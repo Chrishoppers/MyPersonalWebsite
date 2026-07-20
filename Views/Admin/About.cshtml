@@ -12,30 +12,6 @@
 
 <link rel="stylesheet" href="~/css/about.css" />
 
-<style>
-    /* 管理员后台特有样式（不冲突） */
-    .admin-container { max-width: 900px; margin: 0 auto; padding: 2rem 1.5rem; }
-    .admin-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 2rem; border-bottom: 1px solid rgba(255,255,255,0.04); padding-bottom: 1.5rem; }
-    .admin-header h1 { font-size: 1.8rem; font-weight: 700; background: linear-gradient(135deg,#8B5CF6,#EC4899,#F59E0B); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 0; }
-    .edit-card { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.04); border-radius: 20px; padding: 1.8rem 2rem; margin-bottom: 1.5rem; transition: all 0.3s ease; }
-    .edit-card:hover { border-color: rgba(255,255,255,0.06); }
-    .edit-card .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
-    .edit-card .card-header h3 { color: #fff; font-weight: 600; font-size: 1.1rem; margin: 0; }
-    .edit-card .card-header .badge { font-size: 0.65rem; padding: 0.15rem 0.6rem; border-radius: 20px; background: rgba(139,92,246,0.12); color: #8B5CF6; border: 1px solid rgba(139,92,246,0.06); }
-    .edit-card textarea { width: 100%; padding: 0.8rem 1rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.04); background: rgba(255,255,255,0.02); color: #e0e0e0; font-size: 0.9rem; transition: all 0.3s ease; outline: none; resize: vertical; min-height: 100px; font-family: inherit; }
-    .edit-card textarea:focus { border-color: rgba(108,60,225,0.15); background: rgba(255,255,255,0.04); box-shadow: 0 0 0 4px rgba(108,60,225,0.04); }
-    .edit-card input { width: 100%; padding: 0.7rem 1rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.04); background: rgba(255,255,255,0.02); color: #e0e0e0; font-size: 0.9rem; transition: all 0.3s ease; outline: none; }
-    .edit-card input:focus { border-color: rgba(108,60,225,0.15); background: rgba(255,255,255,0.04); box-shadow: 0 0 0 4px rgba(108,60,225,0.04); }
-    .edit-card input::placeholder { color: rgba(255,255,255,0.08); }
-    .btn-save { padding: 0.5rem 1.5rem; border: none; border-radius: 40px; background: linear-gradient(135deg, #8B5CF6, #EC4899); color: #fff; font-weight: 500; font-size: 0.85rem; cursor: pointer; transition: all 0.3s ease; }
-    .btn-save:hover { transform: scale(1.02); box-shadow: 0 4px 20px rgba(108,60,225,0.2); }
-    .btn-glass { padding: 0.5rem 1.5rem; border-radius: 40px; border: 1px solid rgba(255,255,255,0.04); background: rgba(255,255,255,0.02); color: rgba(255,255,255,0.4); text-decoration: none; font-size: 0.85rem; transition: all 0.3s ease; }
-    .btn-glass:hover { background: rgba(255,255,255,0.04); color: #fff; }
-    .social-input-group { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; }
-    .social-input-group input { flex: 1; min-width: 150px; }
-    .social-input-group .platform-label { color: rgba(255,255,255,0.2); font-size: 0.8rem; min-width: 60px; }
-</style>
-
 <div class="admin-container">
 
     <div class="admin-header">
