@@ -13,7 +13,7 @@ namespace MyPersonalWebsite.Controllers
     {
         private readonly AppDbContext _context;
         private readonly EmailService _emailService;
-        private readonly SvgCaptchaService _captchaService;  // ⭐ 替换
+       private readonly SvgCaptchaService _captchaService;
         private readonly RateLimitService _rateLimitService;
 
         public AuthController(
