@@ -1,19 +1,36 @@
-var app = builder.Build();
+using Microsoft.EntityFrameworkCore;
+using MyPersonalWebsite.Models;
+using MyPersonalWebsite.Services;
+using MyPersonalWebsite.Hubs;
 
-// ⭐ 强制 HTTPS（放在最前面）
-app.Use((context, next) =>
+var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddControllersWithViews();
+
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"))
+);
+
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddSession(options =>
 {
-    if (context.Request.Headers.ContainsKey("X-Forwarded-Proto") &&
-        context.Request.Headers["X-Forwarded-Proto"] == "http")
-    {
-        var httpsUrl = "https://" + context.Request.Host + context.Request.Path;
-        context.Response.Redirect(httpsUrl, true);
-        return Task.CompletedTask;
-    }
-    return next();
+    options.IdleTimeout = TimeSpan.FromMinutes(30);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
 });
 
-// 自动创建数据库
+builder.Services.AddHttpClient();
+builder.Services.AddHttpContextAccessor();
+
+builder.Services.AddScoped<SvgCaptchaService>();
+builder.Services.AddScoped<EmailService>();
+builder.Services.AddScoped<RateLimitService>();
+
+builder.Services.AddSignalR();
+
+var app = builder.Build();
+
+// ⭐ 自动创建数据库
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -26,5 +43,16 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();  // 这行现在会被正确执行
-// ... 其余代码
+app.UseHttpsRedirection();
+app.UseStaticFiles();
+app.UseRouting();
+app.UseSession();
+app.UseAuthorization();
+
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=Home}/{action=Index}/{id?}");
+
+app.MapHub<MessageHub>("/messageHub");
+
+app.Run();
