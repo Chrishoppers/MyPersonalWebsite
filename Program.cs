@@ -19,7 +19,7 @@ builder.Services.AddSession(options =>
 
 builder.Services.AddHttpClient();
 builder.Services.AddHttpContextAccessor();
-
+builder.Services.AddScoped<SvgCaptchaService>();
 builder.Services.AddScoped<EmailService>();
 builder.Services.AddScoped<CaptchaImageService>();
 builder.Services.AddScoped<RateLimitService>();
