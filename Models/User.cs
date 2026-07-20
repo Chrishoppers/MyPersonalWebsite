@@ -20,7 +20,9 @@ namespace MyPersonalWebsite.Models
         public string? BanReason { get; set; }
 
         // ⭐ 头像
-        public string? AvatarUrl { get; set; }
+       public string? AvatarUrl { get; set; }
+public bool IsAvatarApproved { get; set; } = false;  // ⭐ 新增：头像是否审核通过
+public DateTime? AvatarSubmittedAt { get; set; }     // ⭐ 新增：头像提交时间
 
         // 关联
         public ICollection<Message>? Messages { get; set; }
