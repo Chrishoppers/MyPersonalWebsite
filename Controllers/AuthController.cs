@@ -73,19 +73,22 @@ public async Task<IActionResult> ForgotPassword(string email)
     _context.PasswordResets.Add(reset);
     await _context.SaveChangesAsync();
 
-    // 发送邮件
-    try
+    // ⭐ 后台发送邮件（不等待）
+    _ = Task.Run(async () =>
     {
-        await _emailService.SendPasswordResetEmailAsync(user.Email, token);
-        ViewBag.Message = "验证码已发送到您的邮箱，请查收";
-        ViewBag.Email = user.Email;
-        return View("ResetPassword");
-    }
-    catch (Exception ex)
-    {
-        ModelState.AddModelError("", "邮件发送失败，请稍后重试");
-        return View();
-    }
+        try
+        {
+            await _emailService.SendPasswordResetEmailAsync(user.Email, token);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"邮件发送失败: {ex.Message}");
+        }
+    });
+
+    ViewBag.Message = "验证码已发送到您的邮箱，请查收（如未收到请检查垃圾箱）";
+    ViewBag.Email = user.Email;
+    return View("ResetPassword");
 }
 
 // 显示重置密码页面
