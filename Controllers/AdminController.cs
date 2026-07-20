@@ -1,12 +1,13 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MyPersonalWebsite.Models;
+using MyPersonalWebsite.Services;
 using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;  // ⭐ 确保有这行
-using System.IO;                 // ⭐ 确保有这行
-using MyPersonalWebsite.Services;   // ⭐ 添加这
+using Microsoft.AspNetCore.Http;
 
 namespace MyPersonalWebsite.Controllers
 {
@@ -170,7 +171,7 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // ⭐ 3. 博客图片上传
+        // 3. 博客图片上传
         // ============================================================
         [HttpPost]
         public async Task<IActionResult> UploadBlogImage(IFormFile image)
@@ -182,37 +183,31 @@ namespace MyPersonalWebsite.Controllers
                     return Json(new { success = false, message = "请选择图片" });
                 }
 
-                // 检查文件类型
                 var allowedTypes = new[] { "image/jpeg", "image/png", "image/gif", "image/webp" };
                 if (!allowedTypes.Contains(image.ContentType))
                 {
                     return Json(new { success = false, message = "只支持 JPG, PNG, GIF, WebP 格式" });
                 }
 
-                // 检查文件大小（5MB）
                 if (image.Length > 5 * 1024 * 1024)
                 {
                     return Json(new { success = false, message = "图片大小不能超过 5MB" });
                 }
 
-                // 生成唯一文件名
                 var fileName = $"{Guid.NewGuid():N}_{image.FileName}";
                 var uploadPath = Path.Combine("wwwroot", "images", "blog");
 
-                // 确保目录存在
                 if (!Directory.Exists(uploadPath))
                 {
                     Directory.CreateDirectory(uploadPath);
                 }
 
-                // 保存文件
                 var filePath = Path.Combine(uploadPath, fileName);
                 using (var stream = new FileStream(filePath, FileMode.Create))
                 {
                     await image.CopyToAsync(stream);
                 }
 
-                // 返回图片 URL
                 var imageUrl = $"/images/blog/{fileName}";
                 return Json(new { success = true, url = imageUrl });
             }
@@ -316,83 +311,6 @@ namespace MyPersonalWebsite.Controllers
 
             return Json(new { success = true, message = $"已解封用户 {user.Username}" });
         }
-        // ============================================================
-// 关于我管理
-// ============================================================
-public async Task<IActionResult> About()
-{
-    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-    if (isAdmin != 1)
-    {
-        return RedirectToAction("Login", "Auth");
-    }
-
-    var sections = await _context.AboutMeContents
-        .OrderBy(s => s.SortOrder)
-        .ToListAsync();
-
-    // 如果没有数据，创建默认
-    if (!sections.Any())
-    {
-        var defaults = new[]
-        {
-            new AboutMe { SectionKey = "bio", Title = "👨‍💻 我是谁", Content = "你好！我是 Chris Hopper，一名热爱技术的全栈开发者。", SortOrder = 1 },
-            new AboutMe { SectionKey = "journey", Title = "📚 学习路线", Content = "2024 - 开始学习 C# 和 .NET\n2025 - 深入学习 ASP.NET Core\n2026 - 构建个人网站", SortOrder = 2 },
-            new AboutMe { SectionKey = "goal", Title = "🎯 我的目标", Content = "成为一名优秀的全栈开发者，用技术创造价值。", SortOrder = 3 },
-            new AboutMe { SectionKey = "social", Title = "🔗 社交链接", Content = "https://github.com/chrishopper", SortOrder = 4 }
-        };
-        _context.AboutMeContents.AddRange(defaults);
-        await _context.SaveChangesAsync();
-        sections = await _context.AboutMeContents.OrderBy(s => s.SortOrder).ToListAsync();
-    }
-
-    return View(sections);
-}
-
-[HttpPost]
-public async Task<IActionResult> UpdateAboutMe([FromBody] Dictionary<string, string> data)
-{
-    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-    if (isAdmin != 1)
-    {
-        return Json(new { success = false, message = "权限不足" });
-    }
-
-    try
-    {
-        foreach (var item in data)
-        {
-            if (item.Key.StartsWith("social_"))
-            {
-                // 社交链接单独处理
-                var platform = item.Key.Replace("social_", "");
-                var section = await _context.AboutMeContents
-                    .FirstOrDefaultAsync(s => s.SectionKey == "social");
-                if (section != null)
-                {
-                    section.Content = item.Value;
-                    section.UpdatedAt = DateTime.Now;
-                }
-            }
-            else
-            {
-                var section = await _context.AboutMeContents
-                    .FirstOrDefaultAsync(s => s.SectionKey == item.Key);
-                if (section != null)
-                {
-                    section.Content = item.Value;
-                    section.UpdatedAt = DateTime.Now;
-                }
-            }
-        }
-        await _context.SaveChangesAsync();
-        return Json(new { success = true });
-    }
-    catch (Exception ex)
-    {
-        return Json(new { success = false, message = ex.Message });
-    }
-}
 
         // ============================================================
         // 6. 授权码管理
@@ -518,6 +436,97 @@ public async Task<IActionResult> UpdateAboutMe([FromBody] Dictionary<string, str
                     }
                 }
             });
+        }
+
+        // ============================================================
+        // ⭐ 7. 关于我管理
+        // ============================================================
+        public async Task<IActionResult> About()
+        {
+            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+            if (isAdmin != 1)
+            {
+                return RedirectToAction("Login", "Auth");
+            }
+
+            var sections = await _context.AboutMeContents
+                .OrderBy(s => s.SortOrder)
+                .ToListAsync();
+
+            if (!sections.Any())
+            {
+                var defaults = new[]
+                {
+                    new AboutMe { SectionKey = "bio", Title = "👨‍💻 我是谁", Content = "你好！我是 Chris Hopper，一名热爱技术的全栈开发者。这个网站是我用 ASP.NET Core 10.0 打造的个人空间，用于分享技术心得、项目经验和生活感悟。", SortOrder = 1 },
+                    new AboutMe { SectionKey = "journey", Title = "📚 学习路线", Content = "2024 - 开始学习 C# 和 .NET 平台\n2025 - 深入学习 ASP.NET Core Web 开发\n2026 - 构建个人网站，持续精进技术", SortOrder = 2 },
+                    new AboutMe { SectionKey = "goal", Title = "🎯 我的目标", Content = "成为一名优秀的全栈开发者，用技术创造价值，用代码改变生活。持续学习，不断进步，分享知识，回馈社区。", SortOrder = 3 },
+                    new AboutMe { SectionKey = "social", Title = "🔗 社交链接", Content = "github:https://github.com/chrishopper|twitter:https://twitter.com/chrishopper|linkedin:https://linkedin.com/in/chrishopper", SortOrder = 4 }
+                };
+                _context.AboutMeContents.AddRange(defaults);
+                await _context.SaveChangesAsync();
+                sections = await _context.AboutMeContents.OrderBy(s => s.SortOrder).ToListAsync();
+            }
+
+            return View(sections);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> UpdateAboutMe([FromBody] Dictionary<string, string> data)
+        {
+            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+            if (isAdmin != 1)
+            {
+                return Json(new { success = false, message = "权限不足" });
+            }
+
+            try
+            {
+                // 处理社交链接
+                if (data.ContainsKey("social_github") || data.ContainsKey("social_twitter") || 
+                    data.ContainsKey("social_linkedin") || data.ContainsKey("social_discord"))
+                {
+                    var socialLinks = new List<string>();
+                    if (data.ContainsKey("social_github") && !string.IsNullOrEmpty(data["social_github"]))
+                        socialLinks.Add($"github:{data["social_github"]}");
+                    if (data.ContainsKey("social_twitter") && !string.IsNullOrEmpty(data["social_twitter"]))
+                        socialLinks.Add($"twitter:{data["social_twitter"]}");
+                    if (data.ContainsKey("social_linkedin") && !string.IsNullOrEmpty(data["social_linkedin"]))
+                        socialLinks.Add($"linkedin:{data["social_linkedin"]}");
+                    if (data.ContainsKey("social_discord") && !string.IsNullOrEmpty(data["social_discord"]))
+                        socialLinks.Add($"discord:{data["social_discord"]}");
+
+                    var socialSection = await _context.AboutMeContents
+                        .FirstOrDefaultAsync(s => s.SectionKey == "social");
+                    if (socialSection != null)
+                    {
+                        socialSection.Content = string.Join("|", socialLinks);
+                        socialSection.UpdatedAt = DateTime.Now;
+                    }
+                }
+
+                // 处理其他内容
+                var contentKeys = new[] { "bio", "journey", "goal" };
+                foreach (var key in contentKeys)
+                {
+                    if (data.ContainsKey(key))
+                    {
+                        var section = await _context.AboutMeContents
+                            .FirstOrDefaultAsync(s => s.SectionKey == key);
+                        if (section != null)
+                        {
+                            section.Content = data[key];
+                            section.UpdatedAt = DateTime.Now;
+                        }
+                    }
+                }
+
+                await _context.SaveChangesAsync();
+                return Json(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
         }
     }
 }
