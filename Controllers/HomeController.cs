@@ -41,15 +41,49 @@ namespace MyPersonalWebsite.Controllers
         // 关于我
         // ============================================================
         public async Task<IActionResult> About()
+{
+    var sections = await _context.AboutMeContents
+        .OrderBy(s => s.SortOrder)
+        .ToListAsync();
+
+    if (!sections.Any())
+    {
+        var defaults = new[]
         {
-            var userId = HttpContext.Session.GetInt32("UserId");
-            User? user = null;
-            if (userId.HasValue)
-            {
-                user = await _context.Users.FindAsync(userId.Value);
-            }
-            return View(user);
-        }
+            new AboutMe { SectionKey = "bio", Title = "👨‍💻 我是谁", Content = "你好！我是 Chris Hopper，一名热爱技术的全栈开发者。", SortOrder = 1 },
+            new AboutMe { SectionKey = "journey", Title = "📚 学习路线", Content = "2024 - 开始学习 C# 和 .NET\n2025 - 深入学习 ASP.NET Core\n2026 - 构建个人网站", SortOrder = 2 },
+            new AboutMe { SectionKey = "goal", Title = "🎯 我的目标", Content = "成为一名优秀的全栈开发者，用技术创造价值。", SortOrder = 3 },
+            new AboutMe { SectionKey = "social", Title = "🔗 社交链接", Content = "github:https://github.com/chrishopper|twitter:https://twitter.com/chrishopper", SortOrder = 4 }
+        };
+        _context.AboutMeContents.AddRange(defaults);
+        await _context.SaveChangesAsync();
+        sections = await _context.AboutMeContents.OrderBy(s => s.SortOrder).ToListAsync();
+    }
+
+    var userId = HttpContext.Session.GetInt32("UserId");
+    User? currentUser = null;
+    if (userId.HasValue)
+    {
+        currentUser = await _context.Users.FindAsync(userId.Value);
+    }
+
+    // ⭐ 管理员获取待审核头像列表
+    var pendingAvatars = new List<User>();
+    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+    if (isAdmin == 1)
+    {
+        pendingAvatars = await _context.Users
+            .Where(u => !string.IsNullOrEmpty(u.AvatarUrl) && !u.IsAvatarApproved)
+            .OrderByDescending(u => u.AvatarSubmittedAt)
+            .ToListAsync();
+    }
+
+    ViewBag.Sections = sections;
+    ViewBag.CurrentUser = currentUser;
+    ViewBag.PendingAvatars = pendingAvatars;
+
+    return View();
+}
 
         // ============================================================
         // 联系方式页面
