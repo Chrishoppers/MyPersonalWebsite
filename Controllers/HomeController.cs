@@ -4,6 +4,7 @@ using MyPersonalWebsite.Models;
 using MyPersonalWebsite.Services;
 using System;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -39,13 +40,19 @@ namespace MyPersonalWebsite.Controllers
         // ============================================================
         // 关于我
         // ============================================================
-        public IActionResult About()
+        public async Task<IActionResult> About()
         {
-            return View();
+            var userId = HttpContext.Session.GetInt32("UserId");
+            User? user = null;
+            if (userId.HasValue)
+            {
+                user = await _context.Users.FindAsync(userId.Value);
+            }
+            return View(user);
         }
 
         // ============================================================
-        // 联系方式页面（需要登录）
+        // 联系方式页面
         // ============================================================
         public IActionResult Contact()
         {
@@ -58,7 +65,7 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // 申请联系方式（POST）- 需要登录
+        // 申请联系方式
         // ============================================================
         [HttpPost]
         public async Task<IActionResult> RequestContact([FromBody] ContactRequest request)
@@ -85,7 +92,6 @@ namespace MyPersonalWebsite.Controllers
                     return Json(new { success = false, message = "请填写所有必填项" });
                 }
 
-                // 生成授权码
                 var code = GenerateAuthorizationCode();
 
                 var contactRequest = new ContactRequest
@@ -97,7 +103,7 @@ namespace MyPersonalWebsite.Controllers
                     Relationship = request.Relationship,
                     Remarks = request.Remarks ?? string.Empty,
                     RequestTime = DateTime.Now,
-                    IsApproved = true,      // ⭐ 自动通过
+                    IsApproved = true,
                     IsUsed = false,
                     UserId = user.Id,
                     Username = user.Username,
@@ -107,7 +113,6 @@ namespace MyPersonalWebsite.Controllers
                 _context.ContactRequests.Add(contactRequest);
                 await _context.SaveChangesAsync();
 
-                // 发送管理员通知
                 try
                 {
                     var emailService = HttpContext.RequestServices.GetService<EmailService>();
@@ -138,7 +143,7 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // 管理员查询授权码（GET）
+        // 管理员查询授权码
         // ============================================================
         public async Task<IActionResult> QueryContact(string code)
         {
@@ -156,13 +161,11 @@ namespace MyPersonalWebsite.Controllers
                 return Json(new { success = false, message = "授权码无效或不存在" });
             }
 
-            // 如果已使用，拒绝查询
             if (request.IsUsed)
             {
                 return Json(new { success = false, message = "该授权码已被使用，请联系管理员" });
             }
 
-            // 标记为已查看
             if (!request.IsApproved)
             {
                 request.IsApproved = true;
@@ -170,9 +173,8 @@ namespace MyPersonalWebsite.Controllers
                 await _context.SaveChangesAsync();
             }
 
-            // 根据平台返回对应的联系方式
             string contactInfo = request.Platform == "WeChat"
-                ? "💬 微信号：chris_hopper_wechat"
+                ? "💬 微信号：Chris_hopper"
                 : "🐧 QQ号：2908685235";
 
             return Json(new
@@ -191,7 +193,6 @@ namespace MyPersonalWebsite.Controllers
                     request.ViewTime,
                     request.IsUsed,
                     ContactInfo = contactInfo,
-                    // ⭐ 新增：申请人信息
                     User = new
                     {
                         request.Username,
@@ -200,6 +201,67 @@ namespace MyPersonalWebsite.Controllers
                     }
                 }
             });
+        }
+
+        // ============================================================
+        // ⭐ 上传头像
+        // ============================================================
+        [HttpPost]
+        public async Task<IActionResult> UploadAvatar(IFormFile avatar)
+        {
+            try
+            {
+                var userId = HttpContext.Session.GetInt32("UserId");
+                if (!userId.HasValue)
+                {
+                    return Json(new { success = false, message = "请先登录" });
+                }
+
+                if (avatar == null || avatar.Length == 0)
+                {
+                    return Json(new { success = false, message = "请选择图片" });
+                }
+
+                var allowedTypes = new[] { "image/jpeg", "image/png", "image/gif", "image/webp" };
+                if (!allowedTypes.Contains(avatar.ContentType))
+                {
+                    return Json(new { success = false, message = "只支持 JPG, PNG, GIF, WebP 格式" });
+                }
+
+                if (avatar.Length > 5 * 1024 * 1024)
+                {
+                    return Json(new { success = false, message = "图片不能超过 5MB" });
+                }
+
+                var fileName = $"{Guid.NewGuid():N}_{avatar.FileName}";
+                var uploadPath = Path.Combine("wwwroot", "images", "avatars");
+
+                if (!Directory.Exists(uploadPath))
+                {
+                    Directory.CreateDirectory(uploadPath);
+                }
+
+                var filePath = Path.Combine(uploadPath, fileName);
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await avatar.CopyToAsync(stream);
+                }
+
+                var avatarUrl = $"/images/avatars/{fileName}";
+
+                var user = await _context.Users.FindAsync(userId.Value);
+                if (user != null)
+                {
+                    user.AvatarUrl = avatarUrl;
+                    await _context.SaveChangesAsync();
+                }
+
+                return Json(new { success = true, url = avatarUrl });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
         }
 
         // ============================================================
@@ -212,7 +274,7 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // 私有方法：生成授权码
+        // 生成授权码
         // ============================================================
         private string GenerateAuthorizationCode()
         {
