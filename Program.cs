@@ -1,15 +1,17 @@
 using Microsoft.EntityFrameworkCore;
 using MyPersonalWebsite.Models;
 using MyPersonalWebsite.Services;
-using MyPersonalWebsite.Hubs;   // ⭐ 添加这一行
-using Npgsql;
+using MyPersonalWebsite.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
 
+// ⭐ 使用 PostgreSQL
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"))
+    options.UseNpgsql(connectionString)
+);
 
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
@@ -21,23 +23,21 @@ builder.Services.AddSession(options =>
 
 builder.Services.AddHttpClient();
 builder.Services.AddHttpContextAccessor();
+
 builder.Services.AddScoped<SvgCaptchaService>();
 builder.Services.AddScoped<EmailService>();
-builder.Services.AddScoped<CaptchaImageService>();
 builder.Services.AddScoped<RateLimitService>();
-builder.Services.AddScoped<LikeService>();
 
 builder.Services.AddSignalR();
 
 var app = builder.Build();
 
-// ===== ⭐ 自动创建数据库 =====
+// 自动创建数据库和表
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     dbContext.Database.EnsureCreated();
 }
-// =============================
 
 if (!app.Environment.IsDevelopment())
 {
@@ -48,9 +48,7 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
-
 app.UseSession();
-
 app.UseAuthorization();
 
 app.MapControllerRoute(
