@@ -67,26 +67,33 @@
 
                 @if (section.SectionKey == "social")
                 {
+                    // 解析社交链接
+                    var links = section.Content?.Split('|') ?? new string[0];
+                    var github = links.FirstOrDefault(l => l.StartsWith("github:"))?.Replace("github:", "") ?? "";
+                    var twitter = links.FirstOrDefault(l => l.StartsWith("twitter:"))?.Replace("twitter:", "") ?? "";
+                    var linkedin = links.FirstOrDefault(l => l.StartsWith("linkedin:"))?.Replace("linkedin:", "") ?? "";
+                    var discord = links.FirstOrDefault(l => l.StartsWith("discord:"))?.Replace("discord:", "") ?? "";
+
                     <div class="social-input-group">
                         <span class="platform-label">GitHub</span>
-                        <input type="text" id="social_github" value="@section.Content" placeholder="https://github.com/..." />
+                        <input type="text" id="social_github" value="@github" placeholder="https://github.com/..." />
                     </div>
                     <div class="social-input-group" style="margin-top:0.5rem;">
                         <span class="platform-label">Twitter</span>
-                        <input type="text" id="social_twitter" value="" placeholder="https://twitter.com/..." />
+                        <input type="text" id="social_twitter" value="@twitter" placeholder="https://twitter.com/..." />
                     </div>
                     <div class="social-input-group" style="margin-top:0.5rem;">
                         <span class="platform-label">LinkedIn</span>
-                        <input type="text" id="social_linkedin" value="" placeholder="https://linkedin.com/in/..." />
+                        <input type="text" id="social_linkedin" value="@linkedin" placeholder="https://linkedin.com/in/..." />
                     </div>
                     <div class="social-input-group" style="margin-top:0.5rem;">
                         <span class="platform-label">Discord</span>
-                        <input type="text" id="social_discord" value="" placeholder="https://discord.gg/..." />
+                        <input type="text" id="social_discord" value="@discord" placeholder="https://discord.gg/..." />
                     </div>
                 }
                 else
                 {
-                    <textarea id="content_@section.Id" data-key="@section.SectionKey">@section.Content</textarea>
+                    <textarea id="content_@section.Id" data-key="@section.SectionKey" rows="5">@section.Content</textarea>
                 }
             </div>
         }
@@ -116,13 +123,11 @@
         function saveAll() {
             const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
 
-            // 收集所有内容
             const data = {};
             document.querySelectorAll('textarea[data-key]').forEach(el => {
                 data[el.dataset.key] = el.value;
             });
 
-            // 收集社交链接
             data['social_github'] = document.getElementById('social_github')?.value || '';
             data['social_twitter'] = document.getElementById('social_twitter')?.value || '';
             data['social_linkedin'] = document.getElementById('social_linkedin')?.value || '';
