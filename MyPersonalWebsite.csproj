@@ -7,10 +7,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- SQLite -->
+    <PackageReference Include="MailKit" Version="4.7.1" />
+    <PackageReference Include="MimeKit" Version="4.7.1" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.0" />
-    <!-- SignalR 已内置，不需要手动引用 -->
+    <!-- 不需要手动引用 SignalR，已内置 -->
   </ItemGroup>
 
 </Project>
