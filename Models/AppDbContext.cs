@@ -19,6 +19,7 @@ namespace MyPersonalWebsite.Models
         public DbSet<ReportRecord> ReportRecords { get; set; }
         public DbSet<User> Users { get; set; }
         public DbSet<AboutMe> AboutMeContents { get; set; }
+        public DbSet<PasswordReset> PasswordResets { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
