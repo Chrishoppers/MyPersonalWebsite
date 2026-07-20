@@ -311,6 +311,56 @@ namespace MyPersonalWebsite.Controllers
 
             return Json(new { success = true, message = $"已解封用户 {user.Username}" });
         }
+        // ============================================================
+// 头像审核 - 通过
+// ============================================================
+[HttpPost]
+public async Task<IActionResult> ApproveAvatar(int userId)
+{
+    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+    if (isAdmin != 1)
+    {
+        return Json(new { success = false, message = "权限不足" });
+    }
+
+    var user = await _context.Users.FindAsync(userId);
+    if (user == null)
+    {
+        return Json(new { success = false, message = "用户不存在" });
+    }
+
+    user.IsAvatarApproved = true;
+    await _context.SaveChangesAsync();
+
+    return Json(new { success = true, message = "头像已通过审核" });
+}
+
+// ============================================================
+// 头像审核 - 拒绝
+// ============================================================
+[HttpPost]
+public async Task<IActionResult> RejectAvatar(int userId)
+{
+    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+    if (isAdmin != 1)
+    {
+        return Json(new { success = false, message = "权限不足" });
+    }
+
+    var user = await _context.Users.FindAsync(userId);
+    if (user == null)
+    {
+        return Json(new { success = false, message = "用户不存在" });
+    }
+
+    // 清空头像
+    user.AvatarUrl = null;
+    user.IsAvatarApproved = false;
+    user.AvatarSubmittedAt = null;
+    await _context.SaveChangesAsync();
+
+    return Json(new { success = true, message = "头像已拒绝" });
+}
 
         // ============================================================
         // 6. 授权码管理
