@@ -316,6 +316,83 @@ namespace MyPersonalWebsite.Controllers
 
             return Json(new { success = true, message = $"已解封用户 {user.Username}" });
         }
+        // ============================================================
+// 关于我管理
+// ============================================================
+public async Task<IActionResult> About()
+{
+    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+    if (isAdmin != 1)
+    {
+        return RedirectToAction("Login", "Auth");
+    }
+
+    var sections = await _context.AboutMeContents
+        .OrderBy(s => s.SortOrder)
+        .ToListAsync();
+
+    // 如果没有数据，创建默认
+    if (!sections.Any())
+    {
+        var defaults = new[]
+        {
+            new AboutMe { SectionKey = "bio", Title = "👨‍💻 我是谁", Content = "你好！我是 Chris Hopper，一名热爱技术的全栈开发者。", SortOrder = 1 },
+            new AboutMe { SectionKey = "journey", Title = "📚 学习路线", Content = "2024 - 开始学习 C# 和 .NET\n2025 - 深入学习 ASP.NET Core\n2026 - 构建个人网站", SortOrder = 2 },
+            new AboutMe { SectionKey = "goal", Title = "🎯 我的目标", Content = "成为一名优秀的全栈开发者，用技术创造价值。", SortOrder = 3 },
+            new AboutMe { SectionKey = "social", Title = "🔗 社交链接", Content = "https://github.com/chrishopper", SortOrder = 4 }
+        };
+        _context.AboutMeContents.AddRange(defaults);
+        await _context.SaveChangesAsync();
+        sections = await _context.AboutMeContents.OrderBy(s => s.SortOrder).ToListAsync();
+    }
+
+    return View(sections);
+}
+
+[HttpPost]
+public async Task<IActionResult> UpdateAboutMe([FromBody] Dictionary<string, string> data)
+{
+    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+    if (isAdmin != 1)
+    {
+        return Json(new { success = false, message = "权限不足" });
+    }
+
+    try
+    {
+        foreach (var item in data)
+        {
+            if (item.Key.StartsWith("social_"))
+            {
+                // 社交链接单独处理
+                var platform = item.Key.Replace("social_", "");
+                var section = await _context.AboutMeContents
+                    .FirstOrDefaultAsync(s => s.SectionKey == "social");
+                if (section != null)
+                {
+                    section.Content = item.Value;
+                    section.UpdatedAt = DateTime.Now;
+                }
+            }
+            else
+            {
+                var section = await _context.AboutMeContents
+                    .FirstOrDefaultAsync(s => s.SectionKey == item.Key);
+                if (section != null)
+                {
+                    section.Content = item.Value;
+                    section.UpdatedAt = DateTime.Now;
+                }
+            }
+        }
+        await _context.SaveChangesAsync();
+        return Json(new { success = true });
+    }
+    catch (Exception ex)
+    {
+        return Json(new { success = false, message = ex.Message });
+    }
+}
 
         // ============================================================
         // 6. 授权码管理
