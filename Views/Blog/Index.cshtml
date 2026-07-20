@@ -1,13 +1,195 @@
-﻿@model List<MyPersonalWebsite.Models.Blog>
+@model List<MyPersonalWebsite.Models.Blog>
 
 @{
     ViewData["Title"] = "博客列表";
 }
 
-<h2><i class="bi bi-journal"></i> 所有文章</h2>
-<hr>
+<style>
+    .blog-list-container {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 1rem 0;
+    }
 
-<div class="row">
+    .blog-list-header {
+        text-align: center;
+        margin-bottom: 2.5rem;
+    }
+
+    .blog-list-header h2 {
+        font-size: 2.5rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, #8B5CF6 0%, #EC4899 50%, #F59E0B 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 0.3rem;
+    }
+
+    .blog-list-header p {
+        color: rgba(255,255,255,0.3);
+        font-size: 1rem;
+    }
+
+    /* 博客卡片 - 深色高级感 */
+    .blog-card {
+        background: rgba(255,255,255,0.03);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255,255,255,0.04);
+        border-radius: 20px;
+        padding: 1.8rem 2rem;
+        margin-bottom: 1.5rem;
+        transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .blog-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: linear-gradient(135deg, #8B5CF6, #EC4899);
+        opacity: 0;
+        transition: opacity 0.4s ease;
+    }
+
+    .blog-card:hover {
+        background: rgba(255,255,255,0.05);
+        transform: translateY(-4px);
+        border-color: rgba(108,60,225,0.1);
+        box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    }
+
+    .blog-card:hover::before {
+        opacity: 1;
+    }
+
+    .blog-card .cover-image {
+        width: 100%;
+        height: 200px;
+        border-radius: 12px;
+        object-fit: cover;
+        margin-bottom: 1rem;
+        background: rgba(255,255,255,0.02);
+        border: 1px solid rgba(255,255,255,0.04);
+    }
+
+    .blog-card .cover-image-placeholder {
+        width: 100%;
+        height: 200px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, rgba(108,60,225,0.05), rgba(236,72,153,0.05));
+        border: 1px solid rgba(255,255,255,0.04);
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: rgba(255,255,255,0.1);
+        font-size: 0.9rem;
+    }
+
+    .blog-card .title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #fff;
+        margin-bottom: 0.3rem;
+        text-decoration: none;
+    }
+
+    .blog-card .title a {
+        color: #fff;
+        text-decoration: none;
+        transition: color 0.3s ease;
+    }
+
+    .blog-card .title a:hover {
+        color: #8B5CF6;
+    }
+
+    .blog-card .meta {
+        color: rgba(255,255,255,0.25);
+        font-size: 0.8rem;
+        margin-bottom: 0.8rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .blog-card .summary {
+        color: rgba(255,255,255,0.5);
+        line-height: 1.7;
+        font-size: 0.95rem;
+        margin-bottom: 1rem;
+    }
+
+    .blog-card .actions {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .blog-card .actions .btn-read {
+        padding: 0.5rem 1.5rem;
+        border: 1px solid rgba(108,60,225,0.2);
+        border-radius: 40px;
+        background: rgba(108,60,225,0.05);
+        color: #8B5CF6;
+        text-decoration: none;
+        font-weight: 500;
+        font-size: 0.85rem;
+        transition: all 0.3s ease;
+    }
+
+    .blog-card .actions .btn-read:hover {
+        background: rgba(108,60,225,0.12);
+        transform: scale(1.02);
+    }
+
+    .blog-card .actions .like-btn {
+        background: none;
+        border: none;
+        color: rgba(255,255,255,0.2);
+        cursor: pointer;
+        font-size: 0.85rem;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+
+    .blog-card .actions .like-btn:hover {
+        color: #EC4899;
+    }
+
+    .blog-card .actions .like-btn.liked {
+        color: #EC4899;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        background: rgba(255,255,255,0.02);
+        border-radius: 20px;
+        border: 1px solid rgba(255,255,255,0.04);
+        color: rgba(255,255,255,0.2);
+    }
+
+    .empty-state .icon {
+        font-size: 3rem;
+        margin-bottom: 0.5rem;
+        opacity: 0.3;
+    }
+</style>
+
+<div class="blog-list-container">
+    <div class="blog-list-header">
+        <h2>📖 所有文章</h2>
+        <p>分享技术、思考与成长</p>
+    </div>
+
     @if (Model != null && Model.Any())
     {
         foreach (var blog in Model)
@@ -15,159 +197,77 @@
             var isLiked = ViewBag.LikedIds != null && ((HashSet<int>)ViewBag.LikedIds).Contains(blog.Id);
             var currentUserId = ViewBag.CurrentUserId as int?;
 
-            <div class="col-md-6 mb-4">
-                <div class="card h-100 shadow-sm">
-                    <div class="card-body">
-                        <h4 class="card-title">@blog.Title</h4>
-                        <p class="text-muted small">
-                            <i class="bi bi-calendar3"></i> @blog.PublishDate.ToString("yyyy年MM月dd日")
-                        </p>
-                        <p class="card-text">@blog.Summary</p>
+            <div class="blog-card">
+                @if (!string.IsNullOrEmpty(blog.CoverImageUrl))
+                {
+                    <img class="cover-image" src="@blog.CoverImageUrl" alt="@blog.Title" />
+                }
+                else
+                {
+                    <div class="cover-image-placeholder">📷 暂无封面</div>
+                }
 
-                        <!-- ⭐ 点赞按钮 -->
-                        <div class="d-flex align-items-center gap-3 mt-2">
-                            @if (currentUserId.HasValue)
-                            {
-                                <button class="btn btn-outline-primary btn-sm like-btn @(isLiked ? "liked" : "")" 
-                                        onclick="toggleLike(@blog.Id, this)">
-                                    <i class="bi @(isLiked ? "bi-heart-fill" : "bi-heart")"></i>
-                                    <span class="like-count" id="likeCount-@blog.Id">@blog.LikeCount</span>
-                                </button>
-                            }
-                            else
-                            {
-                                <span class="btn btn-outline-secondary btn-sm" style="cursor:default;">
-                                    <i class="bi bi-heart"></i> <span class="like-count">@blog.LikeCount</span>
-                                </span>
-                            }
-                            <a href="/Blog/Details/@blog.Id" class="btn btn-primary btn-sm">
-                                阅读全文 <i class="bi bi-arrow-right"></i>
-                            </a>
-                        </div>
-                    </div>
+                <div class="title">
+                    <a href="/Blog/Details/@blog.Id">@blog.Title</a>
+                </div>
+
+                <div class="meta">
+                    <span><i class="bi bi-calendar3"></i> @blog.PublishDate.ToString("yyyy年MM月dd日")</span>
+                    <span><i class="bi bi-heart"></i> @blog.LikeCount</span>
+                </div>
+
+                <div class="summary">@blog.Summary</div>
+
+                <div class="actions">
+                    <a href="/Blog/Details/@blog.Id" class="btn-read">阅读全文 →</a>
+
+                    @if (currentUserId.HasValue)
+                    {
+                        <button class="like-btn @(isLiked ? "liked" : "")" onclick="toggleLike(@blog.Id, this)">
+                            <i class="bi @(isLiked ? "bi-heart-fill" : "bi-heart")"></i>
+                            <span class="like-count" id="likeCount-@blog.Id">@blog.LikeCount</span>
+                        </button>
+                    }
+                    else
+                    {
+                        <span class="like-btn" style="cursor:default;opacity:0.4;">
+                            <i class="bi bi-heart"></i> @blog.LikeCount
+                        </span>
+                    }
                 </div>
             </div>
         }
     }
     else
     {
-        <div class="col">
-            <div class="alert alert-info">还没有博客，敬请期待！</div>
+        <div class="empty-state">
+            <div class="icon">📝</div>
+            <p>还没有博客，敬请期待！</p>
         </div>
     }
 </div>
 
-<style>
-    .like-btn {
-        transition: all 0.2s ease;
-    }
-    .like-btn.liked {
-        background: #dc3545;
-        border-color: #dc3545;
-        color: #fff;
-    }
-    .like-btn.liked:hover {
-        background: #c82333;
-        border-color: #bd2130;
-        color: #fff;
-    }
-    .like-btn .bi-heart-fill {
-        color: #fff;
-    }
-</style>
-
-@section Scripts {
-    <script>
-        function toggleLike(blogId, btn) {
-            const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
-
-            fetch('/Blog/ToggleLike', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    'RequestVerificationToken': token
-                },
-                body: `blogId=${blogId}`
-            })
-            .then(r => r.json())
-            .then(data => {
-                if (data.success) {
-                    // 更新点赞数
-                    const countEl = document.getElementById(`likeCount-${blogId}`);
-                    if (countEl) {
-                        countEl.textContent = data.likeCount;
-                    }
-
-                    // 更新按钮样式
-                    if (data.isLiked) {
-                        btn.classList.add('liked');
-                        btn.querySelector('i').className = 'bi bi-heart-fill';
-                    } else {
-                        btn.classList.remove('liked');
-                        btn.querySelector('i').className = 'bi bi-heart';
-                    }
-
-                    // 显示提示
-                    showToast(data.message, 'success');
+<script>
+    function toggleLike(blogId, btn) {
+        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+        fetch('/Blog/ToggleLike', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'RequestVerificationToken': token },
+            body: `blogId=${blogId}`
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                const countEl = document.getElementById(`likeCount-${blogId}`);
+                if (countEl) countEl.textContent = data.likeCount;
+                if (data.isLiked) {
+                    btn.classList.add('liked');
+                    btn.querySelector('i').className = 'bi bi-heart-fill';
                 } else {
-                    showToast(data.message || '操作失败', 'error');
+                    btn.classList.remove('liked');
+                    btn.querySelector('i').className = 'bi bi-heart';
                 }
-            })
-            .catch(() => showToast('操作失败，请重试', 'error'));
-        }
-
-        function showToast(message, type = 'info') {
-            const container = document.getElementById('toastContainer') || createToastContainer();
-            const toast = document.createElement('div');
-            toast.className = `toast-msg ${type}`;
-            toast.textContent = message;
-            container.appendChild(toast);
-            setTimeout(() => {
-                toast.style.opacity = '0';
-                toast.style.transform = 'translateX(20px)';
-                setTimeout(() => toast.remove(), 300);
-            }, 3000);
-        }
-
-        function createToastContainer() {
-            const container = document.createElement('div');
-            container.id = 'toastContainer';
-            container.style.cssText = `
-                position: fixed;
-                bottom: 2rem;
-                right: 2rem;
-                z-index: 2000;
-                display: flex;
-                flex-direction: column;
-                gap: 0.5rem;
-                align-items: flex-end;
-            `;
-            document.body.appendChild(container);
-            // 添加样式
-            const style = document.createElement('style');
-            style.textContent = `
-                .toast-msg {
-                    padding: 0.8rem 1.8rem;
-                    border-radius: 40px;
-                    color: #fff;
-                    font-weight: 500;
-                    animation: slideUp 0.4s ease;
-                    font-size: 0.9rem;
-                    backdrop-filter: blur(10px);
-                    background: rgba(0, 0, 0, 0.7);
-                    border: 1px solid rgba(255, 255, 255, 0.04);
-                    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
-                }
-                .toast-msg.success { background: rgba(40, 167, 69, 0.85); }
-                .toast-msg.error { background: rgba(220, 53, 69, 0.85); }
-                .toast-msg.info { background: rgba(79, 172, 254, 0.85); }
-                @@keyframes slideUp {
-                    from { opacity: 0; transform: translateY(20px) scale(0.95); }
-                    to { opacity: 1; transform: translateY(0) scale(1); }
-                }
-            `;
-            document.head.appendChild(style);
-            return container;
-        }
-    </script>
-}
+            }
+        });
+    }
+</script>
