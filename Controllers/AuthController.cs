@@ -16,18 +16,17 @@ namespace MyPersonalWebsite.Controllers
        private readonly SvgCaptchaService _captchaService;
         private readonly RateLimitService _rateLimitService;
 
-        public AuthController(
-            AppDbContext context,
-            EmailService emailService,
-            SvgCaptchaService captchaService,   // ⭐ 替换
-            RateLimitService rateLimitService)
-        {
-            _context = context;
-            _emailService = emailService;
-            _captchaService = captchaService;
-            _rateLimitService = rateLimitService;
-        }
-
+       public AuthController(
+    AppDbContext context,
+    EmailService emailService,
+    SvgCaptchaService captchaService,   // ⭐ 改这里
+    RateLimitService rateLimitService)
+{
+    _context = context;
+    _emailService = emailService;
+    _captchaService = captchaService;   // ⭐ 改这里
+    _rateLimitService = rateLimitService;
+}
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Register(string username, string email, string password, string captchaAnswer)
