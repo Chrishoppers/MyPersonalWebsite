@@ -1,10 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MyPersonalWebsite.Models;
-using MyPersonalWebsite.Services;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;  // ⭐ 确保有这行
+using System.IO;                 // ⭐ 确保有这行
 
 namespace MyPersonalWebsite.Controllers
 {
@@ -168,7 +169,60 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // 3. 留言管理
+        // ⭐ 3. 博客图片上传
+        // ============================================================
+        [HttpPost]
+        public async Task<IActionResult> UploadBlogImage(IFormFile image)
+        {
+            try
+            {
+                if (image == null || image.Length == 0)
+                {
+                    return Json(new { success = false, message = "请选择图片" });
+                }
+
+                // 检查文件类型
+                var allowedTypes = new[] { "image/jpeg", "image/png", "image/gif", "image/webp" };
+                if (!allowedTypes.Contains(image.ContentType))
+                {
+                    return Json(new { success = false, message = "只支持 JPG, PNG, GIF, WebP 格式" });
+                }
+
+                // 检查文件大小（5MB）
+                if (image.Length > 5 * 1024 * 1024)
+                {
+                    return Json(new { success = false, message = "图片大小不能超过 5MB" });
+                }
+
+                // 生成唯一文件名
+                var fileName = $"{Guid.NewGuid():N}_{image.FileName}";
+                var uploadPath = Path.Combine("wwwroot", "images", "blog");
+
+                // 确保目录存在
+                if (!Directory.Exists(uploadPath))
+                {
+                    Directory.CreateDirectory(uploadPath);
+                }
+
+                // 保存文件
+                var filePath = Path.Combine(uploadPath, fileName);
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await image.CopyToAsync(stream);
+                }
+
+                // 返回图片 URL
+                var imageUrl = $"/images/blog/{fileName}";
+                return Json(new { success = true, url = imageUrl });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        // ============================================================
+        // 4. 留言管理
         // ============================================================
         public async Task<IActionResult> Messages()
         {
@@ -186,7 +240,7 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // 4. 用户管理
+        // 5. 用户管理
         // ============================================================
         public async Task<IActionResult> Users()
         {
@@ -263,7 +317,7 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // 5. 授权码管理
+        // 6. 授权码管理
         // ============================================================
         public async Task<IActionResult> ContactRequests()
         {
