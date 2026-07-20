@@ -5,8 +5,8 @@ using MyPersonalWebsite.Helpers;
 using MyPersonalWebsite.Services;
 using System;
 using System.Linq;
-using System.Threading.Tasks;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace MyPersonalWebsite.Controllers
 {
@@ -28,124 +28,6 @@ namespace MyPersonalWebsite.Controllers
             _captchaService = captchaService;
             _rateLimitService = rateLimitService;
         }
-        // ============================================================
-// 忘记密码
-// ============================================================
-
-// 显示忘记密码页面
-[HttpGet]
-public IActionResult ForgotPassword()
-{
-    return View();
-}
-
-// 发送重置邮件
-[HttpPost]
-[ValidateAntiForgeryToken]
-public async Task<IActionResult> ForgotPassword(string email)
-{
-    if (string.IsNullOrEmpty(email))
-    {
-        ModelState.AddModelError("", "请输入邮箱");
-        return View();
-    }
-
-    var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
-    if (user == null)
-    {
-        ModelState.AddModelError("", "该邮箱未注册");
-        return View();
-    }
-
-    // 生成6位数字验证码
-    var token = new Random().Next(100000, 999999).ToString();
-
-    // 保存到数据库
-    var reset = new PasswordReset
-    {
-        UserId = user.Id,
-        Token = token,
-        Email = user.Email,
-        CreatedAt = DateTime.Now,
-        ExpiresAt = DateTime.Now.AddMinutes(10),
-        IsUsed = false
-    };
-
-    _context.PasswordResets.Add(reset);
-    await _context.SaveChangesAsync();
-
-    // ⭐ 后台发送邮件（不等待）
-    _ = Task.Run(async () =>
-    {
-        try
-        {
-            await _emailService.SendPasswordResetEmailAsync(user.Email, token);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"邮件发送失败: {ex.Message}");
-        }
-    });
-
-    ViewBag.Message = "验证码已发送到您的邮箱，请查收（如未收到请检查垃圾箱）";
-    ViewBag.Email = user.Email;
-    return View("ResetPassword");
-}
-
-// 显示重置密码页面
-[HttpGet]
-public IActionResult ResetPassword()
-{
-    return View();
-}
-
-// 重置密码
-[HttpPost]
-[ValidateAntiForgeryToken]
-public async Task<IActionResult> ResetPassword(string email, string token, string newPassword)
-{
-    if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(token) || string.IsNullOrEmpty(newPassword))
-    {
-        ModelState.AddModelError("", "请填写完整信息");
-        return View();
-    }
-
-    if (newPassword.Length < 6)
-    {
-        ModelState.AddModelError("", "密码至少6位");
-        return View();
-    }
-
-    var reset = await _context.PasswordResets
-        .FirstOrDefaultAsync(r => r.Email == email && r.Token == token && !r.IsUsed);
-
-    if (reset == null)
-    {
-        ModelState.AddModelError("", "验证码无效或已使用");
-        return View();
-    }
-
-    if (reset.ExpiresAt < DateTime.Now)
-    {
-        ModelState.AddModelError("", "验证码已过期，请重新获取");
-        return View();
-    }
-
-    // 更新密码
-    var user = await _context.Users.FindAsync(reset.UserId);
-    if (user != null)
-    {
-        user.PasswordHash = PasswordHelper.HashPassword(newPassword);
-        await _context.SaveChangesAsync();
-    }
-
-    // 标记验证码已使用
-    reset.IsUsed = true;
-    await _context.SaveChangesAsync();
-
-    TempData["Message"] = "密码重置成功！请用新密码登录";
-    return RedirectToAction("Login");
-}
 
         // ============================================================
         // 1. 注册
@@ -161,7 +43,7 @@ public async Task<IActionResult> ResetPassword(string email, string token, strin
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Register(string username, string email, string password, string captchaAnswer)
         {
-            // IP限流检查
+            // IP限流
             var clientIp = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
             if (!_rateLimitService.CanRegister(clientIp))
             {
@@ -170,34 +52,30 @@ public async Task<IActionResult> ResetPassword(string email, string token, strin
                 return View();
             }
 
-            // ⭐ 验证 SVG 验证码
+            // 验证验证码
             if (!_captchaService.VerifyCaptcha(captchaAnswer))
             {
                 ModelState.AddModelError("", "验证码错误，请重新输入");
                 return View();
             }
-
-            // 清除验证码（防止重复使用）
             HttpContext.Session.Remove("SvgCaptchaText");
 
-            // 检查用户名是否已存在
+            // 检查用户名
             if (_context.Users.Any(u => u.Username == username))
             {
                 ModelState.AddModelError("", "用户名已被使用");
                 return View();
             }
 
-            // 检查邮箱是否已存在
+            // 检查邮箱
             if (_context.Users.Any(u => u.Email == email))
             {
                 ModelState.AddModelError("", "邮箱已被注册");
                 return View();
             }
 
-            // 生成6位验证码
             var code = new Random().Next(100000, 999999).ToString();
 
-            // 创建用户
             var user = new User
             {
                 Username = username,
@@ -214,7 +92,7 @@ public async Task<IActionResult> ResetPassword(string email, string token, strin
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
 
-            // 发送管理员通知邮件（新用户注册）
+            // 发送管理员通知
             try
             {
                 await _emailService.SendAdminNewUserNotificationAsync(username, email);
@@ -271,7 +149,6 @@ public async Task<IActionResult> ResetPassword(string email, string token, strin
                 return View();
             }
 
-            // 验证成功
             user.IsEmailVerified = true;
             user.VerificationCode = null;
             user.VerificationCodeExpiry = null;
@@ -313,7 +190,6 @@ public async Task<IActionResult> ResetPassword(string email, string token, strin
                     }
                     else
                     {
-                        // 封禁已过期，自动解封
                         user.IsBanned = false;
                         user.BanExpiry = null;
                         await _context.SaveChangesAsync();
@@ -321,7 +197,6 @@ public async Task<IActionResult> ResetPassword(string email, string token, strin
                 }
                 else
                 {
-                    // 永久封禁
                     ModelState.AddModelError("", banMessage);
                     return View();
                 }
@@ -339,11 +214,9 @@ public async Task<IActionResult> ResetPassword(string email, string token, strin
                 return View();
             }
 
-            // 更新最后登录时间
             user.LastLoginAt = DateTime.Now;
             await _context.SaveChangesAsync();
 
-            // 保存登录状态到 Session
             HttpContext.Session.SetInt32("UserId", user.Id);
             HttpContext.Session.SetString("Username", user.Username);
             HttpContext.Session.SetString("UserEmail", user.Email);
@@ -365,6 +238,120 @@ public async Task<IActionResult> ResetPassword(string email, string token, strin
         {
             HttpContext.Session.Clear();
             return RedirectToAction("Index", "Home");
+        }
+
+        // ============================================================
+        // 5. 忘记密码
+        // ============================================================
+
+        [HttpGet]
+        public IActionResult ForgotPassword()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ForgotPassword(string email)
+        {
+            if (string.IsNullOrEmpty(email))
+            {
+                ModelState.AddModelError("", "请输入邮箱");
+                return View();
+            }
+
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+            if (user == null)
+            {
+                ModelState.AddModelError("", "该邮箱未注册");
+                return View();
+            }
+
+            var token = new Random().Next(100000, 999999).ToString();
+
+            var reset = new PasswordReset
+            {
+                UserId = user.Id,
+                Token = token,
+                Email = user.Email,
+                CreatedAt = DateTime.Now,
+                ExpiresAt = DateTime.Now.AddMinutes(10),
+                IsUsed = false
+            };
+
+            _context.PasswordResets.Add(reset);
+            await _context.SaveChangesAsync();
+
+            try
+            {
+                await _emailService.SendPasswordResetEmailAsync(user.Email, token);
+                ViewBag.Message = "验证码已发送到您的邮箱，请查收";
+                ViewBag.Email = user.Email;
+                return View("ResetPassword");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"邮件发送失败: {ex.Message}");
+                Console.WriteLine($"========== 验证码：{token} ==========");
+                ViewBag.Message = $"邮件发送失败（验证码：{token}），请联系管理员";
+                ViewBag.Email = user.Email;
+                return View("ResetPassword");
+            }
+        }
+
+        // ============================================================
+        // 6. 重置密码
+        // ============================================================
+
+        [HttpGet]
+        public IActionResult ResetPassword()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ResetPassword(string email, string token, string newPassword)
+        {
+            if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(token) || string.IsNullOrEmpty(newPassword))
+            {
+                ModelState.AddModelError("", "请填写完整信息");
+                return View();
+            }
+
+            if (newPassword.Length < 6)
+            {
+                ModelState.AddModelError("", "密码至少6位");
+                return View();
+            }
+
+            var reset = await _context.PasswordResets
+                .FirstOrDefaultAsync(r => r.Email == email && r.Token == token && !r.IsUsed);
+
+            if (reset == null)
+            {
+                ModelState.AddModelError("", "验证码无效或已使用");
+                return View();
+            }
+
+            if (reset.ExpiresAt < DateTime.Now)
+            {
+                ModelState.AddModelError("", "验证码已过期，请重新获取");
+                return View();
+            }
+
+            var user = await _context.Users.FindAsync(reset.UserId);
+            if (user != null)
+            {
+                user.PasswordHash = PasswordHelper.HashPassword(newPassword);
+                await _context.SaveChangesAsync();
+            }
+
+            reset.IsUsed = true;
+            await _context.SaveChangesAsync();
+
+            TempData["Message"] = "密码重置成功！请用新密码登录";
+            return RedirectToAction("Login");
         }
     }
 }
