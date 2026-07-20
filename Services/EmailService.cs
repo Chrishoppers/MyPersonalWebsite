@@ -13,6 +13,40 @@ namespace MyPersonalWebsite.Services
         private readonly string _senderEmail = "chris_hopper@qq.com";        // ⚠️ 改成你的QQ邮箱
         private readonly string _senderPassword = "bbxpjraxosmtdfaj";      // ⚠️ 改成QQ邮箱授权码
         private readonly string _adminEmail = "2908685235@qq.com";          // ⭐ 管理员邮箱
+        // ============================================================
+// 发送密码重置验证码
+// ============================================================
+public async Task SendPasswordResetEmailAsync(string toEmail, string code)
+{
+    var message = new MimeMessage();
+    message.From.Add(new MailboxAddress("Chris Hopper 个人网站", _senderEmail));
+    message.To.Add(new MailboxAddress("", toEmail));
+    message.Subject = "【Chris Hopper 个人网站】重置密码验证码";
+
+    message.Body = new TextPart("html")
+    {
+        Text = $@"
+            <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;'>
+                <h2 style='color: #0D6EFD;'>Chris Hopper 个人网站</h2>
+                <p>您好！</p>
+                <p>您正在重置 Chris Hopper 个人网站的登录密码，请使用以下验证码：</p>
+                <div style='background-color: #f0f4ff; padding: 15px; border-radius: 8px; text-align: center; font-size: 32px; letter-spacing: 8px; font-weight: bold; color: #0D6EFD;'>
+                    {code}
+                </div>
+                <p style='color: #888; font-size: 14px;'>验证码有效期为 <strong>10 分钟</strong>，请尽快使用。</p>
+                <p style='color: #888; font-size: 14px;'>如果这不是您的操作，请忽略此邮件。</p>
+                <hr style='border: none; border-top: 1px solid #eee;'>
+                <p style='color: #aaa; font-size: 12px;'>此邮件由系统自动发送，请勿直接回复。</p>
+            </div>
+        "
+    };
+
+    using var client = new SmtpClient();
+    await client.ConnectAsync(_smtpHost, _smtpPort, SecureSocketOptions.StartTls);
+    await client.AuthenticateAsync(_senderEmail, _senderPassword);
+    await client.SendAsync(message);
+    await client.DisconnectAsync(true);
+}
 
         // ============================================================
         // 1. 发送验证码
