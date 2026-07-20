@@ -1,4 +1,4 @@
-﻿using MailKit.Net.Smtp;
+using MailKit.Net.Smtp;
 using MailKit.Security;
 using MimeKit;
 using System;
@@ -8,45 +8,12 @@ namespace MyPersonalWebsite.Services
 {
     public class EmailService
     {
+        // ⭐⭐⭐ 检查这 3 个配置 ⭐⭐⭐
         private readonly string _smtpHost = "smtp.qq.com";
         private readonly int _smtpPort = 587;
-        private readonly string _senderEmail = "chris_hopper@qq.com";        // ⚠️ 改成你的QQ邮箱
-        private readonly string _senderPassword = "bbxpjraxosmtdfaj";      // ⚠️ 改成QQ邮箱授权码
-        private readonly string _adminEmail = "2908685235@qq.com";          // ⭐ 管理员邮箱
-        // ============================================================
-// 发送密码重置验证码
-// ============================================================
-public async Task SendPasswordResetEmailAsync(string toEmail, string code)
-{
-    var message = new MimeMessage();
-    message.From.Add(new MailboxAddress("Chris Hopper 个人网站", _senderEmail));
-    message.To.Add(new MailboxAddress("", toEmail));
-    message.Subject = "【Chris Hopper 个人网站】重置密码验证码";
-
-    message.Body = new TextPart("html")
-    {
-        Text = $@"
-            <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;'>
-                <h2 style='color: #0D6EFD;'>Chris Hopper 个人网站</h2>
-                <p>您好！</p>
-                <p>您正在重置 Chris Hopper 个人网站的登录密码，请使用以下验证码：</p>
-                <div style='background-color: #f0f4ff; padding: 15px; border-radius: 8px; text-align: center; font-size: 32px; letter-spacing: 8px; font-weight: bold; color: #0D6EFD;'>
-                    {code}
-                </div>
-                <p style='color: #888; font-size: 14px;'>验证码有效期为 <strong>10 分钟</strong>，请尽快使用。</p>
-                <p style='color: #888; font-size: 14px;'>如果这不是您的操作，请忽略此邮件。</p>
-                <hr style='border: none; border-top: 1px solid #eee;'>
-                <p style='color: #aaa; font-size: 12px;'>此邮件由系统自动发送，请勿直接回复。</p>
-            </div>
-        "
-    };
-
-    using var client = new SmtpClient();
-    await client.ConnectAsync(_smtpHost, _smtpPort, SecureSocketOptions.StartTls);
-    await client.AuthenticateAsync(_senderEmail, _senderPassword);
-    await client.SendAsync(message);
-    await client.DisconnectAsync(true);
-}
+        private readonly string _senderEmail = "chris_hopper@qq.com";
+        private readonly string _senderPassword = "bbxpjraxosmtdfaj";  // ⚠️ 替换为真实授权码
+        private readonly string _adminEmail = "2908685235@qq.com";
 
         // ============================================================
         // 1. 发送验证码
@@ -84,7 +51,7 @@ public async Task SendPasswordResetEmailAsync(string toEmail, string code)
         }
 
         // ============================================================
-        // 2. 管理员回复通知（用户）
+        // 2. 管理员回复通知
         // ============================================================
         public async Task SendReplyNotificationAsync(string toEmail, string userName, string originalContent, string replyContent)
         {
@@ -162,7 +129,7 @@ public async Task SendPasswordResetEmailAsync(string toEmail, string code)
         }
 
         // ============================================================
-        // 管理员通知：新授权码申请（包含用户信息）
+        // 4. 管理员通知：新授权码申请
         // ============================================================
         public async Task SendAdminNewContactRequestNotificationAsync(
             string identity,
@@ -170,8 +137,8 @@ public async Task SendPasswordResetEmailAsync(string toEmail, string code)
             string authCode,
             string howKnowMe,
             string relationship,
-            string username,      // ⭐ 新增
-            string userEmail)     // ⭐ 新增
+            string username,
+            string userEmail)
         {
             var message = new MimeMessage();
             message.From.Add(new MailboxAddress("Chris Hopper 个人网站", _senderEmail));
@@ -181,27 +148,27 @@ public async Task SendPasswordResetEmailAsync(string toEmail, string code)
             message.Body = new TextPart("html")
             {
                 Text = $@"
-            <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;'>
-                <h2 style='color: #a855f7;'>🔑 新授权码申请</h2>
-                <p>您好，管理员！</p>
-                <p>有新的联系方式授权申请：</p>
-                <div style='background-color: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0;'>
-                    <p><strong>👤 申请人：</strong>{identity}</p>
-                    <p><strong>📧 用户邮箱：</strong>{userEmail}</p>
-                    <p><strong>👤 用户名：</strong>{username}</p>
-                    <p><strong>📱 平台：</strong>{(platform == "WeChat" ? "微信" : "QQ")}</p>
-                    <p><strong>🔑 授权码：</strong><code style='background:#eee;padding:2px 8px;border-radius:4px;font-size:16px;letter-spacing:1px;'>{authCode}</code></p>
-                    <p><strong>👋 怎么认识：</strong>{howKnowMe}</p>
-                    <p><strong>🤝 关系：</strong>{relationship}</p>
-                    <p><strong>⏰ 时间：</strong>{DateTime.Now:yyyy-MM-dd HH:mm}</p>
-                </div>
-                <p style='margin-top: 15px;'>
-                    <a href='https://yourdomain.com/Admin/ContactRequests' style='display: inline-block; padding: 10px 20px; background-color: #a855f7; color: white; text-decoration: none; border-radius: 5px;'>🔍 前往查看</a>
-                </p>
-                <hr style='border: none; border-top: 1px solid #eee;'>
-                <p style='color: #aaa; font-size: 12px;'>此邮件由系统自动发送，请勿直接回复。</p>
-            </div>
-        "
+                    <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;'>
+                        <h2 style='color: #a855f7;'>🔑 新授权码申请</h2>
+                        <p>您好，管理员！</p>
+                        <p>有新的联系方式授权申请：</p>
+                        <div style='background-color: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0;'>
+                            <p><strong>👤 申请人：</strong>{identity}</p>
+                            <p><strong>📧 用户邮箱：</strong>{userEmail}</p>
+                            <p><strong>👤 用户名：</strong>{username}</p>
+                            <p><strong>📱 平台：</strong>{(platform == "WeChat" ? "微信" : "QQ")}</p>
+                            <p><strong>🔑 授权码：</strong><code style='background:#eee;padding:2px 8px;border-radius:4px;font-size:16px;letter-spacing:1px;'>{authCode}</code></p>
+                            <p><strong>👋 怎么认识：</strong>{howKnowMe}</p>
+                            <p><strong>🤝 关系：</strong>{relationship}</p>
+                            <p><strong>⏰ 时间：</strong>{DateTime.Now:yyyy-MM-dd HH:mm}</p>
+                        </div>
+                        <p style='margin-top: 15px;'>
+                            <a href='https://yourdomain.com/Admin/ContactRequests' style='display: inline-block; padding: 10px 20px; background-color: #a855f7; color: white; text-decoration: none; border-radius: 5px;'>🔍 前往查看</a>
+                        </p>
+                        <hr style='border: none; border-top: 1px solid #eee;'>
+                        <p style='color: #aaa; font-size: 12px;'>此邮件由系统自动发送，请勿直接回复。</p>
+                    </div>
+                "
             };
 
             using var client = new SmtpClient();
@@ -267,6 +234,41 @@ public async Task SendPasswordResetEmailAsync(string toEmail, string code)
                             <p><strong>📝 标题：</strong>{blogTitle}</p>
                             <p><strong>⏰ 时间：</strong>{DateTime.Now:yyyy-MM-dd HH:mm}</p>
                         </div>
+                        <p style='color: #aaa; font-size: 12px;'>此邮件由系统自动发送，请勿直接回复。</p>
+                    </div>
+                "
+            };
+
+            using var client = new SmtpClient();
+            await client.ConnectAsync(_smtpHost, _smtpPort, SecureSocketOptions.StartTls);
+            await client.AuthenticateAsync(_senderEmail, _senderPassword);
+            await client.SendAsync(message);
+            await client.DisconnectAsync(true);
+        }
+
+        // ============================================================
+        // 7. ⭐ 发送密码重置验证码 ⭐
+        // ============================================================
+        public async Task SendPasswordResetEmailAsync(string toEmail, string code)
+        {
+            var message = new MimeMessage();
+            message.From.Add(new MailboxAddress("Chris Hopper 个人网站", _senderEmail));
+            message.To.Add(new MailboxAddress("", toEmail));
+            message.Subject = "【Chris Hopper 个人网站】重置密码验证码";
+
+            message.Body = new TextPart("html")
+            {
+                Text = $@"
+                    <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;'>
+                        <h2 style='color: #0D6EFD;'>Chris Hopper 个人网站</h2>
+                        <p>您好！</p>
+                        <p>您正在重置密码，请使用以下验证码：</p>
+                        <div style='background-color: #f0f4ff; padding: 15px; border-radius: 8px; text-align: center; font-size: 32px; letter-spacing: 8px; font-weight: bold; color: #0D6EFD;'>
+                            {code}
+                        </div>
+                        <p style='color: #888; font-size: 14px;'>验证码有效期为 <strong>10 分钟</strong>。</p>
+                        <p style='color: #888; font-size: 14px;'>如果这不是您的操作，请忽略此邮件。</p>
+                        <hr style='border: none; border-top: 1px solid #eee;'>
                         <p style='color: #aaa; font-size: 12px;'>此邮件由系统自动发送，请勿直接回复。</p>
                     </div>
                 "
