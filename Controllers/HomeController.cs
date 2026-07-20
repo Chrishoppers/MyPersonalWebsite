@@ -20,7 +20,7 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // 首页
+        // 1. 首页
         // ============================================================
         public IActionResult Index()
         {
@@ -38,55 +38,54 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // 关于我
+        // 2. 关于我
         // ============================================================
         public async Task<IActionResult> About()
-{
-    var sections = await _context.AboutMeContents
-        .OrderBy(s => s.SortOrder)
-        .ToListAsync();
-
-    if (!sections.Any())
-    {
-        var defaults = new[]
         {
-            new AboutMe { SectionKey = "bio", Title = "👨‍💻 我是谁", Content = "你好！我是 Chris Hopper，一名热爱技术的全栈开发者。", SortOrder = 1 },
-            new AboutMe { SectionKey = "journey", Title = "📚 学习路线", Content = "2024 - 开始学习 C# 和 .NET\n2025 - 深入学习 ASP.NET Core\n2026 - 构建个人网站", SortOrder = 2 },
-            new AboutMe { SectionKey = "goal", Title = "🎯 我的目标", Content = "成为一名优秀的全栈开发者，用技术创造价值。", SortOrder = 3 },
-            new AboutMe { SectionKey = "social", Title = "🔗 社交链接", Content = "github:https://github.com/chrishopper|twitter:https://twitter.com/chrishopper", SortOrder = 4 }
-        };
-        _context.AboutMeContents.AddRange(defaults);
-        await _context.SaveChangesAsync();
-        sections = await _context.AboutMeContents.OrderBy(s => s.SortOrder).ToListAsync();
-    }
+            var sections = await _context.AboutMeContents
+                .OrderBy(s => s.SortOrder)
+                .ToListAsync();
 
-    var userId = HttpContext.Session.GetInt32("UserId");
-    User? currentUser = null;
-    if (userId.HasValue)
-    {
-        currentUser = await _context.Users.FindAsync(userId.Value);
-    }
+            if (!sections.Any())
+            {
+                var defaults = new[]
+                {
+                    new AboutMe { SectionKey = "bio", Title = "👨‍💻 我是谁", Content = "你好！我是 Chris Hopper，一名热爱技术的全栈开发者。这个网站是我用 ASP.NET Core 10.0 打造的个人空间，用于分享技术心得、项目经验和生活感悟。", SortOrder = 1 },
+                    new AboutMe { SectionKey = "journey", Title = "📚 学习路线", Content = "2024 - 开始学习 C# 和 .NET 平台\n2025 - 深入学习 ASP.NET Core Web 开发\n2026 - 构建个人网站，持续精进技术", SortOrder = 2 },
+                    new AboutMe { SectionKey = "goal", Title = "🎯 我的目标", Content = "成为一名优秀的全栈开发者，用技术创造价值，用代码改变生活。持续学习，不断进步，分享知识，回馈社区。", SortOrder = 3 },
+                    new AboutMe { SectionKey = "social", Title = "🔗 社交链接", Content = "github:https://github.com/chrishopper|twitter:https://twitter.com/chrishopper|linkedin:https://linkedin.com/in/chrishopper", SortOrder = 4 }
+                };
+                _context.AboutMeContents.AddRange(defaults);
+                await _context.SaveChangesAsync();
+                sections = await _context.AboutMeContents.OrderBy(s => s.SortOrder).ToListAsync();
+            }
 
-    // ⭐ 管理员获取待审核头像列表
-    var pendingAvatars = new List<User>();
-    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-    if (isAdmin == 1)
-    {
-        pendingAvatars = await _context.Users
-            .Where(u => !string.IsNullOrEmpty(u.AvatarUrl) && !u.IsAvatarApproved)
-            .OrderByDescending(u => u.AvatarSubmittedAt)
-            .ToListAsync();
-    }
+            var userId = HttpContext.Session.GetInt32("UserId");
+            User? currentUser = null;
+            if (userId.HasValue)
+            {
+                currentUser = await _context.Users.FindAsync(userId.Value);
+            }
 
-    ViewBag.Sections = sections;
-    ViewBag.CurrentUser = currentUser;
-    ViewBag.PendingAvatars = pendingAvatars;
+            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+            var pendingAvatars = new List<User>();
+            if (isAdmin == 1)
+            {
+                pendingAvatars = await _context.Users
+                    .Where(u => !string.IsNullOrEmpty(u.AvatarUrl) && !u.IsAvatarApproved)
+                    .OrderByDescending(u => u.AvatarSubmittedAt)
+                    .ToListAsync();
+            }
 
-    return View();
-}
+            ViewBag.Sections = sections;
+            ViewBag.CurrentUser = currentUser;
+            ViewBag.PendingAvatars = pendingAvatars;
+
+            return View();
+        }
 
         // ============================================================
-        // 联系方式页面
+        // 3. 联系方式页面
         // ============================================================
         public IActionResult Contact()
         {
@@ -99,7 +98,7 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // 申请联系方式
+        // 4. 申请联系方式
         // ============================================================
         [HttpPost]
         public async Task<IActionResult> RequestContact([FromBody] ContactRequest request)
@@ -177,7 +176,7 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // 管理员查询授权码
+        // 5. 管理员查询授权码
         // ============================================================
         public async Task<IActionResult> QueryContact(string code)
         {
@@ -238,81 +237,80 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // ⭐ 上传头像
+        // 6. 上传头像
         // ============================================================
         [HttpPost]
-public async Task<IActionResult> UploadAvatar(IFormFile avatar)
-{
-    try
-    {
-        var userId = HttpContext.Session.GetInt32("UserId");
-        if (!userId.HasValue)
+        public async Task<IActionResult> UploadAvatar(IFormFile avatar)
         {
-            return Json(new { success = false, message = "请先登录" });
-        }
-
-        if (avatar == null || avatar.Length == 0)
-        {
-            return Json(new { success = false, message = "请选择图片" });
-        }
-
-        var allowedTypes = new[] { "image/jpeg", "image/png", "image/gif", "image/webp" };
-        if (!allowedTypes.Contains(avatar.ContentType))
-        {
-            return Json(new { success = false, message = "只支持 JPG, PNG, GIF, WebP 格式" });
-        }
-
-        if (avatar.Length > 5 * 1024 * 1024)
-        {
-            return Json(new { success = false, message = "图片不能超过 5MB" });
-        }
-
-        var fileName = $"{Guid.NewGuid():N}_{avatar.FileName}";
-        var uploadPath = Path.Combine("wwwroot", "images", "avatars");
-
-        if (!Directory.Exists(uploadPath))
-        {
-            Directory.CreateDirectory(uploadPath);
-        }
-
-        var filePath = Path.Combine(uploadPath, fileName);
-        using (var stream = new FileStream(filePath, FileMode.Create))
-        {
-            await avatar.CopyToAsync(stream);
-        }
-
-        var avatarUrl = $"/images/avatars/{fileName}";
-
-        var user = await _context.Users.FindAsync(userId.Value);
-        if (user != null)
-        {
-            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-
-            // ⭐ 管理员自动通过，普通用户需要审核
-            if (isAdmin == 1)
+            try
             {
-                user.IsAvatarApproved = true;
-            }
-            else
-            {
-                user.IsAvatarApproved = false;
-            }
-            user.AvatarUrl = avatarUrl;
-            user.AvatarSubmittedAt = DateTime.Now;
-            await _context.SaveChangesAsync();
-        }
+                var userId = HttpContext.Session.GetInt32("UserId");
+                if (!userId.HasValue)
+                {
+                    return Json(new { success = false, message = "请先登录" });
+                }
 
-        var message = isAdmin == 1 ? "头像更新成功！" : "头像已提交，等待管理员审核";
-        return Json(new { success = true, url = avatarUrl, message = message });
-    }
-    catch (Exception ex)
-    {
-        return Json(new { success = false, message = ex.Message });
-    }
-}
+                if (avatar == null || avatar.Length == 0)
+                {
+                    return Json(new { success = false, message = "请选择图片" });
+                }
+
+                var allowedTypes = new[] { "image/jpeg", "image/png", "image/gif", "image/webp" };
+                if (!allowedTypes.Contains(avatar.ContentType))
+                {
+                    return Json(new { success = false, message = "只支持 JPG, PNG, GIF, WebP 格式" });
+                }
+
+                if (avatar.Length > 5 * 1024 * 1024)
+                {
+                    return Json(new { success = false, message = "图片不能超过 5MB" });
+                }
+
+                var fileName = $"{Guid.NewGuid():N}_{avatar.FileName}";
+                var uploadPath = Path.Combine("wwwroot", "images", "avatars");
+
+                if (!Directory.Exists(uploadPath))
+                {
+                    Directory.CreateDirectory(uploadPath);
+                }
+
+                var filePath = Path.Combine(uploadPath, fileName);
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await avatar.CopyToAsync(stream);
+                }
+
+                var avatarUrl = $"/images/avatars/{fileName}";
+                var user = await _context.Users.FindAsync(userId.Value);
+
+                if (user != null)
+                {
+                    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+
+                    if (isAdmin == 1)
+                    {
+                        user.IsAvatarApproved = true;
+                    }
+                    else
+                    {
+                        user.IsAvatarApproved = false;
+                    }
+                    user.AvatarUrl = avatarUrl;
+                    user.AvatarSubmittedAt = DateTime.Now;
+                    await _context.SaveChangesAsync();
+                }
+
+                var message = isAdmin == 1 ? "头像更新成功！" : "头像已提交，等待管理员审核";
+                return Json(new { success = true, url = avatarUrl, message = message });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
 
         // ============================================================
-        // 错误页面
+        // 7. 错误页面
         // ============================================================
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
@@ -321,7 +319,7 @@ public async Task<IActionResult> UploadAvatar(IFormFile avatar)
         }
 
         // ============================================================
-        // 生成授权码
+        // 8. 生成授权码
         // ============================================================
         private string GenerateAuthorizationCode()
         {
