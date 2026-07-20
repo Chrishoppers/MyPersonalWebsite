@@ -22,12 +22,12 @@
         <div class="col-md-8">
             @if (sections != null)
             {
-                foreach (var section in sections.Where(s => s.SectionKey != "social"))
+                foreach (var sec in sections.Where(s => s.SectionKey != "social"))
                 {
                     <div class="about-card">
-                        <div class="card-icon">@section.Title.Split(' ').FirstOrDefault()</div>
-                        <h4>@section.Title</h4>
-                        <p>@Html.Raw(section.Content.Replace("\n", "<br />"))</p>
+                        <div class="card-icon">@sec.Title.Split(' ').FirstOrDefault()</div>
+                        <h4>@sec.Title</h4>
+                        <p>@Html.Raw(sec.Content.Replace("\n", "<br />"))</p>
                     </div>
                 }
             }
