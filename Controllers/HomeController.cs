@@ -241,62 +241,75 @@ namespace MyPersonalWebsite.Controllers
         // ⭐ 上传头像
         // ============================================================
         [HttpPost]
-        public async Task<IActionResult> UploadAvatar(IFormFile avatar)
+public async Task<IActionResult> UploadAvatar(IFormFile avatar)
+{
+    try
+    {
+        var userId = HttpContext.Session.GetInt32("UserId");
+        if (!userId.HasValue)
         {
-            try
-            {
-                var userId = HttpContext.Session.GetInt32("UserId");
-                if (!userId.HasValue)
-                {
-                    return Json(new { success = false, message = "请先登录" });
-                }
-
-                if (avatar == null || avatar.Length == 0)
-                {
-                    return Json(new { success = false, message = "请选择图片" });
-                }
-
-                var allowedTypes = new[] { "image/jpeg", "image/png", "image/gif", "image/webp" };
-                if (!allowedTypes.Contains(avatar.ContentType))
-                {
-                    return Json(new { success = false, message = "只支持 JPG, PNG, GIF, WebP 格式" });
-                }
-
-                if (avatar.Length > 5 * 1024 * 1024)
-                {
-                    return Json(new { success = false, message = "图片不能超过 5MB" });
-                }
-
-                var fileName = $"{Guid.NewGuid():N}_{avatar.FileName}";
-                var uploadPath = Path.Combine("wwwroot", "images", "avatars");
-
-                if (!Directory.Exists(uploadPath))
-                {
-                    Directory.CreateDirectory(uploadPath);
-                }
-
-                var filePath = Path.Combine(uploadPath, fileName);
-                using (var stream = new FileStream(filePath, FileMode.Create))
-                {
-                    await avatar.CopyToAsync(stream);
-                }
-
-                var avatarUrl = $"/images/avatars/{fileName}";
-
-                var user = await _context.Users.FindAsync(userId.Value);
-                if (user != null)
-                {
-                    user.AvatarUrl = avatarUrl;
-                    await _context.SaveChangesAsync();
-                }
-
-                return Json(new { success = true, url = avatarUrl });
-            }
-            catch (Exception ex)
-            {
-                return Json(new { success = false, message = ex.Message });
-            }
+            return Json(new { success = false, message = "请先登录" });
         }
+
+        if (avatar == null || avatar.Length == 0)
+        {
+            return Json(new { success = false, message = "请选择图片" });
+        }
+
+        var allowedTypes = new[] { "image/jpeg", "image/png", "image/gif", "image/webp" };
+        if (!allowedTypes.Contains(avatar.ContentType))
+        {
+            return Json(new { success = false, message = "只支持 JPG, PNG, GIF, WebP 格式" });
+        }
+
+        if (avatar.Length > 5 * 1024 * 1024)
+        {
+            return Json(new { success = false, message = "图片不能超过 5MB" });
+        }
+
+        var fileName = $"{Guid.NewGuid():N}_{avatar.FileName}";
+        var uploadPath = Path.Combine("wwwroot", "images", "avatars");
+
+        if (!Directory.Exists(uploadPath))
+        {
+            Directory.CreateDirectory(uploadPath);
+        }
+
+        var filePath = Path.Combine(uploadPath, fileName);
+        using (var stream = new FileStream(filePath, FileMode.Create))
+        {
+            await avatar.CopyToAsync(stream);
+        }
+
+        var avatarUrl = $"/images/avatars/{fileName}";
+
+        var user = await _context.Users.FindAsync(userId.Value);
+        if (user != null)
+        {
+            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+
+            // ⭐ 管理员自动通过，普通用户需要审核
+            if (isAdmin == 1)
+            {
+                user.IsAvatarApproved = true;
+            }
+            else
+            {
+                user.IsAvatarApproved = false;
+            }
+            user.AvatarUrl = avatarUrl;
+            user.AvatarSubmittedAt = DateTime.Now;
+            await _context.SaveChangesAsync();
+        }
+
+        var message = isAdmin == 1 ? "头像更新成功！" : "头像已提交，等待管理员审核";
+        return Json(new { success = true, url = avatarUrl, message = message });
+    }
+    catch (Exception ex)
+    {
+        return Json(new { success = false, message = ex.Message });
+    }
+}
 
         // ============================================================
         // 错误页面
