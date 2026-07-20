@@ -7,16 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="GoogleReCaptcha.V3" Version="1.3.1" />
-    <PackageReference Include="MailKit" Version="4.17.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.10" />
-<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.10">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="MimeKit" Version="4.17.0" />
-    <PackageReference Include="System.Drawing.Common" Version="10.0.10" />
+    <!-- SQLite -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.0" />
+    <!-- SignalR 已内置，不需要手动引用 -->
   </ItemGroup>
 
 </Project>
