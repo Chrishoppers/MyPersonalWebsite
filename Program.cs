@@ -7,7 +7,6 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
 
-// ⭐ 使用 SQLite
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"))
 );
@@ -31,7 +30,7 @@ builder.Services.AddSignalR();
 
 var app = builder.Build();
 
-// 自动创建数据库
+// ⭐⭐⭐ 自动创建数据库和表 ⭐⭐⭐
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
