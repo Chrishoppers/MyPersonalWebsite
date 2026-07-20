@@ -39,7 +39,7 @@
     .toast-msg.success { background: rgba(40,167,69,0.8); }
     .toast-msg.error { background: rgba(220,53,69,0.8); }
     .toast-msg.info { background: rgba(79,172,254,0.8); }
-    @@keyframes slideUp { from { opacity: 0; transform: translateY(20px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(20px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
 
     .social-input-group { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; }
     .social-input-group input { flex: 1; min-width: 150px; }
@@ -67,7 +67,6 @@
 
                 @if (section.SectionKey == "social")
                 {
-                    // 解析社交链接
                     var links = section.Content?.Split('|') ?? new string[0];
                     var github = links.FirstOrDefault(l => l.StartsWith("github:"))?.Replace("github:", "") ?? "";
                     var twitter = links.FirstOrDefault(l => l.StartsWith("twitter:"))?.Replace("twitter:", "") ?? "";
@@ -105,51 +104,49 @@
 
 <div class="toast-container" id="toastContainer"></div>
 
-@section Scripts {
-    <script>
-        function showToast(message, type = 'info') {
-            const container = document.getElementById('toastContainer');
-            const toast = document.createElement('div');
-            toast.className = `toast-msg ${type}`;
-            toast.textContent = message;
-            container.appendChild(toast);
-            setTimeout(() => {
-                toast.style.opacity = '0';
-                toast.style.transform = 'translateX(20px)';
-                setTimeout(() => toast.remove(), 300);
-            }, 3000);
-        }
+<script>
+    function showToast(message, type = 'info') {
+        const container = document.getElementById('toastContainer');
+        const toast = document.createElement('div');
+        toast.className = `toast-msg ${type}`;
+        toast.textContent = message;
+        container.appendChild(toast);
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateX(20px)';
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
 
-        function saveAll() {
-            const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+    function saveAll() {
+        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
 
-            const data = {};
-            document.querySelectorAll('textarea[data-key]').forEach(el => {
-                data[el.dataset.key] = el.value;
-            });
+        const data = {};
+        document.querySelectorAll('textarea[data-key]').forEach(el => {
+            data[el.dataset.key] = el.value;
+        });
 
-            data['social_github'] = document.getElementById('social_github')?.value || '';
-            data['social_twitter'] = document.getElementById('social_twitter')?.value || '';
-            data['social_linkedin'] = document.getElementById('social_linkedin')?.value || '';
-            data['social_discord'] = document.getElementById('social_discord')?.value || '';
+        data['social_github'] = document.getElementById('social_github')?.value || '';
+        data['social_twitter'] = document.getElementById('social_twitter')?.value || '';
+        data['social_linkedin'] = document.getElementById('social_linkedin')?.value || '';
+        data['social_discord'] = document.getElementById('social_discord')?.value || '';
 
-            fetch('/Admin/UpdateAboutMe', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'RequestVerificationToken': token
-                },
-                body: JSON.stringify(data)
-            })
-            .then(r => r.json())
-            .then(data => {
-                if (data.success) {
-                    showToast('✅ 保存成功！', 'success');
-                } else {
-                    showToast(data.message || '保存失败', 'error');
-                }
-            })
-            .catch(() => showToast('保存失败，请重试', 'error'));
-        }
-    </script>
-}
+        fetch('/Admin/UpdateAboutMe', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'RequestVerificationToken': token
+            },
+            body: JSON.stringify(data)
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                showToast('✅ 保存成功！', 'success');
+            } else {
+                showToast(data.message || '保存失败', 'error');
+            }
+        })
+        .catch(() => showToast('保存失败，请重试', 'error'));
+    }
+</script>
