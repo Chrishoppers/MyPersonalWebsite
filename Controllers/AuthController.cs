@@ -27,6 +27,121 @@ namespace MyPersonalWebsite.Controllers
             _captchaService = captchaService;
             _rateLimitService = rateLimitService;
         }
+        // ============================================================
+// 忘记密码
+// ============================================================
+
+// 显示忘记密码页面
+[HttpGet]
+public IActionResult ForgotPassword()
+{
+    return View();
+}
+
+// 发送重置邮件
+[HttpPost]
+[ValidateAntiForgeryToken]
+public async Task<IActionResult> ForgotPassword(string email)
+{
+    if (string.IsNullOrEmpty(email))
+    {
+        ModelState.AddModelError("", "请输入邮箱");
+        return View();
+    }
+
+    var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+    if (user == null)
+    {
+        ModelState.AddModelError("", "该邮箱未注册");
+        return View();
+    }
+
+    // 生成6位数字验证码
+    var token = new Random().Next(100000, 999999).ToString();
+
+    // 保存到数据库
+    var reset = new PasswordReset
+    {
+        UserId = user.Id,
+        Token = token,
+        Email = user.Email,
+        CreatedAt = DateTime.Now,
+        ExpiresAt = DateTime.Now.AddMinutes(10),
+        IsUsed = false
+    };
+
+    _context.PasswordResets.Add(reset);
+    await _context.SaveChangesAsync();
+
+    // 发送邮件
+    try
+    {
+        await _emailService.SendPasswordResetEmailAsync(user.Email, token);
+        ViewBag.Message = "验证码已发送到您的邮箱，请查收";
+        ViewBag.Email = user.Email;
+        return View("ResetPassword");
+    }
+    catch (Exception ex)
+    {
+        ModelState.AddModelError("", "邮件发送失败，请稍后重试");
+        return View();
+    }
+}
+
+// 显示重置密码页面
+[HttpGet]
+public IActionResult ResetPassword()
+{
+    return View();
+}
+
+// 重置密码
+[HttpPost]
+[ValidateAntiForgeryToken]
+public async Task<IActionResult> ResetPassword(string email, string token, string newPassword)
+{
+    if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(token) || string.IsNullOrEmpty(newPassword))
+    {
+        ModelState.AddModelError("", "请填写完整信息");
+        return View();
+    }
+
+    if (newPassword.Length < 6)
+    {
+        ModelState.AddModelError("", "密码至少6位");
+        return View();
+    }
+
+    var reset = await _context.PasswordResets
+        .FirstOrDefaultAsync(r => r.Email == email && r.Token == token && !r.IsUsed);
+
+    if (reset == null)
+    {
+        ModelState.AddModelError("", "验证码无效或已使用");
+        return View();
+    }
+
+    if (reset.ExpiresAt < DateTime.Now)
+    {
+        ModelState.AddModelError("", "验证码已过期，请重新获取");
+        return View();
+    }
+
+    // 更新密码
+    var user = await _context.Users.FindAsync(reset.UserId);
+    if (user != null)
+    {
+        user.PasswordHash = PasswordHelper.HashPassword(newPassword);
+        await _context.SaveChangesAsync();
+    }
+
+    // 标记验证码已使用
+    reset.IsUsed = true;
+    await _context.SaveChangesAsync();
+
+    TempData["Message"] = "密码重置成功！请用新密码登录";
+    return RedirectToAction("Login");
+}
 
         // ============================================================
         // 1. 注册
