@@ -47,7 +47,6 @@
 </style>
 
 <div class="admin-container">
-
     <div class="admin-header">
         <h1>📝 编辑关于我</h1>
         <div>
@@ -99,7 +98,6 @@
     </form>
 
     <button class="btn-save" onclick="saveAll()" style="padding:0.8rem 3rem;font-size:1rem;width:100%;">💾 保存所有修改</button>
-
 </div>
 
 <div class="toast-container" id="toastContainer"></div>
@@ -120,12 +118,10 @@
 
     function saveAll() {
         const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
-
         const data = {};
         document.querySelectorAll('textarea[data-key]').forEach(el => {
             data[el.dataset.key] = el.value;
         });
-
         data['social_github'] = document.getElementById('social_github')?.value || '';
         data['social_twitter'] = document.getElementById('social_twitter')?.value || '';
         data['social_linkedin'] = document.getElementById('social_linkedin')?.value || '';
@@ -133,10 +129,7 @@
 
         fetch('/Admin/UpdateAboutMe', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'RequestVerificationToken': token
-            },
+            headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': token },
             body: JSON.stringify(data)
         })
         .then(r => r.json())
