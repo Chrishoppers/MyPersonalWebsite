@@ -23,17 +23,17 @@
     </div>
 
     <form id="aboutForm">
-        @foreach (var section in Model)
+        @foreach (var sec in Model)
         {
             <div class="edit-card">
                 <div class="card-header">
-                    <h3>@section.Title</h3>
-                    <span class="badge">@section.SectionKey</span>
+                    <h3>@sec.Title</h3>
+                    <span class="badge">@sec.SectionKey</span>
                 </div>
 
-                @if (section.SectionKey == "social")
+                @if (sec.SectionKey == "social")
                 {
-                    var links = section.Content?.Split('|') ?? new string[0];
+                    var links = sec.Content?.Split('|') ?? new string[0];
                     var github = links.FirstOrDefault(l => l.StartsWith("github:"))?.Replace("github:", "") ?? "";
                     var twitter = links.FirstOrDefault(l => l.StartsWith("twitter:"))?.Replace("twitter:", "") ?? "";
                     var linkedin = links.FirstOrDefault(l => l.StartsWith("linkedin:"))?.Replace("linkedin:", "") ?? "";
@@ -58,7 +58,7 @@
                 }
                 else
                 {
-                    <textarea id="content_@section.Id" data-key="@section.SectionKey" rows="5">@section.Content</textarea>
+                    <textarea id="content_@sec.Id" data-key="@sec.SectionKey" rows="5">@sec.Content</textarea>
                 }
             </div>
         }
