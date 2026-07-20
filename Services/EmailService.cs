@@ -8,11 +8,11 @@ namespace MyPersonalWebsite.Services
 {
     public class EmailService
     {
-        // ⭐⭐⭐ 检查这 3 个配置 ⭐⭐⭐
-        private readonly string _smtpHost = "smtp.qq.com";
-        private readonly int _smtpPort = 587;
-        private readonly string _senderEmail = "chris_hopper@qq.com";
-        private readonly string _senderPassword = "bbxpjraxosmtdfaj";  // ⚠️ 替换为真实授权码
+        // ⭐ 从环境变量读取配置，如果没有则使用默认值
+        private readonly string _smtpHost = Environment.GetEnvironmentVariable("SMTP_HOST") ?? "smtp.qq.com";
+        private readonly int _smtpPort = int.Parse(Environment.GetEnvironmentVariable("SMTP_PORT") ?? "587");
+        private readonly string _senderEmail = Environment.GetEnvironmentVariable("SMTP_EMAIL") ?? "2908685235@qq.com";
+        private readonly string _senderPassword = Environment.GetEnvironmentVariable("SMTP_PASSWORD") ?? "";
         private readonly string _adminEmail = "2908685235@qq.com";
 
         // ============================================================
@@ -76,7 +76,7 @@ namespace MyPersonalWebsite.Services
                             <p style='color: #888; font-size: 14px;'>回复时间：{DateTime.Now:yyyy-MM-dd HH:mm}</p>
                         </div>
                         <p style='color: #888; font-size: 14px;'>您可以点击下方链接查看完整内容：</p>
-                        <a href='https://yourdomain.com/Message/Index' style='display: inline-block; padding: 10px 20px; background-color: #0D6EFD; color: white; text-decoration: none; border-radius: 5px;'>查看留言板</a>
+                        <a href='https://chris-hopper.org/Message/Index' style='display: inline-block; padding: 10px 20px; background-color: #0D6EFD; color: white; text-decoration: none; border-radius: 5px;'>查看留言板</a>
                         <hr style='border: none; border-top: 1px solid #eee;'>
                         <p style='color: #aaa; font-size: 12px;'>此邮件由系统自动发送，请勿直接回复。</p>
                     </div>
@@ -113,7 +113,7 @@ namespace MyPersonalWebsite.Services
                             <p><strong>⏰ 时间：</strong>{DateTime.Now:yyyy-MM-dd HH:mm}</p>
                         </div>
                         <p style='margin-top: 15px;'>
-                            <a href='https://yourdomain.com/Admin/Messages' style='display: inline-block; padding: 10px 20px; background-color: #0D6EFD; color: white; text-decoration: none; border-radius: 5px;'>🔍 前往审核</a>
+                            <a href='https://chris-hopper.org/Admin/Messages' style='display: inline-block; padding: 10px 20px; background-color: #0D6EFD; color: white; text-decoration: none; border-radius: 5px;'>🔍 前往审核</a>
                         </p>
                         <hr style='border: none; border-top: 1px solid #eee;'>
                         <p style='color: #aaa; font-size: 12px;'>此邮件由系统自动发送，请勿直接回复。</p>
@@ -163,7 +163,7 @@ namespace MyPersonalWebsite.Services
                             <p><strong>⏰ 时间：</strong>{DateTime.Now:yyyy-MM-dd HH:mm}</p>
                         </div>
                         <p style='margin-top: 15px;'>
-                            <a href='https://yourdomain.com/Admin/ContactRequests' style='display: inline-block; padding: 10px 20px; background-color: #a855f7; color: white; text-decoration: none; border-radius: 5px;'>🔍 前往查看</a>
+                            <a href='https://chris-hopper.org/Admin/ContactRequests' style='display: inline-block; padding: 10px 20px; background-color: #a855f7; color: white; text-decoration: none; border-radius: 5px;'>🔍 前往查看</a>
                         </p>
                         <hr style='border: none; border-top: 1px solid #eee;'>
                         <p style='color: #aaa; font-size: 12px;'>此邮件由系统自动发送，请勿直接回复。</p>
