@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using MyPersonalWebsite.Services;
 using System;
 
@@ -6,27 +6,21 @@ namespace MyPersonalWebsite.Controllers
 {
     public class CaptchaController : Controller
     {
-        private readonly CaptchaImageService _captchaService;
+        private readonly SvgCaptchaService _svgCaptchaService;
 
-        public CaptchaController(CaptchaImageService captchaService)
+        public CaptchaController(SvgCaptchaService svgCaptchaService)
         {
-            _captchaService = captchaService;
+            _svgCaptchaService = svgCaptchaService;
         }
 
-        // 生成验证码图片
+        // 返回 SVG 验证码图片
         public IActionResult Index()
         {
-            // 1. 生成随机文本
-            var captchaText = _captchaService.GenerateCaptchaText(5);
+            var text = _svgCaptchaService.GenerateAndStoreCaptcha();
+            var svg = _svgCaptchaService.GenerateSvg(text);
 
-            // 2. 存入 Session（用于验证）
-            HttpContext.Session.SetString("CaptchaText", captchaText);
-
-            // 3. 生成图片
-            var imageBytes = _captchaService.GenerateCaptchaImage(captchaText);
-
-            // 4. 返回图片
-            return File(imageBytes, "image/png");
+            // 返回 SVG 格式
+            return Content(svg, "image/svg+xml");
         }
 
         // 刷新验证码（前端 AJAX 调用）
