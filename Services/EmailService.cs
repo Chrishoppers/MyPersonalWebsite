@@ -11,8 +11,8 @@ namespace MyPersonalWebsite.Services
         // ⭐ 从环境变量读取配置，如果没有则使用默认值
         private readonly string _smtpHost = Environment.GetEnvironmentVariable("SMTP_HOST") ?? "smtp.qq.com";
         private readonly int _smtpPort = int.Parse(Environment.GetEnvironmentVariable("SMTP_PORT") ?? "587");
-        private readonly string _senderEmail = Environment.GetEnvironmentVariable("SMTP_EMAIL") ?? "2908685235@qq.com";
-        private readonly string _senderPassword = Environment.GetEnvironmentVariable("SMTP_PASSWORD") ?? "";
+        private readonly string _senderEmail = Environment.GetEnvironmentVariable("SMTP_EMAIL") ?? "chris_hopper@qq.com";
+        private readonly string _senderPassword = "bbxpjraxosmtdfaj";
         private readonly string _adminEmail = "2908685235@qq.com";
 
         // ============================================================
