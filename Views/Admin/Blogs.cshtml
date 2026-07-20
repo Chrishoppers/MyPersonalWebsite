@@ -1,0 +1,66 @@
+﻿@model List<MyPersonalWebsite.Models.Blog>
+
+@{
+    ViewData["Title"] = "博客管理";
+}
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-journal"></i> 博客管理</h2>
+        <a href="/Admin/CreateBlog" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> 写新文章
+        </a>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            @if (Model != null && Model.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>ID</th>
+                                <th>标题</th>
+                                <th>发布日期</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var blog in Model)
+                            {
+                                <tr>
+                                    <td>@blog.Id</td>
+                                    <td>@blog.Title</td>
+                                    <td>@blog.PublishDate.ToString("yyyy-MM-dd HH:mm")</td>
+                                    <td>
+                                        <a href="/Admin/EditBlog/@blog.Id" class="btn btn-sm btn-warning">
+                                            <i class="bi bi-pencil"></i> 编辑
+                                        </a>
+                                        <form asp-action="DeleteBlog" method="post" style="display:inline;">
+                                            <input type="hidden" name="id" value="@blog.Id" />
+                                            <button type="submit" class="btn btn-sm btn-danger" 
+                                                    onclick="return confirm('确定要删除这篇文章吗？')">
+                                                <i class="bi bi-trash"></i> 删除
+                                            </button>
+                                        </form>
+                                        <a href="/Blog/Details/@blog.Id" target="_blank" class="btn btn-sm btn-info">
+                                            <i class="bi bi-eye"></i> 查看
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="text-center py-5">
+                    <p class="text-muted">还没有博客文章</p>
+                    <a href="/Admin/CreateBlog" class="btn btn-primary">写第一篇</a>
+                </div>
+            }
+        </div>
+    </div>
+</div>

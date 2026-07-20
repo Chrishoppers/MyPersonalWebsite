@@ -1,0 +1,670 @@
+﻿@{
+    ViewData["Title"] = "联系我";
+}
+
+<style>
+    :root {
+        --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --text-primary: #1a1a2e;
+        --text-secondary: rgba(26, 26, 46, 0.6);
+    }
+
+    body {
+        background: #f0f2f5;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    .contact-container {
+        max-width: 700px;
+        margin: 0 auto;
+        padding: 1.5rem 1.2rem;
+    }
+
+    .contact-header {
+        text-align: center;
+        padding: 1.5rem 0 2rem;
+    }
+
+    .contact-header h1 {
+        font-size: 2.4rem;
+        font-weight: 700;
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 0.3rem;
+    }
+
+    .contact-header p {
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+    }
+
+    .platform-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .platform-card {
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(10px);
+        border-radius: 16px;
+        padding: 1.5rem 1rem;
+        text-align: center;
+        border: 2px solid transparent;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+    }
+
+    .platform-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(102, 126, 234, 0.1);
+    }
+
+    .platform-card.selected {
+        border-color: #667eea;
+        background: rgba(102, 126, 234, 0.04);
+        box-shadow: 0 4px 16px rgba(102, 126, 234, 0.1);
+    }
+
+    .platform-card .icon {
+        font-size: 2.5rem;
+        display: block;
+        margin-bottom: 0.3rem;
+    }
+
+    .platform-card .name {
+        font-weight: 600;
+        color: var(--text-primary);
+        font-size: 1rem;
+    }
+
+    .platform-card .desc {
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+        margin-top: 0.1rem;
+    }
+
+    .platform-card .check {
+        display: none;
+    }
+
+    .platform-card.selected .check {
+        display: inline;
+        color: #667eea;
+        font-weight: 700;
+    }
+
+    .form-card {
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        padding: 1.5rem 1.8rem;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+        display: none;
+    }
+
+    .form-card.active {
+        display: block;
+        animation: fadeIn 0.3s ease;
+    }
+
+    @@keyframes fadeIn {
+        from { opacity: 0; transform: translateY(15px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .form-card .form-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 0.2rem;
+    }
+
+    .form-card .form-subtitle {
+        color: var(--text-secondary);
+        font-size: 0.85rem;
+        margin-bottom: 1.2rem;
+    }
+
+    .form-group {
+        margin-bottom: 1rem;
+    }
+
+    .form-group label {
+        display: block;
+        font-weight: 500;
+        color: var(--text-primary);
+        margin-bottom: 0.2rem;
+        font-size: 0.85rem;
+    }
+
+    .form-group label .required {
+        color: #dc3545;
+    }
+
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+        width: 100%;
+        padding: 0.7rem 1rem;
+        border-radius: 12px;
+        border: 1px solid rgba(0, 0, 0, 0.06);
+        background: rgba(255, 255, 255, 0.6);
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+        font-family: inherit;
+        color: var(--text-primary);
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus,
+    .form-group select:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.06);
+    }
+
+    .form-group textarea {
+        resize: vertical;
+        min-height: 60px;
+    }
+
+    .form-group .hint {
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+        margin-top: 0.2rem;
+    }
+
+    .btn-primary-custom {
+        padding: 0.75rem 2rem;
+        border: none;
+        border-radius: 40px;
+        background: var(--primary-gradient);
+        color: #fff;
+        font-weight: 600;
+        font-size: 0.95rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        width: 100%;
+        box-shadow: 0 4px 16px rgba(102, 126, 234, 0.15);
+    }
+
+    .btn-primary-custom:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 24px rgba(102, 126, 234, 0.2);
+    }
+
+    .btn-primary-custom:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    /* ===== 结果卡片 ===== */
+    .result-card {
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        padding: 1.5rem 1.8rem;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+        margin-top: 1.5rem;
+        display: none;
+        animation: fadeIn 0.3s ease;
+    }
+
+    .result-card.active {
+        display: block;
+    }
+
+    .result-card .success-icon {
+        text-align: center;
+        font-size: 2.5rem;
+        margin-bottom: 0.3rem;
+    }
+
+    .result-card h3 {
+        text-align: center;
+        color: var(--text-primary);
+        font-weight: 600;
+        font-size: 1.1rem;
+    }
+
+    .result-card .sub-text {
+        text-align: center;
+        color: var(--text-secondary);
+        font-size: 0.85rem;
+        margin-top: 0.2rem;
+    }
+
+    /* ⭐ 联系方式展示 */
+    .contact-display {
+        background: rgba(102, 126, 234, 0.04);
+        border-radius: 16px;
+        padding: 1.2rem 1.5rem;
+        margin: 1rem 0;
+        border: 1px solid rgba(102, 126, 234, 0.08);
+    }
+
+    .contact-display .platform-label {
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+
+    .contact-display .platform-value {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: #667eea;
+        margin-top: 0.2rem;
+        word-break: break-all;
+    }
+
+    .contact-display .platform-value .copy-btn {
+        background: rgba(102, 126, 234, 0.08);
+        border: none;
+        padding: 0.2rem 0.8rem;
+        border-radius: 30px;
+        color: #667eea;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-size: 0.75rem;
+        margin-left: 0.8rem;
+    }
+
+    .contact-display .platform-value .copy-btn:hover {
+        background: rgba(102, 126, 234, 0.15);
+    }
+
+    .contact-display .platform-value .copy-btn.copied {
+        background: rgba(40, 167, 69, 0.12);
+        color: #28a745;
+    }
+
+    /* ⭐ 授权码区域 */
+    .code-box {
+        background: rgba(0, 0, 0, 0.03);
+        border-radius: 12px;
+        padding: 0.8rem 1.2rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin: 0.8rem 0;
+        border: 2px dashed rgba(102, 126, 234, 0.15);
+    }
+
+    .code-box .code {
+        font-family: 'Courier New', monospace;
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #667eea;
+        letter-spacing: 2px;
+    }
+
+    .code-box .copy-btn {
+        background: rgba(102, 126, 234, 0.08);
+        border: none;
+        padding: 0.3rem 1rem;
+        border-radius: 30px;
+        color: #667eea;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-size: 0.8rem;
+    }
+
+    .code-box .copy-btn:hover {
+        background: rgba(102, 126, 234, 0.15);
+    }
+
+    .code-box .copy-btn.copied {
+        background: rgba(40, 167, 69, 0.12);
+        color: #28a745;
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.5rem;
+        margin-top: 0.8rem;
+        padding: 0.8rem 1rem;
+        background: rgba(0, 0, 0, 0.02);
+        border-radius: 12px;
+    }
+
+    .info-grid .item .label {
+        font-size: 0.65rem;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+
+    .info-grid .item .value {
+        font-weight: 500;
+        color: var(--text-primary);
+        font-size: 0.85rem;
+    }
+
+    .note {
+        text-align: center;
+        color: var(--text-secondary);
+        font-size: 0.8rem;
+        margin-top: 0.8rem;
+        padding: 0.6rem;
+        background: rgba(255, 193, 7, 0.04);
+        border-radius: 10px;
+        border: 1px solid rgba(255, 193, 7, 0.06);
+    }
+
+    .btn-reset {
+        margin-top: 0.8rem;
+        padding: 0.6rem;
+        border: none;
+        border-radius: 40px;
+        background: rgba(0, 0, 0, 0.04);
+        color: var(--text-secondary);
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        width: 100%;
+        font-size: 0.85rem;
+    }
+
+    .btn-reset:hover {
+        background: rgba(0, 0, 0, 0.06);
+    }
+
+    @@media (max-width: 540px) {
+        .platform-grid {
+            grid-template-columns: 1fr 1fr;
+            gap: 0.6rem;
+        }
+        .platform-card {
+            padding: 1rem 0.5rem;
+        }
+        .platform-card .icon {
+            font-size: 2rem;
+        }
+        .platform-card .name {
+            font-size: 0.85rem;
+        }
+        .contact-header h1 {
+            font-size: 1.8rem;
+        }
+        .form-card {
+            padding: 1.2rem;
+        }
+        .result-card {
+            padding: 1.2rem;
+        }
+        .result-card .info-grid {
+            grid-template-columns: 1fr 1fr;
+        }
+        .contact-display .platform-value {
+            font-size: 1rem;
+        }
+    }
+</style>
+
+<div class="contact-container">
+
+    <!-- ===== 头部 ===== -->
+    <div class="contact-header">
+        <h1>📬 联系我</h1>
+        <p>选择平台，简单介绍一下你自己</p>
+    </div>
+
+    <!-- ===== 平台选择 ===== -->
+    <div class="platform-grid">
+        <div class="platform-card" data-platform="WeChat" onclick="selectPlatform('WeChat')">
+            <span class="icon">💬</span>
+            <div class="name">微信</div>
+            <div class="desc">推荐，回复最快</div>
+            <div class="check">✓</div>
+        </div>
+        <div class="platform-card" data-platform="QQ" onclick="selectPlatform('QQ')">
+            <span class="icon">🐧</span>
+            <div class="name">QQ</div>
+            <div class="desc">也常用 QQ</div>
+            <div class="check">✓</div>
+        </div>
+    </div>
+
+    <!-- ===== 表单 ===== -->
+    <div class="form-card" id="formCard">
+        <div class="form-title">📝 简单介绍一下</div>
+        <div class="form-subtitle">加好友时需要输入授权码验证身份</div>
+
+        <form id="contactForm">
+            <input type="hidden" id="selectedPlatform" value="WeChat" />
+
+            <div class="form-group">
+                <label>你怎么知道我的？ <span class="required">*</span></label>
+                <select id="howKnowMe" required>
+                    <option value="">请选择...</option>
+                    <option value="同学推荐">同学推荐</option>
+                    <option value="老师推荐">老师推荐</option>
+                    <option value="朋友推荐">朋友推荐</option>
+                    <option value="网上看到">网上看到</option>
+                    <option value="社团/活动">社团/活动</option>
+                    <option value="其他">其他</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>你是？ <span class="required">*</span></label>
+                <input type="text" id="identity" placeholder="例如：高一学生、高三学长、同校同学..." required />
+                <div class="hint">简单说说你的身份就好</div>
+            </div>
+
+            <div class="form-group">
+                <label>你和我的关系 <span class="required">*</span></label>
+                <select id="relationship" required>
+                    <option value="">请选择...</option>
+                    <option value="同校同学">同校同学</option>
+                    <option value="同班同学">同班同学</option>
+                    <option value="学长/学姐">学长/学姐</option>
+                    <option value="学弟/学妹">学弟/学妹</option>
+                    <option value="朋友">朋友</option>
+                    <option value="兴趣同好">兴趣同好</option>
+                    <option value="其他">其他</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>其它想说的</label>
+                <textarea id="remarks" placeholder="比如想交流学习、技术、或者只是想交个朋友..."></textarea>
+            </div>
+
+            <button type="submit" class="btn-primary-custom" id="submitBtn">
+                🔑 获取联系方式
+            </button>
+        </form>
+    </div>
+
+    <!-- ===== 结果卡片（显示联系方式 + 授权码） ===== -->
+    <div class="result-card" id="resultCard">
+        <div class="success-icon">🎉</div>
+        <h3>申请已通过！</h3>
+        <p class="sub-text">以下是我的联系方式，加好友时请输入授权码</p>
+
+        <!-- ⭐ 联系方式 -->
+        <div class="contact-display" id="contactDisplay">
+            <div class="platform-label">📱 平台</div>
+            <div class="platform-value" id="resultPlatform">微信</div>
+            <div class="platform-label" style="margin-top:0.5rem;">👤 账号</div>
+            <div class="platform-value" id="resultAccount">
+                <span id="accountText">Chris_hopper</span>
+                <button class="copy-btn" onclick="copyAccount()">📋 复制</button>
+            </div>
+        </div>
+
+        <!-- ⭐ 授权码 -->
+        <div class="code-box">
+            <span class="code" id="authCode">ABCD-EFGH-IJKL</span>
+            <button class="copy-btn" onclick="copyCode()">📋 复制</button>
+        </div>
+
+        <div class="info-grid">
+            <div class="item">
+                <div class="label">申请时间</div>
+                <div class="value" id="resultTime">2024-01-01 12:00</div>
+            </div>
+            <div class="item">
+                <div class="label">状态</div>
+                <div class="value" style="color:#28a745;">✅ 已通过</div>
+            </div>
+        </div>
+
+        <div class="note">
+            💡 加好友时请备注授权码 <strong id="noteCode">ABCD-EFGH-IJKL</strong>，方便我通过验证
+        </div>
+
+        <button class="btn-reset" onclick="resetForm()">🔄 重新申请</button>
+    </div>
+
+</div>
+
+@section Scripts {
+    <script>
+        let selectedPlatform = 'WeChat';
+
+        // 平台对应的联系方式
+        const contactMap = {
+            'WeChat': { name: '微信', account: 'Chris_hopper' },
+            'QQ': { name: 'QQ', account: '2908685235' }
+        };
+
+        function selectPlatform(platform) {
+            selectedPlatform = platform;
+            document.querySelectorAll('.platform-card').forEach(c => c.classList.remove('selected'));
+            document.querySelector(`.platform-card[data-platform="${platform}"]`).classList.add('selected');
+            document.getElementById('selectedPlatform').value = platform;
+            document.getElementById('formCard').classList.add('active');
+            document.getElementById('resultCard').classList.remove('active');
+        }
+
+        document.getElementById('contactForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const platform = document.getElementById('selectedPlatform').value;
+            const howKnowMe = document.getElementById('howKnowMe').value;
+            const identity = document.getElementById('identity').value.trim();
+            const relationship = document.getElementById('relationship').value;
+            const remarks = document.getElementById('remarks').value.trim();
+
+            if (!howKnowMe || !identity || !relationship) {
+                alert('请填写所有必填项！');
+                return;
+            }
+
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            btn.textContent = '⏳ 处理中...';
+
+            try {
+                const response = await fetch('/Home/RequestContact', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''
+                    },
+                    body: JSON.stringify({
+                        platform: platform,
+                        howKnowMe: howKnowMe,
+                        identity: identity,
+                        relationship: relationship,
+                        remarks: remarks
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // 显示联系方式
+                    const contact = contactMap[platform];
+                    document.getElementById('resultPlatform').textContent = contact.name;
+                    document.getElementById('accountText').textContent = contact.account;
+                    document.getElementById('resultAccount').dataset.account = contact.account;
+
+                    // 显示授权码
+                    document.getElementById('authCode').textContent = data.code;
+                    document.getElementById('noteCode').textContent = data.code;
+                    document.getElementById('resultTime').textContent = new Date().toLocaleString('zh-CN');
+
+                    document.getElementById('formCard').classList.remove('active');
+                    document.getElementById('resultCard').classList.add('active');
+                } else {
+                    alert(data.message || '申请失败，请重试');
+                }
+            } catch (error) {
+                alert('网络错误，请重试');
+                console.error(error);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '🔑 获取联系方式';
+            }
+        });
+
+        // ===== 复制授权码 =====
+        function copyCode() {
+            const code = document.getElementById('authCode').textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                const btn = document.querySelector('.code-box .copy-btn');
+                btn.textContent = '✅ 已复制';
+                btn.classList.add('copied');
+                setTimeout(() => {
+                    btn.textContent = '📋 复制';
+                    btn.classList.remove('copied');
+                }, 2000);
+            }).catch(() => {
+                const input = document.createElement('input');
+                input.value = code;
+                document.body.appendChild(input);
+                input.select();
+                document.execCommand('copy');
+                document.body.removeChild(input);
+                alert('授权码已复制！');
+            });
+        }
+
+        // ===== 复制账号 =====
+        function copyAccount() {
+            const account = document.getElementById('accountText').textContent;
+            navigator.clipboard.writeText(account).then(() => {
+                const btn = document.querySelector('#resultAccount .copy-btn');
+                btn.textContent = '✅ 已复制';
+                btn.classList.add('copied');
+                setTimeout(() => {
+                    btn.textContent = '📋 复制';
+                    btn.classList.remove('copied');
+                }, 2000);
+            }).catch(() => {
+                const input = document.createElement('input');
+                input.value = account;
+                document.body.appendChild(input);
+                input.select();
+                document.execCommand('copy');
+                document.body.removeChild(input);
+                alert('账号已复制！');
+            });
+        }
+
+        function resetForm() {
+            document.getElementById('resultCard').classList.remove('active');
+            document.getElementById('formCard').classList.add('active');
+            document.getElementById('contactForm').reset();
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            selectPlatform('WeChat');
+        });
+    </script>
+}

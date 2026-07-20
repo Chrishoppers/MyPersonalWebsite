@@ -1,0 +1,54 @@
+﻿@{
+    ViewData["Title"] = "验证邮箱";
+    var email = ViewBag.Email as string;
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-warning text-dark text-center py-3">
+                    <h4 class="mb-0"><i class="bi bi-envelope-check"></i> 验证邮箱</h4>
+                </div>
+                <div class="card-body p-4">
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="alert alert-danger">
+                            @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                            {
+                                <p class="mb-0">@error.ErrorMessage</p>
+                            }
+                        </div>
+                    }
+
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i> 
+                        验证码已发送至 <strong>@email</strong>，请查看邮箱。
+                        <br><small>验证码有效期为 <strong>10 分钟</strong></small>
+                    </div>
+
+                    <form asp-action="VerifyEmail" method="post">
+                        <input type="hidden" name="email" value="@email" />
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold"><i class="bi bi-shield-check"></i> 验证码</label>
+                            <input type="text" name="code" class="form-control form-control-lg text-center" 
+                                   placeholder="请输入6位验证码" required maxlength="6" 
+                                   style="letter-spacing: 8px; font-size: 24px; font-weight: bold;" />
+                        </div>
+
+                        <button type="submit" class="btn btn-success btn-lg w-100">
+                            <i class="bi bi-check-circle"></i> 验证邮箱
+                        </button>
+                    </form>
+
+                    <div class="text-center mt-3">
+                        <p class="mb-0 text-muted">
+                            没收到邮件？ <a href="/Auth/Register" class="text-primary">重新注册</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,481 @@
+﻿@{
+    ViewData["Title"] = "管理后台";
+    var isAdmin = Context.Session.GetInt32("IsAdmin") ?? 0;
+    if (isAdmin != 1)
+    {
+        Context.Response.Redirect("/Auth/Login");
+        return;
+    }
+    var username = Context.Session.GetString("Username") ?? "管理员";
+}
+
+<style>
+    body {
+        background: #0b0e1a;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        color: #e0e0e0;
+    }
+
+    .dashboard-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem 1.5rem;
+    }
+
+    /* ===== 头部 ===== */
+    .dashboard-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-bottom: 2rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    }
+
+    .dashboard-header .left h1 {
+        font-size: 1.8rem;
+        font-weight: 700;
+        margin: 0;
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 50%, #4facfe 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .dashboard-header .left .greeting {
+        color: rgba(255, 255, 255, 0.3);
+        font-size: 0.9rem;
+        margin-top: 0.1rem;
+    }
+
+    .dashboard-header .right {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .dashboard-header .right .user-badge {
+        padding: 0.4rem 1.2rem;
+        border-radius: 40px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.04);
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.85rem;
+    }
+
+    .btn-glass {
+        padding: 0.5rem 1.5rem;
+        border-radius: 40px;
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        background: rgba(255, 255, 255, 0.04);
+        color: rgba(255, 255, 255, 0.7);
+        font-weight: 500;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        font-size: 0.9rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        cursor: pointer;
+    }
+
+    .btn-glass:hover {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(255, 255, 255, 0.12);
+        color: #fff;
+        transform: translateY(-1px);
+    }
+
+    .btn-glass.danger {
+        background: rgba(220, 53, 69, 0.08);
+        border-color: rgba(220, 53, 69, 0.08);
+        color: #dc3545;
+    }
+
+    .btn-glass.danger:hover {
+        background: rgba(220, 53, 69, 0.15);
+    }
+
+    /* ===== 统计卡片 ===== */
+    .stats-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2.5rem;
+    }
+
+    .stat-card {
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 20px;
+        padding: 1.2rem 1.5rem;
+        border: 1px solid rgba(255, 255, 255, 0.04);
+        backdrop-filter: blur(10px);
+        transition: all 0.3s ease;
+    }
+
+    .stat-card:hover {
+        background: rgba(255, 255, 255, 0.05);
+        transform: translateY(-2px);
+        border-color: rgba(255, 255, 255, 0.06);
+    }
+
+    .stat-card .number {
+        font-size: 2.2rem;
+        font-weight: 700;
+        color: #fff;
+        line-height: 1.2;
+    }
+
+    .stat-card .label {
+        font-size: 0.8rem;
+        color: rgba(255, 255, 255, 0.35);
+        margin-top: 0.2rem;
+        font-weight: 400;
+    }
+
+    .stat-card .icon {
+        font-size: 1.2rem;
+        margin-right: 0.3rem;
+    }
+
+    .stat-card.blue .number { color: #4facfe; }
+    .stat-card.green .number { color: #28a745; }
+    .stat-card.pink .number { color: #f5576c; }
+    .stat-card.orange .number { color: #ffc107; }
+    .stat-card.purple .number { color: #a855f7; }
+
+    /* ===== 快捷卡片网格 ===== */
+    .card-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 1.2rem;
+        margin-bottom: 2rem;
+    }
+
+    .card-item {
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 20px;
+        padding: 1.5rem 1.8rem;
+        border: 1px solid rgba(255, 255, 255, 0.04);
+        transition: all 0.3s ease;
+        text-decoration: none;
+        color: inherit;
+        display: block;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .card-item::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: linear-gradient(135deg, #f093fb, #f5576c);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .card-item:hover {
+        background: rgba(255, 255, 255, 0.05);
+        transform: translateY(-3px);
+        border-color: rgba(255, 255, 255, 0.06);
+    }
+
+    .card-item:hover::before {
+        opacity: 1;
+    }
+
+    .card-item .card-icon {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+
+    .card-item .card-title {
+        font-weight: 600;
+        font-size: 1.05rem;
+        color: #fff;
+        margin-bottom: 0.2rem;
+    }
+
+    .card-item .card-desc {
+        font-size: 0.85rem;
+        color: rgba(255, 255, 255, 0.3);
+    }
+
+    .card-item .card-badge {
+        position: absolute;
+        top: 0.8rem;
+        right: 1rem;
+        font-size: 0.65rem;
+        padding: 0.15rem 0.6rem;
+        border-radius: 20px;
+        font-weight: 500;
+    }
+
+    .card-badge.pending {
+        background: rgba(255, 193, 7, 0.12);
+        color: #ffc107;
+        border: 1px solid rgba(255, 193, 7, 0.06);
+    }
+
+    .card-badge.count {
+        background: rgba(79, 172, 254, 0.12);
+        color: #4facfe;
+        border: 1px solid rgba(79, 172, 254, 0.06);
+    }
+
+    /* ===== 最近活动 ===== */
+    .activity-section {
+        background: rgba(255, 255, 255, 0.02);
+        border-radius: 20px;
+        padding: 1.5rem 1.8rem;
+        border: 1px solid rgba(255, 255, 255, 0.03);
+    }
+
+    .activity-section .section-title {
+        font-weight: 600;
+        font-size: 1rem;
+        color: rgba(255, 255, 255, 0.6);
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .activity-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 0.6rem 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+    }
+
+    .activity-item:last-child {
+        border-bottom: none;
+    }
+
+    .activity-item .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        flex-shrink: 0;
+    }
+
+    .activity-item .dot.blue { background: #4facfe; }
+    .activity-item .dot.green { background: #28a745; }
+    .activity-item .dot.orange { background: #ffc107; }
+    .activity-item .dot.pink { background: #f5576c; }
+    .activity-item .dot.purple { background: #a855f7; }
+
+    .activity-item .act-text {
+        flex: 1;
+        font-size: 0.9rem;
+        color: rgba(255, 255, 255, 0.7);
+    }
+
+    .activity-item .act-text strong {
+        color: #fff;
+        font-weight: 600;
+    }
+
+    .activity-item .act-time {
+        font-size: 0.75rem;
+        color: rgba(255, 255, 255, 0.2);
+        flex-shrink: 0;
+    }
+
+    /* ===== 空状态 ===== */
+    .empty-state {
+        text-align: center;
+        padding: 1.5rem;
+        color: rgba(255, 255, 255, 0.2);
+        font-size: 0.9rem;
+    }
+
+    /* ===== 响应式 ===== */
+    @@media (max-width: 640px) {
+        .dashboard-header {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 0.5rem;
+        }
+        .dashboard-header .right {
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+        .dashboard-header .left h1 {
+            font-size: 1.4rem;
+        }
+        .stats-row {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.6rem;
+        }
+        .stat-card {
+            padding: 0.8rem 1rem;
+        }
+        .stat-card .number {
+            font-size: 1.6rem;
+        }
+        .card-grid {
+            grid-template-columns: 1fr;
+        }
+        .activity-section {
+            padding: 1rem;
+        }
+    }
+
+    @@media (max-width: 400px) {
+        .stats-row {
+            grid-template-columns: 1fr 1fr;
+        }
+        .stat-card .number {
+            font-size: 1.3rem;
+        }
+        .stat-card .label {
+            font-size: 0.65rem;
+        }
+    }
+</style>
+
+<div class="dashboard-container">
+
+    <!-- ===== 头部 ===== -->
+    <div class="dashboard-header">
+        <div class="left">
+            <h1>⚙️ 管理后台</h1>
+            <div class="greeting">👋 欢迎回来，<strong>@username</strong></div>
+        </div>
+        <div class="right">
+            <span class="user-badge">👑 管理员</span>
+            <a href="/Admin/Dashboard" class="btn-glass" style="background:rgba(79,172,254,0.08);color:#4facfe;border-color:rgba(79,172,254,0.08);">
+                🔄 刷新
+            </a>
+            <a href="/Auth/Logout" class="btn-glass danger">
+                🚪 退出
+            </a>
+        </div>
+    </div>
+
+    <!-- ===== 统计卡片 ===== -->
+    <div class="stats-row">
+        <div class="stat-card blue">
+            <div class="number"><span class="icon">📝</span> @ViewBag.BlogCount</div>
+            <div class="label">博客文章</div>
+        </div>
+        <div class="stat-card green">
+            <div class="number"><span class="icon">💬</span> @ViewBag.MessageCount</div>
+            <div class="label">留言总数</div>
+        </div>
+        <div class="stat-card orange">
+            <div class="number"><span class="icon">⏳</span> @ViewBag.PendingMessages</div>
+            <div class="label">待审核留言</div>
+        </div>
+        <div class="stat-card pink">
+            <div class="number"><span class="icon">👤</span> @ViewBag.UserCount</div>
+            <div class="label">注册用户</div>
+        </div>
+        <div class="stat-card purple">
+            <div class="number"><span class="icon">🔑</span> @ViewBag.ContactRequestCount</div>
+            <div class="label">授权码申请</div>
+        </div>
+    </div>
+
+    <!-- ===== 功能卡片 ===== -->
+    <div class="card-grid">
+        <a href="/Admin/Blogs" class="card-item">
+            <span class="card-icon">📖</span>
+            <div class="card-title">博客管理</div>
+            <div class="card-desc">发布、编辑、删除文章</div>
+            @if (ViewBag.BlogCount > 0)
+            {
+                <span class="card-badge count">@ViewBag.BlogCount 篇</span>
+            }
+        </a>
+
+        <a href="/Admin/Messages" class="card-item">
+            <span class="card-icon">💬</span>
+            <div class="card-title">留言管理</div>
+            <div class="card-desc">审核、回复、删除留言</div>
+            @if (ViewBag.PendingMessages > 0)
+            {
+                <span class="card-badge pending">@ViewBag.PendingMessages 待审核</span>
+            }
+            else
+            {
+                <span class="card-badge count">@ViewBag.MessageCount 条</span>
+            }
+        </a>
+
+        <a href="/Admin/Users" class="card-item">
+            <span class="card-icon">👥</span>
+            <div class="card-title">用户管理</div>
+            <div class="card-desc">查看所有注册用户</div>
+            <span class="card-badge count">@ViewBag.UserCount 人</span>
+        </a>
+
+        <a href="/Admin/ContactRequests" class="card-item">
+            <span class="card-icon">🔑</span>
+            <div class="card-title">授权码管理</div>
+            <div class="card-desc">查看、标记、管理授权码</div>
+            @if (ViewBag.PendingContactRequests > 0)
+            {
+                <span class="card-badge pending">@ViewBag.PendingContactRequests 待处理</span>
+            }
+            else
+            {
+                <span class="card-badge count">@ViewBag.ContactRequestCount 条</span>
+            }
+        </a>
+    </div>
+
+    <!-- ===== 最近活动 ===== -->
+    <div class="activity-section">
+        <div class="section-title">📋 最近动态</div>
+        @{
+            var hasActivity = false;
+        }
+
+        @if (ViewBag.RecentMessages != null && ((List<MyPersonalWebsite.Models.Message>)ViewBag.RecentMessages).Any())
+        {
+            hasActivity = true;
+            foreach (var msg in (List<MyPersonalWebsite.Models.Message>)ViewBag.RecentMessages)
+            {
+                <div class="activity-item">
+                    <span class="dot green"></span>
+                    <span class="act-text">
+                        <strong>@msg.VisitorName</strong> 发布了新留言
+                        <span style="color:rgba(255,255,255,0.3);font-size:0.85rem;">“@(msg.Content.Length > 30 ? msg.Content.Substring(0,30) + "..." : msg.Content)”</span>
+                    </span>
+                    <span class="act-time">@msg.CreateTime.ToString("MM-dd HH:mm")</span>
+                </div>
+            }
+        }
+
+        @if (ViewBag.RecentContactRequests != null && ((List<MyPersonalWebsite.Models.ContactRequest>)ViewBag.RecentContactRequests).Any())
+        {
+            hasActivity = true;
+            foreach (var req in (List<MyPersonalWebsite.Models.ContactRequest>)ViewBag.RecentContactRequests)
+            {
+                <div class="activity-item">
+                    <span class="dot orange"></span>
+                    <span class="act-text">
+                        <strong>@req.Identity</strong> 申请了 <strong>@(req.Platform == "WeChat" ? "微信" : "QQ")</strong> 授权码
+                        <span style="color:rgba(255,255,255,0.3);font-size:0.85rem;">@req.AuthorizationCode</span>
+                    </span>
+                    <span class="act-time">@req.RequestTime.ToString("MM-dd HH:mm")</span>
+                </div>
+            }
+        }
+
+        @if (!hasActivity)
+        {
+            <div class="empty-state">暂无最近动态</div>
+        }
+    </div>
+
+</div>

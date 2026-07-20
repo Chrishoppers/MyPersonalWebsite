@@ -1,0 +1,282 @@
+﻿@{
+    ViewData["Title"] = "关于我";
+}
+
+<style>
+    .about-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 1rem 0;
+    }
+
+    .about-header {
+        text-align: center;
+        margin-bottom: 2.5rem;
+    }
+
+    .about-header h1 {
+        font-size: 2.8rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, #8B5CF6 0%, #EC4899 50%, #F59E0B 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 0.3rem;
+    }
+
+    .about-header p {
+        color: rgba(255,255,255,0.3);
+        font-size: 1rem;
+    }
+
+    /* 关于卡片 */
+    .about-card {
+        background: rgba(255,255,255,0.02);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255,255,255,0.04);
+        border-radius: 20px;
+        padding: 2rem 2.2rem;
+        margin-bottom: 1.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .about-card:hover {
+        background: rgba(255,255,255,0.03);
+        border-color: rgba(108,60,225,0.08);
+    }
+
+    .about-card .card-icon {
+        font-size: 1.8rem;
+        margin-bottom: 0.3rem;
+    }
+
+    .about-card h4 {
+        color: #fff;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        font-size: 1.1rem;
+    }
+
+    .about-card p {
+        color: rgba(255,255,255,0.5);
+        line-height: 1.7;
+        margin-bottom: 0;
+    }
+
+    .about-card ul {
+        color: rgba(255,255,255,0.5);
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .about-card ul li {
+        padding: 0.3rem 0;
+        border-bottom: 1px solid rgba(255,255,255,0.02);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .about-card ul li::before {
+        content: '▸';
+        color: #8B5CF6;
+        font-weight: 700;
+    }
+
+    .about-card ul li:last-child {
+        border-bottom: none;
+    }
+
+    .about-card .contact-item {
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+        padding: 0.4rem 0;
+        color: rgba(255,255,255,0.5);
+    }
+
+    .about-card .contact-item i {
+        color: #8B5CF6;
+        font-size: 1.1rem;
+        width: 24px;
+    }
+
+    /* 头像卡片 */
+    .profile-card {
+        background: rgba(255,255,255,0.02);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255,255,255,0.04);
+        border-radius: 20px;
+        padding: 2rem 1.5rem;
+        text-align: center;
+        transition: all 0.3s ease;
+        height: 100%;
+    }
+
+    .profile-card:hover {
+        background: rgba(255,255,255,0.03);
+        border-color: rgba(108,60,225,0.08);
+        transform: translateY(-4px);
+    }
+
+    .profile-card .avatar {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        margin: 0 auto 1rem;
+        background: linear-gradient(135deg, #8B5CF6, #EC4899);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+        font-weight: 700;
+        color: #fff;
+        box-shadow: 0 8px 32px rgba(108,60,225,0.2);
+    }
+
+    .profile-card h5 {
+        color: #fff;
+        font-weight: 600;
+        font-size: 1.2rem;
+        margin-bottom: 0.2rem;
+    }
+
+    .profile-card .role {
+        color: rgba(255,255,255,0.3);
+        font-size: 0.9rem;
+        margin-bottom: 1rem;
+    }
+
+    .profile-card .social-links {
+        display: flex;
+        justify-content: center;
+        gap: 0.8rem;
+    }
+
+    .profile-card .social-links a {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(255,255,255,0.04);
+        color: rgba(255,255,255,0.4);
+        transition: all 0.3s ease;
+        text-decoration: none;
+        font-size: 1rem;
+    }
+
+    .profile-card .social-links a:hover {
+        background: rgba(108,60,225,0.1);
+        border-color: rgba(108,60,225,0.15);
+        color: #8B5CF6;
+        transform: translateY(-3px);
+    }
+
+    /* 响应式 */
+    @@media (max-width: 768px) {
+        .about-header h1 {
+            font-size: 2rem;
+        }
+        .about-card {
+            padding: 1.5rem;
+        }
+        .profile-card .avatar {
+            width: 90px;
+            height: 90px;
+            font-size: 2.2rem;
+        }
+        .about-container {
+            padding: 0.5rem 0;
+        }
+    }
+</style>
+
+<div class="about-container">
+
+    <!-- ===== 头部 ===== -->
+    <div class="about-header">
+        <h1>✨ 关于我</h1>
+        <p>了解我的故事、技能和愿景</p>
+    </div>
+
+    <!-- ===== 主要内容 ===== -->
+    <div class="row g-4">
+
+        <!-- 左侧：详细信息 -->
+        <div class="col-md-8">
+
+            <!-- 我是谁 -->
+            <div class="about-card">
+                <div class="card-icon">👨‍💻</div>
+                <h4>我是谁</h4>
+                <p>
+                    你好！我是 <strong style="color:#8B5CF6;">Chris Hopper</strong>，一名热爱技术的全栈开发者。
+                    这个网站是我用 ASP.NET Core 10.0 打造的个人空间，
+                    用于分享技术心得、项目经验和生活感悟。
+                </p>
+            </div>
+
+            <!-- 学习路线 -->
+            <div class="about-card">
+                <div class="card-icon">📚</div>
+                <h4>学习路线</h4>
+                <ul>
+                    <li>2024 - 开始学习 C# 和 .NET 平台</li>
+                    <li>2025 - 深入学习 ASP.NET Core Web 开发</li>
+                    <li>2026 - 构建个人网站，持续精进技术</li>
+                </ul>
+            </div>
+
+            <!-- 目标 -->
+            <div class="about-card">
+                <div class="card-icon">🎯</div>
+                <h4>我的目标</h4>
+                <p>
+                    成为一名优秀的全栈开发者，用技术创造价值，用代码改变生活。
+                    持续学习，不断进步，分享知识，回馈社区。
+                </p>
+            </div>
+
+            <!-- 联系 -->
+            <div class="about-card">
+                <div class="card-icon">📧</div>
+                <h4>联系我</h4>
+                <div class="contact-item">
+                    <i class="bi bi-envelope"></i>
+                    <span>chris.hopper@example.com</span>
+                </div>
+                <div class="contact-item">
+                    <i class="bi bi-github"></i>
+                    <span>github.com/chrishopper</span>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- 右侧：头像 + 社交 -->
+        <div class="col-md-4">
+            <div class="profile-card">
+                <div class="avatar">CH</div>
+                <h5>Chris Hopper</h5>
+                <div class="role">全栈开发者 · 创作者</div>
+
+                <div class="social-links">
+                    <a href="#" title="GitHub"><i class="bi bi-github"></i></a>
+                    <a href="#" title="LinkedIn"><i class="bi bi-linkedin"></i></a>
+                    <a href="#" title="Twitter"><i class="bi bi-twitter-x"></i></a>
+                    <a href="#" title="Discord"><i class="bi bi-discord"></i></a>
+                </div>
+
+                <div style="margin-top:1.2rem;padding-top:1rem;border-top:1px solid rgba(255,255,255,0.03);">
+                    <span style="color:rgba(255,255,255,0.15);font-size:0.7rem;">✨ 持续学习 · 不断成长</span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>

@@ -1,0 +1,163 @@
+﻿@{
+    ViewData["Title"] = "首页";
+}
+
+<style>
+    .hero-gradient {
+        background: linear-gradient(135deg, rgba(108,60,225,0.06) 0%, rgba(236,72,153,0.03) 50%, rgba(245,158,11,0.02) 100%);
+        border: 1px solid rgba(255,255,255,0.04);
+        border-radius: 24px;
+        padding: 3rem 2.5rem;
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+    .hero-title {
+        font-size: 3.2rem;
+        font-weight: 800;
+        margin-bottom: 0.5rem;
+        background: linear-gradient(135deg, #8B5CF6 0%, #EC4899 50%, #F59E0B 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    .hero-sub {
+        font-size: 1.2rem;
+        color: rgba(255,255,255,0.5);
+        margin-bottom: 1rem;
+    }
+    .hero-desc {
+        color: rgba(255,255,255,0.3);
+        max-width: 600px;
+        margin: 0 auto 1.5rem;
+    }
+    .btn-glow {
+        display: inline-block;
+        padding: 0.75rem 2.5rem;
+        border-radius: 50px;
+        background: linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%);
+        color: #fff;
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 24px rgba(108,60,225,0.2);
+    }
+    .btn-glow:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 40px rgba(108,60,225,0.3);
+        color: #fff;
+    }
+    .tag {
+        display: inline-block;
+        padding: 0.3rem 1rem;
+        border-radius: 50px;
+        font-size: 0.85rem;
+    }
+    .tag-purple { background: rgba(108,60,225,0.12); color: #8B5CF6; }
+    .tag-cyan { background: rgba(6,182,212,0.08); color: #06B6D4; }
+    .tag-yellow { background: rgba(245,158,11,0.08); color: #F59E0B; }
+    .tag-pink { background: rgba(236,72,153,0.08); color: #EC4899; }
+    .tag-gray { background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.4); }
+
+    .section-title {
+        color: rgba(255,255,255,0.7);
+        font-weight: 600;
+        margin-bottom: 1.2rem;
+    }
+    .card-dark {
+        background: rgba(255,255,255,0.02);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255,255,255,0.04);
+        border-radius: 16px;
+        padding: 1.5rem;
+        height: 100%;
+        transition: all 0.3s ease;
+    }
+    .card-dark:hover {
+        background: rgba(255,255,255,0.04);
+        transform: translateY(-4px);
+        border-color: rgba(108,60,225,0.1);
+    }
+    .card-dark h5 { color: #fff; font-weight: 600; }
+    .card-dark .date { color: rgba(255,255,255,0.25); font-size: 0.8rem; }
+    .card-dark .desc { color: rgba(255,255,255,0.4); font-size: 0.9rem; }
+    .card-dark .link { color: #8B5CF6; text-decoration: none; font-weight: 500; }
+    .card-dark .link:hover { color: #A78BFA; }
+    .empty-state { color: rgba(255,255,255,0.15); text-align: center; padding: 2rem; }
+</style>
+
+<div class="container" style="padding-top:1rem;">
+
+    <!-- ===== 英雄区 ===== -->
+    <div class="hero-gradient">
+        <h1 class="hero-title">👋 你好，我是 Chris Hopper</h1>
+        <p class="hero-sub">全栈开发者 · 热爱技术与创作</p>
+        <p class="hero-desc">欢迎来到我的个人空间，这里记录了我的学习、思考和作品。</p>
+        <a href="/Home/About" class="btn-glow">了解更多 →</a>
+    </div>
+
+    <!-- ===== 技术栈 ===== -->
+    <div style="margin-bottom:2rem;">
+        <h5 style="color:rgba(255,255,255,0.4);font-weight:500;margin-bottom:0.8rem;">🚀 技术栈</h5>
+        <div style="display:flex;flex-wrap:wrap;gap:0.5rem;">
+            <span class="tag tag-purple">C#</span>
+            <span class="tag tag-purple">ASP.NET Core</span>
+            <span class="tag tag-cyan">SQLite</span>
+            <span class="tag tag-yellow">JavaScript</span>
+            <span class="tag tag-pink">Bootstrap</span>
+            <span class="tag tag-gray">Git</span>
+        </div>
+    </div>
+
+    <!-- ===== 最新博客 ===== -->
+    <h3 class="section-title"><i class="bi bi-newspaper"></i> 最新文章</h3>
+    <div class="row">
+        @{
+            var blogs = ViewBag.LatestBlogs as List<MyPersonalWebsite.Models.Blog>;
+            if (blogs != null && blogs.Any())
+            {
+                foreach (var blog in blogs)
+                {
+                    <div class="col-md-4 mb-3">
+                        <div class="card-dark">
+                            <h5>@blog.Title</h5>
+                            <p class="date"><i class="bi bi-calendar3"></i> @blog.PublishDate.ToString("yyyy年MM月dd日")</p>
+                            <p class="desc">@blog.Summary</p>
+                            <a href="/Blog/Details/@blog.Id" class="link">阅读全文 <i class="bi bi-arrow-right"></i></a>
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="col"><div class="empty-state">暂无博客，敬请期待！</div></div>
+            }
+        }
+    </div>
+
+    <!-- ===== 作品集 ===== -->
+    <h3 class="section-title" style="margin-top:1.5rem;"><i class="bi bi-grid-3x3-gap-fill"></i> 我的作品</h3>
+    <div class="row">
+        @{
+            var projects = ViewBag.Projects as List<MyPersonalWebsite.Models.Project>;
+            if (projects != null && projects.Any())
+            {
+                foreach (var project in projects)
+                {
+                    <div class="col-md-4 mb-3">
+                        <div class="card-dark">
+                            <h5>@project.Name</h5>
+                            <p class="desc">@project.Description</p>
+                            <p style="color:rgba(255,255,255,0.15);font-size:0.8rem;"><i class="bi bi-tags"></i> @project.TechStack</p>
+                            <a href="@project.ProjectUrl" target="_blank" class="link">查看项目 <i class="bi bi-box-arrow-up-right"></i></a>
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="col"><div class="empty-state">暂无作品展示</div></div>
+            }
+        }
+    </div>
+
+</div>

@@ -1,0 +1,55 @@
+﻿@model MyPersonalWebsite.Models.Blog
+
+@{
+    ViewData["Title"] = "编辑文章";
+}
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-pencil"></i> 编辑文章</h2>
+        <a href="/Admin/Blogs" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> 返回
+        </a>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <form asp-action="EditBlog" method="post">
+                <input type="hidden" asp-for="Id" />
+                <input type="hidden" asp-for="PublishDate" />
+
+                <div class="mb-3">
+                    <label asp-for="Title" class="form-label fw-semibold">标题</label>
+                    <input asp-for="Title" class="form-control form-control-lg" />
+                    <span asp-validation-for="Title" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Summary" class="form-label fw-semibold">摘要</label>
+                    <input asp-for="Summary" class="form-control" />
+                    <span asp-validation-for="Summary" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Content" class="form-label fw-semibold">内容</label>
+                    <textarea asp-for="Content" class="form-control" rows="12"></textarea>
+                    <span asp-validation-for="Content" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="CoverImageUrl" class="form-label fw-semibold">封面图链接</label>
+                    <input asp-for="CoverImageUrl" class="form-control" />
+                    <span asp-validation-for="CoverImageUrl" class="text-danger"></span>
+                </div>
+
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-save"></i> 保存修改
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

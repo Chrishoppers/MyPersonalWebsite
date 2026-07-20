@@ -1,0 +1,215 @@
+/* ===== CSS变量 ===== */
+:root {
+    --primary: #6C3CE1;
+    --primary-light: #8B5CF6;
+    --primary-dark: #4F46E5;
+    --secondary: #EC4899;
+    --accent: #06B6D4;
+    --gradient-main: linear-gradient(135deg, #6C3CE1 0%, #EC4899 50%, #F59E0B 100%);
+    --gradient-glass: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.02) 100%);
+    --bg-dark: #0A0A0F;
+    --bg-card: rgba(255,255,255,0.03);
+    --text-primary: #FFFFFF;
+    --text-secondary: rgba(255,255,255,0.6);
+    --text-muted: rgba(255,255,255,0.3);
+    --border-glass: rgba(255,255,255,0.06);
+    --shadow-glow: 0 0 40px rgba(108, 60, 225, 0.08);
+    --radius-lg: 24px;
+    --radius-md: 16px;
+    --radius-sm: 12px;
+}
+
+/* ===== 全局重置 ===== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background: var(--bg-dark);
+    color: var(--text-primary);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    min-height: 100vh;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* ===== 滚动条 ===== */
+::-webkit-scrollbar {
+    width: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(255,255,255,0.02);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--primary);
+    border-radius: 10px;
+}
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: var(--primary-light);
+    }
+
+/* ===== 毛玻璃基座 ===== */
+.glass {
+    background: var(--gradient-glass);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--border-glass);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-glow);
+}
+
+/* ===== 渐变文字 ===== */
+.gradient-text {
+    background: var(--gradient-main);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* ===== 渐变按钮 ===== */
+.btn-gradient {
+    padding: 0.75rem 2rem;
+    border: none;
+    border-radius: 50px;
+    background: var(--gradient-main);
+    background-size: 200% 200%;
+    color: #fff;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.4s ease;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 24px rgba(108, 60, 225, 0.2);
+}
+
+    .btn-gradient:hover {
+        transform: translateY(-3px) scale(1.02);
+        box-shadow: 0 8px 40px rgba(108, 60, 225, 0.3);
+        background-position: 100% 100%;
+    }
+
+    .btn-gradient:active {
+        transform: scale(0.97);
+    }
+
+/* ===== 高级卡片 ===== */
+.card-advanced {
+    background: var(--bg-card);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--border-glass);
+    border-radius: var(--radius-lg);
+    transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+    .card-advanced::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: var(--gradient-main);
+        opacity: 0;
+        transition: opacity 0.4s ease;
+    }
+
+    .card-advanced:hover {
+        transform: translateY(-8px) scale(1.01);
+        border-color: rgba(108, 60, 225, 0.15);
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+
+        .card-advanced:hover::before {
+            opacity: 1;
+        }
+
+/* ===== 输入框 ===== */
+.input-advanced {
+    width: 100%;
+    padding: 0.9rem 1.2rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-glass);
+    background: rgba(255,255,255,0.03);
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+    outline: none;
+}
+
+    .input-advanced:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 4px rgba(108, 60, 225, 0.1);
+    }
+
+    .input-advanced::placeholder {
+        color: var(--text-muted);
+    }
+
+/* ===== 导航栏高级版 ===== */
+.nav-advanced {
+    background: rgba(10, 10, 15, 0.8);
+    backdrop-filter: blur(40px);
+    border-bottom: 1px solid var(--border-glass);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    padding: 0.6rem 0;
+}
+
+    .nav-advanced .nav-link {
+        color: var(--text-secondary);
+        font-weight: 500;
+        transition: all 0.3s ease;
+        position: relative;
+        padding: 0.5rem 1.2rem;
+        border-radius: 50px;
+    }
+
+        .nav-advanced .nav-link:hover {
+            color: #fff;
+            background: rgba(255,255,255,0.04);
+        }
+
+        .nav-advanced .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: 2px;
+            left: 50%;
+            width: 0;
+            height: 2px;
+            background: var(--gradient-main);
+            transition: all 0.3s ease;
+            transform: translateX(-50%);
+        }
+
+        .nav-advanced .nav-link:hover::after {
+            width: 60%;
+        }
+
+    .nav-advanced .nav-brand {
+        font-size: 1.3rem;
+        font-weight: 700;
+        background: var(--gradient-main);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+/* ===== 响应式 ===== */
+@media (max-width: 768px) {
+    .nav-advanced .nav-link::after {
+        display: none;
+    }
+
+    .card-advanced:hover {
+        transform: translateY(-4px);
+    }
+}

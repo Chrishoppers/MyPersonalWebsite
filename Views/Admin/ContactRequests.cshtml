@@ -1,0 +1,601 @@
+﻿@model List<MyPersonalWebsite.Models.ContactRequest>
+
+@{
+    ViewData["Title"] = "授权码管理";
+    var isAdmin = Context.Session.GetInt32("IsAdmin") ?? 0;
+    if (isAdmin != 1)
+    {
+        Context.Response.Redirect("/Auth/Login");
+        return;
+    }
+}
+
+<style>
+    body {
+        background: #0b0e1a;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        color: #e0e0e0;
+    }
+
+    .admin-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem 1.5rem;
+    }
+
+    .admin-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-bottom: 2rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    }
+
+    .admin-header h1 {
+        font-size: 1.8rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 50%, #4facfe 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin: 0;
+    }
+
+    .btn-glass {
+        padding: 0.5rem 1.5rem;
+        border-radius: 40px;
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        background: rgba(255, 255, 255, 0.04);
+        color: rgba(255, 255, 255, 0.7);
+        font-weight: 500;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        font-size: 0.9rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        cursor: pointer;
+    }
+
+    .btn-glass:hover {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(255, 255, 255, 0.12);
+        color: #fff;
+    }
+
+    .stats-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 16px;
+        padding: 1rem 1.2rem;
+        border: 1px solid rgba(255, 255, 255, 0.04);
+        text-align: center;
+    }
+
+    .stat-card .number {
+        font-size: 1.6rem;
+        font-weight: 700;
+        color: #fff;
+    }
+
+    .stat-card .label {
+        font-size: 0.75rem;
+        color: rgba(255, 255, 255, 0.4);
+        margin-top: 0.2rem;
+    }
+
+    .stat-card.total .number { color: #4facfe; }
+    .stat-card.pending .number { color: #ffc107; }
+    .stat-card.used .number { color: #28a745; }
+
+    .filter-bar {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        margin-bottom: 1.5rem;
+        padding: 1rem 1.5rem;
+        background: rgba(255, 255, 255, 0.02);
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.04);
+        align-items: center;
+    }
+
+    .filter-bar select,
+    .filter-bar input {
+        padding: 0.5rem 1rem;
+        border-radius: 40px;
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        background: rgba(255, 255, 255, 0.04);
+        color: #e0e0e0;
+        font-size: 0.85rem;
+        outline: none;
+        transition: border-color 0.2s ease;
+    }
+
+    .filter-bar select:focus,
+    .filter-bar input:focus {
+        border-color: rgba(79, 172, 254, 0.3);
+    }
+
+    .filter-bar select option {
+        background: #1a1a2e;
+        color: #e0e0e0;
+    }
+
+    .filter-bar .search-input {
+        flex: 1;
+        min-width: 180px;
+    }
+
+    .filter-bar .filter-label {
+        color: rgba(255, 255, 255, 0.3);
+        font-size: 0.8rem;
+    }
+
+    /* ===== 表格 ===== */
+    .table-responsive {
+        overflow-x: auto;
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.04);
+        background: rgba(255, 255, 255, 0.02);
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.85rem;
+        min-width: 700px;
+    }
+
+    th {
+        text-align: left;
+        padding: 0.8rem 1rem;
+        background: rgba(255, 255, 255, 0.03);
+        color: rgba(255, 255, 255, 0.4);
+        font-weight: 500;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    }
+
+    td {
+        padding: 0.8rem 1rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        color: rgba(255, 255, 255, 0.8);
+        vertical-align: middle;
+    }
+
+    tr:hover td {
+        background: rgba(255, 255, 255, 0.02);
+    }
+
+    .code-text {
+        font-family: 'Courier New', monospace;
+        font-weight: 600;
+        color: #4facfe;
+        letter-spacing: 1px;
+        font-size: 0.8rem;
+    }
+
+    .badge-status {
+        font-size: 0.65rem;
+        padding: 0.15rem 0.7rem;
+        border-radius: 20px;
+        font-weight: 500;
+        display: inline-block;
+    }
+
+    .badge-pending {
+        background: rgba(255, 193, 7, 0.12);
+        color: #ffc107;
+        border: 1px solid rgba(255, 193, 7, 0.06);
+    }
+
+    .badge-viewed {
+        background: rgba(79, 172, 254, 0.12);
+        color: #4facfe;
+        border: 1px solid rgba(79, 172, 254, 0.06);
+    }
+
+    .badge-used {
+        background: rgba(40, 167, 69, 0.12);
+        color: #28a745;
+        border: 1px solid rgba(40, 167, 69, 0.06);
+    }
+
+    .badge-expired {
+        background: rgba(220, 53, 69, 0.12);
+        color: #dc3545;
+        border: 1px solid rgba(220, 53, 69, 0.06);
+    }
+
+    .btn-sm {
+        padding: 0.2rem 0.8rem;
+        border: none;
+        border-radius: 30px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        background: rgba(255, 255, 255, 0.04);
+        color: rgba(255, 255, 255, 0.6);
+        text-decoration: none;
+        display: inline-block;
+    }
+
+    .btn-sm:hover {
+        background: rgba(255, 255, 255, 0.08);
+        color: #fff;
+    }
+
+    .btn-sm.primary {
+        background: rgba(79, 172, 254, 0.12);
+        color: #4facfe;
+    }
+
+    .btn-sm.primary:hover {
+        background: rgba(79, 172, 254, 0.2);
+    }
+
+    .btn-sm.success {
+        background: rgba(40, 167, 69, 0.12);
+        color: #28a745;
+    }
+
+    .btn-sm.success:hover {
+        background: rgba(40, 167, 69, 0.2);
+    }
+
+    .btn-sm.danger {
+        background: rgba(220, 53, 69, 0.08);
+        color: #dc3545;
+    }
+
+    .btn-sm.danger:hover {
+        background: rgba(220, 53, 69, 0.15);
+    }
+
+    .btn-sm:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem 2rem;
+        color: rgba(255, 255, 255, 0.2);
+    }
+
+    .empty-state .icon {
+        font-size: 3rem;
+        margin-bottom: 0.5rem;
+        opacity: 0.3;
+    }
+
+    .toast-container {
+        position: fixed;
+        bottom: 2rem;
+        right: 2rem;
+        z-index: 2000;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        align-items: flex-end;
+    }
+
+    .toast-msg {
+        padding: 0.8rem 1.8rem;
+        border-radius: 40px;
+        color: #fff;
+        font-weight: 500;
+        animation: slideUp 0.4s ease;
+        font-size: 0.9rem;
+        backdrop-filter: blur(10px);
+        background: rgba(0, 0, 0, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.04);
+    }
+
+    .toast-msg.success { background: rgba(40, 167, 69, 0.8); }
+    .toast-msg.error { background: rgba(220, 53, 69, 0.8); }
+    .toast-msg.info { background: rgba(79, 172, 254, 0.8); }
+
+    @@keyframes slideUp {
+        from { opacity: 0; transform: translateY(20px) scale(0.95); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    @@media (max-width: 640px) {
+        .admin-header h1 { font-size: 1.3rem; }
+        .filter-bar { flex-direction: column; align-items: stretch; }
+        .stats-row { grid-template-columns: repeat(2, 1fr); }
+        td, th { padding: 0.5rem 0.6rem; font-size: 0.75rem; }
+        .code-text { font-size: 0.7rem; }
+    }
+</style>
+
+<div class="admin-container">
+    <!-- ===== 头部 ===== -->
+    <div class="admin-header">
+        <h1>🔑 授权码管理</h1>
+        <div>
+            <a href="/Admin/Dashboard" class="btn-glass">← 返回后台</a>
+        </div>
+    </div>
+
+    <!-- ===== 统计 ===== -->
+    <div class="stats-row">
+        <div class="stat-card total">
+            <div class="number">@Model.Count</div>
+            <div class="label">📝 总申请</div>
+        </div>
+        <div class="stat-card pending">
+            <div class="number">@Model.Count(r => !r.IsUsed && !r.IsApproved)</div>
+            <div class="label">⏳ 待查看</div>
+        </div>
+        <div class="stat-card">
+            <div class="number">@Model.Count(r => r.IsApproved && !r.IsUsed)</div>
+            <div class="label">👁️ 已查看</div>
+        </div>
+        <div class="stat-card used">
+            <div class="number">@Model.Count(r => r.IsUsed)</div>
+            <div class="label">✅ 已使用</div>
+        </div>
+    </div>
+
+    <!-- ===== 筛选 ===== -->
+    <div class="filter-bar">
+        <span class="filter-label">🔍 筛选：</span>
+        <select id="filterStatus">
+            <option value="all">全部</option>
+            <option value="pending">⏳ 待查看</option>
+            <option value="viewed">👁️ 已查看</option>
+            <option value="used">✅ 已使用</option>
+        </select>
+        <select id="filterPlatform">
+            <option value="all">全部平台</option>
+            <option value="WeChat">微信</option>
+            <option value="QQ">QQ</option>
+        </select>
+        <input type="text" class="search-input" id="searchInput" placeholder="搜索授权码或申请人..." />
+        <button class="btn-glass" onclick="applyFilters()">应用</button>
+        <button class="btn-glass" onclick="resetFilters()">重置</button>
+    </div>
+
+    <!-- ===== 表格 ===== -->
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th>授权码</th>
+                    <th>平台</th>
+                    <th>申请人</th>          <!-- ⭐ 新增 -->
+                    <th>申请人</th>
+                    <th>关系</th>
+                    <th>申请时间</th>
+                    <th>状态</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Any())
+                {
+                    foreach (var r in Model.OrderByDescending(r => r.RequestTime))
+                    {
+                        string statusClass = r.IsUsed ? "badge-used" : (r.IsApproved ? "badge-viewed" : "badge-pending");
+                        string statusText = r.IsUsed ? "✅ 已使用" : (r.IsApproved ? "👁️ 已查看" : "⏳ 待查看");
+
+                        <tr class="request-row"
+                            data-status="@(r.IsUsed ? "used" : (r.IsApproved ? "viewed" : "pending"))"
+                            data-platform="@r.Platform"
+                            data-search="@(r.AuthorizationCode + " " + r.Identity + " " + r.HowKnowMe + " " + r.Remarks)">
+                            <td><span class="code-text">@r.AuthorizationCode</span></td>
+                            <td>@(r.Platform == "WeChat" ? "💬 微信" : "🐧 QQ")</td>
+                            <td>@r.Identity</td>
+                            <td>@r.Relationship</td>
+                            <td style="font-size:0.75rem;color:rgba(255,255,255,0.3);">@r.RequestTime.ToString("MM-dd HH:mm")</td>
+                            <td><span class="badge-status @statusClass">@statusText</span></td>
+                            <td>
+                                <div style="display:flex;gap:0.3rem;flex-wrap:wrap;">
+                                    @if (!r.IsUsed)
+                                    {
+                                        <button class="btn-sm success" onclick="markUsed(@r.Id, '@r.AuthorizationCode')">
+                                            ✅ 标记已使用
+                                        </button>
+                                    }
+                                    @if (r.IsUsed)
+                                    {
+                                        <button class="btn-sm primary" onclick="unmarkUsed(@r.Id, '@r.AuthorizationCode')">
+                                            ↩️ 撤销
+                                        </button>
+                                    }
+                                    <button class="btn-sm primary" onclick="viewDetail(@r.Id)">
+                                        👁️ 详情
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="7">
+                            <div class="empty-state">
+                                <div class="icon">📭</div>
+                                <p>暂无申请记录</p>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- ===== Toast ===== -->
+<div class="toast-container" id="toastContainer"></div>
+
+@section Scripts {
+    <script>
+        // ============================================================
+        // 标记已使用
+        // ============================================================
+        function markUsed(id, code) {
+            if (!confirm(`确定要标记授权码 ${code} 为已使用吗？`)) return;
+
+            const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+            fetch('/Admin/MarkContactUsed', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'RequestVerificationToken': token
+                },
+                body: `id=${id}`
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    showToast('✅ 已标记为已使用', 'success');
+                    setTimeout(() => location.reload(), 800);
+                } else {
+                    showToast(data.message || '操作失败', 'error');
+                }
+            })
+            .catch(() => showToast('操作失败，请重试', 'error'));
+        }
+
+        // ============================================================
+        // 撤销使用标记
+        // ============================================================
+        function unmarkUsed(id, code) {
+            if (!confirm(`确定要撤销授权码 ${code} 的使用标记吗？`)) return;
+
+            const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+            fetch('/Admin/UnmarkContactUsed', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'RequestVerificationToken': token
+                },
+                body: `id=${id}`
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    showToast('↩️ 已撤销使用标记', 'info');
+                    setTimeout(() => location.reload(), 800);
+                } else {
+                    showToast(data.message || '操作失败', 'error');
+                }
+            })
+            .catch(() => showToast('操作失败，请重试', 'error'));
+        }
+
+        // ============================================================
+        // 查看详情（弹窗）
+        // ============================================================
+        function viewDetail(id) {
+    fetch(`/Admin/ContactDetail?id=${id}`)
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                const d = data.data;
+                const platform = d.platform === 'WeChat' ? '微信' : 'QQ';
+                const status = d.isUsed ? '✅ 已使用' : (d.isApproved ? '👁️ 已查看' : '⏳ 待查看');
+                const contact = d.platform === 'WeChat' ? 'chris_hopper_wechat' : '2908685235';
+
+                alert(
+                    `📋 申请详情\n\n` +
+                    `📱 平台：${platform}\n` +
+                    `🔑 授权码：${d.authorizationCode}\n` +
+                    `\n━━━ 申请人信息 ━━━\n` +
+                    `👤 用户名：${d.user.username}\n` +
+                    `📧 邮箱：${d.user.userEmail}\n` +
+                    `🆔 用户ID：${d.user.userId}\n` +
+                    `\n━━━ 申请信息 ━━━\n` +
+                    `👤 怎么认识：${d.howKnowMe}\n` +
+                    `🪪 身份：${d.identity}\n` +
+                    `🤝 关系：${d.relationship}\n` +
+                    `📝 备注：${d.remarks || '无'}\n` +
+                    `⏰ 申请时间：${new Date(d.requestTime).toLocaleString('zh-CN')}\n` +
+                    `📊 状态：${status}\n` +
+                    `${d.isUsed ? `✅ 使用时间：${new Date(d.usedTime).toLocaleString('zh-CN')}\n` : ''}` +
+                    `\n━━━ 联系方式 ━━━\n` +
+                    `${contact}`
+                );
+            } else {
+                showToast(data.message || '获取详情失败', 'error');
+            }
+        })
+        .catch(() => showToast('操作失败，请重试', 'error'));
+}
+
+        // ============================================================
+        // 筛选功能
+        // ============================================================
+        function applyFilters() {
+            const status = document.getElementById('filterStatus').value;
+            const platform = document.getElementById('filterPlatform').value;
+            const search = document.getElementById('searchInput').value.toLowerCase();
+
+            const rows = document.querySelectorAll('.request-row');
+            let count = 0;
+
+            rows.forEach(row => {
+                let show = true;
+                const rowStatus = row.dataset.status;
+                const rowPlatform = row.dataset.platform;
+                const rowSearch = row.dataset.search?.toLowerCase() || '';
+
+                if (status !== 'all' && rowStatus !== status) show = false;
+                if (platform !== 'all' && rowPlatform !== platform) show = false;
+                if (search && !rowSearch.includes(search)) show = false;
+
+                row.style.display = show ? '' : 'none';
+                if (show) count++;
+            });
+
+            showToast(`显示 ${count} 条记录`, 'info');
+        }
+
+        function resetFilters() {
+            document.getElementById('filterStatus').value = 'all';
+            document.getElementById('filterPlatform').value = 'all';
+            document.getElementById('searchInput').value = '';
+            document.querySelectorAll('.request-row').forEach(row => {
+                row.style.display = '';
+            });
+            showToast('已重置筛选', 'info');
+        }
+
+        document.getElementById('searchInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') applyFilters();
+        });
+
+        // ============================================================
+        // Toast
+        // ============================================================
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast-msg ${type}`;
+            toast.textContent = message;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(20px)';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+    </script>
+}

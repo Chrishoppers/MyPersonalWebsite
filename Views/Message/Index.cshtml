@@ -1,0 +1,743 @@
+﻿@model List<MyPersonalWebsite.Models.Message>
+
+@{
+    ViewData["Title"] = "留言大屏";
+    var currentUserId = ViewBag.CurrentUserId as int?;
+    var isAdmin = ViewBag.IsAdmin as int? ?? 0;
+    var likedIds = ViewBag.LikedIds as HashSet<int> ?? new HashSet<int>();
+}
+
+<style>
+    /* ===== 全局重置 ===== */
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        background: #0b0e1a;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        min-height: 100vh;
+        overflow-x: hidden;
+    }
+
+    .danmaku-wall-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 2rem 1.5rem;
+    }
+
+    /* ===== 头部 ===== */
+    .wall-header {
+        text-align: center;
+        padding: 1.5rem 0 2rem;
+        position: relative;
+    }
+
+    .wall-header h1 {
+        font-size: 3rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 50%, #4facfe 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        letter-spacing: -0.02em;
+        margin-bottom: 0.5rem;
+        text-shadow: 0 0 60px rgba(245, 87, 108, 0.15);
+    }
+
+    .wall-header p {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 1.05rem;
+        font-weight: 300;
+        letter-spacing: 0.04em;
+    }
+
+    .wall-header .badge-stats {
+        display: inline-flex;
+        gap: 2rem;
+        margin-top: 1rem;
+        padding: 0.6rem 2.2rem;
+        background: rgba(255, 255, 255, 0.04);
+        backdrop-filter: blur(20px);
+        border-radius: 60px;
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    }
+
+    .badge-stats span {
+        font-size: 0.85rem;
+        color: rgba(255, 255, 255, 0.5);
+    }
+
+    .badge-stats strong {
+        color: #fff;
+        font-weight: 600;
+    }
+
+    .header-actions {
+        margin-top: 1.5rem;
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .btn-glass {
+        padding: 0.6rem 2rem;
+        border-radius: 60px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(255, 255, 255, 0.04);
+        color: #fff;
+        font-weight: 500;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        backdrop-filter: blur(10px);
+        font-size: 0.95rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-glass:hover {
+        background: linear-gradient(135deg, rgba(245, 87, 108, 0.15), rgba(79, 172, 254, 0.15));
+        border-color: rgba(255, 255, 255, 0.15);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        color: #fff;
+    }
+
+    .btn-glass.primary {
+        background: linear-gradient(135deg, #f5576c, #4facfe);
+        border: none;
+        box-shadow: 0 4px 24px rgba(245, 87, 108, 0.2);
+    }
+
+    .btn-glass.primary:hover {
+        transform: translateY(-2px) scale(1.02);
+        box-shadow: 0 8px 40px rgba(245, 87, 108, 0.3);
+    }
+
+    /* ===== 多行弹幕墙 ===== */
+    .danmaku-wall {
+        position: relative;
+        width: 100%;
+        min-height: 200px;
+        background: rgba(255, 255, 255, 0.02);
+        border-radius: 24px;
+        overflow: hidden;
+        margin: 0 0 2rem 0;
+        border: 1px solid rgba(255, 255, 255, 0.04);
+        box-shadow: inset 0 0 60px rgba(0, 0, 0, 0.2);
+        padding: 0.5rem 0;
+    }
+
+    .danmaku-wall::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(ellipse at 30% 50%, rgba(79, 172, 254, 0.02), transparent 70%),
+                    radial-gradient(ellipse at 70% 50%, rgba(245, 87, 108, 0.02), transparent 70%);
+        pointer-events: none;
+    }
+
+    /* 每一行弹幕轨道 */
+    .danmaku-row {
+        position: relative;
+        width: 100%;
+        height: 50px;
+        overflow: hidden;
+        margin-bottom: 2px;
+        display: flex;
+        align-items: center;
+    }
+
+    .danmaku-row:last-child {
+        margin-bottom: 0;
+    }
+
+    .danmaku-track {
+        position: absolute;
+        white-space: nowrap;
+        will-change: transform;
+        display: flex;
+        align-items: center;
+        height: 100%;
+        padding-left: 20px;
+        animation: scrollDanmaku var(--duration, 25s) linear infinite;
+    }
+
+    /* 每行不同速度 */
+    .danmaku-row:nth-child(1) .danmaku-track { --duration: 28s; }
+    .danmaku-row:nth-child(2) .danmaku-track { --duration: 22s; }
+    .danmaku-row:nth-child(3) .danmaku-track { --duration: 32s; }
+    .danmaku-row:nth-child(4) .danmaku-track { --duration: 18s; }
+    .danmaku-row:nth-child(5) .danmaku-track { --duration: 26s; }
+    .danmaku-row:nth-child(6) .danmaku-track { --duration: 20s; }
+
+    /* 鼠标悬停时暂停所有动画 */
+    .danmaku-wall:hover .danmaku-track {
+        animation-play-state: paused;
+    }
+
+    /* 单条弹幕卡片 */
+    .danmaku-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.6rem;
+        margin-right: 3rem;
+        padding: 0.3rem 1.2rem 0.3rem 1rem;
+        border-radius: 40px;
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.04);
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+        transition: all 0.2s ease;
+        cursor: default;
+        font-size: 0.95rem;
+        color: rgba(255, 255, 255, 0.85);
+        user-select: none;
+    }
+
+    .danmaku-item:hover {
+        background: rgba(255, 255, 255, 0.08);
+        transform: scale(1.04);
+        border-color: rgba(255, 255, 255, 0.08);
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+    }
+
+    .danmaku-item .avatar {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #f093fb, #f5576c);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.7rem;
+        font-weight: 700;
+        color: #fff;
+        flex-shrink: 0;
+    }
+
+    .danmaku-item .username {
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.8rem;
+    }
+
+    .danmaku-item .content {
+        color: rgba(255, 255, 255, 0.9);
+        max-width: 300px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .danmaku-item .actions {
+        display: inline-flex;
+        gap: 0.2rem;
+        margin-left: 0.3rem;
+        opacity: 0.3;
+        transition: opacity 0.2s ease;
+    }
+
+    .danmaku-item:hover .actions {
+        opacity: 1;
+    }
+
+    .danmaku-item .actions button {
+        background: none;
+        border: none;
+        color: rgba(255, 255, 255, 0.4);
+        cursor: pointer;
+        padding: 0.1rem 0.3rem;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        transition: all 0.2s ease;
+    }
+
+    .danmaku-item .actions button:hover {
+        color: #fff;
+        background: rgba(255, 255, 255, 0.04);
+    }
+
+    .danmaku-item .actions .like-btn {
+        color: rgba(255, 255, 255, 0.3);
+    }
+
+    .danmaku-item .actions .like-btn:hover {
+        color: #f5576c;
+    }
+
+    .danmaku-item .actions .like-btn.liked {
+        color: #f5576c;
+    }
+
+    .danmaku-item .actions .report-btn:hover {
+        color: #ffc107;
+    }
+
+    .danmaku-item .actions .delete-btn:hover {
+        color: #dc3545;
+    }
+
+    .danmaku-item .badge-pending {
+        font-size: 0.6rem;
+        background: rgba(255, 193, 7, 0.15);
+        color: #ffc107;
+        padding: 0.1rem 0.5rem;
+        border-radius: 20px;
+        border: 1px solid rgba(255, 193, 7, 0.1);
+        margin-left: 0.3rem;
+    }
+
+    .danmaku-item .badge-admin {
+        font-size: 0.6rem;
+        background: rgba(79, 172, 254, 0.15);
+        color: #4facfe;
+        padding: 0.1rem 0.5rem;
+        border-radius: 20px;
+        border: 1px solid rgba(79, 172, 254, 0.1);
+        margin-left: 0.3rem;
+    }
+
+    /* ===== 弹幕动画 ===== */
+    @@keyframes scrollDanmaku {
+        0% {
+            transform: translateX(100vw);
+        }
+        100% {
+            transform: translateX(-200%);
+        }
+    }
+
+    /* ===== 举报弹窗 ===== */
+    .report-modal-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(8px);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .report-modal-overlay.active {
+        display: flex;
+    }
+
+    .report-modal {
+        background: #1a1a2e;
+        border-radius: 28px;
+        padding: 2rem 2.2rem;
+        max-width: 420px;
+        width: 90%;
+        border: 1px solid rgba(255, 255, 255, 0.04);
+        box-shadow: 0 24px 80px rgba(0, 0, 0, 0.4);
+        animation: modalIn 0.3s ease;
+    }
+
+    .report-modal h5 {
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        color: #fff;
+    }
+
+    .report-modal p {
+        color: rgba(255, 255, 255, 0.4);
+        font-size: 0.9rem;
+        margin-bottom: 1rem;
+    }
+
+    .report-modal select {
+        width: 100%;
+        padding: 0.8rem 1rem;
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        background: rgba(255, 255, 255, 0.04);
+        color: #fff;
+        font-size: 0.95rem;
+        margin-bottom: 1rem;
+        transition: border-color 0.2s ease;
+    }
+
+    .report-modal select:focus {
+        outline: none;
+        border-color: rgba(79, 172, 254, 0.3);
+    }
+
+    .report-modal select option {
+        background: #1a1a2e;
+        color: #fff;
+    }
+
+    .report-modal .modal-actions {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: flex-end;
+    }
+
+    .report-modal .modal-actions button {
+        padding: 0.6rem 1.8rem;
+        border: none;
+        border-radius: 40px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-size: 0.9rem;
+    }
+
+    .report-modal .btn-submit {
+        background: linear-gradient(135deg, #f5576c, #4facfe);
+        color: #fff;
+    }
+
+    .report-modal .btn-submit:hover {
+        transform: scale(1.02);
+        box-shadow: 0 4px 20px rgba(245, 87, 108, 0.2);
+    }
+
+    .report-modal .btn-cancel {
+        background: rgba(255, 255, 255, 0.04);
+        color: rgba(255, 255, 255, 0.4);
+    }
+
+    .report-modal .btn-cancel:hover {
+        background: rgba(255, 255, 255, 0.08);
+    }
+
+    @@keyframes modalIn {
+        from {
+            opacity: 0;
+            transform: scale(0.95) translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
+    }
+
+    /* ===== Toast ===== */
+    .toast-container {
+        position: fixed;
+        bottom: 2rem;
+        right: 2rem;
+        z-index: 2000;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        align-items: flex-end;
+    }
+
+    .toast-msg {
+        padding: 0.8rem 1.8rem;
+        border-radius: 40px;
+        color: #fff;
+        font-weight: 500;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        animation: slideUp 0.4s ease;
+        font-size: 0.9rem;
+        backdrop-filter: blur(10px);
+        background: rgba(0, 0, 0, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.04);
+    }
+
+    .toast-msg.success { background: rgba(40, 167, 69, 0.8); }
+    .toast-msg.error { background: rgba(220, 53, 69, 0.8); }
+    .toast-msg.info { background: rgba(79, 172, 254, 0.8); }
+
+    @@keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px) scale(0.95);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+
+    /* ===== 响应式 ===== */
+    @@media (max-width: 768px) {
+        .wall-header h1 {
+            font-size: 2rem;
+        }
+        .wall-header .badge-stats {
+            flex-wrap: wrap;
+            gap: 0.5rem 1rem;
+            padding: 0.5rem 1.2rem;
+        }
+        .danmaku-item {
+            font-size: 0.8rem;
+            padding: 0.2rem 0.8rem 0.2rem 0.6rem;
+            margin-right: 1.5rem;
+        }
+        .danmaku-item .content {
+            max-width: 120px;
+        }
+        .danmaku-row {
+            height: 40px;
+        }
+        .danmaku-wall {
+            min-height: 120px;
+        }
+    }
+
+    @@media (max-width: 480px) {
+        .danmaku-item .content {
+            max-width: 80px;
+        }
+        .danmaku-item .actions button {
+            font-size: 0.6rem;
+        }
+        .danmaku-row {
+            height: 36px;
+        }
+    }
+</style>
+
+<div class="danmaku-wall-container">
+    <!-- ===== 头部 ===== -->
+    <div class="wall-header">
+        <h1>💬 留言大屏</h1>
+        <p>实时弹幕 · 连接彼此</p>
+        <div class="badge-stats">
+            <span>📝 共 <strong>@Model.Count(m => m.IsApproved)</strong> 条</span>
+            <span>⏳ 待审核 <strong>@Model.Count(m => !m.IsApproved)</strong> 条</span>
+            <span>❤️ 总点赞 <strong>@Model.Sum(m => m.LikeCount)</strong></span>
+        </div>
+        <div class="header-actions">
+            <a href="/Message/Create" class="btn-glass primary">
+                ✍️ 发布留言
+            </a>
+            @if (isAdmin == 1)
+            {
+                <a href="/Admin/Messages" class="btn-glass">
+                    ⚙️ 审核管理
+                </a>
+            }
+        </div>
+    </div>
+
+    <!-- ===== 多行弹幕墙 ===== -->
+    <div class="danmaku-wall" id="danmakuWall">
+        @{
+            // 只显示已审核的留言
+            var approvedMessages = Model.Where(m => m.IsApproved).ToList();
+            // 分组：每行最多8条
+            int itemsPerRow = 8;
+            int rowCount = (int)Math.Ceiling((double)approvedMessages.Count / itemsPerRow);
+            if (rowCount < 2) rowCount = 2; // 最少2行，让弹幕看起来丰富
+        }
+
+        @for (int row = 0; row < rowCount; row++)
+        {
+            var rowItems = approvedMessages.Skip(row * itemsPerRow).Take(itemsPerRow).ToList();
+            <div class="danmaku-row">
+                <div class="danmaku-track">
+                    @foreach (var msg in rowItems)
+                    {
+                        var isLiked = likedIds.Contains(msg.Id);
+                        var canLike = currentUserId.HasValue && currentUserId.Value != msg.UserId;
+                        var isOwner = currentUserId.HasValue && currentUserId.Value == msg.UserId;
+
+                        <span class="danmaku-item" data-msgid="@msg.Id" data-userid="@msg.UserId">
+                            <span class="avatar">@(msg.User?.Username?.FirstOrDefault().ToString().ToUpper() ?? "?")</span>
+                            <span class="username">@(msg.User?.Username ?? msg.VisitorName)</span>
+                            @if (msg.User?.IsAdmin == true)
+                            {
+                                <span class="badge-admin">👑</span>
+                            }
+                            <span class="content">@msg.Content</span>
+                            <span class="actions">
+                                @if (canLike)
+                                {
+                                    <button class="like-btn @(isLiked ? "liked" : "")" 
+                                            onclick="toggleLike(@msg.Id, this)" title="点赞">
+                                        @(isLiked ? "❤️" : "🤍")
+                                    </button>
+                                }
+                                @if (currentUserId.HasValue && currentUserId.Value != msg.UserId && !isOwner)
+                                {
+                                    <button class="report-btn" onclick="openReportModal(@msg.Id)" title="举报">
+                                        🚩
+                                    </button>
+                                }
+                                @if (isAdmin == 1)
+                                {
+                                    <button class="delete-btn" onclick="deleteMessage(@msg.Id)" title="删除">
+                                        🗑️
+                                    </button>
+                                }
+                            </span>
+                        </span>
+                    }
+                </div>
+            </div>
+        }
+
+        <!-- 如果没有已审核的留言 -->
+        @if (!approvedMessages.Any())
+        {
+            <div style="display: flex; align-items: center; justify-content: center; height: 200px; color: rgba(255,255,255,0.2); font-size: 1.2rem; flex-direction: column; gap: 1rem;">
+                <span style="font-size: 3rem;">💬</span>
+                暂无已审核的留言
+                @if (isAdmin == 1)
+                {
+                    <span style="font-size: 0.9rem; color: rgba(255,255,255,0.2);">去 <a href="/Admin/Messages" style="color: #4facfe;">审核管理</a> 中通过留言</span>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+<!-- ===== 举报弹窗 ===== -->
+<div class="report-modal-overlay" id="reportModal">
+    <div class="report-modal">
+        <h5>🚩 举报留言</h5>
+        <p>请选择举报原因，我们会尽快处理</p>
+        <select id="reportReason">
+            <option value="骚扰">骚扰或辱骂</option>
+            <option value="广告">广告或垃圾信息</option>
+            <option value="违规">违反社区规定</option>
+            <option value="其他">其他问题</option>
+        </select>
+        <input type="hidden" id="reportMessageId" />
+        <div class="modal-actions">
+            <button class="btn-cancel" onclick="closeReportModal()">取消</button>
+            <button class="btn-submit" onclick="submitReport()">提交举报</button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== Toast ===== -->
+<div class="toast-container" id="toastContainer"></div>
+
+@section Scripts {
+    <script>
+        // ============================================================
+        // 1. 点赞功能
+        // ============================================================
+        function toggleLike(messageId, btn) {
+            const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+            fetch('/Message/ToggleLike', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'RequestVerificationToken': token
+                },
+                body: `messageId=${messageId}`
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    if (data.isLiked) {
+                        btn.classList.add('liked');
+                        btn.textContent = '❤️';
+                    } else {
+                        btn.classList.remove('liked');
+                        btn.textContent = '🤍';
+                    }
+                    showToast(data.message, 'success');
+                } else {
+                    showToast(data.message || '操作失败', 'error');
+                }
+            })
+            .catch(() => showToast('操作失败，请重试', 'error'));
+        }
+
+        // ============================================================
+        // 2. 举报功能
+        // ============================================================
+        function openReportModal(messageId) {
+            document.getElementById('reportMessageId').value = messageId;
+            document.getElementById('reportModal').classList.add('active');
+        }
+
+        function closeReportModal() {
+            document.getElementById('reportModal').classList.remove('active');
+        }
+
+        function submitReport() {
+            const messageId = document.getElementById('reportMessageId').value;
+            const reason = document.getElementById('reportReason').value;
+
+            const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+
+            fetch('/Message/Report', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'RequestVerificationToken': token
+                },
+                body: `messageId=${messageId}&reason=${encodeURIComponent(reason)}`
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    closeReportModal();
+                    showToast('举报已提交，管理员将尽快处理', 'success');
+                } else {
+                    showToast(data.message || '举报失败', 'error');
+                }
+            })
+            .catch(() => showToast('操作失败，请重试', 'error'));
+        }
+
+        // 点击外部关闭弹窗
+        document.getElementById('reportModal').addEventListener('click', function(e) {
+            if (e.target === this) closeReportModal();
+        });
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeReportModal();
+        });
+
+        // ============================================================
+        // 3. 删除留言（管理员）
+        // ============================================================
+        function deleteMessage(messageId) {
+            if (!confirm('确定要删除这条留言吗？此操作不可恢复。')) return;
+
+            const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+
+            fetch('/Message/Delete', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'RequestVerificationToken': token
+                },
+                body: `id=${messageId}`
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    showToast('删除成功', 'success');
+                    location.reload();
+                } else {
+                    showToast(data.message || '删除失败', 'error');
+                }
+            })
+            .catch(() => showToast('操作失败，请重试', 'error'));
+        }
+
+        // ============================================================
+        // 4. Toast 消息
+        // ============================================================
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast-msg ${type}`;
+            toast.textContent = message;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(20px)';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+    </script>
+}
