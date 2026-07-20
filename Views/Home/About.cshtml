@@ -1,9 +1,9 @@
-@model MyPersonalWebsite.Models.User
-
 @{
     ViewData["Title"] = "关于我";
+    var sections = ViewBag.Sections as List<MyPersonalWebsite.Models.AboutMe>;
+    var socialSection = sections?.FirstOrDefault(s => s.SectionKey == "social");
+    var socialLinks = socialSection?.Content?.Split('|') ?? new string[0];
     var userId = Context.Session.GetInt32("UserId");
-    var currentUser = Model;
 }
 
 <style>
@@ -64,31 +64,7 @@
         color: rgba(255,255,255,0.5);
         line-height: 1.7;
         margin-bottom: 0;
-    }
-
-    .about-card ul {
-        color: rgba(255,255,255,0.5);
-        list-style: none;
-        padding: 0;
-        margin: 0;
-    }
-
-    .about-card ul li {
-        padding: 0.3rem 0;
-        border-bottom: 1px solid rgba(255,255,255,0.02);
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-
-    .about-card ul li::before {
-        content: '▸';
-        color: #8B5CF6;
-        font-weight: 700;
-    }
-
-    .about-card ul li:last-child {
-        border-bottom: none;
+        white-space: pre-wrap;
     }
 
     .profile-card {
@@ -108,17 +84,11 @@
         transform: translateY(-4px);
     }
 
-    .profile-card .avatar-container {
-        position: relative;
-        width: 120px;
-        height: 120px;
-        margin: 0 auto 1rem;
-    }
-
     .profile-card .avatar {
         width: 120px;
         height: 120px;
         border-radius: 50%;
+        margin: 0 auto 1rem;
         overflow: hidden;
         background: linear-gradient(135deg, #8B5CF6, #EC4899);
         box-shadow: 0 8px 32px rgba(108,60,225,0.2);
@@ -134,33 +104,6 @@
         width: 100%;
         height: 100%;
         object-fit: cover;
-    }
-
-    .profile-card .avatar-upload-btn {
-        position: absolute;
-        bottom: 0;
-        right: 0;
-        width: 36px;
-        height: 36px;
-        border-radius: 50%;
-        border: 2px solid #0A0A0F;
-        background: linear-gradient(135deg, #8B5CF6, #EC4899);
-        color: #fff;
-        font-size: 0.9rem;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .profile-card .avatar-upload-btn:hover {
-        transform: scale(1.1);
-        box-shadow: 0 4px 16px rgba(108,60,225,0.3);
-    }
-
-    .profile-card .avatar-upload-btn input {
-        display: none;
     }
 
     .profile-card h5 {
@@ -180,6 +123,7 @@
         display: flex;
         justify-content: center;
         gap: 0.8rem;
+        flex-wrap: wrap;
     }
 
     .profile-card .social-links a {
@@ -204,39 +148,6 @@
         transform: translateY(-3px);
     }
 
-    /* Toast */
-    .toast-container {
-        position: fixed;
-        bottom: 2rem;
-        right: 2rem;
-        z-index: 2000;
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-        align-items: flex-end;
-    }
-
-    .toast-msg {
-        padding: 0.8rem 1.8rem;
-        border-radius: 40px;
-        color: #fff;
-        font-weight: 500;
-        animation: slideUp 0.4s ease;
-        font-size: 0.9rem;
-        backdrop-filter: blur(10px);
-        background: rgba(0,0,0,0.6);
-        border: 1px solid rgba(255,255,255,0.04);
-    }
-
-    .toast-msg.success { background: rgba(40,167,69,0.8); }
-    .toast-msg.error { background: rgba(220,53,69,0.8); }
-    .toast-msg.info { background: rgba(79,172,254,0.8); }
-
-    @@keyframes slideUp {
-        from { opacity: 0; transform: translateY(20px) scale(0.95); }
-        to { opacity: 1; transform: translateY(0) scale(1); }
-    }
-
     @@media (max-width: 768px) {
         .about-header h1 {
             font-size: 2rem;
@@ -248,13 +159,6 @@
             width: 90px;
             height: 90px;
             font-size: 2.2rem;
-        }
-        .profile-card .avatar-container {
-            width: 90px;
-            height: 90px;
-        }
-        .about-container {
-            padding: 0.5rem 0;
         }
     }
 </style>
@@ -268,157 +172,53 @@
 
     <div class="row g-4">
 
-        <!-- 左侧 -->
         <div class="col-md-8">
-
-            <div class="about-card">
-                <div class="card-icon">👨‍💻</div>
-                <h4>我是谁</h4>
-                <p>
-                    你好！我是 <strong style="color:#8B5CF6;">Chris Hopper</strong>，一名热爱技术的全栈开发者。
-                    这个网站是我用 ASP.NET Core 10.0 打造的个人空间，
-                    用于分享技术心得、项目经验和生活感悟。
-                </p>
-            </div>
-
-            <div class="about-card">
-                <div class="card-icon">📚</div>
-                <h4>学习路线</h4>
-                <ul>
-                    <li>2024 - 开始学习 C# 和 .NET 平台</li>
-                    <li>2025 - 深入学习 ASP.NET Core Web 开发</li>
-                    <li>2026 - 构建个人网站，持续精进技术</li>
-                </ul>
-            </div>
-
-            <div class="about-card">
-                <div class="card-icon">🎯</div>
-                <h4>我的目标</h4>
-                <p>
-                    成为一名优秀的全栈开发者，用技术创造价值，用代码改变生活。
-                    持续学习，不断进步，分享知识，回馈社区。
-                </p>
-            </div>
-
+            @if (sections != null)
+            {
+                foreach (var section in sections.Where(s => s.SectionKey != "social"))
+                {
+                    <div class="about-card">
+                        <div class="card-icon">@section.Title.Split(' ').FirstOrDefault()</div>
+                        <h4>@section.Title</h4>
+                        <p>@Html.Raw(section.Content.Replace("\n", "<br />"))</p>
+                    </div>
+                }
+            }
         </div>
 
-        <!-- 右侧：头像 -->
         <div class="col-md-4">
             <div class="profile-card">
-                <div class="avatar-container">
-
-                    @if (currentUser != null && !string.IsNullOrEmpty(currentUser.AvatarUrl))
-                    {
-                        <div class="avatar">
-                            <img src="@currentUser.AvatarUrl" alt="@currentUser.Username" />
-                        </div>
-                    }
-                    else
-                    {
-                        <div class="avatar">
-                            <span id="avatarText">CH</span>
-                        </div>
-                    }
-
-                    @if (userId.HasValue)
-                    {
-                        <label class="avatar-upload-btn" title="更换头像">
-                            <i class="bi bi-camera"></i>
-                            <input type="file" id="avatarInput" accept="image/*" />
-                        </label>
-                    }
-
+                <div class="avatar">
+                    <span>CH</span>
                 </div>
-
-                <h5>@(currentUser?.Username ?? "Chris Hopper")</h5>
+                <h5>Chris Hopper</h5>
                 <div class="role">全栈开发者 · 创作者</div>
 
                 <div class="social-links">
-                    <a href="#" title="GitHub"><i class="bi bi-github"></i></a>
-                    <a href="#" title="LinkedIn"><i class="bi bi-linkedin"></i></a>
-                    <a href="#" title="Twitter"><i class="bi bi-twitter-x"></i></a>
-                    <a href="#" title="Discord"><i class="bi bi-discord"></i></a>
+                    @foreach (var link in socialLinks)
+                    {
+                        var parts = link.Split(':');
+                        if (parts.Length == 2)
+                        {
+                            var icon = parts[0].ToLower();
+                            var url = parts[1];
+                            var iconMap = new Dictionary<string, string> {
+                                { "github", "bi-github" },
+                                { "twitter", "bi-twitter-x" },
+                                { "linkedin", "bi-linkedin" },
+                                { "discord", "bi-discord" },
+                                { "youtube", "bi-youtube" },
+                                { "bilibili", "bi-play-btn" }
+                            };
+                            var iconClass = iconMap.ContainsKey(icon) ? iconMap[icon] : "bi-link-45deg";
+                            <a href="@url" target="_blank" title="@icon">
+                                <i class="bi @iconClass"></i>
+                            </a>
+                        }
+                    }
                 </div>
 
                 <div style="margin-top:1.2rem;padding-top:1rem;border-top:1px solid rgba(255,255,255,0.03);">
                     <span style="color:rgba(255,255,255,0.15);font-size:0.7rem;">✨ 持续学习 · 不断成长</span>
                 </div>
-            </div>
-        </div>
-
-    </div>
-</div>
-
-<!-- Toast -->
-<div class="toast-container" id="toastContainer"></div>
-
-@section Scripts {
-    <script>
-        // ===== 头像上传 =====
-        document.getElementById('avatarInput')?.addEventListener('change', function(e) {
-            const file = this.files[0];
-            if (!file) return;
-
-            if (!file.type.startsWith('image/')) {
-                showToast('请选择图片文件', 'error');
-                return;
-            }
-
-            if (file.size > 5 * 1024 * 1024) {
-                showToast('图片不能超过 5MB', 'error');
-                return;
-            }
-
-            const formData = new FormData();
-            formData.append('avatar', file);
-
-            const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
-
-            showToast('上传中...', 'info');
-
-            fetch('/Home/UploadAvatar', {
-                method: 'POST',
-                headers: {
-                    'RequestVerificationToken': token
-                },
-                body: formData
-            })
-            .then(r => r.json())
-            .then(data => {
-                if (data.success) {
-                    // 更新头像
-                    const avatarDiv = document.querySelector('.avatar');
-                    if (avatarDiv) {
-                        const img = avatarDiv.querySelector('img');
-                        if (img) {
-                            img.src = data.url + '?_=' + new Date().getTime();
-                        } else {
-                            avatarDiv.innerHTML = `<img src="${data.url}?_=${new Date().getTime()}" alt="头像" />`;
-                        }
-                    }
-                    showToast('头像更新成功！', 'success');
-                } else {
-                    showToast(data.message || '上传失败', 'error');
-                }
-            })
-            .catch(() => showToast('上传失败，请重试', 'error'));
-
-            // 重置 input，允许重复选择同一文件
-            this.value = '';
-        });
-
-        // ===== Toast =====
-        function showToast(message, type = 'info') {
-            const container = document.getElementById('toastContainer');
-            const toast = document.createElement('div');
-            toast.className = `toast-msg ${type}`;
-            toast.textContent = message;
-            container.appendChild(toast);
-            setTimeout(() => {
-                toast.style.opacity = '0';
-                toast.style.transform = 'translateX(20px)';
-                setTimeout(() => toast.remove(), 300);
-            }, 3000);
-        }
-    </script>
-}
+           
