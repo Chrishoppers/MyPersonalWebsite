@@ -18,6 +18,7 @@ namespace MyPersonalWebsite.Models
         public DbSet<MessageLike> MessageLikes { get; set; }
         public DbSet<ReportRecord> ReportRecords { get; set; }
         public DbSet<User> Users { get; set; }
+        public DbSet<AboutMe> AboutMeContents { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
