@@ -1,55 +1,396 @@
-﻿@model MyPersonalWebsite.Models.Blog
+@model MyPersonalWebsite.Models.Blog
 
 @{
     ViewData["Title"] = "编辑文章";
 }
 
-<div class="container py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2><i class="bi bi-pencil"></i> 编辑文章</h2>
-        <a href="/Admin/Blogs" class="btn btn-outline-secondary">
-            <i class="bi bi-arrow-left"></i> 返回
-        </a>
-    </div>
+<style>
+    .blog-editor-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 1rem 0;
+    }
 
-    <div class="card shadow-sm">
-        <div class="card-body">
-            <form asp-action="EditBlog" method="post">
-                <input type="hidden" asp-for="Id" />
-                <input type="hidden" asp-for="PublishDate" />
+    .blog-editor-card {
+        background: rgba(255,255,255,0.02);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255,255,255,0.04);
+        border-radius: 24px;
+        padding: 2.5rem 3rem;
+    }
 
-                <div class="mb-3">
-                    <label asp-for="Title" class="form-label fw-semibold">标题</label>
-                    <input asp-for="Title" class="form-control form-control-lg" />
-                    <span asp-validation-for="Title" class="text-danger"></span>
+    .blog-editor-card .form-label {
+        color: rgba(255,255,255,0.7);
+        font-weight: 500;
+        font-size: 0.9rem;
+    }
+
+    .blog-editor-card .form-control {
+        background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 12px;
+        color: #fff;
+        padding: 0.8rem 1.2rem;
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+    }
+
+    .blog-editor-card .form-control:focus {
+        background: rgba(255,255,255,0.05);
+        border-color: rgba(108,60,225,0.2);
+        box-shadow: 0 0 0 4px rgba(108,60,225,0.04);
+        outline: none;
+        color: #fff;
+    }
+
+    .blog-editor-card .form-control::placeholder {
+        color: rgba(255,255,255,0.15);
+    }
+
+    .blog-editor-card textarea.form-control {
+        min-height: 300px;
+        resize: vertical;
+        font-family: 'Courier New', monospace;
+        font-size: 0.9rem;
+        line-height: 1.8;
+    }
+
+    .upload-area {
+        border: 2px dashed rgba(255,255,255,0.06);
+        border-radius: 16px;
+        padding: 2rem;
+        text-align: center;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        background: rgba(255,255,255,0.01);
+    }
+
+    .upload-area:hover {
+        border-color: rgba(108,60,225,0.15);
+        background: rgba(255,255,255,0.02);
+    }
+
+    .upload-area .icon {
+        font-size: 2.5rem;
+        color: rgba(255,255,255,0.1);
+        margin-bottom: 0.5rem;
+    }
+
+    .upload-area p {
+        color: rgba(255,255,255,0.2);
+        font-size: 0.9rem;
+        margin: 0;
+    }
+
+    .upload-area .hint {
+        color: rgba(255,255,255,0.08);
+        font-size: 0.8rem;
+    }
+
+    .upload-preview {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-top: 0.8rem;
+    }
+
+    .upload-preview .preview-item {
+        position: relative;
+        width: 80px;
+        height: 80px;
+        border-radius: 12px;
+        overflow: hidden;
+        border: 1px solid rgba(255,255,255,0.04);
+    }
+
+    .upload-preview .preview-item img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .upload-preview .preview-item .remove-btn {
+        position: absolute;
+        top: 2px;
+        right: 2px;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        border: none;
+        background: rgba(220,53,69,0.8);
+        color: #fff;
+        font-size: 0.6rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .upload-preview .preview-item .remove-btn:hover {
+        background: #dc3545;
+    }
+
+    .btn-insert-image {
+        padding: 0.2rem 0.8rem;
+        border: 1px solid rgba(108,60,225,0.1);
+        border-radius: 30px;
+        background: rgba(108,60,225,0.04);
+        color: #8B5CF6;
+        font-size: 0.75rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: absolute;
+        bottom: 4px;
+        left: 50%;
+        transform: translateX(-50%);
+        white-space: nowrap;
+    }
+
+    .btn-insert-image:hover {
+        background: rgba(108,60,225,0.08);
+    }
+
+    .btn-primary-custom {
+        padding: 0.75rem 2.5rem;
+        border: none;
+        border-radius: 40px;
+        background: linear-gradient(135deg, #8B5CF6, #EC4899);
+        color: #fff;
+        font-weight: 600;
+        font-size: 0.95rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary-custom:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 32px rgba(108,60,225,0.2);
+    }
+
+    .btn-secondary-custom {
+        padding: 0.75rem 2.5rem;
+        border: 1px solid rgba(255,255,255,0.04);
+        border-radius: 40px;
+        background: rgba(255,255,255,0.02);
+        color: rgba(255,255,255,0.3);
+        text-decoration: none;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+        display: inline-block;
+    }
+
+    .btn-secondary-custom:hover {
+        background: rgba(255,255,255,0.04);
+        color: rgba(255,255,255,0.5);
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1.5rem;
+    }
+
+    @@media (max-width: 640px) {
+        .blog-editor-card {
+            padding: 1.5rem;
+        }
+        .form-actions {
+            flex-direction: column;
+        }
+    }
+</style>
+
+<div class="blog-editor-container">
+    <div class="blog-editor-card">
+
+        <h2 style="color:#fff;font-weight:700;margin-bottom:0.5rem;">✏️ 编辑文章</h2>
+        <p style="color:rgba(255,255,255,0.2);margin-bottom:1.5rem;">修改文章内容和图片</p>
+
+        <form asp-action="EditBlog" method="post" enctype="multipart/form-data" id="blogForm">
+            <input type="hidden" asp-for="Id" />
+            <input type="hidden" asp-for="PublishDate" />
+
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <div class="mb-3">
+                <label asp-for="Title" class="form-label">📝 标题</label>
+                <input asp-for="Title" class="form-control" placeholder="输入文章标题..." />
+                <span asp-validation-for="Title" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Summary" class="form-label">📋 摘要</label>
+                <input asp-for="Summary" class="form-control" placeholder="简短描述文章内容..." />
+                <span asp-validation-for="Summary" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="CoverImageUrl" class="form-label">🖼️ 封面图链接（可选）</label>
+                <input asp-for="CoverImageUrl" class="form-control" placeholder="https://example.com/image.jpg" />
+                <span asp-validation-for="CoverImageUrl" class="text-danger"></span>
+                @if (!string.IsNullOrEmpty(Model.CoverImageUrl))
+                {
+                    <div class="mt-2">
+                        <img src="@Model.CoverImageUrl" alt="当前封面" style="max-height:100px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);" />
+                        <small style="color:rgba(255,255,255,0.15);display:block;margin-top:0.2rem;">当前封面</small>
+                    </div>
+                }
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">📤 上传图片到文章</label>
+                <div class="upload-area" id="uploadArea">
+                    <div class="icon"><i class="bi bi-cloud-upload"></i></div>
+                    <p>点击或拖拽上传图片</p>
+                    <div class="hint">支持 JPG, PNG, GIF, WebP · 最大 5MB</div>
                 </div>
-
-                <div class="mb-3">
-                    <label asp-for="Summary" class="form-label fw-semibold">摘要</label>
-                    <input asp-for="Summary" class="form-control" />
-                    <span asp-validation-for="Summary" class="text-danger"></span>
+                <input type="file" id="fileInput" accept="image/*" multiple style="display:none;" />
+                <div class="upload-preview" id="uploadPreview"></div>
+                <div class="mt-2">
+                    <small style="color:rgba(255,255,255,0.15);">
+                        💡 上传后点击 <strong>"插入图片"</strong> 可将图片链接插入到内容中
+                    </small>
                 </div>
+            </div>
 
-                <div class="mb-3">
-                    <label asp-for="Content" class="form-label fw-semibold">内容</label>
-                    <textarea asp-for="Content" class="form-control" rows="12"></textarea>
-                    <span asp-validation-for="Content" class="text-danger"></span>
+            <div class="mb-3">
+                <label asp-for="Content" class="form-label">📄 内容</label>
+                <textarea asp-for="Content" class="form-control" id="contentArea" placeholder="输入文章内容，支持 HTML 标签..." rows="12"></textarea>
+                <span asp-validation-for="Content" class="text-danger"></span>
+                <div class="mt-1">
+                    <small style="color:rgba(255,255,255,0.1);">
+                        💡 支持 HTML 标签 · 上传图片后点击 "插入图片" 自动插入
+                    </small>
                 </div>
+            </div>
 
-                <div class="mb-3">
-                    <label asp-for="CoverImageUrl" class="form-label fw-semibold">封面图链接</label>
-                    <input asp-for="CoverImageUrl" class="form-control" />
-                    <span asp-validation-for="CoverImageUrl" class="text-danger"></span>
-                </div>
-
-                <button type="submit" class="btn btn-primary">
+            <div class="form-actions">
+                <button type="submit" class="btn-primary-custom">
                     <i class="bi bi-save"></i> 保存修改
                 </button>
-            </form>
-        </div>
+                <a href="/Admin/Blogs" class="btn-secondary-custom">
+                    <i class="bi bi-arrow-left"></i> 取消
+                </a>
+            </div>
+        </form>
+
     </div>
 </div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const previewContainer = document.getElementById('uploadPreview');
+        const contentArea = document.getElementById('contentArea');
+        const form = document.getElementById('blogForm');
+
+        uploadArea.addEventListener('click', () => fileInput.click());
+
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.style.borderColor = '#8B5CF6';
+            uploadArea.style.background = 'rgba(108,60,225,0.02)';
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.style.borderColor = 'rgba(255,255,255,0.06)';
+            uploadArea.style.background = 'rgba(255,255,255,0.01)';
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.style.borderColor = 'rgba(255,255,255,0.06)';
+            uploadArea.style.background = 'rgba(255,255,255,0.01)';
+            if (e.dataTransfer.files.length) {
+                handleFiles(e.dataTransfer.files);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length) {
+                handleFiles(e.target.files);
+            }
+            fileInput.value = '';
+        });
+
+        let uploadedImages = [];
+
+        function handleFiles(files) {
+            for (let file of files) {
+                if (!file.type.startsWith('image/')) continue;
+                if (file.size > 5 * 1024 * 1024) {
+                    alert(`图片 ${file.name} 超过 5MB 限制`);
+                    continue;
+                }
+
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const dataUrl = e.target.result;
+                    const previewItem = document.createElement('div');
+                    previewItem.className = 'preview-item';
+                    previewItem.innerHTML = `
+                        <img src="${dataUrl}" alt="${file.name}" />
+                        <button class="remove-btn" onclick="this.parentElement.remove();">✕</button>
+                        <button class="btn-insert-image" onclick="insertImage('${dataUrl}')">插入图片</button>
+                    `;
+                    previewContainer.appendChild(previewItem);
+
+                    // 上传到服务器
+                    uploadToServer(file, previewItem);
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function uploadToServer(file, previewItem) {
+            const formData = new FormData();
+            formData.append('image', file);
+
+            const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+
+            fetch('/Admin/UploadBlogImage', {
+                method: 'POST',
+                headers: {
+                    'RequestVerificationToken': token
+                },
+                body: formData
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    const insertBtn = previewItem.querySelector('.btn-insert-image');
+                    const oldUrl = insertBtn.getAttribute('onclick').match(/'([^']+)'/)[1];
+                    insertBtn.setAttribute('onclick', `insertImage('${data.url}')`);
+                    insertBtn.textContent = '✅ 已上传';
+                    insertBtn.style.background = 'rgba(40,167,69,0.12)';
+                    insertBtn.style.color = '#28a745';
+                    setTimeout(() => {
+                        insertBtn.textContent = '插入图片';
+                        insertBtn.style.background = '';
+                        insertBtn.style.color = '';
+                    }, 1500);
+                } else {
+                    alert('上传失败: ' + data.message);
+                }
+            })
+            .catch(err => console.error('上传失败:', err));
+        }
+
+        function insertImage(url) {
+            const imgTag = `<img src="${url}" alt="blog image" style="max-width:100%;border-radius:12px;margin:0.5rem 0;" />\n`;
+            const cursorPos = contentArea.selectionStart;
+            const text = contentArea.value;
+            contentArea.value = text.substring(0, cursorPos) + imgTag + text.substring(cursorPos);
+            contentArea.focus();
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                form.submit();
+            }
+        });
+    </script>
 }
