@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using MyPersonalWebsite.Models;
 using MyPersonalWebsite.Services;
+using MyPersonalWebsite.Hubs;   // ⭐ 添加这一行
 
 var builder = WebApplication.CreateBuilder(args);
 
