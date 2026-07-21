@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MyPersonalWebsite.Models;
-using MyPersonalWebsite.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,7 +17,6 @@ namespace MyPersonalWebsite.Controllers
             _context = context;
         }
 
-        // ===== 留言大屏 =====
         public async Task<IActionResult> Index()
         {
             var messages = await _context.Messages
@@ -31,7 +29,6 @@ namespace MyPersonalWebsite.Controllers
             return View(messages);
         }
 
-        // ===== 发布留言页面 =====
         [HttpGet]
         public IActionResult Create()
         {
@@ -43,7 +40,6 @@ namespace MyPersonalWebsite.Controllers
             return View();
         }
 
-        // ===== 发布留言提交 =====
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Message message)
@@ -55,15 +51,9 @@ namespace MyPersonalWebsite.Controllers
             }
 
             var user = await _context.Users.FindAsync(userId.Value);
-            if (user == null)
+            if (user == null || user.IsBanned)
             {
-                ModelState.AddModelError("", "用户不存在");
-                return View();
-            }
-
-            if (user.IsBanned)
-            {
-                ModelState.AddModelError("", "您的账号已被封禁");
+                ModelState.AddModelError("", user?.IsBanned == true ? "您的账号已被封禁" : "请先登录");
                 return View();
             }
 
@@ -86,7 +76,6 @@ namespace MyPersonalWebsite.Controllers
             return View(message);
         }
 
-        // ===== 点赞 =====
         [HttpPost]
         public async Task<IActionResult> ToggleLike(int messageId)
         {
@@ -104,11 +93,6 @@ namespace MyPersonalWebsite.Controllers
                     return Json(new { success = false, message = "留言不存在" });
                 }
 
-                if (message.UserId == userId.Value)
-                {
-                    return Json(new { success = false, message = "不能给自己的留言点赞" });
-                }
-
                 message.LikeCount++;
                 await _context.SaveChangesAsync();
 
@@ -120,7 +104,6 @@ namespace MyPersonalWebsite.Controllers
             }
         }
 
-        // ===== 管理员删除 =====
         [HttpPost]
         public async Task<IActionResult> Delete(int id)
         {
