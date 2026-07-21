@@ -279,14 +279,7 @@ namespace MyPersonalWebsite.Controllers
             }
 
             user.IsBanned = true;
-            if (hours > 0)
-            {
-                user.BanExpiry = DateTime.Now.AddHours(hours);
-            }
-            else
-            {
-                user.BanExpiry = null;
-            }
+            user.BanExpiry = hours > 0 ? DateTime.Now.AddHours(hours) : (DateTime?)null;
             user.BanReason = reason;
             user.BanNote = note;
 
@@ -296,4 +289,7 @@ namespace MyPersonalWebsite.Controllers
             {
                 await _emailService.SendUserActionNotificationAsync(
                     user.Email,
-        
+                    user.Username,
+                    "ban",
+                    reason ?? "违反网站规定",
+                   
