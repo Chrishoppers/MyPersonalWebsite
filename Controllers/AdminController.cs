@@ -732,4 +732,37 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // 拒绝
+        // 拒绝更改
+        // ============================================================
+        [HttpPost]
+        public async Task<IActionResult> RejectUserChange(int userId)
+        {
+            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+            if (isAdmin != 1)
+            {
+                return Json(new { success = false, message = "权限不足" });
+            }
+
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null)
+            {
+                return Json(new { success = false, message = "用户不存在" });
+            }
+
+            user.PendingUsername = null;
+            user.PendingEmail = null;
+            user.IsUsernameChangeApproved = false;
+            user.IsEmailChangeApproved = false;
+
+            if (!user.IsAvatarApproved && !string.IsNullOrEmpty(user.AvatarUrl))
+            {
+                user.AvatarUrl = null;
+                user.AvatarSubmittedAt = null;
+            }
+
+            await _context.SaveChangesAsync();
+
+            return Json(new { success = true, message = "已拒绝更改" });
+        }
+    }
+}
