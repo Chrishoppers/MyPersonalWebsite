@@ -13,13 +13,13 @@ namespace MyPersonalWebsite.Controllers
     public class AuthController : Controller
     {
         private readonly AppDbContext _context;
-        private readonly EmailService _emailService;
+        private readonly BrevoEmailService _emailService;
         private readonly SvgCaptchaService _captchaService;
         private readonly RateLimitService _rateLimitService;
 
         public AuthController(
             AppDbContext context,
-            EmailService emailService,
+            BrevoEmailService emailService,
             SvgCaptchaService captchaService,
             RateLimitService rateLimitService)
         {
@@ -292,8 +292,7 @@ namespace MyPersonalWebsite.Controllers
             catch (Exception ex)
             {
                 Console.WriteLine($"邮件发送失败: {ex.Message}");
-                Console.WriteLine($"========== 验证码：{token} ==========");
-                ViewBag.Message = $"邮件发送失败（验证码：{token}），请联系管理员";
+                ViewBag.Message = $"邮件发送失败，请联系管理员（验证码：{token}）";
                 ViewBag.Email = user.Email;
                 return View("ResetPassword");
             }
