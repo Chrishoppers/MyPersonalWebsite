@@ -8,8 +8,6 @@ namespace MyPersonalWebsite.Services
     public class EmailRateLimitService
     {
         private readonly AppDbContext _context;
-        private readonly int _dailyLimit = 8; // 每天最多8封
-        private readonly int _adminDailyLimit = 100; // 管理员每天最多100封
 
         public EmailRateLimitService(AppDbContext context)
         {
@@ -18,24 +16,24 @@ namespace MyPersonalWebsite.Services
 
         public async Task<(bool IsAllowed, string Message, int Remaining)> CanSendEmailAsync(int userId, bool isAdmin)
         {
-            var limit = isAdmin ? _adminDailyLimit : _dailyLimit;
+            // 管理员不限制
+            if (isAdmin)
+            {
+                return (true, "管理员不限流", 999);
+            }
 
             var today = DateTime.Today;
             var todayCount = await _context.EmailLogs
                 .CountAsync(l => l.UserId == userId && l.SentAt >= today && l.SentAt < today.AddDays(1));
 
+            var limit = 8; // 每天8封
+
             if (todayCount >= limit)
             {
-                var remaining = 0;
-                var message = isAdmin 
-                    ? $"管理员每日邮件配额已用完（{limit}封/天）"
-                    : $"⚠️ 今日邮件发送已达上限（{limit}封/天），请明天再试";
-
-                return (false, message, remaining);
+                return (false, $"⚠️ 今日邮件已发 {limit} 封，已达上限，请明天再试", 0);
             }
 
-            var remainingCount = limit - todayCount;
-            return (true, $"今日剩余 {remainingCount} 封", remainingCount);
+            return (true, $"今日剩余 {limit - todayCount} 封", limit - todayCount);
         }
 
         public async Task LogEmailAsync(int userId, string email, string type, bool isSuccess, string? errorMessage = null)
