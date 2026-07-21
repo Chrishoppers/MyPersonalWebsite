@@ -30,13 +30,12 @@ builder.Services.AddSignalR();
 
 var app = builder.Build();
 
-// ⭐ 自动创建数据库
+// ⭐ 创建缺失的表
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     dbContext.Database.EnsureCreated();
 
-    // ⭐ 手动创建 MessageLikes 表
     dbContext.Database.ExecuteSqlRaw(@"
         CREATE TABLE IF NOT EXISTS ""MessageLikes"" (
             ""Id"" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
