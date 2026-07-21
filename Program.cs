@@ -11,16 +11,13 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"))
 );
 
-builder.Services.AddDistributedMemoryCache();
-builder.Services.AddSession(options =>
-{
-    options.IdleTimeout = TimeSpan.FromMinutes(30);
-    options.Cookie.HttpOnly = true;
-    options.Cookie.IsEssential = true;
-});
+// ⭐ 用内存缓存替代 Session
+builder.Services.AddMemoryCache();
+
+// ⭐ 添加 HttpContextAccessor
+builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddHttpClient();
-builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddScoped<BrevoEmailService>();
 builder.Services.AddScoped<SvgCaptchaService>();
@@ -30,7 +27,6 @@ builder.Services.AddSignalR();
 
 var app = builder.Build();
 
-// 创建数据库
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -46,7 +42,6 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
-app.UseSession();
 app.UseAuthorization();
 
 app.MapControllerRoute(
