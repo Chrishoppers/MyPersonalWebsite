@@ -18,15 +18,14 @@ namespace MyPersonalWebsite.Models
         public DbSet<AboutMe> AboutMeContents { get; set; }
         public DbSet<PasswordReset> PasswordResets { get; set; }
         public DbSet<BlogLike> BlogLikes { get; set; }
+        public DbSet<EmailLog> EmailLogs { get; set; }  // ⭐ 新增
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            // 博客点赞
             modelBuilder.Entity<BlogLike>()
                 .HasIndex(l => new { l.BlogId, l.UserId })
                 .IsUnique();
 
-            // 种子数据：管理员
             modelBuilder.Entity<User>().HasData(
                 new User
                 {
@@ -41,7 +40,6 @@ namespace MyPersonalWebsite.Models
                 }
             );
 
-            // 种子数据：博客
             modelBuilder.Entity<Blog>().HasData(
                 new Blog
                 {
@@ -53,7 +51,6 @@ namespace MyPersonalWebsite.Models
                 }
             );
 
-            // 种子数据：作品
             modelBuilder.Entity<Project>().HasData(
                 new Project
                 {
