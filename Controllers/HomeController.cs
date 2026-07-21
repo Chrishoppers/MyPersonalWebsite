@@ -19,32 +19,22 @@ namespace MyPersonalWebsite.Controllers
             _dataSync = dataSync;
         }
 
-        // ============================================================
-        // 首页
-        // ============================================================
         public async Task<IActionResult> Index()
         {
             var blogs = await _dataSync.GetBlogsAsync();
             var latestBlogs = blogs.Take(3).ToList();
 
             ViewBag.LatestBlogs = latestBlogs;
-            ViewBag.Projects = new List<Project>(); // 暂时为空
+            ViewBag.Projects = new List<Project>();
 
             return View();
         }
 
-        // ============================================================
-        // 关于我
-        // ============================================================
         public async Task<IActionResult> About()
         {
-            // TODO: 从 DataSync 读取 AboutMe 内容
             return View();
         }
 
-        // ============================================================
-        // 个人信息页面
-        // ============================================================
         public async Task<IActionResult> Profile()
         {
             var userId = HttpContext.Session.GetInt32("UserId");
@@ -63,9 +53,6 @@ namespace MyPersonalWebsite.Controllers
             return View();
         }
 
-        // ============================================================
-        // 修改昵称/邮箱页面
-        // ============================================================
         [HttpGet]
         public async Task<IActionResult> EditProfile(string field)
         {
@@ -138,9 +125,6 @@ namespace MyPersonalWebsite.Controllers
             return RedirectToAction("Profile");
         }
 
-        // ============================================================
-        // 上传头像
-        // ============================================================
         [HttpPost]
         public async Task<IActionResult> UploadAvatar(IFormFile avatar)
         {
@@ -196,9 +180,6 @@ namespace MyPersonalWebsite.Controllers
             return Json(new { success = true, url = avatarUrl, message = message });
         }
 
-        // ============================================================
-        // 联系方式页面
-        // ============================================================
         public IActionResult Contact()
         {
             var userId = HttpContext.Session.GetInt32("UserId");
@@ -208,11 +189,7 @@ namespace MyPersonalWebsite.Controllers
             }
             return View();
         }
-    }
-}
-        // ============================================================
-        // 申请联系方式
-        // ============================================================
+
         [HttpPost]
         public async Task<IActionResult> RequestContact([FromBody] ContactRequest request)
         {
@@ -257,7 +234,6 @@ namespace MyPersonalWebsite.Controllers
                 };
 
                 // TODO: 保存 contactRequest 到数据库
-                // await _dataSync.AddContactRequestAsync(contactRequest);
 
                 try
                 {
@@ -288,9 +264,6 @@ namespace MyPersonalWebsite.Controllers
             }
         }
 
-        // ============================================================
-        // 管理员查询授权码
-        // ============================================================
         public async Task<IActionResult> QueryContact(string code)
         {
             if (string.IsNullOrEmpty(code))
@@ -299,7 +272,6 @@ namespace MyPersonalWebsite.Controllers
             }
 
             // TODO: 从数据库查询授权码
-            // var request = await _dataSync.GetContactRequestByCodeAsync(code);
 
             string contactInfo = "💬 微信号：Chris_hopper";
             return Json(new
@@ -314,18 +286,12 @@ namespace MyPersonalWebsite.Controllers
             });
         }
 
-        // ============================================================
-        // 错误页面
-        // ============================================================
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
 
-        // ============================================================
-        // 生成授权码
-        // ============================================================
         private string GenerateAuthorizationCode()
         {
             const string chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
