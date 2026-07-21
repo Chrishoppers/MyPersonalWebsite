@@ -22,6 +22,9 @@ namespace MyPersonalWebsite.Controllers
             _emailService = emailService;
         }
 
+        // ============================================================
+        // 1. 仪表盘
+        // ============================================================
         public async Task<IActionResult> Dashboard()
         {
             var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
@@ -37,6 +40,15 @@ namespace MyPersonalWebsite.Controllers
             ViewBag.ContactRequestCount = await _context.ContactRequests.CountAsync();
             ViewBag.PendingContactRequests = await _context.ContactRequests.CountAsync(r => !r.IsUsed && !r.IsApproved);
 
+            // 待审核更改数量
+            ViewBag.PendingChangesCount = await _context.Users
+                .Where(u => !u.IsDeleted && (
+                    !string.IsNullOrEmpty(u.PendingUsername) ||
+                    !string.IsNullOrEmpty(u.PendingEmail) ||
+                    (!u.IsAvatarApproved && !string.IsNullOrEmpty(u.AvatarUrl))
+                ))
+                .CountAsync();
+
             ViewBag.RecentMessages = await _context.Messages
                 .OrderByDescending(m => m.CreateTime)
                 .Take(5)
@@ -50,6 +62,9 @@ namespace MyPersonalWebsite.Controllers
             return View();
         }
 
+        // ============================================================
+        // 2. 博客管理
+        // ============================================================
         public async Task<IActionResult> Blogs()
         {
             var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
@@ -74,107 +89,6 @@ namespace MyPersonalWebsite.Controllers
             }
             return View();
         }
-        // ============================================================
-// 待审核更改列表
-// ============================================================
-public async Task<IActionResult> PendingChanges()
-{
-    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-    if (isAdmin != 1)
-    {
-        return RedirectToAction("Login", "Auth");
-    }
-
-    var users = await _context.Users
-        .Where(u => !u.IsDeleted && (
-            !string.IsNullOrEmpty(u.PendingUsername) ||
-            !string.IsNullOrEmpty(u.PendingEmail) ||
-            (!u.IsAvatarApproved && !string.IsNullOrEmpty(u.AvatarUrl))
-        ))
-        .ToListAsync();
-
-    return View(users);
-}
-
-// ============================================================
-// 通过更改
-// ============================================================
-[HttpPost]
-public async Task<IActionResult> ApproveUserChange(int userId)
-{
-    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-    if (isAdmin != 1)
-    {
-        return Json(new { success = false, message = "权限不足" });
-    }
-
-    var user = await _context.Users.FindAsync(userId);
-    if (user == null)
-    {
-        return Json(new { success = false, message = "用户不存在" });
-    }
-
-    // 通过昵称
-    if (!string.IsNullOrEmpty(user.PendingUsername))
-    {
-        user.Username = user.PendingUsername;
-        user.PendingUsername = null;
-        user.IsUsernameChangeApproved = true;
-    }
-
-    // 通过邮箱
-    if (!string.IsNullOrEmpty(user.PendingEmail))
-    {
-        user.Email = user.PendingEmail;
-        user.PendingEmail = null;
-        user.IsEmailChangeApproved = true;
-    }
-
-    // 通过头像
-    if (!user.IsAvatarApproved && !string.IsNullOrEmpty(user.AvatarUrl))
-    {
-        user.IsAvatarApproved = true;
-    }
-
-    await _context.SaveChangesAsync();
-
-    return Json(new { success = true, message = "更改已通过" });
-}
-
-// ============================================================
-// 拒绝更改
-// ============================================================
-[HttpPost]
-public async Task<IActionResult> RejectUserChange(int userId)
-{
-    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-    if (isAdmin != 1)
-    {
-        return Json(new { success = false, message = "权限不足" });
-    }
-
-    var user = await _context.Users.FindAsync(userId);
-    if (user == null)
-    {
-        return Json(new { success = false, message = "用户不存在" });
-    }
-
-    user.PendingUsername = null;
-    user.PendingEmail = null;
-    user.IsUsernameChangeApproved = false;
-    user.IsEmailChangeApproved = false;
-
-    // 头像拒绝：清空未审核头像
-    if (!user.IsAvatarApproved && !string.IsNullOrEmpty(user.AvatarUrl))
-    {
-        user.AvatarUrl = null;
-        user.AvatarSubmittedAt = null;
-    }
-
-    await _context.SaveChangesAsync();
-
-    return Json(new { success = true, message = "已拒绝更改" });
-}
 
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -263,6 +177,9 @@ public async Task<IActionResult> RejectUserChange(int userId)
             return Json(new { success = true, message = "删除成功" });
         }
 
+        // ============================================================
+        // 3. 博客图片上传
+        // ============================================================
         [HttpPost]
         public async Task<IActionResult> UploadBlogImage(IFormFile image)
         {
@@ -307,6 +224,9 @@ public async Task<IActionResult> RejectUserChange(int userId)
             }
         }
 
+        // ============================================================
+        // 4. 留言管理
+        // ============================================================
         public async Task<IActionResult> Messages()
         {
             var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
@@ -322,6 +242,9 @@ public async Task<IActionResult> RejectUserChange(int userId)
             return View(messages);
         }
 
+        // ============================================================
+        // 5. 用户管理
+        // ============================================================
         public async Task<IActionResult> Users()
         {
             var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
@@ -482,6 +405,9 @@ public async Task<IActionResult> RejectUserChange(int userId)
             return Json(new { success = true, message = $"已删除用户 {user.Username}" });
         }
 
+        // ============================================================
+        // 6. 授权码管理
+        // ============================================================
         public async Task<IActionResult> ContactRequests()
         {
             var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
@@ -605,6 +531,9 @@ public async Task<IActionResult> RejectUserChange(int userId)
             });
         }
 
+        // ============================================================
+        // 7. 关于我管理
+        // ============================================================
         public async Task<IActionResult> About()
         {
             var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
@@ -691,6 +620,9 @@ public async Task<IActionResult> RejectUserChange(int userId)
             }
         }
 
+        // ============================================================
+        // 8. 头像审核
+        // ============================================================
         [HttpPost]
         public async Task<IActionResult> ApproveAvatar(int userId)
         {
@@ -734,5 +666,73 @@ public async Task<IActionResult> RejectUserChange(int userId)
 
             return Json(new { success = true, message = "头像已拒绝" });
         }
-    }
-}
+
+        // ============================================================
+        // 9. 待审核更改
+        // ============================================================
+        public async Task<IActionResult> PendingChanges()
+        {
+            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+            if (isAdmin != 1)
+            {
+                return RedirectToAction("Login", "Auth");
+            }
+
+            var users = await _context.Users
+                .Where(u => !u.IsDeleted && (
+                    !string.IsNullOrEmpty(u.PendingUsername) ||
+                    !string.IsNullOrEmpty(u.PendingEmail) ||
+                    (!u.IsAvatarApproved && !string.IsNullOrEmpty(u.AvatarUrl))
+                ))
+                .ToListAsync();
+
+            return View(users);
+        }
+
+        // ============================================================
+        // 通过更改
+        // ============================================================
+        [HttpPost]
+        public async Task<IActionResult> ApproveUserChange(int userId)
+        {
+            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+            if (isAdmin != 1)
+            {
+                return Json(new { success = false, message = "权限不足" });
+            }
+
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null)
+            {
+                return Json(new { success = false, message = "用户不存在" });
+            }
+
+            if (!string.IsNullOrEmpty(user.PendingUsername))
+            {
+                user.Username = user.PendingUsername;
+                user.PendingUsername = null;
+                user.IsUsernameChangeApproved = true;
+            }
+
+            if (!string.IsNullOrEmpty(user.PendingEmail))
+            {
+                user.Email = user.PendingEmail;
+                user.PendingEmail = null;
+                user.IsEmailChangeApproved = true;
+            }
+
+            if (!user.IsAvatarApproved && !string.IsNullOrEmpty(user.AvatarUrl))
+            {
+                user.IsAvatarApproved = true;
+            }
+
+            await _context.SaveChangesAsync();
+
+            return Json(new { success = true, message = "更改已通过" });
+        }
+
+        // ============================================================
+        // 拒绝更改
+        // ============================================================
+        [HttpPost]
+       
