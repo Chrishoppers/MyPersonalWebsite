@@ -17,7 +17,6 @@ namespace MyPersonalWebsite.Models
         public int ReportCount { get; set; } = 0;
         public bool IsReported { get; set; } = false;
 
-        // 关联
         public User? User { get; set; }
     }
 }
