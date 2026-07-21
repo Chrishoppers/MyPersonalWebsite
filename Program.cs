@@ -12,6 +12,10 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 );
 
 builder.Services.AddDistributedMemoryCache();
+
+// ⭐ 内存缓存（给限流用）
+builder.Services.AddMemoryCache();
+
 builder.Services.AddSession(options =>
 {
     options.IdleTimeout = TimeSpan.FromMinutes(30);
@@ -23,6 +27,7 @@ builder.Services.AddHttpClient();
 builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddScoped<BrevoEmailService>();
+builder.Services.AddScoped<EmailRateLimitService>();
 builder.Services.AddScoped<SvgCaptchaService>();
 builder.Services.AddScoped<RateLimitService>();
 
@@ -30,7 +35,7 @@ builder.Services.AddSignalR();
 
 var app = builder.Build();
 
-// ⭐ 创建数据库
+// 创建数据库
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
