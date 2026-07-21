@@ -1,0 +1,44 @@
+@{
+    ViewData["Title"] = "修改信息";
+    var field = ViewBag.Field as string;
+    var currentValue = ViewBag.CurrentValue as string ?? "";
+    var pendingValue = ViewBag.PendingValue as string;
+}
+
+<style>
+    .edit-container { max-width: 500px; margin: 2rem auto; padding: 0 1rem; }
+    .edit-card { background: rgba(255,255,255,0.02); backdrop-filter: blur(20px); border-radius: 24px; border: 1px solid rgba(255,255,255,0.04); padding: 2rem; }
+    .edit-card h2 { color: #fff; font-weight: 700; margin-bottom: 0.5rem; }
+    .edit-card .sub { color: rgba(255,255,255,0.2); margin-bottom: 1.5rem; }
+    .form-group { margin-bottom: 1.2rem; }
+    .form-group label { display: block; color: rgba(255,255,255,0.4); font-size: 0.8rem; margin-bottom: 0.3rem; }
+    .form-group input { width: 100%; padding: 0.8rem 1rem; border-radius: 16px; border: 1px solid rgba(255,255,255,0.04); background: rgba(255,255,255,0.02); color: #fff; font-size: 0.95rem; outline: none; }
+    .form-group input:focus { border-color: rgba(108,60,225,0.15); background: rgba(255,255,255,0.04); }
+    .btn-submit { width: 100%; padding: 0.9rem; border: none; border-radius: 40px; background: linear-gradient(135deg,#8B5CF6,#EC4899); color: #fff; font-weight: 600; font-size: 0.95rem; cursor: pointer; transition: all 0.3s ease; }
+    .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(108,60,225,0.2); }
+    .btn-cancel { display: block; text-align: center; margin-top: 1rem; color: rgba(255,255,255,0.2); text-decoration: none; font-size: 0.85rem; }
+    .btn-cancel:hover { color: rgba(255,255,255,0.4); }
+    .pending-info { background: rgba(255,193,7,0.04); border: 1px solid rgba(255,193,7,0.06); border-radius: 12px; padding: 0.8rem 1rem; margin-bottom: 1rem; color: rgba(255,255,255,0.3); font-size: 0.85rem; }
+</style>
+
+<div class="edit-container">
+    <div class="edit-card">
+        <h2>修改 @(field == "username" ? "昵称" : "邮箱")</h2>
+        <p class="sub">当前值：<span style="color:rgba(255,255,255,0.3);">@currentValue</span></p>
+
+        @if (!string.IsNullOrEmpty(pendingValue) && pendingValue != currentValue)
+        {
+            <div class="pending-info">⏳ 待审核值：<strong style="color:#ffc107;">@pendingValue</strong></div>
+        }
+
+        <form asp-action="EditProfile" method="post">
+            <input type="hidden" name="field" value="@field" />
+            <div class="form-group">
+                <label>新 @(field == "username" ? "昵称" : "邮箱")</label>
+                <input type="@(field == "email" ? "email" : "text")" name="value" placeholder="输入新值" required />
+            </div>
+            <button type="submit" class="btn-submit">提交修改</button>
+        </form>
+        <a href="/Home/Profile" class="btn-cancel">← 返回个人信息</a>
+    </div>
+</div>
