@@ -23,6 +23,7 @@ builder.Services.AddHttpClient();
 builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddScoped<BrevoEmailService>();   // ⭐ Brevo 邮件服务
+builder.Services.AddScoped<EmailRateLimitService>();
 builder.Services.AddScoped<SvgCaptchaService>();
 builder.Services.AddScoped<RateLimitService>();
 
