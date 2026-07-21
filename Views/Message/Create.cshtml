@@ -23,7 +23,7 @@
             <div style="background:rgba(220,53,69,0.1);border:1px solid rgba(220,53,69,0.2);border-radius:12px;padding:0.8rem 1.2rem;color:#dc3545;margin-bottom:1rem;">
                 @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
                 {
-                    <p class="mb-0">@error.ErrorMessage</p>
+                    <p style="margin:0;">@error.ErrorMessage</p>
                 }
             </div>
         }
@@ -33,13 +33,13 @@
 
             <div style="margin-bottom:1rem;">
                 <label style="display:block;color:rgba(255,255,255,0.6);font-size:0.85rem;font-weight:500;margin-bottom:0.3rem;">显示名称</label>
-                <input type="text" class="form-control" value="@username" disabled style="width:100%;padding:0.7rem 1rem;border-radius:12px;border:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.02);color:#fff;font-size:0.95rem;" />
+                <input type="text" value="@username" disabled style="width:100%;padding:0.7rem 1rem;border-radius:12px;border:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.02);color:#fff;font-size:0.95rem;" />
                 <small style="color:rgba(255,255,255,0.15);font-size:0.75rem;">使用你的用户名显示</small>
             </div>
 
             <div style="margin-bottom:1rem;">
                 <label style="display:block;color:rgba(255,255,255,0.6);font-size:0.85rem;font-weight:500;margin-bottom:0.3rem;">邮箱</label>
-                <input type="email" class="form-control" value="@userEmail" disabled style="width:100%;padding:0.7rem 1rem;border-radius:12px;border:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.02);color:#fff;font-size:0.95rem;" />
+                <input type="email" value="@userEmail" disabled style="width:100%;padding:0.7rem 1rem;border-radius:12px;border:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.02);color:#fff;font-size:0.95rem;" />
                 <small style="color:rgba(255,255,255,0.15);font-size:0.75rem;">管理员回复将通过此邮箱通知您</small>
             </div>
 
@@ -52,6 +52,7 @@
                 </div>
             </div>
 
+            <!-- ⭐ 这就是你需要的发送按钮！ -->
             <div style="display:flex;gap:1rem;flex-wrap:wrap;">
                 <button type="submit" style="flex:1;padding:0.8rem 2rem;border:none;border-radius:40px;background:linear-gradient(135deg,#8B5CF6,#EC4899);color:#fff;font-weight:600;font-size:0.95rem;cursor:pointer;transition:all 0.3s ease;min-width:150px;">
                     ✍️ 发布留言
