@@ -197,5 +197,38 @@ namespace MyPersonalWebsite.Services
 
             await SendEmailAsync("2908685235@qq.com", "🔑 新授权码申请", html);
         }
+        // ============================================================
+// 管理员操作通知 - 发送给被操作的用户
+// ============================================================
+
+public async Task SendUserActionNotificationAsync(string toEmail, string username, string actionType, string reason, string note)
+{
+    var actionMap = new Dictionary<string, string>
+    {
+        { "ban", "封禁" },
+        { "unban", "解封" },
+        { "delete", "删除账号" }
+    };
+
+    var actionName = actionMap.ContainsKey(actionType) ? actionMap[actionType] : actionType;
+    
+    var html = $@"
+        <div style='font-family: Arial; max-width: 600px; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;'>
+            <h2 style='color: #dc3545;'>⚠️ 账号通知</h2>
+            <p>您好 <strong>{username}</strong>！</p>
+            <p>您的账号在 <strong>Chris Hopper 个人网站</strong> 已被管理员 <strong>{actionName}</strong>。</p>
+            <div style='background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0;'>
+                <p><strong>📌 原因：</strong>{reason}</p>
+                <p><strong>📝 备注：</strong>{note ?? "无"}</p>
+                <p><strong>⏰ 时间：</strong>{DateTime.Now:yyyy-MM-dd HH:mm}</p>
+            </div>
+            <p style='color: #888; font-size: 14px;'>如有疑问，请联系管理员。</p>
+            <hr style='border: none; border-top: 1px solid #eee;'>
+            <p style='color: #aaa; font-size: 12px;'>此邮件由系统自动发送，请勿直接回复。</p>
+        </div>
+    ";
+
+    await SendEmailAsync(toEmail, $"【Chris Hopper 个人网站】账号{actionName}通知", html);
+}
     }
 }
