@@ -4,7 +4,6 @@
     ViewData["Title"] = "留言大屏";
     var currentUserId = ViewBag.CurrentUserId as int?;
     var isAdmin = ViewBag.IsAdmin as int? ?? 0;
-    var likedIds = ViewBag.LikedIds as HashSet<int> ?? new HashSet<int>();
 }
 
 <style>
@@ -82,6 +81,27 @@
         margin: 0.5rem 0 0.8rem;
     }
 
+    .admin-reply {
+        background: rgba(108,60,225,0.04);
+        border-radius: 12px;
+        padding: 0.8rem 1.2rem;
+        margin-top: 0.8rem;
+        border-left: 2px solid #8B5CF6;
+    }
+
+    .admin-reply .reply-label {
+        font-size: 0.7rem;
+        color: #8B5CF6;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+
+    .admin-reply .reply-content {
+        color: rgba(255,255,255,0.6);
+        font-size: 0.9rem;
+        margin-top: 0.2rem;
+    }
+
     .msg-actions {
         display: flex;
         align-items: center;
@@ -110,27 +130,6 @@
         color: #EC4899;
     }
 
-    .admin-reply {
-        background: rgba(108,60,225,0.04);
-        border-radius: 12px;
-        padding: 0.8rem 1.2rem;
-        margin-top: 0.8rem;
-        border-left: 2px solid #8B5CF6;
-    }
-
-    .admin-reply .reply-label {
-        font-size: 0.7rem;
-        color: #8B5CF6;
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-    }
-
-    .admin-reply .reply-content {
-        color: rgba(255,255,255,0.6);
-        font-size: 0.9rem;
-        margin-top: 0.2rem;
-    }
-
     .empty-state {
         text-align: center;
         padding: 3rem 2rem;
@@ -147,9 +146,6 @@
     {
         foreach (var msg in Model)
         {
-            var isLiked = likedIds.Contains(msg.Id);
-            var canLike = currentUserId.HasValue && currentUserId.Value != msg.UserId;
-
             <div class="message-card" id="msg-@msg.Id">
                 <div class="msg-user">
                     <div class="msg-avatar">
@@ -172,11 +168,10 @@
                 }
 
                 <div class="msg-actions">
-                    @if (canLike)
+                    @if (currentUserId.HasValue && currentUserId.Value != msg.UserId)
                     {
-                        <button class="btn-like @(isLiked ? "liked" : "")" onclick="toggleLike(@msg.Id, this)">
-                            <span>❤️</span>
-                            <span id="likeCount-@msg.Id">@msg.LikeCount</span>
+                        <button class="btn-like" onclick="toggleLike(@msg.Id, this)">
+                            ❤️ <span id="likeCount-@msg.Id">@msg.LikeCount</span>
                         </button>
                     }
                     else
@@ -188,7 +183,7 @@
 
                     @if (isAdmin == 1)
                     {
-                        <button class="btn-like" onclick="deleteMessage(@msg.Id)" style="color:rgba(255,255,255,0.15);">
+                        <button onclick="deleteMessage(@msg.Id)" style="background:none;border:none;color:rgba(255,255,255,0.15);cursor:pointer;font-size:0.8rem;">
                             🗑️ 删除
                         </button>
                     }
@@ -218,11 +213,15 @@
             .then(data => {
                 if (data.success) {
                     const countEl = document.getElementById(`likeCount-${messageId}`);
-                    if (countEl) countEl.textContent = data.likeCount;
+                    if (countEl) {
+                        countEl.textContent = data.likeCount;
+                    }
                     if (data.isLiked) {
                         btn.classList.add('liked');
+                        btn.innerHTML = '❤️ ' + data.likeCount;
                     } else {
                         btn.classList.remove('liked');
+                        btn.innerHTML = '❤️ ' + data.likeCount;
                     }
                 }
             });
