@@ -12,6 +12,12 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 );
 
 builder.Services.AddDistributedMemoryCache();
+
+// ⭐ 配置 DataProtection 密钥持久化（解决 Session 密钥丢失问题）
+builder.Services.AddDataProtection()
+    .PersistKeysToFileSystem(new DirectoryInfo("/app/keys"))
+    .SetApplicationName("MyPersonalWebsite");
+
 builder.Services.AddSession(options =>
 {
     options.IdleTimeout = TimeSpan.FromMinutes(30);
@@ -22,8 +28,7 @@ builder.Services.AddSession(options =>
 builder.Services.AddHttpClient();
 builder.Services.AddHttpContextAccessor();
 
-builder.Services.AddScoped<BrevoEmailService>();   // Brevo 邮件服务
-builder.Services.AddScoped<EmailRateLimitService>();
+builder.Services.AddScoped<BrevoEmailService>();
 builder.Services.AddScoped<SvgCaptchaService>();
 builder.Services.AddScoped<RateLimitService>();
 
