@@ -1,5 +1,4 @@
-using Microsoft.EntityFrameworkCore;
-using MyPersonalWebsite.Models;
+using Microsoft.Extensions.Caching.Memory;
 using System;
 using System.Threading.Tasks;
 
@@ -7,48 +6,39 @@ namespace MyPersonalWebsite.Services
 {
     public class EmailRateLimitService
     {
-        private readonly AppDbContext _context;
+        private readonly IMemoryCache _cache;
+        private readonly int _dailyLimit = 8;
 
-        public EmailRateLimitService(AppDbContext context)
+        public EmailRateLimitService(IMemoryCache cache)
         {
-            _context = context;
+            _cache = cache;
         }
 
-        public async Task<(bool IsAllowed, string Message, int Remaining)> CanSendEmailAsync(int userId, bool isAdmin)
+        public Task<(bool IsAllowed, string Message, int Remaining)> CanSendEmailAsync(int userId, bool isAdmin)
         {
             if (isAdmin)
             {
-                return (true, "管理员不限流", 999);
+                return Task.FromResult((true, "管理员不限流", 999));
             }
 
-            var today = DateTime.Today;
-            var todayCount = await _context.EmailLogs
-                .CountAsync(l => l.UserId == userId && l.SentAt >= today && l.SentAt < today.AddDays(1));
+            var key = $"email_limit_{userId}_{DateTime.Today:yyyyMMdd}";
+            var todayCount = _cache.TryGetValue(key, out int count) ? count : 0;
 
-            var limit = 8;
-
-            if (todayCount >= limit)
+            if (todayCount >= _dailyLimit)
             {
-                return (false, $"⚠️ 今日邮件已发 {limit} 封，已达上限，请明天再试", 0);
+                return Task.FromResult((false, $"⚠️ 今日邮件已发 {_dailyLimit} 封，已达上限，请明天再试", 0));
             }
 
-            return (true, $"今日剩余 {limit - todayCount} 封", limit - todayCount);
+            var remaining = _dailyLimit - todayCount;
+            return Task.FromResult((true, $"今日剩余 {remaining} 封", remaining));
         }
 
-        public async Task LogEmailAsync(int userId, string email, string type, bool isSuccess, string? errorMessage = null)
+        public Task LogEmailAsync(int userId, string email, string type, bool isSuccess, string? errorMessage = null)
         {
-            var log = new EmailLog
-            {
-                UserId = userId,
-                Email = email,
-                Type = type,
-                SentAt = DateTime.Now,
-                IsSuccess = isSuccess,
-                ErrorMessage = errorMessage
-            };
-
-            _context.EmailLogs.Add(log);
-            await _context.SaveChangesAsync();
+            var key = $"email_limit_{userId}_{DateTime.Today:yyyyMMdd}";
+            var todayCount = _cache.TryGetValue(key, out int count) ? count : 0;
+            _cache.Set(key, todayCount + 1, DateTimeOffset.Now.AddDays(1));
+            return Task.CompletedTask;
         }
     }
 }
