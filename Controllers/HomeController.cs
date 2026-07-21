@@ -338,5 +338,95 @@ namespace MyPersonalWebsite.Controllers
             }
             return string.Join("-", parts);
         }
+        // ============================================================
+// 个人信息页面
+// ============================================================
+public async Task<IActionResult> Profile()
+{
+    var userId = HttpContext.Session.GetInt32("UserId");
+    if (!userId.HasValue)
+    {
+        return RedirectToAction("Login", "Auth");
+    }
+    var user = await _context.Users.FindAsync(userId.Value);
+    if (user == null)
+    {
+        return RedirectToAction("Login", "Auth");
+    }
+    ViewBag.User = user;
+    return View();
+}
+
+// ============================================================
+// 修改昵称/邮箱
+// ============================================================
+[HttpGet]
+public async Task<IActionResult> EditProfile(string field)
+{
+    var userId = HttpContext.Session.GetInt32("UserId");
+    if (!userId.HasValue)
+    {
+        return RedirectToAction("Login", "Auth");
+    }
+    var user = await _context.Users.FindAsync(userId.Value);
+    if (user == null)
+    {
+        return RedirectToAction("Login", "Auth");
+    }
+
+    ViewBag.Field = field;
+    ViewBag.CurrentValue = field == "username" ? user.Username : user.Email;
+    ViewBag.PendingValue = field == "username" ? user.PendingUsername : user.PendingEmail;
+    ViewBag.User = user;
+    return View();
+}
+
+[HttpPost]
+public async Task<IActionResult> EditProfile(string field, string value)
+{
+    var userId = HttpContext.Session.GetInt32("UserId");
+    if (!userId.HasValue)
+    {
+        return RedirectToAction("Login", "Auth");
+    }
+    var user = await _context.Users.FindAsync(userId.Value);
+    if (user == null)
+    {
+        return RedirectToAction("Login", "Auth");
+    }
+
+    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+
+    if (field == "username")
+    {
+        if (isAdmin == 1)
+        {
+            user.Username = value;
+            user.IsUsernameChangeApproved = true;
+        }
+        else
+        {
+            user.PendingUsername = value;
+            user.IsUsernameChangeApproved = false;
+        }
+    }
+    else if (field == "email")
+    {
+        if (isAdmin == 1)
+        {
+            user.Email = value;
+            user.IsEmailChangeApproved = true;
+        }
+        else
+        {
+            user.PendingEmail = value;
+            user.IsEmailChangeApproved = false;
+        }
+    }
+
+    await _context.SaveChangesAsync();
+    TempData["Success"] = isAdmin == 1 ? "修改成功！" : "修改已提交，等待管理员审核";
+    return RedirectToAction("Profile");
+}
     }
 }
