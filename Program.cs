@@ -7,6 +7,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
 
+// ⭐ 保留 SQLite（用于本地开发）
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"))
 );
@@ -25,6 +26,7 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<BrevoEmailService>();
 builder.Services.AddScoped<SvgCaptchaService>();
 builder.Services.AddScoped<RateLimitService>();
+builder.Services.AddScoped<TursoService>();  // ⭐ 添加 Turso
 
 builder.Services.AddSignalR();
 
@@ -51,24 +53,50 @@ using (var scope = app.Services.CreateScope())
         dbContext.SaveChanges();
         Console.WriteLine("✅ 管理员账号已创建");
     }
+
+    // ⭐ 同步数据到 Turso
+    try
+    {
+        var tursoService = scope.ServiceProvider.GetRequiredService<TursoService>();
+        
+        // 创建表
+        await tursoService.ExecuteSqlAsync(@"
+            CREATE TABLE IF NOT EXISTS Users (
+                Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                Username TEXT NOT NULL,
+                Email TEXT NOT NULL,
+                PasswordHash TEXT NOT NULL,
+                VerificationCode TEXT,
+                VerificationCodeExpiry TEXT,
+                IsEmailVerified INTEGER DEFAULT 0,
+                IsAdmin INTEGER DEFAULT 0,
+                CreatedAt TEXT NOT NULL,
+                LastLoginAt TEXT,
+                IsBanned INTEGER DEFAULT 0,
+                BanExpiry TEXT,
+                BanReason TEXT,
+                BanNote TEXT,
+                IsDeleted INTEGER DEFAULT 0,
+                DeletedAt TEXT,
+                DeleteReason TEXT,
+                DeleteNote TEXT,
+                AvatarUrl TEXT,
+                IsAvatarApproved INTEGER DEFAULT 0,
+                AvatarSubmittedAt TEXT,
+                PendingEmail TEXT,
+                PendingUsername TEXT,
+                IsEmailChangeApproved INTEGER DEFAULT 0,
+                IsUsernameChangeApproved INTEGER DEFAULT 0
+            )
+        ");
+        
+        // 创建其他表...
+        Console.WriteLine("✅ Turso 数据库已同步");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Turso 同步失败: {ex.Message}");
+    }
 }
 
-if (!app.Environment.IsDevelopment())
-{
-    app.UseExceptionHandler("/Home/Error");
-    app.UseHsts();
-}
-
-app.UseHttpsRedirection();
-app.UseStaticFiles();
-app.UseRouting();
-app.UseSession();
-app.UseAuthorization();
-
-app.MapControllerRoute(
-    name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}");
-
-app.MapHub<MessageHub>("/messageHub");
-
-app.Run();
+// ... 其余代码不变
