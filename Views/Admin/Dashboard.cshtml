@@ -439,6 +439,19 @@
             <div class="card-desc">编辑个人简介、学习路线</div>
             <span class="card-badge count">✏️ 可编辑</span>
         </a>
+<a href="/Admin/PendingChanges" class="card-item">
+    <span class="card-icon">📋</span>
+    <div class="card-title">待审核更改</div>
+    <div class="card-desc">审核用户头像、昵称、邮箱</div>
+    @if (ViewBag.PendingChangesCount > 0)
+    {
+        <span class="card-badge pending">@ViewBag.PendingChangesCount 项</span>
+    }
+    else
+    {
+        <span class="card-badge count">0 项</span>
+    }
+</a>
     </div>
 
     <!-- ===== 最近活动 ===== -->
