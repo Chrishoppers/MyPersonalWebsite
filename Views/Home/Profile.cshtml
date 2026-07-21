@@ -1,0 +1,119 @@
+@{
+    ViewData["Title"] = "个人信息";
+    var user = ViewBag.User as MyPersonalWebsite.Models.User;
+    if (user == null)
+    {
+        Context.Response.Redirect("/Auth/Login");
+        return;
+    }
+    var userId = Context.Session.GetInt32("UserId");
+    var isAdmin = Context.Session.GetInt32("IsAdmin") ?? 0;
+}
+
+<style>
+    .profile-container { max-width: 700px; margin: 0 auto; padding: 2rem 1rem; }
+    .profile-card { background: rgba(255,255,255,0.02); backdrop-filter: blur(20px); border-radius: 24px; border: 1px solid rgba(255,255,255,0.04); padding: 2rem; }
+    .profile-card h2 { color: #fff; font-weight: 700; margin-bottom: 1.5rem; }
+    .profile-card .info-row { display: flex; justify-content: space-between; align-items: center; padding: 0.8rem 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+    .profile-card .info-row .label { color: rgba(255,255,255,0.3); font-size: 0.85rem; min-width: 80px; }
+    .profile-card .info-row .value { color: #fff; font-size: 0.95rem; }
+    .profile-card .info-row .status { font-size: 0.7rem; padding: 0.15rem 0.6rem; border-radius: 20px; }
+    .status-pending { background: rgba(255,193,7,0.12); color: #ffc107; border: 1px solid rgba(255,193,7,0.06); }
+    .status-approved { background: rgba(40,167,69,0.12); color: #28a745; border: 1px solid rgba(40,167,69,0.06); }
+    .btn-edit { padding: 0.3rem 1rem; border: 1px solid rgba(255,255,255,0.04); border-radius: 30px; background: rgba(255,255,255,0.02); color: rgba(255,255,255,0.4); text-decoration: none; font-size: 0.8rem; transition: all 0.3s ease; cursor: pointer; }
+    .btn-edit:hover { background: rgba(255,255,255,0.04); color: #fff; }
+    .avatar-upload { display: flex; align-items: center; gap: 1rem; padding: 1rem 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+    .avatar-upload .avatar { width: 80px; height: 80px; border-radius: 50%; overflow: hidden; background: linear-gradient(135deg,#8B5CF6,#EC4899); }
+    .avatar-upload .avatar img { width: 100%; height: 100%; object-fit: cover; }
+</style>
+
+<div class="profile-container">
+    <div class="profile-card">
+        <h2>👤 个人信息</h2>
+
+        <!-- 头像 -->
+        <div class="avatar-upload">
+            <div class="avatar">
+                @if (!string.IsNullOrEmpty(user.AvatarUrl) && user.IsAvatarApproved)
+                {
+                    <img src="@user.AvatarUrl" alt="头像" />
+                }
+                else if (!string.IsNullOrEmpty(user.AvatarUrl) && !user.IsAvatarApproved)
+                {
+                    <img src="@user.AvatarUrl" alt="头像" style="opacity:0.3;filter:grayscale(1);" />
+                }
+                else
+                {
+                    <span style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:2.5rem;color:#fff;">@(user.Username?.FirstOrDefault().ToString().ToUpper() ?? "?")</span>
+                }
+            </div>
+            <div>
+                <div style="color:#fff;font-weight:500;">头像</div>
+                <div style="font-size:0.8rem;color:rgba(255,255,255,0.2);">
+                    @if (string.IsNullOrEmpty(user.AvatarUrl))
+                    {
+                        <span>未设置</span>
+                    }
+                    else if (user.IsAvatarApproved)
+                    {
+                        <span class="status-approved" style="padding:0.1rem 0.6rem;border-radius:20px;font-size:0.7rem;">✅ 已通过</span>
+                    }
+                    else
+                    {
+                        <span class="status-pending" style="padding:0.1rem 0.6rem;border-radius:20px;font-size:0.7rem;">⏳ 审核中</span>
+                    }
+                </div>
+                <form asp-action="UploadAvatar" method="post" enctype="multipart/form-data" style="margin-top:0.3rem;">
+                    <input type="file" name="avatar" accept="image/*" style="color:rgba(255,255,255,0.3);font-size:0.8rem;" required />
+                    <button type="submit" class="btn-edit" style="margin-top:0.2rem;">上传</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- 昵称 -->
+        <div class="info-row">
+            <span class="label">昵称</span>
+            <span class="value">@user.Username</span>
+            <span>
+                @if (!string.IsNullOrEmpty(user.PendingUsername) && user.PendingUsername != user.Username)
+                {
+                    <span class="status-pending">⏳ 待审核: @user.PendingUsername</span>
+                }
+                <a href="/Home/EditProfile?field=username" class="btn-edit">修改</a>
+            </span>
+        </div>
+
+        <!-- 邮箱 -->
+        <div class="info-row">
+            <span class="label">邮箱</span>
+            <span class="value">@user.Email</span>
+            <span>
+                @if (!string.IsNullOrEmpty(user.PendingEmail) && user.PendingEmail != user.Email)
+                {
+                    <span class="status-pending">⏳ 待审核: @user.PendingEmail</span>
+                }
+                <a href="/Home/EditProfile?field=email" class="btn-edit">修改</a>
+            </span>
+        </div>
+
+        <!-- 角色 -->
+        <div class="info-row">
+            <span class="label">角色</span>
+            <span class="value">@(user.IsAdmin ? "👑 管理员" : "👤 普通用户")</span>
+        </div>
+
+        <!-- 注册时间 -->
+        <div class="info-row">
+            <span class="label">注册时间</span>
+            <span class="value">@user.CreatedAt.ToString("yyyy-MM-dd HH:mm")</span>
+        </div>
+
+        @if (isAdmin == 1)
+        {
+            <div class="info-row" style="border-top:1px solid rgba(255,255,255,0.04);padding-top:1rem;margin-top:0.5rem;">
+                <span class="label" style="color:#8B5CF6;">🔧 管理员</span>
+                <span style="color:rgba(255,255,255,0.2);font-size:0.8rem;">所有更改自动通过</span>
+            </div>
+        }
+    </div>
+</div>
