@@ -25,19 +25,7 @@ namespace MyPersonalWebsite.Models
                 .HasIndex(l => new { l.BlogId, l.UserId })
                 .IsUnique();
 
-            modelBuilder.Entity<User>().HasData(
-                new User
-                {
-                    Id = 1,
-                    Username = "admin",
-                    Email = "2908685235@qq.com",
-                    PasswordHash = "AQAAAAIAAYagAAAAEJ4Zj6zVqZMjSx5k5r5WYg==",
-                    IsEmailVerified = true,
-                    IsAdmin = true,
-                    IsBanned = false,
-                    CreatedAt = new DateTime(2026, 7, 19, 0, 0, 0)
-                }
-            );
+           
 
             modelBuilder.Entity<Blog>().HasData(
                 new Blog
