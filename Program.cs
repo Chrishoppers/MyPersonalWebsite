@@ -7,9 +7,17 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
 
-// ⭐ 保留 SQLite（用于本地开发）
+// ⭐ 本地 SQLite
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"))
+);
+
+// ⭐ Turso 云端
+var tursoUrl = Environment.GetEnvironmentVariable("TURSO_DATABASE_URL") ?? "";
+var tursoToken = Environment.GetEnvironmentVariable("TURSO_AUTH_TOKEN") ?? "";
+
+builder.Services.AddDbContext<TursoDbContext>(options =>
+    options.UseSqlite($"Data Source={tursoUrl};Mode=ReadWriteCreate;Cache=Shared;AuthToken={tursoToken}")
 );
 
 builder.Services.AddDistributedMemoryCache();
@@ -26,7 +34,7 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<BrevoEmailService>();
 builder.Services.AddScoped<SvgCaptchaService>();
 builder.Services.AddScoped<RateLimitService>();
-builder.Services.AddScoped<TursoService>();  // ⭐ 添加 Turso
+builder.Services.AddScoped<TursoService>();
 
 builder.Services.AddSignalR();
 
@@ -34,69 +42,54 @@ var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
 {
-    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    dbContext.Database.EnsureCreated();
+    var localDb = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    var tursoDb = scope.ServiceProvider.GetRequiredService<TursoDbContext>();
 
-    var adminExists = dbContext.Users.Any(u => u.Username == "admin");
-    if (!adminExists)
-    {
-        dbContext.Users.Add(new User
-        {
-            Username = "admin",
-            Email = "2908685235@qq.com",
-            PasswordHash = "AQAAAAIAAYagAAAAEJ4Zj6zVqZMjSx5k5r5WYg==",
-            IsEmailVerified = true,
-            IsAdmin = true,
-            IsBanned = false,
-            CreatedAt = DateTime.Now
-        });
-        dbContext.SaveChanges();
-        Console.WriteLine("✅ 管理员账号已创建");
-    }
+    // ⭐ 创建本地数据库
+    localDb.Database.EnsureCreated();
+    Console.WriteLine("✅ 本地 SQLite 数据库已就绪");
 
-    // ⭐ 同步数据到 Turso
+    // ⭐ 同步到 Turso
     try
     {
-        var tursoService = scope.ServiceProvider.GetRequiredService<TursoService>();
-        
-        // 创建表
-        await tursoService.ExecuteSqlAsync(@"
-            CREATE TABLE IF NOT EXISTS Users (
-                Id INTEGER PRIMARY KEY AUTOINCREMENT,
-                Username TEXT NOT NULL,
-                Email TEXT NOT NULL,
-                PasswordHash TEXT NOT NULL,
-                VerificationCode TEXT,
-                VerificationCodeExpiry TEXT,
-                IsEmailVerified INTEGER DEFAULT 0,
-                IsAdmin INTEGER DEFAULT 0,
-                CreatedAt TEXT NOT NULL,
-                LastLoginAt TEXT,
-                IsBanned INTEGER DEFAULT 0,
-                BanExpiry TEXT,
-                BanReason TEXT,
-                BanNote TEXT,
-                IsDeleted INTEGER DEFAULT 0,
-                DeletedAt TEXT,
-                DeleteReason TEXT,
-                DeleteNote TEXT,
-                AvatarUrl TEXT,
-                IsAvatarApproved INTEGER DEFAULT 0,
-                AvatarSubmittedAt TEXT,
-                PendingEmail TEXT,
-                PendingUsername TEXT,
-                IsEmailChangeApproved INTEGER DEFAULT 0,
-                IsUsernameChangeApproved INTEGER DEFAULT 0
-            )
-        ");
-        
-        // 创建其他表...
-        Console.WriteLine("✅ Turso 数据库已同步");
+        tursoDb.Database.EnsureCreated();
+        Console.WriteLine("✅ Turso 数据库已就绪");
+
+        // 同步用户数据
+        var localUsers = localDb.Users.ToList();
+        foreach (var user in localUsers)
+        {
+            if (!tursoDb.Users.Any(u => u.Username == user.Username))
+            {
+                tursoDb.Users.Add(user);
+            }
+        }
+        tursoDb.SaveChanges();
+        Console.WriteLine("✅ 数据已同步到 Turso");
     }
     catch (Exception ex)
     {
-        Console.WriteLine($"Turso 同步失败: {ex.Message}");
+        Console.WriteLine($"⚠️ Turso 同步失败: {ex.Message}");
+        Console.WriteLine("⚠️ 网站将继续使用本地 SQLite");
     }
 }
 
-// ... 其余代码不变
+if (!app.Environment.IsDevelopment())
+{
+    app.UseExceptionHandler("/Home/Error");
+    app.UseHsts();
+}
+
+app.UseHttpsRedirection();
+app.UseStaticFiles();
+app.UseRouting();
+app.UseSession();
+app.UseAuthorization();
+
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=Home}/{action=Index}/{id?}");
+
+app.MapHub<MessageHub>("/messageHub");
+
+app.Run();
