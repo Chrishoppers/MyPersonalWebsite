@@ -2,7 +2,6 @@ using Microsoft.EntityFrameworkCore;
 using MyPersonalWebsite.Models;
 using MyPersonalWebsite.Services;
 using MyPersonalWebsite.Hubs;
-using Microsoft.AspNetCore.DataProtection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,16 +11,17 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"))
 );
 
-// ⭐ 禁用 DataProtection（解决 Session 密钥丢失问题）
-builder.Services.AddDataProtection()
-    .UseEphemeralDataProtectionProvider();
-
+// ⭐ 使用内存缓存替代 Session
+builder.Services.AddMemoryCache();
 builder.Services.AddDistributedMemoryCache();
+
+// ⭐ 禁用 Session 加密
 builder.Services.AddSession(options =>
 {
     options.IdleTimeout = TimeSpan.FromMinutes(30);
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
 });
 
 builder.Services.AddHttpClient();
