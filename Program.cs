@@ -23,6 +23,7 @@ builder.Services.AddHttpClient();
 builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddScoped<BrevoEmailService>();
+builder.Services.AddScoped<EmailRateLimitService>();
 builder.Services.AddScoped<SvgCaptchaService>();
 builder.Services.AddScoped<RateLimitService>();
 
@@ -30,11 +31,24 @@ builder.Services.AddSignalR();
 
 var app = builder.Build();
 
-// 创建数据库
+// ⭐ 创建数据库和所有表
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     dbContext.Database.EnsureCreated();
+
+    // ⭐ 创建 EmailLogs 表
+    dbContext.Database.ExecuteSqlRaw(@"
+        CREATE TABLE IF NOT EXISTS ""EmailLogs"" (
+            ""Id"" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+            ""UserId"" INTEGER NOT NULL,
+            ""Email"" TEXT NOT NULL,
+            ""Type"" TEXT NOT NULL,
+            ""SentAt"" TEXT NOT NULL,
+            ""IsSuccess"" INTEGER NOT NULL,
+            ""ErrorMessage"" TEXT NULL
+        );
+    ");
 }
 
 if (!app.Environment.IsDevelopment())
