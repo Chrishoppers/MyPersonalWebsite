@@ -16,6 +16,31 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddMemoryCache();
 builder.Services.AddDistributedMemoryCache();
 
+
+app.UseSession();
+
+// ⭐ 强制清除旧的 Session Cookie
+app.Use(async (context, next) =>
+{
+    if (context.Request.Cookies.ContainsKey(".AspNetCore.Session"))
+    {
+        // 如果 Session Cookie 无法解密，直接清除
+        try
+        {
+            await next();
+        }
+        catch
+        {
+            context.Response.Cookies.Delete(".AspNetCore.Session");
+            await next();
+        }
+    }
+    else
+    {
+        await next();
+    }
+});
+
 // ⭐ 禁用 DataProtection
 builder.Services.AddDataProtection()
     .UseEphemeralDataProtectionProvider();
