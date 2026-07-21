@@ -14,6 +14,7 @@ namespace MyPersonalWebsite.Models
         public DbSet<Project> Projects { get; set; }
         public DbSet<Message> Messages { get; set; }
         public DbSet<ContactRequest> ContactRequests { get; set; }
+        public DbSet<EmailLog> EmailLogs { get; set; }
         public DbSet<BlogLike> BlogLikes { get; set; }
         public DbSet<MessageLike> MessageLikes { get; set; }
         public DbSet<ReportRecord> ReportRecords { get; set; }
