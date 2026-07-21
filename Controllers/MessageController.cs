@@ -115,28 +115,10 @@ namespace MyPersonalWebsite.Controllers
                 else
                 {
                     message.IsApproved = false;
-
-                    try
-                    {
-                        await _emailService.SendAdminNewMessageNotificationAsync(
-                            message.VisitorName,
-                            message.Content,
-                            0
-                        );
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"管理员通知邮件发送失败: {ex.Message}");
-                    }
                 }
 
                 _context.Messages.Add(message);
                 await _context.SaveChangesAsync();
-
-                if (message.IsApproved)
-                {
-                    await _hubContext.Clients.All.SendAsync("ReceiveMessage", message.VisitorName, message.Content);
-                }
 
                 TempData["Success"] = user.IsAdmin ? "留言发布成功！" : "留言已提交，等待管理员审核后显示";
                 return RedirectToAction("Index");
@@ -272,8 +254,6 @@ namespace MyPersonalWebsite.Controllers
             message.IsApproved = true;
             await _context.SaveChangesAsync();
 
-            await _hubContext.Clients.All.SendAsync("ReceiveMessage", message.VisitorName, message.Content);
-
             return Json(new { success = true, message = "审核通过" });
         }
 
@@ -302,20 +282,6 @@ namespace MyPersonalWebsite.Controllers
             message.AdminReply = replyContent;
             message.AdminReplyTime = DateTime.Now;
             await _context.SaveChangesAsync();
-
-            try
-            {
-                await _emailService.SendReplyNotificationAsync(
-                    message.Email,
-                    message.VisitorName,
-                    message.Content,
-                    replyContent
-                );
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"回复邮件发送失败: {ex.Message}");
-            }
 
             return Json(new { success = true, message = "回复成功" });
         }
