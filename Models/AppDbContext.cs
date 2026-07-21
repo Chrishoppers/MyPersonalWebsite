@@ -18,7 +18,6 @@ namespace MyPersonalWebsite.Models
         public DbSet<AboutMe> AboutMeContents { get; set; }
         public DbSet<PasswordReset> PasswordResets { get; set; }
         public DbSet<BlogLike> BlogLikes { get; set; }
-        public DbSet<EmailLog> EmailLogs { get; set; }  // ⭐ 新增
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
