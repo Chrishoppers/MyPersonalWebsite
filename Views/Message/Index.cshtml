@@ -6,180 +6,41 @@
     var isAdmin = ViewBag.IsAdmin as int? ?? 0;
 }
 
-<style>
-    .message-wall {
-        max-width: 900px;
-        margin: 0 auto;
-        padding: 2rem 1rem;
-    }
-
-    .wall-header h1 {
-        font-size: 2.5rem;
-        font-weight: 700;
-        background: linear-gradient(135deg, #8B5CF6 0%, #EC4899 50%, #F59E0B 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        text-align: center;
-        padding: 1rem 0 2rem;
-    }
-
-    .message-card {
-        background: rgba(255,255,255,0.02);
-        backdrop-filter: blur(20px);
-        border-radius: 20px;
-        border: 1px solid rgba(255,255,255,0.04);
-        padding: 1.5rem 2rem;
-        margin-bottom: 1.5rem;
-    }
-
-    .message-card:hover {
-        background: rgba(255,255,255,0.04);
-        border-color: rgba(108,60,225,0.08);
-    }
-
-    .msg-user {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        margin-bottom: 0.5rem;
-    }
-
-    .msg-avatar {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, #8B5CF6, #EC4899);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #fff;
-        font-weight: 600;
-        font-size: 1rem;
-        flex-shrink: 0;
-    }
-
-    .msg-meta .name {
-        font-weight: 600;
-        color: #fff;
-    }
-
-    .msg-meta .time {
-        font-size: 0.8rem;
-        color: rgba(255,255,255,0.2);
-    }
-
-    .msg-content {
-        color: rgba(255,255,255,0.7);
-        line-height: 1.7;
-        margin: 0.5rem 0 0.8rem;
-    }
-
-    .msg-actions {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        padding-top: 0.5rem;
-        border-top: 1px solid rgba(255,255,255,0.03);
-    }
-
-    .btn-like {
-        background: none;
-        border: none;
-        color: rgba(255,255,255,0.3);
-        cursor: pointer;
-        transition: all 0.3s ease;
-        font-size: 0.9rem;
-        display: flex;
-        align-items: center;
-        gap: 0.3rem;
-    }
-
-    .btn-like:hover {
-        color: #EC4899;
-    }
-
-    .btn-like.liked {
-        color: #EC4899;
-    }
-
-    .empty-state {
-        text-align: center;
-        padding: 3rem 2rem;
-        color: rgba(255,255,255,0.15);
-    }
-
-    .admin-reply {
-        background: rgba(108,60,225,0.04);
-        border-radius: 12px;
-        padding: 0.8rem 1.2rem;
-        margin-top: 0.8rem;
-        border-left: 2px solid #8B5CF6;
-    }
-
-    .admin-reply .reply-label {
-        font-size: 0.7rem;
-        color: #8B5CF6;
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-    }
-
-    .admin-reply .reply-content {
-        color: rgba(255,255,255,0.6);
-        font-size: 0.9rem;
-        margin-top: 0.2rem;
-    }
-</style>
-
-<div class="message-wall">
-    <div class="wall-header">
-        <h1>💬 留言大屏</h1>
-    </div>
+<div style="max-width:900px;margin:0 auto;padding:2rem 1rem;">
+    <h1 style="text-align:center;font-size:2.5rem;font-weight:700;background:linear-gradient(135deg,#8B5CF6,#EC4899,#F59E0B);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:2rem;">💬 留言大屏</h1>
 
     @if (Model != null && Model.Any())
     {
-        foreach (var msg in Model)
+        @foreach (var msg in Model)
         {
-            <div class="message-card" id="msg-@msg.Id">
-                <div class="msg-user">
-                    <div class="msg-avatar">
+            <div style="background:rgba(255,255,255,0.02);backdrop-filter:blur(20px);border-radius:20px;border:1px solid rgba(255,255,255,0.04);padding:1.5rem 2rem;margin-bottom:1.5rem;">
+                <div style="display:flex;align-items:center;gap:1rem;margin-bottom:0.5rem;">
+                    <div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#8B5CF6,#EC4899);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:600;font-size:1rem;flex-shrink:0;">
                         @(msg.VisitorName?.FirstOrDefault().ToString().ToUpper() ?? "?")
                     </div>
-                    <div class="msg-meta">
-                        <span class="name">@msg.VisitorName</span>
-                        <div class="time">@msg.CreateTime.ToString("yyyy-MM-dd HH:mm")</div>
+                    <div>
+                        <span style="font-weight:600;color:#fff;">@msg.VisitorName</span>
+                        <div style="font-size:0.8rem;color:rgba(255,255,255,0.2);">@msg.CreateTime.ToString("yyyy-MM-dd HH:mm")</div>
                     </div>
                 </div>
 
-                <div class="msg-content">@msg.Content</div>
+                <div style="color:rgba(255,255,255,0.7);line-height:1.7;margin:0.5rem 0 0.8rem;">@msg.Content</div>
 
-                @if (!string.IsNullOrEmpty(msg.AdminReply))
-                {
-                    <div class="admin-reply">
-                        <div class="reply-label">👨‍💼 管理员回复</div>
-                        <div class="reply-content">@msg.AdminReply</div>
-                    </div>
-                }
-
-                <div class="msg-actions">
+                <div style="display:flex;align-items:center;gap:1rem;padding-top:0.5rem;border-top:1px solid rgba(255,255,255,0.03);">
                     @if (currentUserId.HasValue && currentUserId.Value != msg.UserId)
                     {
-                        <button class="btn-like" onclick="toggleLike(@msg.Id, this)">
+                        <button onclick="toggleLike(@msg.Id, this)" style="background:none;border:none;color:rgba(255,255,255,0.3);cursor:pointer;font-size:0.9rem;display:flex;align-items:center;gap:0.3rem;">
                             ❤️ <span id="likeCount-@msg.Id">@msg.LikeCount</span>
                         </button>
                     }
                     else
                     {
-                        <span class="btn-like" style="cursor:default;opacity:0.4;">
-                            ❤️ <span id="likeCount-@msg.Id">@msg.LikeCount</span>
-                        </span>
+                        <span style="color:rgba(255,255,255,0.2);font-size:0.9rem;">❤️ @msg.LikeCount</span>
                     }
 
                     @if (isAdmin == 1)
                     {
-                        <button onclick="deleteMessage(@msg.Id)" style="background:none;border:none;color:rgba(255,255,255,0.15);cursor:pointer;font-size:0.8rem;">
-                            🗑️ 删除
-                        </button>
+                        <button onclick="deleteMessage(@msg.Id)" style="background:none;border:none;color:rgba(255,255,255,0.15);cursor:pointer;font-size:0.8rem;">🗑️ 删除</button>
                     }
                 </div>
             </div>
@@ -187,51 +48,49 @@
     }
     else
     {
-        <div class="empty-state">💬 还没有留言，快来抢沙发吧！</div>
+        <div style="text-align:center;padding:3rem 2rem;color:rgba(255,255,255,0.15);">💬 还没有留言，快来抢沙发吧！</div>
     }
 </div>
 
-@section Scripts {
-    <script>
-        function toggleLike(messageId, btn) {
-            const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
-            fetch('/Message/ToggleLike', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    'RequestVerificationToken': token
-                },
-                body: `messageId=${messageId}`
-            })
-            .then(r => r.json())
-            .then(data => {
-                if (data.success) {
-                    const countEl = document.getElementById(`likeCount-${messageId}`);
-                    if (countEl) {
-                        countEl.textContent = data.likeCount;
-                    }
+<script>
+    function toggleLike(messageId, btn) {
+        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+        fetch('/Message/ToggleLike', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'RequestVerificationToken': token
+            },
+            body: `messageId=${messageId}`
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                const countEl = document.getElementById(`likeCount-${messageId}`);
+                if (countEl) {
+                    countEl.textContent = data.likeCount;
                 }
-            });
-        }
+            }
+        });
+    }
 
-        function deleteMessage(messageId) {
-            if (!confirm('确定删除这条留言吗？')) return;
-            const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
-            fetch('/Message/Delete', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    'RequestVerificationToken': token
-                },
-                body: `id=${messageId}`
-            })
-            .then(r => r.json())
-            .then(data => {
-                if (data.success) {
-                    const card = document.getElementById(`msg-${messageId}`);
-                    if (card) card.remove();
-                }
-            });
-        }
-    </script>
-}
+    function deleteMessage(messageId) {
+        if (!confirm('确定删除这条留言吗？')) return;
+        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+        fetch('/Message/Delete', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'RequestVerificationToken': token
+            },
+            body: `id=${messageId}`
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                const card = document.getElementById(`msg-${messageId}`);
+                if (card) card.remove();
+            }
+        });
+    }
+</script>
