@@ -10,102 +10,18 @@ namespace MyPersonalWebsite.Services
     {
         private readonly HttpClient _httpClient;
         private readonly string _apiKey;
-        private readonly EmailRateLimitService _rateLimitService;
-        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public BrevoEmailService(
-            HttpClient httpClient,
-            EmailRateLimitService rateLimitService,
-            IHttpContextAccessor httpContextAccessor)
+        public BrevoEmailService(HttpClient httpClient)
         {
             _httpClient = httpClient;
             _apiKey = Environment.GetEnvironmentVariable("BREVO_API_KEY") ?? "";
-            _rateLimitService = rateLimitService;
-            _httpContextAccessor = httpContextAccessor;
         }
 
         // ============================================================
-        // 私有方法
-        // ============================================================
-
-        private int? GetCurrentUserId()
-        {
-            return _httpContextAccessor.HttpContext?.Session.GetInt32("UserId");
-        }
-
-        private bool IsAdmin()
-        {
-            return (_httpContextAccessor.HttpContext?.Session.GetInt32("IsAdmin") ?? 0) == 1;
-        }
-
-        // ============================================================
-        // 受限制的邮件发送（普通用户每天8封）
+        // 核心发送方法
         // ============================================================
 
         public async Task<(bool Success, string Message)> SendEmailWithLimitAsync(string to, string subject, string htmlContent, string type)
-{
-    var userId = GetCurrentUserId();
-    if (!userId.HasValue)
-    {
-        return (false, "请先登录");
-    }
-
-    var isAdmin = IsAdmin();
-    var (canSend, message, remaining) = await _rateLimitService.CanSendEmailAsync(userId.Value, isAdmin);
-
-    if (!canSend)
-    {
-        return (false, message);
-    }
-
-    try
-    {
-        var request = new
-        {
-            sender = new { email = "hello@chris-hopper.org", name = "Chris Hopper 个人网站" },
-            to = new[] { new { email = to } },
-            subject = subject,
-            htmlContent = htmlContent
-        };
-
-        var json = JsonSerializer.Serialize(request);
-        var content = new StringContent(json, Encoding.UTF8, "application/json");
-
-        _httpClient.DefaultRequestHeaders.Clear();
-        _httpClient.DefaultRequestHeaders.Add("api-key", _apiKey);
-
-        var response = await _httpClient.PostAsync("https://api.brevo.com/v3/smtp/email", content);
-
-        // ⭐ 新增：打印响应内容，方便调试
-        var responseContent = await response.Content.ReadAsStringAsync();
-        Console.WriteLine($"Brevo Response: {(int)response.StatusCode} - {responseContent}");
-
-        var isSuccess = (int)response.StatusCode >= 200 && (int)response.StatusCode < 300;
-
-        await _rateLimitService.LogEmailAsync(userId.Value, to, type, isSuccess, isSuccess ? null : $"Status: {(int)response.StatusCode}");
-
-        if (isSuccess)
-        {
-            return (true, $"✅ 邮件发送成功（今日剩余 {remaining - 1} 封）");
-        }
-        else
-        {
-            return (false, $"邮件发送失败，请稍后重试（状态码: {(int)response.StatusCode}）");
-        }
-    }
-    catch (Exception ex)
-    {
-        await _rateLimitService.LogEmailAsync(userId.Value, to, type, false, ex.Message);
-        Console.WriteLine($"Brevo Exception: {ex.Message}");
-        return (false, $"邮件发送失败: {ex.Message}");
-    }
-}
-
-        // ============================================================
-        // 不受限制的邮件发送（管理员通知）
-        // ============================================================
-
-        public async Task<bool> SendEmailAsync(string to, string subject, string htmlContent)
         {
             try
             {
@@ -124,16 +40,25 @@ namespace MyPersonalWebsite.Services
                 _httpClient.DefaultRequestHeaders.Add("api-key", _apiKey);
 
                 var response = await _httpClient.PostAsync("https://api.brevo.com/v3/smtp/email", content);
-                return response.IsSuccessStatusCode;
+
+                if (response.IsSuccessStatusCode)
+                {
+                    return (true, "邮件发送成功 ✅");
+                }
+                else
+                {
+                    var error = await response.Content.ReadAsStringAsync();
+                    return (false, $"邮件发送失败: {error}");
+                }
             }
-            catch
+            catch (Exception ex)
             {
-                return false;
+                return (false, $"邮件发送失败: {ex.Message}");
             }
         }
 
         // ============================================================
-        // 邮件模板（普通用户，受限制）
+        // 邮件模板
         // ============================================================
 
         public async Task SendVerificationCodeAsync(string toEmail, string code)
@@ -211,8 +136,35 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 管理员通知（不受限制）
+        // 管理员通知（不受限制，直接用 SendEmailAsync）
         // ============================================================
+
+        public async Task<bool> SendEmailAsync(string to, string subject, string htmlContent)
+        {
+            try
+            {
+                var request = new
+                {
+                    sender = new { email = "hello@chris-hopper.org", name = "Chris Hopper 个人网站" },
+                    to = new[] { new { email = to } },
+                    subject = subject,
+                    htmlContent = htmlContent
+                };
+
+                var json = JsonSerializer.Serialize(request);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                _httpClient.DefaultRequestHeaders.Clear();
+                _httpClient.DefaultRequestHeaders.Add("api-key", _apiKey);
+
+                var response = await _httpClient.PostAsync("https://api.brevo.com/v3/smtp/email", content);
+                return response.IsSuccessStatusCode;
+            }
+            catch
+            {
+                return false;
+            }
+        }
 
         public async Task SendAdminNewMessageNotificationAsync(string visitorName, string content, int messageId)
         {
