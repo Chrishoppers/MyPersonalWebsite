@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using MyPersonalWebsite.Models;
 using MyPersonalWebsite.Services;
 using MyPersonalWebsite.Hubs;
+using Microsoft.AspNetCore.DataProtection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,11 +12,12 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"))
 );
 
+// ⭐ 配置 DataProtection 密钥持久化
+builder.Services.AddDataProtection()
+    .PersistKeysToFileSystem(new DirectoryInfo("/app/keys"))
+    .SetApplicationName("MyPersonalWebsite");
+
 builder.Services.AddDistributedMemoryCache();
-
-// ⭐ 内存缓存（给限流用）
-builder.Services.AddMemoryCache();
-
 builder.Services.AddSession(options =>
 {
     options.IdleTimeout = TimeSpan.FromMinutes(30);
@@ -27,7 +29,6 @@ builder.Services.AddHttpClient();
 builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddScoped<BrevoEmailService>();
-builder.Services.AddScoped<EmailRateLimitService>();
 builder.Services.AddScoped<SvgCaptchaService>();
 builder.Services.AddScoped<RateLimitService>();
 
