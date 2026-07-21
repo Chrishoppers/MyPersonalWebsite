@@ -5,7 +5,6 @@ using MyPersonalWebsite.Helpers;
 using MyPersonalWebsite.Services;
 using System;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace MyPersonalWebsite.Controllers
