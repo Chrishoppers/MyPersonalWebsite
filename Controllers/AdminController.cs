@@ -23,7 +23,7 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // 1. 仪表盘
+        // 仪表盘
         // ============================================================
         public async Task<IActionResult> Dashboard()
         {
@@ -61,7 +61,7 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // 2. 博客管理
+        // 博客管理
         // ============================================================
         public async Task<IActionResult> Blogs()
         {
@@ -176,7 +176,7 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // 3. 博客图片上传
+        // 博客图片上传
         // ============================================================
         [HttpPost]
         public async Task<IActionResult> UploadBlogImage(IFormFile image)
@@ -223,7 +223,7 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // 4. 留言管理
+        // 留言管理
         // ============================================================
         public async Task<IActionResult> Messages()
         {
@@ -241,7 +241,7 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // 5. 用户管理
+        // 用户管理
         // ============================================================
         public async Task<IActionResult> Users()
         {
@@ -259,7 +259,7 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // 6. 封禁用户
+        // 封禁用户
         // ============================================================
         [HttpPost]
         public async Task<IActionResult> BanUser(int id, int hours, string reason, string note)
@@ -288,6 +288,7 @@ namespace MyPersonalWebsite.Controllers
 
             await _context.SaveChangesAsync();
 
-            try
-            {
-                await _emailService.SendUserActionNotificat
+            return Json(new { success = true, message = "已封禁用户" });
+        }
+
+        // =================
