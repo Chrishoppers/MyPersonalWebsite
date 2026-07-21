@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace MyPersonalWebsite.Models
@@ -15,8 +15,6 @@ namespace MyPersonalWebsite.Models
         public int LikeCount { get; set; } = 0;
         public string? AdminReply { get; set; }
         public DateTime? AdminReplyTime { get; set; }
-
-        // ⭐ 举报相关字段（新增）
         public int ReportCount { get; set; } = 0;
         public bool IsReported { get; set; } = false;
 
