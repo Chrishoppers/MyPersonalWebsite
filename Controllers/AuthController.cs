@@ -29,10 +29,6 @@ namespace MyPersonalWebsite.Controllers
             _rateLimitService = rateLimitService;
         }
 
-        // ============================================================
-        // 1. 注册
-        // ============================================================
-
         [HttpGet]
         public IActionResult Register()
         {
@@ -104,10 +100,6 @@ namespace MyPersonalWebsite.Controllers
             return RedirectToAction("VerifyEmail", new { email = email });
         }
 
-        // ============================================================
-        // 2. 邮箱验证
-        // ============================================================
-
         [HttpGet]
         public IActionResult VerifyEmail(string email)
         {
@@ -153,10 +145,6 @@ namespace MyPersonalWebsite.Controllers
             TempData["Message"] = "邮箱验证成功！请登录";
             return RedirectToAction("Login");
         }
-
-        // ============================================================
-        // 3. 登录
-        // ============================================================
 
         [HttpGet]
         public IActionResult Login()
@@ -228,21 +216,11 @@ namespace MyPersonalWebsite.Controllers
             return RedirectToAction("Index", "Home");
         }
 
-        // ============================================================
-        // 4. 退出登录
-        // ============================================================
-
         public IActionResult Logout()
         {
             HttpContext.Session.Clear();
             return RedirectToAction("Index", "Home");
         }
-    }
-}
-
-        // ============================================================
-        // 5. 忘记密码
-        // ============================================================
 
         [HttpGet]
         public IActionResult ForgotPassword()
@@ -279,7 +257,7 @@ namespace MyPersonalWebsite.Controllers
                 IsUsed = false
             };
 
-            // TODO: 保存 reset 到数据库（需要扩展 DataSyncService）
+            // TODO: 保存 reset 到数据库
 
             try
             {
@@ -297,10 +275,6 @@ namespace MyPersonalWebsite.Controllers
             }
         }
 
-        // ============================================================
-        // 6. 重置密码
-        // ============================================================
-
         [HttpGet]
         public IActionResult ResetPassword()
         {
@@ -310,7 +284,6 @@ namespace MyPersonalWebsite.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ResetPassword(string email, string token, string newPassword)
-            // 这里需要实现密码重置逻辑
         {
             if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(token) || string.IsNullOrEmpty(newPassword))
             {
@@ -325,7 +298,6 @@ namespace MyPersonalWebsite.Controllers
             }
 
             // TODO: 验证 token 并重置密码
-            // 需要从数据库查询 PasswordReset 记录
 
             TempData["Message"] = "密码重置成功！请用新密码登录";
             return RedirectToAction("Login");
