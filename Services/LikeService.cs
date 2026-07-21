@@ -22,7 +22,6 @@ namespace MyPersonalWebsite.Services
             if (message.UserId == userId)
                 return (false, "不能给自己的留言点赞", message.LikeCount, false);
 
-            // ⭐ 简单版：只更新 LikeCount，不记录谁点了赞
             message.LikeCount++;
             await _context.SaveChangesAsync();
 
