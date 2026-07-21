@@ -12,10 +12,9 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"))
 );
 
-// ⭐ 配置 DataProtection 密钥持久化
+// ⭐ 禁用 DataProtection（解决 Session 密钥丢失问题）
 builder.Services.AddDataProtection()
-    .PersistKeysToFileSystem(new DirectoryInfo("/app/keys"))
-    .SetApplicationName("MyPersonalWebsite");
+    .UseEphemeralDataProtectionProvider();
 
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
