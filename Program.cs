@@ -7,12 +7,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
 
-// ⭐ 配置 Turso 连接
-var tursoUrl = builder.Configuration.GetConnectionString("TursoConnection");
-var tursoToken = Environment.GetEnvironmentVariable("TURSO_AUTH_TOKEN") ?? "";
-
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlite($"{tursoUrl}?authToken={tursoToken}")
+    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"))
 );
 
 builder.Services.AddDistributedMemoryCache();
@@ -34,7 +30,6 @@ builder.Services.AddSignalR();
 
 var app = builder.Build();
 
-// ⭐ 自动创建数据库表
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
