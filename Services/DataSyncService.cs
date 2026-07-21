@@ -66,6 +66,18 @@ namespace MyPersonalWebsite.Services
                 .FirstOrDefaultAsync(u => u.Username == username);
         }
 
+        public async Task<User?> GetUserByIdAsync(int id)
+        {
+            try
+            {
+                var user = await _tursoContext.Users.FindAsync(id);
+                if (user != null) return user;
+            }
+            catch { }
+
+            return await _localContext.Users.FindAsync(id);
+        }
+
         public async Task UpdateUserAsync(User user)
         {
             _localContext.Users.Update(user);
@@ -93,7 +105,8 @@ namespace MyPersonalWebsite.Services
                 return await _localContext.Users.ToListAsync();
             }
         }
-
+    }
+}
         // ============================================================
         // 博客相关
         // ============================================================
@@ -181,7 +194,8 @@ namespace MyPersonalWebsite.Services
                 Console.WriteLine($"Turso 同步失败: {ex.Message}");
             }
         }
-
+    }
+}
         // ============================================================
         // 留言相关
         // ============================================================
@@ -270,16 +284,10 @@ namespace MyPersonalWebsite.Services
             }
         }
 
-        // ============================================================
-        // 通用：保存本地数据并同步到 Turso
-        // ============================================================
-
         public async Task SaveChangesAsync()
         {
-            // 保存本地
             await _localContext.SaveChangesAsync();
 
-            // 同步到 Turso
             try
             {
                 await _tursoContext.SaveChangesAsync();
@@ -287,6 +295,62 @@ namespace MyPersonalWebsite.Services
             catch (Exception ex)
             {
                 Console.WriteLine($"Turso 同步失败: {ex.Message}");
+            }
+        }
+    }
+}
+        // ============================================================
+        // 管理员账号检查
+        // ============================================================
+
+        public async Task EnsureAdminExistsAsync()
+        {
+            var localAdmin = await _localContext.Users
+                .FirstOrDefaultAsync(u => u.Username == "admin");
+
+            if (localAdmin == null)
+            {
+                var admin = new User
+                {
+                    Username = "admin",
+                    Email = "2908685235@qq.com",
+                    PasswordHash = "AQAAAAIAAYagAAAAEJ4Zj6zVqZMjSx5k5r5WYg==",
+                    IsEmailVerified = true,
+                    IsAdmin = true,
+                    IsBanned = false,
+                    CreatedAt = DateTime.Now
+                };
+                _localContext.Users.Add(admin);
+                await _localContext.SaveChangesAsync();
+
+                try
+                {
+                    _tursoContext.Users.Add(admin);
+                    await _tursoContext.SaveChangesAsync();
+                    Console.WriteLine("✅ 管理员账号已同步到 Turso");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"⚠️ Turso 管理员同步失败: {ex.Message}");
+                }
+            }
+            else
+            {
+                try
+                {
+                    var tursoAdmin = await _tursoContext.Users
+                        .FirstOrDefaultAsync(u => u.Username == "admin");
+                    if (tursoAdmin == null)
+                    {
+                        _tursoContext.Users.Add(localAdmin);
+                        await _tursoContext.SaveChangesAsync();
+                        Console.WriteLine("✅ 管理员账号已补录到 Turso");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"⚠️ Turso 管理员检查失败: {ex.Message}");
+                }
             }
         }
 
@@ -309,63 +373,6 @@ namespace MyPersonalWebsite.Services
                     .Where(u => !u.IsDeleted)
                     .OrderByDescending(u => u.CreatedAt)
                     .ToListAsync();
-            }
-        }
-
-        // ============================================================
-        // 管理员账号检查（启动时用）
-        // ============================================================
-
-        public async Task EnsureAdminExistsAsync()
-        {
-            // 检查本地
-            var localAdmin = await _localContext.Users
-                .FirstOrDefaultAsync(u => u.Username == "admin");
-
-            if (localAdmin == null)
-            {
-                var admin = new User
-                {
-                    Username = "admin",
-                    Email = "2908685235@qq.com",
-                    PasswordHash = "AQAAAAIAAYagAAAAEJ4Zj6zVqZMjSx5k5r5WYg==",
-                    IsEmailVerified = true,
-                    IsAdmin = true,
-                    IsBanned = false,
-CreatedAt = DateTime.Now
-                };
-                _localContext.Users.Add(admin);
-                await _localContext.SaveChangesAsync();
-
-                try
-                {
-                    _tursoContext.Users.Add(admin);
-                    await _tursoContext.SaveChangesAsync();
-                    Console.WriteLine("✅ 管理员账号已同步到 Turso");
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"⚠️ Turso 管理员同步失败: {ex.Message}");
-                }
-            }
-            else
-            {
-                // 检查 Turso 是否有管理员
-                try
-                {
-                    var tursoAdmin = await _tursoContext.Users
-                        .FirstOrDefaultAsync(u => u.Username == "admin");
-                    if (tursoAdmin == null)
-                    {
-                        _tursoContext.Users.Add(localAdmin);
-                        await _tursoContext.SaveChangesAsync();
-                        Console.WriteLine("✅ 管理员账号已补录到 Turso");
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"⚠️ Turso 管理员检查失败: {ex.Message}");
-                }
             }
         }
     }
