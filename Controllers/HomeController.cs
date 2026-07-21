@@ -12,27 +12,23 @@ namespace MyPersonalWebsite.Controllers
 {
     public class HomeController : Controller
     {
-        private readonly AppDbContext _context;
+        private readonly DataSyncService _dataSync;
 
-        public HomeController(AppDbContext context)
+        public HomeController(DataSyncService dataSync)
         {
-            _context = context;
+            _dataSync = dataSync;
         }
 
         // ============================================================
         // 首页
         // ============================================================
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            var latestBlogs = _context.Blogs
-                .OrderByDescending(b => b.PublishDate)
-                .Take(3)
-                .ToList();
-
-            var projects = _context.Projects.ToList();
+            var blogs = await _dataSync.GetBlogsAsync();
+            var latestBlogs = blogs.Take(3).ToList();
 
             ViewBag.LatestBlogs = latestBlogs;
-            ViewBag.Projects = projects;
+            ViewBag.Projects = new List<Project>(); // 暂时为空
 
             return View();
         }
@@ -42,45 +38,7 @@ namespace MyPersonalWebsite.Controllers
         // ============================================================
         public async Task<IActionResult> About()
         {
-            var sections = await _context.AboutMeContents
-                .OrderBy(s => s.SortOrder)
-                .ToListAsync();
-
-            if (!sections.Any())
-            {
-                var defaults = new[]
-                {
-                    new AboutMe { SectionKey = "bio", Title = "👨‍💻 我是谁", Content = "你好！我是 Chris Hopper，一名热爱技术的全栈开发者。这个网站是我用 ASP.NET Core 10.0 打造的个人空间，用于分享技术心得、项目经验和生活感悟。", SortOrder = 1 },
-                    new AboutMe { SectionKey = "journey", Title = "📚 学习路线", Content = "2024 - 开始学习 C# 和 .NET 平台\n2025 - 深入学习 ASP.NET Core Web 开发\n2026 - 构建个人网站，持续精进技术", SortOrder = 2 },
-                    new AboutMe { SectionKey = "goal", Title = "🎯 我的目标", Content = "成为一名优秀的全栈开发者，用技术创造价值，用代码改变生活。持续学习，不断进步，分享知识，回馈社区。", SortOrder = 3 },
-                    new AboutMe { SectionKey = "social", Title = "🔗 社交链接", Content = "github:https://github.com/chrishopper|twitter:https://twitter.com/chrishopper|linkedin:https://linkedin.com/in/chrishopper", SortOrder = 4 }
-                };
-                _context.AboutMeContents.AddRange(defaults);
-                await _context.SaveChangesAsync();
-                sections = await _context.AboutMeContents.OrderBy(s => s.SortOrder).ToListAsync();
-            }
-
-            var userId = HttpContext.Session.GetInt32("UserId");
-            User? currentUser = null;
-            if (userId.HasValue)
-            {
-                currentUser = await _context.Users.FindAsync(userId.Value);
-            }
-
-            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-            var pendingAvatars = new List<User>();
-            if (isAdmin == 1)
-            {
-                pendingAvatars = await _context.Users
-                    .Where(u => !string.IsNullOrEmpty(u.AvatarUrl) && !u.IsAvatarApproved)
-                    .OrderByDescending(u => u.AvatarSubmittedAt)
-                    .ToListAsync();
-            }
-
-            ViewBag.Sections = sections;
-            ViewBag.CurrentUser = currentUser;
-            ViewBag.PendingAvatars = pendingAvatars;
-
+            // TODO: 从 DataSync 读取 AboutMe 内容
             return View();
         }
 
@@ -94,11 +52,13 @@ namespace MyPersonalWebsite.Controllers
             {
                 return RedirectToAction("Login", "Auth");
             }
-            var user = await _context.Users.FindAsync(userId.Value);
+
+            var user = await _dataSync.GetUserByIdAsync(userId.Value);
             if (user == null)
             {
                 return RedirectToAction("Login", "Auth");
             }
+
             ViewBag.User = user;
             return View();
         }
@@ -114,7 +74,8 @@ namespace MyPersonalWebsite.Controllers
             {
                 return RedirectToAction("Login", "Auth");
             }
-            var user = await _context.Users.FindAsync(userId.Value);
+
+            var user = await _dataSync.GetUserByIdAsync(userId.Value);
             if (user == null)
             {
                 return RedirectToAction("Login", "Auth");
@@ -135,7 +96,8 @@ namespace MyPersonalWebsite.Controllers
             {
                 return RedirectToAction("Login", "Auth");
             }
-            var user = await _context.Users.FindAsync(userId.Value);
+
+            var user = await _dataSync.GetUserByIdAsync(userId.Value);
             if (user == null)
             {
                 return RedirectToAction("Login", "Auth");
@@ -170,7 +132,8 @@ namespace MyPersonalWebsite.Controllers
                 }
             }
 
-            await _context.SaveChangesAsync();
+            await _dataSync.UpdateUserAsync(user);
+
             TempData["Success"] = isAdmin == 1 ? "修改成功！" : "修改已提交，等待管理员审核";
             return RedirectToAction("Profile");
         }
@@ -218,27 +181,18 @@ namespace MyPersonalWebsite.Controllers
             }
 
             var avatarUrl = $"/images/avatars/{fileName}";
+            var user = await _dataSync.GetUserByIdAsync(userId.Value);
 
-            // ⭐ 先获取 isAdmin 值
-            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-
-            var user = await _context.Users.FindAsync(userId.Value);
             if (user != null)
             {
-                if (isAdmin == 1)
-                {
-                    user.IsAvatarApproved = true;
-                }
-                else
-                {
-                    user.IsAvatarApproved = false;
-                }
+                var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+                user.IsAvatarApproved = isAdmin == 1;
                 user.AvatarUrl = avatarUrl;
                 user.AvatarSubmittedAt = DateTime.Now;
-                await _context.SaveChangesAsync();
+                await _dataSync.UpdateUserAsync(user);
             }
 
-            var message = isAdmin == 1 ? "头像更新成功！" : "头像已提交，等待管理员审核";
+            var message = user?.IsAvatarApproved == true ? "头像更新成功！" : "头像已提交，等待管理员审核";
             return Json(new { success = true, url = avatarUrl, message = message });
         }
 
@@ -254,7 +208,8 @@ namespace MyPersonalWebsite.Controllers
             }
             return View();
         }
-
+    }
+}
         // ============================================================
         // 申请联系方式
         // ============================================================
@@ -269,7 +224,7 @@ namespace MyPersonalWebsite.Controllers
                     return Json(new { success = false, message = "请先登录" });
                 }
 
-                var user = await _context.Users.FindAsync(userId.Value);
+                var user = await _dataSync.GetUserByIdAsync(userId.Value);
                 if (user == null)
                 {
                     return Json(new { success = false, message = "用户不存在" });
@@ -301,12 +256,12 @@ namespace MyPersonalWebsite.Controllers
                     UserEmail = user.Email
                 };
 
-                _context.ContactRequests.Add(contactRequest);
-                await _context.SaveChangesAsync();
+                // TODO: 保存 contactRequest 到数据库
+                // await _dataSync.AddContactRequestAsync(contactRequest);
 
                 try
                 {
-                    var emailService = HttpContext.RequestServices.GetService<EmailService>();
+                    var emailService = HttpContext.RequestServices.GetService<BrevoEmailService>();
                     if (emailService != null)
                     {
                         await emailService.SendAdminNewContactRequestNotificationAsync(
@@ -343,53 +298,18 @@ namespace MyPersonalWebsite.Controllers
                 return Json(new { success = false, message = "请输入授权码" });
             }
 
-            var request = await _context.ContactRequests
-                .Include(r => r.User)
-                .FirstOrDefaultAsync(r => r.AuthorizationCode == code.ToUpper());
+            // TODO: 从数据库查询授权码
+            // var request = await _dataSync.GetContactRequestByCodeAsync(code);
 
-            if (request == null)
-            {
-                return Json(new { success = false, message = "授权码无效或不存在" });
-            }
-
-            if (request.IsUsed)
-            {
-                return Json(new { success = false, message = "该授权码已被使用，请联系管理员" });
-            }
-
-            if (!request.IsApproved)
-            {
-                request.IsApproved = true;
-                request.ViewTime = DateTime.Now;
-                await _context.SaveChangesAsync();
-            }
-
-            string contactInfo = request.Platform == "WeChat"
-                ? "💬 微信号：Chris_hopper"
-                : "🐧 QQ号：2908685235";
-
+            string contactInfo = "💬 微信号：Chris_hopper";
             return Json(new
             {
                 success = true,
                 data = new
                 {
-                    request.Platform,
-                    request.AuthorizationCode,
-                    request.HowKnowMe,
-                    request.Identity,
-                    request.Relationship,
-                    request.Remarks,
-                    request.RequestTime,
-                    request.IsApproved,
-                    request.ViewTime,
-                    request.IsUsed,
-                    ContactInfo = contactInfo,
-                    User = new
-                    {
-                        request.Username,
-                        request.UserEmail,
-                        UserId = request.UserId
-                    }
+                    Platform = "WeChat",
+                    AuthorizationCode = code,
+                    ContactInfo = contactInfo
                 }
             });
         }
