@@ -7,8 +7,12 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
 
+// ⭐ 配置 Turso 连接
+var tursoUrl = builder.Configuration.GetConnectionString("TursoConnection");
+var tursoToken = Environment.GetEnvironmentVariable("TURSO_AUTH_TOKEN") ?? "";
+
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"))
+    options.UseSqlite($"{tursoUrl}?authToken={tursoToken}")
 );
 
 builder.Services.AddDistributedMemoryCache();
@@ -30,13 +34,12 @@ builder.Services.AddSignalR();
 
 var app = builder.Build();
 
-// 创建数据库并初始化管理员（只在第一次运行）
+// ⭐ 自动创建数据库表
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     dbContext.Database.EnsureCreated();
 
-    // 只在管理员不存在时创建
     var adminExists = dbContext.Users.Any(u => u.Username == "admin");
     if (!adminExists)
     {
@@ -52,10 +55,6 @@ using (var scope = app.Services.CreateScope())
         });
         dbContext.SaveChanges();
         Console.WriteLine("✅ 管理员账号已创建");
-    }
-    else
-    {
-        Console.WriteLine("✅ 管理员账号已存在，跳过创建");
     }
 }
 
