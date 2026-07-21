@@ -1,3 +1,5 @@
+using Microsoft.EntityFrameworkCore;
+using MyPersonalWebsite.Models;
 using System;
 using System.Threading.Tasks;
 
@@ -5,22 +7,48 @@ namespace MyPersonalWebsite.Services
 {
     public class EmailRateLimitService
     {
+        private readonly AppDbContext _context;
+
+        public EmailRateLimitService(AppDbContext context)
+        {
+            _context = context;
+        }
+
         public async Task<(bool IsAllowed, string Message, int Remaining)> CanSendEmailAsync(int userId, bool isAdmin)
         {
-            // 管理员不限流
             if (isAdmin)
             {
-                return await Task.FromResult((true, "管理员不限流", 999));
+                return (true, "管理员不限流", 999);
             }
 
-            // 暂不实现限流，直接放行
-            return await Task.FromResult((true, "已发送", 8));
+            var today = DateTime.Today;
+            var todayCount = await _context.EmailLogs
+                .CountAsync(l => l.UserId == userId && l.SentAt >= today && l.SentAt < today.AddDays(1));
+
+            var limit = 8;
+
+            if (todayCount >= limit)
+            {
+                return (false, $"⚠️ 今日邮件已发 {limit} 封，已达上限，请明天再试", 0);
+            }
+
+            return (true, $"今日剩余 {limit - todayCount} 封", limit - todayCount);
         }
 
         public async Task LogEmailAsync(int userId, string email, string type, bool isSuccess, string? errorMessage = null)
         {
-            // 暂不实现日志
-            await Task.CompletedTask;
+            var log = new EmailLog
+            {
+                UserId = userId,
+                Email = email,
+                Type = type,
+                SentAt = DateTime.Now,
+                IsSuccess = isSuccess,
+                ErrorMessage = errorMessage
+            };
+
+            _context.EmailLogs.Add(log);
+            await _context.SaveChangesAsync();
         }
     }
 }
