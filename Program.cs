@@ -30,24 +30,11 @@ builder.Services.AddSignalR();
 
 var app = builder.Build();
 
-// ⭐ 创建缺失的表
+// 创建数据库
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     dbContext.Database.EnsureCreated();
-
-    dbContext.Database.ExecuteSqlRaw(@"
-        CREATE TABLE IF NOT EXISTS ""MessageLikes"" (
-            ""Id"" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-            ""MessageId"" INTEGER NOT NULL,
-            ""UserId"" INTEGER NOT NULL,
-            ""CreateTime"" TEXT NOT NULL
-        );
-    ");
-
-    dbContext.Database.ExecuteSqlRaw(@"
-        CREATE UNIQUE INDEX IF NOT EXISTS ""IX_MessageLikes_MessageId_UserId"" ON ""MessageLikes"" (""MessageId"", ""UserId"");
-    ");
 }
 
 if (!app.Environment.IsDevelopment())
