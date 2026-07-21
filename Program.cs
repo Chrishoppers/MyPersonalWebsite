@@ -2,7 +2,6 @@ using Microsoft.EntityFrameworkCore;
 using MyPersonalWebsite.Models;
 using MyPersonalWebsite.Services;
 using MyPersonalWebsite.Hubs;
-using Microsoft.AspNetCore.DataProtection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,46 +11,12 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"))
 );
 
-// ⭐ 使用内存缓存替代 Session
-builder.Services.AddMemoryCache();
 builder.Services.AddDistributedMemoryCache();
-
-
-app.UseSession();
-
-// ⭐ 强制清除旧的 Session Cookie
-app.Use(async (context, next) =>
-{
-    if (context.Request.Cookies.ContainsKey(".AspNetCore.Session"))
-    {
-        // 如果 Session Cookie 无法解密，直接清除
-        try
-        {
-            await next();
-        }
-        catch
-        {
-            context.Response.Cookies.Delete(".AspNetCore.Session");
-            await next();
-        }
-    }
-    else
-    {
-        await next();
-    }
-});
-
-// ⭐ 禁用 DataProtection
-builder.Services.AddDataProtection()
-    .UseEphemeralDataProtectionProvider();
-
-// ⭐ 禁用 Session 加密
 builder.Services.AddSession(options =>
 {
     options.IdleTimeout = TimeSpan.FromMinutes(30);
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
-    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
 });
 
 builder.Services.AddHttpClient();
