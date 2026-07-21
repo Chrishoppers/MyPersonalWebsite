@@ -22,16 +22,15 @@ builder.Services.AddSession(options =>
 builder.Services.AddHttpClient();
 builder.Services.AddHttpContextAccessor();
 
+builder.Services.AddScoped<BrevoEmailService>();   // ⭐ Brevo 邮件服务
 builder.Services.AddScoped<SvgCaptchaService>();
-builder.Services.AddScoped<BrevoEmailService>();
-//builder.Services.AddScoped<EmailService>();
 builder.Services.AddScoped<RateLimitService>();
 
 builder.Services.AddSignalR();
 
 var app = builder.Build();
 
-// ⭐ 自动创建数据库
+// 自动创建数据库
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
