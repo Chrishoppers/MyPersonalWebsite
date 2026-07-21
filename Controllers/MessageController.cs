@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using MyPersonalWebsite.Models;
@@ -15,13 +15,13 @@ namespace MyPersonalWebsite.Controllers
     {
         private readonly AppDbContext _context;
         private readonly LikeService _likeService;
-        private readonly EmailService _emailService;
+        private readonly BrevoEmailService _emailService;
         private readonly IHubContext<MessageHub> _hubContext;
 
         public MessageController(
             AppDbContext context,
             LikeService likeService,
-            EmailService emailService,
+            BrevoEmailService emailService,
             IHubContext<MessageHub> hubContext)
         {
             _context = context;
@@ -37,20 +37,26 @@ namespace MyPersonalWebsite.Controllers
         {
             var messages = await _context.Messages
                 .Include(m => m.User)
-                .Include(m => m.Likes)
                 .OrderByDescending(m => m.CreateTime)
                 .ToListAsync();
 
             var userId = HttpContext.Session.GetInt32("UserId");
-
             var likedIds = new HashSet<int>();
+
             if (userId.HasValue)
             {
-                var likes = await _context.MessageLikes
-                    .Where(l => l.UserId == userId.Value)
-                    .Select(l => l.MessageId)
-                    .ToListAsync();
-                likedIds = new HashSet<int>(likes);
+                try
+                {
+                    var likes = await _context.MessageLikes
+                        .Where(l => l.UserId == userId.Value)
+                        .Select(l => l.MessageId)
+                        .ToListAsync();
+                    likedIds = new HashSet<int>(likes);
+                }
+                catch
+                {
+                    likedIds = new HashSet<int>();
+                }
             }
 
             ViewBag.LikedIds = likedIds;
@@ -104,15 +110,12 @@ namespace MyPersonalWebsite.Controllers
 
                 if (user.IsAdmin)
                 {
-                    // 管理员留言自动通过
                     message.IsApproved = true;
                 }
                 else
                 {
-                    // 普通用户需要审核
                     message.IsApproved = false;
 
-                    // ⭐ 发送管理员通知邮件
                     try
                     {
                         await _emailService.SendAdminNewMessageNotificationAsync(
@@ -130,7 +133,6 @@ namespace MyPersonalWebsite.Controllers
                 _context.Messages.Add(message);
                 await _context.SaveChangesAsync();
 
-                // 如果留言已通过，推送到弹幕
                 if (message.IsApproved)
                 {
                     await _hubContext.Clients.All.SendAsync("ReceiveMessage", message.VisitorName, message.Content);
@@ -155,14 +157,21 @@ namespace MyPersonalWebsite.Controllers
                 return Json(new { success = false, message = "请先登录" });
             }
 
-            var result = await _likeService.ToggleLikeAsync(messageId, userId.Value);
-            return Json(new
+            try
             {
-                success = result.Success,
-                message = result.Message,
-                likeCount = result.NewLikeCount,
-                isLiked = result.IsLiked
-            });
+                var result = await _likeService.ToggleLikeAsync(messageId, userId.Value);
+                return Json(new
+                {
+                    success = result.Success,
+                    message = result.Message,
+                    likeCount = result.NewLikeCount,
+                    isLiked = result.IsLiked
+                });
+            }
+            catch
+            {
+                return Json(new { success = false, message = "点赞失败，请稍后重试" });
+            }
         }
 
         // ============================================================
@@ -183,13 +192,11 @@ namespace MyPersonalWebsite.Controllers
                 return Json(new { success = false, message = "留言不存在" });
             }
 
-            // 不能举报自己
             if (message.UserId == userId.Value)
             {
                 return Json(new { success = false, message = "不能举报自己的留言" });
             }
 
-            // 检查是否已举报过
             var existingReport = await _context.ReportRecords
                 .FirstOrDefaultAsync(r => r.MessageId == messageId && r.UserId == userId.Value);
             if (existingReport != null)
@@ -197,7 +204,6 @@ namespace MyPersonalWebsite.Controllers
                 return Json(new { success = false, message = "您已举报过这条留言" });
             }
 
-            // 记录举报
             var report = new ReportRecord
             {
                 MessageId = messageId,
@@ -207,7 +213,6 @@ namespace MyPersonalWebsite.Controllers
             };
             _context.ReportRecords.Add(report);
 
-            // 增加留言的举报计数
             message.ReportCount++;
             if (message.ReportCount >= 3)
             {
@@ -267,7 +272,6 @@ namespace MyPersonalWebsite.Controllers
             message.IsApproved = true;
             await _context.SaveChangesAsync();
 
-            // 推送到弹幕
             await _hubContext.Clients.All.SendAsync("ReceiveMessage", message.VisitorName, message.Content);
 
             return Json(new { success = true, message = "审核通过" });
@@ -299,7 +303,6 @@ namespace MyPersonalWebsite.Controllers
             message.AdminReplyTime = DateTime.Now;
             await _context.SaveChangesAsync();
 
-            // 发送邮件通知用户
             try
             {
                 await _emailService.SendReplyNotificationAsync(
