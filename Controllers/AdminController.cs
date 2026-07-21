@@ -22,9 +22,6 @@ namespace MyPersonalWebsite.Controllers
             _emailService = emailService;
         }
 
-        // ============================================================
-        // 仪表盘
-        // ============================================================
         public async Task<IActionResult> Dashboard()
         {
             var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
@@ -51,117 +48,109 @@ namespace MyPersonalWebsite.Controllers
                 ));
 
             ViewBag.RecentMessages = messages.OrderByDescending(m => m.CreateTime).Take(5).ToList();
-
             return View();
         }
-    }
-}
-// ============================================================
-// 博客管理
-// ============================================================
-public async Task<IActionResult> Blogs()
-{
-    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-    if (isAdmin != 1)
-    {
-        return RedirectToAction("Login", "Auth");
-    }
 
-    var blogs = await _dataSync.GetBlogsAsync();
-    return View(blogs);
-}
-
-[HttpGet]
-public IActionResult CreateBlog()
-{
-    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-    if (isAdmin != 1)
-    {
-        return RedirectToAction("Login", "Auth");
-    }
-    return View();
-}
-
-[HttpPost]
-[ValidateAntiForgeryToken]
-public async Task<IActionResult> CreateBlog(Blog blog)
-{
-    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-    if (isAdmin != 1)
-    {
-        return RedirectToAction("Login", "Auth");
-    }
-
-    if (ModelState.IsValid)
-    {
-        blog.PublishDate = DateTime.Now;
-        await _dataSync.AddBlogAsync(blog);
-
-        try
+        public async Task<IActionResult> Blogs()
         {
-            await _emailService.SendAdminNewBlogNotificationAsync(blog.Title);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"邮件发送失败: {ex.Message}");
+            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+            if (isAdmin != 1)
+            {
+                return RedirectToAction("Login", "Auth");
+            }
+
+            var blogs = await _dataSync.GetBlogsAsync();
+            return View(blogs);
         }
 
-        return RedirectToAction("Blogs");
-    }
-    return View(blog);
-}
+        [HttpGet]
+        public IActionResult CreateBlog()
+        {
+            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+            if (isAdmin != 1)
+            {
+                return RedirectToAction("Login", "Auth");
+            }
+            return View();
+        }
 
-[HttpGet]
-public async Task<IActionResult> EditBlog(int id)
-{
-    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-    if (isAdmin != 1)
-    {
-        return RedirectToAction("Login", "Auth");
-    }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CreateBlog(Blog blog)
+        {
+            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+            if (isAdmin != 1)
+            {
+                return RedirectToAction("Login", "Auth");
+            }
 
-    var blog = await _dataSync.GetBlogByIdAsync(id);
-    if (blog == null)
-    {
-        return NotFound();
-    }
-    return View(blog);
-}
+            if (ModelState.IsValid)
+            {
+                blog.PublishDate = DateTime.Now;
+                await _dataSync.AddBlogAsync(blog);
 
-[HttpPost]
-[ValidateAntiForgeryToken]
-public async Task<IActionResult> EditBlog(Blog blog)
-{
-    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-    if (isAdmin != 1)
-    {
-        return RedirectToAction("Login", "Auth");
-    }
+                try
+                {
+                    await _emailService.SendAdminNewBlogNotificationAsync(blog.Title);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"邮件发送失败: {ex.Message}");
+                }
 
-    if (ModelState.IsValid)
-    {
-        await _dataSync.UpdateBlogAsync(blog);
-        return RedirectToAction("Blogs");
-    }
-    return View(blog);
-}
+                return RedirectToAction("Blogs");
+            }
+            return View(blog);
+        }
 
-[HttpPost]
-public async Task<IActionResult> DeleteBlog(int id)
-{
-    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-    if (isAdmin != 1)
-    {
-        return Json(new { success = false, message = "权限不足" });
-    }
+        [HttpGet]
+        public async Task<IActionResult> EditBlog(int id)
+        {
+            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+            if (isAdmin != 1)
+            {
+                return RedirectToAction("Login", "Auth");
+            }
 
-    await _dataSync.DeleteBlogAsync(id);
-    return Json(new { success = true, message = "删除成功" });
-}
-// ============================================================
-// 博客图片上传
-// ============================================================
-[HttpPost]
+            var blog = await _dataSync.GetBlogByIdAsync(id);
+            if (blog == null)
+            {
+                return NotFound();
+            }
+            return View(blog);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditBlog(Blog blog)
+        {
+            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+            if (isAdmin != 1)
+            {
+                return RedirectToAction("Login", "Auth");
+            }
+
+            if (ModelState.IsValid)
+            {
+                await _dataSync.UpdateBlogAsync(blog);
+                return RedirectToAction("Blogs");
+            }
+            return View(blog);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> DeleteBlog(int id)
+        {
+            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+            if (isAdmin != 1)
+            {
+                return Json(new { success = false, message = "权限不足" });
+            }
+
+            await _dataSync.DeleteBlogAsync(id);
+            return Json(new { success = true, message = "删除成功" });
+        }
+        [HttpPost]
 public async Task<IActionResult> UploadBlogImage(IFormFile image)
 {
     try
@@ -205,9 +194,6 @@ public async Task<IActionResult> UploadBlogImage(IFormFile image)
     }
 }
 
-// ============================================================
-// 留言管理
-// ============================================================
 public async Task<IActionResult> Messages()
 {
     var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
@@ -220,9 +206,6 @@ public async Task<IActionResult> Messages()
     return View(messages);
 }
 
-// ============================================================
-// 用户管理
-// ============================================================
 public async Task<IActionResult> Users()
 {
     var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
@@ -234,9 +217,7 @@ public async Task<IActionResult> Users()
     var users = await _dataSync.GetAllUsersAsync();
     return View(users.Where(u => !u.IsDeleted).OrderByDescending(u => u.CreatedAt).ToList());
 }
-// ============================================================
-// 封禁用户
-// ============================================================
+
 [HttpPost]
 public async Task<IActionResult> BanUser(int id, int hours, string reason, string note)
 {
@@ -281,10 +262,6 @@ public async Task<IActionResult> BanUser(int id, int hours, string reason, strin
 
     return Json(new { success = true, message = $"已封禁用户 {user.Username}" });
 }
-
-// ============================================================
-// 解封用户
-// ============================================================
 [HttpPost]
 public async Task<IActionResult> UnbanUser(int id)
 {
@@ -324,57 +301,51 @@ public async Task<IActionResult> UnbanUser(int id)
 
     return Json(new { success = true, message = $"已解封用户 {user.Username}" });
 }
-        // ============================================================
-        // 删除用户
-        // ============================================================
-        [HttpPost]
-        public async Task<IActionResult> DeleteUser(int id, string reason, string note)
-        {
-            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-            if (isAdmin != 1)
-            {
-                return Json(new { success = false, message = "权限不足" });
-            }
 
-            var user = await _dataSync.GetUserByIdAsync(id);
-            if (user == null)
-            {
-                return Json(new { success = false, message = "用户不存在" });
-            }
+[HttpPost]
+public async Task<IActionResult> DeleteUser(int id, string reason, string note)
+{
+    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+    if (isAdmin != 1)
+    {
+        return Json(new { success = false, message = "权限不足" });
+    }
 
-            if (user.IsAdmin)
-            {
-                return Json(new { success = false, message = "不能删除管理员" });
-            }
+    var user = await _dataSync.GetUserByIdAsync(id);
+    if (user == null)
+    {
+        return Json(new { success = false, message = "用户不存在" });
+    }
 
-            user.IsDeleted = true;
-            user.DeletedAt = DateTime.Now;
-            user.DeleteReason = reason;
-            user.DeleteNote = note;
+    if (user.IsAdmin)
+    {
+        return Json(new { success = false, message = "不能删除管理员" });
+    }
 
-            await _dataSync.UpdateUserAsync(user);
+    user.IsDeleted = true;
+    user.DeletedAt = DateTime.Now;
+    user.DeleteReason = reason;
+    user.DeleteNote = note;
 
-            try
-            {
-                await _emailService.SendUserActionNotificationAsync(
-                    user.Email,
-                    user.Username,
-                    "delete",
-                    reason ?? "违反网站规定",
-                    note ?? "无"
-                );
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"邮件发送失败: {ex.Message}");
-            }
+    await _dataSync.UpdateUserAsync(user);
 
-            return Json(new { success = true, message = $"已删除用户 {user.Username}" });
-        }
+    try
+    {
+        await _emailService.SendUserActionNotificationAsync(
+            user.Email,
+            user.Username,
+            "delete",
+            reason ?? "违反网站规定",
+            note ?? "无"
+        );
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"邮件发送失败: {ex.Message}");
+    }
 
-        // ============================================================
-        // 激活用户
-        // ============================================================
+    return Json(new { success = true, message = $"已删除用户 {user.Username}" });
+}
         [HttpPost]
         public async Task<IActionResult> ActivateUser(int userId)
         {
