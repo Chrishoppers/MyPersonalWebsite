@@ -12,14 +12,13 @@ namespace MyPersonalWebsite.Controllers
     public class MessageController : Controller
     {
         private readonly AppDbContext _context;
-        private readonly LikeService _likeService;
 
-        public MessageController(AppDbContext context, LikeService likeService)
+        public MessageController(AppDbContext context)
         {
             _context = context;
-            _likeService = likeService;
         }
 
+        // ===== 留言大屏 =====
         public async Task<IActionResult> Index()
         {
             var messages = await _context.Messages
@@ -32,6 +31,7 @@ namespace MyPersonalWebsite.Controllers
             return View(messages);
         }
 
+        // ===== 发布留言页面 =====
         [HttpGet]
         public IActionResult Create()
         {
@@ -43,6 +43,7 @@ namespace MyPersonalWebsite.Controllers
             return View();
         }
 
+        // ===== 发布留言提交 =====
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Message message)
@@ -54,9 +55,15 @@ namespace MyPersonalWebsite.Controllers
             }
 
             var user = await _context.Users.FindAsync(userId.Value);
-            if (user == null || user.IsBanned)
+            if (user == null)
             {
-                ModelState.AddModelError("", user?.IsBanned == true ? "您的账号已被封禁" : "请先登录");
+                ModelState.AddModelError("", "用户不存在");
+                return View();
+            }
+
+            if (user.IsBanned)
+            {
+                ModelState.AddModelError("", "您的账号已被封禁");
                 return View();
             }
 
@@ -79,6 +86,7 @@ namespace MyPersonalWebsite.Controllers
             return View(message);
         }
 
+        // ===== 点赞 =====
         [HttpPost]
         public async Task<IActionResult> ToggleLike(int messageId)
         {
@@ -90,21 +98,29 @@ namespace MyPersonalWebsite.Controllers
 
             try
             {
-                var result = await _likeService.ToggleLikeAsync(messageId, userId.Value);
-                return Json(new
+                var message = await _context.Messages.FindAsync(messageId);
+                if (message == null)
                 {
-                    success = result.Success,
-                    message = result.Message,
-                    likeCount = result.NewLikeCount,
-                    isLiked = result.IsLiked
-                });
+                    return Json(new { success = false, message = "留言不存在" });
+                }
+
+                if (message.UserId == userId.Value)
+                {
+                    return Json(new { success = false, message = "不能给自己的留言点赞" });
+                }
+
+                message.LikeCount++;
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true, likeCount = message.LikeCount });
             }
             catch
             {
-                return Json(new { success = false, message = "点赞失败，请稍后重试" });
+                return Json(new { success = false, message = "点赞失败" });
             }
         }
 
+        // ===== 管理员删除 =====
         [HttpPost]
         public async Task<IActionResult> Delete(int id)
         {
