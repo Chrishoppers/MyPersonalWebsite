@@ -14,10 +14,12 @@ namespace MyPersonalWebsite.Controllers
     public class AdminController : Controller
     {
         private readonly AppDbContext _context;
+        private readonly BrevoEmailService _emailService;
 
-        public AdminController(AppDbContext context)
+        public AdminController(AppDbContext context, BrevoEmailService emailService)
         {
             _context = context;
+            _emailService = emailService;
         }
 
         // ============================================================
@@ -31,7 +33,7 @@ namespace MyPersonalWebsite.Controllers
                 return RedirectToAction("Login", "Auth");
             }
 
-            ViewBag.UserCount = await _context.Users.CountAsync();
+            ViewBag.UserCount = await _context.Users.CountAsync(u => !u.IsDeleted);
             ViewBag.BlogCount = await _context.Blogs.CountAsync();
             ViewBag.MessageCount = await _context.Messages.CountAsync();
             ViewBag.PendingMessages = await _context.Messages.CountAsync(m => !m.IsApproved);
@@ -97,11 +99,7 @@ namespace MyPersonalWebsite.Controllers
 
                 try
                 {
-                    var emailService = HttpContext.RequestServices.GetService<EmailService>();
-                    if (emailService != null)
-                    {
-                        await emailService.SendAdminNewBlogNotificationAsync(blog.Title);
-                    }
+                    await _emailService.SendAdminNewBlogNotificationAsync(blog.Title);
                 }
                 catch (Exception ex)
                 {
@@ -247,13 +245,17 @@ namespace MyPersonalWebsite.Controllers
             }
 
             var users = await _context.Users
+                .Where(u => !u.IsDeleted)
                 .OrderByDescending(u => u.CreatedAt)
                 .ToListAsync();
             return View(users);
         }
 
+        // ============================================================
+        // 5a. 封禁用户
+        // ============================================================
         [HttpPost]
-        public async Task<IActionResult> BanUser(int id, int hours, string reason)
+        public async Task<IActionResult> BanUser(int id, int hours, string reason, string note)
         {
             var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
             if (isAdmin != 1)
@@ -282,12 +284,32 @@ namespace MyPersonalWebsite.Controllers
                 user.BanExpiry = null;
             }
             user.BanReason = reason;
+            user.BanNote = note;
 
             await _context.SaveChangesAsync();
+
+            // 发送邮件通知
+            try
+            {
+                await _emailService.SendUserActionNotificationAsync(
+                    user.Email,
+                    user.Username,
+                    "ban",
+                    reason ?? "违反网站规定",
+                    note ?? "无"
+                );
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"邮件发送失败: {ex.Message}");
+            }
 
             return Json(new { success = true, message = $"已封禁用户 {user.Username}" });
         }
 
+        // ============================================================
+        // 5b. 解封用户
+        // ============================================================
         [HttpPost]
         public async Task<IActionResult> UnbanUser(int id)
         {
@@ -306,61 +328,92 @@ namespace MyPersonalWebsite.Controllers
             user.IsBanned = false;
             user.BanExpiry = null;
             user.BanReason = null;
+            user.BanNote = null;
 
             await _context.SaveChangesAsync();
 
+            // 发送邮件通知
+            try
+            {
+                await _emailService.SendUserActionNotificationAsync(
+                    user.Email,
+                    user.Username,
+                    "unban",
+                    "管理员已解封您的账号",
+                    null
+                );
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"邮件发送失败: {ex.Message}");
+            }
+
             return Json(new { success = true, message = $"已解封用户 {user.Username}" });
         }
+
         // ============================================================
-// 头像审核 - 通过
-// ============================================================
-[HttpPost]
-public async Task<IActionResult> ApproveAvatar(int userId)
-{
-    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-    if (isAdmin != 1)
-    {
-        return Json(new { success = false, message = "权限不足" });
-    }
+        // 5c. 删除账号（软删除）
+        // ============================================================
+        [HttpPost]
+        public async Task<IActionResult> DeleteUser(int id, string reason, string note)
+        {
+            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+            if (isAdmin != 1)
+            {
+                return Json(new { success = false, message = "权限不足" });
+            }
 
-    var user = await _context.Users.FindAsync(userId);
-    if (user == null)
-    {
-        return Json(new { success = false, message = "用户不存在" });
-    }
+            var user = await _context.Users
+                .Include(u => u.Messages)
+                .Include(u => u.Likes)
+                .FirstOrDefaultAsync(u => u.Id == id);
 
-    user.IsAvatarApproved = true;
-    await _context.SaveChangesAsync();
+            if (user == null)
+            {
+                return Json(new { success = false, message = "用户不存在" });
+            }
 
-    return Json(new { success = true, message = "头像已通过审核" });
-}
+            if (user.IsAdmin)
+            {
+                return Json(new { success = false, message = "不能删除管理员" });
+            }
 
-// ============================================================
-// 头像审核 - 拒绝
-// ============================================================
-[HttpPost]
-public async Task<IActionResult> RejectAvatar(int userId)
-{
-    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-    if (isAdmin != 1)
-    {
-        return Json(new { success = false, message = "权限不足" });
-    }
+            // 软删除
+            user.IsDeleted = true;
+            user.DeletedAt = DateTime.Now;
+            user.DeleteReason = reason;
+            user.DeleteNote = note;
 
-    var user = await _context.Users.FindAsync(userId);
-    if (user == null)
-    {
-        return Json(new { success = false, message = "用户不存在" });
-    }
+            // 同时删除该用户的所有留言
+            if (user.Messages != null)
+            {
+                _context.Messages.RemoveRange(user.Messages);
+            }
+            if (user.Likes != null)
+            {
+                _context.MessageLikes.RemoveRange(user.Likes);
+            }
 
-    // 清空头像
-    user.AvatarUrl = null;
-    user.IsAvatarApproved = false;
-    user.AvatarSubmittedAt = null;
-    await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync();
 
-    return Json(new { success = true, message = "头像已拒绝" });
-}
+            // 发送邮件通知
+            try
+            {
+                await _emailService.SendUserActionNotificationAsync(
+                    user.Email,
+                    user.Username,
+                    "delete",
+                    reason ?? "违反网站规定",
+                    note ?? "无"
+                );
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"邮件发送失败: {ex.Message}");
+            }
+
+            return Json(new { success = true, message = $"已删除用户 {user.Username}" });
+        }
 
         // ============================================================
         // 6. 授权码管理
@@ -489,7 +542,7 @@ public async Task<IActionResult> RejectAvatar(int userId)
         }
 
         // ============================================================
-        // ⭐ 7. 关于我管理
+        // 7. 关于我管理
         // ============================================================
         public async Task<IActionResult> About()
         {
@@ -507,10 +560,10 @@ public async Task<IActionResult> RejectAvatar(int userId)
             {
                 var defaults = new[]
                 {
-                    new AboutMe { SectionKey = "bio", Title = "👨‍💻 我是谁", Content = "你好！我是 Chris Hopper，一名热爱技术的全栈开发者。这个网站是我用 ASP.NET Core 10.0 打造的个人空间，用于分享技术心得、项目经验和生活感悟。", SortOrder = 1 },
-                    new AboutMe { SectionKey = "journey", Title = "📚 学习路线", Content = "2024 - 开始学习 C# 和 .NET 平台\n2025 - 深入学习 ASP.NET Core Web 开发\n2026 - 构建个人网站，持续精进技术", SortOrder = 2 },
-                    new AboutMe { SectionKey = "goal", Title = "🎯 我的目标", Content = "成为一名优秀的全栈开发者，用技术创造价值，用代码改变生活。持续学习，不断进步，分享知识，回馈社区。", SortOrder = 3 },
-                    new AboutMe { SectionKey = "social", Title = "🔗 社交链接", Content = "github:https://github.com/chrishopper|twitter:https://twitter.com/chrishopper|linkedin:https://linkedin.com/in/chrishopper", SortOrder = 4 }
+                    new AboutMe { SectionKey = "bio", Title = "👨‍💻 我是谁", Content = "你好！我是 Chris Hopper，一名热爱技术的全栈开发者。", SortOrder = 1 },
+                    new AboutMe { SectionKey = "journey", Title = "📚 学习路线", Content = "2024 - 开始学习 C# 和 .NET\n2025 - 深入学习 ASP.NET Core\n2026 - 构建个人网站", SortOrder = 2 },
+                    new AboutMe { SectionKey = "goal", Title = "🎯 我的目标", Content = "成为一名优秀的全栈开发者，用技术创造价值。", SortOrder = 3 },
+                    new AboutMe { SectionKey = "social", Title = "🔗 社交链接", Content = "github:https://github.com/chrishopper|twitter:https://twitter.com/chrishopper", SortOrder = 4 }
                 };
                 _context.AboutMeContents.AddRange(defaults);
                 await _context.SaveChangesAsync();
@@ -531,7 +584,6 @@ public async Task<IActionResult> RejectAvatar(int userId)
 
             try
             {
-                // 处理社交链接
                 if (data.ContainsKey("social_github") || data.ContainsKey("social_twitter") || 
                     data.ContainsKey("social_linkedin") || data.ContainsKey("social_discord"))
                 {
@@ -554,7 +606,6 @@ public async Task<IActionResult> RejectAvatar(int userId)
                     }
                 }
 
-                // 处理其他内容
                 var contentKeys = new[] { "bio", "journey", "goal" };
                 foreach (var key in contentKeys)
                 {
@@ -577,6 +628,53 @@ public async Task<IActionResult> RejectAvatar(int userId)
             {
                 return Json(new { success = false, message = ex.Message });
             }
+        }
+
+        // ============================================================
+        // 8. 头像审核
+        // ============================================================
+        [HttpPost]
+        public async Task<IActionResult> ApproveAvatar(int userId)
+        {
+            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+            if (isAdmin != 1)
+            {
+                return Json(new { success = false, message = "权限不足" });
+            }
+
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null)
+            {
+                return Json(new { success = false, message = "用户不存在" });
+            }
+
+            user.IsAvatarApproved = true;
+            await _context.SaveChangesAsync();
+
+            return Json(new { success = true, message = "头像已通过审核" });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> RejectAvatar(int userId)
+        {
+            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+            if (isAdmin != 1)
+            {
+                return Json(new { success = false, message = "权限不足" });
+            }
+
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null)
+            {
+                return Json(new { success = false, message = "用户不存在" });
+            }
+
+            user.AvatarUrl = null;
+            user.IsAvatarApproved = false;
+            user.AvatarSubmittedAt = null;
+            await _context.SaveChangesAsync();
+
+            return Json(new { success = true, message = "头像已拒绝" });
         }
     }
 }
