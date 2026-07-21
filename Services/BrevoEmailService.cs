@@ -21,58 +21,40 @@ namespace MyPersonalWebsite.Services
         // 核心发送方法
         // ============================================================
 
-       public async Task<(bool Success, string Message)> SendEmailWithLimitAsync(string to, string subject, string htmlContent, string type)
-{
-    var userId = GetCurrentUserId();
-    if (!userId.HasValue)
-    {
-        return (false, "请先登录");
-    }
-
-    var isAdmin = IsAdmin();
-    var (canSend, message, remaining) = await _rateLimitService.CanSendEmailAsync(userId.Value, isAdmin);
-
-    if (!canSend)
-    {
-        return (false, message);
-    }
-
-    try
-    {
-        var request = new
+        public async Task<(bool Success, string Message)> SendEmailWithLimitAsync(string to, string subject, string htmlContent, string type)
         {
-            sender = new { email = "hello@chris-hopper.org", name = "Chris Hopper 个人网站" },
-            to = new[] { new { email = to } },
-            subject = subject,
-            htmlContent = htmlContent
-        };
+            try
+            {
+                var request = new
+                {
+                    sender = new { email = "hello@chris-hopper.org", name = "Chris Hopper 个人网站" },
+                    to = new[] { new { email = to } },
+                    subject = subject,
+                    htmlContent = htmlContent
+                };
 
-        var json = JsonSerializer.Serialize(request);
-        var content = new StringContent(json, Encoding.UTF8, "application/json");
+                var json = JsonSerializer.Serialize(request);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-        _httpClient.DefaultRequestHeaders.Clear();
-        _httpClient.DefaultRequestHeaders.Add("api-key", _apiKey);
+                _httpClient.DefaultRequestHeaders.Clear();
+                _httpClient.DefaultRequestHeaders.Add("api-key", _apiKey);
 
-        var response = await _httpClient.PostAsync("https://api.brevo.com/v3/smtp/email", content);
+                var response = await _httpClient.PostAsync("https://api.brevo.com/v3/smtp/email", content);
 
-        if (response.IsSuccessStatusCode)
-        {
-            await _rateLimitService.LogEmailAsync(userId.Value, to, type, true);
-            return (true, $"✅ 邮件已发送（今日剩余 {remaining - 1} 封）");
+                if (response.IsSuccessStatusCode)
+                {
+                    return (true, "✅ 邮件发送成功");
+                }
+                else
+                {
+                    return (false, "邮件发送失败，请稍后重试");
+                }
+            }
+            catch (Exception ex)
+            {
+                return (false, $"邮件发送失败: {ex.Message}");
+            }
         }
-        else
-        {
-            var error = await response.Content.ReadAsStringAsync();
-            await _rateLimitService.LogEmailAsync(userId.Value, to, type, false, error);
-            return (false, $"邮件发送失败，请重试");
-        }
-    }
-    catch (Exception ex)
-    {
-        await _rateLimitService.LogEmailAsync(userId.Value, to, type, false, ex.Message);
-        return (false, "邮件发送失败，请重试");
-    }
-}
 
         // ============================================================
         // 邮件模板
@@ -153,7 +135,7 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 管理员通知（不受限制，直接用 SendEmailAsync）
+        // 管理员通知（不受限制）
         // ============================================================
 
         public async Task<bool> SendEmailAsync(string to, string subject, string htmlContent)
