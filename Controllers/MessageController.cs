@@ -17,6 +17,9 @@ namespace MyPersonalWebsite.Controllers
             _context = context;
         }
 
+        // ============================================================
+        // 留言大屏
+        // ============================================================
         public async Task<IActionResult> Index()
         {
             var messages = await _context.Messages
@@ -29,6 +32,9 @@ namespace MyPersonalWebsite.Controllers
             return View(messages);
         }
 
+        // ============================================================
+        // 发布留言页面
+        // ============================================================
         [HttpGet]
         public IActionResult Create()
         {
@@ -40,6 +46,9 @@ namespace MyPersonalWebsite.Controllers
             return View();
         }
 
+        // ============================================================
+        // 发布留言提交
+        // ============================================================
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Message message)
@@ -76,6 +85,9 @@ namespace MyPersonalWebsite.Controllers
             return View(message);
         }
 
+        // ============================================================
+        // 点赞
+        // ============================================================
         [HttpPost]
         public async Task<IActionResult> ToggleLike(int messageId)
         {
@@ -93,6 +105,11 @@ namespace MyPersonalWebsite.Controllers
                     return Json(new { success = false, message = "留言不存在" });
                 }
 
+                if (message.UserId == userId.Value)
+                {
+                    return Json(new { success = false, message = "不能给自己的留言点赞" });
+                }
+
                 message.LikeCount++;
                 await _context.SaveChangesAsync();
 
@@ -104,6 +121,9 @@ namespace MyPersonalWebsite.Controllers
             }
         }
 
+        // ============================================================
+        // 管理员删除留言
+        // ============================================================
         [HttpPost]
         public async Task<IActionResult> Delete(int id)
         {
