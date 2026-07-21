@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using MyPersonalWebsite.Models;
 using System.Threading.Tasks;
 
@@ -37,7 +37,8 @@ namespace MyPersonalWebsite.Services
                 _context.MessageLikes.Add(new MessageLike
                 {
                     MessageId = messageId,
-                    UserId = userId
+                    UserId = userId,
+                    CreateTime = DateTime.Now
                 });
                 message.LikeCount++;
                 await _context.SaveChangesAsync();
