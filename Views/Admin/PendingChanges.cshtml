@@ -1,0 +1,68 @@
+@model List<MyPersonalWebsite.Models.User>
+
+@{
+    ViewData["Title"] = "待审核更改";
+    var isAdmin = Context.Session.GetInt32("IsAdmin") ?? 0;
+    if (isAdmin != 1)
+    {
+        Context.Response.Redirect("/Auth/Login");
+        return;
+    }
+}
+
+<div style="max-width:1000px;margin:0 auto;padding:2rem 1rem;">
+    <h2 style="color:#fff;font-weight:700;margin-bottom:1.5rem;">📋 待审核更改</h2>
+
+    @if (Model.Any(u => !string.IsNullOrEmpty(u.PendingUsername) || !string.IsNullOrEmpty(u.PendingEmail) || !u.IsAvatarApproved))
+    {
+        <div style="background:rgba(255,255,255,0.02);border-radius:20px;border:1px solid rgba(255,255,255,0.04);overflow:hidden;">
+            <table style="width:100%;border-collapse:collapse;color:#e0e0e0;font-size:0.9rem;">
+                <thead>
+                    <tr style="background:rgba(255,255,255,0.02);">
+                        <th style="padding:0.8rem 1rem;text-align:left;color:rgba(255,255,255,0.3);">用户</th>
+                        <th style="padding:0.8rem 1rem;text-align:left;color:rgba(255,255,255,0.3);">更改类型</th>
+                        <th style="padding:0.8rem 1rem;text-align:left;color:rgba(255,255,255,0.3);">当前值</th>
+                        <th style="padding:0.8rem 1rem;text-align:left;color:rgba(255,255,255,0.3);">申请值</th>
+                        <th style="padding:0.8rem 1rem;text-align:left;color:rgba(255,255,255,0.3);">操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var user in Model)
+                    {
+                        var hasPending = false;
+                        <tr>
+                            <td style="padding:0.8rem 1rem;border-top:1px solid rgba(255,255,255,0.02);">@user.Username</td>
+                            <td style="padding:0.8rem 1rem;border-top:1px solid rgba(255,255,255,0.02);">
+                                @if (!string.IsNullOrEmpty(user.PendingUsername)) { <span>昵称</span><br /> }
+                                @if (!string.IsNullOrEmpty(user.PendingEmail)) { <span>邮箱</span><br /> }
+                                @if (!user.IsAvatarApproved && !string.IsNullOrEmpty(user.AvatarUrl)) { <span>头像</span><br /> }
+                            </td>
+                            <td style="padding:0.8rem 1rem;border-top:1px solid rgba(255,255,255,0.02);">
+                                @user.Username<br />@user.Email
+                            </td>
+                            <td style="padding:0.8rem 1rem;border-top:1px solid rgba(255,255,255,0.02);">
+                                @if (!string.IsNullOrEmpty(user.PendingUsername)) { <span>@user.PendingUsername</span><br /> }
+                                @if (!string.IsNullOrEmpty(user.PendingEmail)) { <span>@user.PendingEmail</span><br /> }
+                                @if (!user.IsAvatarApproved && !string.IsNullOrEmpty(user.AvatarUrl)) { <span>新头像</span> }
+                            </td>
+                            <td style="padding:0.8rem 1rem;border-top:1px solid rgba(255,255,255,0.02);">
+                                <form asp-action="ApproveUserChange" method="post" style="display:inline;">
+                                    <input type="hidden" name="userId" value="@user.Id" />
+                                    <button type="submit" style="padding:0.2rem 0.8rem;border:none;border-radius:20px;background:rgba(40,167,69,0.12);color:#28a745;cursor:pointer;font-size:0.75rem;">✅ 通过</button>
+                                </form>
+                                <form asp-action="RejectUserChange" method="post" style="display:inline;">
+                                    <input type="hidden" name="userId" value="@user.Id" />
+                                    <button type="submit" style="padding:0.2rem 0.8rem;border:none;border-radius:20px;background:rgba(220,53,69,0.08);color:#dc3545;cursor:pointer;font-size:0.75rem;">❌ 拒绝</button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div style="text-align:center;padding:3rem 2rem;color:rgba(255,255,255,0.15);">✅ 暂无待审核的更改</div>
+    }
+</div>
