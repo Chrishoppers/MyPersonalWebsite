@@ -1,738 +1,119 @@
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using MyPersonalWebsite.Models;
-using MyPersonalWebsite.Services;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-
-namespace MyPersonalWebsite.Controllers
-{
-    public class AdminController : Controller
+@{
+    ViewData["Title"] = "个人信息";
+    var user = ViewBag.User as MyPersonalWebsite.Models.User;
+    if (user == null)
     {
-        private readonly AppDbContext _context;
-        private readonly BrevoEmailService _emailService;
+        Context.Response.Redirect("/Auth/Login");
+        return;
+    }
+    var userId = Context.Session.GetInt32("UserId");
+    var isAdmin = Context.Session.GetInt32("IsAdmin") ?? 0;
+}
 
-        public AdminController(AppDbContext context, BrevoEmailService emailService)
-        {
-            _context = context;
-            _emailService = emailService;
-        }
+<style>
+    .profile-container { max-width: 700px; margin: 0 auto; padding: 2rem 1rem; }
+    .profile-card { background: rgba(255,255,255,0.02); backdrop-filter: blur(20px); border-radius: 24px; border: 1px solid rgba(255,255,255,0.04); padding: 2rem; }
+    .profile-card h2 { color: #fff; font-weight: 700; margin-bottom: 1.5rem; }
+    .profile-card .info-row { display: flex; justify-content: space-between; align-items: center; padding: 0.8rem 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+    .profile-card .info-row .label { color: rgba(255,255,255,0.3); font-size: 0.85rem; min-width: 80px; }
+    .profile-card .info-row .value { color: #fff; font-size: 0.95rem; }
+    .profile-card .info-row .status { font-size: 0.7rem; padding: 0.15rem 0.6rem; border-radius: 20px; }
+    .status-pending { background: rgba(255,193,7,0.12); color: #ffc107; border: 1px solid rgba(255,193,7,0.06); }
+    .status-approved { background: rgba(40,167,69,0.12); color: #28a745; border: 1px solid rgba(40,167,69,0.06); }
+    .btn-edit { padding: 0.3rem 1rem; border: 1px solid rgba(255,255,255,0.04); border-radius: 30px; background: rgba(255,255,255,0.02); color: rgba(255,255,255,0.4); text-decoration: none; font-size: 0.8rem; transition: all 0.3s ease; cursor: pointer; }
+    .btn-edit:hover { background: rgba(255,255,255,0.04); color: #fff; }
+    .avatar-upload { display: flex; align-items: center; gap: 1rem; padding: 1rem 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+    .avatar-upload .avatar { width: 80px; height: 80px; border-radius: 50%; overflow: hidden; background: linear-gradient(135deg,#8B5CF6,#EC4899); }
+    .avatar-upload .avatar img { width: 100%; height: 100%; object-fit: cover; }
+</style>
 
-        // ============================================================
-        // 1. 仪表盘
-        // ============================================================
-        public async Task<IActionResult> Dashboard()
-        {
-            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-            if (isAdmin != 1)
-            {
-                return RedirectToAction("Login", "Auth");
-            }
+<div class="profile-container">
+    <div class="profile-card">
+        <h2>👤 个人信息</h2>
 
-            ViewBag.UserCount = await _context.Users.CountAsync(u => !u.IsDeleted);
-            ViewBag.BlogCount = await _context.Blogs.CountAsync();
-            ViewBag.MessageCount = await _context.Messages.CountAsync();
-            ViewBag.PendingMessages = await _context.Messages.CountAsync(m => !m.IsApproved);
-            ViewBag.ContactRequestCount = await _context.ContactRequests.CountAsync();
-            ViewBag.PendingContactRequests = await _context.ContactRequests.CountAsync(r => !r.IsUsed && !r.IsApproved);
-
-            // 待审核更改数量
-            ViewBag.PendingChangesCount = await _context.Users
-                .Where(u => !u.IsDeleted && (
-                    !string.IsNullOrEmpty(u.PendingUsername) ||
-                    !string.IsNullOrEmpty(u.PendingEmail) ||
-                    (!u.IsAvatarApproved && !string.IsNullOrEmpty(u.AvatarUrl))
-                ))
-                .CountAsync();
-
-            ViewBag.RecentMessages = await _context.Messages
-                .OrderByDescending(m => m.CreateTime)
-                .Take(5)
-                .ToListAsync();
-
-            ViewBag.RecentContactRequests = await _context.ContactRequests
-                .OrderByDescending(r => r.RequestTime)
-                .Take(5)
-                .ToListAsync();
-
-            return View();
-        }
-
-        // ============================================================
-        // 2. 博客管理
-        // ============================================================
-        public async Task<IActionResult> Blogs()
-        {
-            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-            if (isAdmin != 1)
-            {
-                return RedirectToAction("Login", "Auth");
-            }
-
-            var blogs = await _context.Blogs
-                .OrderByDescending(b => b.PublishDate)
-                .ToListAsync();
-            return View(blogs);
-        }
-
-        [HttpGet]
-        public IActionResult CreateBlog()
-        {
-            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-            if (isAdmin != 1)
-            {
-                return RedirectToAction("Login", "Auth");
-            }
-            return View();
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CreateBlog(Blog blog)
-        {
-            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-            if (isAdmin != 1)
-            {
-                return RedirectToAction("Login", "Auth");
-            }
-
-            if (ModelState.IsValid)
-            {
-                blog.PublishDate = DateTime.Now;
-                _context.Blogs.Add(blog);
-                await _context.SaveChangesAsync();
-
-                try
+        <!-- 头像 -->
+        <div class="avatar-upload">
+            <div class="avatar">
+                @if (!string.IsNullOrEmpty(user.AvatarUrl) && user.IsAvatarApproved)
                 {
-                    await _emailService.SendAdminNewBlogNotificationAsync(blog.Title);
+                    <img src="@user.AvatarUrl" alt="头像" />
                 }
-                catch (Exception ex)
+                else if (!string.IsNullOrEmpty(user.AvatarUrl) && !user.IsAvatarApproved)
                 {
-                    Console.WriteLine($"通知邮件发送失败: {ex.Message}");
+                    <img src="@user.AvatarUrl" alt="头像" style="opacity:0.3;filter:grayscale(1);" />
                 }
-
-                return RedirectToAction("Blogs");
-            }
-            return View(blog);
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> EditBlog(int id)
-        {
-            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-            if (isAdmin != 1)
-            {
-                return RedirectToAction("Login", "Auth");
-            }
-
-            var blog = await _context.Blogs.FindAsync(id);
-            if (blog == null)
-            {
-                return NotFound();
-            }
-            return View(blog);
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> EditBlog(Blog blog)
-        {
-            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-            if (isAdmin != 1)
-            {
-                return RedirectToAction("Login", "Auth");
-            }
-
-            if (ModelState.IsValid)
-            {
-                _context.Blogs.Update(blog);
-                await _context.SaveChangesAsync();
-                return RedirectToAction("Blogs");
-            }
-            return View(blog);
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> DeleteBlog(int id)
-        {
-            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-            if (isAdmin != 1)
-            {
-                return Json(new { success = false, message = "权限不足" });
-            }
-
-            var blog = await _context.Blogs.FindAsync(id);
-            if (blog == null)
-            {
-                return Json(new { success = false, message = "博客不存在" });
-            }
-
-            _context.Blogs.Remove(blog);
-            await _context.SaveChangesAsync();
-
-            return Json(new { success = true, message = "删除成功" });
-        }
-
-        // ============================================================
-        // 3. 博客图片上传
-        // ============================================================
-        [HttpPost]
-        public async Task<IActionResult> UploadBlogImage(IFormFile image)
-        {
-            try
-            {
-                if (image == null || image.Length == 0)
+                else
                 {
-                    return Json(new { success = false, message = "请选择图片" });
+                    <span style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:2.5rem;color:#fff;">@(user.Username?.FirstOrDefault().ToString().ToUpper() ?? "?")</span>
                 }
-
-                var allowedTypes = new[] { "image/jpeg", "image/png", "image/gif", "image/webp" };
-                if (!allowedTypes.Contains(image.ContentType))
-                {
-                    return Json(new { success = false, message = "只支持 JPG, PNG, GIF, WebP 格式" });
-                }
-
-                if (image.Length > 5 * 1024 * 1024)
-                {
-                    return Json(new { success = false, message = "图片大小不能超过 5MB" });
-                }
-
-                var fileName = $"{Guid.NewGuid():N}_{image.FileName}";
-                var uploadPath = Path.Combine("wwwroot", "images", "blog");
-
-                if (!Directory.Exists(uploadPath))
-                {
-                    Directory.CreateDirectory(uploadPath);
-                }
-
-                var filePath = Path.Combine(uploadPath, fileName);
-                using (var stream = new FileStream(filePath, FileMode.Create))
-                {
-                    await image.CopyToAsync(stream);
-                }
-
-                var imageUrl = $"/images/blog/{fileName}";
-                return Json(new { success = true, url = imageUrl });
-            }
-            catch (Exception ex)
-            {
-                return Json(new { success = false, message = ex.Message });
-            }
-        }
-
-        // ============================================================
-        // 4. 留言管理
-        // ============================================================
-        public async Task<IActionResult> Messages()
-        {
-            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-            if (isAdmin != 1)
-            {
-                return RedirectToAction("Login", "Auth");
-            }
-
-            var messages = await _context.Messages
-                .Include(m => m.User)
-                .OrderByDescending(m => m.CreateTime)
-                .ToListAsync();
-            return View(messages);
-        }
-
-        // ============================================================
-        // 5. 用户管理
-        // ============================================================
-        public async Task<IActionResult> Users()
-        {
-            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-            if (isAdmin != 1)
-            {
-                return RedirectToAction("Login", "Auth");
-            }
-
-            var users = await _context.Users
-                .Where(u => !u.IsDeleted)
-                .OrderByDescending(u => u.CreatedAt)
-                .ToListAsync();
-            return View(users);
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> BanUser(int id, int hours, string reason, string note)
-        {
-            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-            if (isAdmin != 1)
-            {
-                return Json(new { success = false, message = "权限不足" });
-            }
-
-            var user = await _context.Users.FindAsync(id);
-            if (user == null)
-            {
-                return Json(new { success = false, message = "用户不存在" });
-            }
-
-            if (user.IsAdmin)
-            {
-                return Json(new { success = false, message = "不能封禁管理员" });
-            }
-
-            user.IsBanned = true;
-            if (hours > 0)
-            {
-                user.BanExpiry = DateTime.Now.AddHours(hours);
-            }
-            else
-            {
-                user.BanExpiry = null;
-            }
-            user.BanReason = reason;
-            user.BanNote = note;
-
-            await _context.SaveChangesAsync();
-
-            try
-            {
-                await _emailService.SendUserActionNotificationAsync(
-                    user.Email,
-                    user.Username,
-                    "ban",
-                    reason ?? "违反网站规定",
-                    note ?? "无"
-                );
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"邮件发送失败: {ex.Message}");
-            }
-
-            return Json(new { success = true, message = $"已封禁用户 {user.Username}" });
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> UnbanUser(int id)
-        {
-            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-            if (isAdmin != 1)
-            {
-                return Json(new { success = false, message = "权限不足" });
-            }
-
-            var user = await _context.Users.FindAsync(id);
-            if (user == null)
-            {
-                return Json(new { success = false, message = "用户不存在" });
-            }
-
-            user.IsBanned = false;
-            user.BanExpiry = null;
-            user.BanReason = null;
-            user.BanNote = null;
-
-            await _context.SaveChangesAsync();
-
-            try
-            {
-                await _emailService.SendUserActionNotificationAsync(
-                    user.Email,
-                    user.Username,
-                    "unban",
-                    "管理员已解封您的账号",
-                    null
-                );
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"邮件发送失败: {ex.Message}");
-            }
-
-            return Json(new { success = true, message = $"已解封用户 {user.Username}" });
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> DeleteUser(int id, string reason, string note)
-        {
-            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-            if (isAdmin != 1)
-            {
-                return Json(new { success = false, message = "权限不足" });
-            }
-
-            var user = await _context.Users
-                .Include(u => u.Messages)
-                .FirstOrDefaultAsync(u => u.Id == id);
-
-            if (user == null)
-            {
-                return Json(new { success = false, message = "用户不存在" });
-            }
-
-            if (user.IsAdmin)
-            {
-                return Json(new { success = false, message = "不能删除管理员" });
-            }
-
-            user.IsDeleted = true;
-            user.DeletedAt = DateTime.Now;
-            user.DeleteReason = reason;
-            user.DeleteNote = note;
-
-            if (user.Messages != null)
-            {
-                _context.Messages.RemoveRange(user.Messages);
-            }
-
-            await _context.SaveChangesAsync();
-
-            try
-            {
-                await _emailService.SendUserActionNotificationAsync(
-                    user.Email,
-                    user.Username,
-                    "delete",
-                    reason ?? "违反网站规定",
-                    note ?? "无"
-                );
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"邮件发送失败: {ex.Message}");
-            }
-
-            return Json(new { success = true, message = $"已删除用户 {user.Username}" });
-        }
-
-        // ============================================================
-        // 6. 授权码管理
-        // ============================================================
-        public async Task<IActionResult> ContactRequests()
-        {
-            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-            if (isAdmin != 1)
-            {
-                return RedirectToAction("Login", "Auth");
-            }
-
-            var requests = await _context.ContactRequests
-                .Include(r => r.User)
-                .OrderByDescending(r => r.RequestTime)
-                .ToListAsync();
-            return View(requests);
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> MarkContactUsed(int id)
-        {
-            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-            if (isAdmin != 1)
-            {
-                return Json(new { success = false, message = "权限不足" });
-            }
-
-            var request = await _context.ContactRequests.FindAsync(id);
-            if (request == null)
-            {
-                return Json(new { success = false, message = "记录不存在" });
-            }
-
-            if (request.IsUsed)
-            {
-                return Json(new { success = false, message = "已被标记为已使用" });
-            }
-
-            request.IsUsed = true;
-            request.UsedTime = DateTime.Now;
-            request.UsedBy = HttpContext.Session.GetString("Username") ?? "admin";
-            await _context.SaveChangesAsync();
-
-            return Json(new { success = true, message = "已标记为已使用" });
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> UnmarkContactUsed(int id)
-        {
-            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-            if (isAdmin != 1)
-            {
-                return Json(new { success = false, message = "权限不足" });
-            }
-
-            var request = await _context.ContactRequests.FindAsync(id);
-            if (request == null)
-            {
-                return Json(new { success = false, message = "记录不存在" });
-            }
-
-            if (!request.IsUsed)
-            {
-                return Json(new { success = false, message = "该记录未被标记为已使用" });
-            }
-
-            request.IsUsed = false;
-            request.UsedTime = null;
-            request.UsedBy = null;
-            await _context.SaveChangesAsync();
-
-            return Json(new { success = true, message = "已撤销使用标记" });
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> ContactDetail(int id)
-        {
-            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-            if (isAdmin != 1)
-            {
-                return Json(new { success = false, message = "权限不足" });
-            }
-
-            var request = await _context.ContactRequests
-                .Include(r => r.User)
-                .FirstOrDefaultAsync(r => r.Id == id);
-
-            if (request == null)
-            {
-                return Json(new { success = false, message = "记录不存在" });
-            }
-
-            if (!request.IsApproved)
-            {
-                request.IsApproved = true;
-                request.ViewTime = DateTime.Now;
-                await _context.SaveChangesAsync();
-            }
-
-            return Json(new
-            {
-                success = true,
-                data = new
-                {
-                    request.Platform,
-                    request.AuthorizationCode,
-                    request.HowKnowMe,
-                    request.Identity,
-                    request.Relationship,
-                    request.Remarks,
-                    request.RequestTime,
-                    request.IsApproved,
-                    request.ViewTime,
-                    request.IsUsed,
-                    request.UsedTime,
-                    request.UsedBy,
-                    User = new
+            </div>
+            <div>
+                <div style="color:#fff;font-weight:500;">头像</div>
+                <div style="font-size:0.8rem;color:rgba(255,255,255,0.2);">
+                    @if (string.IsNullOrEmpty(user.AvatarUrl))
                     {
-                        request.Username,
-                        request.UserEmail,
-                        UserId = request.UserId
+                        <span>未设置</span>
                     }
-                }
-            });
-        }
-
-        // ============================================================
-        // 7. 关于我管理
-        // ============================================================
-        public async Task<IActionResult> About()
-        {
-            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-            if (isAdmin != 1)
-            {
-                return RedirectToAction("Login", "Auth");
-            }
-
-            var sections = await _context.AboutMeContents
-                .OrderBy(s => s.SortOrder)
-                .ToListAsync();
-
-            if (!sections.Any())
-            {
-                var defaults = new[]
-                {
-                    new AboutMe { SectionKey = "bio", Title = "👨‍💻 我是谁", Content = "你好！我是 Chris Hopper，一名热爱技术的全栈开发者。", SortOrder = 1 },
-                    new AboutMe { SectionKey = "journey", Title = "📚 学习路线", Content = "2024 - 开始学习 C# 和 .NET\n2025 - 深入学习 ASP.NET Core\n2026 - 构建个人网站", SortOrder = 2 },
-                    new AboutMe { SectionKey = "goal", Title = "🎯 我的目标", Content = "成为一名优秀的全栈开发者，用技术创造价值。", SortOrder = 3 },
-                    new AboutMe { SectionKey = "social", Title = "🔗 社交链接", Content = "github:https://github.com/chrishopper|twitter:https://twitter.com/chrishopper", SortOrder = 4 }
-                };
-                _context.AboutMeContents.AddRange(defaults);
-                await _context.SaveChangesAsync();
-                sections = await _context.AboutMeContents.OrderBy(s => s.SortOrder).ToListAsync();
-            }
-
-            return View(sections);
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> UpdateAboutMe([FromBody] Dictionary<string, string> data)
-        {
-            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-            if (isAdmin != 1)
-            {
-                return Json(new { success = false, message = "权限不足" });
-            }
-
-            try
-            {
-                if (data.ContainsKey("social_github") || data.ContainsKey("social_twitter") || 
-                    data.ContainsKey("social_linkedin") || data.ContainsKey("social_discord"))
-                {
-                    var socialLinks = new List<string>();
-                    if (data.ContainsKey("social_github") && !string.IsNullOrEmpty(data["social_github"]))
-                        socialLinks.Add($"github:{data["social_github"]}");
-                    if (data.ContainsKey("social_twitter") && !string.IsNullOrEmpty(data["social_twitter"]))
-                        socialLinks.Add($"twitter:{data["social_twitter"]}");
-                    if (data.ContainsKey("social_linkedin") && !string.IsNullOrEmpty(data["social_linkedin"]))
-                        socialLinks.Add($"linkedin:{data["social_linkedin"]}");
-                    if (data.ContainsKey("social_discord") && !string.IsNullOrEmpty(data["social_discord"]))
-                        socialLinks.Add($"discord:{data["social_discord"]}");
-
-                    var socialSection = await _context.AboutMeContents
-                        .FirstOrDefaultAsync(s => s.SectionKey == "social");
-                    if (socialSection != null)
+                    else if (user.IsAvatarApproved)
                     {
-                        socialSection.Content = string.Join("|", socialLinks);
-                        socialSection.UpdatedAt = DateTime.Now;
+                        <span class="status-approved" style="padding:0.1rem 0.6rem;border-radius:20px;font-size:0.7rem;">✅ 已通过</span>
                     }
-                }
-
-                var contentKeys = new[] { "bio", "journey", "goal" };
-                foreach (var key in contentKeys)
-                {
-                    if (data.ContainsKey(key))
+                    else
                     {
-                        var section = await _context.AboutMeContents
-                            .FirstOrDefaultAsync(s => s.SectionKey == key);
-                        if (section != null)
-                        {
-                            section.Content = data[key];
-                            section.UpdatedAt = DateTime.Now;
-                        }
+                        <span class="status-pending" style="padding:0.1rem 0.6rem;border-radius:20px;font-size:0.7rem;">⏳ 审核中</span>
                     }
+                </div>
+                <form asp-action="UploadAvatar" method="post" enctype="multipart/form-data" style="margin-top:0.3rem;">
+                    <input type="file" name="avatar" accept="image/*" style="color:rgba(255,255,255,0.3);font-size:0.8rem;" required />
+                    <button type="submit" class="btn-edit" style="margin-top:0.2rem;">上传</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- 昵称 -->
+        <div class="info-row">
+            <span class="label">昵称</span>
+            <span class="value">@user.Username</span>
+            <span>
+                @if (!string.IsNullOrEmpty(user.PendingUsername) && user.PendingUsername != user.Username)
+                {
+                    <span class="status-pending">⏳ 待审核: @user.PendingUsername</span>
                 }
+                <a href="/Home/EditProfile?field=username" class="btn-edit">修改</a>
+            </span>
+        </div>
 
-                await _context.SaveChangesAsync();
-                return Json(new { success = true });
-            }
-            catch (Exception ex)
-            {
-                return Json(new { success = false, message = ex.Message });
-            }
-        }
+        <!-- 邮箱 -->
+        <div class="info-row">
+            <span class="label">邮箱</span>
+            <span class="value">@user.Email</span>
+            <span>
+                @if (!string.IsNullOrEmpty(user.PendingEmail) && user.PendingEmail != user.Email)
+                {
+                    <span class="status-pending">⏳ 待审核: @user.PendingEmail</span>
+                }
+                <a href="/Home/EditProfile?field=email" class="btn-edit">修改</a>
+            </span>
+        </div>
 
-        // ============================================================
-        // 8. 头像审核
-        // ============================================================
-        [HttpPost]
-        public async Task<IActionResult> ApproveAvatar(int userId)
+        <!-- 角色 -->
+        <div class="info-row">
+            <span class="label">角色</span>
+            <span class="value">@(user.IsAdmin ? "👑 管理员" : "👤 普通用户")</span>
+        </div>
+
+        <!-- 注册时间 -->
+        <div class="info-row">
+            <span class="label">注册时间</span>
+            <span class="value">@user.CreatedAt.ToString("yyyy-MM-dd HH:mm")</span>
+        </div>
+
+        @if (isAdmin == 1)
         {
-            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-            if (isAdmin != 1)
-            {
-                return Json(new { success = false, message = "权限不足" });
-            }
-
-            var user = await _context.Users.FindAsync(userId);
-            if (user == null)
-            {
-                return Json(new { success = false, message = "用户不存在" });
-            }
-
-            user.IsAvatarApproved = true;
-            await _context.SaveChangesAsync();
-
-            return Json(new { success = true, message = "头像已通过审核" });
+            <div class="info-row" style="border-top:1px solid rgba(255,255,255,0.04);padding-top:1rem;margin-top:0.5rem;">
+                <span class="label" style="color:#8B5CF6;">🔧 管理员</span>
+                <span style="color:rgba(255,255,255,0.2);font-size:0.8rem;">所有更改自动通过</span>
+            </div>
         }
-
-        [HttpPost]
-        public async Task<IActionResult> RejectAvatar(int userId)
-        {
-            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-            if (isAdmin != 1)
-            {
-                return Json(new { success = false, message = "权限不足" });
-            }
-
-            var user = await _context.Users.FindAsync(userId);
-            if (user == null)
-            {
-                return Json(new { success = false, message = "用户不存在" });
-            }
-
-            user.AvatarUrl = null;
-            user.IsAvatarApproved = false;
-            user.AvatarSubmittedAt = null;
-            await _context.SaveChangesAsync();
-
-            return Json(new { success = true, message = "头像已拒绝" });
-        }
-
-        // ============================================================
-        // 9. 待审核更改
-        // ============================================================
-        public async Task<IActionResult> PendingChanges()
-        {
-            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-            if (isAdmin != 1)
-            {
-                return RedirectToAction("Login", "Auth");
-            }
-
-            var users = await _context.Users
-                .Where(u => !u.IsDeleted && (
-                    !string.IsNullOrEmpty(u.PendingUsername) ||
-                    !string.IsNullOrEmpty(u.PendingEmail) ||
-                    (!u.IsAvatarApproved && !string.IsNullOrEmpty(u.AvatarUrl))
-                ))
-                .ToListAsync();
-
-            return View(users);
-        }
-
-        // ============================================================
-        // 通过更改
-        // ============================================================
-        [HttpPost]
-        public async Task<IActionResult> ApproveUserChange(int userId)
-        {
-            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-            if (isAdmin != 1)
-            {
-                return Json(new { success = false, message = "权限不足" });
-            }
-
-            var user = await _context.Users.FindAsync(userId);
-            if (user == null)
-            {
-                return Json(new { success = false, message = "用户不存在" });
-            }
-
-            if (!string.IsNullOrEmpty(user.PendingUsername))
-            {
-                user.Username = user.PendingUsername;
-                user.PendingUsername = null;
-                user.IsUsernameChangeApproved = true;
-            }
-
-            if (!string.IsNullOrEmpty(user.PendingEmail))
-            {
-                user.Email = user.PendingEmail;
-                user.PendingEmail = null;
-                user.IsEmailChangeApproved = true;
-            }
-
-            if (!user.IsAvatarApproved && !string.IsNullOrEmpty(user.AvatarUrl))
-            {
-                user.IsAvatarApproved = true;
-            }
-
-            await _context.SaveChangesAsync();
-
-            return Json(new { success = true, message = "更改已通过" });
-        }
-
-        // ============================================================
-        // 拒绝更改
-        // ============================================================
-        [HttpPost]
-       
+    </div>
+</div>
