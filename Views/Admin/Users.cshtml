@@ -1,4 +1,4 @@
-﻿@model List<MyPersonalWebsite.Models.User>
+@model List<MyPersonalWebsite.Models.User>
 
 @{
     ViewData["Title"] = "用户管理";
@@ -10,531 +10,83 @@
     }
 }
 
-<style>
-    body {
-        background: #0b0e1a;
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        color: #e0e0e0;
-    }
+<div style="max-width:1200px;margin:0 auto;padding:2rem 1rem;">
+    <h2 style="color:#fff;font-weight:700;margin-bottom:1.5rem;">👥 用户管理</h2>
 
-    .admin-container {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 2rem 1.5rem;
-    }
-
-    .admin-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 1rem;
-        margin-bottom: 2rem;
-        padding-bottom: 1.5rem;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-    }
-
-    .admin-header h1 {
-        font-size: 1.8rem;
-        font-weight: 700;
-        background: linear-gradient(135deg, #f093fb 0%, #f5576c 50%, #4facfe 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        margin: 0;
-    }
-
-    .btn-glass {
-        padding: 0.5rem 1.5rem;
-        border-radius: 40px;
-        border: 1px solid rgba(255, 255, 255, 0.06);
-        background: rgba(255, 255, 255, 0.04);
-        color: rgba(255, 255, 255, 0.7);
-        font-weight: 500;
-        text-decoration: none;
-        transition: all 0.3s ease;
-        font-size: 0.9rem;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        cursor: pointer;
-    }
-
-    .btn-glass:hover {
-        background: rgba(255, 255, 255, 0.08);
-        border-color: rgba(255, 255, 255, 0.12);
-        color: #fff;
-    }
-
-    .stats-row {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-        gap: 1rem;
-        margin-bottom: 2rem;
-    }
-
-    .stat-card {
-        background: rgba(255, 255, 255, 0.03);
-        border-radius: 16px;
-        padding: 1rem 1.2rem;
-        border: 1px solid rgba(255, 255, 255, 0.04);
-        text-align: center;
-    }
-
-    .stat-card .number {
-        font-size: 1.6rem;
-        font-weight: 700;
-        color: #fff;
-    }
-
-    .stat-card .label {
-        font-size: 0.75rem;
-        color: rgba(255, 255, 255, 0.4);
-        margin-top: 0.2rem;
-    }
-
-    .stat-card.total .number { color: #4facfe; }
-    .stat-card.banned .number { color: #dc3545; }
-    .stat-card.active .number { color: #28a745; }
-
-    .filter-bar {
-        display: flex;
-        gap: 1rem;
-        flex-wrap: wrap;
-        margin-bottom: 1.5rem;
-        padding: 1rem 1.5rem;
-        background: rgba(255, 255, 255, 0.02);
-        border-radius: 16px;
-        border: 1px solid rgba(255, 255, 255, 0.04);
-        align-items: center;
-    }
-
-    .filter-bar select,
-    .filter-bar input {
-        padding: 0.5rem 1rem;
-        border-radius: 40px;
-        border: 1px solid rgba(255, 255, 255, 0.06);
-        background: rgba(255, 255, 255, 0.04);
-        color: #e0e0e0;
-        font-size: 0.85rem;
-        outline: none;
-        transition: border-color 0.2s ease;
-    }
-
-    .filter-bar select:focus,
-    .filter-bar input:focus {
-        border-color: rgba(79, 172, 254, 0.3);
-    }
-
-    .filter-bar select option {
-        background: #1a1a2e;
-        color: #e0e0e0;
-    }
-
-    .filter-bar .search-input {
-        flex: 1;
-        min-width: 180px;
-    }
-
-    .filter-bar .filter-label {
-        color: rgba(255, 255, 255, 0.3);
-        font-size: 0.8rem;
-    }
-
-    .table-responsive {
-        overflow-x: auto;
-        border-radius: 16px;
-        border: 1px solid rgba(255, 255, 255, 0.04);
-        background: rgba(255, 255, 255, 0.02);
-    }
-
-    table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 0.85rem;
-        min-width: 700px;
-    }
-
-    th {
-        text-align: left;
-        padding: 0.8rem 1rem;
-        background: rgba(255, 255, 255, 0.03);
-        color: rgba(255, 255, 255, 0.4);
-        font-weight: 500;
-        font-size: 0.75rem;
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-    }
-
-    td {
-        padding: 0.8rem 1rem;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.03);
-        color: rgba(255, 255, 255, 0.8);
-        vertical-align: middle;
-    }
-
-    tr:hover td {
-        background: rgba(255, 255, 255, 0.02);
-    }
-
-    .badge-status {
-        font-size: 0.65rem;
-        padding: 0.15rem 0.7rem;
-        border-radius: 20px;
-        font-weight: 500;
-        display: inline-block;
-    }
-
-    .badge-admin {
-        background: rgba(79, 172, 254, 0.12);
-        color: #4facfe;
-        border: 1px solid rgba(79, 172, 254, 0.06);
-    }
-
-    .badge-banned {
-        background: rgba(220, 53, 69, 0.12);
-        color: #dc3545;
-        border: 1px solid rgba(220, 53, 69, 0.06);
-    }
-
-    .badge-active {
-        background: rgba(40, 167, 69, 0.12);
-        color: #28a745;
-        border: 1px solid rgba(40, 167, 69, 0.06);
-    }
-
-    .badge-verified {
-        background: rgba(79, 172, 254, 0.08);
-        color: #4facfe;
-        border: 1px solid rgba(79, 172, 254, 0.04);
-    }
-
-    .badge-unverified {
-        background: rgba(255, 193, 7, 0.08);
-        color: #ffc107;
-        border: 1px solid rgba(255, 193, 7, 0.04);
-    }
-
-    .btn-sm {
-        padding: 0.2rem 0.8rem;
-        border: none;
-        border-radius: 30px;
-        font-size: 0.75rem;
-        font-weight: 500;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        background: rgba(255, 255, 255, 0.04);
-        color: rgba(255, 255, 255, 0.6);
-        text-decoration: none;
-        display: inline-block;
-    }
-
-    .btn-sm:hover {
-        background: rgba(255, 255, 255, 0.08);
-        color: #fff;
-    }
-
-    .btn-sm.danger {
-        background: rgba(220, 53, 69, 0.08);
-        color: #dc3545;
-    }
-
-    .btn-sm.danger:hover {
-        background: rgba(220, 53, 69, 0.15);
-    }
-
-    .btn-sm.success {
-        background: rgba(40, 167, 69, 0.08);
-        color: #28a745;
-    }
-
-    .btn-sm.success:hover {
-        background: rgba(40, 167, 69, 0.15);
-    }
-
-    .btn-sm.primary {
-        background: rgba(79, 172, 254, 0.08);
-        color: #4facfe;
-    }
-
-    .btn-sm.primary:hover {
-        background: rgba(79, 172, 254, 0.15);
-    }
-
-    .btn-sm:disabled {
-        opacity: 0.4;
-        cursor: not-allowed;
-    }
-
-    .empty-state {
-        text-align: center;
-        padding: 3rem 2rem;
-        color: rgba(255, 255, 255, 0.2);
-    }
-
-    .empty-state .icon {
-        font-size: 3rem;
-        margin-bottom: 0.5rem;
-        opacity: 0.3;
-    }
-
-    .toast-container {
-        position: fixed;
-        bottom: 2rem;
-        right: 2rem;
-        z-index: 2000;
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-        align-items: flex-end;
-    }
-
-    .toast-msg {
-        padding: 0.8rem 1.8rem;
-        border-radius: 40px;
-        color: #fff;
-        font-weight: 500;
-        animation: slideUp 0.4s ease;
-        font-size: 0.9rem;
-        backdrop-filter: blur(10px);
-        background: rgba(0, 0, 0, 0.6);
-        border: 1px solid rgba(255, 255, 255, 0.04);
-    }
-
-    .toast-msg.success { background: rgba(40, 167, 69, 0.8); }
-    .toast-msg.error { background: rgba(220, 53, 69, 0.8); }
-    .toast-msg.info { background: rgba(79, 172, 254, 0.8); }
-
-    @@keyframes slideUp {
-        from { opacity: 0; transform: translateY(20px) scale(0.95); }
-        to { opacity: 1; transform: translateY(0) scale(1); }
-    }
-
-    /* 封禁弹窗 */
-    .ban-modal-overlay {
-        display: none;
-        position: fixed;
-        inset: 0;
-        background: rgba(0, 0, 0, 0.5);
-        backdrop-filter: blur(8px);
-        z-index: 1000;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .ban-modal-overlay.active {
-        display: flex;
-    }
-
-    .ban-modal {
-        background: #1a1a2e;
-        border-radius: 28px;
-        padding: 2rem 2.2rem;
-        max-width: 400px;
-        width: 90%;
-        border: 1px solid rgba(255, 255, 255, 0.04);
-        box-shadow: 0 24px 80px rgba(0, 0, 0, 0.4);
-        animation: modalIn 0.3s ease;
-    }
-
-    .ban-modal h5 {
-        font-weight: 600;
-        margin-bottom: 0.5rem;
-        color: #fff;
-    }
-
-    .ban-modal p {
-        color: rgba(255, 255, 255, 0.4);
-        font-size: 0.9rem;
-        margin-bottom: 1rem;
-    }
-
-    .ban-modal select,
-    .ban-modal input {
-        width: 100%;
-        padding: 0.7rem 1rem;
-        border-radius: 14px;
-        border: 1px solid rgba(255, 255, 255, 0.06);
-        background: rgba(255, 255, 255, 0.04);
-        color: #e0e0e0;
-        font-size: 0.9rem;
-        margin-bottom: 0.8rem;
-        transition: border-color 0.2s ease;
-        font-family: inherit;
-    }
-
-    .ban-modal select:focus,
-    .ban-modal input:focus {
-        outline: none;
-        border-color: rgba(79, 172, 254, 0.3);
-    }
-
-    .ban-modal select option {
-        background: #1a1a2e;
-        color: #e0e0e0;
-    }
-
-    .ban-modal .modal-actions {
-        display: flex;
-        gap: 0.5rem;
-        justify-content: flex-end;
-    }
-
-    .ban-modal .modal-actions button {
-        padding: 0.6rem 1.8rem;
-        border: none;
-        border-radius: 40px;
-        font-weight: 500;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        font-size: 0.9rem;
-    }
-
-    .ban-modal .btn-submit {
-        background: linear-gradient(135deg, #dc3545, #c82333);
-        color: #fff;
-    }
-
-    .ban-modal .btn-submit:hover {
-        transform: scale(1.02);
-        box-shadow: 0 4px 20px rgba(220, 53, 69, 0.2);
-    }
-
-    .ban-modal .btn-cancel {
-        background: rgba(255, 255, 255, 0.04);
-        color: rgba(255, 255, 255, 0.4);
-    }
-
-    .ban-modal .btn-cancel:hover {
-        background: rgba(255, 255, 255, 0.08);
-    }
-
-    @@keyframes modalIn {
-        from { opacity: 0; transform: scale(0.95) translateY(20px); }
-        to { opacity: 1; transform: scale(1) translateY(0); }
-    }
-
-    @@media (max-width: 640px) {
-        .admin-header h1 { font-size: 1.3rem; }
-        .filter-bar { flex-direction: column; align-items: stretch; }
-        .stats-row { grid-template-columns: repeat(2, 1fr); }
-        td, th { padding: 0.5rem 0.6rem; font-size: 0.75rem; }
-    }
-</style>
-
-<div class="admin-container">
-
-    <!-- ===== 头部 ===== -->
-    <div class="admin-header">
-        <h1>👥 用户管理</h1>
-        <div>
-            <a href="/Admin/Dashboard" class="btn-glass">← 返回后台</a>
-        </div>
-    </div>
-
-    <!-- ===== 统计 ===== -->
-    <div class="stats-row">
-        <div class="stat-card total">
-            <div class="number">@Model.Count</div>
-            <div class="label">📝 总用户</div>
-        </div>
-        <div class="stat-card active">
-            <div class="number">@Model.Count(u => !u.IsBanned)</div>
-            <div class="label">✅ 活跃用户</div>
-        </div>
-        <div class="stat-card banned">
-            <div class="number">@Model.Count(u => u.IsBanned)</div>
-            <div class="label">🚫 已封禁</div>
-        </div>
-    </div>
-
-    <!-- ===== 筛选 ===== -->
-    <div class="filter-bar">
-        <span class="filter-label">🔍 筛选：</span>
-        <select id="filterStatus">
-            <option value="all">全部</option>
-            <option value="active">✅ 活跃</option>
-            <option value="banned">🚫 已封禁</option>
-            <option value="admin">👑 管理员</option>
-        </select>
-        <input type="text" class="search-input" id="searchInput" placeholder="搜索用户名或邮箱..." />
-        <button class="btn-glass" onclick="applyFilters()">应用</button>
-        <button class="btn-glass" onclick="resetFilters()">重置</button>
-    </div>
-
-    <!-- ===== 表格 ===== -->
-    <div class="table-responsive">
-        <table>
+    <div style="background:rgba(255,255,255,0.02);border-radius:20px;border:1px solid rgba(255,255,255,0.04);overflow:hidden;">
+        <table style="width:100%;border-collapse:collapse;color:#e0e0e0;font-size:0.9rem;">
             <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>用户名</th>
-                    <th>邮箱</th>
-                    <th>角色</th>
-                    <th>状态</th>
-                    <th>邮箱验证</th>
-                    <th>注册时间</th>
-                    <th>操作</th>
+                <tr style="background:rgba(255,255,255,0.02);">
+                    <th style="padding:0.8rem 1rem;text-align:left;color:rgba(255,255,255,0.3);">ID</th>
+                    <th style="padding:0.8rem 1rem;text-align:left;color:rgba(255,255,255,0.3);">用户名</th>
+                    <th style="padding:0.8rem 1rem;text-align:left;color:rgba(255,255,255,0.3);">邮箱</th>
+                    <th style="padding:0.8rem 1rem;text-align:left;color:rgba(255,255,255,0.3);">角色</th>
+                    <th style="padding:0.8rem 1rem;text-align:left;color:rgba(255,255,255,0.3);">邮箱验证</th>
+                    <th style="padding:0.8rem 1rem;text-align:left;color:rgba(255,255,255,0.3);">状态</th>
+                    <th style="padding:0.8rem 1rem;text-align:left;color:rgba(255,255,255,0.3);">操作</th>
                 </tr>
             </thead>
             <tbody>
-                @if (Model.Any())
-                {
-                    foreach (var user in Model.OrderByDescending(u => u.CreatedAt))
-                    {
-                        string statusClass = user.IsBanned ? "badge-banned" : "badge-active";
-                        string statusText = user.IsBanned ? "🚫 已封禁" : "✅ 活跃";
-                        string roleClass = user.IsAdmin ? "badge-admin" : "";
-                        string roleText = user.IsAdmin ? "👑 管理员" : "👤 普通用户";
-                        string verifyClass = user.IsEmailVerified ? "badge-verified" : "badge-unverified";
-                        string verifyText = user.IsEmailVerified ? "✅ 已验证" : "⏳ 未验证";
-
-                        <tr class="user-row"
-                            data-status="@(user.IsBanned ? "banned" : "active")"
-                            data-role="@(user.IsAdmin ? "admin" : "user")"
-                            data-search="@(user.Username + " " + user.Email)">
-                            <td>@user.Id</td>
-                            <td><strong>@user.Username</strong></td>
-                            <td style="font-size:0.8rem;color:rgba(255,255,255,0.5);">@user.Email</td>
-                            <td><span class="badge-status @roleClass">@roleText</span></td>
-                            <td><span class="badge-status @statusClass">@statusText</span></td>
-                            <td><span class="badge-status @verifyClass">@verifyText</span></td>
-                            <td style="font-size:0.75rem;color:rgba(255,255,255,0.3);">@user.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
-                            <td>
-                                <div style="display:flex;gap:0.3rem;flex-wrap:wrap;">
-                                    @if (!user.IsAdmin)
-                                    {
-                                        @if (!user.IsBanned)
-                                        {
-                                            <button class="btn-sm danger" onclick="openBanModal(@user.Id, '@user.Username')">
-                                                🚫 封禁
-                                            </button>
-                                        }
-                                        else
-                                        {
-                                            <button class="btn-sm success" onclick="unbanUser(@user.Id, '@user.Username')">
-                                                ✅ 解封
-                                            </button>
-                                        }
-                                    }
-                                    else
-                                    {
-                                        <span style="font-size:0.7rem;color:rgba(255,255,255,0.2);">不可操作</span>
-                                    }
-                                </div>
-                            </td>
-                        </tr>
-                    }
-                }
-                else
+                @foreach (var user in Model)
                 {
                     <tr>
-                        <td colspan="8">
-                            <div class="empty-state">
-                                <div class="icon">👤</div>
-                                <p>暂无用户</p>
-                            </div>
+                        <td style="padding:0.8rem 1rem;border-top:1px solid rgba(255,255,255,0.02);">@user.Id</td>
+                        <td style="padding:0.8rem 1rem;border-top:1px solid rgba(255,255,255,0.02);">@user.Username</td>
+                        <td style="padding:0.8rem 1rem;border-top:1px solid rgba(255,255,255,0.02);">@user.Email</td>
+                        <td style="padding:0.8rem 1rem;border-top:1px solid rgba(255,255,255,0.02);">
+                            @if (user.IsAdmin)
+                            {
+                                <span style="color:#8B5CF6;">👑 管理员</span>
+                            }
+                            else
+                            {
+                                <span style="color:rgba(255,255,255,0.3);">普通用户</span>
+                            }
+                        </td>
+                        <td style="padding:0.8rem 1rem;border-top:1px solid rgba(255,255,255,0.02);">
+                            @if (user.IsEmailVerified)
+                            {
+                                <span style="color:#28a745;">✅ 已验证</span>
+                            }
+                            else
+                            {
+                                <span style="color:#ffc107;">⏳ 未验证</span>
+                            }
+                        </td>
+                        <td style="padding:0.8rem 1rem;border-top:1px solid rgba(255,255,255,0.02);">
+                            @if (user.IsBanned)
+                            {
+                                <span style="color:#dc3545;">🚫 已封禁</span>
+                            }
+                            else
+                            {
+                                <span style="color:#28a745;">✅ 正常</span>
+                            }
+                        </td>
+                        <td style="padding:0.8rem 1rem;border-top:1px solid rgba(255,255,255,0.02);">
+                            <!-- ⭐ 激活按钮 -->
+                            @if (!user.IsEmailVerified)
+                            {
+                                <button onclick="activateUser(@user.Id)" style="padding:0.2rem 0.8rem;border:none;border-radius:20px;background:rgba(40,167,69,0.12);color:#28a745;cursor:pointer;font-size:0.75rem;margin-right:0.3rem;">
+                                    ✅ 激活
+                                </button>
+                            }
+
+                            @if (!user.IsAdmin)
+                            {
+                                @if (!user.IsBanned)
+                                {
+                                    <button onclick="banUser(@user.Id)" style="padding:0.2rem 0.8rem;border:none;border-radius:20px;background:rgba(220,53,69,0.08);color:#dc3545;cursor:pointer;font-size:0.75rem;margin-right:0.3rem;">
+                                        🚫 封禁
+                                    </button>
+                                }
+                                else
+                                {
+                                    <button onclick="unbanUser(@user.Id)" style="padding:0.2rem 0.8rem;border:none;border-radius:20px;background:rgba(40,167,69,0.08);color:#28a745;cursor:pointer;font-size:0.75rem;margin-right:0.3rem;">
+                                        ✅ 解封
+                                    </button>
+                                }
+                            }
                         </td>
                     </tr>
                 }
@@ -543,179 +95,75 @@
     </div>
 </div>
 
-<!-- ===== 封禁弹窗 ===== -->
-<div class="ban-modal-overlay" id="banModal">
-    <div class="ban-modal">
-        <h5>🚫 封禁用户</h5>
-        <p id="banUserInfo">确定要封禁 <strong>用户</strong> 吗？</p>
-
-        <select id="banDuration">
-            <option value="1">1 小时</option>
-            <option value="6">6 小时</option>
-            <option value="12">12 小时</option>
-            <option value="24">1 天</option>
-            <option value="72">3 天</option>
-            <option value="168">7 天</option>
-            <option value="720">30 天</option>
-            <option value="0">永久封禁</option>
-        </select>
-
-        <input type="text" id="banReason" placeholder="封禁原因（可选）" />
-
-        <input type="hidden" id="banUserId" />
-
-        <div class="modal-actions">
-            <button class="btn-cancel" onclick="closeBanModal()">取消</button>
-            <button class="btn-submit" onclick="submitBan()">确认封禁</button>
-        </div>
-    </div>
-</div>
-
-<!-- ===== Toast ===== -->
-<div class="toast-container" id="toastContainer"></div>
-
-@section Scripts {
-    <script>
-        // ============================================================
-        // 封禁用户
-        // ============================================================
-        let banUserId = 0;
-        let banUsername = '';
-
-        function openBanModal(id, username) {
-            banUserId = id;
-            banUsername = username;
-            document.getElementById('banUserInfo').innerHTML = `确定要封禁 <strong>${username}</strong> 吗？`;
-            document.getElementById('banUserId').value = id;
-            document.getElementById('banReason').value = '';
-            document.getElementById('banModal').classList.add('active');
-        }
-
-        function closeBanModal() {
-            document.getElementById('banModal').classList.remove('active');
-        }
-
-        function submitBan() {
-            const id = document.getElementById('banUserId').value;
-            const hours = parseInt(document.getElementById('banDuration').value);
-            const reason = document.getElementById('banReason').value.trim();
-
-            const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
-
-            fetch('/Admin/BanUser', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    'RequestVerificationToken': token
-                },
-                body: `id=${id}&hours=${hours}&reason=${encodeURIComponent(reason)}`
-            })
-            .then(r => r.json())
-            .then(data => {
-                if (data.success) {
-                    closeBanModal();
-                    showToast(`✅ ${data.message}`, 'success');
-                    setTimeout(() => location.reload(), 800);
-                } else {
-                    showToast(data.message || '封禁失败', 'error');
-                }
-            })
-            .catch(() => showToast('操作失败，请重试', 'error'));
-        }
-
-        // 点击外部关闭弹窗
-        document.getElementById('banModal').addEventListener('click', function(e) {
-            if (e.target === this) closeBanModal();
+<script>
+    function activateUser(userId) {
+        if (!confirm('确定激活该用户吗？')) return;
+        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+        fetch('/Admin/ActivateUser', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'RequestVerificationToken': token
+            },
+            body: `userId=${userId}`
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                alert('✅ 用户已激活');
+                location.reload();
+            } else {
+                alert(data.message);
+            }
         });
+    }
 
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') closeBanModal();
+    function banUser(userId) {
+        if (!confirm('确定封禁该用户吗？')) return;
+        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+        const hours = prompt('封禁时长（小时），输入0为永久封禁：', '24');
+        if (hours === null) return;
+        const reason = prompt('封禁原因：', '违反网站规定');
+        if (reason === null) return;
+
+        fetch('/Admin/BanUser', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'RequestVerificationToken': token
+            },
+            body: `id=${userId}&hours=${hours}&reason=${encodeURIComponent(reason)}&note=`
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                alert('✅ ' + data.message);
+                location.reload();
+            } else {
+                alert(data.message);
+            }
         });
+    }
 
-        // ============================================================
-        // 解封用户
-        // ============================================================
-        function unbanUser(id, username) {
-            if (!confirm(`确定要解封用户 ${username} 吗？`)) return;
-
-            const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
-
-            fetch('/Admin/UnbanUser', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    'RequestVerificationToken': token
-                },
-                body: `id=${id}`
-            })
-            .then(r => r.json())
-            .then(data => {
-                if (data.success) {
-                    showToast(`✅ ${data.message}`, 'success');
-                    setTimeout(() => location.reload(), 800);
-                } else {
-                    showToast(data.message || '解封失败', 'error');
-                }
-            })
-            .catch(() => showToast('操作失败，请重试', 'error'));
-        }
-
-        // ============================================================
-        // 筛选功能
-        // ============================================================
-        function applyFilters() {
-            const status = document.getElementById('filterStatus').value;
-            const search = document.getElementById('searchInput').value.toLowerCase();
-
-            const rows = document.querySelectorAll('.user-row');
-            let count = 0;
-
-            rows.forEach(row => {
-                let show = true;
-                const rowStatus = row.dataset.status;
-                const rowRole = row.dataset.role;
-                const rowSearch = row.dataset.search?.toLowerCase() || '';
-
-                if (status === 'active' && rowStatus !== 'active') show = false;
-                else if (status === 'banned' && rowStatus !== 'banned') show = false;
-                else if (status === 'admin' && rowRole !== 'admin') show = false;
-
-                if (show && search && !rowSearch.includes(search)) show = false;
-
-                row.style.display = show ? '' : 'none';
-                if (show) count++;
-            });
-
-            showToast(`显示 ${count} 名用户`, 'info');
-        }
-
-        function resetFilters() {
-            document.getElementById('filterStatus').value = 'all';
-            document.getElementById('searchInput').value = '';
-            document.querySelectorAll('.user-row').forEach(row => {
-                row.style.display = '';
-            });
-            showToast('已重置筛选', 'info');
-        }
-
-        document.getElementById('searchInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') applyFilters();
+    function unbanUser(userId) {
+        if (!confirm('确定解封该用户吗？')) return;
+        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+        fetch('/Admin/UnbanUser', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'RequestVerificationToken': token
+            },
+            body: `id=${userId}`
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                alert('✅ ' + data.message);
+                location.reload();
+            } else {
+                alert(data.message);
+            }
         });
-
-        // ============================================================
-        // Toast
-        // ============================================================
-        function showToast(message, type = 'info') {
-            const container = document.getElementById('toastContainer');
-            const toast = document.createElement('div');
-            toast.className = `toast-msg ${type}`;
-            toast.textContent = message;
-            container.appendChild(toast);
-            setTimeout(() => {
-                toast.style.opacity = '0';
-                toast.style.transform = 'translateX(20px)';
-                setTimeout(() => toast.remove(), 300);
-            }, 3000);
-        }
-    </script>
-}
+    }
+</script>
