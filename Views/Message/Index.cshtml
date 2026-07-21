@@ -9,6 +9,13 @@
 <div style="max-width:900px;margin:0 auto;padding:2rem 1rem;">
     <h1 style="text-align:center;font-size:2.5rem;font-weight:700;background:linear-gradient(135deg,#8B5CF6,#EC4899,#F59E0B);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:2rem;">💬 留言大屏</h1>
 
+    <!-- ⭐ 发布留言按钮 -->
+    <div style="text-align:center;margin-bottom:1.5rem;">
+        <a href="/Message/Create" style="display:inline-block;padding:0.8rem 2rem;border:none;border-radius:40px;background:linear-gradient(135deg,#8B5CF6,#EC4899);color:#fff;font-weight:600;font-size:0.95rem;text-decoration:none;cursor:pointer;transition:all 0.3s ease;">
+            ✍️ 发布留言
+        </a>
+    </div>
+
     @if (Model != null && Model.Any())
     {
         @foreach (var msg in Model)
@@ -25,6 +32,14 @@
                 </div>
 
                 <div style="color:rgba(255,255,255,0.7);line-height:1.7;margin:0.5rem 0 0.8rem;">@msg.Content</div>
+
+                @if (!string.IsNullOrEmpty(msg.AdminReply))
+                {
+                    <div style="background:rgba(108,60,225,0.04);border-radius:12px;padding:0.8rem 1.2rem;margin-top:0.8rem;border-left:2px solid #8B5CF6;">
+                        <div style="font-size:0.7rem;color:#8B5CF6;text-transform:uppercase;letter-spacing:0.04em;">👨‍💼 管理员回复</div>
+                        <div style="color:rgba(255,255,255,0.6);font-size:0.9rem;margin-top:0.2rem;">@msg.AdminReply</div>
+                    </div>
+                }
 
                 <div style="display:flex;align-items:center;gap:1rem;padding-top:0.5rem;border-top:1px solid rgba(255,255,255,0.03);">
                     @if (currentUserId.HasValue && currentUserId.Value != msg.UserId)
