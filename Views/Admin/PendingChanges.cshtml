@@ -13,7 +13,7 @@
 <div style="max-width:1000px;margin:0 auto;padding:2rem 1rem;">
     <h2 style="color:#fff;font-weight:700;margin-bottom:1.5rem;">📋 待审核更改</h2>
 
-    @if (Model.Any(u => !string.IsNullOrEmpty(u.PendingUsername) || !string.IsNullOrEmpty(u.PendingEmail) || !u.IsAvatarApproved))
+    @if (Model.Any(u => !string.IsNullOrEmpty(u.PendingUsername) || !string.IsNullOrEmpty(u.PendingEmail) || (!u.IsAvatarApproved && !string.IsNullOrEmpty(u.AvatarUrl))))
     {
         <div style="background:rgba(255,255,255,0.02);border-radius:20px;border:1px solid rgba(255,255,255,0.04);overflow:hidden;">
             <table style="width:100%;border-collapse:collapse;color:#e0e0e0;font-size:0.9rem;">
@@ -29,7 +29,6 @@
                 <tbody>
                     @foreach (var user in Model)
                     {
-                        var hasPending = false;
                         <tr>
                             <td style="padding:0.8rem 1rem;border-top:1px solid rgba(255,255,255,0.02);">@user.Username</td>
                             <td style="padding:0.8rem 1rem;border-top:1px solid rgba(255,255,255,0.02);">
@@ -46,14 +45,8 @@
                                 @if (!user.IsAvatarApproved && !string.IsNullOrEmpty(user.AvatarUrl)) { <span>新头像</span> }
                             </td>
                             <td style="padding:0.8rem 1rem;border-top:1px solid rgba(255,255,255,0.02);">
-                                <form asp-action="ApproveUserChange" method="post" style="display:inline;">
-                                    <input type="hidden" name="userId" value="@user.Id" />
-                                    <button type="submit" style="padding:0.2rem 0.8rem;border:none;border-radius:20px;background:rgba(40,167,69,0.12);color:#28a745;cursor:pointer;font-size:0.75rem;">✅ 通过</button>
-                                </form>
-                                <form asp-action="RejectUserChange" method="post" style="display:inline;">
-                                    <input type="hidden" name="userId" value="@user.Id" />
-                                    <button type="submit" style="padding:0.2rem 0.8rem;border:none;border-radius:20px;background:rgba(220,53,69,0.08);color:#dc3545;cursor:pointer;font-size:0.75rem;">❌ 拒绝</button>
-                                </form>
+                                <button onclick="approveChange(@user.Id)" style="padding:0.2rem 0.8rem;border:none;border-radius:20px;background:rgba(40,167,69,0.12);color:#28a745;cursor:pointer;font-size:0.75rem;">✅ 通过</button>
+                                <button onclick="rejectChange(@user.Id)" style="padding:0.2rem 0.8rem;border:none;border-radius:20px;background:rgba(220,53,69,0.08);color:#dc3545;cursor:pointer;font-size:0.75rem;">❌ 拒绝</button>
                             </td>
                         </tr>
                     }
@@ -66,3 +59,47 @@
         <div style="text-align:center;padding:3rem 2rem;color:rgba(255,255,255,0.15);">✅ 暂无待审核的更改</div>
     }
 </div>
+
+<script>
+    function approveChange(userId) {
+        if (!confirm('确定通过该用户的更改吗？')) return;
+        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+        fetch('/Admin/ApproveUserChange', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'RequestVerificationToken': token
+            },
+            body: `userId=${userId}`
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.message);
+            }
+        });
+    }
+
+    function rejectChange(userId) {
+        if (!confirm('确定拒绝该用户的更改吗？')) return;
+        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+        fetch('/Admin/RejectUserChange', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'RequestVerificationToken': token
+            },
+            body: `userId=${userId}`
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.message);
+            }
+        });
+    }
+</script>
