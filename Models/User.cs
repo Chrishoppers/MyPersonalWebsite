@@ -27,7 +27,6 @@ namespace MyPersonalWebsite.Models
         public bool IsAvatarApproved { get; set; } = false;
         public DateTime? AvatarSubmittedAt { get; set; }
 
-        // 关联
         public ICollection<Message>? Messages { get; set; }
     }
 }
