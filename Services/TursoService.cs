@@ -23,11 +23,7 @@ namespace MyPersonalWebsite.Services
         {
             try
             {
-                var request = new
-                {
-                    sqls = new[] { sql }
-                };
-
+                var request = new { sqls = new[] { sql } };
                 var json = JsonSerializer.Serialize(request);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
@@ -47,11 +43,7 @@ namespace MyPersonalWebsite.Services
         {
             try
             {
-                var request = new
-                {
-                    sqls = new[] { sql }
-                };
-
+                var request = new { sqls = new[] { sql } };
                 var json = JsonSerializer.Serialize(request);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
@@ -59,8 +51,7 @@ namespace MyPersonalWebsite.Services
                 _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {_authToken}");
 
                 var response = await _httpClient.PostAsync($"{_databaseUrl}/v1/pipeline", content);
-                var result = await response.Content.ReadAsStringAsync();
-                return result;
+                return await response.Content.ReadAsStringAsync();
             }
             catch
             {
