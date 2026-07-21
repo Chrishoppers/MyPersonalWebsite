@@ -22,28 +22,11 @@ namespace MyPersonalWebsite.Services
             if (message.UserId == userId)
                 return (false, "不能给自己的留言点赞", message.LikeCount, false);
 
-            var existingLike = await _context.MessageLikes
-                .FirstOrDefaultAsync(l => l.MessageId == messageId && l.UserId == userId);
+            // ⭐ 简单版：只更新 LikeCount，不记录谁点了赞
+            message.LikeCount++;
+            await _context.SaveChangesAsync();
 
-            if (existingLike != null)
-            {
-                _context.MessageLikes.Remove(existingLike);
-                message.LikeCount--;
-                await _context.SaveChangesAsync();
-                return (true, "已取消点赞", message.LikeCount, false);
-            }
-            else
-            {
-                _context.MessageLikes.Add(new MessageLike
-                {
-                    MessageId = messageId,
-                    UserId = userId,
-                    CreateTime = DateTime.Now
-                });
-                message.LikeCount++;
-                await _context.SaveChangesAsync();
-                return (true, "点赞成功", message.LikeCount, true);
-            }
+            return (true, "点赞成功", message.LikeCount, true);
         }
     }
 }
