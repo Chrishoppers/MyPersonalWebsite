@@ -22,9 +22,6 @@ namespace MyPersonalWebsite.Controllers
             _emailService = emailService;
         }
 
-        // ============================================================
-        // 1. 仪表盘
-        // ============================================================
         public async Task<IActionResult> Dashboard()
         {
             var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
@@ -53,9 +50,6 @@ namespace MyPersonalWebsite.Controllers
             return View();
         }
 
-        // ============================================================
-        // 2. 博客管理
-        // ============================================================
         public async Task<IActionResult> Blogs()
         {
             var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
@@ -168,9 +162,6 @@ namespace MyPersonalWebsite.Controllers
             return Json(new { success = true, message = "删除成功" });
         }
 
-        // ============================================================
-        // 3. 博客图片上传
-        // ============================================================
         [HttpPost]
         public async Task<IActionResult> UploadBlogImage(IFormFile image)
         {
@@ -215,9 +206,6 @@ namespace MyPersonalWebsite.Controllers
             }
         }
 
-        // ============================================================
-        // 4. 留言管理
-        // ============================================================
         public async Task<IActionResult> Messages()
         {
             var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
@@ -233,9 +221,6 @@ namespace MyPersonalWebsite.Controllers
             return View(messages);
         }
 
-        // ============================================================
-        // 5. 用户管理
-        // ============================================================
         public async Task<IActionResult> Users()
         {
             var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
@@ -251,9 +236,6 @@ namespace MyPersonalWebsite.Controllers
             return View(users);
         }
 
-        // ============================================================
-        // 5a. 封禁用户
-        // ============================================================
         [HttpPost]
         public async Task<IActionResult> BanUser(int id, int hours, string reason, string note)
         {
@@ -288,7 +270,6 @@ namespace MyPersonalWebsite.Controllers
 
             await _context.SaveChangesAsync();
 
-            // 发送邮件通知
             try
             {
                 await _emailService.SendUserActionNotificationAsync(
@@ -307,9 +288,6 @@ namespace MyPersonalWebsite.Controllers
             return Json(new { success = true, message = $"已封禁用户 {user.Username}" });
         }
 
-        // ============================================================
-        // 5b. 解封用户
-        // ============================================================
         [HttpPost]
         public async Task<IActionResult> UnbanUser(int id)
         {
@@ -332,7 +310,6 @@ namespace MyPersonalWebsite.Controllers
 
             await _context.SaveChangesAsync();
 
-            // 发送邮件通知
             try
             {
                 await _emailService.SendUserActionNotificationAsync(
@@ -351,9 +328,6 @@ namespace MyPersonalWebsite.Controllers
             return Json(new { success = true, message = $"已解封用户 {user.Username}" });
         }
 
-        // ============================================================
-        // 5c. 删除账号（软删除）
-        // ============================================================
         [HttpPost]
         public async Task<IActionResult> DeleteUser(int id, string reason, string note)
         {
@@ -365,7 +339,6 @@ namespace MyPersonalWebsite.Controllers
 
             var user = await _context.Users
                 .Include(u => u.Messages)
-                .Include(u => u.Likes)
                 .FirstOrDefaultAsync(u => u.Id == id);
 
             if (user == null)
@@ -378,25 +351,18 @@ namespace MyPersonalWebsite.Controllers
                 return Json(new { success = false, message = "不能删除管理员" });
             }
 
-            // 软删除
             user.IsDeleted = true;
             user.DeletedAt = DateTime.Now;
             user.DeleteReason = reason;
             user.DeleteNote = note;
 
-            // 同时删除该用户的所有留言
             if (user.Messages != null)
             {
                 _context.Messages.RemoveRange(user.Messages);
             }
-            if (user.Likes != null)
-            {
-                _context.MessageLikes.RemoveRange(user.Likes);
-            }
 
             await _context.SaveChangesAsync();
 
-            // 发送邮件通知
             try
             {
                 await _emailService.SendUserActionNotificationAsync(
@@ -415,9 +381,6 @@ namespace MyPersonalWebsite.Controllers
             return Json(new { success = true, message = $"已删除用户 {user.Username}" });
         }
 
-        // ============================================================
-        // 6. 授权码管理
-        // ============================================================
         public async Task<IActionResult> ContactRequests()
         {
             var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
@@ -541,9 +504,6 @@ namespace MyPersonalWebsite.Controllers
             });
         }
 
-        // ============================================================
-        // 7. 关于我管理
-        // ============================================================
         public async Task<IActionResult> About()
         {
             var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
@@ -630,9 +590,6 @@ namespace MyPersonalWebsite.Controllers
             }
         }
 
-        // ============================================================
-        // 8. 头像审核
-        // ============================================================
         [HttpPost]
         public async Task<IActionResult> ApproveAvatar(int userId)
         {
