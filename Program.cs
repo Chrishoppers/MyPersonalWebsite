@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.DataProtection;  // ⭐ 添加这行
 using MyPersonalWebsite.Models;
 using MyPersonalWebsite.Services;
 using MyPersonalWebsite.Hubs;
@@ -13,7 +14,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 builder.Services.AddDistributedMemoryCache();
 
-// ⭐ 配置 DataProtection 密钥持久化（解决 Session 密钥丢失问题）
+// ⭐ 配置 DataProtection 密钥持久化
 builder.Services.AddDataProtection()
     .PersistKeysToFileSystem(new DirectoryInfo("/app/keys"))
     .SetApplicationName("MyPersonalWebsite");
