@@ -20,7 +20,7 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // 1. 首页
+        // 首页
         // ============================================================
         public IActionResult Index()
         {
@@ -38,7 +38,7 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // 2. 关于我
+        // 关于我
         // ============================================================
         public async Task<IActionResult> About()
         {
@@ -85,7 +85,164 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // 3. 联系方式页面
+        // 个人信息页面
+        // ============================================================
+        public async Task<IActionResult> Profile()
+        {
+            var userId = HttpContext.Session.GetInt32("UserId");
+            if (!userId.HasValue)
+            {
+                return RedirectToAction("Login", "Auth");
+            }
+            var user = await _context.Users.FindAsync(userId.Value);
+            if (user == null)
+            {
+                return RedirectToAction("Login", "Auth");
+            }
+            ViewBag.User = user;
+            return View();
+        }
+
+        // ============================================================
+        // 修改昵称/邮箱页面
+        // ============================================================
+        [HttpGet]
+        public async Task<IActionResult> EditProfile(string field)
+        {
+            var userId = HttpContext.Session.GetInt32("UserId");
+            if (!userId.HasValue)
+            {
+                return RedirectToAction("Login", "Auth");
+            }
+            var user = await _context.Users.FindAsync(userId.Value);
+            if (user == null)
+            {
+                return RedirectToAction("Login", "Auth");
+            }
+
+            ViewBag.Field = field;
+            ViewBag.CurrentValue = field == "username" ? user.Username : user.Email;
+            ViewBag.PendingValue = field == "username" ? user.PendingUsername : user.PendingEmail;
+            ViewBag.User = user;
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> EditProfile(string field, string value)
+        {
+            var userId = HttpContext.Session.GetInt32("UserId");
+            if (!userId.HasValue)
+            {
+                return RedirectToAction("Login", "Auth");
+            }
+            var user = await _context.Users.FindAsync(userId.Value);
+            if (user == null)
+            {
+                return RedirectToAction("Login", "Auth");
+            }
+
+            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+
+            if (field == "username")
+            {
+                if (isAdmin == 1)
+                {
+                    user.Username = value;
+                    user.IsUsernameChangeApproved = true;
+                }
+                else
+                {
+                    user.PendingUsername = value;
+                    user.IsUsernameChangeApproved = false;
+                }
+            }
+            else if (field == "email")
+            {
+                if (isAdmin == 1)
+                {
+                    user.Email = value;
+                    user.IsEmailChangeApproved = true;
+                }
+                else
+                {
+                    user.PendingEmail = value;
+                    user.IsEmailChangeApproved = false;
+                }
+            }
+
+            await _context.SaveChangesAsync();
+            TempData["Success"] = isAdmin == 1 ? "修改成功！" : "修改已提交，等待管理员审核";
+            return RedirectToAction("Profile");
+        }
+
+        // ============================================================
+        // 上传头像
+        // ============================================================
+        [HttpPost]
+        public async Task<IActionResult> UploadAvatar(IFormFile avatar)
+        {
+            var userId = HttpContext.Session.GetInt32("UserId");
+            if (!userId.HasValue)
+            {
+                return Json(new { success = false, message = "请先登录" });
+            }
+
+            if (avatar == null || avatar.Length == 0)
+            {
+                return Json(new { success = false, message = "请选择图片" });
+            }
+
+            var allowedTypes = new[] { "image/jpeg", "image/png", "image/gif", "image/webp" };
+            if (!allowedTypes.Contains(avatar.ContentType))
+            {
+                return Json(new { success = false, message = "只支持 JPG, PNG, GIF, WebP 格式" });
+            }
+
+            if (avatar.Length > 5 * 1024 * 1024)
+            {
+                return Json(new { success = false, message = "图片不能超过 5MB" });
+            }
+
+            var fileName = $"{Guid.NewGuid():N}_{avatar.FileName}";
+            var uploadPath = Path.Combine("wwwroot", "images", "avatars");
+
+            if (!Directory.Exists(uploadPath))
+            {
+                Directory.CreateDirectory(uploadPath);
+            }
+
+            var filePath = Path.Combine(uploadPath, fileName);
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await avatar.CopyToAsync(stream);
+            }
+
+            var avatarUrl = $"/images/avatars/{fileName}";
+            var user = await _context.Users.FindAsync(userId.Value);
+
+            if (user != null)
+            {
+                var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+
+                if (isAdmin == 1)
+                {
+                    user.IsAvatarApproved = true;
+                }
+                else
+                {
+                    user.IsAvatarApproved = false;
+                }
+                user.AvatarUrl = avatarUrl;
+                user.AvatarSubmittedAt = DateTime.Now;
+                await _context.SaveChangesAsync();
+            }
+
+            var message = isAdmin == 1 ? "头像更新成功！" : "头像已提交，等待管理员审核";
+            return Json(new { success = true, url = avatarUrl, message = message });
+        }
+
+        // ============================================================
+        // 联系方式页面
         // ============================================================
         public IActionResult Contact()
         {
@@ -98,7 +255,7 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // 4. 申请联系方式
+        // 申请联系方式
         // ============================================================
         [HttpPost]
         public async Task<IActionResult> RequestContact([FromBody] ContactRequest request)
@@ -176,7 +333,7 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // 5. 管理员查询授权码
+        // 管理员查询授权码
         // ============================================================
         public async Task<IActionResult> QueryContact(string code)
         {
@@ -237,81 +394,7 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // 6. 上传头像
-        // ============================================================
-        [HttpPost]
-        public async Task<IActionResult> UploadAvatar(IFormFile avatar)
-        {
-            try
-            {
-                var userId = HttpContext.Session.GetInt32("UserId");
-                if (!userId.HasValue)
-                {
-                    return Json(new { success = false, message = "请先登录" });
-                }
-
-                if (avatar == null || avatar.Length == 0)
-                {
-                    return Json(new { success = false, message = "请选择图片" });
-                }
-
-                var allowedTypes = new[] { "image/jpeg", "image/png", "image/gif", "image/webp" };
-                if (!allowedTypes.Contains(avatar.ContentType))
-                {
-                    return Json(new { success = false, message = "只支持 JPG, PNG, GIF, WebP 格式" });
-                }
-
-                if (avatar.Length > 5 * 1024 * 1024)
-                {
-                    return Json(new { success = false, message = "图片不能超过 5MB" });
-                }
-
-                var fileName = $"{Guid.NewGuid():N}_{avatar.FileName}";
-                var uploadPath = Path.Combine("wwwroot", "images", "avatars");
-
-                if (!Directory.Exists(uploadPath))
-                {
-                    Directory.CreateDirectory(uploadPath);
-                }
-
-                var filePath = Path.Combine(uploadPath, fileName);
-                using (var stream = new FileStream(filePath, FileMode.Create))
-                {
-                    await avatar.CopyToAsync(stream);
-                }
-
-                var avatarUrl = $"/images/avatars/{fileName}";
-
-                // ⭐ 先获取 isAdmin 值
-                var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-
-                var user = await _context.Users.FindAsync(userId.Value);
-                if (user != null)
-                {
-                    if (isAdmin == 1)
-                    {
-                        user.IsAvatarApproved = true;
-                    }
-                    else
-                    {
-                        user.IsAvatarApproved = false;
-                    }
-                    user.AvatarUrl = avatarUrl;
-                    user.AvatarSubmittedAt = DateTime.Now;
-                    await _context.SaveChangesAsync();
-                }
-
-                var message = isAdmin == 1 ? "头像更新成功！" : "头像已提交，等待管理员审核";
-                return Json(new { success = true, url = avatarUrl, message = message });
-            }
-            catch (Exception ex)
-            {
-                return Json(new { success = false, message = ex.Message });
-            }
-        }
-
-        // ============================================================
-        // 7. 错误页面
+        // 错误页面
         // ============================================================
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
@@ -320,7 +403,7 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // 8. 生成授权码
+        // 生成授权码
         // ============================================================
         private string GenerateAuthorizationCode()
         {
@@ -338,95 +421,5 @@ namespace MyPersonalWebsite.Controllers
             }
             return string.Join("-", parts);
         }
-        // ============================================================
-// 个人信息页面
-// ============================================================
-public async Task<IActionResult> Profile()
-{
-    var userId = HttpContext.Session.GetInt32("UserId");
-    if (!userId.HasValue)
-    {
-        return RedirectToAction("Login", "Auth");
-    }
-    var user = await _context.Users.FindAsync(userId.Value);
-    if (user == null)
-    {
-        return RedirectToAction("Login", "Auth");
-    }
-    ViewBag.User = user;
-    return View();
-}
-
-// ============================================================
-// 修改昵称/邮箱
-// ============================================================
-[HttpGet]
-public async Task<IActionResult> EditProfile(string field)
-{
-    var userId = HttpContext.Session.GetInt32("UserId");
-    if (!userId.HasValue)
-    {
-        return RedirectToAction("Login", "Auth");
-    }
-    var user = await _context.Users.FindAsync(userId.Value);
-    if (user == null)
-    {
-        return RedirectToAction("Login", "Auth");
-    }
-
-    ViewBag.Field = field;
-    ViewBag.CurrentValue = field == "username" ? user.Username : user.Email;
-    ViewBag.PendingValue = field == "username" ? user.PendingUsername : user.PendingEmail;
-    ViewBag.User = user;
-    return View();
-}
-
-[HttpPost]
-public async Task<IActionResult> EditProfile(string field, string value)
-{
-    var userId = HttpContext.Session.GetInt32("UserId");
-    if (!userId.HasValue)
-    {
-        return RedirectToAction("Login", "Auth");
-    }
-    var user = await _context.Users.FindAsync(userId.Value);
-    if (user == null)
-    {
-        return RedirectToAction("Login", "Auth");
-    }
-
-    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-
-    if (field == "username")
-    {
-        if (isAdmin == 1)
-        {
-            user.Username = value;
-            user.IsUsernameChangeApproved = true;
-        }
-        else
-        {
-            user.PendingUsername = value;
-            user.IsUsernameChangeApproved = false;
-        }
-    }
-    else if (field == "email")
-    {
-        if (isAdmin == 1)
-        {
-            user.Email = value;
-            user.IsEmailChangeApproved = true;
-        }
-        else
-        {
-            user.PendingEmail = value;
-            user.IsEmailChangeApproved = false;
-        }
-    }
-
-    await _context.SaveChangesAsync();
-    TempData["Success"] = isAdmin == 1 ? "修改成功！" : "修改已提交，等待管理员审核";
-    return RedirectToAction("Profile");
-}
     }
 }
