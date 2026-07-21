@@ -22,6 +22,9 @@ namespace MyPersonalWebsite.Controllers
             _emailService = emailService;
         }
 
+        // ============================================================
+        // 仪表盘
+        // ============================================================
         public async Task<IActionResult> Dashboard()
         {
             var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
@@ -57,6 +60,9 @@ namespace MyPersonalWebsite.Controllers
             return View();
         }
 
+        // ============================================================
+        // 博客管理
+        // ============================================================
         public async Task<IActionResult> Blogs()
         {
             var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
@@ -65,7 +71,9 @@ namespace MyPersonalWebsite.Controllers
                 return RedirectToAction("Login", "Auth");
             }
 
-            var blogs = await _context.Blogs.OrderByDescending(b => b.PublishDate).ToListAsync();
+            var blogs = await _context.Blogs
+                .OrderByDescending(b => b.PublishDate)
+                .ToListAsync();
             return View(blogs);
         }
 
@@ -95,6 +103,16 @@ namespace MyPersonalWebsite.Controllers
                 blog.PublishDate = DateTime.Now;
                 _context.Blogs.Add(blog);
                 await _context.SaveChangesAsync();
+
+                try
+                {
+                    await _emailService.SendAdminNewBlogNotificationAsync(blog.Title);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"邮件发送失败: {ex.Message}");
+                }
+
                 return RedirectToAction("Blogs");
             }
             return View(blog);
@@ -153,9 +171,13 @@ namespace MyPersonalWebsite.Controllers
 
             _context.Blogs.Remove(blog);
             await _context.SaveChangesAsync();
+
             return Json(new { success = true, message = "删除成功" });
         }
 
+        // ============================================================
+        // 博客图片上传
+        // ============================================================
         [HttpPost]
         public async Task<IActionResult> UploadBlogImage(IFormFile image)
         {
@@ -200,6 +222,9 @@ namespace MyPersonalWebsite.Controllers
             }
         }
 
+        // ============================================================
+        // 留言管理
+        // ============================================================
         public async Task<IActionResult> Messages()
         {
             var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
@@ -215,6 +240,9 @@ namespace MyPersonalWebsite.Controllers
             return View(messages);
         }
 
+        // ============================================================
+        // 用户管理
+        // ============================================================
         public async Task<IActionResult> Users()
         {
             var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
@@ -230,6 +258,9 @@ namespace MyPersonalWebsite.Controllers
             return View(users);
         }
 
+        // ============================================================
+        // 封禁用户
+        // ============================================================
         [HttpPost]
         public async Task<IActionResult> BanUser(int id, int hours, string reason, string note)
         {
@@ -256,46 +287,8 @@ namespace MyPersonalWebsite.Controllers
             user.BanNote = note;
 
             await _context.SaveChangesAsync();
-            return Json(new { success = true, message = "已封禁用户" });
-        }
 
-        [HttpPost]
-        public async Task<IActionResult> UnbanUser(int id)
-        {
-            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-            if (isAdmin != 1)
+            try
             {
-                return Json(new { success = false, message = "权限不足" });
-            }
-
-            var user = await _context.Users.FindAsync(id);
-            if (user == null)
-            {
-                return Json(new { success = false, message = "用户不存在" });
-            }
-
-            user.IsBanned = false;
-            user.BanExpiry = null;
-            user.BanReason = null;
-            user.BanNote = null;
-
-            await _context.SaveChangesAsync();
-            return Json(new { success = true, message = "已解封用户" });
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> DeleteUser(int id, string reason, string note)
-        {
-            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-            if (isAdmin != 1)
-            {
-                return Json(new { success = false, message = "权限不足" });
-            }
-
-            var user = await _context.Users
-                .Include(u => u.Messages)
-                .FirstOrDefaultAsync(u => u.Id == id);
-
-            if (user == null)
-            {
-                return Json(new { success = false, messa
+                await _emailService.SendUserActionNotificationAsync(
+          
