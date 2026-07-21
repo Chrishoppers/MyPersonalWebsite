@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using MyPersonalWebsite.Models;
 using MyPersonalWebsite.Services;
 using MyPersonalWebsite.Hubs;
+using Microsoft.AspNetCore.DataProtection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,6 +15,10 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 // ⭐ 使用内存缓存替代 Session
 builder.Services.AddMemoryCache();
 builder.Services.AddDistributedMemoryCache();
+
+// ⭐ 禁用 DataProtection
+builder.Services.AddDataProtection()
+    .UseEphemeralDataProtectionProvider();
 
 // ⭐ 禁用 Session 加密
 builder.Services.AddSession(options =>
