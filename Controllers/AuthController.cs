@@ -16,17 +16,20 @@ namespace MyPersonalWebsite.Controllers
         private readonly BrevoEmailService _emailService;
         private readonly SvgCaptchaService _captchaService;
         private readonly RateLimitService _rateLimitService;
+        private readonly AppDbContext _context;  // ⭐ 新增
 
         public AuthController(
             DataSyncService dataSync,
             BrevoEmailService emailService,
             SvgCaptchaService captchaService,
-            RateLimitService rateLimitService)
+            RateLimitService rateLimitService,
+            AppDbContext context)  // ⭐ 新增
         {
             _dataSync = dataSync;
             _emailService = emailService;
             _captchaService = captchaService;
             _rateLimitService = rateLimitService;
+            _context = context;  // ⭐ 新增
         }
 
         [HttpGet]
@@ -221,6 +224,67 @@ namespace MyPersonalWebsite.Controllers
             HttpContext.Session.Clear();
             return RedirectToAction("Index", "Home");
         }
+                // ============================================================
+        // 修改密码
+        // ============================================================
+        [HttpGet]
+        public IActionResult ChangePassword()
+        {
+            var userId = HttpContext.Session.GetInt32("UserId");
+            if (!userId.HasValue)
+            {
+                return RedirectToAction("Login", "Auth");
+            }
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ChangePassword(string currentPassword, string newPassword, string confirmPassword)
+        {
+            var userId = HttpContext.Session.GetInt32("UserId");
+            if (!userId.HasValue)
+            {
+                return RedirectToAction("Login", "Auth");
+            }
+
+            if (string.IsNullOrEmpty(currentPassword) || string.IsNullOrEmpty(newPassword) || string.IsNullOrEmpty(confirmPassword))
+            {
+                ModelState.AddModelError("", "请填写所有字段");
+                return View();
+            }
+
+            if (newPassword.Length < 6)
+            {
+                ModelState.AddModelError("", "新密码至少6位");
+                return View();
+            }
+
+            if (newPassword != confirmPassword)
+            {
+                ModelState.AddModelError("", "两次输入的密码不一致");
+                return View();
+            }
+
+            var user = await _dataSync.GetUserByIdAsync(userId.Value);
+            if (user == null)
+            {
+                ModelState.AddModelError("", "用户不存在");
+                return View();
+            }
+
+            if (!PasswordHelper.VerifyPassword(currentPassword, user.PasswordHash))
+            {
+                ModelState.AddModelError("", "当前密码错误");
+                return View();
+            }
+
+            user.PasswordHash = PasswordHelper.HashPassword(newPassword);
+            await _dataSync.UpdateUserAsync(user);
+
+            TempData["Message"] = "密码修改成功！请重新登录";
+            return RedirectToAction("Login");
+        }
 
         [HttpGet]
         public IActionResult ForgotPassword()
@@ -257,7 +321,8 @@ namespace MyPersonalWebsite.Controllers
                 IsUsed = false
             };
 
-            // TODO: 保存 reset 到数据库
+            _context.PasswordResets.Add(reset);
+            await _context.SaveChangesAsync();
 
             try
             {
@@ -282,54 +347,52 @@ namespace MyPersonalWebsite.Controllers
         }
 
         [HttpPost]
-[ValidateAntiForgeryToken]
-public async Task<IActionResult> ResetPassword(string email, string token, string newPassword)
-{
-    if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(token) || string.IsNullOrEmpty(newPassword))
-    {
-        ModelState.AddModelError("", "请填写完整信息");
-        return View();
-    }
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ResetPassword(string email, string token, string newPassword)
+        {
+            if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(token) || string.IsNullOrEmpty(newPassword))
+            {
+                ModelState.AddModelError("", "请填写完整信息");
+                return View();
+            }
 
-    if (newPassword.Length < 6)
-    {
-        ModelState.AddModelError("", "密码至少6位");
-        return View();
-    }
+            if (newPassword.Length < 6)
+            {
+                ModelState.AddModelError("", "密码至少6位");
+                return View();
+            }
 
-    // ⭐ 查找有效的重置记录
-    var reset = await _context.PasswordResets
-        .FirstOrDefaultAsync(r => r.Email == email && r.Token == token && !r.IsUsed);
+            var reset = await _context.PasswordResets
+                .FirstOrDefaultAsync(r => r.Email == email && r.Token == token && !r.IsUsed);
 
-    if (reset == null)
-    {
-        ModelState.AddModelError("", "验证码无效或已使用");
-        return View();
-    }
+            if (reset == null)
+            {
+                ModelState.AddModelError("", "验证码无效或已使用");
+                return View();
+            }
 
-    if (reset.ExpiresAt < DateTime.Now)
-    {
-        ModelState.AddModelError("", "验证码已过期，请重新获取");
-        return View();
-    }
+            if (reset.ExpiresAt < DateTime.Now)
+            {
+                ModelState.AddModelError("", "验证码已过期，请重新获取");
+                return View();
+            }
 
-    // ⭐ 更新用户密码
-    var user = await _dataSync.GetUserByIdAsync(reset.UserId);
-    if (user == null)
-    {
-        ModelState.AddModelError("", "用户不存在");
-        return View();
-    }
+            var user = await _dataSync.GetUserByIdAsync(reset.UserId);
+            if (user == null)
+            {
+                ModelState.AddModelError("", "用户不存在");
+                return View();
+            }
 
-    user.PasswordHash = PasswordHelper.HashPassword(newPassword);
-    await _dataSync.UpdateUserAsync(user);  // ⭐ 双写
+            user.PasswordHash = PasswordHelper.HashPassword(newPassword);
+            await _dataSync.UpdateUserAsync(user);
 
-    // ⭐ 标记验证码已使用
-    reset.IsUsed = true;
-    await _context.SaveChangesAsync();
+            reset.IsUsed = true;
+            await _context.SaveChangesAsync();
 
-    TempData["Message"] = "密码重置成功！请用新密码登录";
-    return RedirectToAction("Login");
-}
+            TempData["Message"] = "密码重置成功！请用新密码登录";
+            return RedirectToAction("Login");
+        }
     }
 }
+    
