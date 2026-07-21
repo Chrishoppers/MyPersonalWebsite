@@ -15,26 +15,19 @@ namespace MyPersonalWebsite.Models
         public bool IsAdmin { get; set; } = false;
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public DateTime? LastLoginAt { get; set; }
-        
-        // 封禁相关
         public bool IsBanned { get; set; } = false;
         public DateTime? BanExpiry { get; set; }
         public string? BanReason { get; set; }
-        public string? BanNote { get; set; }  // ⭐ 新增：管理员备注
-        
-        // 删除相关（软删除）
+        public string? BanNote { get; set; }
         public bool IsDeleted { get; set; } = false;
         public DateTime? DeletedAt { get; set; }
         public string? DeleteReason { get; set; }
         public string? DeleteNote { get; set; }
-        
-        // 头像
         public string? AvatarUrl { get; set; }
         public bool IsAvatarApproved { get; set; } = false;
         public DateTime? AvatarSubmittedAt { get; set; }
 
         // 关联
         public ICollection<Message>? Messages { get; set; }
-        public ICollection<MessageLike>? Likes { get; set; }
     }
 }
