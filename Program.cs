@@ -23,7 +23,8 @@ builder.Services.AddHttpClient();
 builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddScoped<SvgCaptchaService>();
-builder.Services.AddScoped<EmailService>();
+builder.Services.AddScoped<BrevoEmailService>();
+//builder.Services.AddScoped<EmailService>();
 builder.Services.AddScoped<RateLimitService>();
 
 builder.Services.AddSignalR();
