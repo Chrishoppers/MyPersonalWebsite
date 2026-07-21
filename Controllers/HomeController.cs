@@ -218,12 +218,13 @@ namespace MyPersonalWebsite.Controllers
             }
 
             var avatarUrl = $"/images/avatars/{fileName}";
-            var user = await _context.Users.FindAsync(userId.Value);
 
+            // ⭐ 先获取 isAdmin 值
+            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+
+            var user = await _context.Users.FindAsync(userId.Value);
             if (user != null)
             {
-                var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-
                 if (isAdmin == 1)
                 {
                     user.IsAvatarApproved = true;
