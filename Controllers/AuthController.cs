@@ -282,25 +282,54 @@ namespace MyPersonalWebsite.Controllers
         }
 
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ResetPassword(string email, string token, string newPassword)
-        {
-            if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(token) || string.IsNullOrEmpty(newPassword))
-            {
-                ModelState.AddModelError("", "请填写完整信息");
-                return View();
-            }
+[ValidateAntiForgeryToken]
+public async Task<IActionResult> ResetPassword(string email, string token, string newPassword)
+{
+    if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(token) || string.IsNullOrEmpty(newPassword))
+    {
+        ModelState.AddModelError("", "请填写完整信息");
+        return View();
+    }
 
-            if (newPassword.Length < 6)
-            {
-                ModelState.AddModelError("", "密码至少6位");
-                return View();
-            }
+    if (newPassword.Length < 6)
+    {
+        ModelState.AddModelError("", "密码至少6位");
+        return View();
+    }
 
-            // TODO: 验证 token 并重置密码
+    // ⭐ 查找有效的重置记录
+    var reset = await _context.PasswordResets
+        .FirstOrDefaultAsync(r => r.Email == email && r.Token == token && !r.IsUsed);
 
-            TempData["Message"] = "密码重置成功！请用新密码登录";
-            return RedirectToAction("Login");
-        }
+    if (reset == null)
+    {
+        ModelState.AddModelError("", "验证码无效或已使用");
+        return View();
+    }
+
+    if (reset.ExpiresAt < DateTime.Now)
+    {
+        ModelState.AddModelError("", "验证码已过期，请重新获取");
+        return View();
+    }
+
+    // ⭐ 更新用户密码
+    var user = await _dataSync.GetUserByIdAsync(reset.UserId);
+    if (user == null)
+    {
+        ModelState.AddModelError("", "用户不存在");
+        return View();
+    }
+
+    user.PasswordHash = PasswordHelper.HashPassword(newPassword);
+    await _dataSync.UpdateUserAsync(user);  // ⭐ 双写
+
+    // ⭐ 标记验证码已使用
+    reset.IsUsed = true;
+    await _context.SaveChangesAsync();
+
+    TempData["Message"] = "密码重置成功！请用新密码登录";
+    return RedirectToAction("Login");
+}
     }
 }
