@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.DataProtection;  // ⭐ 添加这行
 using MyPersonalWebsite.Models;
 using MyPersonalWebsite.Services;
 using MyPersonalWebsite.Hubs;
@@ -13,12 +12,6 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 );
 
 builder.Services.AddDistributedMemoryCache();
-
-// ⭐ 配置 DataProtection 密钥持久化
-builder.Services.AddDataProtection()
-    .PersistKeysToFileSystem(new DirectoryInfo("/app/keys"))
-    .SetApplicationName("MyPersonalWebsite");
-
 builder.Services.AddSession(options =>
 {
     options.IdleTimeout = TimeSpan.FromMinutes(30);
@@ -37,11 +30,25 @@ builder.Services.AddSignalR();
 
 var app = builder.Build();
 
-// 自动创建数据库
+// ⭐ 自动创建数据库
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     dbContext.Database.EnsureCreated();
+
+    // ⭐ 手动创建 MessageLikes 表
+    dbContext.Database.ExecuteSqlRaw(@"
+        CREATE TABLE IF NOT EXISTS ""MessageLikes"" (
+            ""Id"" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+            ""MessageId"" INTEGER NOT NULL,
+            ""UserId"" INTEGER NOT NULL,
+            ""CreateTime"" TEXT NOT NULL
+        );
+    ");
+
+    dbContext.Database.ExecuteSqlRaw(@"
+        CREATE UNIQUE INDEX IF NOT EXISTS ""IX_MessageLikes_MessageId_UserId"" ON ""MessageLikes"" (""MessageId"", ""UserId"");
+    ");
 }
 
 if (!app.Environment.IsDevelopment())
