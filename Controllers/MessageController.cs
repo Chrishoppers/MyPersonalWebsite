@@ -20,9 +20,6 @@ namespace MyPersonalWebsite.Controllers
             _likeService = likeService;
         }
 
-        // ============================================================
-        // 1. 留言大屏
-        // ============================================================
         public async Task<IActionResult> Index()
         {
             var messages = await _context.Messages
@@ -35,9 +32,6 @@ namespace MyPersonalWebsite.Controllers
             return View(messages);
         }
 
-        // ============================================================
-        // 2. 创建留言（页面）
-        // ============================================================
         [HttpGet]
         public IActionResult Create()
         {
@@ -49,9 +43,6 @@ namespace MyPersonalWebsite.Controllers
             return View();
         }
 
-        // ============================================================
-        // 3. 创建留言（提交）
-        // ============================================================
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Message message)
@@ -88,9 +79,6 @@ namespace MyPersonalWebsite.Controllers
             return View(message);
         }
 
-        // ============================================================
-        // 4. 点赞
-        // ============================================================
         [HttpPost]
         public async Task<IActionResult> ToggleLike(int messageId)
         {
@@ -117,9 +105,6 @@ namespace MyPersonalWebsite.Controllers
             }
         }
 
-        // ============================================================
-        // 5. 管理员删除留言
-        // ============================================================
         [HttpPost]
         public async Task<IActionResult> Delete(int id)
         {
