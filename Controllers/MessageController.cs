@@ -20,20 +20,12 @@ namespace MyPersonalWebsite.Controllers
             _emailService = emailService;
         }
 
-        // ============================================================
-        // 留言大屏
-        // ============================================================
         public async Task<IActionResult> Index()
         {
             var messages = await _dataSync.GetMessagesAsync();
 
             var userId = HttpContext.Session.GetInt32("UserId");
             var likedIds = new HashSet<int>();
-            // TODO: 从 DataSync 获取点赞数据
-            // if (userId.HasValue)
-            // {
-            //     likedIds = await _dataSync.GetUserLikedMessageIdsAsync(userId.Value);
-            // }
 
             ViewBag.LikedIds = likedIds;
             ViewBag.CurrentUserId = userId;
@@ -42,9 +34,6 @@ namespace MyPersonalWebsite.Controllers
             return View(messages);
         }
 
-        // ============================================================
-        // 发布留言页面
-        // ============================================================
         [HttpGet]
         public IActionResult Create()
         {
@@ -56,9 +45,6 @@ namespace MyPersonalWebsite.Controllers
             return View();
         }
 
-        // ============================================================
-        // 发布留言提交
-        // ============================================================
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Message message)
@@ -109,11 +95,7 @@ namespace MyPersonalWebsite.Controllers
 
             return View(message);
         }
-    }
-}
-        // ============================================================
-        // 点赞/取消点赞
-        // ============================================================
+
         [HttpPost]
         public async Task<IActionResult> ToggleLike(int messageId)
         {
@@ -126,9 +108,6 @@ namespace MyPersonalWebsite.Controllers
             try
             {
                 // TODO: 实现留言点赞逻辑
-                // var result = await _dataSync.ToggleMessageLikeAsync(messageId, userId.Value);
-                // return Json(new { success = true, isLiked = result.IsLiked, likeCount = result.LikeCount, message = result.Message });
-
                 return Json(new { success = true, isLiked = true, likeCount = 1, message = "点赞成功" });
             }
             catch
@@ -137,9 +116,6 @@ namespace MyPersonalWebsite.Controllers
             }
         }
 
-        // ============================================================
-        // 举报留言
-        // ============================================================
         [HttpPost]
         public async Task<IActionResult> Report(int messageId, string reason)
         {
@@ -153,9 +129,6 @@ namespace MyPersonalWebsite.Controllers
             return Json(new { success = true, message = "举报已提交" });
         }
 
-        // ============================================================
-        // 管理员删除留言
-        // ============================================================
         [HttpPost]
         public async Task<IActionResult> Delete(int id)
         {
@@ -169,9 +142,6 @@ namespace MyPersonalWebsite.Controllers
             return Json(new { success = true, message = "删除成功" });
         }
 
-        // ============================================================
-        // 管理员审核留言
-        // ============================================================
         [HttpPost]
         public async Task<IActionResult> Approve(int id)
         {
@@ -193,9 +163,6 @@ namespace MyPersonalWebsite.Controllers
             return Json(new { success = true, message = "审核通过" });
         }
 
-        // ============================================================
-        // 管理员回复留言
-        // ============================================================
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Reply(int messageId, string replyContent)
