@@ -30,13 +30,13 @@ builder.Services.AddSignalR();
 
 var app = builder.Build();
 
-// ⭐ 创建数据库并初始化数据（只插入一次）
+// 创建数据库并初始化管理员（只在第一次运行）
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     dbContext.Database.EnsureCreated();
 
-    // ⭐ 检查管理员是否存在，不存在才插入
+    // 只在管理员不存在时创建
     var adminExists = dbContext.Users.Any(u => u.Username == "admin");
     if (!adminExists)
     {
@@ -44,7 +44,7 @@ using (var scope = app.Services.CreateScope())
         {
             Username = "admin",
             Email = "2908685235@qq.com",
-            PasswordHash = "AQAAAAIAAYagAAAAEJ4Zj6zVqZMjSx5k5r5WYg==", // admin123
+            PasswordHash = "AQAAAAIAAYagAAAAEJ4Zj6zVqZMjSx5k5r5WYg==",
             IsEmailVerified = true,
             IsAdmin = true,
             IsBanned = false,
