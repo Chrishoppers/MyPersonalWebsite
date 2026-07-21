@@ -1,9 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using MyPersonalWebsite.Models;
 using MyPersonalWebsite.Services;
-using MyPersonalWebsite.Hubs;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,19 +13,11 @@ namespace MyPersonalWebsite.Controllers
     {
         private readonly AppDbContext _context;
         private readonly LikeService _likeService;
-        private readonly BrevoEmailService _emailService;
-        private readonly IHubContext<MessageHub> _hubContext;
 
-        public MessageController(
-            AppDbContext context,
-            LikeService likeService,
-            BrevoEmailService emailService,
-            IHubContext<MessageHub> hubContext)
+        public MessageController(AppDbContext context, LikeService likeService)
         {
             _context = context;
             _likeService = likeService;
-            _emailService = emailService;
-            _hubContext = hubContext;
         }
 
         // ============================================================
@@ -36,31 +26,10 @@ namespace MyPersonalWebsite.Controllers
         public async Task<IActionResult> Index()
         {
             var messages = await _context.Messages
-                .Include(m => m.User)
                 .OrderByDescending(m => m.CreateTime)
                 .ToListAsync();
 
-            var userId = HttpContext.Session.GetInt32("UserId");
-            var likedIds = new HashSet<int>();
-
-            if (userId.HasValue)
-            {
-                try
-                {
-                    var likes = await _context.MessageLikes
-                        .Where(l => l.UserId == userId.Value)
-                        .Select(l => l.MessageId)
-                        .ToListAsync();
-                    likedIds = new HashSet<int>(likes);
-                }
-                catch
-                {
-                    likedIds = new HashSet<int>();
-                }
-            }
-
-            ViewBag.LikedIds = likedIds;
-            ViewBag.CurrentUserId = userId;
+            ViewBag.CurrentUserId = HttpContext.Session.GetInt32("UserId");
             ViewBag.IsAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
 
             return View(messages);
@@ -107,20 +76,12 @@ namespace MyPersonalWebsite.Controllers
                 message.Email = user.Email;
                 message.CreateTime = DateTime.Now;
                 message.LikeCount = 0;
-
-                if (user.IsAdmin)
-                {
-                    message.IsApproved = true;
-                }
-                else
-                {
-                    message.IsApproved = false;
-                }
+                message.IsApproved = true;
 
                 _context.Messages.Add(message);
                 await _context.SaveChangesAsync();
 
-                TempData["Success"] = user.IsAdmin ? "留言发布成功！" : "留言已提交，等待管理员审核后显示";
+                TempData["Success"] = "留言发布成功！";
                 return RedirectToAction("Index");
             }
 
@@ -128,7 +89,7 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // 4. 点赞/取消点赞
+        // 4. 点赞
         // ============================================================
         [HttpPost]
         public async Task<IActionResult> ToggleLike(int messageId)
@@ -157,57 +118,7 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // 5. 举报留言
-        // ============================================================
-        [HttpPost]
-        public async Task<IActionResult> Report(int messageId, string reason)
-        {
-            var userId = HttpContext.Session.GetInt32("UserId");
-            if (!userId.HasValue)
-            {
-                return Json(new { success = false, message = "请先登录" });
-            }
-
-            var message = await _context.Messages.FindAsync(messageId);
-            if (message == null)
-            {
-                return Json(new { success = false, message = "留言不存在" });
-            }
-
-            if (message.UserId == userId.Value)
-            {
-                return Json(new { success = false, message = "不能举报自己的留言" });
-            }
-
-            var existingReport = await _context.ReportRecords
-                .FirstOrDefaultAsync(r => r.MessageId == messageId && r.UserId == userId.Value);
-            if (existingReport != null)
-            {
-                return Json(new { success = false, message = "您已举报过这条留言" });
-            }
-
-            var report = new ReportRecord
-            {
-                MessageId = messageId,
-                UserId = userId.Value,
-                Reason = reason,
-                CreateTime = DateTime.Now
-            };
-            _context.ReportRecords.Add(report);
-
-            message.ReportCount++;
-            if (message.ReportCount >= 3)
-            {
-                message.IsReported = true;
-            }
-
-            await _context.SaveChangesAsync();
-
-            return Json(new { success = true, message = "举报已提交" });
-        }
-
-        // ============================================================
-        // 6. 管理员删除留言
+        // 5. 管理员删除留言
         // ============================================================
         [HttpPost]
         public async Task<IActionResult> Delete(int id)
@@ -228,62 +139,6 @@ namespace MyPersonalWebsite.Controllers
             await _context.SaveChangesAsync();
 
             return Json(new { success = true, message = "删除成功" });
-        }
-
-        // ============================================================
-        // 7. 管理员审核留言
-        // ============================================================
-        [HttpPost]
-        public async Task<IActionResult> Approve(int id)
-        {
-            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-            if (isAdmin != 1)
-            {
-                return Json(new { success = false, message = "权限不足" });
-            }
-
-            var message = await _context.Messages
-                .Include(m => m.User)
-                .FirstOrDefaultAsync(m => m.Id == id);
-
-            if (message == null)
-            {
-                return Json(new { success = false, message = "留言不存在" });
-            }
-
-            message.IsApproved = true;
-            await _context.SaveChangesAsync();
-
-            return Json(new { success = true, message = "审核通过" });
-        }
-
-        // ============================================================
-        // 8. 管理员回复留言
-        // ============================================================
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Reply(int messageId, string replyContent)
-        {
-            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-            if (isAdmin != 1)
-            {
-                return Json(new { success = false, message = "权限不足" });
-            }
-
-            var message = await _context.Messages
-                .Include(m => m.User)
-                .FirstOrDefaultAsync(m => m.Id == messageId);
-
-            if (message == null)
-            {
-                return Json(new { success = false, message = "留言不存在" });
-            }
-
-            message.AdminReply = replyContent;
-            message.AdminReplyTime = DateTime.Now;
-            await _context.SaveChangesAsync();
-
-            return Json(new { success = true, message = "回复成功" });
         }
     }
 }
