@@ -27,7 +27,7 @@ namespace MyPersonalWebsite.Models
         public bool IsAvatarApproved { get; set; } = false;
         public DateTime? AvatarSubmittedAt { get; set; }
 
-        // ⭐ 新增：待审核的邮箱和昵称
+        // ⭐ 待审核字段
         public string? PendingEmail { get; set; }
         public string? PendingUsername { get; set; }
         public bool IsEmailChangeApproved { get; set; } = false;
