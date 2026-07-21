@@ -18,13 +18,17 @@ namespace MyPersonalWebsite.Services
             _apiKey = Environment.GetEnvironmentVariable("BREVO_API_KEY") ?? "";
         }
 
+        // ============================================================
+        // 核心发送方法
+        // ============================================================
+
         public async Task<bool> SendEmailAsync(string to, string subject, string htmlContent)
         {
             try
             {
                 var request = new
                 {
-                    sender = new { email = "hello@chris-hopper.org", name = "Chris Hopper 个人网站" },
+                    sender = new { email = "chris@chris-hopper.org", name = "Chris Hopper 个人网站" },
                     to = new[] { new { email = to } },
                     subject = subject,
                     htmlContent = htmlContent
@@ -44,6 +48,10 @@ namespace MyPersonalWebsite.Services
                 return false;
             }
         }
+
+        // ============================================================
+        // 邮件模板
+        // ============================================================
 
         public async Task SendVerificationCodeAsync(string toEmail, string code)
         {
@@ -104,6 +112,10 @@ namespace MyPersonalWebsite.Services
 
             await SendEmailAsync(toEmail, "【Chris Hopper 个人网站】你的留言收到了回复 💬", html);
         }
+
+        // ============================================================
+        // 管理员通知
+        // ============================================================
 
         public async Task SendAdminNewMessageNotificationAsync(string visitorName, string content, int messageId)
         {
