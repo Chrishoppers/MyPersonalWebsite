@@ -393,71 +393,76 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // 关于我编辑
-        // ============================================================
-        public async Task<IActionResult> About()
+// 关于我编辑
+// ============================================================
+public async Task<IActionResult> About()
+{
+    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+    if (isAdmin != 1)
+        return RedirectToAction("Login", "Auth");
+
+    var sections = await _dataSync.GetAboutMeAsync();
+    return View(sections);
+}
+
+[HttpPost]
+public async Task<IActionResult> UpdateAboutMe([FromBody] Dictionary<string, string> data)
+{
+    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+    if (isAdmin != 1)
+        return Json(new { success = false, message = "权限不足" });
+
+    try
+    {
+        var sections = await _dataSync.GetAboutMeAsync();
+
+        // 更新普通字段
+        foreach (var item in data)
         {
-            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-            if (isAdmin != 1)
-                return RedirectToAction("Login", "Auth");
+            var key = item.Key;
+            var value = item.Value;
 
-            var sections = await _dataSync.GetAboutMeAsync();
-            return View(sections);
-        }
+            if (key.StartsWith("social_"))
+                continue;
 
-        [HttpPost]
-        public async Task<IActionResult> UpdateAboutMe([FromBody] Dictionary<string, string> data)
-        {
-            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-            if (isAdmin != 1)
-                return Json(new { success = false, message = "权限不足" });
-
-            try
+            var section = sections.FirstOrDefault(s => s.SectionKey == key);
+            if (section != null)
             {
-                var sections = await _dataSync.GetAboutMeAsync();
-
-                foreach (var item in data)
-                {
-                    var key = item.Key;
-                    var value = item.Value;
-
-                    if (key.StartsWith("social_"))
-                        continue;
-
-                    var section = sections.FirstOrDefault(s => s.SectionKey == key);
-                    if (section != null)
-                    {
-                        section.Content = value;
-                        section.UpdatedAt = DateTime.Now;
-                        await _dataSync.UpdateAboutMeAsync(section);
-                    }
-                }
-
-                var socialSection = sections.FirstOrDefault(s => s.SectionKey == "social");
-                if (socialSection != null)
-                {
-                    var socialParts = new List<string>();
-                    if (!string.IsNullOrEmpty(data.GetValueOrDefault("social_github")))
-                        socialParts.Add($"github:{data["social_github"]}");
-                    if (!string.IsNullOrEmpty(data.GetValueOrDefault("social_twitter")))
-                        socialParts.Add($"twitter:{data["social_twitter"]}");
-                    if (!string.IsNullOrEmpty(data.GetValueOrDefault("social_linkedin")))
-                        socialParts.Add($"linkedin:{data["social_linkedin"]}");
-                    if (!string.IsNullOrEmpty(data.GetValueOrDefault("social_discord")))
-                        socialParts.Add($"discord:{data["social_discord"]}");
-
-                    socialSection.Content = string.Join("|", socialParts);
-                    socialSection.UpdatedAt = DateTime.Now;
-                    await _dataSync.UpdateAboutMeAsync(socialSection);
-                }
-
-                return Json(new { success = true, message = "保存成功" });
-            }
-            catch (Exception ex)
-            {
-                return Json(new { success = false, message = ex.Message });
+                section.Content = value;
+                section.UpdatedAt = DateTime.Now;
+                await _dataSync.UpdateAboutMeAsync(section);
+                Console.WriteLine($"✅ AboutMe {key} 已更新");
             }
         }
+
+        // 更新社交链接
+        var socialSection = sections.FirstOrDefault(s => s.SectionKey == "social");
+        if (socialSection != null)
+        {
+            var socialParts = new List<string>();
+            if (!string.IsNullOrEmpty(data.GetValueOrDefault("social_github")))
+                socialParts.Add($"github:{data["social_github"]}");
+            if (!string.IsNullOrEmpty(data.GetValueOrDefault("social_twitter")))
+                socialParts.Add($"twitter:{data["social_twitter"]}");
+            if (!string.IsNullOrEmpty(data.GetValueOrDefault("social_linkedin")))
+                socialParts.Add($"linkedin:{data["social_linkedin"]}");
+            if (!string.IsNullOrEmpty(data.GetValueOrDefault("social_discord")))
+                socialParts.Add($"discord:{data["social_discord"]}");
+
+            socialSection.Content = string.Join("|", socialParts);
+            socialSection.UpdatedAt = DateTime.Now;
+            await _dataSync.UpdateAboutMeAsync(socialSection);
+            Console.WriteLine($"✅ 社交链接已更新");
+        }
+
+        return Json(new { success = true, message = "保存成功" });
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"⚠️ AboutMe 保存失败: {ex.Message}");
+        return Json(new { success = false, message = ex.Message });
+    }
+}
 
         // ============================================================
         // ⭐ 新增：审核用户邮箱（通过/拒绝）
