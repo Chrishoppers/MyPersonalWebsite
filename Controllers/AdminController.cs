@@ -285,7 +285,7 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // 待审核更改
+        // 待审核更改（头像/昵称/邮箱）
         // ============================================================
         public async Task<IActionResult> PendingChanges()
         {
@@ -356,40 +356,570 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // 头像审核
+        // ⭐ 1. 新用户审核（通过）- 无需登录
         // ============================================================
-        [HttpPost]
-        public async Task<IActionResult> ApproveAvatar(int userId)
-        {
-            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-            if (isAdmin != 1)
-                return Json(new { success = false, message = "权限不足" });
 
+        [HttpGet]
+        public async Task<IActionResult> ApproveUser(int userId)
+        {
             var user = await _dataSync.GetUserByIdAsync(userId);
             if (user == null)
-                return Json(new { success = false, message = "用户不存在" });
+            {
+                return View("AuditResult", new AuditResultViewModel
+                {
+                    Success = false,
+                    Title = "❌ 审核失败",
+                    Message = "用户不存在，可能已被删除。",
+                    IconType = "fail"
+                });
+            }
+
+            if (user.IsApproved)
+            {
+                return View("AuditResult", new AuditResultViewModel
+                {
+                    Success = true,
+                    Title = "ℹ️ 已审核",
+                    Message = $"用户 <strong>{user.Username}</strong> 已经审核通过了，无需重复操作。",
+                    IconType = "info"
+                });
+            }
+
+            user.IsApproved = true;
+            user.IsAvatarApproved = true;
+            await _dataSync.UpdateUserAsync(user);
+
+            try
+            {
+                await _emailService.SendUserActionNotificationAsync(
+                    user.Email,
+                    user.Username,
+                    "approve",
+                    "您的账号已通过管理员审核，现在可以登录了！",
+                    "🎉 欢迎加入 Chris hopper 的个人网站！"
+                );
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"邮件发送失败: {ex.Message}");
+            }
+
+            return View("AuditResult", new AuditResultViewModel
+            {
+                Success = true,
+                Title = "✅ 审核通过！",
+                Message = $"用户 <strong>{user.Username}</strong> 已通过审核。",
+                Detail = "用户已收到审核通过的通知邮件。",
+                Username = user.Username,
+                Email = user.Email,
+                IconType = "success"
+            });
+        }
+
+        // ============================================================
+        // ⭐ 1. 新用户审核（拒绝）- 无需登录
+        // ============================================================
+
+        [HttpGet]
+        public async Task<IActionResult> RejectUser(int userId)
+        {
+            var user = await _dataSync.GetUserByIdAsync(userId);
+            if (user == null)
+            {
+                return View("AuditResult", new AuditResultViewModel
+                {
+                    Success = false,
+                    Title = "❌ 审核失败",
+                    Message = "用户不存在，可能已被删除。",
+                    IconType = "fail"
+                });
+            }
+
+            if (user.IsDeleted)
+            {
+                return View("AuditResult", new AuditResultViewModel
+                {
+                    Success = true,
+                    Title = "ℹ️ 已处理",
+                    Message = $"用户 <strong>{user.Username}</strong> 已经被处理过了。",
+                    IconType = "info"
+                });
+            }
+
+            user.IsDeleted = true;
+            user.DeletedAt = DateTime.Now;
+            user.DeleteReason = "管理员审核拒绝";
+            await _dataSync.UpdateUserAsync(user);
+
+            try
+            {
+                await _emailService.SendUserActionNotificationAsync(
+                    user.Email,
+                    user.Username,
+                    "reject",
+                    "您的账号审核未通过，请重新注册或联系管理员。",
+                    "如有疑问，请联系管理员 2908685235@qq.com"
+                );
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"邮件发送失败: {ex.Message}");
+            }
+
+            return View("AuditResult", new AuditResultViewModel
+            {
+                Success = false,
+                Title = "❌ 已拒绝",
+                Message = $"用户 <strong>{user.Username}</strong> 已拒绝。",
+                Detail = "用户已收到审核拒绝的通知邮件。",
+                Username = user.Username,
+                Email = user.Email,
+                IconType = "fail"
+            });
+        }
+
+        // ============================================================
+        // ⭐ 2. 头像审核（通过）- 无需登录
+        // ============================================================
+
+        [HttpGet]
+        public async Task<IActionResult> ApproveAvatar(int userId)
+        {
+            var user = await _dataSync.GetUserByIdAsync(userId);
+            if (user == null)
+            {
+                return View("AuditResult", new AuditResultViewModel
+                {
+                    Success = false,
+                    Title = "❌ 审核失败",
+                    Message = "用户不存在。",
+                    IconType = "fail"
+                });
+            }
+
+            if (user.IsAvatarApproved)
+            {
+                return View("AuditResult", new AuditResultViewModel
+                {
+                    Success = true,
+                    Title = "ℹ️ 已审核",
+                    Message = $"用户 <strong>{user.Username}</strong> 的头像已经审核通过了。",
+                    IconType = "info"
+                });
+            }
 
             user.IsAvatarApproved = true;
             await _dataSync.UpdateUserAsync(user);
-            return Json(new { success = true, message = "头像已通过" });
+
+            try
+            {
+                await _emailService.SendUserActionNotificationAsync(
+                    user.Email,
+                    user.Username,
+                    "avatar_approve",
+                    "您的头像已通过管理员审核！",
+                    "头像已更新，现在可以在个人资料中查看了。"
+                );
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"邮件发送失败: {ex.Message}");
+            }
+
+            return View("AuditResult", new AuditResultViewModel
+            {
+                Success = true,
+                Title = "✅ 头像审核通过！",
+                Message = $"用户 <strong>{user.Username}</strong> 的头像已通过审核。",
+                Detail = "用户已收到通知邮件。",
+                Username = user.Username,
+                Email = user.Email,
+                IconType = "success"
+            });
         }
 
-        [HttpPost]
+        // ============================================================
+        // ⭐ 2. 头像审核（拒绝）- 无需登录
+        // ============================================================
+
+        [HttpGet]
         public async Task<IActionResult> RejectAvatar(int userId)
         {
-            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-            if (isAdmin != 1)
-                return Json(new { success = false, message = "权限不足" });
-
             var user = await _dataSync.GetUserByIdAsync(userId);
             if (user == null)
-                return Json(new { success = false, message = "用户不存在" });
+            {
+                return View("AuditResult", new AuditResultViewModel
+                {
+                    Success = false,
+                    Title = "❌ 审核失败",
+                    Message = "用户不存在。",
+                    IconType = "fail"
+                });
+            }
 
             user.AvatarUrl = null;
             user.AvatarSubmittedAt = null;
             user.IsAvatarApproved = false;
             await _dataSync.UpdateUserAsync(user);
-            return Json(new { success = true, message = "头像已拒绝" });
+
+            try
+            {
+                await _emailService.SendUserActionNotificationAsync(
+                    user.Email,
+                    user.Username,
+                    "avatar_reject",
+                    "您的头像审核未通过，请重新上传。",
+                    "请上传清晰、合规的头像图片。"
+                );
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"邮件发送失败: {ex.Message}");
+            }
+
+            return View("AuditResult", new AuditResultViewModel
+            {
+                Success = false,
+                Title = "❌ 头像已拒绝",
+                Message = $"用户 <strong>{user.Username}</strong> 的头像已拒绝。",
+                Detail = "用户已收到通知邮件。",
+                Username = user.Username,
+                Email = user.Email,
+                IconType = "fail"
+            });
+        }
+
+        // ============================================================
+        // ⭐ 3. 昵称修改审核（通过）- 无需登录
+        // ============================================================
+
+        [HttpGet]
+        public async Task<IActionResult> ApproveUsername(int userId)
+        {
+            var user = await _dataSync.GetUserByIdAsync(userId);
+            if (user == null)
+            {
+                return View("AuditResult", new AuditResultViewModel
+                {
+                    Success = false,
+                    Title = "❌ 审核失败",
+                    Message = "用户不存在。",
+                    IconType = "fail"
+                });
+            }
+
+            if (string.IsNullOrEmpty(user.PendingUsername))
+            {
+                return View("AuditResult", new AuditResultViewModel
+                {
+                    Success = true,
+                    Title = "ℹ️ 无需审核",
+                    Message = $"用户 <strong>{user.Username}</strong> 没有待审核的昵称修改。",
+                    IconType = "info"
+                });
+            }
+
+            var oldUsername = user.Username;
+            user.Username = user.PendingUsername;
+            user.PendingUsername = null;
+            user.IsUsernameChangeApproved = true;
+            await _dataSync.UpdateUserAsync(user);
+
+            try
+            {
+                await _emailService.SendUserActionNotificationAsync(
+                    user.Email,
+                    user.Username,
+                    "username_approve",
+                    $"您的昵称已从「{oldUsername}」改为「{user.Username}」，已通过审核！",
+                    null
+                );
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"邮件发送失败: {ex.Message}");
+            }
+
+            return View("AuditResult", new AuditResultViewModel
+            {
+                Success = true,
+                Title = "✅ 昵称修改通过！",
+                Message = $"用户 <strong>{user.Username}</strong> 的昵称修改已通过。",
+                Detail = $"原昵称：{oldUsername} → 新昵称：{user.Username}",
+                Username = user.Username,
+                Email = user.Email,
+                IconType = "success"
+            });
+        }
+
+        // ============================================================
+        // ⭐ 3. 昵称修改审核（拒绝）- 无需登录
+        // ============================================================
+
+        [HttpGet]
+        public async Task<IActionResult> RejectUsername(int userId)
+        {
+            var user = await _dataSync.GetUserByIdAsync(userId);
+            if (user == null)
+            {
+                return View("AuditResult", new AuditResultViewModel
+                {
+                    Success = false,
+                    Title = "❌ 审核失败",
+                    Message = "用户不存在。",
+                    IconType = "fail"
+                });
+            }
+
+            var pendingName = user.PendingUsername;
+            user.PendingUsername = null;
+            user.IsUsernameChangeApproved = false;
+            await _dataSync.UpdateUserAsync(user);
+
+            try
+            {
+                await _emailService.SendUserActionNotificationAsync(
+                    user.Email,
+                    user.Username,
+                    "username_reject",
+                    $"您的昵称「{pendingName}」修改申请未通过审核。",
+                    "请使用合规的昵称重新申请。"
+                );
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"邮件发送失败: {ex.Message}");
+            }
+
+            return View("AuditResult", new AuditResultViewModel
+            {
+                Success = false,
+                Title = "❌ 昵称修改已拒绝",
+                Message = $"用户 <strong>{user.Username}</strong> 的昵称修改已拒绝。",
+                Detail = $"拒绝的昵称：{pendingName}",
+                Username = user.Username,
+                Email = user.Email,
+                IconType = "fail"
+            });
+        }
+
+        // ============================================================
+        // ⭐ 4. 邮箱修改审核（通过）- 无需登录
+        // ============================================================
+
+        [HttpGet]
+        public async Task<IActionResult> ApproveEmail(int userId)
+        {
+            var user = await _dataSync.GetUserByIdAsync(userId);
+            if (user == null)
+            {
+                return View("AuditResult", new AuditResultViewModel
+                {
+                    Success = false,
+                    Title = "❌ 审核失败",
+                    Message = "用户不存在。",
+                    IconType = "fail"
+                });
+            }
+
+            if (string.IsNullOrEmpty(user.PendingEmail))
+            {
+                return View("AuditResult", new AuditResultViewModel
+                {
+                    Success = true,
+                    Title = "ℹ️ 无需审核",
+                    Message = $"用户 <strong>{user.Username}</strong> 没有待审核的邮箱修改。",
+                    IconType = "info"
+                });
+            }
+
+            var oldEmail = user.Email;
+            user.Email = user.PendingEmail;
+            user.PendingEmail = null;
+            user.IsEmailChangeApproved = true;
+            await _dataSync.UpdateUserAsync(user);
+
+            try
+            {
+                await _emailService.SendUserActionNotificationAsync(
+                    user.Email,
+                    user.Username,
+                    "email_approve",
+                    $"您的邮箱已从「{oldEmail}」改为「{user.Email}」，已通过审核！",
+                    null
+                );
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"邮件发送失败: {ex.Message}");
+            }
+
+            return View("AuditResult", new AuditResultViewModel
+            {
+                Success = true,
+                Title = "✅ 邮箱修改通过！",
+                Message = $"用户 <strong>{user.Username}</strong> 的邮箱修改已通过。",
+                Detail = $"原邮箱：{oldEmail} → 新邮箱：{user.Email}",
+                Username = user.Username,
+                Email = user.Email,
+                IconType = "success"
+            });
+        }
+
+        // ============================================================
+        // ⭐ 4. 邮箱修改审核（拒绝）- 无需登录
+        // ============================================================
+
+        [HttpGet]
+        public async Task<IActionResult> RejectEmail(int userId)
+        {
+            var user = await _dataSync.GetUserByIdAsync(userId);
+            if (user == null)
+            {
+                return View("AuditResult", new AuditResultViewModel
+                {
+                    Success = false,
+                    Title = "❌ 审核失败",
+                    Message = "用户不存在。",
+                    IconType = "fail"
+                });
+            }
+
+            var pendingEmail = user.PendingEmail;
+            user.PendingEmail = null;
+            user.IsEmailChangeApproved = false;
+            await _dataSync.UpdateUserAsync(user);
+
+            try
+            {
+                await _emailService.SendUserActionNotificationAsync(
+                    user.Email,
+                    user.Username,
+                    "email_reject",
+                    $"您的邮箱「{pendingEmail}」修改申请未通过审核。",
+                    "请使用合规的邮箱重新申请。"
+                );
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"邮件发送失败: {ex.Message}");
+            }
+
+            return View("AuditResult", new AuditResultViewModel
+            {
+                Success = false,
+                Title = "❌ 邮箱修改已拒绝",
+                Message = $"用户 <strong>{user.Username}</strong> 的邮箱修改已拒绝。",
+                Detail = $"拒绝的邮箱：{pendingEmail}",
+                Username = user.Username,
+                Email = user.Email,
+                IconType = "fail"
+            });
+        }
+
+        // ============================================================
+        // ⭐ 5. 留言审核（通过）- 无需登录
+        // ============================================================
+
+        [HttpGet]
+        public async Task<IActionResult> ApproveMessage(int messageId)
+        {
+            var message = await _dataSync.GetMessageByIdAsync(messageId);
+            if (message == null)
+            {
+                return View("AuditResult", new AuditResultViewModel
+                {
+                    Success = false,
+                    Title = "❌ 审核失败",
+                    Message = "留言不存在。",
+                    IconType = "fail"
+                });
+            }
+
+            if (message.IsApproved)
+            {
+                return View("AuditResult", new AuditResultViewModel
+                {
+                    Success = true,
+                    Title = "ℹ️ 已审核",
+                    Message = "该留言已经审核通过了。",
+                    IconType = "info"
+                });
+            }
+
+            message.IsApproved = true;
+            await _dataSync.UpdateMessageAsync(message);
+
+            // 通知留言者
+            try
+            {
+                await _emailService.SendUserActionNotificationAsync(
+                    message.Email,
+                    message.VisitorName,
+                    "message_approve",
+                    "您的留言已通过管理员审核，现在可以在留言板中看到了！",
+                    null
+                );
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"邮件发送失败: {ex.Message}");
+            }
+
+            return View("AuditResult", new AuditResultViewModel
+            {
+                Success = true,
+                Title = "✅ 留言审核通过！",
+                Message = $"留言已通过审核。",
+                Detail = $"留言者：{message.VisitorName}",
+                IconType = "success"
+            });
+        }
+
+        // ============================================================
+        // ⭐ 5. 留言审核（删除）- 无需登录
+        // ============================================================
+
+        [HttpGet]
+        public async Task<IActionResult> RejectMessage(int messageId)
+        {
+            var message = await _dataSync.GetMessageByIdAsync(messageId);
+            if (message == null)
+            {
+                return View("AuditResult", new AuditResultViewModel
+                {
+                    Success = false,
+                    Title = "❌ 操作失败",
+                    Message = "留言不存在。",
+                    IconType = "fail"
+                });
+            }
+
+            await _dataSync.DeleteMessageAsync(messageId);
+
+            try
+            {
+                await _emailService.SendUserActionNotificationAsync(
+                    message.Email,
+                    message.VisitorName,
+                    "message_reject",
+                    "您的留言审核未通过，已被删除。",
+                    "请遵守留言规范重新发布。"
+                );
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"邮件发送失败: {ex.Message}");
+            }
+
+            return View("AuditResult", new AuditResultViewModel
+            {
+                Success = false,
+                Title = "🗑️ 留言已删除",
+                Message = $"留言已删除。",
+                Detail = $"留言者：{message.VisitorName}",
+                IconType = "fail"
+            });
         }
 
         // ============================================================
@@ -460,94 +990,7 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // ⭐ 审核用户（通过）- 无需登录
-        // ============================================================
-
-        [HttpGet]
-public async Task<IActionResult> ApproveUser(int userId)
-{
-    var user = await _dataSync.GetUserByIdAsync(userId);
-    if (user == null)
-    {
-        return Content("❌ 用户不存在");
-    }
-
-    if (user.IsApproved)
-    {
-        return Content("ℹ️ 该用户已审核通过，无需重复操作");
-    }
-
-    // ⭐ 更新状态
-    user.IsApproved = true;
-    user.IsAvatarApproved = true;
-
-    // ⭐ 调用 UpdateUserAsync（会写入 Turso）
-    await _dataSync.UpdateUserAsync(user);
-
-    // ⭐ 验证是否真的写入了
-    var verifyUser = await _dataSync.GetUserByIdAsync(userId);
-    Console.WriteLine($"验证: IsApproved = {verifyUser?.IsApproved}");
-
-    try
-    {
-        await _emailService.SendUserActionNotificationAsync(
-            user.Email,
-            user.Username,
-            "approve",
-            "您的账号已通过管理员审核，现在可以登录了！",
-            "🎉 欢迎加入 Chris hopper 的个人网站！"
-        );
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"邮件发送失败: {ex.Message}");
-    }
-
-    return Content("✅ 用户已通过审核！用户将收到通知邮件。");
-}
-        // ============================================================
-        // ⭐ 审核用户（拒绝）- 无需登录
-        // ============================================================
-
-        [HttpGet]
-        public async Task<IActionResult> RejectUser(int userId)
-        {
-            var user = await _dataSync.GetUserByIdAsync(userId);
-            if (user == null)
-            {
-                return Content("❌ 用户不存在");
-            }
-
-            if (user.IsDeleted)
-            {
-                return Content("ℹ️ 该用户已被处理，无需重复操作");
-            }
-
-            user.IsDeleted = true;
-            user.DeletedAt = DateTime.Now;
-            user.DeleteReason = "管理员审核拒绝";
-            await _dataSync.UpdateUserAsync(user);
-
-            try
-            {
-                await _emailService.SendUserActionNotificationAsync(
-                    user.Email,
-                    user.Username,
-                    "reject",
-                    "您的账号审核未通过，请重新注册或联系管理员。",
-                    "如有疑问，请联系管理员 2908685235@qq.com"
-                );
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"邮件发送失败: {ex.Message}");
-            }
-
-            return Content("❌ 已拒绝该用户。用户将收到通知邮件。");
-        }
-
-        // ============================================================
-        // 用户操作
+        // 用户操作（封禁/解封/删除/激活）
         // ============================================================
         [HttpPost]
         public async Task<IActionResult> BanUser(int id, int hours, string reason, string note)
