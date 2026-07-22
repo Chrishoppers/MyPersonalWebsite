@@ -11,43 +11,51 @@ namespace MyPersonalWebsite.Services
     {
         private readonly AppDbContext _localContext;
         private readonly TursoDbContext _tursoContext;
+        private readonly bool _tursoAvailable;
 
         public DataSyncService(AppDbContext localContext, TursoDbContext tursoContext)
         {
             _localContext = localContext;
             _tursoContext = tursoContext;
+            _tursoAvailable = tursoContext.Database.CanConnect();
         }
 
         // ============================================================
-        // 用户相关
+        // 用户相关 - 优先 Turso，备用本地
         // ============================================================
 
         public async Task AddUserAsync(User user)
         {
-            _localContext.Users.Add(user);
-            await _localContext.SaveChangesAsync();
-
-            try
+            if (_tursoAvailable)
             {
                 _tursoContext.Users.Add(user);
                 await _tursoContext.SaveChangesAsync();
+                Console.WriteLine($"✅ 用户 {user.Username} 已保存到 Turso");
             }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Turso 同步失败: {ex.Message}");
-            }
+            
+            // 同时保存到本地（备份）
+            _localContext.Users.Add(user);
+            await _localContext.SaveChangesAsync();
         }
 
         public async Task<User?> GetUserByEmailAsync(string email)
         {
+            // 优先从 Turso 读取
             try
             {
-                var user = await _tursoContext.Users
-                    .FirstOrDefaultAsync(u => u.Email == email);
-                if (user != null) return user;
+                if (_tursoAvailable)
+                {
+                    var user = await _tursoContext.Users
+                        .FirstOrDefaultAsync(u => u.Email == email);
+                    if (user != null) return user;
+                }
             }
-            catch { }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Turso 读取失败: {ex.Message}");
+            }
 
+            // 降级到本地
             return await _localContext.Users
                 .FirstOrDefaultAsync(u => u.Email == email);
         }
@@ -56,9 +64,12 @@ namespace MyPersonalWebsite.Services
         {
             try
             {
-                var user = await _tursoContext.Users
-                    .FirstOrDefaultAsync(u => u.Username == username);
-                if (user != null) return user;
+                if (_tursoAvailable)
+                {
+                    var user = await _tursoContext.Users
+                        .FirstOrDefaultAsync(u => u.Username == username);
+                    if (user != null) return user;
+                }
             }
             catch { }
 
@@ -70,8 +81,11 @@ namespace MyPersonalWebsite.Services
         {
             try
             {
-                var user = await _tursoContext.Users.FindAsync(id);
-                if (user != null) return user;
+                if (_tursoAvailable)
+                {
+                    var user = await _tursoContext.Users.FindAsync(id);
+                    if (user != null) return user;
+                }
             }
             catch { }
 
@@ -80,74 +94,73 @@ namespace MyPersonalWebsite.Services
 
         public async Task UpdateUserAsync(User user)
         {
-            _localContext.Users.Update(user);
-            await _localContext.SaveChangesAsync();
-
-            try
+            if (_tursoAvailable)
             {
                 _tursoContext.Users.Update(user);
                 await _tursoContext.SaveChangesAsync();
             }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Turso 同步失败: {ex.Message}");
-            }
+            
+            _localContext.Users.Update(user);
+            await _localContext.SaveChangesAsync();
         }
 
         public async Task<List<User>> GetAllUsersAsync()
         {
             try
             {
-                return await _tursoContext.Users.ToListAsync();
+                if (_tursoAvailable)
+                {
+                    return await _tursoContext.Users.ToListAsync();
+                }
             }
-            catch
-            {
-                return await _localContext.Users.ToListAsync();
-            }
+            catch { }
+
+            return await _localContext.Users.ToListAsync();
         }
 
         // ============================================================
-        // 博客相关
+        // 博客相关 - 优先 Turso
         // ============================================================
 
         public async Task AddBlogAsync(Blog blog)
         {
-            _localContext.Blogs.Add(blog);
-            await _localContext.SaveChangesAsync();
-
-            try
+            if (_tursoAvailable)
             {
                 _tursoContext.Blogs.Add(blog);
                 await _tursoContext.SaveChangesAsync();
             }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Turso 同步失败: {ex.Message}");
-            }
+            
+            _localContext.Blogs.Add(blog);
+            await _localContext.SaveChangesAsync();
         }
 
         public async Task<List<Blog>> GetBlogsAsync()
         {
             try
             {
-                return await _tursoContext.Blogs
-                    .OrderByDescending(b => b.PublishDate)
-                    .ToListAsync();
+                if (_tursoAvailable)
+                {
+                    return await _tursoContext.Blogs
+                        .OrderByDescending(b => b.PublishDate)
+                        .ToListAsync();
+                }
             }
-            catch
-            {
-                return await _localContext.Blogs
-                    .OrderByDescending(b => b.PublishDate)
-                    .ToListAsync();
-            }
+            catch { }
+
+            return await _localContext.Blogs
+                .OrderByDescending(b => b.PublishDate)
+                .ToListAsync();
         }
 
         public async Task<Blog?> GetBlogByIdAsync(int id)
         {
             try
             {
-                var blog = await _tursoContext.Blogs.FindAsync(id);
-                if (blog != null) return blog;
+                if (_tursoAvailable)
+                {
+                    var blog = await _tursoContext.Blogs.FindAsync(id);
+                    if (blog != null) return blog;
+                }
             }
             catch { }
 
@@ -156,30 +169,19 @@ namespace MyPersonalWebsite.Services
 
         public async Task UpdateBlogAsync(Blog blog)
         {
-            _localContext.Blogs.Update(blog);
-            await _localContext.SaveChangesAsync();
-
-            try
+            if (_tursoAvailable)
             {
                 _tursoContext.Blogs.Update(blog);
                 await _tursoContext.SaveChangesAsync();
             }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Turso 同步失败: {ex.Message}");
-            }
+            
+            _localContext.Blogs.Update(blog);
+            await _localContext.SaveChangesAsync();
         }
 
         public async Task DeleteBlogAsync(int id)
         {
-            var blog = await _localContext.Blogs.FindAsync(id);
-            if (blog != null)
-            {
-                _localContext.Blogs.Remove(blog);
-                await _localContext.SaveChangesAsync();
-            }
-
-            try
+            if (_tursoAvailable)
             {
                 var tursoBlog = await _tursoContext.Blogs.FindAsync(id);
                 if (tursoBlog != null)
@@ -188,54 +190,58 @@ namespace MyPersonalWebsite.Services
                     await _tursoContext.SaveChangesAsync();
                 }
             }
-            catch (Exception ex)
+
+            var localBlog = await _localContext.Blogs.FindAsync(id);
+            if (localBlog != null)
             {
-                Console.WriteLine($"Turso 同步失败: {ex.Message}");
+                _localContext.Blogs.Remove(localBlog);
+                await _localContext.SaveChangesAsync();
             }
         }
 
         // ============================================================
-        // 留言相关
+        // 留言相关 - 优先 Turso
         // ============================================================
 
         public async Task AddMessageAsync(Message message)
         {
-            _localContext.Messages.Add(message);
-            await _localContext.SaveChangesAsync();
-
-            try
+            if (_tursoAvailable)
             {
                 _tursoContext.Messages.Add(message);
                 await _tursoContext.SaveChangesAsync();
             }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Turso 同步失败: {ex.Message}");
-            }
+            
+            _localContext.Messages.Add(message);
+            await _localContext.SaveChangesAsync();
         }
 
         public async Task<List<Message>> GetMessagesAsync()
         {
             try
             {
-                return await _tursoContext.Messages
-                    .OrderByDescending(m => m.CreateTime)
-                    .ToListAsync();
+                if (_tursoAvailable)
+                {
+                    return await _tursoContext.Messages
+                        .OrderByDescending(m => m.CreateTime)
+                        .ToListAsync();
+                }
             }
-            catch
-            {
-                return await _localContext.Messages
-                    .OrderByDescending(m => m.CreateTime)
-                    .ToListAsync();
-            }
+            catch { }
+
+            return await _localContext.Messages
+                .OrderByDescending(m => m.CreateTime)
+                .ToListAsync();
         }
 
         public async Task<Message?> GetMessageByIdAsync(int id)
         {
             try
             {
-                var msg = await _tursoContext.Messages.FindAsync(id);
-                if (msg != null) return msg;
+                if (_tursoAvailable)
+                {
+                    var msg = await _tursoContext.Messages.FindAsync(id);
+                    if (msg != null) return msg;
+                }
             }
             catch { }
 
@@ -244,30 +250,19 @@ namespace MyPersonalWebsite.Services
 
         public async Task UpdateMessageAsync(Message message)
         {
-            _localContext.Messages.Update(message);
-            await _localContext.SaveChangesAsync();
-
-            try
+            if (_tursoAvailable)
             {
                 _tursoContext.Messages.Update(message);
                 await _tursoContext.SaveChangesAsync();
             }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Turso 同步失败: {ex.Message}");
-            }
+            
+            _localContext.Messages.Update(message);
+            await _localContext.SaveChangesAsync();
         }
 
         public async Task DeleteMessageAsync(int id)
         {
-            var msg = await _localContext.Messages.FindAsync(id);
-            if (msg != null)
-            {
-                _localContext.Messages.Remove(msg);
-                await _localContext.SaveChangesAsync();
-            }
-
-            try
+            if (_tursoAvailable)
             {
                 var tursoMsg = await _tursoContext.Messages.FindAsync(id);
                 if (tursoMsg != null)
@@ -276,79 +271,22 @@ namespace MyPersonalWebsite.Services
                     await _tursoContext.SaveChangesAsync();
                 }
             }
-            catch (Exception ex)
+
+            var localMsg = await _localContext.Messages.FindAsync(id);
+            if (localMsg != null)
             {
-                Console.WriteLine($"Turso 同步失败: {ex.Message}");
+                _localContext.Messages.Remove(localMsg);
+                await _localContext.SaveChangesAsync();
             }
         }
 
         public async Task SaveChangesAsync()
         {
-            await _localContext.SaveChangesAsync();
-
-            try
+            if (_tursoAvailable)
             {
                 await _tursoContext.SaveChangesAsync();
             }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Turso 同步失败: {ex.Message}");
-            }
-        }
-
-        // ============================================================
-        // 管理员账号检查
-        // ============================================================
-
-        public async Task EnsureAdminExistsAsync()
-        {
-            var localAdmin = await _localContext.Users
-                .FirstOrDefaultAsync(u => u.Username == "admin");
-
-            if (localAdmin == null)
-            {
-                var admin = new User
-                {
-                    Username = "admin",
-                    Email = "2908685235@qq.com",
-                    PasswordHash = "AQAAAAIAAYagAAAAEJ4Zj6zVqZMjSx5k5r5WYg==",
-                    IsEmailVerified = true,
-                    IsAdmin = true,
-                    IsBanned = false,
-                    CreatedAt = DateTime.Now
-                };
-                _localContext.Users.Add(admin);
-                await _localContext.SaveChangesAsync();
-
-                try
-                {
-                    _tursoContext.Users.Add(admin);
-                    await _tursoContext.SaveChangesAsync();
-                    Console.WriteLine("✅ 管理员账号已同步到 Turso");
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"⚠️ Turso 管理员同步失败: {ex.Message}");
-                }
-            }
-            else
-            {
-                try
-                {
-                    var tursoAdmin = await _tursoContext.Users
-                        .FirstOrDefaultAsync(u => u.Username == "admin");
-                    if (tursoAdmin == null)
-                    {
-                        _tursoContext.Users.Add(localAdmin);
-                        await _tursoContext.SaveChangesAsync();
-                        Console.WriteLine("✅ 管理员账号已补录到 Turso");
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"⚠️ Turso 管理员检查失败: {ex.Message}");
-                }
-            }
+            await _localContext.SaveChangesAsync();
         }
 
         // ============================================================
@@ -359,24 +297,29 @@ namespace MyPersonalWebsite.Services
         {
             try
             {
-                return await _tursoContext.ContactRequests
-                    .OrderByDescending(r => r.RequestTime)
-                    .ToListAsync();
+                if (_tursoAvailable)
+                {
+                    return await _tursoContext.ContactRequests
+                        .OrderByDescending(r => r.RequestTime)
+                        .ToListAsync();
+                }
             }
-            catch
-            {
-                return await _localContext.ContactRequests
-                    .OrderByDescending(r => r.RequestTime)
-                    .ToListAsync();
-            }
+            catch { }
+
+            return await _localContext.ContactRequests
+                .OrderByDescending(r => r.RequestTime)
+                .ToListAsync();
         }
 
         public async Task<ContactRequest?> GetContactRequestByIdAsync(int id)
         {
             try
             {
-                var request = await _tursoContext.ContactRequests.FindAsync(id);
-                if (request != null) return request;
+                if (_tursoAvailable)
+                {
+                    var request = await _tursoContext.ContactRequests.FindAsync(id);
+                    if (request != null) return request;
+                }
             }
             catch { }
 
@@ -385,34 +328,26 @@ namespace MyPersonalWebsite.Services
 
         public async Task UpdateContactRequestAsync(ContactRequest request)
         {
-            _localContext.ContactRequests.Update(request);
-            await _localContext.SaveChangesAsync();
-
-            try
+            if (_tursoAvailable)
             {
                 _tursoContext.ContactRequests.Update(request);
                 await _tursoContext.SaveChangesAsync();
             }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Turso 同步失败: {ex.Message}");
-            }
+            
+            _localContext.ContactRequests.Update(request);
+            await _localContext.SaveChangesAsync();
         }
 
         public async Task AddContactRequestAsync(ContactRequest request)
         {
-            _localContext.ContactRequests.Add(request);
-            await _localContext.SaveChangesAsync();
-
-            try
+            if (_tursoAvailable)
             {
                 _tursoContext.ContactRequests.Add(request);
                 await _tursoContext.SaveChangesAsync();
             }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Turso 同步失败: {ex.Message}");
-            }
+            
+            _localContext.ContactRequests.Add(request);
+            await _localContext.SaveChangesAsync();
         }
 
         // ============================================================
@@ -423,10 +358,12 @@ namespace MyPersonalWebsite.Services
         {
             try
             {
-                var sections = await _tursoContext.AboutMeContents
-                    .OrderBy(s => s.SortOrder)
-                    .ToListAsync();
-                if (sections.Any()) return sections;
+                if (_tursoAvailable)
+                {
+                    return await _tursoContext.AboutMeContents
+                        .OrderBy(s => s.SortOrder)
+                        .ToListAsync();
+                }
             }
             catch { }
 
@@ -437,17 +374,69 @@ namespace MyPersonalWebsite.Services
 
         public async Task UpdateAboutMeAsync(AboutMe section)
         {
-            _localContext.AboutMeContents.Update(section);
-            await _localContext.SaveChangesAsync();
-
-            try
+            if (_tursoAvailable)
             {
                 _tursoContext.AboutMeContents.Update(section);
                 await _tursoContext.SaveChangesAsync();
             }
-            catch (Exception ex)
+            
+            _localContext.AboutMeContents.Update(section);
+            await _localContext.SaveChangesAsync();
+        }
+
+        // ============================================================
+        // 管理员账号检查
+        // ============================================================
+
+        public async Task EnsureAdminExistsAsync()
+        {
+            User? admin = null;
+
+            // 先检查 Turso
+            try
             {
-                Console.WriteLine($"Turso 同步失败: {ex.Message}");
+                if (_tursoAvailable)
+                {
+                    admin = await _tursoContext.Users
+                        .FirstOrDefaultAsync(u => u.Username == "admin");
+                }
+            }
+            catch { }
+
+            // 如果 Turso 没有，检查本地
+            if (admin == null)
+            {
+                admin = await _localContext.Users
+                    .FirstOrDefaultAsync(u => u.Username == "admin");
+            }
+
+            if (admin == null)
+            {
+                var newAdmin = new User
+                {
+                    Username = "admin",
+                    Email = "2908685235@qq.com",
+                    PasswordHash = "AQAAAAIAAYagAAAAEJ4Zj6zVqZMjSx5k5r5WYg==",
+                    IsEmailVerified = true,
+                    IsAdmin = true,
+                    IsBanned = false,
+                    CreatedAt = DateTime.Now
+                };
+
+                if (_tursoAvailable)
+                {
+                    _tursoContext.Users.Add(newAdmin);
+                    await _tursoContext.SaveChangesAsync();
+                    Console.WriteLine("✅ 管理员账号已创建到 Turso");
+                }
+
+                _localContext.Users.Add(newAdmin);
+                await _localContext.SaveChangesAsync();
+                Console.WriteLine("✅ 管理员账号已创建到本地");
+            }
+            else
+            {
+                Console.WriteLine("✅ 管理员账号已存在");
             }
         }
 
@@ -459,18 +448,20 @@ namespace MyPersonalWebsite.Services
         {
             try
             {
-                return await _tursoContext.Users
-                    .Where(u => !u.IsDeleted)
-                    .OrderByDescending(u => u.CreatedAt)
-                    .ToListAsync();
+                if (_tursoAvailable)
+                {
+                    return await _tursoContext.Users
+                        .Where(u => !u.IsDeleted)
+                        .OrderByDescending(u => u.CreatedAt)
+                        .ToListAsync();
+                }
             }
-            catch
-            {
-                return await _localContext.Users
-                    .Where(u => !u.IsDeleted)
-                    .OrderByDescending(u => u.CreatedAt)
-                    .ToListAsync();
-            }
+            catch { }
+
+            return await _localContext.Users
+                .Where(u => !u.IsDeleted)
+                .OrderByDescending(u => u.CreatedAt)
+                .ToListAsync();
         }
     }
 }
