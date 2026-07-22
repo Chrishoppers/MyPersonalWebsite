@@ -10,43 +10,195 @@
     }
 }
 
-<div style="max-width:1000px;margin:0 auto;padding:2rem 1rem;">
-    <h2 style="color:#fff;font-weight:700;margin-bottom:1.5rem;">📋 待审核更改</h2>
+<style>
+    .pending-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem 1rem;
+    }
 
-    @if (Model.Any(u => !string.IsNullOrEmpty(u.PendingUsername) || !string.IsNullOrEmpty(u.PendingEmail) || (!u.IsAvatarApproved && !string.IsNullOrEmpty(u.AvatarUrl))))
+    .pending-container h2 {
+        color: #fff;
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+    }
+
+    .table-wrapper {
+        background: rgba(255,255,255,0.02);
+        border-radius: 20px;
+        border: 1px solid rgba(255,255,255,0.04);
+        overflow-x: auto;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        color: #e0e0e0;
+        font-size: 0.9rem;
+        min-width: 800px;
+    }
+
+    th {
+        padding: 0.8rem 1rem;
+        text-align: left;
+        color: rgba(255,255,255,0.3);
+        font-weight: 500;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        border-bottom: 1px solid rgba(255,255,255,0.04);
+        background: rgba(255,255,255,0.02);
+    }
+
+    td {
+        padding: 0.8rem 1rem;
+        border-top: 1px solid rgba(255,255,255,0.02);
+        vertical-align: middle;
+    }
+
+    .btn-action {
+        padding: 0.2rem 0.8rem;
+        border: none;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        margin: 0.1rem 0.1rem;
+    }
+
+    .btn-approve {
+        background: rgba(40,167,69,0.12);
+        color: #28a745;
+    }
+    .btn-approve:hover {
+        background: rgba(40,167,69,0.2);
+    }
+
+    .btn-reject {
+        background: rgba(220,53,69,0.08);
+        color: #dc3545;
+    }
+    .btn-reject:hover {
+        background: rgba(220,53,69,0.15);
+    }
+
+    .avatar-preview-thumb {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 1px solid rgba(255,255,255,0.06);
+        flex-shrink: 0;
+    }
+
+    .change-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .change-item .change-label {
+        color: rgba(255,255,255,0.5);
+        font-size: 0.8rem;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem 2rem;
+        color: rgba(255,255,255,0.15);
+    }
+
+    @@media (max-width: 768px) {
+        td, th {
+            padding: 0.5rem 0.6rem;
+            font-size: 0.75rem;
+        }
+        .avatar-preview-thumb {
+            width: 30px;
+            height: 30px;
+        }
+    }
+</style>
+
+<div class="pending-container">
+    <h2>📋 待审核更改</h2>
+
+    @{
+        var hasPending = Model.Any(u =>
+            !string.IsNullOrEmpty(u.PendingUsername) ||
+            !string.IsNullOrEmpty(u.PendingEmail) ||
+            (!u.IsAvatarApproved && !string.IsNullOrEmpty(u.AvatarUrl))
+        );
+    }
+
+    @if (hasPending)
     {
-        <div style="background:rgba(255,255,255,0.02);border-radius:20px;border:1px solid rgba(255,255,255,0.04);overflow:hidden;">
-            <table style="width:100%;border-collapse:collapse;color:#e0e0e0;font-size:0.9rem;">
+        <div class="table-wrapper">
+            <table>
                 <thead>
-                    <tr style="background:rgba(255,255,255,0.02);">
-                        <th style="padding:0.8rem 1rem;text-align:left;color:rgba(255,255,255,0.3);">用户</th>
-                        <th style="padding:0.8rem 1rem;text-align:left;color:rgba(255,255,255,0.3);">更改类型</th>
-                        <th style="padding:0.8rem 1rem;text-align:left;color:rgba(255,255,255,0.3);">当前值</th>
-                        <th style="padding:0.8rem 1rem;text-align:left;color:rgba(255,255,255,0.3);">申请值</th>
-                        <th style="padding:0.8rem 1rem;text-align:left;color:rgba(255,255,255,0.3);">操作</th>
+                    <tr>
+                        <th>用户</th>
+                        <th>更改类型</th>
+                        <th>当前值</th>
+                        <th>申请值</th>
+                        <th>操作</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach (var user in Model)
                     {
+                        var hasUsernameChange = !string.IsNullOrEmpty(user.PendingUsername);
+                        var hasEmailChange = !string.IsNullOrEmpty(user.PendingEmail);
+                        var hasAvatarChange = !user.IsAvatarApproved && !string.IsNullOrEmpty(user.AvatarUrl);
+
+                        if (!hasUsernameChange && !hasEmailChange && !hasAvatarChange) continue;
+
                         <tr>
-                            <td style="padding:0.8rem 1rem;border-top:1px solid rgba(255,255,255,0.02);">@user.Username</td>
                             <td style="padding:0.8rem 1rem;border-top:1px solid rgba(255,255,255,0.02);">
-                                @if (!string.IsNullOrEmpty(user.PendingUsername)) { <span>昵称</span><br /> }
-                                @if (!string.IsNullOrEmpty(user.PendingEmail)) { <span>邮箱</span><br /> }
-                                @if (!user.IsAvatarApproved && !string.IsNullOrEmpty(user.AvatarUrl)) { <span>头像</span><br /> }
+                                <strong style="color:#fff;">@user.Username</strong>
                             </td>
+
                             <td style="padding:0.8rem 1rem;border-top:1px solid rgba(255,255,255,0.02);">
-                                @user.Username<br />@user.Email
+                                @if (hasUsernameChange) { <span>昵称</span><br /> }
+                                @if (hasEmailChange) { <span>邮箱</span><br /> }
+                                @if (hasAvatarChange) { <span>头像</span> }
                             </td>
+
                             <td style="padding:0.8rem 1rem;border-top:1px solid rgba(255,255,255,0.02);">
-                                @if (!string.IsNullOrEmpty(user.PendingUsername)) { <span>@user.PendingUsername</span><br /> }
-                                @if (!string.IsNullOrEmpty(user.PendingEmail)) { <span>@user.PendingEmail</span><br /> }
-                                @if (!user.IsAvatarApproved && !string.IsNullOrEmpty(user.AvatarUrl)) { <span>新头像</span> }
+                                @if (hasUsernameChange) { <span>@user.Username</span><br /> }
+                                @if (hasEmailChange) { <span>@user.Email</span><br /> }
+                                @if (hasAvatarChange)
+                                {
+                                    <span>当前头像</span>
+                                    if (!string.IsNullOrEmpty(user.AvatarUrl))
+                                    {
+                                        <br />
+                                        <img src="@user.AvatarUrl" alt="当前头像" class="avatar-preview-thumb" style="opacity:0.5;filter:grayscale(1);margin-top:0.2rem;" />
+                                    }
+                                }
                             </td>
+
                             <td style="padding:0.8rem 1rem;border-top:1px solid rgba(255,255,255,0.02);">
-                                <button onclick="approveChange(@user.Id)" style="padding:0.2rem 0.8rem;border:none;border-radius:20px;background:rgba(40,167,69,0.12);color:#28a745;cursor:pointer;font-size:0.75rem;">✅ 通过</button>
-                                <button onclick="rejectChange(@user.Id)" style="padding:0.2rem 0.8rem;border:none;border-radius:20px;background:rgba(220,53,69,0.08);color:#dc3545;cursor:pointer;font-size:0.75rem;">❌ 拒绝</button>
+                                @if (hasUsernameChange) { <span style="color:#8B5CF6;">@user.PendingUsername</span><br /> }
+                                @if (hasEmailChange) { <span style="color:#8B5CF6;">@user.PendingEmail</span><br /> }
+                                @if (hasAvatarChange)
+                                {
+                                    <div class="change-item">
+                                        <span class="change-label">新头像</span>
+                                        <img src="@user.AvatarUrl" alt="新头像预览" class="avatar-preview-thumb" />
+                                    </div>
+                                }
+                            </td>
+
+                            <td style="padding:0.8rem 1rem;border-top:1px solid rgba(255,255,255,0.02);">
+                                <button class="btn-action btn-approve" onclick="approveChange(@user.Id)">
+                                    ✅ 通过
+                                </button>
+                                <button class="btn-action btn-reject" onclick="rejectChange(@user.Id)">
+                                    ❌ 拒绝
+                                </button>
                             </td>
                         </tr>
                     }
@@ -56,7 +208,7 @@
     }
     else
     {
-        <div style="text-align:center;padding:3rem 2rem;color:rgba(255,255,255,0.15);">✅ 暂无待审核的更改</div>
+        <div class="empty-state">✅ 暂无待审核的更改</div>
     }
 </div>
 
