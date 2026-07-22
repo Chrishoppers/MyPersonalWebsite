@@ -24,9 +24,6 @@ namespace MyPersonalWebsite.Models
             modelBuilder.Entity<BlogLike>()
                 .HasIndex(l => new { l.BlogId, l.UserId })
                 .IsUnique();
-
-            // Turso 中如果管理员不存在，自动创建
-            // 但不使用 HasData，避免重复插入
         }
     }
 }
