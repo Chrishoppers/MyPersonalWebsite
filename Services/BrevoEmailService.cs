@@ -51,7 +51,7 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 1. 普通用户注册 - 管理员审核邮件（含通过/拒绝按钮）
+        // 1. 管理员审核邮件（含通过/拒绝按钮）
         // ============================================================
 
         public async Task SendAdminVerificationRequestAsync(string username, string email, int userId)
@@ -94,30 +94,7 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 2. 发送邮箱验证码（注册时邮箱验证）
-        // ============================================================
-
-        public async Task SendVerificationCodeAsync(string toEmail, string code)
-        {
-            var html = $@"
-                <div style='font-family: Arial; max-width: 600px; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;'>
-                    <h2 style='color: #0D6EFD;'>✌️ 嘿，是你吗？</h2>
-                    <p>有人在 <strong>Chris Hopper 的个人网站</strong> 用这个邮箱注册了账号。</p>
-                    <p>如果是你，请用这个验证码完成注册：</p>
-                    <div style='background: #f0f4ff; padding: 15px; text-align: center; font-size: 32px; letter-spacing: 8px; font-weight: bold; color: #0D6EFD;'>
-                        {code}
-                    </div>
-                    <p style='color: #888; font-size: 14px;'>⏳ 10 分钟内有效。</p>
-                    <hr>
-                    <p style='color: #aaa; font-size: 12px;'>💌 系统自动发送，不用回复。</p>
-                </div>
-            ";
-
-            await SendEmailAsync(toEmail, "【Chris Hopper 个人网站】邮箱验证码 ✌️", html);
-        }
-
-        // ============================================================
-        // 3. 密码重置验证码
+        // 2. 密码重置验证码
         // ============================================================
 
         public async Task SendPasswordResetEmailAsync(string toEmail, string code)
@@ -140,7 +117,7 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 4. 管理员回复留言通知
+        // 3. 管理员回复留言通知
         // ============================================================
 
         public async Task SendReplyNotificationAsync(string toEmail, string userName, string originalContent, string replyContent)
@@ -166,7 +143,7 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 5. 用户操作通知（封禁/解封/删除/审核通过/审核拒绝）
+        // 4. 用户操作通知
         // ============================================================
 
         public async Task SendUserActionNotificationAsync(string toEmail, string username, string actionType, string reason, string note)
@@ -215,7 +192,7 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 6. 管理员通知：新留言待审核
+        // 5. 管理员通知：新留言待审核
         // ============================================================
 
         public async Task SendAdminNewMessageNotificationAsync(string visitorName, string content, int messageId)
@@ -239,30 +216,7 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 7. 管理员通知：新用户注册（备用，现在是审核邮件替代）
-        // ============================================================
-
-        public async Task SendAdminNewUserNotificationAsync(string username, string email)
-        {
-            var html = $@"
-                <div style='font-family: Arial; max-width: 600px; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;'>
-                    <h2 style='color: #28a745;'>👤 新用户注册</h2>
-                    <p>有新用户注册了：</p>
-                    <div style='background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0;'>
-                        <p><strong>用户名：</strong>{username}</p>
-                        <p><strong>邮箱：</strong>{email}</p>
-                        <p><strong>时间：</strong>{DateTime.Now:yyyy-MM-dd HH:mm}</p>
-                    </div>
-                    <hr>
-                    <p style='color: #aaa; font-size: 12px;'>此邮件由系统自动发送，请勿直接回复。</p>
-                </div>
-            ";
-
-            await SendEmailAsync(_adminEmail, "👤 新用户注册", html);
-        }
-
-        // ============================================================
-        // 8. 管理员通知：新博客发布
+        // 6. 管理员通知：新博客发布
         // ============================================================
 
         public async Task SendAdminNewBlogNotificationAsync(string blogTitle)
@@ -279,7 +233,7 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 9. 管理员通知：新授权码申请
+        // 7. 管理员通知：新授权码申请
         // ============================================================
 
         public async Task SendAdminNewContactRequestNotificationAsync(string identity, string platform, string authCode, string howKnowMe, string relationship, string username, string userEmail)
