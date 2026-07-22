@@ -25,7 +25,6 @@ namespace MyPersonalWebsite.Services
             else
                 Console.WriteLine("⚠️ Turso 未配置");
         }
-       
 
         // ============================================================
         // 用户相关
@@ -97,10 +96,9 @@ namespace MyPersonalWebsite.Services
             var result = await _tursoService.QueryAsync($"SELECT * FROM Users WHERE Id = {id}");
             var user = ParseUserFromJson(result);
             
-            // ⭐ 调试日志
             if (user != null)
             {
-                Console.WriteLine($"✅ 读取用户: Id={user.Id}, 用户名={user.Username}, IsApproved={user.IsApproved}");
+                Console.WriteLine($"✅ 读取用户: Id={user.Id}, 用户名={user.Username}, IsApproved={user.IsApproved}, AvatarUrl={user.AvatarUrl}");
             }
             
             return user;
@@ -115,7 +113,6 @@ namespace MyPersonalWebsite.Services
                 Email = '{EscapeSql(user.Email)}',
                 PasswordHash = '{EscapeSql(user.PasswordHash)}',
                 IsEmailVerified = {(user.IsEmailVerified ? 1 : 0)},
-                IsApproved = {(user.IsApproved ? 1 : 0)}, 
                 IsAdmin = {(user.IsAdmin ? 1 : 0)},
                 LastLoginAt = {(user.LastLoginAt.HasValue ? $"'{user.LastLoginAt.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
                 IsBanned = {(user.IsBanned ? 1 : 0)},
@@ -125,6 +122,7 @@ namespace MyPersonalWebsite.Services
                 DeletedAt = {(user.DeletedAt.HasValue ? $"'{user.DeletedAt.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
                 DeleteReason = {(string.IsNullOrEmpty(user.DeleteReason) ? "NULL" : $"'{EscapeSql(user.DeleteReason)}'")},
                 DeleteNote = {(string.IsNullOrEmpty(user.DeleteNote) ? "NULL" : $"'{EscapeSql(user.DeleteNote)}'")},
+                -- ⭐ 头像字段
                 AvatarUrl = {(string.IsNullOrEmpty(user.AvatarUrl) ? "NULL" : $"'{EscapeSql(user.AvatarUrl)}'")},
                 IsAvatarApproved = {(user.IsAvatarApproved ? 1 : 0)},
                 AvatarSubmittedAt = {(user.AvatarSubmittedAt.HasValue ? $"'{user.AvatarSubmittedAt.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
@@ -138,7 +136,7 @@ namespace MyPersonalWebsite.Services
             WHERE Id = {user.Id}";
 
             await _tursoService.ExecuteSqlAsync(sql);
-            Console.WriteLine($"✅ 用户 {user.Username} 已更新到 Turso (IsApproved={user.IsApproved})");
+            Console.WriteLine($"✅ 用户 {user.Username} 已更新到 Turso (头像={user.AvatarUrl}, IsApproved={user.IsApproved})");
         }
 
         public async Task<List<User>> GetAllUsersAsync()
@@ -324,6 +322,7 @@ namespace MyPersonalWebsite.Services
                     IsApproved = true,
                     IsBanned = false,
                     IsDeleted = false,
+                    IsAvatarApproved = true,
                     CreatedAt = DateTime.Now
                 };
 
@@ -483,31 +482,31 @@ namespace MyPersonalWebsite.Services
             return element;
         }
 
-       private int GetIntFromRow(JsonElement element)
-{
-    try
-    {
-        var val = GetValueFromRow(element);
-        if (val is JsonElement je)
+        private int GetIntFromRow(JsonElement element)
         {
-            if (je.ValueKind == JsonValueKind.Null) return 0;
-            if (je.ValueKind == JsonValueKind.Number) return je.GetInt32();
-            if (je.ValueKind == JsonValueKind.String)
+            try
             {
-                var str = je.GetString();
-                if (int.TryParse(str, out var result))
-                    return result;
+                var val = GetValueFromRow(element);
+                if (val is JsonElement je)
+                {
+                    if (je.ValueKind == JsonValueKind.Null) return 0;
+                    if (je.ValueKind == JsonValueKind.Number) return je.GetInt32();
+                    if (je.ValueKind == JsonValueKind.String)
+                    {
+                        var str = je.GetString();
+                        if (int.TryParse(str, out var result))
+                            return result;
+                        return 0;
+                    }
+                    return 0;
+                }
+                var strVal = val?.ToString();
+                if (int.TryParse(strVal, out var result2))
+                    return result2;
                 return 0;
             }
-            return 0;
+            catch { return 0; }
         }
-        var strVal = val?.ToString();
-        if (int.TryParse(strVal, out var result2))
-            return result2;
-        return 0;
-    }
-    catch { return 0; }
-}
 
         private string GetStringFromRow(JsonElement element)
         {
