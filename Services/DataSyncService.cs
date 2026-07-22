@@ -755,19 +755,13 @@ namespace MyPersonalWebsite.Services
                     {
                         if (result.TryGetProperty("rows", out var rows) && rows.GetArrayLength() > 0)
                         {
+                            // ⭐ 关键修复：rows[0] 直接就是数组！
                             var row = rows[0];
                             var cols = result.GetProperty("cols");
 
-                            // ⭐ 关键修复：从 row 对象中获取 values 数组
-                            if (!row.TryGetProperty("values", out var values))
+                            if (row.ValueKind != JsonValueKind.Array)
                             {
-                                Console.WriteLine("⚠️ 行中没有 values 属性");
-                                return null;
-                            }
-
-                            if (values.ValueKind != JsonValueKind.Array)
-                            {
-                                Console.WriteLine($"⚠️ values 不是数组类型: {values.ValueKind}");
+                                Console.WriteLine($"⚠️ row 不是数组类型: {row.ValueKind}");
                                 return null;
                             }
 
@@ -776,7 +770,7 @@ namespace MyPersonalWebsite.Services
                             for (int i = 0; i < cols.GetArrayLength(); i++)
                             {
                                 var colName = cols[i].GetProperty("name").GetString();
-                                var value = values[i];
+                                var value = row[i];
 
                                 switch (colName)
                                 {
@@ -841,10 +835,7 @@ namespace MyPersonalWebsite.Services
                             {
                                 var row = rows[r];
 
-                                if (!row.TryGetProperty("values", out var values))
-                                    continue;
-
-                                if (values.ValueKind != JsonValueKind.Array)
+                                if (row.ValueKind != JsonValueKind.Array)
                                     continue;
 
                                 var user = new User();
@@ -852,7 +843,7 @@ namespace MyPersonalWebsite.Services
                                 for (int i = 0; i < cols.GetArrayLength(); i++)
                                 {
                                     var colName = cols[i].GetProperty("name").GetString();
-                                    var value = values[i];
+                                    var value = row[i];
 
                                     switch (colName)
                                     {
@@ -904,10 +895,7 @@ namespace MyPersonalWebsite.Services
                             {
                                 var row = rows[r];
 
-                                if (!row.TryGetProperty("values", out var values))
-                                    continue;
-
-                                if (values.ValueKind != JsonValueKind.Array)
+                                if (row.ValueKind != JsonValueKind.Array)
                                     continue;
 
                                 var blog = new Blog();
@@ -915,7 +903,7 @@ namespace MyPersonalWebsite.Services
                                 for (int i = 0; i < cols.GetArrayLength(); i++)
                                 {
                                     var colName = cols[i].GetProperty("name").GetString();
-                                    var value = values[i];
+                                    var value = row[i];
 
                                     switch (colName)
                                     {
@@ -969,10 +957,7 @@ namespace MyPersonalWebsite.Services
                             {
                                 var row = rows[r];
 
-                                if (!row.TryGetProperty("values", out var values))
-                                    continue;
-
-                                if (values.ValueKind != JsonValueKind.Array)
+                                if (row.ValueKind != JsonValueKind.Array)
                                     continue;
 
                                 var msg = new Message();
@@ -980,7 +965,7 @@ namespace MyPersonalWebsite.Services
                                 for (int i = 0; i < cols.GetArrayLength(); i++)
                                 {
                                     var colName = cols[i].GetProperty("name").GetString();
-                                    var value = values[i];
+                                    var value = row[i];
 
                                     switch (colName)
                                     {
@@ -1039,10 +1024,7 @@ namespace MyPersonalWebsite.Services
                             {
                                 var row = rows[r];
 
-                                if (!row.TryGetProperty("values", out var values))
-                                    continue;
-
-                                if (values.ValueKind != JsonValueKind.Array)
+                                if (row.ValueKind != JsonValueKind.Array)
                                     continue;
 
                                 var req = new ContactRequest();
@@ -1050,7 +1032,7 @@ namespace MyPersonalWebsite.Services
                                 for (int i = 0; i < cols.GetArrayLength(); i++)
                                 {
                                     var colName = cols[i].GetProperty("name").GetString();
-                                    var value = values[i];
+                                    var value = row[i];
 
                                     switch (colName)
                                     {
@@ -1112,10 +1094,7 @@ namespace MyPersonalWebsite.Services
                             {
                                 var row = rows[r];
 
-                                if (!row.TryGetProperty("values", out var values))
-                                    continue;
-
-                                if (values.ValueKind != JsonValueKind.Array)
+                                if (row.ValueKind != JsonValueKind.Array)
                                     continue;
 
                                 var section = new AboutMe();
@@ -1123,7 +1102,7 @@ namespace MyPersonalWebsite.Services
                                 for (int i = 0; i < cols.GetArrayLength(); i++)
                                 {
                                     var colName = cols[i].GetProperty("name").GetString();
-                                    var value = values[i];
+                                    var value = row[i];
 
                                     switch (colName)
                                     {
