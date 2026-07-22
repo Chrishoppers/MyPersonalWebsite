@@ -14,11 +14,6 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"))
 );
 
-// ============================================================
-// TursoDbContext 不再使用 EF Core 连接！
-// ============================================================
-// 删除或注释掉 TursoDbContext 的注册
-
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
 {
@@ -33,8 +28,8 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<BrevoEmailService>();
 builder.Services.AddScoped<SvgCaptchaService>();
 builder.Services.AddScoped<RateLimitService>();
-builder.Services.AddScoped<DataSyncService>();  // 改用 TursoService
-builder.Services.AddScoped<TursoService>();     // HTTP API
+builder.Services.AddScoped<DataSyncService>();
+builder.Services.AddScoped<TursoService>();
 
 builder.Services.AddSignalR();
 
@@ -50,7 +45,10 @@ using (var scope = app.Services.CreateScope())
     Console.WriteLine("✅ 本地 SQLite 缓存已就绪");
 
     // 确保 Turso 中有管理员账号
-    await dataSync.EnsureAdminExistsAsync();  // ⭐ 改成 EnsureAdminExistsAsync
+    await dataSync.EnsureAdminExistsAsync();
+
+    // ⭐ 确保 AboutMe 数据存在
+    await EnsureAboutMeDataAsync(dataSync);
 }
 
 if (!app.Environment.IsDevelopment())
@@ -72,3 +70,80 @@ app.MapControllerRoute(
 app.MapHub<MessageHub>("/messageHub");
 
 app.Run();
+
+// ============================================================
+// ⭐ EnsureAboutMeDataAsync 方法
+// ============================================================
+async Task EnsureAboutMeDataAsync(DataSyncService dataSync)
+{
+    Console.WriteLine("📦 检查 AboutMe 数据...");
+
+    try
+    {
+        var sections = await dataSync.GetAboutMeAsync();
+
+        if (sections == null || !sections.Any())
+        {
+            Console.WriteLine("📝 AboutMe 数据为空，正在插入默认数据...");
+
+            var defaultSections = new[]
+            {
+                new AboutMe
+                {
+                    Id = 1,
+                    SectionKey = "bio",
+                    Title = "🧑‍💻 关于我",
+                    Content = "你好！我是 Chris hopper，一个人类。",
+                    Icon = "🧑‍💻",
+                    SortOrder = 1,
+                    UpdatedAt = DateTime.Now
+                },
+                new AboutMe
+                {
+                    Id = 2,
+                    SectionKey = "journey",
+                    Title = "🚀 学习之路",
+                    Content = "未知",
+                    Icon = "🚀",
+                    SortOrder = 2,
+                    UpdatedAt = DateTime.Now
+                },
+                new AboutMe
+                {
+                    Id = 3,
+                    SectionKey = "goal",
+                    Title = "🎯 愿景",
+                    Content = "用技术解决问题，创造有价值的工具和内容。\n希望我的作品能对他人有所帮助。",
+                    Icon = "🎯",
+                    SortOrder = 3,
+                    UpdatedAt = DateTime.Now
+                },
+                new AboutMe
+                {
+                    Id = 4,
+                    SectionKey = "social",
+                    Title = "🔗 社交链接",
+                    Content = "github:https://github.com|twitter:https://twitter.com|linkedin:https://linkedin.com",
+                    Icon = "🔗",
+                    SortOrder = 4,
+                    UpdatedAt = DateTime.Now
+                }
+            };
+
+            foreach (var section in defaultSections)
+            {
+                await dataSync.AddAboutMeAsync(section);
+            }
+
+            Console.WriteLine("✅ AboutMe 默认数据已插入 Turso");
+        }
+        else
+        {
+            Console.WriteLine($"✅ AboutMe 数据已存在 ({sections.Count} 条)");
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"⚠️ AboutMe 数据检查失败: {ex.Message}");
+    }
+}
