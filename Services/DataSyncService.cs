@@ -29,7 +29,7 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 用户相关（双写 + 优先 Turso）
+        // 用户相关
         // ============================================================
 
         public async Task AddUserAsync(User user)
@@ -757,7 +757,7 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // JSON 解析方法（Turso v2 格式 - 使用 GetValue 方法）
+        // JSON 解析方法 - 修复变量名冲突
         // ============================================================
 
         private object? GetValueFromRow(JsonElement element)
@@ -765,13 +765,9 @@ namespace MyPersonalWebsite.Services
             if (element.ValueKind == JsonValueKind.Object)
             {
                 if (element.TryGetProperty("value", out var value))
-                {
                     return value;
-                }
                 if (element.TryGetProperty("Value", out var value2))
-                {
                     return value2;
-                }
                 return element;
             }
             return element;
@@ -783,9 +779,7 @@ namespace MyPersonalWebsite.Services
             {
                 var value = GetValueFromRow(element);
                 if (value is JsonElement je)
-                {
                     return je.ValueKind == JsonValueKind.Null ? "" : je.GetString() ?? "";
-                }
                 return value?.ToString() ?? "";
             }
             catch { return ""; }
@@ -801,9 +795,7 @@ namespace MyPersonalWebsite.Services
                     if (je.ValueKind == JsonValueKind.Null) return 0;
                     if (je.ValueKind == JsonValueKind.Number) return je.GetInt32();
                     if (je.ValueKind == JsonValueKind.String)
-                    {
                         return int.TryParse(je.GetString(), out var result) ? result : 0;
-                    }
                     return 0;
                 }
                 return int.TryParse(value?.ToString(), out var result) ? result : 0;
@@ -872,17 +864,15 @@ namespace MyPersonalWebsite.Services
                 {
                     var firstResult = results[0];
                     if (firstResult.TryGetProperty("response", out var response) &&
-                        response.TryGetProperty("result", out var result))
+                        response.TryGetProperty("result", out var resultObj))
                     {
-                        if (result.TryGetProperty("rows", out var rows) && rows.GetArrayLength() > 0)
+                        if (resultObj.TryGetProperty("rows", out var rows) && rows.GetArrayLength() > 0)
                         {
                             var row = rows[0];
-                            var cols = result.GetProperty("cols");
+                            var cols = resultObj.GetProperty("cols");
 
                             if (row.ValueKind != JsonValueKind.Array)
-                            {
                                 return null;
-                            }
 
                             var user = new User();
 
@@ -944,11 +934,11 @@ namespace MyPersonalWebsite.Services
                 {
                     var firstResult = results[0];
                     if (firstResult.TryGetProperty("response", out var response) &&
-                        response.TryGetProperty("result", out var result))
+                        response.TryGetProperty("result", out var resultObj))
                     {
-                        if (result.TryGetProperty("rows", out var rows) && rows.GetArrayLength() > 0)
+                        if (resultObj.TryGetProperty("rows", out var rows) && rows.GetArrayLength() > 0)
                         {
-                            var cols = result.GetProperty("cols");
+                            var cols = resultObj.GetProperty("cols");
 
                             for (int r = 0; r < rows.GetArrayLength(); r++)
                             {
@@ -1004,11 +994,11 @@ namespace MyPersonalWebsite.Services
                 {
                     var firstResult = results[0];
                     if (firstResult.TryGetProperty("response", out var response) &&
-                        response.TryGetProperty("result", out var result))
+                        response.TryGetProperty("result", out var resultObj))
                     {
-                        if (result.TryGetProperty("rows", out var rows) && rows.GetArrayLength() > 0)
+                        if (resultObj.TryGetProperty("rows", out var rows) && rows.GetArrayLength() > 0)
                         {
-                            var cols = result.GetProperty("cols");
+                            var cols = resultObj.GetProperty("cols");
 
                             for (int r = 0; r < rows.GetArrayLength(); r++)
                             {
@@ -1066,11 +1056,11 @@ namespace MyPersonalWebsite.Services
                 {
                     var firstResult = results[0];
                     if (firstResult.TryGetProperty("response", out var response) &&
-                        response.TryGetProperty("result", out var result))
+                        response.TryGetProperty("result", out var resultObj))
                     {
-                        if (result.TryGetProperty("rows", out var rows) && rows.GetArrayLength() > 0)
+                        if (resultObj.TryGetProperty("rows", out var rows) && rows.GetArrayLength() > 0)
                         {
-                            var cols = result.GetProperty("cols");
+                            var cols = resultObj.GetProperty("cols");
 
                             for (int r = 0; r < rows.GetArrayLength(); r++)
                             {
@@ -1133,11 +1123,11 @@ namespace MyPersonalWebsite.Services
                 {
                     var firstResult = results[0];
                     if (firstResult.TryGetProperty("response", out var response) &&
-                        response.TryGetProperty("result", out var result))
+                        response.TryGetProperty("result", out var resultObj))
                     {
-                        if (result.TryGetProperty("rows", out var rows) && rows.GetArrayLength() > 0)
+                        if (resultObj.TryGetProperty("rows", out var rows) && rows.GetArrayLength() > 0)
                         {
-                            var cols = result.GetProperty("cols");
+                            var cols = resultObj.GetProperty("cols");
 
                             for (int r = 0; r < rows.GetArrayLength(); r++)
                             {
@@ -1203,11 +1193,11 @@ namespace MyPersonalWebsite.Services
                 {
                     var firstResult = results[0];
                     if (firstResult.TryGetProperty("response", out var response) &&
-                        response.TryGetProperty("result", out var result))
+                        response.TryGetProperty("result", out var resultObj))
                     {
-                        if (result.TryGetProperty("rows", out var rows) && rows.GetArrayLength() > 0)
+                        if (resultObj.TryGetProperty("rows", out var rows) && rows.GetArrayLength() > 0)
                         {
-                            var cols = result.GetProperty("cols");
+                            var cols = resultObj.GetProperty("cols");
 
                             for (int r = 0; r < rows.GetArrayLength(); r++)
                             {
