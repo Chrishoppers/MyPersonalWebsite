@@ -185,7 +185,6 @@ namespace MyPersonalWebsite.Controllers
                     user.Username,
                     user.Email,
                     user.Id,
-                    user.AvatarUrl
                 );
             }
             catch (Exception ex)
