@@ -481,7 +481,7 @@ namespace MyPersonalWebsite.Services
             return element;
         }
 
-        private int GetIntFromRow(JsonElement element)
+       private int GetIntFromRow(JsonElement element)
 {
     try
     {
@@ -491,10 +491,18 @@ namespace MyPersonalWebsite.Services
             if (je.ValueKind == JsonValueKind.Null) return 0;
             if (je.ValueKind == JsonValueKind.Number) return je.GetInt32();
             if (je.ValueKind == JsonValueKind.String)
-                return int.TryParse(je.GetString(), out var parsedValue) ? parsedValue : 0;
+            {
+                var str = je.GetString();
+                if (int.TryParse(str, out var result))
+                    return result;
+                return 0;
+            }
             return 0;
         }
-        return int.TryParse(val?.ToString(), out var parsedValue) ? parsedValue : 0;
+        var strVal = val?.ToString();
+        if (int.TryParse(strVal, out var result2))
+            return result2;
+        return 0;
     }
     catch { return 0; }
 }
