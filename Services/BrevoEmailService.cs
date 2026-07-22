@@ -29,7 +29,7 @@ namespace MyPersonalWebsite.Services
             {
                 var request = new
                 {
-                    sender = new { email = "chris@chris-hopper.org", name = "Chris Hopper 个人网站" },
+                    sender = new { email = "chris@chris-hopper.org", name = "Chris hopper 个人网站" },
                     to = new[] { new { email = to } },
                     subject = subject,
                     htmlContent = htmlContent
