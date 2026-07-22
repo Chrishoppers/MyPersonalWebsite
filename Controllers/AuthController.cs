@@ -73,7 +73,6 @@ namespace MyPersonalWebsite.Controllers
                 return View();
             }
 
-            // 创建用户，默认邮箱未验证
             var user = new User
             {
                 Username = username,
@@ -87,7 +86,6 @@ namespace MyPersonalWebsite.Controllers
 
             await _dataSync.AddUserAsync(user);
 
-            // 发送审核通知给管理员
             try
             {
                 await _emailService.SendAdminVerificationRequestAsync(user.Username, user.Email, user.Id);
@@ -98,7 +96,6 @@ namespace MyPersonalWebsite.Controllers
             }
 
             TempData["RegisterEmail"] = email;
-            TempData["RegisterMessage"] = "📧 注册申请已提交！请等待管理员审核邮箱，审核结果将通过邮件通知您。";
             return RedirectToAction("RegisterSuccess");
         }
 
