@@ -29,9 +29,7 @@ namespace MyPersonalWebsite.Controllers
         {
             var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
             if (isAdmin != 1)
-            {
                 return RedirectToAction("Login", "Auth");
-            }
 
             var users = await _dataSync.GetAllUsersAsync();
             var blogs = await _dataSync.GetBlogsAsync();
@@ -63,9 +61,7 @@ namespace MyPersonalWebsite.Controllers
         {
             var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
             if (isAdmin != 1)
-            {
                 return RedirectToAction("Login", "Auth");
-            }
 
             var blogs = await _dataSync.GetBlogsAsync();
             return View(blogs);
@@ -76,9 +72,7 @@ namespace MyPersonalWebsite.Controllers
         {
             var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
             if (isAdmin != 1)
-            {
                 return RedirectToAction("Login", "Auth");
-            }
             return View();
         }
 
@@ -88,9 +82,7 @@ namespace MyPersonalWebsite.Controllers
         {
             var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
             if (isAdmin != 1)
-            {
                 return RedirectToAction("Login", "Auth");
-            }
 
             if (ModelState.IsValid)
             {
@@ -116,15 +108,11 @@ namespace MyPersonalWebsite.Controllers
         {
             var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
             if (isAdmin != 1)
-            {
                 return RedirectToAction("Login", "Auth");
-            }
 
             var blog = await _dataSync.GetBlogByIdAsync(id);
             if (blog == null)
-            {
                 return NotFound();
-            }
             return View(blog);
         }
 
@@ -134,9 +122,7 @@ namespace MyPersonalWebsite.Controllers
         {
             var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
             if (isAdmin != 1)
-            {
                 return RedirectToAction("Login", "Auth");
-            }
 
             if (ModelState.IsValid)
             {
@@ -151,9 +137,7 @@ namespace MyPersonalWebsite.Controllers
         {
             var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
             if (isAdmin != 1)
-            {
                 return Json(new { success = false, message = "权限不足" });
-            }
 
             await _dataSync.DeleteBlogAsync(id);
             return Json(new { success = true, message = "删除成功" });
@@ -165,28 +149,20 @@ namespace MyPersonalWebsite.Controllers
             try
             {
                 if (image == null || image.Length == 0)
-                {
                     return Json(new { success = false, message = "请选择图片" });
-                }
 
                 var allowedTypes = new[] { "image/jpeg", "image/png", "image/gif", "image/webp" };
                 if (!allowedTypes.Contains(image.ContentType))
-                {
                     return Json(new { success = false, message = "只支持 JPG, PNG, GIF, WebP 格式" });
-                }
 
                 if (image.Length > 5 * 1024 * 1024)
-                {
                     return Json(new { success = false, message = "图片大小不能超过 5MB" });
-                }
 
                 var fileName = $"{Guid.NewGuid():N}_{image.FileName}";
                 var uploadPath = Path.Combine("wwwroot", "images", "blog");
 
                 if (!Directory.Exists(uploadPath))
-                {
                     Directory.CreateDirectory(uploadPath);
-                }
 
                 var filePath = Path.Combine(uploadPath, fileName);
                 using (var stream = new FileStream(filePath, FileMode.Create))
@@ -194,8 +170,7 @@ namespace MyPersonalWebsite.Controllers
                     await image.CopyToAsync(stream);
                 }
 
-                var imageUrl = $"/images/blog/{fileName}";
-                return Json(new { success = true, url = imageUrl });
+                return Json(new { success = true, url = $"/images/blog/{fileName}" });
             }
             catch (Exception ex)
             {
@@ -210,9 +185,7 @@ namespace MyPersonalWebsite.Controllers
         {
             var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
             if (isAdmin != 1)
-            {
                 return RedirectToAction("Login", "Auth");
-            }
 
             var messages = await _dataSync.GetMessagesAsync();
             return View(messages);
@@ -225,9 +198,7 @@ namespace MyPersonalWebsite.Controllers
         {
             var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
             if (isAdmin != 1)
-            {
                 return RedirectToAction("Login", "Auth");
-            }
 
             var users = await _dataSync.GetAllUsersAsync();
             return View(users.OrderByDescending(u => u.CreatedAt).ToList());
@@ -240,9 +211,7 @@ namespace MyPersonalWebsite.Controllers
         {
             var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
             if (isAdmin != 1)
-            {
                 return RedirectToAction("Login", "Auth");
-            }
 
             var requests = await _dataSync.GetContactRequestsAsync();
             return View(requests);
@@ -253,15 +222,11 @@ namespace MyPersonalWebsite.Controllers
         {
             var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
             if (isAdmin != 1)
-            {
                 return Json(new { success = false, message = "权限不足" });
-            }
 
             var request = await _dataSync.GetContactRequestByIdAsync(id);
             if (request == null)
-            {
                 return Json(new { success = false, message = "记录不存在" });
-            }
 
             request.IsUsed = true;
             request.UsedTime = DateTime.Now;
@@ -275,15 +240,11 @@ namespace MyPersonalWebsite.Controllers
         {
             var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
             if (isAdmin != 1)
-            {
                 return Json(new { success = false, message = "权限不足" });
-            }
 
             var request = await _dataSync.GetContactRequestByIdAsync(id);
             if (request == null)
-            {
                 return Json(new { success = false, message = "记录不存在" });
-            }
 
             request.IsUsed = false;
             request.UsedTime = null;
@@ -297,15 +258,11 @@ namespace MyPersonalWebsite.Controllers
         {
             var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
             if (isAdmin != 1)
-            {
                 return Json(new { success = false, message = "权限不足" });
-            }
 
             var request = await _dataSync.GetContactRequestByIdAsync(id);
             if (request == null)
-            {
                 return Json(new { success = false, message = "记录不存在" });
-            }
 
             return Json(new
             {
@@ -314,12 +271,7 @@ namespace MyPersonalWebsite.Controllers
                 {
                     platform = request.Platform,
                     authorizationCode = request.AuthorizationCode,
-                    user = new
-                    {
-                        userId = request.UserId,
-                        username = request.Username,
-                        userEmail = request.UserEmail
-                    },
+                    user = new { userId = request.UserId, username = request.Username, userEmail = request.UserEmail },
                     howKnowMe = request.HowKnowMe,
                     identity = request.Identity,
                     relationship = request.Relationship,
@@ -339,9 +291,7 @@ namespace MyPersonalWebsite.Controllers
         {
             var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
             if (isAdmin != 1)
-            {
                 return RedirectToAction("Login", "Auth");
-            }
 
             var users = await _dataSync.GetAllUsersAsync();
             return View(users);
@@ -352,17 +302,12 @@ namespace MyPersonalWebsite.Controllers
         {
             var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
             if (isAdmin != 1)
-            {
                 return Json(new { success = false, message = "权限不足" });
-            }
 
             var user = await _dataSync.GetUserByIdAsync(userId);
             if (user == null)
-            {
                 return Json(new { success = false, message = "用户不存在" });
-            }
 
-            // 应用待审核的更改
             if (!string.IsNullOrEmpty(user.PendingUsername))
             {
                 user.Username = user.PendingUsername;
@@ -378,9 +323,7 @@ namespace MyPersonalWebsite.Controllers
             }
 
             if (!user.IsAvatarApproved && !string.IsNullOrEmpty(user.AvatarUrl))
-            {
                 user.IsAvatarApproved = true;
-            }
 
             await _dataSync.UpdateUserAsync(user);
             return Json(new { success = true, message = "更改已批准" });
@@ -391,23 +334,17 @@ namespace MyPersonalWebsite.Controllers
         {
             var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
             if (isAdmin != 1)
-            {
                 return Json(new { success = false, message = "权限不足" });
-            }
 
             var user = await _dataSync.GetUserByIdAsync(userId);
             if (user == null)
-            {
                 return Json(new { success = false, message = "用户不存在" });
-            }
 
-            // 清空待审核的更改
             user.PendingUsername = null;
             user.PendingEmail = null;
             user.IsUsernameChangeApproved = false;
             user.IsEmailChangeApproved = false;
 
-            // 头像拒绝：清空头像
             if (!user.IsAvatarApproved && !string.IsNullOrEmpty(user.AvatarUrl))
             {
                 user.AvatarUrl = null;
@@ -419,22 +356,18 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // 头像审核（独立接口）
+        // 头像审核
         // ============================================================
         [HttpPost]
         public async Task<IActionResult> ApproveAvatar(int userId)
         {
             var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
             if (isAdmin != 1)
-            {
                 return Json(new { success = false, message = "权限不足" });
-            }
 
             var user = await _dataSync.GetUserByIdAsync(userId);
             if (user == null)
-            {
                 return Json(new { success = false, message = "用户不存在" });
-            }
 
             user.IsAvatarApproved = true;
             await _dataSync.UpdateUserAsync(user);
@@ -446,15 +379,11 @@ namespace MyPersonalWebsite.Controllers
         {
             var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
             if (isAdmin != 1)
-            {
                 return Json(new { success = false, message = "权限不足" });
-            }
 
             var user = await _dataSync.GetUserByIdAsync(userId);
             if (user == null)
-            {
                 return Json(new { success = false, message = "用户不存在" });
-            }
 
             user.AvatarUrl = null;
             user.AvatarSubmittedAt = null;
@@ -470,9 +399,7 @@ namespace MyPersonalWebsite.Controllers
         {
             var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
             if (isAdmin != 1)
-            {
                 return RedirectToAction("Login", "Auth");
-            }
 
             var sections = await _dataSync.GetAboutMeAsync();
             return View(sections);
@@ -483,9 +410,7 @@ namespace MyPersonalWebsite.Controllers
         {
             var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
             if (isAdmin != 1)
-            {
                 return Json(new { success = false, message = "权限不足" });
-            }
 
             try
             {
@@ -497,9 +422,7 @@ namespace MyPersonalWebsite.Controllers
                     var value = item.Value;
 
                     if (key.StartsWith("social_"))
-                    {
                         continue;
-                    }
 
                     var section = sections.FirstOrDefault(s => s.SectionKey == key);
                     if (section != null)
@@ -510,7 +433,6 @@ namespace MyPersonalWebsite.Controllers
                     }
                 }
 
-                // 处理社交链接
                 var socialSection = sections.FirstOrDefault(s => s.SectionKey == "social");
                 if (socialSection != null)
                 {
@@ -538,27 +460,21 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // 用户操作：封禁 / 解封 / 删除 / 激活
+        // 用户操作
         // ============================================================
         [HttpPost]
         public async Task<IActionResult> BanUser(int id, int hours, string reason, string note)
         {
             var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
             if (isAdmin != 1)
-            {
                 return Json(new { success = false, message = "权限不足" });
-            }
 
             var user = await _dataSync.GetUserByIdAsync(id);
             if (user == null)
-            {
                 return Json(new { success = false, message = "用户不存在" });
-            }
 
             if (user.IsAdmin)
-            {
                 return Json(new { success = false, message = "不能封禁管理员" });
-            }
 
             user.IsBanned = true;
             user.BanExpiry = hours > 0 ? DateTime.Now.AddHours(hours) : (DateTime?)null;
@@ -570,12 +486,8 @@ namespace MyPersonalWebsite.Controllers
             try
             {
                 await _emailService.SendUserActionNotificationAsync(
-                    user.Email,
-                    user.Username,
-                    "ban",
-                    reason ?? "违反网站规定",
-                    note ?? "无"
-                );
+                    user.Email, user.Username, "ban",
+                    reason ?? "违反网站规定", note ?? "无");
             }
             catch (Exception ex)
             {
@@ -590,15 +502,11 @@ namespace MyPersonalWebsite.Controllers
         {
             var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
             if (isAdmin != 1)
-            {
                 return Json(new { success = false, message = "权限不足" });
-            }
 
             var user = await _dataSync.GetUserByIdAsync(id);
             if (user == null)
-            {
                 return Json(new { success = false, message = "用户不存在" });
-            }
 
             user.IsBanned = false;
             user.BanExpiry = null;
@@ -610,12 +518,7 @@ namespace MyPersonalWebsite.Controllers
             try
             {
                 await _emailService.SendUserActionNotificationAsync(
-                    user.Email,
-                    user.Username,
-                    "unban",
-                    "管理员已解封您的账号",
-                    null
-                );
+                    user.Email, user.Username, "unban", "管理员已解封您的账号", null);
             }
             catch (Exception ex)
             {
@@ -630,20 +533,14 @@ namespace MyPersonalWebsite.Controllers
         {
             var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
             if (isAdmin != 1)
-            {
                 return Json(new { success = false, message = "权限不足" });
-            }
 
             var user = await _dataSync.GetUserByIdAsync(id);
             if (user == null)
-            {
                 return Json(new { success = false, message = "用户不存在" });
-            }
 
             if (user.IsAdmin)
-            {
                 return Json(new { success = false, message = "不能删除管理员" });
-            }
 
             user.IsDeleted = true;
             user.DeletedAt = DateTime.Now;
@@ -655,12 +552,8 @@ namespace MyPersonalWebsite.Controllers
             try
             {
                 await _emailService.SendUserActionNotificationAsync(
-                    user.Email,
-                    user.Username,
-                    "delete",
-                    reason ?? "违反网站规定",
-                    note ?? "无"
-                );
+                    user.Email, user.Username, "delete",
+                    reason ?? "违反网站规定", note ?? "无");
             }
             catch (Exception ex)
             {
@@ -675,15 +568,11 @@ namespace MyPersonalWebsite.Controllers
         {
             var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
             if (isAdmin != 1)
-            {
                 return Json(new { success = false, message = "权限不足" });
-            }
 
             var user = await _dataSync.GetUserByIdAsync(userId);
             if (user == null)
-            {
                 return Json(new { success = false, message = "用户不存在" });
-            }
 
             user.IsEmailVerified = true;
             await _dataSync.UpdateUserAsync(user);
@@ -691,12 +580,7 @@ namespace MyPersonalWebsite.Controllers
             try
             {
                 await _emailService.SendUserActionNotificationAsync(
-                    user.Email,
-                    user.Username,
-                    "activate",
-                    "管理员已激活您的账号",
-                    null
-                );
+                    user.Email, user.Username, "activate", "管理员已激活您的账号", null);
             }
             catch (Exception ex)
             {
