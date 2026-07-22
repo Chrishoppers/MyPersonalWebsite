@@ -22,6 +22,9 @@ namespace MyPersonalWebsite.Controllers
             _emailService = emailService;
         }
 
+        // ============================================================
+        // 仪表盘
+        // ============================================================
         public async Task<IActionResult> Dashboard()
         {
             var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
@@ -33,13 +36,14 @@ namespace MyPersonalWebsite.Controllers
             var users = await _dataSync.GetAllUsersAsync();
             var blogs = await _dataSync.GetBlogsAsync();
             var messages = await _dataSync.GetMessagesAsync();
+            var contactRequests = await _dataSync.GetContactRequestsAsync();
 
             ViewBag.UserCount = users.Count(u => !u.IsDeleted);
             ViewBag.BlogCount = blogs.Count;
             ViewBag.MessageCount = messages.Count;
             ViewBag.PendingMessages = messages.Count(m => !m.IsApproved);
-            ViewBag.ContactRequestCount = 0;
-            ViewBag.PendingContactRequests = 0;
+            ViewBag.ContactRequestCount = contactRequests.Count;
+            ViewBag.PendingContactRequests = contactRequests.Count(r => !r.IsUsed && !r.IsApproved);
             ViewBag.PendingChangesCount = users.Count(u =>
                 !u.IsDeleted && (
                     !string.IsNullOrEmpty(u.PendingUsername) ||
@@ -48,9 +52,13 @@ namespace MyPersonalWebsite.Controllers
                 ));
 
             ViewBag.RecentMessages = messages.OrderByDescending(m => m.CreateTime).Take(5).ToList();
+            ViewBag.RecentContactRequests = contactRequests.OrderByDescending(r => r.RequestTime).Take(5).ToList();
             return View();
         }
 
+        // ============================================================
+        // 博客管理
+        // ============================================================
         public async Task<IActionResult> Blogs()
         {
             var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
@@ -150,202 +158,519 @@ namespace MyPersonalWebsite.Controllers
             await _dataSync.DeleteBlogAsync(id);
             return Json(new { success = true, message = "删除成功" });
         }
+
         [HttpPost]
-public async Task<IActionResult> UploadBlogImage(IFormFile image)
-{
-    try
-    {
-        if (image == null || image.Length == 0)
+        public async Task<IActionResult> UploadBlogImage(IFormFile image)
         {
-            return Json(new { success = false, message = "请选择图片" });
+            try
+            {
+                if (image == null || image.Length == 0)
+                {
+                    return Json(new { success = false, message = "请选择图片" });
+                }
+
+                var allowedTypes = new[] { "image/jpeg", "image/png", "image/gif", "image/webp" };
+                if (!allowedTypes.Contains(image.ContentType))
+                {
+                    return Json(new { success = false, message = "只支持 JPG, PNG, GIF, WebP 格式" });
+                }
+
+                if (image.Length > 5 * 1024 * 1024)
+                {
+                    return Json(new { success = false, message = "图片大小不能超过 5MB" });
+                }
+
+                var fileName = $"{Guid.NewGuid():N}_{image.FileName}";
+                var uploadPath = Path.Combine("wwwroot", "images", "blog");
+
+                if (!Directory.Exists(uploadPath))
+                {
+                    Directory.CreateDirectory(uploadPath);
+                }
+
+                var filePath = Path.Combine(uploadPath, fileName);
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await image.CopyToAsync(stream);
+                }
+
+                var imageUrl = $"/images/blog/{fileName}";
+                return Json(new { success = true, url = imageUrl });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
         }
 
-        var allowedTypes = new[] { "image/jpeg", "image/png", "image/gif", "image/webp" };
-        if (!allowedTypes.Contains(image.ContentType))
+        // ============================================================
+        // 留言管理
+        // ============================================================
+        public async Task<IActionResult> Messages()
         {
-            return Json(new { success = false, message = "只支持 JPG, PNG, GIF, WebP 格式" });
+            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+            if (isAdmin != 1)
+            {
+                return RedirectToAction("Login", "Auth");
+            }
+
+            var messages = await _dataSync.GetMessagesAsync();
+            return View(messages);
         }
 
-        if (image.Length > 5 * 1024 * 1024)
+        // ============================================================
+        // 用户管理
+        // ============================================================
+        public async Task<IActionResult> Users()
         {
-            return Json(new { success = false, message = "图片大小不能超过 5MB" });
+            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+            if (isAdmin != 1)
+            {
+                return RedirectToAction("Login", "Auth");
+            }
+
+            var users = await _dataSync.GetAllUsersAsync();
+            return View(users.OrderByDescending(u => u.CreatedAt).ToList());
         }
 
-        var fileName = $"{Guid.NewGuid():N}_{image.FileName}";
-        var uploadPath = Path.Combine("wwwroot", "images", "blog");
-
-        if (!Directory.Exists(uploadPath))
+        // ============================================================
+        // 授权码管理
+        // ============================================================
+        public async Task<IActionResult> ContactRequests()
         {
-            Directory.CreateDirectory(uploadPath);
+            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+            if (isAdmin != 1)
+            {
+                return RedirectToAction("Login", "Auth");
+            }
+
+            var requests = await _dataSync.GetContactRequestsAsync();
+            return View(requests);
         }
 
-        var filePath = Path.Combine(uploadPath, fileName);
-        using (var stream = new FileStream(filePath, FileMode.Create))
+        [HttpPost]
+        public async Task<IActionResult> MarkContactUsed(int id)
         {
-            await image.CopyToAsync(stream);
+            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+            if (isAdmin != 1)
+            {
+                return Json(new { success = false, message = "权限不足" });
+            }
+
+            var request = await _dataSync.GetContactRequestByIdAsync(id);
+            if (request == null)
+            {
+                return Json(new { success = false, message = "记录不存在" });
+            }
+
+            request.IsUsed = true;
+            request.UsedTime = DateTime.Now;
+            await _dataSync.UpdateContactRequestAsync(request);
+
+            return Json(new { success = true, message = "已标记为已使用" });
         }
 
-        var imageUrl = $"/images/blog/{fileName}";
-        return Json(new { success = true, url = imageUrl });
-    }
-    catch (Exception ex)
-    {
-        return Json(new { success = false, message = ex.Message });
-    }
-}
+        [HttpPost]
+        public async Task<IActionResult> UnmarkContactUsed(int id)
+        {
+            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+            if (isAdmin != 1)
+            {
+                return Json(new { success = false, message = "权限不足" });
+            }
 
-public async Task<IActionResult> Messages()
-{
-    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-    if (isAdmin != 1)
-    {
-        return RedirectToAction("Login", "Auth");
-    }
+            var request = await _dataSync.GetContactRequestByIdAsync(id);
+            if (request == null)
+            {
+                return Json(new { success = false, message = "记录不存在" });
+            }
 
-    var messages = await _dataSync.GetMessagesAsync();
-    return View(messages);
-}
+            request.IsUsed = false;
+            request.UsedTime = null;
+            await _dataSync.UpdateContactRequestAsync(request);
 
-public async Task<IActionResult> Users()
-{
-    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-    if (isAdmin != 1)
-    {
-        return RedirectToAction("Login", "Auth");
-    }
+            return Json(new { success = true, message = "已撤销使用标记" });
+        }
 
-    var users = await _dataSync.GetAllUsersAsync();
-    return View(users.Where(u => !u.IsDeleted).OrderByDescending(u => u.CreatedAt).ToList());
-}
+        [HttpGet]
+        public async Task<IActionResult> ContactDetail(int id)
+        {
+            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+            if (isAdmin != 1)
+            {
+                return Json(new { success = false, message = "权限不足" });
+            }
 
-[HttpPost]
-public async Task<IActionResult> BanUser(int id, int hours, string reason, string note)
-{
-    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-    if (isAdmin != 1)
-    {
-        return Json(new { success = false, message = "权限不足" });
-    }
+            var request = await _dataSync.GetContactRequestByIdAsync(id);
+            if (request == null)
+            {
+                return Json(new { success = false, message = "记录不存在" });
+            }
 
-    var user = await _dataSync.GetUserByIdAsync(id);
-    if (user == null)
-    {
-        return Json(new { success = false, message = "用户不存在" });
-    }
+            return Json(new
+            {
+                success = true,
+                data = new
+                {
+                    platform = request.Platform,
+                    authorizationCode = request.AuthorizationCode,
+                    user = new
+                    {
+                        userId = request.UserId,
+                        username = request.Username,
+                        userEmail = request.UserEmail
+                    },
+                    howKnowMe = request.HowKnowMe,
+                    identity = request.Identity,
+                    relationship = request.Relationship,
+                    remarks = request.Remarks,
+                    requestTime = request.RequestTime,
+                    isApproved = request.IsApproved,
+                    isUsed = request.IsUsed,
+                    usedTime = request.UsedTime
+                }
+            });
+        }
 
-    if (user.IsAdmin)
-    {
-        return Json(new { success = false, message = "不能封禁管理员" });
-    }
+        // ============================================================
+        // 待审核更改
+        // ============================================================
+        public async Task<IActionResult> PendingChanges()
+        {
+            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+            if (isAdmin != 1)
+            {
+                return RedirectToAction("Login", "Auth");
+            }
 
-    user.IsBanned = true;
-    user.BanExpiry = hours > 0 ? DateTime.Now.AddHours(hours) : (DateTime?)null;
-    user.BanReason = reason;
-    user.BanNote = note;
+            var users = await _dataSync.GetAllUsersAsync();
+            return View(users);
+        }
 
-    await _dataSync.UpdateUserAsync(user);
+        [HttpPost]
+        public async Task<IActionResult> ApproveUserChange(int userId)
+        {
+            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+            if (isAdmin != 1)
+            {
+                return Json(new { success = false, message = "权限不足" });
+            }
 
-    try
-    {
-        await _emailService.SendUserActionNotificationAsync(
-            user.Email,
-            user.Username,
-            "ban",
-            reason ?? "违反网站规定",
-            note ?? "无"
-        );
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"邮件发送失败: {ex.Message}");
-    }
+            var user = await _dataSync.GetUserByIdAsync(userId);
+            if (user == null)
+            {
+                return Json(new { success = false, message = "用户不存在" });
+            }
 
-    return Json(new { success = true, message = $"已封禁用户 {user.Username}" });
-}
-[HttpPost]
-public async Task<IActionResult> UnbanUser(int id)
-{
-    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-    if (isAdmin != 1)
-    {
-        return Json(new { success = false, message = "权限不足" });
-    }
+            // 应用待审核的更改
+            if (!string.IsNullOrEmpty(user.PendingUsername))
+            {
+                user.Username = user.PendingUsername;
+                user.PendingUsername = null;
+                user.IsUsernameChangeApproved = true;
+            }
 
-    var user = await _dataSync.GetUserByIdAsync(id);
-    if (user == null)
-    {
-        return Json(new { success = false, message = "用户不存在" });
-    }
+            if (!string.IsNullOrEmpty(user.PendingEmail))
+            {
+                user.Email = user.PendingEmail;
+                user.PendingEmail = null;
+                user.IsEmailChangeApproved = true;
+            }
 
-    user.IsBanned = false;
-    user.BanExpiry = null;
-    user.BanReason = null;
-    user.BanNote = null;
+            if (!user.IsAvatarApproved && !string.IsNullOrEmpty(user.AvatarUrl))
+            {
+                user.IsAvatarApproved = true;
+            }
 
-    await _dataSync.UpdateUserAsync(user);
+            await _dataSync.UpdateUserAsync(user);
+            return Json(new { success = true, message = "更改已批准" });
+        }
 
-    try
-    {
-        await _emailService.SendUserActionNotificationAsync(
-            user.Email,
-            user.Username,
-            "unban",
-            "管理员已解封您的账号",
-            null
-        );
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"邮件发送失败: {ex.Message}");
-    }
+        [HttpPost]
+        public async Task<IActionResult> RejectUserChange(int userId)
+        {
+            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+            if (isAdmin != 1)
+            {
+                return Json(new { success = false, message = "权限不足" });
+            }
 
-    return Json(new { success = true, message = $"已解封用户 {user.Username}" });
-}
+            var user = await _dataSync.GetUserByIdAsync(userId);
+            if (user == null)
+            {
+                return Json(new { success = false, message = "用户不存在" });
+            }
 
-[HttpPost]
-public async Task<IActionResult> DeleteUser(int id, string reason, string note)
-{
-    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-    if (isAdmin != 1)
-    {
-        return Json(new { success = false, message = "权限不足" });
-    }
+            // 清空待审核的更改
+            user.PendingUsername = null;
+            user.PendingEmail = null;
+            user.IsUsernameChangeApproved = false;
+            user.IsEmailChangeApproved = false;
 
-    var user = await _dataSync.GetUserByIdAsync(id);
-    if (user == null)
-    {
-        return Json(new { success = false, message = "用户不存在" });
-    }
+            // 头像拒绝：清空头像
+            if (!user.IsAvatarApproved && !string.IsNullOrEmpty(user.AvatarUrl))
+            {
+                user.AvatarUrl = null;
+                user.AvatarSubmittedAt = null;
+            }
 
-    if (user.IsAdmin)
-    {
-        return Json(new { success = false, message = "不能删除管理员" });
-    }
+            await _dataSync.UpdateUserAsync(user);
+            return Json(new { success = true, message = "更改已拒绝" });
+        }
 
-    user.IsDeleted = true;
-    user.DeletedAt = DateTime.Now;
-    user.DeleteReason = reason;
-    user.DeleteNote = note;
+        // ============================================================
+        // 头像审核（独立接口）
+        // ============================================================
+        [HttpPost]
+        public async Task<IActionResult> ApproveAvatar(int userId)
+        {
+            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+            if (isAdmin != 1)
+            {
+                return Json(new { success = false, message = "权限不足" });
+            }
 
-    await _dataSync.UpdateUserAsync(user);
+            var user = await _dataSync.GetUserByIdAsync(userId);
+            if (user == null)
+            {
+                return Json(new { success = false, message = "用户不存在" });
+            }
 
-    try
-    {
-        await _emailService.SendUserActionNotificationAsync(
-            user.Email,
-            user.Username,
-            "delete",
-            reason ?? "违反网站规定",
-            note ?? "无"
-        );
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"邮件发送失败: {ex.Message}");
-    }
+            user.IsAvatarApproved = true;
+            await _dataSync.UpdateUserAsync(user);
+            return Json(new { success = true, message = "头像已通过" });
+        }
 
-    return Json(new { success = true, message = $"已删除用户 {user.Username}" });
-}
+        [HttpPost]
+        public async Task<IActionResult> RejectAvatar(int userId)
+        {
+            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+            if (isAdmin != 1)
+            {
+                return Json(new { success = false, message = "权限不足" });
+            }
+
+            var user = await _dataSync.GetUserByIdAsync(userId);
+            if (user == null)
+            {
+                return Json(new { success = false, message = "用户不存在" });
+            }
+
+            user.AvatarUrl = null;
+            user.AvatarSubmittedAt = null;
+            user.IsAvatarApproved = false;
+            await _dataSync.UpdateUserAsync(user);
+            return Json(new { success = true, message = "头像已拒绝" });
+        }
+
+        // ============================================================
+        // 关于我编辑
+        // ============================================================
+        public async Task<IActionResult> About()
+        {
+            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+            if (isAdmin != 1)
+            {
+                return RedirectToAction("Login", "Auth");
+            }
+
+            var sections = await _dataSync.GetAboutMeAsync();
+            return View(sections);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> UpdateAboutMe([FromBody] Dictionary<string, string> data)
+        {
+            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+            if (isAdmin != 1)
+            {
+                return Json(new { success = false, message = "权限不足" });
+            }
+
+            try
+            {
+                var sections = await _dataSync.GetAboutMeAsync();
+
+                foreach (var item in data)
+                {
+                    var key = item.Key;
+                    var value = item.Value;
+
+                    if (key.StartsWith("social_"))
+                    {
+                        // 社交链接特殊处理
+                        continue;
+                    }
+
+                    var section = sections.FirstOrDefault(s => s.SectionKey == key);
+                    if (section != null)
+                    {
+                        section.Content = value;
+                        section.UpdatedAt = DateTime.Now;
+                        await _dataSync.UpdateAboutMeAsync(section);
+                    }
+                }
+
+                // 处理社交链接
+                var socialSection = sections.FirstOrDefault(s => s.SectionKey == "social");
+                if (socialSection != null)
+                {
+                    var socialParts = new List<string>();
+                    if (!string.IsNullOrEmpty(data.GetValueOrDefault("social_github")))
+                        socialParts.Add($"github:{data["social_github"]}");
+                    if (!string.IsNullOrEmpty(data.GetValueOrDefault("social_twitter")))
+                        socialParts.Add($"twitter:{data["social_twitter"]}");
+                    if (!string.IsNullOrEmpty(data.GetValueOrDefault("social_linkedin")))
+                        socialParts.Add($"linkedin:{data["social_linkedin"]}");
+                    if (!string.IsNullOrEmpty(data.GetValueOrDefault("social_discord")))
+                        socialParts.Add($"discord:{data["social_discord"]}");
+
+                    socialSection.Content = string.Join("|", socialParts);
+                    socialSection.UpdatedAt = DateTime.Now;
+                    await _dataSync.UpdateAboutMeAsync(socialSection);
+                }
+
+                return Json(new { success = true, message = "保存成功" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        // ============================================================
+        // 用户操作：封禁 / 解封 / 删除 / 激活
+        // ============================================================
+        [HttpPost]
+        public async Task<IActionResult> BanUser(int id, int hours, string reason, string note)
+        {
+            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+            if (isAdmin != 1)
+            {
+                return Json(new { success = false, message = "权限不足" });
+            }
+
+            var user = await _dataSync.GetUserByIdAsync(id);
+            if (user == null)
+            {
+                return Json(new { success = false, message = "用户不存在" });
+            }
+
+            if (user.IsAdmin)
+            {
+                return Json(new { success = false, message = "不能封禁管理员" });
+            }
+
+            user.IsBanned = true;
+            user.BanExpiry = hours > 0 ? DateTime.Now.AddHours(hours) : (DateTime?)null;
+            user.BanReason = reason;
+            user.BanNote = note;
+
+            await _dataSync.UpdateUserAsync(user);
+
+            try
+            {
+                await _emailService.SendUserActionNotificationAsync(
+                    user.Email,
+                    user.Username,
+                    "ban",
+                    reason ?? "违反网站规定",
+                    note ?? "无"
+                );
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"邮件发送失败: {ex.Message}");
+            }
+
+            return Json(new { success = true, message = $"已封禁用户 {user.Username}" });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> UnbanUser(int id)
+        {
+            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+            if (isAdmin != 1)
+            {
+                return Json(new { success = false, message = "权限不足" });
+            }
+
+            var user = await _dataSync.GetUserByIdAsync(id);
+            if (user == null)
+            {
+                return Json(new { success = false, message = "用户不存在" });
+            }
+
+            user.IsBanned = false;
+            user.BanExpiry = null;
+            user.BanReason = null;
+            user.BanNote = null;
+
+            await _dataSync.UpdateUserAsync(user);
+
+            try
+            {
+                await _emailService.SendUserActionNotificationAsync(
+                    user.Email,
+                    user.Username,
+                    "unban",
+                    "管理员已解封您的账号",
+                    null
+                );
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"邮件发送失败: {ex.Message}");
+            }
+
+            return Json(new { success = true, message = $"已解封用户 {user.Username}" });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> DeleteUser(int id, string reason, string note)
+        {
+            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+            if (isAdmin != 1)
+            {
+                return Json(new { success = false, message = "权限不足" });
+            }
+
+            var user = await _dataSync.GetUserByIdAsync(id);
+            if (user == null)
+            {
+                return Json(new { success = false, message = "用户不存在" });
+            }
+
+            if (user.IsAdmin)
+            {
+                return Json(new { success = false, message = "不能删除管理员" });
+            }
+
+            user.IsDeleted = true;
+            user.DeletedAt = DateTime.Now;
+            user.DeleteReason = reason;
+            user.DeleteNote = note;
+
+            await _dataSync.UpdateUserAsync(user);
+
+            try
+            {
+                await _emailService.SendUserActionNotificationAsync(
+                    user.Email,
+                    user.Username,
+                    "delete",
+                    reason ?? "违反网站规定",
+                    note ?? "无"
+                );
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"邮件发送失败: {ex.Message}");
+            }
+
+            return Json(new { success = true, message = $"已删除用户 {user.Username}" });
+        }
+
         [HttpPost]
         public async Task<IActionResult> ActivateUser(int userId)
         {
