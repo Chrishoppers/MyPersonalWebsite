@@ -99,8 +99,6 @@ app.MapControllerRoute(
 
 app.MapHub<MessageHub>("/messageHub");
 
-app.Run();
-
 // ============================================================
 // ⭐ EnsureAboutMeDataAsync 方法
 // ============================================================
@@ -177,3 +175,41 @@ async Task EnsureAboutMeDataAsync(DataSyncService dataSync)
         Console.WriteLine($"⚠️ AboutMe 数据检查失败: {ex.Message}");
     }
 }
+
+// 在 using (var scope = app.Services.CreateScope()) 之后，app.Run() 之前添加
+
+// ⭐ 启动后台清理任务
+_ = Task.Run(async () =>
+{
+    while (true)
+    {
+        try
+        {
+            await Task.Delay(TimeSpan.FromMinutes(5)); // 每5分钟检查一次
+            using (var scope = app.Services.CreateScope())
+            {
+                var dataSync = scope.ServiceProvider.GetRequiredService<DataSyncService>();
+                var users = await dataSync.GetAllUsersAsync();
+                var expiredUsers = users.Where(u =>
+                    !u.IsEmailVerified &&
+                    u.VerificationCodeExpiry.HasValue &&
+                    u.VerificationCodeExpiry.Value < DateTime.Now.AddMinutes(-10)
+                );
+
+                foreach (var user in expiredUsers)
+                {
+                    await dataSync.DeleteUser(user.Id);
+                    Console.WriteLine($"🗑️ 已清理过期未验证用户: {user.Username} ({user.Email})");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"⚠️ 清理过期用户失败: {ex.Message}");
+        }
+    }
+});
+
+app.Run();
+
+
