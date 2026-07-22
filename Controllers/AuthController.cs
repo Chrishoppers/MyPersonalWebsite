@@ -16,22 +16,25 @@ namespace MyPersonalWebsite.Controllers
         private readonly BrevoEmailService _emailService;
         private readonly SvgCaptchaService _captchaService;
         private readonly RateLimitService _rateLimitService;
-        private readonly AppDbContext _context;  // ⭐ 新增
+        private readonly AppDbContext _context;
 
         public AuthController(
             DataSyncService dataSync,
             BrevoEmailService emailService,
             SvgCaptchaService captchaService,
             RateLimitService rateLimitService,
-            AppDbContext context)  // ⭐ 新增
+            AppDbContext context)
         {
             _dataSync = dataSync;
             _emailService = emailService;
             _captchaService = captchaService;
             _rateLimitService = rateLimitService;
-            _context = context;  // ⭐ 新增
+            _context = context;
         }
 
+        // ============================================================
+        // 注册
+        // ============================================================
         [HttpGet]
         public IActionResult Register()
         {
@@ -103,6 +106,9 @@ namespace MyPersonalWebsite.Controllers
             return RedirectToAction("VerifyEmail", new { email = email });
         }
 
+        // ============================================================
+        // 验证邮箱
+        // ============================================================
         [HttpGet]
         public IActionResult VerifyEmail(string email)
         {
@@ -149,6 +155,9 @@ namespace MyPersonalWebsite.Controllers
             return RedirectToAction("Login");
         }
 
+        // ============================================================
+        // 登录
+        // ============================================================
         [HttpGet]
         public IActionResult Login()
         {
@@ -219,13 +228,17 @@ namespace MyPersonalWebsite.Controllers
             return RedirectToAction("Index", "Home");
         }
 
+        // ============================================================
+        // 登出
+        // ============================================================
         public IActionResult Logout()
         {
             HttpContext.Session.Clear();
             return RedirectToAction("Index", "Home");
         }
-                // ============================================================
-        // 修改密码
+
+        // ============================================================
+        // 修改密码（⭐ 关键：必须同步到 Turso）
         // ============================================================
         [HttpGet]
         public IActionResult ChangePassword()
@@ -279,13 +292,22 @@ namespace MyPersonalWebsite.Controllers
                 return View();
             }
 
+            // ⭐ 修改密码
             user.PasswordHash = PasswordHelper.HashPassword(newPassword);
+
+            // ⭐ 调用 UpdateUserAsync（同时更新 Turso 和本地）
             await _dataSync.UpdateUserAsync(user);
 
-            TempData["Message"] = "密码修改成功！请重新登录";
+            // 清除 Session，强制重新登录
+            HttpContext.Session.Clear();
+
+            TempData["Message"] = "✅ 密码修改成功！请使用新密码重新登录";
             return RedirectToAction("Login");
         }
 
+        // ============================================================
+        // 忘记密码
+        // ============================================================
         [HttpGet]
         public IActionResult ForgotPassword()
         {
@@ -384,7 +406,10 @@ namespace MyPersonalWebsite.Controllers
                 return View();
             }
 
+            // ⭐ 重置密码
             user.PasswordHash = PasswordHelper.HashPassword(newPassword);
+
+            // ⭐ 同步到 Turso + 本地
             await _dataSync.UpdateUserAsync(user);
 
             reset.IsUsed = true;
@@ -395,4 +420,3 @@ namespace MyPersonalWebsite.Controllers
         }
     }
 }
-    
