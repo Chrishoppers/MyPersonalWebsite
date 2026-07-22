@@ -1,111 +1,723 @@
 @model List<MyPersonalWebsite.Models.Message>
 
 @{
-    ViewData["Title"] = "留言大屏";
+    ViewData["Title"] = "弹幕留言墙";
     var currentUserId = ViewBag.CurrentUserId as int?;
     var isAdmin = ViewBag.IsAdmin as int? ?? 0;
 }
 
-<div style="max-width:900px;margin:0 auto;padding:2rem 1rem;">
-    <h1 style="text-align:center;font-size:2.5rem;font-weight:700;background:linear-gradient(135deg,#8B5CF6,#EC4899,#F59E0B);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:2rem;">💬 留言大屏</h1>
+<style>
+    /* ===== 全局 ===== */
+    body {
+        background: #0a0a0f;
+        overflow-x: hidden;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
 
-    <!-- ⭐ 发布留言按钮 -->
-    <div style="text-align:center;margin-bottom:1.5rem;">
-        <a href="/Message/Create" style="display:inline-block;padding:0.8rem 2rem;border:none;border-radius:40px;background:linear-gradient(135deg,#8B5CF6,#EC4899);color:#fff;font-weight:600;font-size:0.95rem;text-decoration:none;cursor:pointer;transition:all 0.3s ease;">
-            ✍️ 发布留言
-        </a>
-    </div>
+    .danmaku-container {
+        max-width: 100%;
+        padding: 1rem 1.5rem;
+        min-height: 100vh;
+        position: relative;
+    }
 
-    @if (Model != null && Model.Any())
-    {
-        @foreach (var msg in Model)
-        {
-            <div style="background:rgba(255,255,255,0.02);backdrop-filter:blur(20px);border-radius:20px;border:1px solid rgba(255,255,255,0.04);padding:1.5rem 2rem;margin-bottom:1.5rem;">
-                <div style="display:flex;align-items:center;gap:1rem;margin-bottom:0.5rem;">
-                    <div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#8B5CF6,#EC4899);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:600;font-size:1rem;flex-shrink:0;">
-                        @(msg.VisitorName?.FirstOrDefault().ToString().ToUpper() ?? "?")
-                    </div>
-                    <div>
-                        <span style="font-weight:600;color:#fff;">@msg.VisitorName</span>
-                        <div style="font-size:0.8rem;color:rgba(255,255,255,0.2);">@msg.CreateTime.ToString("yyyy-MM-dd HH:mm")</div>
-                    </div>
-                </div>
+    /* ===== 头部 ===== */
+    .danmaku-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid rgba(255,255,255,0.04);
+        margin-bottom: 1.5rem;
+    }
 
-                <div style="color:rgba(255,255,255,0.7);line-height:1.7;margin:0.5rem 0 0.8rem;">@msg.Content</div>
+    .danmaku-header h1 {
+        font-size: 1.8rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, #8B5CF6 0%, #EC4899 50%, #F59E0B 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin: 0;
+    }
 
-                @if (!string.IsNullOrEmpty(msg.AdminReply))
-                {
-                    <div style="background:rgba(108,60,225,0.04);border-radius:12px;padding:0.8rem 1.2rem;margin-top:0.8rem;border-left:2px solid #8B5CF6;">
-                        <div style="font-size:0.7rem;color:#8B5CF6;text-transform:uppercase;letter-spacing:0.04em;">👨‍💼 管理员回复</div>
-                        <div style="color:rgba(255,255,255,0.6);font-size:0.9rem;margin-top:0.2rem;">@msg.AdminReply</div>
-                    </div>
-                }
+    .danmaku-header .stats {
+        color: rgba(255,255,255,0.3);
+        font-size: 0.85rem;
+    }
 
-                <div style="display:flex;align-items:center;gap:1rem;padding-top:0.5rem;border-top:1px solid rgba(255,255,255,0.03);">
-                    @if (currentUserId.HasValue && currentUserId.Value != msg.UserId)
-                    {
-                        <button onclick="toggleLike(@msg.Id, this)" style="background:none;border:none;color:rgba(255,255,255,0.3);cursor:pointer;font-size:0.9rem;display:flex;align-items:center;gap:0.3rem;">
-                            ❤️ <span id="likeCount-@msg.Id">@msg.LikeCount</span>
-                        </button>
-                    }
-                    else
-                    {
-                        <span style="color:rgba(255,255,255,0.2);font-size:0.9rem;">❤️ @msg.LikeCount</span>
-                    }
+    .danmaku-header .stats strong {
+        color: #8B5CF6;
+        font-weight: 700;
+    }
 
-                    @if (isAdmin == 1)
-                    {
-                        <button onclick="deleteMessage(@msg.Id)" style="background:none;border:none;color:rgba(255,255,255,0.15);cursor:pointer;font-size:0.8rem;">🗑️ 删除</button>
-                    }
-                </div>
-            </div>
+    .btn-danmaku {
+        padding: 0.6rem 1.8rem;
+        border: none;
+        border-radius: 40px;
+        background: linear-gradient(135deg, #8B5CF6, #EC4899);
+        color: #fff;
+        font-weight: 600;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-block;
+    }
+
+    .btn-danmaku:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 32px rgba(108,60,225,0.2);
+        color: #fff;
+    }
+
+    .btn-danmaku.secondary {
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .btn-danmaku.secondary:hover {
+        background: rgba(255,255,255,0.08);
+        box-shadow: none;
+    }
+
+    /* ===== 弹幕舞台 ===== */
+    .danmaku-stage {
+        position: relative;
+        width: 100%;
+        height: 80vh;
+        min-height: 500px;
+        overflow: hidden;
+        border-radius: 24px;
+        background: radial-gradient(ellipse at center, rgba(108,60,225,0.03) 0%, transparent 70%);
+        border: 1px solid rgba(255,255,255,0.02);
+    }
+
+    /* ===== 弹幕轨道 ===== */
+    .danmaku-track {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+    }
+
+    /* ===== 单条弹幕 ===== */
+    .danmaku-item {
+        position: absolute;
+        white-space: nowrap;
+        font-size: 1rem;
+        font-weight: 500;
+        color: rgba(255,255,255,0.85);
+        cursor: pointer;
+        padding: 0.3rem 1.2rem;
+        border-radius: 40px;
+        background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(255,255,255,0.02);
+        backdrop-filter: blur(10px);
+        transition: all 0.3s ease;
+        user-select: none;
+        animation: danmakuScroll linear infinite;
+        text-shadow: 0 2px 12px rgba(0,0,0,0.3);
+        z-index: 1;
+    }
+
+    .danmaku-item:hover {
+        transform: scale(1.08);
+        background: rgba(108,60,225,0.12);
+        border-color: rgba(108,60,225,0.15);
+        box-shadow: 0 4px 24px rgba(108,60,225,0.1);
+        z-index: 10;
+    }
+
+    /* ===== 不同颜色主题 ===== */
+    .danmaku-item.color-0 { color: #ffffff; }
+    .danmaku-item.color-1 { color: #8B5CF6; }
+    .danmaku-item.color-2 { color: #EC4899; }
+    .danmaku-item.color-3 { color: #06B6D4; }
+    .danmaku-item.color-4 { color: #F59E0B; }
+    .danmaku-item.color-5 { color: #34D399; }
+    .danmaku-item.color-6 { color: #F472B6; }
+    .danmaku-item.color-7 { color: #60A5FA; }
+
+    /* ===== 弹幕动画 ===== */
+    @@keyframes danmakuScroll {
+        0% {
+            transform: translateX(100vw) translateX(0);
+            opacity: 1;
+        }
+        90% {
+            opacity: 1;
+        }
+        100% {
+            transform: translateX(-200%) translateX(0);
+            opacity: 0.3;
         }
     }
-    else
-    {
-        <div style="text-align:center;padding:3rem 2rem;color:rgba(255,255,255,0.15);">💬 还没有留言，快来抢沙发吧！</div>
+
+    /* ===== 弹幕速度不同 ===== */
+    .danmaku-item.speed-0 { animation-duration: 12s; }
+    .danmaku-item.speed-1 { animation-duration: 15s; }
+    .danmaku-item.speed-2 { animation-duration: 18s; }
+    .danmaku-item.speed-3 { animation-duration: 21s; }
+    .danmaku-item.speed-4 { animation-duration: 25s; }
+
+    /* ===== 弹幕大小 ===== */
+    .danmaku-item.size-sm { font-size: 0.85rem; padding: 0.2rem 1rem; }
+    .danmaku-item.size-md { font-size: 1rem; padding: 0.3rem 1.2rem; }
+    .danmaku-item.size-lg { font-size: 1.2rem; padding: 0.4rem 1.5rem; }
+    .danmaku-item.size-xl { font-size: 1.5rem; padding: 0.5rem 1.8rem; font-weight: 700; }
+
+    /* ===== 空状态 ===== */
+    .danmaku-empty {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+        color: rgba(255,255,255,0.08);
+        font-size: 1.2rem;
+        z-index: 0;
     }
+
+    .danmaku-empty .icon {
+        font-size: 4rem;
+        margin-bottom: 0.5rem;
+        opacity: 0.3;
+    }
+
+    /* ===== 右键/点击弹窗 ===== */
+    .danmaku-popup {
+        position: fixed;
+        background: rgba(20,20,35,0.95);
+        backdrop-filter: blur(30px);
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 16px;
+        padding: 0.8rem 1.2rem;
+        box-shadow: 0 16px 64px rgba(0,0,0,0.5);
+        z-index: 1000;
+        display: none;
+        min-width: 180px;
+        animation: popupIn 0.2s ease;
+    }
+
+    .danmaku-popup.active {
+        display: block;
+    }
+
+    @@keyframes popupIn {
+        from { opacity: 0; transform: scale(0.95) translateY(8px); }
+        to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    .danmaku-popup .popup-user {
+        font-size: 0.8rem;
+        color: rgba(255,255,255,0.4);
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid rgba(255,255,255,0.04);
+        margin-bottom: 0.5rem;
+    }
+
+    .danmaku-popup .popup-user strong {
+        color: #fff;
+    }
+
+    .danmaku-popup .popup-content {
+        font-size: 0.9rem;
+        color: rgba(255,255,255,0.7);
+        padding: 0.3rem 0 0.6rem;
+        word-break: break-word;
+        white-space: normal;
+        max-width: 260px;
+    }
+
+    .danmaku-popup .popup-actions {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        padding-top: 0.5rem;
+        border-top: 1px solid rgba(255,255,255,0.04);
+    }
+
+    .danmaku-popup .popup-actions button {
+        padding: 0.3rem 1.2rem;
+        border: none;
+        border-radius: 30px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .popup-actions .btn-like {
+        background: rgba(236,72,153,0.12);
+        color: #EC4899;
+    }
+    .popup-actions .btn-like:hover {
+        background: rgba(236,72,153,0.2);
+    }
+    .popup-actions .btn-like.liked {
+        background: rgba(236,72,153,0.25);
+        color: #EC4899;
+    }
+
+    .popup-actions .btn-report {
+        background: rgba(220,53,69,0.08);
+        color: #dc3545;
+    }
+    .popup-actions .btn-report:hover {
+        background: rgba(220,53,69,0.15);
+    }
+
+    .popup-actions .btn-close-popup {
+        background: rgba(255,255,255,0.04);
+        color: rgba(255,255,255,0.2);
+    }
+    .popup-actions .btn-close-popup:hover {
+        background: rgba(255,255,255,0.08);
+    }
+
+    /* ===== Toast ===== */
+    .toast-container {
+        position: fixed;
+        bottom: 2rem;
+        right: 2rem;
+        z-index: 2000;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        align-items: flex-end;
+    }
+
+    .toast-msg {
+        padding: 0.8rem 1.8rem;
+        border-radius: 40px;
+        color: #fff;
+        font-weight: 500;
+        animation: slideUp 0.4s ease;
+        font-size: 0.9rem;
+        backdrop-filter: blur(10px);
+        background: rgba(0,0,0,0.6);
+        border: 1px solid rgba(255,255,255,0.04);
+    }
+
+    .toast-msg.success { background: rgba(40,167,69,0.8); }
+    .toast-msg.error { background: rgba(220,53,69,0.8); }
+    .toast-msg.info { background: rgba(79,172,254,0.8); }
+
+    @@keyframes slideUp {
+        from { opacity: 0; transform: translateY(20px) scale(0.95); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    /* ===== 响应式 ===== */
+    @@media (max-width: 768px) {
+        .danmaku-header h1 { font-size: 1.3rem; }
+        .danmaku-stage { height: 70vh; min-height: 400px; }
+        .danmaku-item { font-size: 0.8rem; padding: 0.2rem 0.8rem; }
+        .danmaku-item.size-lg { font-size: 1rem; padding: 0.3rem 1rem; }
+        .danmaku-item.size-xl { font-size: 1.2rem; padding: 0.4rem 1.2rem; }
+        .danmaku-popup { min-width: 200px; left: 50% !important; transform: translateX(-50%) !important; }
+        .danmaku-popup.active { transform: translateX(-50%) scale(1) !important; }
+    }
+
+    @@media (max-width: 480px) {
+        .danmaku-stage { height: 60vh; min-height: 350px; }
+    }
+</style>
+
+<!-- ===== 弹幕舞台 ===== -->
+<div class="danmaku-container">
+
+    <!-- 头部 -->
+    <div class="danmaku-header">
+        <div>
+            <h1>💬 弹幕留言墙</h1>
+            <div class="stats">
+                共 <strong id="totalCount">0</strong> 条弹幕 · 
+                <span id="rowCount">0</span> 行
+            </div>
+        </div>
+        <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+            <a href="/Message/Create" class="btn-danmaku">✍️ 发送弹幕</a>
+            <button class="btn-danmaku secondary" onclick="refreshDanmaku()">🔄 刷新</button>
+            @if (isAdmin == 1)
+            {
+                <a href="/Admin/Messages" class="btn-danmaku secondary" style="color:rgba(255,255,255,0.3);">⚙️ 管理</a>
+            }
+        </div>
+    </div>
+
+    <!-- 舞台 -->
+    <div class="danmaku-stage" id="danmakuStage">
+        <div class="danmaku-track" id="danmakuTrack">
+            <!-- 弹幕由 JavaScript 动态渲染 -->
+        </div>
+        <div class="danmaku-empty" id="emptyState">
+            <div class="icon">💬</div>
+            <p>还没有弹幕，快来发第一条！</p>
+        </div>
+    </div>
+
 </div>
 
-<script>
-    function toggleLike(messageId, btn) {
-        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
-        fetch('/Message/ToggleLike', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'RequestVerificationToken': token
-            },
-            body: `messageId=${messageId}`
-        })
-        .then(r => r.json())
-        .then(data => {
-            if (data.success) {
-                const countEl = document.getElementById(`likeCount-${messageId}`);
-                if (countEl) {
-                    countEl.textContent = data.likeCount;
-                }
-            }
-        });
-    }
+<!-- ===== 弹幕操作弹窗 ===== -->
+<div class="danmaku-popup" id="danmakuPopup">
+    <div class="popup-user">
+        <i class="bi bi-person-circle"></i> <strong id="popupUser">匿名</strong>
+        <span style="color:rgba(255,255,255,0.15);font-size:0.7rem;margin-left:0.5rem;" id="popupTime"></span>
+    </div>
+    <div class="popup-content" id="popupContent">留言内容</div>
+    <div class="popup-actions">
+        <button class="btn-like" id="popupLikeBtn" onclick="popupLike()">
+            ❤️ <span id="popupLikeCount">0</span>
+        </button>
+        <button class="btn-report" onclick="popupReport()">🚩 举报</button>
+        <button class="btn-close-popup" onclick="closePopup()">✕</button>
+    </div>
+</div>
 
-    function deleteMessage(messageId) {
-        if (!confirm('确定删除这条留言吗？')) return;
-        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
-        fetch('/Message/Delete', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'RequestVerificationToken': token
-            },
-            body: `id=${messageId}`
-        })
-        .then(r => r.json())
-        .then(data => {
-            if (data.success) {
-                const card = document.getElementById(`msg-${messageId}`);
-                if (card) card.remove();
+<!-- ===== Toast ===== -->
+<div class="toast-container" id="toastContainer"></div>
+
+@section Scripts {
+    <script>
+        // ============================================================
+        // 配置
+        // ============================================================
+        const ROW_HEIGHT = 52;           // 每行高度（px）
+        const MAX_ROWS = 20;             // 最大行数
+        const MIN_ROWS = 3;              // 最小行数
+        const ITEMS_PER_ROW_MAX = 5;     // 每行最多弹幕数
+        const ITEMS_PER_ROW_MIN = 2;     // 每行最少弹幕数
+
+        let messages = [];
+        let popupMessageId = null;
+        let popupMessageLiked = false;
+        let currentUserId = @(currentUserId ?? 0);
+        let isAdmin = @isAdmin;
+
+        // ============================================================
+        // 颜色方案
+        // ============================================================
+        const COLORS = ['color-0', 'color-1', 'color-2', 'color-3', 'color-4', 'color-5', 'color-6', 'color-7'];
+        const SPEEDS = ['speed-0', 'speed-1', 'speed-2', 'speed-3', 'speed-4'];
+        const SIZES = ['size-sm', 'size-md', 'size-lg', 'size-xl'];
+
+        // ============================================================
+        // 渲染弹幕
+        // ============================================================
+        function renderDanmaku() {
+            const track = document.getElementById('danmakuTrack');
+            const empty = document.getElementById('emptyState');
+            const totalCount = document.getElementById('totalCount');
+            const rowCount = document.getElementById('rowCount');
+
+            if (!messages || messages.length === 0) {
+                track.innerHTML = '';
+                empty.style.display = 'block';
+                totalCount.textContent = '0';
+                rowCount.textContent = '0';
+                return;
+            }
+
+            empty.style.display = 'none';
+            totalCount.textContent = messages.length;
+
+            // 计算行数
+            const total = messages.length;
+            let rows = Math.ceil(total / ITEMS_PER_ROW_MAX);
+            rows = Math.max(rows, MIN_ROWS);
+            rows = Math.min(rows, MAX_ROWS);
+
+            // 每行实际数量（尽量均匀分布）
+            const itemsPerRow = Math.ceil(total / rows);
+            rowCount.textContent = rows;
+
+            // 清空轨道
+            track.innerHTML = '';
+
+            // 构建弹幕
+            messages.forEach((msg, index) => {
+                const rowIndex = Math.floor(index / itemsPerRow) % rows;
+                const yPos = 20 + rowIndex * ROW_HEIGHT;
+
+                // 随机样式
+                const colorClass = COLORS[msg.id % COLORS.length];
+                const speedClass = SPEEDS[msg.id % SPEEDS.length];
+                const sizeClass = SIZES[(msg.id + index) % SIZES.length];
+
+                // 内容（截断过长内容）
+                let content = msg.content;
+                if (content.length > 50) content = content.substring(0, 50) + '...';
+
+                const div = document.createElement('div');
+                div.className = `danmaku-item ${colorClass} ${speedClass} ${sizeClass}`;
+                div.style.top = yPos + 'px';
+                div.style.animationDelay = (index * 0.8 % 5) + 's';
+                div.textContent = content;
+                div.dataset.id = msg.id;
+                div.dataset.userId = msg.userId;
+                div.dataset.visitorName = msg.visitorName || '匿名';
+                div.dataset.email = msg.email || '';
+                div.dataset.content = msg.content;
+                div.dataset.createTime = msg.createTime || '';
+                div.dataset.likeCount = msg.likeCount || 0;
+                div.dataset.reported = msg.isReported || false;
+
+                // 点击事件
+                div.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    openPopup(e, this);
+                });
+
+                // 悬停暂停动画
+                div.addEventListener('mouseenter', function() {
+                    this.style.animationPlayState = 'paused';
+                });
+                div.addEventListener('mouseleave', function() {
+                    this.style.animationPlayState = 'running';
+                });
+
+                track.appendChild(div);
+            });
+
+            // 调整舞台高度
+            const stage = document.getElementById('danmakuStage');
+            const neededHeight = 20 + rows * ROW_HEIGHT + 30;
+            const minHeight = 500;
+            stage.style.height = Math.max(neededHeight, minHeight) + 'px';
+        }
+
+        // ============================================================
+        // 打开弹窗
+        // ============================================================
+        function openPopup(event, element) {
+            const id = parseInt(element.dataset.id);
+            const userId = parseInt(element.dataset.userId);
+            const visitorName = element.dataset.visitorName || '匿名';
+            const email = element.dataset.email || '';
+            const content = element.dataset.content || '';
+            const createTime = element.dataset.createTime || '';
+            const likeCount = parseInt(element.dataset.likeCount || 0);
+            const reported = element.dataset.reported === 'true';
+
+            popupMessageId = id;
+            popupMessageLiked = false;
+
+            document.getElementById('popupUser').textContent = visitorName;
+            document.getElementById('popupTime').textContent = createTime ? new Date(createTime).toLocaleString('zh-CN') : '';
+            document.getElementById('popupContent').textContent = content;
+            document.getElementById('popupLikeCount').textContent = likeCount;
+
+            const likeBtn = document.getElementById('popupLikeBtn');
+            likeBtn.classList.remove('liked');
+            likeBtn.innerHTML = `❤️ <span id="popupLikeCount">${likeCount}</span>`;
+            likeBtn.disabled = !currentUserId || currentUserId === userId;
+
+            const popup = document.getElementById('danmakuPopup');
+            popup.classList.add('active');
+
+            // 定位
+            let x = event.clientX || window.innerWidth / 2;
+            let y = event.clientY || window.innerHeight / 2;
+
+            // 防止超出屏幕
+            const popupWidth = 220;
+            const popupHeight = 220;
+            if (x + popupWidth > window.innerWidth) x = window.innerWidth - popupWidth - 20;
+            if (y + popupHeight > window.innerHeight) y = window.innerHeight - popupHeight - 20;
+            if (x < 20) x = 20;
+            if (y < 20) y = 20;
+
+            popup.style.left = x + 'px';
+            popup.style.top = y + 'px';
+        }
+
+        function closePopup() {
+            document.getElementById('danmakuPopup').classList.remove('active');
+            popupMessageId = null;
+        }
+
+        // 点击其他地方关闭弹窗
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.danmaku-popup') && !e.target.closest('.danmaku-item')) {
+                closePopup();
             }
         });
-    }
-</script>
+
+        // ESC 关闭
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closePopup();
+        });
+
+        // ============================================================
+        // 弹窗操作：点赞
+        // ============================================================
+        function popupLike() {
+            if (!popupMessageId) return;
+            if (!currentUserId) {
+                showToast('请先登录再点赞', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('popupLikeBtn');
+            btn.disabled = true;
+
+            const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+            fetch('/Message/ToggleLike', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'RequestVerificationToken': token
+                },
+                body: `messageId=${popupMessageId}`
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    const countEl = document.getElementById('popupLikeCount');
+                    countEl.textContent = data.likeCount;
+                    btn.classList.add('liked');
+                    btn.innerHTML = `❤️ <span id="popupLikeCount">${data.likeCount}</span>`;
+                    showToast(data.message || '点赞成功', 'success');
+
+                    // 更新弹幕上的点赞数
+                    const item = document.querySelector(`.danmaku-item[data-id="${popupMessageId}"]`);
+                    if (item) item.dataset.likeCount = data.likeCount;
+                } else {
+                    showToast(data.message || '操作失败', 'error');
+                }
+            })
+            .catch(() => showToast('操作失败，请重试', 'error'))
+            .finally(() => {
+                btn.disabled = false;
+            });
+        }
+
+        // ============================================================
+        // 弹窗操作：举报
+        // ============================================================
+        function popupReport() {
+            if (!popupMessageId) return;
+            if (!currentUserId) {
+                showToast('请先登录再举报', 'error');
+                return;
+            }
+
+            const reason = prompt('请输入举报原因：', '广告/垃圾信息');
+            if (!reason || reason.trim() === '') return;
+
+            const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+            fetch('/Message/Report', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'RequestVerificationToken': token
+                },
+                body: `messageId=${popupMessageId}&reason=${encodeURIComponent(reason)}`
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    showToast('✅ 举报已提交，感谢反馈', 'success');
+                    closePopup();
+                } else {
+                    showToast(data.message || '举报失败', 'error');
+                }
+            })
+            .catch(() => showToast('操作失败，请重试', 'error'));
+        }
+
+        // ============================================================
+        // 刷新
+        // ============================================================
+        function refreshDanmaku() {
+            showToast('🔄 刷新中...', 'info');
+            fetch('/Message/GetDanmakuData')
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        messages = data.messages || [];
+                        renderDanmaku();
+                        showToast(`✅ 已更新 ${messages.length} 条弹幕`, 'success');
+                    }
+                })
+                .catch(() => showToast('刷新失败，请重试', 'error'));
+        }
+
+        // ============================================================
+        // Toast
+        // ============================================================
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast-msg ${type}`;
+            toast.textContent = message;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(20px)';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // ============================================================
+        // SignalR 实时弹幕
+        // ============================================================
+        function connectSignalR() {
+            try {
+                const connection = new signalR.HubConnectionBuilder()
+                    .withUrl('/messageHub')
+                    .configureLogging(signalR.LogLevel.Information)
+                    .build();
+
+                connection.on('ReceiveMessage', function(username, content, messageId) {
+                    // 收到新弹幕，刷新列表
+                    refreshDanmaku();
+                    showToast(`💬 ${username} 发了新弹幕`, 'info');
+                });
+
+                connection.start()
+                    .then(() => console.log('✅ SignalR 已连接'))
+                    .catch(err => console.error('❌ SignalR 连接失败:', err));
+            } catch (e) {
+                console.log('SignalR 不可用，使用轮询模式');
+            }
+        }
+
+        // ============================================================
+        // 初始化
+        // ============================================================
+        document.addEventListener('DOMContentLoaded', function() {
+            // 加载数据
+            fetch('/Message/GetDanmakuData')
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        messages = data.messages || [];
+                        renderDanmaku();
+                    }
+                })
+                .catch(() => {
+                    // 降级：从 Model 加载
+                    messages = @Html.Raw(Json.Serialize(Model));
+                    renderDanmaku();
+                });
+
+            // 连接 SignalR
+            connectSignalR();
+
+            // 窗口变化重新调整
+            let resizeTimer;
+            window.addEventListener('resize', function() {
+                clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(renderDanmaku, 300);
+            });
+        });
+    </script>
+
+    <!-- SignalR 客户端库 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
+}
