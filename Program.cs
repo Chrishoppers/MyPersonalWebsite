@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.DataProtection;
 using MyPersonalWebsite.Models;
 using MyPersonalWebsite.Services;
 using MyPersonalWebsite.Hubs;
@@ -22,7 +23,6 @@ var tursoToken = Environment.GetEnvironmentVariable("TURSO_AUTH_TOKEN") ?? "";
 
 if (!string.IsNullOrEmpty(tursoUrl) && !string.IsNullOrEmpty(tursoToken))
 {
-    // 使用 Turso 作为主数据库
     builder.Services.AddDbContext<TursoDbContext>(options =>
         options.UseSqlite($"Data Source={tursoUrl};Mode=ReadWriteCreate;Cache=Shared")
     );
@@ -30,7 +30,6 @@ if (!string.IsNullOrEmpty(tursoUrl) && !string.IsNullOrEmpty(tursoToken))
 }
 else
 {
-    // 降级到本地 SQLite
     builder.Services.AddDbContext<TursoDbContext>(options =>
         options.UseSqlite("Data Source=PersonalSite.db")
     );
@@ -38,23 +37,17 @@ else
 }
 
 // ============================================================
-// ⭐ 使用 Turso 存储 Session（跨部署持久化）
+// ⭐ DataProtection 使用文件存储（Render 会保留 /app/keys 目录）
 // ============================================================
 builder.Services.AddDataProtection()
-    .PersistKeysToDbContext<TursoDbContext>()
-    .SetApplicationName("MyPersonalWebsite");
+    .PersistKeysToFileSystem(new DirectoryInfo("/app/keys"))
+    .SetApplicationName("MyPersonalWebsite")
+    .SetDefaultKeyLifetime(TimeSpan.FromDays(30));
 
-// 使用 Turso 作为 Session 存储
-builder.Services.AddDistributedSqliteCache(options =>
-{
-    options.ConnectionString = "Data Source=PersonalSite.db";
-    options.SchemaName = "dbo";
-    options.TableName = "Sessions";
-});
-
-// 或者使用内存缓存（如果 Turso 不可用）
+// ============================================================
+// ⭐ Session 使用内存缓存（配合持久化的 DataProtection）
+// ============================================================
 builder.Services.AddDistributedMemoryCache();
-
 builder.Services.AddSession(options =>
 {
     options.IdleTimeout = TimeSpan.FromMinutes(30);
@@ -84,7 +77,6 @@ using (var scope = app.Services.CreateScope())
     var tursoDb = scope.ServiceProvider.GetRequiredService<TursoDbContext>();
     var dataSync = scope.ServiceProvider.GetRequiredService<DataSyncService>();
 
-    // 创建本地数据库
     db.Database.EnsureCreated();
     Console.WriteLine("✅ 本地 SQLite 数据库已就绪");
 
@@ -99,7 +91,6 @@ using (var scope = app.Services.CreateScope())
         Console.WriteLine("⚠️ 网站将继续使用本地 SQLite");
     }
 
-    // 确保管理员账号存在
     await dataSync.EnsureAdminExistsAsync();
 }
 
