@@ -29,7 +29,7 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 用户相关
+        // 用户相关（双写 + 优先 Turso）
         // ============================================================
 
         public async Task AddUserAsync(User user)
@@ -135,6 +135,26 @@ namespace MyPersonalWebsite.Services
             _localContext.Users.Update(user);
             await _localContext.SaveChangesAsync();
             Console.WriteLine($"✅ 用户 {user.Username} 已更新到本地 SQLite");
+        }
+
+        // ⭐ 新增：删除用户（软删除）
+        public async Task DeleteUser(int id)
+        {
+            var user = await _localContext.Users.FindAsync(id);
+            if (user != null)
+            {
+                user.IsDeleted = true;
+                user.DeletedAt = DateTime.Now;
+                _localContext.Users.Update(user);
+                await _localContext.SaveChangesAsync();
+                Console.WriteLine($"✅ 用户 {user.Username} 已软删除（本地）");
+
+                if (_tursoAvailable)
+                {
+                    await SyncUserToTursoAsync(user);
+                    Console.WriteLine($"✅ 用户 {user.Username} 已软删除（Turso）");
+                }
+            }
         }
 
         public async Task<List<User>> GetAllUsersAsync()
@@ -737,12 +757,11 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 提取值方法（处理 Turso 返回的值对象）
+        // JSON 解析方法（Turso v2 格式 - 使用 GetValue 方法）
         // ============================================================
 
         private object? GetValueFromRow(JsonElement element)
         {
-            // 如果 element 是对象 {"type": "text", "value": "admin"}
             if (element.ValueKind == JsonValueKind.Object)
             {
                 if (element.TryGetProperty("value", out var value))
@@ -753,10 +772,8 @@ namespace MyPersonalWebsite.Services
                 {
                     return value2;
                 }
-                // 尝试直接解析
                 return element;
             }
-            // 如果 element 直接是值
             return element;
         }
 
@@ -781,7 +798,13 @@ namespace MyPersonalWebsite.Services
                 var value = GetValueFromRow(element);
                 if (value is JsonElement je)
                 {
-                    return je.ValueKind == JsonValueKind.Null ? 0 : je.GetInt32();
+                    if (je.ValueKind == JsonValueKind.Null) return 0;
+                    if (je.ValueKind == JsonValueKind.Number) return je.GetInt32();
+                    if (je.ValueKind == JsonValueKind.String)
+                    {
+                        return int.TryParse(je.GetString(), out var result) ? result : 0;
+                    }
+                    return 0;
                 }
                 return int.TryParse(value?.ToString(), out var result) ? result : 0;
             }
@@ -798,9 +821,16 @@ namespace MyPersonalWebsite.Services
                     if (je.ValueKind == JsonValueKind.Null) return false;
                     if (je.ValueKind == JsonValueKind.True) return true;
                     if (je.ValueKind == JsonValueKind.False) return false;
-                    return je.GetInt32() == 1;
+                    if (je.ValueKind == JsonValueKind.Number) return je.GetInt32() == 1;
+                    if (je.ValueKind == JsonValueKind.String)
+                    {
+                        var str = je.GetString()?.ToLower();
+                        return str == "1" || str == "true" || str == "yes";
+                    }
+                    return false;
                 }
-                return value?.ToString() == "1" || value?.ToString()?.ToLower() == "true";
+                var str2 = value?.ToString()?.ToLower();
+                return str2 == "1" || str2 == "true" || str2 == "yes";
             }
             catch { return false; }
         }
@@ -831,10 +861,6 @@ namespace MyPersonalWebsite.Services
             catch { return null; }
         }
 
-        // ============================================================
-        // JSON 解析方法（使用 GetValueFromRow）
-        // ============================================================
-
         private User? ParseUserFromJson(string json)
         {
             try
@@ -855,7 +881,6 @@ namespace MyPersonalWebsite.Services
 
                             if (row.ValueKind != JsonValueKind.Array)
                             {
-                                Console.WriteLine($"⚠️ row 不是数组类型: {row.ValueKind}");
                                 return null;
                             }
 
