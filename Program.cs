@@ -9,14 +9,14 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 
 // ============================================================
-// 本地 SQLite（仅作为缓存/备用，不用于主数据）
+// 本地 SQLite（仅作为缓存/备用）
 // ============================================================
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"))
 );
 
 // ============================================================
-// ⭐ DataProtection 使用文件存储（每次部署不会丢失 Session）
+// DataProtection 文件存储
 // ============================================================
 builder.Services.AddDataProtection()
     .PersistKeysToFileSystem(new DirectoryInfo("/app/keys"))
@@ -58,9 +58,12 @@ using (var scope = app.Services.CreateScope())
     db.Database.EnsureCreated();
     Console.WriteLine("✅ 本地 SQLite 缓存已就绪");
 
+    // ⭐ 确保 IsApproved 列存在
+    await EnsureIsApprovedColumnAsync(dataSync);
+
     await dataSync.EnsureAdminExistsAsync();
 
-    // ⭐ 确保 AboutMe 数据存在
+    // 确保 AboutMe 数据存在
     await EnsureAboutMeDataAsync(dataSync);
 }
 
@@ -83,6 +86,44 @@ app.MapControllerRoute(
 app.MapHub<MessageHub>("/messageHub");
 
 app.Run();
+
+// ============================================================
+// ⭐ 确保 IsApproved 列存在
+// ============================================================
+async Task EnsureIsApprovedColumnAsync(DataSyncService dataSync)
+{
+    try
+    {
+        Console.WriteLine("📦 检查 Users 表结构...");
+
+        // 尝试查询 IsApproved 列是否存在
+        var result = await dataSync.QueryAsync("SELECT IsApproved FROM Users LIMIT 1");
+        
+        // 如果查询成功，说明列已存在
+        Console.WriteLine("✅ IsApproved 列已存在");
+    }
+    catch (Exception ex)
+    {
+        // 如果报错，说明列不存在，添加它
+        if (ex.Message.Contains("no such column") || ex.Message.Contains("IsApproved"))
+        {
+            Console.WriteLine("📝 IsApproved 列不存在，正在添加...");
+            try
+            {
+                await dataSync.ExecuteSqlAsync("ALTER TABLE Users ADD COLUMN IsApproved INTEGER DEFAULT 0");
+                Console.WriteLine("✅ IsApproved 列已添加");
+            }
+            catch (Exception addEx)
+            {
+                Console.WriteLine($"⚠️ 添加 IsApproved 列失败: {addEx.Message}");
+            }
+        }
+        else
+        {
+            Console.WriteLine($"⚠️ 检查 Users 表失败: {ex.Message}");
+        }
+    }
+}
 
 // ============================================================
 // ⭐ EnsureAboutMeDataAsync 方法
