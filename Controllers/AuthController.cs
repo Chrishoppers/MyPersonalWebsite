@@ -107,6 +107,7 @@ namespace MyPersonalWebsite.Controllers
                 VerificationCodeExpiry = DateTime.Now.AddMinutes(10),
                 IsEmailVerified = false,
                 IsAdmin = false,
+                IsApproved = false,
                 IsBanned = false,
                 IsDeleted = false,
                 CreatedAt = DateTime.Now,
@@ -171,7 +172,7 @@ namespace MyPersonalWebsite.Controllers
                 return View();
             }
 
-            // ⭐ 邮箱验证通过，但还需要管理员审核
+            // 邮箱验证通过，但还需要管理员审核
             user.IsEmailVerified = true;
             user.VerificationCode = null;
             user.VerificationCodeExpiry = null;
@@ -179,14 +180,14 @@ namespace MyPersonalWebsite.Controllers
             await _dataSync.UpdateUserAsync(user);
 
             // 发送管理员审核通知邮件
-try
-{
-    await _emailService.SendAdminVerificationRequestAsync(user.Username, user.Email, user.Id, user.AvatarUrl);
-}
-catch (Exception ex)
-{
-    Console.WriteLine($"管理员审核邮件发送失败: {ex.Message}");
-}
+            try
+            {
+                await _emailService.SendAdminVerificationRequestAsync(user.Username, user.Email, user.Id, user.AvatarUrl);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"管理员审核邮件发送失败: {ex.Message}");
+            }
 
             TempData["RegisterEmail"] = email;
             return RedirectToAction("RegisterSuccess");
@@ -202,7 +203,7 @@ catch (Exception ex)
         }
 
         // ============================================================
-        // 登录
+        // ⭐ 登录（完整版）
         // ============================================================
         [HttpGet]
         public IActionResult Login()
@@ -214,6 +215,7 @@ catch (Exception ex)
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Login(string username, string password)
         {
+            // 1. 查找用户
             var user = await _dataSync.GetUserByUsernameAsync(username);
             if (user == null)
             {
@@ -226,13 +228,17 @@ catch (Exception ex)
                 return View();
             }
 
-            // 检查是否被软删除
+            // 2. 调试日志
+            Console.WriteLine($"🔍 登录尝试: 用户名={user.Username}, IsAdmin={user.IsAdmin}, IsApproved={user.IsApproved}, IsEmailVerified={user.IsEmailVerified}, IsBanned={user.IsBanned}, IsDeleted={user.IsDeleted}");
+
+            // 3. 检查是否被删除
             if (user.IsDeleted)
             {
                 ModelState.AddModelError("", "账号已被删除");
                 return View();
             }
 
+            // 4. 检查是否被封禁
             if (user.IsBanned)
             {
                 string banMessage = "您的账号已被封禁";
@@ -242,6 +248,7 @@ catch (Exception ex)
                 }
                 else if (user.BanExpiry.HasValue && user.BanExpiry.Value <= DateTime.Now)
                 {
+                    // 封禁已过期，自动解封
                     user.IsBanned = false;
                     user.BanExpiry = null;
                     await _dataSync.UpdateUserAsync(user);
@@ -253,34 +260,38 @@ catch (Exception ex)
                 }
             }
 
-            // ⭐ 检查邮箱是否已验证
+            // 5. 检查邮箱是否已验证
             if (!user.IsEmailVerified)
             {
                 ModelState.AddModelError("", "请先验证邮箱");
                 return View();
             }
 
-            // ⭐ 管理员跳过邮箱审核，普通用户检查审核状态
+            // 6. ⭐ 检查管理员审核状态（管理员直接跳过）
             if (!user.IsAdmin && !user.IsApproved)
             {
                 ModelState.AddModelError("", "您的账号正在等待管理员审核，请耐心等待");
                 return View();
             }
 
+            // 7. 验证密码
             if (!PasswordHelper.VerifyPassword(password, user.PasswordHash))
             {
                 ModelState.AddModelError("", "用户名或密码错误");
                 return View();
             }
 
+            // 8. 更新最后登录时间
             user.LastLoginAt = DateTime.Now;
             await _dataSync.UpdateUserAsync(user);
 
+            // 9. 设置 Session
             HttpContext.Session.SetInt32("UserId", user.Id);
             HttpContext.Session.SetString("Username", user.Username);
             HttpContext.Session.SetString("UserEmail", user.Email);
             HttpContext.Session.SetInt32("IsAdmin", user.IsAdmin ? 1 : 0);
 
+            // 10. 跳转
             if (user.IsAdmin)
             {
                 return RedirectToAction("Dashboard", "Admin");
