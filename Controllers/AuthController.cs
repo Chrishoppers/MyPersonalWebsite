@@ -5,7 +5,6 @@ using MyPersonalWebsite.Helpers;
 using MyPersonalWebsite.Services;
 using System;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace MyPersonalWebsite.Controllers
@@ -33,7 +32,7 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // 注册
+        // 注册 - 改为管理员审核
         // ============================================================
         [HttpGet]
         public IActionResult Register()
@@ -74,15 +73,12 @@ namespace MyPersonalWebsite.Controllers
                 return View();
             }
 
-            var code = new Random().Next(100000, 999999).ToString();
-
+            // 创建用户，默认邮箱未验证
             var user = new User
             {
                 Username = username,
                 Email = email,
                 PasswordHash = PasswordHelper.HashPassword(password),
-                VerificationCode = code,
-                VerificationCodeExpiry = DateTime.Now.AddMinutes(10),
                 IsEmailVerified = false,
                 IsAdmin = false,
                 IsBanned = false,
@@ -91,72 +87,32 @@ namespace MyPersonalWebsite.Controllers
 
             await _dataSync.AddUserAsync(user);
 
+            // 发送审核通知给管理员
             try
             {
-                await _emailService.SendAdminNewUserNotificationAsync(username, email);
+                await _emailService.SendAdminVerificationRequestAsync(user.Username, user.Email, user.Id);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"管理员通知邮件发送失败: {ex.Message}");
+                Console.WriteLine($"管理员审核邮件发送失败: {ex.Message}");
             }
 
-            await _emailService.SendVerificationCodeAsync(email, code);
-
             TempData["RegisterEmail"] = email;
-            return RedirectToAction("VerifyEmail", new { email = email });
+            TempData["RegisterMessage"] = "📧 注册申请已提交！请等待管理员审核邮箱，审核结果将通过邮件通知您。";
+            return RedirectToAction("RegisterSuccess");
         }
 
         // ============================================================
-        // 验证邮箱
+        // 注册成功页面
         // ============================================================
         [HttpGet]
-        public IActionResult VerifyEmail(string email)
+        public IActionResult RegisterSuccess()
         {
-            ViewBag.Email = email;
             return View();
         }
 
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> VerifyEmail(string email, string code)
-        {
-            var user = await _dataSync.GetUserByEmailAsync(email);
-            if (user == null)
-            {
-                ModelState.AddModelError("", "用户不存在");
-                return View();
-            }
-
-            if (user.IsEmailVerified)
-            {
-                TempData["Message"] = "邮箱已验证，请登录";
-                return RedirectToAction("Login");
-            }
-
-            if (user.VerificationCode != code)
-            {
-                ModelState.AddModelError("", "验证码错误");
-                return View();
-            }
-
-            if (user.VerificationCodeExpiry < DateTime.Now)
-            {
-                ModelState.AddModelError("", "验证码已过期，请重新注册");
-                return View();
-            }
-
-            user.IsEmailVerified = true;
-            user.VerificationCode = null;
-            user.VerificationCodeExpiry = null;
-
-            await _dataSync.UpdateUserAsync(user);
-
-            TempData["Message"] = "邮箱验证成功！请登录";
-            return RedirectToAction("Login");
-        }
-
         // ============================================================
-        // 登录
+        // 登录 - 管理员跳过邮箱验证
         // ============================================================
         [HttpGet]
         public IActionResult Login()
@@ -200,9 +156,10 @@ namespace MyPersonalWebsite.Controllers
                 }
             }
 
-            if (!user.IsEmailVerified)
+            // ⭐ 管理员跳过邮箱验证
+            if (!user.IsAdmin && !user.IsEmailVerified)
             {
-                ModelState.AddModelError("", "请先验证邮箱后再登录");
+                ModelState.AddModelError("", "您的邮箱尚未通过管理员审核，请等待审核结果通知邮件");
                 return View();
             }
 
@@ -238,7 +195,7 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // 修改密码（⭐ 关键：必须同步到 Turso）
+        // 修改密码
         // ============================================================
         [HttpGet]
         public IActionResult ChangePassword()
@@ -292,15 +249,10 @@ namespace MyPersonalWebsite.Controllers
                 return View();
             }
 
-            // ⭐ 修改密码
             user.PasswordHash = PasswordHelper.HashPassword(newPassword);
-
-            // ⭐ 调用 UpdateUserAsync（同时更新 Turso 和本地）
             await _dataSync.UpdateUserAsync(user);
 
-            // 清除 Session，强制重新登录
             HttpContext.Session.Clear();
-
             TempData["Message"] = "✅ 密码修改成功！请使用新密码重新登录";
             return RedirectToAction("Login");
         }
@@ -406,10 +358,7 @@ namespace MyPersonalWebsite.Controllers
                 return View();
             }
 
-            // ⭐ 重置密码
             user.PasswordHash = PasswordHelper.HashPassword(newPassword);
-
-            // ⭐ 同步到 Turso + 本地
             await _dataSync.UpdateUserAsync(user);
 
             reset.IsUsed = true;
