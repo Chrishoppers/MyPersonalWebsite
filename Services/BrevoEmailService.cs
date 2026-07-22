@@ -50,29 +50,7 @@ namespace MyPersonalWebsite.Services
             }
         }
 
-        // ============================================================
-        // 1. 发送邮箱验证码
-        // ============================================================
-
-        public async Task SendVerificationCodeAsync(string toEmail, string code)
-        {
-            var html = $@"
-                <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;'>
-                    <h2 style='color: #0D6EFD;'>✌️ 嘿，是你吗？</h2>
-                    <p>有人在 <strong>Chris hopper 的个人网站</strong> 用这个邮箱注册了账号。</p>
-                    <p>如果是你，请用这个验证码完成注册：</p>
-                    <div style='background: #f0f4ff; padding: 15px; text-align: center; font-size: 32px; letter-spacing: 8px; font-weight: bold; color: #0D6EFD; border-radius: 8px;'>
-                        {code}
-                    </div>
-                    <p style='color: #888; font-size: 14px;'>⏳ 10 分钟内有效。</p>
-                    <hr style='border: none; border-top: 1px solid #eee;'>
-                    <p style='color: #aaa; font-size: 12px;'>💌 系统自动发送，不用回复。</p>
-                </div>
-            ";
-
-            await SendEmailAsync(toEmail, "【Chris hopper 个人网站】邮箱验证码 ✌️", html);
-        }
-
+        
         // ============================================================
         // 2. 密码重置验证码
         // ============================================================
