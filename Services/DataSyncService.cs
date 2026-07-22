@@ -25,13 +25,7 @@ namespace MyPersonalWebsite.Services
             else
                 Console.WriteLine("⚠️ Turso 未配置");
         }
-        public async Task DeleteUser(int id)
-{
-    if (!_tursoAvailable) return;
-
-    await _tursoService.ExecuteSqlAsync($"DELETE FROM Users WHERE Id = {id}");
-    Console.WriteLine($"✅ 用户 {id} 已从 Turso 删除");
-}
+       
 
         // ============================================================
         // 用户相关
