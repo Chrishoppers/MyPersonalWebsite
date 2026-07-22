@@ -115,6 +115,38 @@ namespace MyPersonalWebsite.Controllers
                 return Json(new { success = false, message = "点赞失败，请稍后重试" });
             }
         }
+        // ============================================================
+// 获取弹幕数据（API）
+// ============================================================
+[HttpGet]
+public async Task<IActionResult> GetDanmakuData()
+{
+    try
+    {
+        var messages = await _dataSync.GetMessagesAsync();
+        // 只返回已审核的留言
+        var approved = messages.Where(m => m.IsApproved).ToList();
+        return Json(new 
+        { 
+            success = true, 
+            messages = approved.Select(m => new
+            {
+                id = m.Id,
+                userId = m.UserId,
+                visitorName = m.VisitorName,
+                email = m.Email,
+                content = m.Content,
+                createTime = m.CreateTime,
+                likeCount = m.LikeCount,
+                isReported = m.IsReported
+            })
+        });
+    }
+    catch (Exception ex)
+    {
+        return Json(new { success = false, message = ex.Message });
+    }
+}
 
         [HttpPost]
         public async Task<IActionResult> Report(int messageId, string reason)
