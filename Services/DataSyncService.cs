@@ -384,28 +384,51 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // AboutMe 相关
-        // ============================================================
+// AboutMe 相关
+// ============================================================
 
-        public async Task<List<AboutMe>> GetAboutMeAsync()
-        {
-            if (!_tursoAvailable) return new List<AboutMe>();
+public async Task<List<AboutMe>> GetAboutMeAsync()
+{
+    if (!_tursoAvailable) return new List<AboutMe>();
 
-            var result = await _tursoService.QueryAsync("SELECT * FROM AboutMeContents ORDER BY SortOrder");
-            return ParseAboutMeListFromJson(result);
-        }
+    var result = await _tursoService.QueryAsync("SELECT * FROM AboutMeContents ORDER BY SortOrder");
+    return ParseAboutMeListFromJson(result);
+}
 
-        public async Task UpdateAboutMeAsync(AboutMe section)
-        {
-            if (!_tursoAvailable) return;
+public async Task UpdateAboutMeAsync(AboutMe section)
+{
+    if (!_tursoAvailable) return;
 
-            var sql = $@"UPDATE AboutMeContents SET
-                Content = '{EscapeSql(section.Content)}',
-                UpdatedAt = '{section.UpdatedAt:yyyy-MM-dd HH:mm:ss}'
-            WHERE Id = {section.Id}";
+    var sql = $@"UPDATE AboutMeContents SET
+        Content = '{EscapeSql(section.Content)}',
+        UpdatedAt = '{section.UpdatedAt:yyyy-MM-dd HH:mm:ss}'
+    WHERE Id = {section.Id}";
 
-            await _tursoService.ExecuteSqlAsync(sql);
-        }
+    await _tursoService.ExecuteSqlAsync(sql);
+    Console.WriteLine($"✅ AboutMe {section.SectionKey} 已更新到 Turso");
+}
+
+// ⭐ 新增：AddAboutMeAsync
+public async Task AddAboutMeAsync(AboutMe section)
+{
+    if (!_tursoAvailable) return;
+
+    var maxIdResult = await _tursoService.QueryAsync("SELECT MAX(Id) as MaxId FROM AboutMeContents");
+    var maxId = ParseMaxId(maxIdResult);
+    section.Id = maxId + 1;
+
+    var sql = $@"INSERT INTO AboutMeContents (
+        Id, SectionKey, Title, Content, Icon, SortOrder, UpdatedAt
+    ) VALUES (
+        {section.Id}, '{EscapeSql(section.SectionKey)}',
+        '{EscapeSql(section.Title)}', '{EscapeSql(section.Content)}',
+        {(string.IsNullOrEmpty(section.Icon) ? "NULL" : $"'{EscapeSql(section.Icon)}'")},
+        {section.SortOrder}, '{section.UpdatedAt:yyyy-MM-dd HH:mm:ss}'
+    )";
+
+    await _tursoService.ExecuteSqlAsync(sql);
+    Console.WriteLine($"✅ AboutMe {section.SectionKey} 已写入 Turso");
+}
 
         // ============================================================
         // 兼容旧接口
