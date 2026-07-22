@@ -8,19 +8,16 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 
 // ============================================================
-// ⭐ 本地 SQLite（仅作为缓存/备用，不用于主数据）
+// 本地 SQLite（仅作为缓存/备用，不用于主数据）
 // ============================================================
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"))
 );
 
 // ============================================================
-// ⭐ TursoDbContext 不再使用 EF Core 连接！
+// TursoDbContext 不再使用 EF Core 连接！
 // ============================================================
 // 删除或注释掉 TursoDbContext 的注册
-// builder.Services.AddDbContext<TursoDbContext>(options =>
-//     options.UseSqlite($"Data Source={tursoUrl};Mode=ReadWriteCreate;Cache=Shared")
-// );
 
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
@@ -53,7 +50,7 @@ using (var scope = app.Services.CreateScope())
     Console.WriteLine("✅ 本地 SQLite 缓存已就绪");
 
     // 确保 Turso 中有管理员账号
-    await dataSync.EnsureAdminExistsInTursoAsync();
+    await dataSync.EnsureAdminExistsAsync();  // ⭐ 改成 EnsureAdminExistsAsync
 }
 
 if (!app.Environment.IsDevelopment())
