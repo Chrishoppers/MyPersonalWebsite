@@ -11,7 +11,6 @@ namespace MyPersonalWebsite.Services
         private readonly HttpClient _httpClient;
         private readonly string _databaseUrl;
         private readonly string _authToken;
-        private readonly string _dbName;
 
         public TursoService(HttpClient httpClient)
         {
@@ -21,26 +20,20 @@ namespace MyPersonalWebsite.Services
             var url = Environment.GetEnvironmentVariable("TURSO_DATABASE_URL") ?? "";
             _authToken = Environment.GetEnvironmentVariable("TURSO_AUTH_TOKEN") ?? "";
             
-            // 从 URL 中提取数据库名称
-            // https://chris-chrishoppers.aws-ap-northeast-1.turso.io
             if (!string.IsNullOrEmpty(url))
             {
                 if (url.StartsWith("libsql://"))
                     url = url.Replace("libsql://", "https://");
                 
-                // 提取数据库名（URL 中第一个 . 前面的部分）
-                var host = new Uri(url).Host;
-                _dbName = host.Split('.')[0];  // chris-chrishoppers
-                _databaseUrl = $"https://{host}";
+                _databaseUrl = url.TrimEnd('/');
             }
             else
             {
                 _databaseUrl = "";
-                _dbName = "";
             }
 
             if (!string.IsNullOrEmpty(_databaseUrl) && !string.IsNullOrEmpty(_authToken))
-                Console.WriteLine($"✅ Turso 配置: DB={_dbName}, URL={_databaseUrl}");
+                Console.WriteLine($"✅ Turso 配置: URL={_databaseUrl}");
             else
                 Console.WriteLine("⚠️ Turso 未配置");
         }
@@ -55,10 +48,20 @@ namespace MyPersonalWebsite.Services
 
             try
             {
-                // Turso v1 API 格式（官方文档）
                 var payload = new
                 {
-                    sqls = new[] { sql }
+                    requests = new[]
+                    {
+                        new
+                        {
+                            type = "execute",
+                            stmt = new
+                            {
+                                sql = sql,
+                                args = new object[] { }
+                            }
+                        }
+                    }
                 };
 
                 var json = JsonSerializer.Serialize(payload);
@@ -67,19 +70,18 @@ namespace MyPersonalWebsite.Services
                 _httpClient.DefaultRequestHeaders.Clear();
                 _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {_authToken}");
 
-                var url = $"{_databaseUrl}/v1/pipeline";
-                Console.WriteLine($"📤 请求 Turso: {url}");
+                var url = $"{_databaseUrl}/v2/pipeline";
                 
                 var response = await _httpClient.PostAsync(url, content);
                 var responseBody = await response.Content.ReadAsStringAsync();
                 
                 if (!response.IsSuccessStatusCode)
                 {
-                    Console.WriteLine($"⚠️ Turso 执行失败 ({response.StatusCode}): {responseBody}");
+                    Console.WriteLine($"⚠️ Turso 执行失败 ({response.StatusCode}): {responseBody.Substring(0, Math.Min(200, responseBody.Length))}");
                     return false;
                 }
                 
-                Console.WriteLine($"✅ Turso 执行成功: {sql.Substring(0, Math.Min(50, sql.Length))}...");
+                Console.WriteLine($"✅ Turso 执行成功");
                 return true;
             }
             catch (TaskCanceledException)
@@ -106,7 +108,18 @@ namespace MyPersonalWebsite.Services
             {
                 var payload = new
                 {
-                    sqls = new[] { sql }
+                    requests = new[]
+                    {
+                        new
+                        {
+                            type = "execute",
+                            stmt = new
+                            {
+                                sql = sql,
+                                args = new object[] { }
+                            }
+                        }
+                    }
                 };
 
                 var json = JsonSerializer.Serialize(payload);
@@ -115,15 +128,14 @@ namespace MyPersonalWebsite.Services
                 _httpClient.DefaultRequestHeaders.Clear();
                 _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {_authToken}");
 
-                var url = $"{_databaseUrl}/v1/pipeline";
-                Console.WriteLine($"📤 查询 Turso: {url}");
+                var url = $"{_databaseUrl}/v2/pipeline";
                 
                 var response = await _httpClient.PostAsync(url, content);
                 var responseBody = await response.Content.ReadAsStringAsync();
                 
                 if (!response.IsSuccessStatusCode)
                 {
-                    Console.WriteLine($"⚠️ Turso 查询失败 ({response.StatusCode}): {responseBody}");
+                    Console.WriteLine($"⚠️ Turso 查询失败 ({response.StatusCode}): {responseBody.Substring(0, Math.Min(200, responseBody.Length))}");
                     return "{}";
                 }
                 
