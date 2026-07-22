@@ -29,7 +29,7 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 用户相关（双写 + 优先 Turso）
+        // 用户相关
         // ============================================================
 
         public async Task AddUserAsync(User user)
@@ -495,7 +495,7 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 管理员账号（不重置密码）
+        // 管理员账号
         // ============================================================
 
         public async Task EnsureAdminExistsAsync()
@@ -737,7 +737,102 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // JSON 解析方法（Turso v2 格式 - 正确修复版）
+        // 提取值方法（处理 Turso 返回的值对象）
+        // ============================================================
+
+        private object? GetValueFromRow(JsonElement element)
+        {
+            // 如果 element 是对象 {"type": "text", "value": "admin"}
+            if (element.ValueKind == JsonValueKind.Object)
+            {
+                if (element.TryGetProperty("value", out var value))
+                {
+                    return value;
+                }
+                if (element.TryGetProperty("Value", out var value2))
+                {
+                    return value2;
+                }
+                // 尝试直接解析
+                return element;
+            }
+            // 如果 element 直接是值
+            return element;
+        }
+
+        private string GetStringFromRow(JsonElement element)
+        {
+            try
+            {
+                var value = GetValueFromRow(element);
+                if (value is JsonElement je)
+                {
+                    return je.ValueKind == JsonValueKind.Null ? "" : je.GetString() ?? "";
+                }
+                return value?.ToString() ?? "";
+            }
+            catch { return ""; }
+        }
+
+        private int GetIntFromRow(JsonElement element)
+        {
+            try
+            {
+                var value = GetValueFromRow(element);
+                if (value is JsonElement je)
+                {
+                    return je.ValueKind == JsonValueKind.Null ? 0 : je.GetInt32();
+                }
+                return int.TryParse(value?.ToString(), out var result) ? result : 0;
+            }
+            catch { return 0; }
+        }
+
+        private bool GetBoolFromRow(JsonElement element)
+        {
+            try
+            {
+                var value = GetValueFromRow(element);
+                if (value is JsonElement je)
+                {
+                    if (je.ValueKind == JsonValueKind.Null) return false;
+                    if (je.ValueKind == JsonValueKind.True) return true;
+                    if (je.ValueKind == JsonValueKind.False) return false;
+                    return je.GetInt32() == 1;
+                }
+                return value?.ToString() == "1" || value?.ToString()?.ToLower() == "true";
+            }
+            catch { return false; }
+        }
+
+        private DateTime? GetDateTimeFromRow(JsonElement element)
+        {
+            try
+            {
+                var value = GetStringFromRow(element);
+                if (string.IsNullOrEmpty(value)) return null;
+                return DateTime.Parse(value);
+            }
+            catch { return null; }
+        }
+
+        private string? GetStringOrNullFromRow(JsonElement element)
+        {
+            try
+            {
+                var value = GetValueFromRow(element);
+                if (value is JsonElement je)
+                {
+                    if (je.ValueKind == JsonValueKind.Null) return null;
+                    return je.GetString();
+                }
+                return value?.ToString();
+            }
+            catch { return null; }
+        }
+
+        // ============================================================
+        // JSON 解析方法（使用 GetValueFromRow）
         // ============================================================
 
         private User? ParseUserFromJson(string json)
@@ -755,7 +850,6 @@ namespace MyPersonalWebsite.Services
                     {
                         if (result.TryGetProperty("rows", out var rows) && rows.GetArrayLength() > 0)
                         {
-                            // ⭐ 关键修复：rows[0] 直接就是数组！
                             var row = rows[0];
                             var cols = result.GetProperty("cols");
 
@@ -770,34 +864,34 @@ namespace MyPersonalWebsite.Services
                             for (int i = 0; i < cols.GetArrayLength(); i++)
                             {
                                 var colName = cols[i].GetProperty("name").GetString();
-                                var value = row[i];
+                                var element = row[i];
 
                                 switch (colName)
                                 {
-                                    case "Id": user.Id = value.ValueKind == JsonValueKind.Null ? 0 : value.GetInt32(); break;
-                                    case "Username": user.Username = value.ValueKind == JsonValueKind.Null ? "" : value.GetString() ?? ""; break;
-                                    case "Email": user.Email = value.ValueKind == JsonValueKind.Null ? "" : value.GetString() ?? ""; break;
-                                    case "PasswordHash": user.PasswordHash = value.ValueKind == JsonValueKind.Null ? "" : value.GetString() ?? ""; break;
-                                    case "IsEmailVerified": user.IsEmailVerified = value.ValueKind == JsonValueKind.Null ? false : value.GetInt32() == 1; break;
-                                    case "IsAdmin": user.IsAdmin = value.ValueKind == JsonValueKind.Null ? false : value.GetInt32() == 1; break;
-                                    case "CreatedAt": user.CreatedAt = value.ValueKind == JsonValueKind.Null ? DateTime.Now : DateTime.Parse(value.GetString() ?? DateTime.Now.ToString()); break;
-                                    case "LastLoginAt": user.LastLoginAt = value.ValueKind == JsonValueKind.Null ? null : DateTime.Parse(value.GetString()!); break;
-                                    case "IsBanned": user.IsBanned = value.ValueKind == JsonValueKind.Null ? false : value.GetInt32() == 1; break;
-                                    case "BanExpiry": user.BanExpiry = value.ValueKind == JsonValueKind.Null ? null : DateTime.Parse(value.GetString()!); break;
-                                    case "BanReason": user.BanReason = value.ValueKind == JsonValueKind.Null ? null : value.GetString(); break;
-                                    case "IsDeleted": user.IsDeleted = value.ValueKind == JsonValueKind.Null ? false : value.GetInt32() == 1; break;
-                                    case "DeletedAt": user.DeletedAt = value.ValueKind == JsonValueKind.Null ? null : DateTime.Parse(value.GetString()!); break;
-                                    case "DeleteReason": user.DeleteReason = value.ValueKind == JsonValueKind.Null ? null : value.GetString(); break;
-                                    case "DeleteNote": user.DeleteNote = value.ValueKind == JsonValueKind.Null ? null : value.GetString(); break;
-                                    case "AvatarUrl": user.AvatarUrl = value.ValueKind == JsonValueKind.Null ? null : value.GetString(); break;
-                                    case "IsAvatarApproved": user.IsAvatarApproved = value.ValueKind == JsonValueKind.Null ? false : value.GetInt32() == 1; break;
-                                    case "AvatarSubmittedAt": user.AvatarSubmittedAt = value.ValueKind == JsonValueKind.Null ? null : DateTime.Parse(value.GetString()!); break;
-                                    case "PendingEmail": user.PendingEmail = value.ValueKind == JsonValueKind.Null ? null : value.GetString(); break;
-                                    case "PendingUsername": user.PendingUsername = value.ValueKind == JsonValueKind.Null ? null : value.GetString(); break;
-                                    case "IsEmailChangeApproved": user.IsEmailChangeApproved = value.ValueKind == JsonValueKind.Null ? false : value.GetInt32() == 1; break;
-                                    case "IsUsernameChangeApproved": user.IsUsernameChangeApproved = value.ValueKind == JsonValueKind.Null ? false : value.GetInt32() == 1; break;
-                                    case "VerificationCode": user.VerificationCode = value.ValueKind == JsonValueKind.Null ? null : value.GetString(); break;
-                                    case "VerificationCodeExpiry": user.VerificationCodeExpiry = value.ValueKind == JsonValueKind.Null ? null : DateTime.Parse(value.GetString()!); break;
+                                    case "Id": user.Id = GetIntFromRow(element); break;
+                                    case "Username": user.Username = GetStringFromRow(element); break;
+                                    case "Email": user.Email = GetStringFromRow(element); break;
+                                    case "PasswordHash": user.PasswordHash = GetStringFromRow(element); break;
+                                    case "IsEmailVerified": user.IsEmailVerified = GetBoolFromRow(element); break;
+                                    case "IsAdmin": user.IsAdmin = GetBoolFromRow(element); break;
+                                    case "CreatedAt": user.CreatedAt = GetDateTimeFromRow(element) ?? DateTime.Now; break;
+                                    case "LastLoginAt": user.LastLoginAt = GetDateTimeFromRow(element); break;
+                                    case "IsBanned": user.IsBanned = GetBoolFromRow(element); break;
+                                    case "BanExpiry": user.BanExpiry = GetDateTimeFromRow(element); break;
+                                    case "BanReason": user.BanReason = GetStringOrNullFromRow(element); break;
+                                    case "IsDeleted": user.IsDeleted = GetBoolFromRow(element); break;
+                                    case "DeletedAt": user.DeletedAt = GetDateTimeFromRow(element); break;
+                                    case "DeleteReason": user.DeleteReason = GetStringOrNullFromRow(element); break;
+                                    case "DeleteNote": user.DeleteNote = GetStringOrNullFromRow(element); break;
+                                    case "AvatarUrl": user.AvatarUrl = GetStringOrNullFromRow(element); break;
+                                    case "IsAvatarApproved": user.IsAvatarApproved = GetBoolFromRow(element); break;
+                                    case "AvatarSubmittedAt": user.AvatarSubmittedAt = GetDateTimeFromRow(element); break;
+                                    case "PendingEmail": user.PendingEmail = GetStringOrNullFromRow(element); break;
+                                    case "PendingUsername": user.PendingUsername = GetStringOrNullFromRow(element); break;
+                                    case "IsEmailChangeApproved": user.IsEmailChangeApproved = GetBoolFromRow(element); break;
+                                    case "IsUsernameChangeApproved": user.IsUsernameChangeApproved = GetBoolFromRow(element); break;
+                                    case "VerificationCode": user.VerificationCode = GetStringOrNullFromRow(element); break;
+                                    case "VerificationCodeExpiry": user.VerificationCodeExpiry = GetDateTimeFromRow(element); break;
                                 }
                             }
                             return user;
@@ -843,21 +937,21 @@ namespace MyPersonalWebsite.Services
                                 for (int i = 0; i < cols.GetArrayLength(); i++)
                                 {
                                     var colName = cols[i].GetProperty("name").GetString();
-                                    var value = row[i];
+                                    var element = row[i];
 
                                     switch (colName)
                                     {
-                                        case "Id": user.Id = value.ValueKind == JsonValueKind.Null ? 0 : value.GetInt32(); break;
-                                        case "Username": user.Username = value.ValueKind == JsonValueKind.Null ? "" : value.GetString() ?? ""; break;
-                                        case "Email": user.Email = value.ValueKind == JsonValueKind.Null ? "" : value.GetString() ?? ""; break;
-                                        case "PasswordHash": user.PasswordHash = value.ValueKind == JsonValueKind.Null ? "" : value.GetString() ?? ""; break;
-                                        case "IsEmailVerified": user.IsEmailVerified = value.ValueKind == JsonValueKind.Null ? false : value.GetInt32() == 1; break;
-                                        case "IsAdmin": user.IsAdmin = value.ValueKind == JsonValueKind.Null ? false : value.GetInt32() == 1; break;
-                                        case "CreatedAt": user.CreatedAt = value.ValueKind == JsonValueKind.Null ? DateTime.Now : DateTime.Parse(value.GetString() ?? DateTime.Now.ToString()); break;
-                                        case "IsBanned": user.IsBanned = value.ValueKind == JsonValueKind.Null ? false : value.GetInt32() == 1; break;
-                                        case "IsDeleted": user.IsDeleted = value.ValueKind == JsonValueKind.Null ? false : value.GetInt32() == 1; break;
-                                        case "AvatarUrl": user.AvatarUrl = value.ValueKind == JsonValueKind.Null ? null : value.GetString(); break;
-                                        case "IsAvatarApproved": user.IsAvatarApproved = value.ValueKind == JsonValueKind.Null ? false : value.GetInt32() == 1; break;
+                                        case "Id": user.Id = GetIntFromRow(element); break;
+                                        case "Username": user.Username = GetStringFromRow(element); break;
+                                        case "Email": user.Email = GetStringFromRow(element); break;
+                                        case "PasswordHash": user.PasswordHash = GetStringFromRow(element); break;
+                                        case "IsEmailVerified": user.IsEmailVerified = GetBoolFromRow(element); break;
+                                        case "IsAdmin": user.IsAdmin = GetBoolFromRow(element); break;
+                                        case "CreatedAt": user.CreatedAt = GetDateTimeFromRow(element) ?? DateTime.Now; break;
+                                        case "IsBanned": user.IsBanned = GetBoolFromRow(element); break;
+                                        case "IsDeleted": user.IsDeleted = GetBoolFromRow(element); break;
+                                        case "AvatarUrl": user.AvatarUrl = GetStringOrNullFromRow(element); break;
+                                        case "IsAvatarApproved": user.IsAvatarApproved = GetBoolFromRow(element); break;
                                     }
                                 }
                                 users.Add(user);
@@ -903,17 +997,17 @@ namespace MyPersonalWebsite.Services
                                 for (int i = 0; i < cols.GetArrayLength(); i++)
                                 {
                                     var colName = cols[i].GetProperty("name").GetString();
-                                    var value = row[i];
+                                    var element = row[i];
 
                                     switch (colName)
                                     {
-                                        case "Id": blog.Id = value.ValueKind == JsonValueKind.Null ? 0 : value.GetInt32(); break;
-                                        case "Title": blog.Title = value.ValueKind == JsonValueKind.Null ? "" : value.GetString() ?? ""; break;
-                                        case "Content": blog.Content = value.ValueKind == JsonValueKind.Null ? "" : value.GetString() ?? ""; break;
-                                        case "Summary": blog.Summary = value.ValueKind == JsonValueKind.Null ? "" : value.GetString() ?? ""; break;
-                                        case "PublishDate": blog.PublishDate = value.ValueKind == JsonValueKind.Null ? DateTime.Now : DateTime.Parse(value.GetString() ?? DateTime.Now.ToString()); break;
-                                        case "CoverImageUrl": blog.CoverImageUrl = value.ValueKind == JsonValueKind.Null ? null : value.GetString(); break;
-                                        case "LikeCount": blog.LikeCount = value.ValueKind == JsonValueKind.Null ? 0 : value.GetInt32(); break;
+                                        case "Id": blog.Id = GetIntFromRow(element); break;
+                                        case "Title": blog.Title = GetStringFromRow(element); break;
+                                        case "Content": blog.Content = GetStringFromRow(element); break;
+                                        case "Summary": blog.Summary = GetStringFromRow(element); break;
+                                        case "PublishDate": blog.PublishDate = GetDateTimeFromRow(element) ?? DateTime.Now; break;
+                                        case "CoverImageUrl": blog.CoverImageUrl = GetStringOrNullFromRow(element); break;
+                                        case "LikeCount": blog.LikeCount = GetIntFromRow(element); break;
                                     }
                                 }
                                 blogs.Add(blog);
@@ -965,22 +1059,22 @@ namespace MyPersonalWebsite.Services
                                 for (int i = 0; i < cols.GetArrayLength(); i++)
                                 {
                                     var colName = cols[i].GetProperty("name").GetString();
-                                    var value = row[i];
+                                    var element = row[i];
 
                                     switch (colName)
                                     {
-                                        case "Id": msg.Id = value.ValueKind == JsonValueKind.Null ? 0 : value.GetInt32(); break;
-                                        case "UserId": msg.UserId = value.ValueKind == JsonValueKind.Null ? 0 : value.GetInt32(); break;
-                                        case "VisitorName": msg.VisitorName = value.ValueKind == JsonValueKind.Null ? "" : value.GetString() ?? ""; break;
-                                        case "Email": msg.Email = value.ValueKind == JsonValueKind.Null ? "" : value.GetString() ?? ""; break;
-                                        case "Content": msg.Content = value.ValueKind == JsonValueKind.Null ? "" : value.GetString() ?? ""; break;
-                                        case "CreateTime": msg.CreateTime = value.ValueKind == JsonValueKind.Null ? DateTime.Now : DateTime.Parse(value.GetString() ?? DateTime.Now.ToString()); break;
-                                        case "IsApproved": msg.IsApproved = value.ValueKind == JsonValueKind.Null ? false : value.GetInt32() == 1; break;
-                                        case "LikeCount": msg.LikeCount = value.ValueKind == JsonValueKind.Null ? 0 : value.GetInt32(); break;
-                                        case "AdminReply": msg.AdminReply = value.ValueKind == JsonValueKind.Null ? null : value.GetString(); break;
-                                        case "AdminReplyTime": msg.AdminReplyTime = value.ValueKind == JsonValueKind.Null ? null : DateTime.Parse(value.GetString()!); break;
-                                        case "ReportCount": msg.ReportCount = value.ValueKind == JsonValueKind.Null ? 0 : value.GetInt32(); break;
-                                        case "IsReported": msg.IsReported = value.ValueKind == JsonValueKind.Null ? false : value.GetInt32() == 1; break;
+                                        case "Id": msg.Id = GetIntFromRow(element); break;
+                                        case "UserId": msg.UserId = GetIntFromRow(element); break;
+                                        case "VisitorName": msg.VisitorName = GetStringFromRow(element); break;
+                                        case "Email": msg.Email = GetStringFromRow(element); break;
+                                        case "Content": msg.Content = GetStringFromRow(element); break;
+                                        case "CreateTime": msg.CreateTime = GetDateTimeFromRow(element) ?? DateTime.Now; break;
+                                        case "IsApproved": msg.IsApproved = GetBoolFromRow(element); break;
+                                        case "LikeCount": msg.LikeCount = GetIntFromRow(element); break;
+                                        case "AdminReply": msg.AdminReply = GetStringOrNullFromRow(element); break;
+                                        case "AdminReplyTime": msg.AdminReplyTime = GetDateTimeFromRow(element); break;
+                                        case "ReportCount": msg.ReportCount = GetIntFromRow(element); break;
+                                        case "IsReported": msg.IsReported = GetBoolFromRow(element); break;
                                     }
                                 }
                                 messages.Add(msg);
@@ -1032,25 +1126,25 @@ namespace MyPersonalWebsite.Services
                                 for (int i = 0; i < cols.GetArrayLength(); i++)
                                 {
                                     var colName = cols[i].GetProperty("name").GetString();
-                                    var value = row[i];
+                                    var element = row[i];
 
                                     switch (colName)
                                     {
-                                        case "Id": req.Id = value.ValueKind == JsonValueKind.Null ? 0 : value.GetInt32(); break;
-                                        case "Platform": req.Platform = value.ValueKind == JsonValueKind.Null ? "" : value.GetString() ?? ""; break;
-                                        case "AuthorizationCode": req.AuthorizationCode = value.ValueKind == JsonValueKind.Null ? "" : value.GetString() ?? ""; break;
-                                        case "HowKnowMe": req.HowKnowMe = value.ValueKind == JsonValueKind.Null ? "" : value.GetString() ?? ""; break;
-                                        case "Identity": req.Identity = value.ValueKind == JsonValueKind.Null ? "" : value.GetString() ?? ""; break;
-                                        case "Relationship": req.Relationship = value.ValueKind == JsonValueKind.Null ? "" : value.GetString() ?? ""; break;
-                                        case "Remarks": req.Remarks = value.ValueKind == JsonValueKind.Null ? "" : value.GetString() ?? ""; break;
-                                        case "UserId": req.UserId = value.ValueKind == JsonValueKind.Null ? 0 : value.GetInt32(); break;
-                                        case "Username": req.Username = value.ValueKind == JsonValueKind.Null ? "" : value.GetString() ?? ""; break;
-                                        case "UserEmail": req.UserEmail = value.ValueKind == JsonValueKind.Null ? "" : value.GetString() ?? ""; break;
-                                        case "RequestTime": req.RequestTime = value.ValueKind == JsonValueKind.Null ? DateTime.Now : DateTime.Parse(value.GetString() ?? DateTime.Now.ToString()); break;
-                                        case "IsApproved": req.IsApproved = value.ValueKind == JsonValueKind.Null ? false : value.GetInt32() == 1; break;
-                                        case "IsUsed": req.IsUsed = value.ValueKind == JsonValueKind.Null ? false : value.GetInt32() == 1; break;
-                                        case "UsedTime": req.UsedTime = value.ValueKind == JsonValueKind.Null ? null : DateTime.Parse(value.GetString()!); break;
-                                        case "UsedBy": req.UsedBy = value.ValueKind == JsonValueKind.Null ? null : value.GetString(); break;
+                                        case "Id": req.Id = GetIntFromRow(element); break;
+                                        case "Platform": req.Platform = GetStringFromRow(element); break;
+                                        case "AuthorizationCode": req.AuthorizationCode = GetStringFromRow(element); break;
+                                        case "HowKnowMe": req.HowKnowMe = GetStringFromRow(element); break;
+                                        case "Identity": req.Identity = GetStringFromRow(element); break;
+                                        case "Relationship": req.Relationship = GetStringFromRow(element); break;
+                                        case "Remarks": req.Remarks = GetStringFromRow(element); break;
+                                        case "UserId": req.UserId = GetIntFromRow(element); break;
+                                        case "Username": req.Username = GetStringFromRow(element); break;
+                                        case "UserEmail": req.UserEmail = GetStringFromRow(element); break;
+                                        case "RequestTime": req.RequestTime = GetDateTimeFromRow(element) ?? DateTime.Now; break;
+                                        case "IsApproved": req.IsApproved = GetBoolFromRow(element); break;
+                                        case "IsUsed": req.IsUsed = GetBoolFromRow(element); break;
+                                        case "UsedTime": req.UsedTime = GetDateTimeFromRow(element); break;
+                                        case "UsedBy": req.UsedBy = GetStringOrNullFromRow(element); break;
                                     }
                                 }
                                 requests.Add(req);
@@ -1102,17 +1196,17 @@ namespace MyPersonalWebsite.Services
                                 for (int i = 0; i < cols.GetArrayLength(); i++)
                                 {
                                     var colName = cols[i].GetProperty("name").GetString();
-                                    var value = row[i];
+                                    var element = row[i];
 
                                     switch (colName)
                                     {
-                                        case "Id": section.Id = value.ValueKind == JsonValueKind.Null ? 0 : value.GetInt32(); break;
-                                        case "SectionKey": section.SectionKey = value.ValueKind == JsonValueKind.Null ? "" : value.GetString() ?? ""; break;
-                                        case "Title": section.Title = value.ValueKind == JsonValueKind.Null ? "" : value.GetString() ?? ""; break;
-                                        case "Content": section.Content = value.ValueKind == JsonValueKind.Null ? "" : value.GetString() ?? ""; break;
-                                        case "Icon": section.Icon = value.ValueKind == JsonValueKind.Null ? null : value.GetString(); break;
-                                        case "SortOrder": section.SortOrder = value.ValueKind == JsonValueKind.Null ? 0 : value.GetInt32(); break;
-                                        case "UpdatedAt": section.UpdatedAt = value.ValueKind == JsonValueKind.Null ? DateTime.Now : DateTime.Parse(value.GetString() ?? DateTime.Now.ToString()); break;
+                                        case "Id": section.Id = GetIntFromRow(element); break;
+                                        case "SectionKey": section.SectionKey = GetStringFromRow(element); break;
+                                        case "Title": section.Title = GetStringFromRow(element); break;
+                                        case "Content": section.Content = GetStringFromRow(element); break;
+                                        case "Icon": section.Icon = GetStringOrNullFromRow(element); break;
+                                        case "SortOrder": section.SortOrder = GetIntFromRow(element); break;
+                                        case "UpdatedAt": section.UpdatedAt = GetDateTimeFromRow(element) ?? DateTime.Now; break;
                                     }
                                 }
                                 sections.Add(section);
