@@ -72,21 +72,57 @@ namespace MyPersonalWebsite.Services
             Console.WriteLine($"✅ 用户 {user.Username} 已写入 Turso");
         }
 
-        public async Task<User?> GetUserByEmailAsync(string email)
+        // ============================================================
+// 获取用户（排除已删除）
+// ============================================================
+
+public async Task<User?> GetUserByUsernameAsync(string username)
+{
+    if (_tursoAvailable)
+    {
+        try
         {
-            if (!_tursoAvailable) return null;
-
-            var result = await _tursoService.QueryAsync($"SELECT * FROM Users WHERE Email = '{EscapeSql(email)}'");
-            return ParseUserFromJson(result);
+            var result = await _tursoService.QueryAsync(
+                $"SELECT * FROM Users WHERE Username = '{EscapeSql(username)}' AND IsDeleted = 0"
+            );
+            var user = ParseUserFromJson(result);
+            if (user != null)
+            {
+                Console.WriteLine($"✅ 从 Turso 读取用户: {username}");
+                return user;
+            }
         }
+        catch { }
+    }
 
-        public async Task<User?> GetUserByUsernameAsync(string username)
+    // 降级到本地（也要排除已删除）
+    return await _localContext.Users
+        .FirstOrDefaultAsync(u => u.Username == username && !u.IsDeleted);
+}
+
+public async Task<User?> GetUserByEmailAsync(string email)
+{
+    if (_tursoAvailable)
+    {
+        try
         {
-            if (!_tursoAvailable) return null;
-
-            var result = await _tursoService.QueryAsync($"SELECT * FROM Users WHERE Username = '{EscapeSql(username)}'");
-            return ParseUserFromJson(result);
+            var result = await _tursoService.QueryAsync(
+                $"SELECT * FROM Users WHERE Email = '{EscapeSql(email)}' AND IsDeleted = 0"
+            );
+            var user = ParseUserFromJson(result);
+            if (user != null)
+            {
+                Console.WriteLine($"✅ 从 Turso 读取用户: {email}");
+                return user;
+            }
         }
+        catch { }
+    }
+
+    // 降级到本地（也要排除已删除）
+    return await _localContext.Users
+        .FirstOrDefaultAsync(u => u.Email == email && !u.IsDeleted);
+}
 
         public async Task<User?> GetUserByIdAsync(int id)
         {
