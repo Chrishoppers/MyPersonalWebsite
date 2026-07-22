@@ -443,7 +443,7 @@ namespace MyPersonalWebsite.Services
                     if (je.ValueKind == JsonValueKind.Null) return 0;
                     if (je.ValueKind == JsonValueKind.Number) return je.GetInt32();
                     if (je.ValueKind == JsonValueKind.String)
-                        return int.TryParse(je.GetString(), out var parsed) ? parsed : 0;
+                       return int.TryParse(je.GetString(), out var parsedInt) ? parsedInt : 0;
                     return 0;
                 }
                 return int.TryParse(val?.ToString(), out var parsed) ? parsed : 0;
