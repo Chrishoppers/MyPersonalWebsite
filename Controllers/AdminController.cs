@@ -536,73 +536,91 @@ public async Task<IActionResult> UpdateAboutMe([FromBody] Dictionary<string, str
 }
 
         // ============================================================
-        // ⭐ 新增：审核用户邮箱（通过/拒绝）
-        // ============================================================
-        [HttpGet]
-        public async Task<IActionResult> VerifyUser(int userId, string action)
-        {
-            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-            if (isAdmin != 1)
-            {
-                return Content("权限不足，请登录管理员账号");
-            }
+// 审核用户（通过）- 无需登录
+// ============================================================
 
-            var user = await _dataSync.GetUserByIdAsync(userId);
-            if (user == null)
-            {
-                return Content("用户不存在");
-            }
+[HttpGet]
+public async Task<IActionResult> ApproveUser(int userId)
+{
+    var user = await _dataSync.GetUserByIdAsync(userId);
+    if (user == null)
+    {
+        return Content("❌ 用户不存在");
+    }
 
-            if (action == "approve")
-            {
-                user.IsEmailVerified = true;
-                await _dataSync.UpdateUserAsync(user);
+    // 防止重复审核
+    if (user.IsApproved)
+    {
+        return Content("ℹ️ 该用户已审核通过，无需重复操作");
+    }
 
-                try
-                {
-                    await _emailService.SendUserActionNotificationAsync(
-                        user.Email,
-                        user.Username,
-                        "verify_approve",
-                        "您的邮箱已通过管理员审核，现在可以登录了！",
-                        "欢迎加入 Chris Hopper 的个人网站 🎉"
-                    );
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"邮件发送失败: {ex.Message}");
-                }
+    // 更新用户状态
+    user.IsApproved = true;
+    user.IsAvatarApproved = true;
+    await _dataSync.UpdateUserAsync(user);
 
-                return Content("✅ 用户邮箱已通过审核！用户将收到通知邮件。");
-            }
-            else if (action == "reject")
-            {
-                // 软删除用户
-                user.IsDeleted = true;
-                user.DeletedAt = DateTime.Now;
-                user.DeleteReason = "邮箱审核未通过";
-                await _dataSync.UpdateUserAsync(user);
+    // 发送通知邮件给用户
+    try
+    {
+        await _emailService.SendUserActionNotificationAsync(
+            user.Email,
+            user.Username,
+            "approve",
+            "您的账号已通过管理员审核，现在可以登录了！",
+            "🎉 欢迎加入 Chris hopper 的个人网站！"
+        );
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"邮件发送失败: {ex.Message}");
+    }
 
-                try
-                {
-                    await _emailService.SendUserActionNotificationAsync(
-                        user.Email,
-                        user.Username,
-                        "verify_reject",
-                        "您的邮箱审核未通过，请重新注册或联系管理员。",
-                        "如有疑问，请联系管理员 2908685235@qq.com"
-                    );
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"邮件发送失败: {ex.Message}");
-                }
+    return Content("✅ 用户已通过审核！用户将收到通知邮件。");
+}
 
-                return Content("❌ 已拒绝该用户的邮箱审核请求。用户将收到通知邮件。");
-            }
+// ============================================================
+// 审核用户（拒绝）- 无需登录
+// ============================================================
 
-            return Content("无效的操作");
-        }
+[HttpGet]
+public async Task<IActionResult> RejectUser(int userId)
+{
+    var user = await _dataSync.GetUserByIdAsync(userId);
+    if (user == null)
+    {
+        return Content("❌ 用户不存在");
+    }
+
+    // 防止重复操作
+    if (user.IsDeleted)
+    {
+        return Content("ℹ️ 该用户已被处理，无需重复操作");
+    }
+
+    // 软删除用户
+    user.IsDeleted = true;
+    user.DeletedAt = DateTime.Now;
+    user.DeleteReason = "管理员审核拒绝";
+    await _dataSync.UpdateUserAsync(user);
+
+    // 发送通知邮件给用户
+    try
+    {
+        await _emailService.SendUserActionNotificationAsync(
+            user.Email,
+            user.Username,
+            "reject",
+            "您的账号审核未通过，请重新注册或联系管理员。",
+            "如有疑问，请联系管理员 2908685235@qq.com"
+        );
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"邮件发送失败: {ex.Message}");
+    }
+
+    return Content("❌ 已拒绝该用户。用户将收到通知邮件。");
+}
 
         // ============================================================
         // 用户操作
