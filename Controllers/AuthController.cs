@@ -5,7 +5,9 @@ using MyPersonalWebsite.Helpers;
 using MyPersonalWebsite.Services;
 using System;
 using System.Linq;
+using System.IO;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 
 namespace MyPersonalWebsite.Controllers
 {
@@ -32,7 +34,7 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // 注册 - 改为管理员审核
+        // 注册
         // ============================================================
         [HttpGet]
         public IActionResult Register()
@@ -42,7 +44,7 @@ namespace MyPersonalWebsite.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Register(string username, string email, string password, string captchaAnswer)
+        public async Task<IActionResult> Register(string username, string email, string password, string captchaAnswer, IFormFile? avatar)
         {
             var clientIp = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
             if (!_rateLimitService.CanRegister(clientIp))
@@ -73,22 +75,118 @@ namespace MyPersonalWebsite.Controllers
                 return View();
             }
 
+            var code = new Random().Next(100000, 999999).ToString();
+
+            // 处理头像上传
+            string? avatarUrl = null;
+            if (avatar != null && avatar.Length > 0)
+            {
+                var allowedTypes = new[] { "image/jpeg", "image/png", "image/gif", "image/webp" };
+                if (allowedTypes.Contains(avatar.ContentType) && avatar.Length <= 5 * 1024 * 1024)
+                {
+                    var fileName = $"{Guid.NewGuid():N}_{avatar.FileName}";
+                    var uploadPath = Path.Combine("wwwroot", "images", "avatars");
+                    if (!Directory.Exists(uploadPath))
+                        Directory.CreateDirectory(uploadPath);
+
+                    var filePath = Path.Combine(uploadPath, fileName);
+                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await avatar.CopyToAsync(stream);
+                    }
+                    avatarUrl = $"/images/avatars/{fileName}";
+                }
+            }
+
             var user = new User
             {
                 Username = username,
                 Email = email,
                 PasswordHash = PasswordHelper.HashPassword(password),
+                VerificationCode = code,
+                VerificationCodeExpiry = DateTime.Now.AddMinutes(10),
                 IsEmailVerified = false,
                 IsAdmin = false,
                 IsBanned = false,
-                CreatedAt = DateTime.Now
+                IsDeleted = false,
+                CreatedAt = DateTime.Now,
+                AvatarUrl = avatarUrl,
+                IsAvatarApproved = false,
+                AvatarSubmittedAt = avatarUrl != null ? DateTime.Now : null
             };
 
             await _dataSync.AddUserAsync(user);
 
+            // 发送验证码邮件
             try
             {
-                await _emailService.SendAdminVerificationRequestAsync(user.Username, user.Email, user.Id);
+                await _emailService.SendVerificationCodeAsync(email, code);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"验证码邮件发送失败: {ex.Message}");
+            }
+
+            TempData["RegisterEmail"] = email;
+            TempData["RegisterUserId"] = user.Id;
+            return RedirectToAction("VerifyEmail", new { email = email });
+        }
+
+        // ============================================================
+        // 验证邮箱
+        // ============================================================
+        [HttpGet]
+        public IActionResult VerifyEmail(string email)
+        {
+            ViewBag.Email = email;
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> VerifyEmail(string email, string code)
+        {
+            var user = await _dataSync.GetUserByEmailAsync(email);
+            if (user == null)
+            {
+                ModelState.AddModelError("", "用户不存在");
+                return View();
+            }
+
+            if (user.IsEmailVerified)
+            {
+                TempData["Message"] = "邮箱已验证，请等待管理员审核";
+                return RedirectToAction("RegisterSuccess");
+            }
+
+            if (user.VerificationCode != code)
+            {
+                ModelState.AddModelError("", "验证码错误");
+                return View();
+            }
+
+            if (user.VerificationCodeExpiry < DateTime.Now)
+            {
+                ModelState.AddModelError("", "验证码已过期，请重新注册");
+                return View();
+            }
+
+            // ⭐ 邮箱验证通过，但还需要管理员审核
+            user.IsEmailVerified = true;
+            user.VerificationCode = null;
+            user.VerificationCodeExpiry = null;
+
+            await _dataSync.UpdateUserAsync(user);
+
+            // ⭐ 发送管理员审核通知邮件（含通过/拒绝按钮 + 头像）
+            try
+            {
+                await _emailService.SendAdminVerificationRequestAsync(
+                    user.Username,
+                    user.Email,
+                    user.Id,
+                    user.AvatarUrl
+                );
             }
             catch (Exception ex)
             {
@@ -100,7 +198,7 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // 注册成功页面
+        // 注册成功页面（等待管理员审核）
         // ============================================================
         [HttpGet]
         public IActionResult RegisterSuccess()
@@ -109,7 +207,7 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // 登录 - 管理员跳过邮箱验证
+        // 登录
         // ============================================================
         [HttpGet]
         public IActionResult Login()
@@ -133,6 +231,13 @@ namespace MyPersonalWebsite.Controllers
                 return View();
             }
 
+            // 检查是否被软删除
+            if (user.IsDeleted)
+            {
+                ModelState.AddModelError("", "账号已被删除");
+                return View();
+            }
+
             if (user.IsBanned)
             {
                 string banMessage = "您的账号已被封禁";
@@ -153,10 +258,17 @@ namespace MyPersonalWebsite.Controllers
                 }
             }
 
-            // ⭐ 管理员跳过邮箱验证
-            if (!user.IsAdmin && !user.IsEmailVerified)
+            // ⭐ 检查邮箱是否已验证
+            if (!user.IsEmailVerified)
             {
-                ModelState.AddModelError("", "您的邮箱尚未通过管理员审核，请等待审核结果通知邮件");
+                ModelState.AddModelError("", "请先验证邮箱");
+                return View();
+            }
+
+            // ⭐ 管理员跳过邮箱审核，普通用户检查审核状态
+            if (!user.IsAdmin && !user.IsApproved)
+            {
+                ModelState.AddModelError("", "您的账号正在等待管理员审核，请耐心等待");
                 return View();
             }
 
@@ -199,9 +311,7 @@ namespace MyPersonalWebsite.Controllers
         {
             var userId = HttpContext.Session.GetInt32("UserId");
             if (!userId.HasValue)
-            {
                 return RedirectToAction("Login", "Auth");
-            }
             return View();
         }
 
@@ -211,9 +321,7 @@ namespace MyPersonalWebsite.Controllers
         {
             var userId = HttpContext.Session.GetInt32("UserId");
             if (!userId.HasValue)
-            {
                 return RedirectToAction("Login", "Auth");
-            }
 
             if (string.IsNullOrEmpty(currentPassword) || string.IsNullOrEmpty(newPassword) || string.IsNullOrEmpty(confirmPassword))
             {
