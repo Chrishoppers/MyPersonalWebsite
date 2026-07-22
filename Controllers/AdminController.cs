@@ -498,7 +498,6 @@ namespace MyPersonalWebsite.Controllers
 
                     if (key.StartsWith("social_"))
                     {
-                        // 社交链接特殊处理
                         continue;
                     }
 
