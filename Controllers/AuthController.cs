@@ -178,19 +178,15 @@ namespace MyPersonalWebsite.Controllers
 
             await _dataSync.UpdateUserAsync(user);
 
-            // ⭐ 发送管理员审核通知邮件（含通过/拒绝按钮 + 头像）
-            try
-            {
-                await _emailService.SendAdminVerificationRequestAsync(
-                    user.Username,
-                    user.Email,
-                    user.Id,
-                );
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"管理员审核邮件发送失败: {ex.Message}");
-            }
+            // 发送管理员审核通知邮件
+try
+{
+    await _emailService.SendAdminVerificationRequestAsync(user.Username, user.Email, user.Id, user.AvatarUrl);
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"管理员审核邮件发送失败: {ex.Message}");
+}
 
             TempData["RegisterEmail"] = email;
             return RedirectToAction("RegisterSuccess");
