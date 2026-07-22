@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.DataProtection;
 using MyPersonalWebsite.Models;
 using MyPersonalWebsite.Services;
 using MyPersonalWebsite.Hubs;
@@ -14,6 +15,17 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"))
 );
 
+// ============================================================
+// ⭐ DataProtection 使用文件存储（每次部署不会丢失 Session）
+// ============================================================
+builder.Services.AddDataProtection()
+    .PersistKeysToFileSystem(new DirectoryInfo("/app/keys"))
+    .SetApplicationName("MyPersonalWebsite")
+    .SetDefaultKeyLifetime(TimeSpan.FromDays(30));
+
+// ============================================================
+// Session
+// ============================================================
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
 {
@@ -35,16 +47,17 @@ builder.Services.AddSignalR();
 
 var app = builder.Build();
 
+// ============================================================
+// 初始化数据库
+// ============================================================
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     var dataSync = scope.ServiceProvider.GetRequiredService<DataSyncService>();
 
-    // 本地数据库仅用于缓存
     db.Database.EnsureCreated();
     Console.WriteLine("✅ 本地 SQLite 缓存已就绪");
 
-    // 确保 Turso 中有管理员账号
     await dataSync.EnsureAdminExistsAsync();
 
     // ⭐ 确保 AboutMe 数据存在
@@ -93,7 +106,7 @@ async Task EnsureAboutMeDataAsync(DataSyncService dataSync)
                     Id = 1,
                     SectionKey = "bio",
                     Title = "🧑‍💻 关于我",
-                    Content = "你好！我是 Chris hopper，一个人类。",
+                    Content = "你好！我是 Chris hopper，一个热爱技术的全栈开发者。\n目前专注于 ASP.NET Core 和现代 Web 开发。",
                     Icon = "🧑‍💻",
                     SortOrder = 1,
                     UpdatedAt = DateTime.Now
@@ -103,7 +116,7 @@ async Task EnsureAboutMeDataAsync(DataSyncService dataSync)
                     Id = 2,
                     SectionKey = "journey",
                     Title = "🚀 学习之路",
-                    Content = "未知",
+                    Content = "从高中开始接触编程，在技术的道路上不断探索和成长。\n我相信持续学习是保持竞争力的关键。",
                     Icon = "🚀",
                     SortOrder = 2,
                     UpdatedAt = DateTime.Now
