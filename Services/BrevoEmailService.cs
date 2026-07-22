@@ -97,7 +97,7 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 3. ⭐ 新用户审核邮件（详细用户信息）
+        // 3. 新用户审核邮件（管理员）
         // ============================================================
 
         public async Task SendAdminNewUserVerificationAsync(string username, string email, int userId, string? avatarUrl, DateTime registerTime)
@@ -139,7 +139,7 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 4. ⭐ 头像审核邮件
+        // 4. 头像审核邮件（管理员）
         // ============================================================
 
         public async Task SendAdminAvatarVerificationAsync(string username, string email, int userId, string avatarUrl, DateTime submittedAt)
@@ -179,7 +179,7 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 5. ⭐ 昵称修改审核邮件
+        // 5. 昵称修改审核邮件（管理员）
         // ============================================================
 
         public async Task SendAdminUsernameVerificationAsync(string username, string email, int userId, string oldUsername, string newUsername)
@@ -215,7 +215,7 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 6. ⭐ 邮箱修改审核邮件
+        // 6. 邮箱修改审核邮件（管理员）
         // ============================================================
 
         public async Task SendAdminEmailVerificationAsync(string username, string email, int userId, string oldEmail, string newEmail)
@@ -251,7 +251,7 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 7. ⭐ 留言审核邮件
+        // 7. 留言审核邮件（管理员）
         // ============================================================
 
         public async Task SendAdminMessageVerificationAsync(string visitorName, string email, int messageId, string content, DateTime createTime)
@@ -293,7 +293,112 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 8. 用户操作通知（审核通过/拒绝/封禁/解封/删除/激活）
+        // 8. 管理员通知：新博客发布
+        // ============================================================
+
+        public async Task SendAdminNewBlogNotificationAsync(string blogTitle)
+        {
+            var html = $@"
+                <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #2a2a3e; border-radius: 16px; background: #0a0a0f; color: #e0e0e0;'>
+                    <h2 style='color: #4facfe;'>📖 新博客发布</h2>
+                    <p>新博客已发布：<strong>{blogTitle}</strong></p>
+                    <p>时间：{DateTime.Now:yyyy-MM-dd HH:mm}</p>
+                    <hr style='border: none; border-top: 1px solid #2a2a3e;'>
+                    <p style='color: #555; font-size: 12px;'>此邮件由系统自动发送，请勿直接回复。</p>
+                </div>
+            ";
+
+            await SendEmailAsync(_adminEmail, "📖 新博客发布", html);
+        }
+
+        // ============================================================
+        // 9. 管理员通知：新留言待审核
+        // ============================================================
+
+        public async Task SendAdminNewMessageNotificationAsync(string visitorName, string content, int messageId)
+        {
+            var baseUrl = "https://chris-hopper.org";
+            var approveUrl = $"{baseUrl}/Admin/ApproveMessage?messageId={messageId}";
+            var rejectUrl = $"{baseUrl}/Admin/RejectMessage?messageId={messageId}";
+
+            var html = $@"
+                <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #2a2a3e; border-radius: 16px; background: #0a0a0f; color: #e0e0e0;'>
+                    <h2 style='color: #4facfe;'>💬 新留言待审核</h2>
+                    <p>有新留言需要审核：</p>
+                    <div style='background: #1a1a2e; padding: 15px; border-radius: 8px; margin: 10px 0; border: 1px solid #2a2a3e;'>
+                        <p><strong>留言者：</strong>{visitorName}</p>
+                        <p><strong>内容：</strong>{content}</p>
+                        <p><strong>时间：</strong>{DateTime.Now:yyyy-MM-dd HH:mm}</p>
+                        <p><strong>留言ID：</strong>{messageId}</p>
+                    </div>
+                    <div style='display: flex; gap: 12px; margin: 16px 0; flex-wrap: wrap;'>
+                        <a href='{approveUrl}' style='display: inline-block; padding: 12px 32px; background: #28a745; color: white; text-decoration: none; border-radius: 8px; font-weight: 600;'>✅ 通过</a>
+                        <a href='{rejectUrl}' style='display: inline-block; padding: 12px 32px; background: #dc3545; color: white; text-decoration: none; border-radius: 8px; font-weight: 600;'>🗑️ 删除</a>
+                    </div>
+                    <hr style='border: none; border-top: 1px solid #2a2a3e;'>
+                    <p style='color: #555; font-size: 12px;'>此邮件由系统自动发送，请勿直接回复。</p>
+                </div>
+            ";
+
+            await SendEmailAsync(_adminEmail, "💬 新留言待审核", html);
+        }
+
+        // ============================================================
+        // 10. 管理员回复留言通知（发送给用户）
+        // ============================================================
+
+        public async Task SendReplyNotificationAsync(string toEmail, string userName, string originalContent, string replyContent)
+        {
+            var html = $@"
+                <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #2a2a3e; border-radius: 16px; background: #0a0a0f; color: #e0e0e0;'>
+                    <h2 style='color: #8B5CF6;'>💬 你的留言被回复了</h2>
+                    <p>你好 <strong>{userName}</strong>！</p>
+                    <p>你在留言板上的留言收到了管理员的回复：</p>
+                    <div style='background: #1a1a2e; padding: 15px; border-radius: 8px; margin: 10px 0; border: 1px solid #2a2a3e;'>
+                        <p><strong>你的留言：</strong>{originalContent}</p>
+                        <hr style='border: none; border-top: 1px solid #2a2a3e;'>
+                        <p><strong>管理员回复：</strong>{replyContent}</p>
+                        <p style='color: #888; font-size: 14px;'>回复时间：{DateTime.Now:yyyy-MM-dd HH:mm}</p>
+                    </div>
+                    <a href='https://chris-hopper.org/Message/Index' style='display: inline-block; padding: 10px 20px; background: #8B5CF6; color: white; text-decoration: none; border-radius: 8px;'>查看留言板</a>
+                    <hr style='border: none; border-top: 1px solid #2a2a3e;'>
+                    <p style='color: #555; font-size: 12px;'>💌 系统自动发送，不用回复。</p>
+                </div>
+            ";
+
+            await SendEmailAsync(toEmail, "【Chris hopper 个人网站】你的留言收到了回复 💬", html);
+        }
+
+        // ============================================================
+        // 11. 管理员通知：新授权码申请
+        // ============================================================
+
+        public async Task SendAdminNewContactRequestNotificationAsync(string identity, string platform, string authCode, string howKnowMe, string relationship, string username, string userEmail)
+        {
+            var html = $@"
+                <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #2a2a3e; border-radius: 16px; background: #0a0a0f; color: #e0e0e0;'>
+                    <h2 style='color: #a855f7;'>🔑 新授权码申请</h2>
+                    <p>有新用户申请联系方式：</p>
+                    <div style='background: #1a1a2e; padding: 15px; border-radius: 8px; margin: 10px 0; border: 1px solid #2a2a3e;'>
+                        <p><strong>👤 申请人：</strong>{identity}</p>
+                        <p><strong>📱 平台：</strong>{(platform == "WeChat" ? "微信" : "QQ")}</p>
+                        <p><strong>🔑 授权码：</strong><span style='color:#a855f7;font-weight:bold;font-size:1.2rem;'>{authCode}</span></p>
+                        <p><strong>👤 用户名：</strong>{username}</p>
+                        <p><strong>📧 邮箱：</strong>{userEmail}</p>
+                        <p><strong>👋 怎么认识：</strong>{howKnowMe}</p>
+                        <p><strong>🤝 关系：</strong>{relationship}</p>
+                        <p><strong>⏰ 时间：</strong>{DateTime.Now:yyyy-MM-dd HH:mm}</p>
+                    </div>
+                    <hr style='border: none; border-top: 1px solid #2a2a3e;'>
+                    <p style='color: #555; font-size: 12px;'>此邮件由系统自动发送，请勿直接回复。</p>
+                </div>
+            ";
+
+            await SendEmailAsync(_adminEmail, "🔑 新授权码申请", html);
+        }
+
+        // ============================================================
+        // 12. 用户操作通知
         // ============================================================
 
         public async Task SendUserActionNotificationAsync(string toEmail, string username, string actionType, string reason, string note)
