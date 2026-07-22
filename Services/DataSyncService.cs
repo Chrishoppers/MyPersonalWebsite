@@ -114,6 +114,7 @@ namespace MyPersonalWebsite.Services
                 Email = '{EscapeSql(user.Email)}',
                 PasswordHash = '{EscapeSql(user.PasswordHash)}',
                 IsEmailVerified = {(user.IsEmailVerified ? 1 : 0)},
+                IsApproved = {(user.IsApproved ? 1 : 0)}, 
                 IsAdmin = {(user.IsAdmin ? 1 : 0)},
                 LastLoginAt = {(user.LastLoginAt.HasValue ? $"'{user.LastLoginAt.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
                 IsBanned = {(user.IsBanned ? 1 : 0)},
