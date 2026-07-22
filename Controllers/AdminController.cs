@@ -464,41 +464,47 @@ namespace MyPersonalWebsite.Controllers
         // ============================================================
 
         [HttpGet]
-        public async Task<IActionResult> ApproveUser(int userId)
-        {
-            var user = await _dataSync.GetUserByIdAsync(userId);
-            if (user == null)
-            {
-                return Content("❌ 用户不存在");
-            }
+public async Task<IActionResult> ApproveUser(int userId)
+{
+    var user = await _dataSync.GetUserByIdAsync(userId);
+    if (user == null)
+    {
+        return Content("❌ 用户不存在");
+    }
 
-            if (user.IsApproved)
-            {
-                return Content("ℹ️ 该用户已审核通过，无需重复操作");
-            }
+    if (user.IsApproved)
+    {
+        return Content("ℹ️ 该用户已审核通过，无需重复操作");
+    }
 
-            user.IsApproved = true;
-            user.IsAvatarApproved = true;
-            await _dataSync.UpdateUserAsync(user);
+    // ⭐ 更新状态
+    user.IsApproved = true;
+    user.IsAvatarApproved = true;
 
-            try
-            {
-                await _emailService.SendUserActionNotificationAsync(
-                    user.Email,
-                    user.Username,
-                    "approve",
-                    "您的账号已通过管理员审核，现在可以登录了！",
-                    "🎉 欢迎加入 Chris hopper 的个人网站！"
-                );
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"邮件发送失败: {ex.Message}");
-            }
+    // ⭐ 调用 UpdateUserAsync（会写入 Turso）
+    await _dataSync.UpdateUserAsync(user);
 
-            return Content("✅ 用户已通过审核！用户将收到通知邮件。");
-        }
+    // ⭐ 验证是否真的写入了
+    var verifyUser = await _dataSync.GetUserByIdAsync(userId);
+    Console.WriteLine($"验证: IsApproved = {verifyUser?.IsApproved}");
 
+    try
+    {
+        await _emailService.SendUserActionNotificationAsync(
+            user.Email,
+            user.Username,
+            "approve",
+            "您的账号已通过管理员审核，现在可以登录了！",
+            "🎉 欢迎加入 Chris hopper 的个人网站！"
+        );
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"邮件发送失败: {ex.Message}");
+    }
+
+    return Content("✅ 用户已通过审核！用户将收到通知邮件。");
+}
         // ============================================================
         // ⭐ 审核用户（拒绝）- 无需登录
         // ============================================================
