@@ -391,6 +391,77 @@ namespace MyPersonalWebsite.Controllers
             await _dataSync.UpdateUserAsync(user);
             return Json(new { success = true, message = "头像已拒绝" });
         }
+        // ============================================================
+// 审核用户（通过/拒绝）
+// ============================================================
+
+[HttpGet]
+public async Task<IActionResult> ApproveUser(int userId)
+{
+    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+    if (isAdmin != 1)
+        return Content("权限不足，请登录管理员账号");
+
+    var user = await _dataSync.GetUserByIdAsync(userId);
+    if (user == null)
+        return Content("用户不存在");
+
+    user.IsApproved = true;
+    user.IsAvatarApproved = true;
+    await _dataSync.UpdateUserAsync(user);
+
+    try
+    {
+        await _emailService.SendUserActionNotificationAsync(
+            user.Email,
+            user.Username,
+            "approve",
+            "您的账号已通过管理员审核，现在可以登录了！",
+            "🎉 欢迎加入 Chris hopper 的个人网站！"
+        );
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"邮件发送失败: {ex.Message}");
+    }
+
+    return Content("✅ 用户已通过审核！用户将收到通知邮件。");
+}
+
+[HttpGet]
+public async Task<IActionResult> RejectUser(int userId)
+{
+    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+    if (isAdmin != 1)
+        return Content("权限不足，请登录管理员账号");
+
+    var user = await _dataSync.GetUserByIdAsync(userId);
+    if (user == null)
+        return Content("用户不存在");
+
+    // 软删除或标记拒绝
+    user.IsDeleted = true;
+    user.DeletedAt = DateTime.Now;
+    user.DeleteReason = "管理员审核拒绝";
+    await _dataSync.UpdateUserAsync(user);
+
+    try
+    {
+        await _emailService.SendUserActionNotificationAsync(
+            user.Email,
+            user.Username,
+            "reject",
+            "您的账号审核未通过，请重新注册或联系管理员。",
+            "如有疑问，请联系管理员 2908685235@qq.com"
+        );
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"邮件发送失败: {ex.Message}");
+    }
+
+    return Content("❌ 已拒绝该用户。用户将收到通知邮件。");
+}
 
         // ============================================================
 // 关于我编辑
