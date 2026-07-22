@@ -1,302 +1,69 @@
 @{
-    ViewData["Title"] = "注册";
+    ViewData["Title"] = "注册申请已提交";
 }
 
 <style>
-    .auth-container {
-        min-height: 80vh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 2rem 1.2rem;
-    }
-
-    .auth-card {
-        background: rgba(255,255,255,0.02);
-        backdrop-filter: blur(40px);
-        border: 1px solid rgba(255,255,255,0.04);
-        border-radius: 32px;
-        padding: 2.8rem 3rem;
-        max-width: 440px;
-        width: 100%;
-        box-shadow: 0 24px 80px rgba(0,0,0,0.3);
-        transition: all 0.3s ease;
-    }
-
-    .auth-card:hover {
-        border-color: rgba(255,255,255,0.06);
-    }
-
-    .auth-card .logo {
+    .success-container {
+        max-width: 600px;
+        margin: 3rem auto;
+        padding: 2rem;
         text-align: center;
+        background: rgba(255,255,255,0.02);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255,255,255,0.04);
+        border-radius: 24px;
+    }
+
+    .success-container .icon {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+    }
+
+    .success-container h2 {
+        color: #fff;
+        font-weight: 700;
         margin-bottom: 0.5rem;
     }
 
-    .auth-card .logo h2 {
-        font-size: 1.8rem;
-        font-weight: 800;
-        background: linear-gradient(135deg, #8B5CF6 0%, #EC4899 50%, #F59E0B 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        margin: 0;
+    .success-container p {
+        color: rgba(255,255,255,0.5);
+        line-height: 1.8;
     }
 
-    .auth-card .subtitle {
-        text-align: center;
-        color: rgba(255,255,255,0.2);
-        font-size: 0.85rem;
-        margin-bottom: 2rem;
+    .success-container .highlight {
+        color: #8B5CF6;
+        font-weight: 600;
     }
 
-    .auth-card .form-group {
-        margin-bottom: 1.2rem;
-    }
-
-    .auth-card .form-group label {
-        display: block;
-        color: rgba(255,255,255,0.4);
-        font-size: 0.8rem;
-        font-weight: 500;
-        margin-bottom: 0.3rem;
-        letter-spacing: 0.04em;
-    }
-
-    .auth-card .form-group .input-wrapper {
-        position: relative;
-    }
-
-    .auth-card .form-group .input-wrapper .input-icon {
-        position: absolute;
-        left: 1rem;
-        top: 50%;
-        transform: translateY(-50%);
-        color: rgba(255,255,255,0.08);
-        font-size: 1rem;
-    }
-
-    .auth-card .form-group input {
-        width: 100%;
-        padding: 0.8rem 1rem 0.8rem 2.8rem;
-        border-radius: 16px;
-        border: 1px solid rgba(255,255,255,0.04);
-        background: rgba(255,255,255,0.02);
-        color: #fff;
-        font-size: 0.95rem;
-        transition: all 0.3s ease;
-        outline: none;
-    }
-
-    .auth-card .form-group input::placeholder {
-        color: rgba(255,255,255,0.08);
-    }
-
-    .auth-card .form-group input:focus {
-        border-color: rgba(108,60,225,0.15);
-        background: rgba(255,255,255,0.04);
-        box-shadow: 0 0 0 4px rgba(108,60,225,0.04);
-    }
-
-    .auth-card .form-group .hint {
-        color: rgba(255,255,255,0.06);
-        font-size: 0.7rem;
-        margin-top: 0.2rem;
-    }
-
-    .auth-card .btn-primary {
-        width: 100%;
-        padding: 0.9rem;
+    .btn-home {
+        display: inline-block;
+        margin-top: 1.5rem;
+        padding: 0.8rem 2.5rem;
         border: none;
         border-radius: 40px;
-        background: linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%);
+        background: linear-gradient(135deg, #8B5CF6, #EC4899);
         color: #fff;
         font-weight: 600;
-        font-size: 0.95rem;
-        cursor: pointer;
+        text-decoration: none;
         transition: all 0.3s ease;
-        margin-top: 0.5rem;
     }
 
-    .auth-card .btn-primary:hover {
+    .btn-home:hover {
         transform: translateY(-2px);
         box-shadow: 0 8px 32px rgba(108,60,225,0.2);
-    }
-
-    .auth-card .btn-primary:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-        transform: none;
-    }
-
-    .auth-card .footer-links {
-        text-align: center;
-        margin-top: 1.5rem;
-        color: rgba(255,255,255,0.12);
-        font-size: 0.85rem;
-    }
-
-    .auth-card .footer-links a {
-        color: rgba(139,92,246,0.6);
-        text-decoration: none;
-        transition: color 0.3s ease;
-    }
-
-    .auth-card .footer-links a:hover {
-        color: #8B5CF6;
-    }
-
-    .auth-card .alert {
-        padding: 0.6rem 1rem;
-        border-radius: 12px;
-        font-size: 0.85rem;
-        margin-bottom: 1rem;
-        background: rgba(220,53,69,0.06);
-        border: 1px solid rgba(220,53,69,0.06);
-        color: rgba(255,255,255,0.4);
-    }
-
-    .auth-card .alert-success {
-        background: rgba(40,167,69,0.06);
-        border-color: rgba(40,167,69,0.06);
-        color: rgba(255,255,255,0.4);
-    }
-
-    .captcha-wrapper {
-        display: flex;
-        align-items: center;
-        gap: 0.8rem;
-        flex-wrap: wrap;
-    }
-
-    .captcha-wrapper img {
-        height: 50px;
-        border-radius: 12px;
-        cursor: pointer;
-        border: 1px solid rgba(255,255,255,0.04);
-        background: rgba(255,255,255,0.02);
-    }
-
-    .captcha-wrapper .captcha-input {
-        flex: 1;
-        min-width: 120px;
-    }
-
-    .captcha-wrapper .captcha-input input {
-        padding-left: 1rem;
-    }
-
-    .captcha-wrapper .refresh-btn {
-        padding: 0.4rem 1rem;
-        border-radius: 30px;
-        border: 1px solid rgba(255,255,255,0.04);
-        background: rgba(255,255,255,0.02);
-        color: rgba(255,255,255,0.2);
-        cursor: pointer;
-        transition: all 0.3s ease;
-        font-size: 0.8rem;
-    }
-
-    .captcha-wrapper .refresh-btn:hover {
-        background: rgba(255,255,255,0.04);
-        color: rgba(255,255,255,0.4);
-    }
-
-    @@media (max-width: 480px) {
-        .auth-card {
-            padding: 2rem 1.5rem;
-        }
-        .captcha-wrapper {
-            flex-direction: column;
-            align-items: stretch;
-        }
-        .captcha-wrapper img {
-            height: 60px;
-            width: 100%;
-            object-fit: cover;
-        }
+        color: #fff;
     }
 </style>
 
-<div class="auth-container">
-    <div class="auth-card">
-
-        <div class="logo">
-            <h2>✨ 注册</h2>
-        </div>
-        <p class="subtitle">创建你的账号</p>
-
-        @if (!ViewData.ModelState.IsValid)
-        {
-            <div class="alert">
-                @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
-                {
-                    <p class="mb-0">@error.ErrorMessage</p>
-                }
-            </div>
-        }
-
-        <form asp-action="Register" method="post" id="registerForm">
-
-            <div class="form-group">
-                <label>用户名</label>
-                <div class="input-wrapper">
-                    <span class="input-icon"><i class="bi bi-person"></i></span>
-                    <input type="text" name="username" placeholder="输入用户名" required />
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label>邮箱</label>
-                <div class="input-wrapper">
-                    <span class="input-icon"><i class="bi bi-envelope"></i></span>
-                    <input type="email" name="email" placeholder="输入邮箱" required />
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label>密码</label>
-                <div class="input-wrapper">
-                    <span class="input-icon"><i class="bi bi-lock"></i></span>
-                    <input type="password" name="password" placeholder="至少 6 位" required minlength="6" />
-                </div>
-            </div>
-
-            <!-- SVG 验证码 -->
-            <div class="form-group">
-                <label>验证码</label>
-                <div class="captcha-wrapper">
-                    <img id="captchaImage" src="/Captcha/Index" alt="验证码" onclick="refreshCaptcha()" title="点击刷新" />
-                    <div class="captcha-input">
-                        <input type="text" name="captchaAnswer" placeholder="输入验证码" required maxlength="6" style="padding-left:1rem;" autocomplete="off" />
-                    </div>
-                    <button type="button" class="refresh-btn" onclick="refreshCaptcha()">
-                        <i class="bi bi-arrow-clockwise"></i>
-                    </button>
-                </div>
-            </div>
-
-            <button type="submit" class="btn-primary" id="submitBtn">注册</button>
-
-            <div class="footer-links">
-                已有账号？ <a href="/Auth/Login">立即登录</a>
-            </div>
-
-        </form>
-
-    </div>
+<div class="success-container">
+    <div class="icon">📧</div>
+    <h2>注册申请已提交！</h2>
+    <p>
+        您的账号已创建，但需要等待管理员审核邮箱才能登录。
+        <br><br>
+        审核结果将通过邮件通知您，请留意查收。
+        <br><br>
+        <span class="highlight">📌 预计审核时间：0.1-24 小时内</span>
+    </p>
+    <a href="/" class="btn-home">🏠 返回首页</a>
 </div>
-
-@section Scripts {
-    <script>
-        function refreshCaptcha() {
-            const img = document.getElementById('captchaImage');
-            img.src = '/Captcha/Refresh?_=' + new Date().getTime();
-        }
-
-        document.getElementById('registerForm').addEventListener('submit', function(e) {
-            const btn = document.getElementById('submitBtn');
-            btn.disabled = true;
-            btn.textContent = '⏳ 注册中...';
-        });
-    </script>
-}
