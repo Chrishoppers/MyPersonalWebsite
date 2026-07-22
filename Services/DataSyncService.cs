@@ -55,8 +55,8 @@ namespace MyPersonalWebsite.Services
             {
                 try
                 {
-                    var result = await _tursoService.QueryAsync($"SELECT * FROM Users WHERE Email = '{EscapeSql(email)}'");
-                    var user = ParseUserFromJson(result);
+                    var jsonResult = await _tursoService.QueryAsync($"SELECT * FROM Users WHERE Email = '{EscapeSql(email)}'");
+                    var user = ParseUserFromJson(jsonResult);
                     if (user != null)
                     {
                         Console.WriteLine($"✅ 从 Turso 读取用户: {email}");
@@ -79,8 +79,8 @@ namespace MyPersonalWebsite.Services
             {
                 try
                 {
-                    var result = await _tursoService.QueryAsync($"SELECT * FROM Users WHERE Username = '{EscapeSql(username)}'");
-                    var user = ParseUserFromJson(result);
+                    var jsonResult = await _tursoService.QueryAsync($"SELECT * FROM Users WHERE Username = '{EscapeSql(username)}'");
+                    var user = ParseUserFromJson(jsonResult);
                     if (user != null)
                     {
                         Console.WriteLine($"✅ 从 Turso 读取用户: {username}");
@@ -103,8 +103,8 @@ namespace MyPersonalWebsite.Services
             {
                 try
                 {
-                    var result = await _tursoService.QueryAsync($"SELECT * FROM Users WHERE Id = {id}");
-                    var user = ParseUserFromJson(result);
+                    var jsonResult = await _tursoService.QueryAsync($"SELECT * FROM Users WHERE Id = {id}");
+                    var user = ParseUserFromJson(jsonResult);
                     if (user != null)
                     {
                         Console.WriteLine($"✅ 从 Turso 读取用户 ID: {id}");
@@ -137,7 +137,6 @@ namespace MyPersonalWebsite.Services
             Console.WriteLine($"✅ 用户 {user.Username} 已更新到本地 SQLite");
         }
 
-        // ⭐ 新增：删除用户（软删除）
         public async Task DeleteUser(int id)
         {
             var user = await _localContext.Users.FindAsync(id);
@@ -163,8 +162,8 @@ namespace MyPersonalWebsite.Services
             {
                 try
                 {
-                    var result = await _tursoService.QueryAsync("SELECT * FROM Users");
-                    var users = ParseUserListFromJson(result);
+                    var jsonResult = await _tursoService.QueryAsync("SELECT * FROM Users");
+                    var users = ParseUserListFromJson(jsonResult);
                     if (users != null && users.Any())
                     {
                         Console.WriteLine($"✅ 从 Turso 读取 {users.Count} 个用户");
@@ -208,8 +207,8 @@ namespace MyPersonalWebsite.Services
             {
                 try
                 {
-                    var result = await _tursoService.QueryAsync("SELECT * FROM Blogs ORDER BY PublishDate DESC");
-                    var blogs = ParseBlogListFromJson(result);
+                    var jsonResult = await _tursoService.QueryAsync("SELECT * FROM Blogs ORDER BY PublishDate DESC");
+                    var blogs = ParseBlogListFromJson(jsonResult);
                     if (blogs != null && blogs.Any())
                     {
                         Console.WriteLine($"✅ 从 Turso 读取 {blogs.Count} 篇博客");
@@ -233,8 +232,8 @@ namespace MyPersonalWebsite.Services
             {
                 try
                 {
-                    var result = await _tursoService.QueryAsync($"SELECT * FROM Blogs WHERE Id = {id}");
-                    var blog = ParseBlogFromJson(result);
+                    var jsonResult = await _tursoService.QueryAsync($"SELECT * FROM Blogs WHERE Id = {id}");
+                    var blog = ParseBlogFromJson(jsonResult);
                     if (blog != null)
                     {
                         Console.WriteLine($"✅ 从 Turso 读取博客 ID: {id}");
@@ -309,8 +308,8 @@ namespace MyPersonalWebsite.Services
             {
                 try
                 {
-                    var result = await _tursoService.QueryAsync("SELECT * FROM Messages ORDER BY CreateTime DESC");
-                    var messages = ParseMessageListFromJson(result);
+                    var jsonResult = await _tursoService.QueryAsync("SELECT * FROM Messages ORDER BY CreateTime DESC");
+                    var messages = ParseMessageListFromJson(jsonResult);
                     if (messages != null && messages.Any())
                     {
                         Console.WriteLine($"✅ 从 Turso 读取 {messages.Count} 条留言");
@@ -334,8 +333,8 @@ namespace MyPersonalWebsite.Services
             {
                 try
                 {
-                    var result = await _tursoService.QueryAsync($"SELECT * FROM Messages WHERE Id = {id}");
-                    var message = ParseMessageFromJson(result);
+                    var jsonResult = await _tursoService.QueryAsync($"SELECT * FROM Messages WHERE Id = {id}");
+                    var message = ParseMessageFromJson(jsonResult);
                     if (message != null)
                     {
                         Console.WriteLine($"✅ 从 Turso 读取留言 ID: {id}");
@@ -399,8 +398,8 @@ namespace MyPersonalWebsite.Services
             {
                 try
                 {
-                    var result = await _tursoService.QueryAsync("SELECT * FROM ContactRequests ORDER BY RequestTime DESC");
-                    var requests = ParseContactRequestListFromJson(result);
+                    var jsonResult = await _tursoService.QueryAsync("SELECT * FROM ContactRequests ORDER BY RequestTime DESC");
+                    var requests = ParseContactRequestListFromJson(jsonResult);
                     if (requests != null && requests.Any())
                     {
                         Console.WriteLine($"✅ 从 Turso 读取 {requests.Count} 条授权码申请");
@@ -422,8 +421,8 @@ namespace MyPersonalWebsite.Services
             {
                 try
                 {
-                    var result = await _tursoService.QueryAsync($"SELECT * FROM ContactRequests WHERE Id = {id}");
-                    var request = ParseContactRequestFromJson(result);
+                    var jsonResult = await _tursoService.QueryAsync($"SELECT * FROM ContactRequests WHERE Id = {id}");
+                    var request = ParseContactRequestFromJson(jsonResult);
                     if (request != null)
                     {
                         Console.WriteLine($"✅ 从 Turso 读取授权码 ID: {id}");
@@ -481,8 +480,8 @@ namespace MyPersonalWebsite.Services
             {
                 try
                 {
-                    var result = await _tursoService.QueryAsync("SELECT * FROM AboutMeContents ORDER BY SortOrder");
-                    var sections = ParseAboutMeListFromJson(result);
+                    var jsonResult = await _tursoService.QueryAsync("SELECT * FROM AboutMeContents ORDER BY SortOrder");
+                    var sections = ParseAboutMeListFromJson(jsonResult);
                     if (sections != null && sections.Any())
                     {
                         Console.WriteLine($"✅ 从 Turso 读取 {sections.Count} 条 AboutMe");
@@ -526,8 +525,8 @@ namespace MyPersonalWebsite.Services
             {
                 try
                 {
-                    var result = await _tursoService.QueryAsync("SELECT * FROM Users WHERE Username = 'admin'");
-                    admin = ParseUserFromJson(result);
+                    var jsonResult = await _tursoService.QueryAsync("SELECT * FROM Users WHERE Username = 'admin'");
+                    admin = ParseUserFromJson(jsonResult);
                     if (admin != null)
                     {
                         Console.WriteLine("✅ 管理员账号已存在于 Turso");
@@ -589,8 +588,8 @@ namespace MyPersonalWebsite.Services
             {
                 try
                 {
-                    var result = await _tursoService.QueryAsync("SELECT * FROM Users WHERE IsDeleted = 0 ORDER BY CreatedAt DESC");
-                    var users = ParseUserListFromJson(result);
+                    var jsonResult = await _tursoService.QueryAsync("SELECT * FROM Users WHERE IsDeleted = 0 ORDER BY CreatedAt DESC");
+                    var users = ParseUserListFromJson(jsonResult);
                     if (users != null && users.Any())
                     {
                         Console.WriteLine($"✅ 从 Turso 读取 {users.Count} 个活跃用户");
@@ -757,17 +756,17 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // JSON 解析方法 - 修复变量名冲突
+        // JSON 解析方法 - 所有变量名都已修复
         // ============================================================
 
         private object? GetValueFromRow(JsonElement element)
         {
             if (element.ValueKind == JsonValueKind.Object)
             {
-                if (element.TryGetProperty("value", out var value))
-                    return value;
-                if (element.TryGetProperty("Value", out var value2))
-                    return value2;
+                if (element.TryGetProperty("value", out var val))
+                    return val;
+                if (element.TryGetProperty("Value", out var val2))
+                    return val2;
                 return element;
             }
             return element;
@@ -777,10 +776,10 @@ namespace MyPersonalWebsite.Services
         {
             try
             {
-                var value = GetValueFromRow(element);
-                if (value is JsonElement je)
+                var val = GetValueFromRow(element);
+                if (val is JsonElement je)
                     return je.ValueKind == JsonValueKind.Null ? "" : je.GetString() ?? "";
-                return value?.ToString() ?? "";
+                return val?.ToString() ?? "";
             }
             catch { return ""; }
         }
@@ -789,16 +788,16 @@ namespace MyPersonalWebsite.Services
         {
             try
             {
-                var value = GetValueFromRow(element);
-                if (value is JsonElement je)
+                var val = GetValueFromRow(element);
+                if (val is JsonElement je)
                 {
                     if (je.ValueKind == JsonValueKind.Null) return 0;
                     if (je.ValueKind == JsonValueKind.Number) return je.GetInt32();
                     if (je.ValueKind == JsonValueKind.String)
-                        return int.TryParse(je.GetString(), out var result) ? result : 0;
+                        return int.TryParse(je.GetString(), out var parsed) ? parsed : 0;
                     return 0;
                 }
-                return int.TryParse(value?.ToString(), out var result) ? result : 0;
+                return int.TryParse(val?.ToString(), out var parsed) ? parsed : 0;
             }
             catch { return 0; }
         }
@@ -807,8 +806,8 @@ namespace MyPersonalWebsite.Services
         {
             try
             {
-                var value = GetValueFromRow(element);
-                if (value is JsonElement je)
+                var val = GetValueFromRow(element);
+                if (val is JsonElement je)
                 {
                     if (je.ValueKind == JsonValueKind.Null) return false;
                     if (je.ValueKind == JsonValueKind.True) return true;
@@ -821,7 +820,7 @@ namespace MyPersonalWebsite.Services
                     }
                     return false;
                 }
-                var str2 = value?.ToString()?.ToLower();
+                var str2 = val?.ToString()?.ToLower();
                 return str2 == "1" || str2 == "true" || str2 == "yes";
             }
             catch { return false; }
@@ -831,9 +830,9 @@ namespace MyPersonalWebsite.Services
         {
             try
             {
-                var value = GetStringFromRow(element);
-                if (string.IsNullOrEmpty(value)) return null;
-                return DateTime.Parse(value);
+                var val = GetStringFromRow(element);
+                if (string.IsNullOrEmpty(val)) return null;
+                return DateTime.Parse(val);
             }
             catch { return null; }
         }
@@ -842,16 +841,20 @@ namespace MyPersonalWebsite.Services
         {
             try
             {
-                var value = GetValueFromRow(element);
-                if (value is JsonElement je)
+                var val = GetValueFromRow(element);
+                if (val is JsonElement je)
                 {
                     if (je.ValueKind == JsonValueKind.Null) return null;
                     return je.GetString();
                 }
-                return value?.ToString();
+                return val?.ToString();
             }
             catch { return null; }
         }
+
+        // ============================================================
+        // ParseUserFromJson
+        // ============================================================
 
         private User? ParseUserFromJson(string json)
         {
@@ -862,8 +865,8 @@ namespace MyPersonalWebsite.Services
 
                 if (root.TryGetProperty("results", out var results) && results.GetArrayLength() > 0)
                 {
-                    var firstResult = results[0];
-                    if (firstResult.TryGetProperty("response", out var response) &&
+                    var firstRes = results[0];
+                    if (firstRes.TryGetProperty("response", out var response) &&
                         response.TryGetProperty("result", out var resultObj))
                     {
                         if (resultObj.TryGetProperty("rows", out var rows) && rows.GetArrayLength() > 0)
@@ -922,6 +925,10 @@ namespace MyPersonalWebsite.Services
             }
         }
 
+        // ============================================================
+        // ParseUserListFromJson
+        // ============================================================
+
         private List<User> ParseUserListFromJson(string json)
         {
             var users = new List<User>();
@@ -932,8 +939,8 @@ namespace MyPersonalWebsite.Services
 
                 if (root.TryGetProperty("results", out var results) && results.GetArrayLength() > 0)
                 {
-                    var firstResult = results[0];
-                    if (firstResult.TryGetProperty("response", out var response) &&
+                    var firstRes = results[0];
+                    if (firstRes.TryGetProperty("response", out var response) &&
                         response.TryGetProperty("result", out var resultObj))
                     {
                         if (resultObj.TryGetProperty("rows", out var rows) && rows.GetArrayLength() > 0)
@@ -982,6 +989,10 @@ namespace MyPersonalWebsite.Services
             return users;
         }
 
+        // ============================================================
+        // ParseBlogListFromJson
+        // ============================================================
+
         private List<Blog> ParseBlogListFromJson(string json)
         {
             var blogs = new List<Blog>();
@@ -992,8 +1003,8 @@ namespace MyPersonalWebsite.Services
 
                 if (root.TryGetProperty("results", out var results) && results.GetArrayLength() > 0)
                 {
-                    var firstResult = results[0];
-                    if (firstResult.TryGetProperty("response", out var response) &&
+                    var firstRes = results[0];
+                    if (firstRes.TryGetProperty("response", out var response) &&
                         response.TryGetProperty("result", out var resultObj))
                     {
                         if (resultObj.TryGetProperty("rows", out var rows) && rows.GetArrayLength() > 0)
@@ -1044,6 +1055,10 @@ namespace MyPersonalWebsite.Services
             return blogs.FirstOrDefault();
         }
 
+        // ============================================================
+        // ParseMessageListFromJson
+        // ============================================================
+
         private List<Message> ParseMessageListFromJson(string json)
         {
             var messages = new List<Message>();
@@ -1054,8 +1069,8 @@ namespace MyPersonalWebsite.Services
 
                 if (root.TryGetProperty("results", out var results) && results.GetArrayLength() > 0)
                 {
-                    var firstResult = results[0];
-                    if (firstResult.TryGetProperty("response", out var response) &&
+                    var firstRes = results[0];
+                    if (firstRes.TryGetProperty("response", out var response) &&
                         response.TryGetProperty("result", out var resultObj))
                     {
                         if (resultObj.TryGetProperty("rows", out var rows) && rows.GetArrayLength() > 0)
@@ -1111,6 +1126,10 @@ namespace MyPersonalWebsite.Services
             return messages.FirstOrDefault();
         }
 
+        // ============================================================
+        // ParseContactRequestListFromJson
+        // ============================================================
+
         private List<ContactRequest> ParseContactRequestListFromJson(string json)
         {
             var requests = new List<ContactRequest>();
@@ -1121,8 +1140,8 @@ namespace MyPersonalWebsite.Services
 
                 if (root.TryGetProperty("results", out var results) && results.GetArrayLength() > 0)
                 {
-                    var firstResult = results[0];
-                    if (firstResult.TryGetProperty("response", out var response) &&
+                    var firstRes = results[0];
+                    if (firstRes.TryGetProperty("response", out var response) &&
                         response.TryGetProperty("result", out var resultObj))
                     {
                         if (resultObj.TryGetProperty("rows", out var rows) && rows.GetArrayLength() > 0)
@@ -1181,6 +1200,10 @@ namespace MyPersonalWebsite.Services
             return requests.FirstOrDefault();
         }
 
+        // ============================================================
+        // ParseAboutMeListFromJson
+        // ============================================================
+
         private List<AboutMe> ParseAboutMeListFromJson(string json)
         {
             var sections = new List<AboutMe>();
@@ -1191,8 +1214,8 @@ namespace MyPersonalWebsite.Services
 
                 if (root.TryGetProperty("results", out var results) && results.GetArrayLength() > 0)
                 {
-                    var firstResult = results[0];
-                    if (firstResult.TryGetProperty("response", out var response) &&
+                    var firstRes = results[0];
+                    if (firstRes.TryGetProperty("response", out var response) &&
                         response.TryGetProperty("result", out var resultObj))
                     {
                         if (resultObj.TryGetProperty("rows", out var rows) && rows.GetArrayLength() > 0)
