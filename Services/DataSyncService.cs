@@ -12,6 +12,21 @@ namespace MyPersonalWebsite.Services
     {
         private readonly TursoService _tursoService;
         private readonly bool _tursoAvailable;
+        // ============================================================
+// 公开方法（供 Program.cs 调用）
+// ============================================================
+
+public async Task<string> QueryAsync(string sql)
+{
+    if (!_tursoAvailable) return "{}";
+    return await _tursoService.QueryAsync(sql);
+}
+
+public async Task<bool> ExecuteSqlAsync(string sql)
+{
+    if (!_tursoAvailable) return false;
+    return await _tursoService.ExecuteSqlAsync(sql);
+}
 
         public DataSyncService(TursoService tursoService)
         {
