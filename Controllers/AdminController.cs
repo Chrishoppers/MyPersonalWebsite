@@ -143,6 +143,74 @@ namespace MyPersonalWebsite.Controllers
             return Json(new { success = true, message = "删除成功" });
         }
 
+        // ============================================================
+// 审核用户邮箱（通过/拒绝）
+// ============================================================
+[HttpGet]
+public async Task<IActionResult> VerifyUser(int userId, string action)
+{
+    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+    if (isAdmin != 1)
+    {
+        return Content("权限不足，请登录管理员账号");
+    }
+
+    var user = await _dataSync.GetUserByIdAsync(userId);
+    if (user == null)
+    {
+        return Content("用户不存在");
+    }
+
+    if (action == "approve")
+    {
+        user.IsEmailVerified = true;
+        await _dataSync.UpdateUserAsync(user);
+
+        // 发送通过通知给用户
+        try
+        {
+            await _emailService.SendUserActionNotificationAsync(
+                user.Email,
+                user.Username,
+                "verify_approve",
+                "您的邮箱已通过管理员审核，现在可以登录了！",
+                "欢迎加入 Chris Hopper 的个人网站 🎉"
+            );
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"邮件发送失败: {ex.Message}");
+        }
+
+        return Content("✅ 用户邮箱已通过审核！用户将收到通知邮件。");
+    }
+    else if (action == "reject")
+    {
+        // 拒绝审核 - 删除用户或标记为拒绝状态
+        // 这里我们直接删除用户（或者你可以改成软删除 + 记录拒绝原因）
+        await _dataSync.DeleteUserAsync(user.Id);
+
+        try
+        {
+            await _emailService.SendUserActionNotificationAsync(
+                user.Email,
+                user.Username,
+                "verify_reject",
+                "您的邮箱审核未通过，请重新注册或联系管理员。",
+                "如有疑问，请联系管理员 chris-hopper@qq.com"
+            );
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"邮件发送失败: {ex.Message}");
+        }
+
+        return Content("❌ 已拒绝该用户的邮箱审核请求。用户将收到通知邮件。");
+    }
+
+    return Content("无效的操作");
+}
+
         [HttpPost]
         public async Task<IActionResult> UploadBlogImage(IFormFile image)
         {
