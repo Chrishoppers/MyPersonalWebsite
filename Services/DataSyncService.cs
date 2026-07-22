@@ -34,7 +34,6 @@ namespace MyPersonalWebsite.Services
 
         public async Task AddUserAsync(User user)
         {
-            // 1. 写入 Turso（如果可用）
             bool tursoSuccess = false;
             if (_tursoAvailable)
             {
@@ -42,10 +41,9 @@ namespace MyPersonalWebsite.Services
                 if (tursoSuccess)
                     Console.WriteLine($"✅ 用户 {user.Username} 已写入 Turso");
                 else
-                    Console.WriteLine($"⚠️ 用户 {user.Username} Turso 写入失败，继续写入本地");
+                    Console.WriteLine($"⚠️ 用户 {user.Username} Turso 写入失败");
             }
 
-            // 2. 写入本地 SQLite（无论 Turso 是否成功，都写本地）
             _localContext.Users.Add(user);
             await _localContext.SaveChangesAsync();
             Console.WriteLine($"✅ 用户 {user.Username} 已写入本地 SQLite");
@@ -53,7 +51,6 @@ namespace MyPersonalWebsite.Services
 
         public async Task<User?> GetUserByEmailAsync(string email)
         {
-            // 1. 优先从 Turso 读取
             if (_tursoAvailable)
             {
                 try
@@ -74,7 +71,6 @@ namespace MyPersonalWebsite.Services
                 }
             }
 
-            // 2. 降级到本地
             Console.WriteLine($"📂 从本地 SQLite 读取用户: {email}");
             return await _localContext.Users
                 .FirstOrDefaultAsync(u => u.Email == email);
@@ -96,7 +92,10 @@ namespace MyPersonalWebsite.Services
                         return user;
                     }
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"⚠️ Turso 读取失败: {ex.Message}");
+                }
             }
 
             Console.WriteLine($"📂 从本地 SQLite 读取用户: {username}");
@@ -114,9 +113,16 @@ namespace MyPersonalWebsite.Services
                         $"SELECT * FROM Users WHERE Id = {id}"
                     );
                     var user = ParseUserFromJson(result);
-                    if (user != null) return user;
+                    if (user != null)
+                    {
+                        Console.WriteLine($"✅ 从 Turso 读取用户 ID: {id}");
+                        return user;
+                    }
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"⚠️ Turso 读取失败: {ex.Message}");
+                }
             }
 
             return await _localContext.Users.FindAsync(id);
@@ -124,7 +130,6 @@ namespace MyPersonalWebsite.Services
 
         public async Task UpdateUserAsync(User user)
         {
-            // 1. 更新 Turso
             bool tursoSuccess = false;
             if (_tursoAvailable)
             {
@@ -132,10 +137,9 @@ namespace MyPersonalWebsite.Services
                 if (tursoSuccess)
                     Console.WriteLine($"✅ 用户 {user.Username} 已更新到 Turso");
                 else
-                    Console.WriteLine($"⚠️ 用户 {user.Username} Turso 更新失败，继续更新本地");
+                    Console.WriteLine($"⚠️ 用户 {user.Username} Turso 更新失败");
             }
 
-            // 2. 更新本地 SQLite（无论 Turso 是否成功）
             _localContext.Users.Update(user);
             await _localContext.SaveChangesAsync();
             Console.WriteLine($"✅ 用户 {user.Username} 已更新到本地 SQLite");
@@ -143,7 +147,6 @@ namespace MyPersonalWebsite.Services
 
         public async Task<List<User>> GetAllUsersAsync()
         {
-            // 优先从 Turso 读取
             if (_tursoAvailable)
             {
                 try
@@ -162,7 +165,6 @@ namespace MyPersonalWebsite.Services
                 }
             }
 
-            // 降级到本地
             var localUsers = await _localContext.Users.ToListAsync();
             Console.WriteLine($"📂 从本地 SQLite 读取 {localUsers.Count} 个用户");
             return localUsers;
@@ -204,7 +206,10 @@ namespace MyPersonalWebsite.Services
                         return blogs;
                     }
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"⚠️ Turso 读取博客失败: {ex.Message}");
+                }
             }
 
             var localBlogs = await _localContext.Blogs
@@ -224,9 +229,16 @@ namespace MyPersonalWebsite.Services
                         $"SELECT * FROM Blogs WHERE Id = {id}"
                     );
                     var blog = ParseBlogFromJson(result);
-                    if (blog != null) return blog;
+                    if (blog != null)
+                    {
+                        Console.WriteLine($"✅ 从 Turso 读取博客 ID: {id}");
+                        return blog;
+                    }
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"⚠️ Turso 读取博客失败: {ex.Message}");
+                }
             }
 
             return await _localContext.Blogs.FindAsync(id);
@@ -239,6 +251,8 @@ namespace MyPersonalWebsite.Services
                 var success = await SyncBlogToTursoAsync(blog);
                 if (success)
                     Console.WriteLine($"✅ 博客 {blog.Title} 已更新到 Turso");
+                else
+                    Console.WriteLine($"⚠️ 博客 {blog.Title} Turso 更新失败");
             }
 
             _localContext.Blogs.Update(blog);
@@ -274,6 +288,8 @@ namespace MyPersonalWebsite.Services
                 var success = await SyncMessageToTursoAsync(message);
                 if (success)
                     Console.WriteLine($"✅ 留言已写入 Turso");
+                else
+                    Console.WriteLine($"⚠️ 留言 Turso 写入失败");
             }
 
             _localContext.Messages.Add(message);
@@ -297,7 +313,10 @@ namespace MyPersonalWebsite.Services
                         return messages;
                     }
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"⚠️ Turso 读取留言失败: {ex.Message}");
+                }
             }
 
             var localMessages = await _localContext.Messages
@@ -317,9 +336,16 @@ namespace MyPersonalWebsite.Services
                         $"SELECT * FROM Messages WHERE Id = {id}"
                     );
                     var message = ParseMessageFromJson(result);
-                    if (message != null) return message;
+                    if (message != null)
+                    {
+                        Console.WriteLine($"✅ 从 Turso 读取留言 ID: {id}");
+                        return message;
+                    }
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"⚠️ Turso 读取留言失败: {ex.Message}");
+                }
             }
 
             return await _localContext.Messages.FindAsync(id);
@@ -332,6 +358,8 @@ namespace MyPersonalWebsite.Services
                 var success = await SyncMessageToTursoAsync(message);
                 if (success)
                     Console.WriteLine($"✅ 留言已更新到 Turso");
+                else
+                    Console.WriteLine($"⚠️ 留言 Turso 更新失败");
             }
 
             _localContext.Messages.Update(message);
@@ -381,7 +409,10 @@ namespace MyPersonalWebsite.Services
                         return requests;
                     }
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"⚠️ Turso 读取授权码失败: {ex.Message}");
+                }
             }
 
             return await _localContext.ContactRequests
@@ -399,9 +430,16 @@ namespace MyPersonalWebsite.Services
                         $"SELECT * FROM ContactRequests WHERE Id = {id}"
                     );
                     var request = ParseContactRequestFromJson(result);
-                    if (request != null) return request;
+                    if (request != null)
+                    {
+                        Console.WriteLine($"✅ 从 Turso 读取授权码 ID: {id}");
+                        return request;
+                    }
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"⚠️ Turso 读取授权码失败: {ex.Message}");
+                }
             }
 
             return await _localContext.ContactRequests.FindAsync(id);
@@ -414,6 +452,8 @@ namespace MyPersonalWebsite.Services
                 var success = await SyncContactRequestToTursoAsync(request);
                 if (success)
                     Console.WriteLine($"✅ 授权码已更新到 Turso");
+                else
+                    Console.WriteLine($"⚠️ 授权码 Turso 更新失败");
             }
 
             _localContext.ContactRequests.Update(request);
@@ -428,6 +468,8 @@ namespace MyPersonalWebsite.Services
                 var success = await SyncContactRequestToTursoAsync(request);
                 if (success)
                     Console.WriteLine($"✅ 授权码已写入 Turso");
+                else
+                    Console.WriteLine($"⚠️ 授权码 Turso 写入失败");
             }
 
             _localContext.ContactRequests.Add(request);
@@ -455,7 +497,10 @@ namespace MyPersonalWebsite.Services
                         return sections;
                     }
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"⚠️ Turso 读取 AboutMe 失败: {ex.Message}");
+                }
             }
 
             return await _localContext.AboutMeContents
@@ -470,6 +515,8 @@ namespace MyPersonalWebsite.Services
                 var success = await SyncAboutMeToTursoAsync(section);
                 if (success)
                     Console.WriteLine($"✅ AboutMe 已更新到 Turso");
+                else
+                    Console.WriteLine($"⚠️ AboutMe Turso 更新失败");
             }
 
             _localContext.AboutMeContents.Update(section);
@@ -478,14 +525,14 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 管理员账号检查（双写）
+        // 管理员账号检查（不重置密码！）
         // ============================================================
 
         public async Task EnsureAdminExistsAsync()
         {
             User? admin = null;
 
-            // 先从 Turso 查
+            // 1. 先从 Turso 查
             if (_tursoAvailable)
             {
                 try
@@ -495,60 +542,64 @@ namespace MyPersonalWebsite.Services
                     );
                     admin = ParseUserFromJson(result);
                     if (admin != null)
+                    {
                         Console.WriteLine("✅ 管理员账号已存在于 Turso");
+                        // 同步到本地
+                        var localAdmin = await _localContext.Users
+                            .FirstOrDefaultAsync(u => u.Username == "admin");
+                        if (localAdmin == null)
+                        {
+                            _localContext.Users.Add(admin);
+                            await _localContext.SaveChangesAsync();
+                            Console.WriteLine("✅ 管理员账号已从 Turso 同步到本地");
+                        }
+                        return;  // 直接返回，不重置密码
+                    }
                 }
-                catch { }
-            }
-
-            // Turso 没有，从本地查
-            if (admin == null)
-            {
-                admin = await _localContext.Users
-                    .FirstOrDefaultAsync(u => u.Username == "admin");
-                if (admin != null)
-                    Console.WriteLine("✅ 管理员账号已存在于本地 SQLite");
-            }
-
-            // 都没有，创建
-            if (admin == null)
-            {
-                admin = new User
+                catch (Exception ex)
                 {
-                    Username = "admin",
-                    Email = "2908685235@qq.com",
-                    PasswordHash = "AQAAAAIAAYagAAAAEJ4Zj6zVqZMjSx5k5r5WYg==",
-                    IsEmailVerified = true,
-                    IsAdmin = true,
-                    IsBanned = false,
-                    CreatedAt = DateTime.Now
-                };
+                    Console.WriteLine($"⚠️ Turso 查询管理员失败: {ex.Message}");
+                }
+            }
 
-                // 写入 Turso
+            // 2. 从本地查
+            admin = await _localContext.Users
+                .FirstOrDefaultAsync(u => u.Username == "admin");
+
+            if (admin != null)
+            {
+                Console.WriteLine("✅ 管理员账号已存在于本地 SQLite");
+                // 同步到 Turso
                 if (_tursoAvailable)
                 {
-                    var success = await SyncUserToTursoAsync(admin);
-                    if (success)
-                        Console.WriteLine("✅ 管理员账号已创建到 Turso");
+                    await SyncUserToTursoAsync(admin);
+                    Console.WriteLine("✅ 管理员账号已从本地同步到 Turso");
                 }
-
-                // 写入本地
-                _localContext.Users.Add(admin);
-                await _localContext.SaveChangesAsync();
-                Console.WriteLine("✅ 管理员账号已创建到本地 SQLite");
+                return;  // 直接返回，不重置密码
             }
 
-            // 如果 Turso 有但本地没有，同步到本地
-            if (_tursoAvailable && admin != null)
+            // 3. 都没有才创建（只有第一次部署会执行）
+            Console.WriteLine("📝 首次部署，创建管理员账号...");
+            admin = new User
             {
-                var localAdmin = await _localContext.Users
-                    .FirstOrDefaultAsync(u => u.Username == "admin");
-                if (localAdmin == null)
-                {
-                    _localContext.Users.Add(admin);
-                    await _localContext.SaveChangesAsync();
-                    Console.WriteLine("✅ 管理员账号已从 Turso 同步到本地");
-                }
+                Username = "admin",
+                Email = "2908685235@qq.com",
+                PasswordHash = "AQAAAAIAAYagAAAAEJ4Zj6zVqZMjSx5k5r5WYg==",
+                IsEmailVerified = true,
+                IsAdmin = true,
+                IsBanned = false,
+                CreatedAt = DateTime.Now
+            };
+
+            if (_tursoAvailable)
+            {
+                await SyncUserToTursoAsync(admin);
+                Console.WriteLine("✅ 管理员账号已创建到 Turso");
             }
+
+            _localContext.Users.Add(admin);
+            await _localContext.SaveChangesAsync();
+            Console.WriteLine("✅ 管理员账号已创建到本地 SQLite");
         }
 
         public async Task<List<User>> GetAllUsersWithFallbackAsync()
@@ -567,7 +618,10 @@ namespace MyPersonalWebsite.Services
                         return users;
                     }
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"⚠️ Turso 读取用户失败: {ex.Message}");
+                }
             }
 
             return await _localContext.Users
@@ -588,8 +642,10 @@ namespace MyPersonalWebsite.Services
                 var sql = $@"INSERT OR REPLACE INTO Users (
                     Id, Username, Email, PasswordHash, IsEmailVerified, IsAdmin,
                     CreatedAt, LastLoginAt, IsBanned, BanExpiry, BanReason,
-                    IsDeleted, DeletedAt, AvatarUrl, IsAvatarApproved,
-                    PendingEmail, PendingUsername, IsEmailChangeApproved, IsUsernameChangeApproved
+                    IsDeleted, DeletedAt, DeleteReason, DeleteNote,
+                    AvatarUrl, IsAvatarApproved, AvatarSubmittedAt,
+                    PendingEmail, PendingUsername, IsEmailChangeApproved, IsUsernameChangeApproved,
+                    VerificationCode, VerificationCodeExpiry
                 ) VALUES (
                     {user.Id}, '{EscapeSql(user.Username)}', '{EscapeSql(user.Email)}',
                     '{EscapeSql(user.PasswordHash)}', {(user.IsEmailVerified ? 1 : 0)},
@@ -600,12 +656,17 @@ namespace MyPersonalWebsite.Services
                     {(string.IsNullOrEmpty(user.BanReason) ? "NULL" : $"'{EscapeSql(user.BanReason)}'")},
                     {(user.IsDeleted ? 1 : 0)},
                     {(user.DeletedAt.HasValue ? $"'{user.DeletedAt.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
+                    {(string.IsNullOrEmpty(user.DeleteReason) ? "NULL" : $"'{EscapeSql(user.DeleteReason)}'")},
+                    {(string.IsNullOrEmpty(user.DeleteNote) ? "NULL" : $"'{EscapeSql(user.DeleteNote)}'")},
                     {(string.IsNullOrEmpty(user.AvatarUrl) ? "NULL" : $"'{EscapeSql(user.AvatarUrl)}'")},
                     {(user.IsAvatarApproved ? 1 : 0)},
+                    {(user.AvatarSubmittedAt.HasValue ? $"'{user.AvatarSubmittedAt.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
                     {(string.IsNullOrEmpty(user.PendingEmail) ? "NULL" : $"'{EscapeSql(user.PendingEmail)}'")},
                     {(string.IsNullOrEmpty(user.PendingUsername) ? "NULL" : $"'{EscapeSql(user.PendingUsername)}'")},
                     {(user.IsEmailChangeApproved ? 1 : 0)},
-                    {(user.IsUsernameChangeApproved ? 1 : 0)}
+                    {(user.IsUsernameChangeApproved ? 1 : 0)},
+                    {(string.IsNullOrEmpty(user.VerificationCode) ? "NULL" : $"'{EscapeSql(user.VerificationCode)}'")},
+                    {(user.VerificationCodeExpiry.HasValue ? $"'{user.VerificationCodeExpiry.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")}
                 )";
                 return await _tursoService.ExecuteSqlAsync(sql);
             }
@@ -719,7 +780,7 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // JSON 解析方法
+        // JSON 解析方法（真正解析 Turso 返回数据）
         // ============================================================
 
         private User? ParseUserFromJson(string json)
@@ -728,78 +789,365 @@ namespace MyPersonalWebsite.Services
             {
                 using var doc = JsonDocument.Parse(json);
                 var root = doc.RootElement;
+
                 if (root.TryGetProperty("results", out var results) && results.GetArrayLength() > 0)
                 {
-                    var first = results[0];
-                    if (first.TryGetProperty("response", out var response) &&
+                    var firstResult = results[0];
+                    if (firstResult.TryGetProperty("response", out var response) &&
                         response.TryGetProperty("result", out var result))
                     {
-                        // Turso 返回的格式: {"results":[{"response":{"result":{"type":"ok","rows":[...]}}}]}
                         if (result.TryGetProperty("rows", out var rows) && rows.GetArrayLength() > 0)
                         {
                             var row = rows[0];
-                            var columns = row.GetProperty("columns");
+                            var cols = result.GetProperty("cols");
                             var values = row.GetProperty("values");
 
-                            // 简单解析（实际需要根据 columns 映射）
-                            // 这里简化处理，实际应该解析 columns 和 values 对应关系
-                            return new User
+                            var user = new User();
+
+                            for (int i = 0; i < cols.GetArrayLength(); i++)
                             {
-                                Id = 1,
-                                Username = "admin",
-                                Email = "admin@example.com",
-                                // ... 其他字段
-                            };
+                                var colName = cols[i].GetProperty("name").GetString();
+                                var value = values[i];
+
+                                switch (colName)
+                                {
+                                    case "Id": user.Id = value.ValueKind == JsonValueKind.Null ? 0 : value.GetInt32(); break;
+                                    case "Username": user.Username = value.ValueKind == JsonValueKind.Null ? "" : value.GetString() ?? ""; break;
+                                    case "Email": user.Email = value.ValueKind == JsonValueKind.Null ? "" : value.GetString() ?? ""; break;
+                                    case "PasswordHash": user.PasswordHash = value.ValueKind == JsonValueKind.Null ? "" : value.GetString() ?? ""; break;
+                                    case "IsEmailVerified": user.IsEmailVerified = value.ValueKind == JsonValueKind.Null ? false : value.GetInt32() == 1; break;
+                                    case "IsAdmin": user.IsAdmin = value.ValueKind == JsonValueKind.Null ? false : value.GetInt32() == 1; break;
+                                    case "CreatedAt": user.CreatedAt = value.ValueKind == JsonValueKind.Null ? DateTime.Now : DateTime.Parse(value.GetString() ?? DateTime.Now.ToString()); break;
+                                    case "LastLoginAt": user.LastLoginAt = value.ValueKind == JsonValueKind.Null ? null : DateTime.Parse(value.GetString()!); break;
+                                    case "IsBanned": user.IsBanned = value.ValueKind == JsonValueKind.Null ? false : value.GetInt32() == 1; break;
+                                    case "BanExpiry": user.BanExpiry = value.ValueKind == JsonValueKind.Null ? null : DateTime.Parse(value.GetString()!); break;
+                                    case "BanReason": user.BanReason = value.ValueKind == JsonValueKind.Null ? null : value.GetString(); break;
+                                    case "IsDeleted": user.IsDeleted = value.ValueKind == JsonValueKind.Null ? false : value.GetInt32() == 1; break;
+                                    case "DeletedAt": user.DeletedAt = value.ValueKind == JsonValueKind.Null ? null : DateTime.Parse(value.GetString()!); break;
+                                    case "DeleteReason": user.DeleteReason = value.ValueKind == JsonValueKind.Null ? null : value.GetString(); break;
+                                    case "DeleteNote": user.DeleteNote = value.ValueKind == JsonValueKind.Null ? null : value.GetString(); break;
+                                    case "AvatarUrl": user.AvatarUrl = value.ValueKind == JsonValueKind.Null ? null : value.GetString(); break;
+                                    case "IsAvatarApproved": user.IsAvatarApproved = value.ValueKind == JsonValueKind.Null ? false : value.GetInt32() == 1; break;
+                                    case "AvatarSubmittedAt": user.AvatarSubmittedAt = value.ValueKind == JsonValueKind.Null ? null : DateTime.Parse(value.GetString()!); break;
+                                    case "PendingEmail": user.PendingEmail = value.ValueKind == JsonValueKind.Null ? null : value.GetString(); break;
+                                    case "PendingUsername": user.PendingUsername = value.ValueKind == JsonValueKind.Null ? null : value.GetString(); break;
+                                    case "IsEmailChangeApproved": user.IsEmailChangeApproved = value.ValueKind == JsonValueKind.Null ? false : value.GetInt32() == 1; break;
+                                    case "IsUsernameChangeApproved": user.IsUsernameChangeApproved = value.ValueKind == JsonValueKind.Null ? false : value.GetInt32() == 1; break;
+                                    case "VerificationCode": user.VerificationCode = value.ValueKind == JsonValueKind.Null ? null : value.GetString(); break;
+                                    case "VerificationCodeExpiry": user.VerificationCodeExpiry = value.ValueKind == JsonValueKind.Null ? null : DateTime.Parse(value.GetString()!); break;
+                                }
+                            }
+                            return user;
                         }
                     }
                 }
                 return null;
             }
-            catch
+            catch (Exception ex)
             {
+                Console.WriteLine($"⚠️ 解析用户 JSON 失败: {ex.Message}");
                 return null;
             }
         }
 
         private List<User> ParseUserListFromJson(string json)
         {
-            // 简化实现，实际应该完整解析
-            return new List<User>();
+            var users = new List<User>();
+            try
+            {
+                using var doc = JsonDocument.Parse(json);
+                var root = doc.RootElement;
+
+                if (root.TryGetProperty("results", out var results) && results.GetArrayLength() > 0)
+                {
+                    var firstResult = results[0];
+                    if (firstResult.TryGetProperty("response", out var response) &&
+                        response.TryGetProperty("result", out var result))
+                    {
+                        if (result.TryGetProperty("rows", out var rows) && rows.GetArrayLength() > 0)
+                        {
+                            var cols = result.GetProperty("cols");
+
+                            for (int r = 0; r < rows.GetArrayLength(); r++)
+                            {
+                                var row = rows[r];
+                                var values = row.GetProperty("values");
+                                var user = new User();
+
+                                for (int i = 0; i < cols.GetArrayLength(); i++)
+                                {
+                                    var colName = cols[i].GetProperty("name").GetString();
+                                    var value = values[i];
+
+                                    switch (colName)
+                                    {
+                                        case "Id": user.Id = value.ValueKind == JsonValueKind.Null ? 0 : value.GetInt32(); break;
+                                        case "Username": user.Username = value.ValueKind == JsonValueKind.Null ? "" : value.GetString() ?? ""; break;
+                                        case "Email": user.Email = value.ValueKind == JsonValueKind.Null ? "" : value.GetString() ?? ""; break;
+                                        case "PasswordHash": user.PasswordHash = value.ValueKind == JsonValueKind.Null ? "" : value.GetString() ?? ""; break;
+                                        case "IsEmailVerified": user.IsEmailVerified = value.ValueKind == JsonValueKind.Null ? false : value.GetInt32() == 1; break;
+                                        case "IsAdmin": user.IsAdmin = value.ValueKind == JsonValueKind.Null ? false : value.GetInt32() == 1; break;
+                                        case "CreatedAt": user.CreatedAt = value.ValueKind == JsonValueKind.Null ? DateTime.Now : DateTime.Parse(value.GetString() ?? DateTime.Now.ToString()); break;
+                                        case "IsBanned": user.IsBanned = value.ValueKind == JsonValueKind.Null ? false : value.GetInt32() == 1; break;
+                                        case "IsDeleted": user.IsDeleted = value.ValueKind == JsonValueKind.Null ? false : value.GetInt32() == 1; break;
+                                        case "AvatarUrl": user.AvatarUrl = value.ValueKind == JsonValueKind.Null ? null : value.GetString(); break;
+                                        case "IsAvatarApproved": user.IsAvatarApproved = value.ValueKind == JsonValueKind.Null ? false : value.GetInt32() == 1; break;
+                                    }
+                                }
+                                users.Add(user);
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"⚠️ 解析用户列表 JSON 失败: {ex.Message}");
+            }
+            return users;
         }
 
         private List<Blog> ParseBlogListFromJson(string json)
         {
-            return new List<Blog>();
+            var blogs = new List<Blog>();
+            try
+            {
+                using var doc = JsonDocument.Parse(json);
+                var root = doc.RootElement;
+
+                if (root.TryGetProperty("results", out var results) && results.GetArrayLength() > 0)
+                {
+                    var firstResult = results[0];
+                    if (firstResult.TryGetProperty("response", out var response) &&
+                        response.TryGetProperty("result", out var result))
+                    {
+                        if (result.TryGetProperty("rows", out var rows) && rows.GetArrayLength() > 0)
+                        {
+                            var cols = result.GetProperty("cols");
+
+                            for (int r = 0; r < rows.GetArrayLength(); r++)
+                            {
+                                var row = rows[r];
+                                var values = row.GetProperty("values");
+                                var blog = new Blog();
+
+                                for (int i = 0; i < cols.GetArrayLength(); i++)
+                                {
+                                    var colName = cols[i].GetProperty("name").GetString();
+                                    var value = values[i];
+
+                                    switch (colName)
+                                    {
+                                        case "Id": blog.Id = value.ValueKind == JsonValueKind.Null ? 0 : value.GetInt32(); break;
+                                        case "Title": blog.Title = value.ValueKind == JsonValueKind.Null ? "" : value.GetString() ?? ""; break;
+                                        case "Content": blog.Content = value.ValueKind == JsonValueKind.Null ? "" : value.GetString() ?? ""; break;
+                                        case "Summary": blog.Summary = value.ValueKind == JsonValueKind.Null ? "" : value.GetString() ?? ""; break;
+                                        case "PublishDate": blog.PublishDate = value.ValueKind == JsonValueKind.Null ? DateTime.Now : DateTime.Parse(value.GetString() ?? DateTime.Now.ToString()); break;
+                                        case "CoverImageUrl": blog.CoverImageUrl = value.ValueKind == JsonValueKind.Null ? null : value.GetString(); break;
+                                        case "LikeCount": blog.LikeCount = value.ValueKind == JsonValueKind.Null ? 0 : value.GetInt32(); break;
+                                    }
+                                }
+                                blogs.Add(blog);
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"⚠️ 解析博客列表 JSON 失败: {ex.Message}");
+            }
+            return blogs;
         }
 
         private Blog? ParseBlogFromJson(string json)
         {
-            return null;
+            var blogs = ParseBlogListFromJson(json);
+            return blogs.FirstOrDefault();
         }
 
         private List<Message> ParseMessageListFromJson(string json)
         {
-            return new List<Message>();
+            var messages = new List<Message>();
+            try
+            {
+                using var doc = JsonDocument.Parse(json);
+                var root = doc.RootElement;
+
+                if (root.TryGetProperty("results", out var results) && results.GetArrayLength() > 0)
+                {
+                    var firstResult = results[0];
+                    if (firstResult.TryGetProperty("response", out var response) &&
+                        response.TryGetProperty("result", out var result))
+                    {
+                        if (result.TryGetProperty("rows", out var rows) && rows.GetArrayLength() > 0)
+                        {
+                            var cols = result.GetProperty("cols");
+
+                            for (int r = 0; r < rows.GetArrayLength(); r++)
+                            {
+                                var row = rows[r];
+                                var values = row.GetProperty("values");
+                                var msg = new Message();
+
+                                for (int i = 0; i < cols.GetArrayLength(); i++)
+                                {
+                                    var colName = cols[i].GetProperty("name").GetString();
+                                    var value = values[i];
+
+                                    switch (colName)
+                                    {
+                                        case "Id": msg.Id = value.ValueKind == JsonValueKind.Null ? 0 : value.GetInt32(); break;
+                                        case "UserId": msg.UserId = value.ValueKind == JsonValueKind.Null ? 0 : value.GetInt32(); break;
+                                        case "VisitorName": msg.VisitorName = value.ValueKind == JsonValueKind.Null ? "" : value.GetString() ?? ""; break;
+                                        case "Email": msg.Email = value.ValueKind == JsonValueKind.Null ? "" : value.GetString() ?? ""; break;
+                                        case "Content": msg.Content = value.ValueKind == JsonValueKind.Null ? "" : value.GetString() ?? ""; break;
+                                        case "CreateTime": msg.CreateTime = value.ValueKind == JsonValueKind.Null ? DateTime.Now : DateTime.Parse(value.GetString() ?? DateTime.Now.ToString()); break;
+                                        case "IsApproved": msg.IsApproved = value.ValueKind == JsonValueKind.Null ? false : value.GetInt32() == 1; break;
+                                        case "LikeCount": msg.LikeCount = value.ValueKind == JsonValueKind.Null ? 0 : value.GetInt32(); break;
+                                        case "AdminReply": msg.AdminReply = value.ValueKind == JsonValueKind.Null ? null : value.GetString(); break;
+                                        case "AdminReplyTime": msg.AdminReplyTime = value.ValueKind == JsonValueKind.Null ? null : DateTime.Parse(value.GetString()!); break;
+                                        case "ReportCount": msg.ReportCount = value.ValueKind == JsonValueKind.Null ? 0 : value.GetInt32(); break;
+                                        case "IsReported": msg.IsReported = value.ValueKind == JsonValueKind.Null ? false : value.GetInt32() == 1; break;
+                                    }
+                                }
+                                messages.Add(msg);
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"⚠️ 解析留言列表 JSON 失败: {ex.Message}");
+            }
+            return messages;
         }
 
         private Message? ParseMessageFromJson(string json)
         {
-            return null;
+            var messages = ParseMessageListFromJson(json);
+            return messages.FirstOrDefault();
         }
 
         private List<ContactRequest> ParseContactRequestListFromJson(string json)
         {
-            return new List<ContactRequest>();
+            var requests = new List<ContactRequest>();
+            try
+            {
+                using var doc = JsonDocument.Parse(json);
+                var root = doc.RootElement;
+
+                if (root.TryGetProperty("results", out var results) && results.GetArrayLength() > 0)
+                {
+                    var firstResult = results[0];
+                    if (firstResult.TryGetProperty("response", out var response) &&
+                        response.TryGetProperty("result", out var result))
+                    {
+                        if (result.TryGetProperty("rows", out var rows) && rows.GetArrayLength() > 0)
+                        {
+                            var cols = result.GetProperty("cols");
+
+                            for (int r = 0; r < rows.GetArrayLength(); r++)
+                            {
+                                var row = rows[r];
+                                var values = row.GetProperty("values");
+                                var req = new ContactRequest();
+
+                                for (int i = 0; i < cols.GetArrayLength(); i++)
+                                {
+                                    var colName = cols[i].GetProperty("name").GetString();
+                                    var value = values[i];
+
+                                    switch (colName)
+                                    {
+                                        case "Id": req.Id = value.ValueKind == JsonValueKind.Null ? 0 : value.GetInt32(); break;
+                                        case "Platform": req.Platform = value.ValueKind == JsonValueKind.Null ? "" : value.GetString() ?? ""; break;
+                                        case "AuthorizationCode": req.AuthorizationCode = value.ValueKind == JsonValueKind.Null ? "" : value.GetString() ?? ""; break;
+                                        case "HowKnowMe": req.HowKnowMe = value.ValueKind == JsonValueKind.Null ? "" : value.GetString() ?? ""; break;
+                                        case "Identity": req.Identity = value.ValueKind == JsonValueKind.Null ? "" : value.GetString() ?? ""; break;
+                                        case "Relationship": req.Relationship = value.ValueKind == JsonValueKind.Null ? "" : value.GetString() ?? ""; break;
+                                        case "Remarks": req.Remarks = value.ValueKind == JsonValueKind.Null ? "" : value.GetString() ?? ""; break;
+                                        case "UserId": req.UserId = value.ValueKind == JsonValueKind.Null ? 0 : value.GetInt32(); break;
+                                        case "Username": req.Username = value.ValueKind == JsonValueKind.Null ? "" : value.GetString() ?? ""; break;
+                                        case "UserEmail": req.UserEmail = value.ValueKind == JsonValueKind.Null ? "" : value.GetString() ?? ""; break;
+                                        case "RequestTime": req.RequestTime = value.ValueKind == JsonValueKind.Null ? DateTime.Now : DateTime.Parse(value.GetString() ?? DateTime.Now.ToString()); break;
+                                        case "IsApproved": req.IsApproved = value.ValueKind == JsonValueKind.Null ? false : value.GetInt32() == 1; break;
+                                        case "IsUsed": req.IsUsed = value.ValueKind == JsonValueKind.Null ? false : value.GetInt32() == 1; break;
+                                        case "UsedTime": req.UsedTime = value.ValueKind == JsonValueKind.Null ? null : DateTime.Parse(value.GetString()!); break;
+                                        case "UsedBy": req.UsedBy = value.ValueKind == JsonValueKind.Null ? null : value.GetString(); break;
+                                    }
+                                }
+                                requests.Add(req);
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"⚠️ 解析授权码列表 JSON 失败: {ex.Message}");
+            }
+            return requests;
         }
 
         private ContactRequest? ParseContactRequestFromJson(string json)
         {
-            return null;
+            var requests = ParseContactRequestListFromJson(json);
+            return requests.FirstOrDefault();
         }
 
         private List<AboutMe> ParseAboutMeListFromJson(string json)
         {
-            return new List<AboutMe>();
+            var sections = new List<AboutMe>();
+            try
+            {
+                using var doc = JsonDocument.Parse(json);
+                var root = doc.RootElement;
+
+                if (root.TryGetProperty("results", out var results) && results.GetArrayLength() > 0)
+                {
+                    var firstResult = results[0];
+                    if (firstResult.TryGetProperty("response", out var response) &&
+                        response.TryGetProperty("result", out var result))
+                    {
+                        if (result.TryGetProperty("rows", out var rows) && rows.GetArrayLength() > 0)
+                        {
+                            var cols = result.GetProperty("cols");
+
+                            for (int r = 0; r < rows.GetArrayLength(); r++)
+                            {
+                                var row = rows[r];
+                                var values = row.GetProperty("values");
+                                var section = new AboutMe();
+
+                                for (int i = 0; i < cols.GetArrayLength(); i++)
+                                {
+                                    var colName = cols[i].GetProperty("name").GetString();
+                                    var value = values[i];
+
+                                    switch (colName)
+                                    {
+                                        case "Id": section.Id = value.ValueKind == JsonValueKind.Null ? 0 : value.GetInt32(); break;
+                                        case "SectionKey": section.SectionKey = value.ValueKind == JsonValueKind.Null ? "" : value.GetString() ?? ""; break;
+                                        case "Title": section.Title = value.ValueKind == JsonValueKind.Null ? "" : value.GetString() ?? ""; break;
+                                        case "Content": section.Content = value.ValueKind == JsonValueKind.Null ? "" : value.GetString() ?? ""; break;
+                                        case "Icon": section.Icon = value.ValueKind == JsonValueKind.Null ? null : value.GetString(); break;
+                                        case "SortOrder": section.SortOrder = value.ValueKind == JsonValueKind.Null ? 0 : value.GetInt32(); break;
+                                        case "UpdatedAt": section.UpdatedAt = value.ValueKind == JsonValueKind.Null ? DateTime.Now : DateTime.Parse(value.GetString() ?? DateTime.Now.ToString()); break;
+                                    }
+                                }
+                                sections.Add(section);
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"⚠️ 解析 AboutMe 列表 JSON 失败: {ex.Message}");
+            }
+            return sections;
         }
 
         // ============================================================
