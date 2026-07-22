@@ -38,6 +38,22 @@
         margin: 0;
     }
 
+    .btn-glass {
+        padding: 0.5rem 1.5rem;
+        border-radius: 40px;
+        border: 1px solid rgba(255,255,255,0.06);
+        background: rgba(255,255,255,0.04);
+        color: rgba(255,255,255,0.7);
+        text-decoration: none;
+        transition: all 0.3s ease;
+        font-size: 0.9rem;
+    }
+
+    .btn-glass:hover {
+        background: rgba(255,255,255,0.08);
+        color: #fff;
+    }
+
     .stats-row {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
@@ -101,6 +117,35 @@
 
     tr:hover td {
         background: rgba(255,255,255,0.02);
+    }
+
+    .user-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 1px solid rgba(255,255,255,0.06);
+        flex-shrink: 0;
+    }
+
+    .user-avatar-placeholder {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.04);
+        color: rgba(255,255,255,0.3);
+        font-size: 0.75rem;
+        font-weight: 600;
+        flex-shrink: 0;
+    }
+
+    .user-cell {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
     }
 
     .badge {
@@ -197,7 +242,7 @@
     }
 
     .btn-action:disabled {
-        opacity: 0.4;
+        opacity: 0.3;
         cursor: not-allowed;
     }
 
@@ -272,6 +317,11 @@
         to { opacity: 1; transform: translateY(0) scale(1); }
     }
 
+    .op-none {
+        color: rgba(255,255,255,0.15);
+        font-size: 0.75rem;
+    }
+
     @@media (max-width: 768px) {
         .admin-header h1 { font-size: 1.3rem; }
         .filter-bar { flex-direction: column; align-items: stretch; }
@@ -285,9 +335,7 @@
     <div class="admin-header">
         <h1>👥 用户管理</h1>
         <div>
-            <a href="/Admin/Dashboard" class="btn-action primary" style="padding:0.4rem 1.2rem;text-decoration:none;">
-                ← 返回后台
-            </a>
+            <a href="/Admin/Dashboard" class="btn-glass">← 返回后台</a>
         </div>
     </div>
 
@@ -336,8 +384,7 @@
         <table>
             <thead>
                 <tr>
-                    <th>ID</th>
-                    <th>用户名</th>
+                    <th>用户</th>
                     <th>邮箱</th>
                     <th>角色</th>
                     <th>邮箱验证</th>
@@ -358,54 +405,62 @@
                         var verifyClass = user.IsEmailVerified ? "badge-verified" : "badge-unverified";
                         var verifyText = user.IsEmailVerified ? "✅ 已验证" : "⏳ 未验证";
 
+                        var avatarUrl = user.AvatarUrl;
+                        var isAvatarApproved = user.IsAvatarApproved;
+                        var username = user.Username;
+
                         <tr class="user-row"
                             data-status="@(user.IsDeleted ? "deleted" : (user.IsBanned ? "banned" : (user.IsEmailVerified ? "active" : "unverified")))"
                             data-search="@(user.Username + " " + user.Email)">
-                            <td><span style="color:rgba(255,255,255,0.3);font-size:0.8rem;">#@user.Id</span></td>
-                            <td><strong style="color:#fff;">@user.Username</strong></td>
+                            <td>
+                                <div class="user-cell">
+                                    @if (!string.IsNullOrEmpty(avatarUrl) && isAvatarApproved)
+                                    {
+                                        <img src="@avatarUrl" alt="头像" class="user-avatar" />
+                                    }
+                                    else if (!string.IsNullOrEmpty(avatarUrl) && !isAvatarApproved)
+                                    {
+                                        <img src="@avatarUrl" alt="头像" class="user-avatar" style="opacity:0.3;filter:grayscale(1);" />
+                                    }
+                                    else
+                                    {
+                                        <span class="user-avatar-placeholder">@(username?.FirstOrDefault().ToString().ToUpper() ?? "?")</span>
+                                    }
+                                    <strong style="color:#fff;">@user.Username</strong>
+                                </div>
+                            </td>
                             <td style="color:rgba(255,255,255,0.6);font-size:0.85rem;">@user.Email</td>
                             <td><span class="badge @roleClass">@roleText</span></td>
                             <td><span class="badge @verifyClass">@verifyText</span></td>
                             <td><span class="badge @statusClass">@statusText</span></td>
                             <td style="font-size:0.75rem;color:rgba(255,255,255,0.25);">@user.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
                             <td>
-                                <div style="display:flex;flex-wrap:wrap;gap:0.2rem;">
-
-                                    @if (!user.IsAdmin)
-                                    {
+                                @if (user.IsDeleted)
+                                {
+                                    <span class="op-none">已删除，无操作</span>
+                                }
+                                else if (user.IsAdmin)
+                                {
+                                    <span class="op-none">管理员不可操作</span>
+                                }
+                                else
+                                {
+                                    <div style="display:flex;flex-wrap:wrap;gap:0.2rem;">
                                         @if (!user.IsEmailVerified)
                                         {
-                                            <button class="btn-action success" onclick="verifyUser(@user.Id)">
-                                                ✅ 验证
-                                            </button>
+                                            <button class="btn-action success" onclick="verifyUser(@user.Id)">✅ 验证</button>
                                         }
-
-                                        @if (!user.IsBanned && !user.IsDeleted)
+                                        @if (!user.IsBanned)
                                         {
-                                            <button class="btn-action danger" onclick="banUser(@user.Id)">
-                                                🚫 封禁
-                                            </button>
+                                            <button class="btn-action danger" onclick="banUser(@user.Id)">🚫 封禁</button>
                                         }
-                                        else if (user.IsBanned && !user.IsDeleted)
+                                        else
                                         {
-                                            <button class="btn-action success" onclick="unbanUser(@user.Id)">
-                                                ✅ 解封
-                                            </button>
+                                            <button class="btn-action success" onclick="unbanUser(@user.Id)">✅ 解封</button>
                                         }
-
-                                        @if (!user.IsDeleted)
-                                        {
-                                            <button class="btn-action danger" onclick="deleteUser(@user.Id)" style="background:rgba(220,53,69,0.04);color:rgba(220,53,69,0.4);">
-                                                🗑️ 删除
-                                            </button>
-                                        }
-                                    }
-                                    else
-                                    {
-                                        <span style="color:rgba(255,255,255,0.15);font-size:0.7rem;">不可操作</span>
-                                    }
-
-                                </div>
+                                        <button class="btn-action danger" onclick="deleteUser(@user.Id)" style="background:rgba(220,53,69,0.04);color:rgba(220,53,69,0.4);">🗑️ 删除</button>
+                                    </div>
+                                }
                             </td>
                         </tr>
                     }
@@ -413,7 +468,7 @@
                 else
                 {
                     <tr>
-                        <td colspan="8">
+                        <td colspan="7">
                             <div class="empty-state">📭 暂无用户</div>
                         </td>
                     </tr>
@@ -429,16 +484,10 @@
 
 @section Scripts {
     <script>
-        // ============================================================
-        // 获取 CSRF Token
-        // ============================================================
         function getToken() {
             return document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
         }
 
-        // ============================================================
-        // Toast 消息
-        // ============================================================
         function showToast(message, type = 'info') {
             const container = document.getElementById('toastContainer');
             const toast = document.createElement('div');
@@ -452,12 +501,8 @@
             }, 3000);
         }
 
-        // ============================================================
-        // 1. 通过邮箱验证
-        // ============================================================
         function verifyUser(userId) {
             if (!confirm('确认通过该用户的邮箱验证吗？')) return;
-
             fetch('/Admin/ActivateUser', {
                 method: 'POST',
                 headers: {
@@ -478,16 +523,11 @@
             .catch(() => showToast('操作失败，请重试', 'error'));
         }
 
-        // ============================================================
-        // 2. 封禁用户
-        // ============================================================
         function banUser(userId) {
             const hours = prompt('封禁时长（小时），输入0为永久封禁：', '24');
             if (hours === null) return;
-
             const reason = prompt('封禁原因：', '违反网站规定');
             if (reason === null) return;
-
             if (!confirm(`确认封禁该用户 ${hours} 小时吗？`)) return;
 
             fetch('/Admin/BanUser', {
@@ -510,12 +550,8 @@
             .catch(() => showToast('操作失败，请重试', 'error'));
         }
 
-        // ============================================================
-        // 3. 解封用户
-        // ============================================================
         function unbanUser(userId) {
             if (!confirm('确认解封该用户吗？')) return;
-
             fetch('/Admin/UnbanUser', {
                 method: 'POST',
                 headers: {
@@ -536,13 +572,9 @@
             .catch(() => showToast('操作失败，请重试', 'error'));
         }
 
-        // ============================================================
-        // 4. 删除用户
-        // ============================================================
         function deleteUser(userId) {
             const reason = prompt('删除原因：', '违反网站规定');
             if (reason === null) return;
-
             if (!confirm(`确认删除该用户吗？此操作不可恢复！`)) return;
 
             fetch('/Admin/DeleteUser', {
@@ -565,13 +597,9 @@
             .catch(() => showToast('操作失败，请重试', 'error'));
         }
 
-        // ============================================================
-        // 5. 筛选功能
-        // ============================================================
         function applyFilters() {
             const status = document.getElementById('filterStatus').value;
             const search = document.getElementById('searchInput').value.toLowerCase();
-
             const rows = document.querySelectorAll('.user-row');
             let count = 0;
 
