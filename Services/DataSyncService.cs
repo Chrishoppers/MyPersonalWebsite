@@ -29,7 +29,7 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 用户相关（双写 + 优先 Turso）
+        // 用户相关
         // ============================================================
 
         public async Task AddUserAsync(User user)
@@ -55,9 +55,7 @@ namespace MyPersonalWebsite.Services
             {
                 try
                 {
-                    var result = await _tursoService.QueryAsync(
-                        $"SELECT * FROM Users WHERE Email = '{EscapeSql(email)}'"
-                    );
+                    var result = await _tursoService.QueryAsync($"SELECT * FROM Users WHERE Email = '{EscapeSql(email)}'");
                     var user = ParseUserFromJson(result);
                     if (user != null)
                     {
@@ -72,8 +70,7 @@ namespace MyPersonalWebsite.Services
             }
 
             Console.WriteLine($"📂 从本地 SQLite 读取用户: {email}");
-            return await _localContext.Users
-                .FirstOrDefaultAsync(u => u.Email == email);
+            return await _localContext.Users.FirstOrDefaultAsync(u => u.Email == email);
         }
 
         public async Task<User?> GetUserByUsernameAsync(string username)
@@ -82,9 +79,7 @@ namespace MyPersonalWebsite.Services
             {
                 try
                 {
-                    var result = await _tursoService.QueryAsync(
-                        $"SELECT * FROM Users WHERE Username = '{EscapeSql(username)}'"
-                    );
+                    var result = await _tursoService.QueryAsync($"SELECT * FROM Users WHERE Username = '{EscapeSql(username)}'");
                     var user = ParseUserFromJson(result);
                     if (user != null)
                     {
@@ -99,8 +94,7 @@ namespace MyPersonalWebsite.Services
             }
 
             Console.WriteLine($"📂 从本地 SQLite 读取用户: {username}");
-            return await _localContext.Users
-                .FirstOrDefaultAsync(u => u.Username == username);
+            return await _localContext.Users.FirstOrDefaultAsync(u => u.Username == username);
         }
 
         public async Task<User?> GetUserByIdAsync(int id)
@@ -109,9 +103,7 @@ namespace MyPersonalWebsite.Services
             {
                 try
                 {
-                    var result = await _tursoService.QueryAsync(
-                        $"SELECT * FROM Users WHERE Id = {id}"
-                    );
+                    var result = await _tursoService.QueryAsync($"SELECT * FROM Users WHERE Id = {id}");
                     var user = ParseUserFromJson(result);
                     if (user != null)
                     {
@@ -171,7 +163,7 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 博客相关（双写 + 优先 Turso）
+        // 博客相关
         // ============================================================
 
         public async Task AddBlogAsync(Blog blog)
@@ -196,9 +188,7 @@ namespace MyPersonalWebsite.Services
             {
                 try
                 {
-                    var result = await _tursoService.QueryAsync(
-                        "SELECT * FROM Blogs ORDER BY PublishDate DESC"
-                    );
+                    var result = await _tursoService.QueryAsync("SELECT * FROM Blogs ORDER BY PublishDate DESC");
                     var blogs = ParseBlogListFromJson(result);
                     if (blogs != null && blogs.Any())
                     {
@@ -212,9 +202,7 @@ namespace MyPersonalWebsite.Services
                 }
             }
 
-            var localBlogs = await _localContext.Blogs
-                .OrderByDescending(b => b.PublishDate)
-                .ToListAsync();
+            var localBlogs = await _localContext.Blogs.OrderByDescending(b => b.PublishDate).ToListAsync();
             Console.WriteLine($"📂 从本地 SQLite 读取 {localBlogs.Count} 篇博客");
             return localBlogs;
         }
@@ -225,9 +213,7 @@ namespace MyPersonalWebsite.Services
             {
                 try
                 {
-                    var result = await _tursoService.QueryAsync(
-                        $"SELECT * FROM Blogs WHERE Id = {id}"
-                    );
+                    var result = await _tursoService.QueryAsync($"SELECT * FROM Blogs WHERE Id = {id}");
                     var blog = ParseBlogFromJson(result);
                     if (blog != null)
                     {
@@ -278,7 +264,7 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 留言相关（双写 + 优先 Turso）
+        // 留言相关
         // ============================================================
 
         public async Task AddMessageAsync(Message message)
@@ -303,9 +289,7 @@ namespace MyPersonalWebsite.Services
             {
                 try
                 {
-                    var result = await _tursoService.QueryAsync(
-                        "SELECT * FROM Messages ORDER BY CreateTime DESC"
-                    );
+                    var result = await _tursoService.QueryAsync("SELECT * FROM Messages ORDER BY CreateTime DESC");
                     var messages = ParseMessageListFromJson(result);
                     if (messages != null && messages.Any())
                     {
@@ -319,9 +303,7 @@ namespace MyPersonalWebsite.Services
                 }
             }
 
-            var localMessages = await _localContext.Messages
-                .OrderByDescending(m => m.CreateTime)
-                .ToListAsync();
+            var localMessages = await _localContext.Messages.OrderByDescending(m => m.CreateTime).ToListAsync();
             Console.WriteLine($"📂 从本地 SQLite 读取 {localMessages.Count} 条留言");
             return localMessages;
         }
@@ -332,9 +314,7 @@ namespace MyPersonalWebsite.Services
             {
                 try
                 {
-                    var result = await _tursoService.QueryAsync(
-                        $"SELECT * FROM Messages WHERE Id = {id}"
-                    );
+                    var result = await _tursoService.QueryAsync($"SELECT * FROM Messages WHERE Id = {id}");
                     var message = ParseMessageFromJson(result);
                     if (message != null)
                     {
@@ -390,7 +370,7 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // ContactRequest 相关（双写 + 优先 Turso）
+        // ContactRequest 相关
         // ============================================================
 
         public async Task<List<ContactRequest>> GetContactRequestsAsync()
@@ -399,9 +379,7 @@ namespace MyPersonalWebsite.Services
             {
                 try
                 {
-                    var result = await _tursoService.QueryAsync(
-                        "SELECT * FROM ContactRequests ORDER BY RequestTime DESC"
-                    );
+                    var result = await _tursoService.QueryAsync("SELECT * FROM ContactRequests ORDER BY RequestTime DESC");
                     var requests = ParseContactRequestListFromJson(result);
                     if (requests != null && requests.Any())
                     {
@@ -415,9 +393,7 @@ namespace MyPersonalWebsite.Services
                 }
             }
 
-            return await _localContext.ContactRequests
-                .OrderByDescending(r => r.RequestTime)
-                .ToListAsync();
+            return await _localContext.ContactRequests.OrderByDescending(r => r.RequestTime).ToListAsync();
         }
 
         public async Task<ContactRequest?> GetContactRequestByIdAsync(int id)
@@ -426,9 +402,7 @@ namespace MyPersonalWebsite.Services
             {
                 try
                 {
-                    var result = await _tursoService.QueryAsync(
-                        $"SELECT * FROM ContactRequests WHERE Id = {id}"
-                    );
+                    var result = await _tursoService.QueryAsync($"SELECT * FROM ContactRequests WHERE Id = {id}");
                     var request = ParseContactRequestFromJson(result);
                     if (request != null)
                     {
@@ -478,7 +452,7 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // AboutMe 相关（双写 + 优先 Turso）
+        // AboutMe 相关
         // ============================================================
 
         public async Task<List<AboutMe>> GetAboutMeAsync()
@@ -487,9 +461,7 @@ namespace MyPersonalWebsite.Services
             {
                 try
                 {
-                    var result = await _tursoService.QueryAsync(
-                        "SELECT * FROM AboutMeContents ORDER BY SortOrder"
-                    );
+                    var result = await _tursoService.QueryAsync("SELECT * FROM AboutMeContents ORDER BY SortOrder");
                     var sections = ParseAboutMeListFromJson(result);
                     if (sections != null && sections.Any())
                     {
@@ -503,9 +475,7 @@ namespace MyPersonalWebsite.Services
                 }
             }
 
-            return await _localContext.AboutMeContents
-                .OrderBy(s => s.SortOrder)
-                .ToListAsync();
+            return await _localContext.AboutMeContents.OrderBy(s => s.SortOrder).ToListAsync();
         }
 
         public async Task UpdateAboutMeAsync(AboutMe section)
@@ -525,35 +495,30 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 管理员账号检查（不重置密码！）
+        // 管理员账号（不重置密码）
         // ============================================================
 
         public async Task EnsureAdminExistsAsync()
         {
             User? admin = null;
 
-            // 1. 先从 Turso 查
             if (_tursoAvailable)
             {
                 try
                 {
-                    var result = await _tursoService.QueryAsync(
-                        "SELECT * FROM Users WHERE Username = 'admin'"
-                    );
+                    var result = await _tursoService.QueryAsync("SELECT * FROM Users WHERE Username = 'admin'");
                     admin = ParseUserFromJson(result);
                     if (admin != null)
                     {
                         Console.WriteLine("✅ 管理员账号已存在于 Turso");
-                        // 同步到本地
-                        var localAdmin = await _localContext.Users
-                            .FirstOrDefaultAsync(u => u.Username == "admin");
+                        var localAdmin = await _localContext.Users.FirstOrDefaultAsync(u => u.Username == "admin");
                         if (localAdmin == null)
                         {
                             _localContext.Users.Add(admin);
                             await _localContext.SaveChangesAsync();
                             Console.WriteLine("✅ 管理员账号已从 Turso 同步到本地");
                         }
-                        return;  // 直接返回，不重置密码
+                        return;
                     }
                 }
                 catch (Exception ex)
@@ -562,23 +527,19 @@ namespace MyPersonalWebsite.Services
                 }
             }
 
-            // 2. 从本地查
-            admin = await _localContext.Users
-                .FirstOrDefaultAsync(u => u.Username == "admin");
+            admin = await _localContext.Users.FirstOrDefaultAsync(u => u.Username == "admin");
 
             if (admin != null)
             {
                 Console.WriteLine("✅ 管理员账号已存在于本地 SQLite");
-                // 同步到 Turso
                 if (_tursoAvailable)
                 {
                     await SyncUserToTursoAsync(admin);
                     Console.WriteLine("✅ 管理员账号已从本地同步到 Turso");
                 }
-                return;  // 直接返回，不重置密码
+                return;
             }
 
-            // 3. 都没有才创建（只有第一次部署会执行）
             Console.WriteLine("📝 首次部署，创建管理员账号...");
             admin = new User
             {
@@ -608,9 +569,7 @@ namespace MyPersonalWebsite.Services
             {
                 try
                 {
-                    var result = await _tursoService.QueryAsync(
-                        "SELECT * FROM Users WHERE IsDeleted = 0 ORDER BY CreatedAt DESC"
-                    );
+                    var result = await _tursoService.QueryAsync("SELECT * FROM Users WHERE IsDeleted = 0 ORDER BY CreatedAt DESC");
                     var users = ParseUserListFromJson(result);
                     if (users != null && users.Any())
                     {
@@ -624,14 +583,11 @@ namespace MyPersonalWebsite.Services
                 }
             }
 
-            return await _localContext.Users
-                .Where(u => !u.IsDeleted)
-                .OrderByDescending(u => u.CreatedAt)
-                .ToListAsync();
+            return await _localContext.Users.Where(u => !u.IsDeleted).OrderByDescending(u => u.CreatedAt).ToListAsync();
         }
 
         // ============================================================
-        // Turso 同步方法（写入 Turso）
+        // Turso 同步方法
         // ============================================================
 
         private async Task<bool> SyncUserToTursoAsync(User user)
@@ -780,7 +736,7 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // JSON 解析方法（真正解析 Turso 返回数据）
+        // JSON 解析方法（Turso v2 格式）
         // ============================================================
 
         private User? ParseUserFromJson(string json)
@@ -800,7 +756,12 @@ namespace MyPersonalWebsite.Services
                         {
                             var row = rows[0];
                             var cols = result.GetProperty("cols");
-                            var values = row.GetProperty("values");
+
+                            JsonElement values;
+                            if (row.TryGetProperty("values", out var valuesArray))
+                                values = valuesArray;
+                            else
+                                values = row;
 
                             var user = new User();
 
@@ -871,7 +832,12 @@ namespace MyPersonalWebsite.Services
                             for (int r = 0; r < rows.GetArrayLength(); r++)
                             {
                                 var row = rows[r];
-                                var values = row.GetProperty("values");
+                                JsonElement values;
+                                if (row.TryGetProperty("values", out var valuesArray))
+                                    values = valuesArray;
+                                else
+                                    values = row;
+
                                 var user = new User();
 
                                 for (int i = 0; i < cols.GetArrayLength(); i++)
@@ -928,7 +894,12 @@ namespace MyPersonalWebsite.Services
                             for (int r = 0; r < rows.GetArrayLength(); r++)
                             {
                                 var row = rows[r];
-                                var values = row.GetProperty("values");
+                                JsonElement values;
+                                if (row.TryGetProperty("values", out var valuesArray))
+                                    values = valuesArray;
+                                else
+                                    values = row;
+
                                 var blog = new Blog();
 
                                 for (int i = 0; i < cols.GetArrayLength(); i++)
@@ -987,7 +958,12 @@ namespace MyPersonalWebsite.Services
                             for (int r = 0; r < rows.GetArrayLength(); r++)
                             {
                                 var row = rows[r];
-                                var values = row.GetProperty("values");
+                                JsonElement values;
+                                if (row.TryGetProperty("values", out var valuesArray))
+                                    values = valuesArray;
+                                else
+                                    values = row;
+
                                 var msg = new Message();
 
                                 for (int i = 0; i < cols.GetArrayLength(); i++)
@@ -1051,7 +1027,12 @@ namespace MyPersonalWebsite.Services
                             for (int r = 0; r < rows.GetArrayLength(); r++)
                             {
                                 var row = rows[r];
-                                var values = row.GetProperty("values");
+                                JsonElement values;
+                                if (row.TryGetProperty("values", out var valuesArray))
+                                    values = valuesArray;
+                                else
+                                    values = row;
+
                                 var req = new ContactRequest();
 
                                 for (int i = 0; i < cols.GetArrayLength(); i++)
@@ -1118,7 +1099,12 @@ namespace MyPersonalWebsite.Services
                             for (int r = 0; r < rows.GetArrayLength(); r++)
                             {
                                 var row = rows[r];
-                                var values = row.GetProperty("values");
+                                JsonElement values;
+                                if (row.TryGetProperty("values", out var valuesArray))
+                                    values = valuesArray;
+                                else
+                                    values = row;
+
                                 var section = new AboutMe();
 
                                 for (int i = 0; i < cols.GetArrayLength(); i++)
