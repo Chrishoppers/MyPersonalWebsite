@@ -7,18 +7,36 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
 
-// 本地 SQLite
+// ============================================================
+// 本地 SQLite（作为备用）
+// ============================================================
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"))
 );
 
-// Turso 云端
+// ============================================================
+// Turso 云端（使用 libSQL 客户端）
+// ============================================================
 var tursoUrl = Environment.GetEnvironmentVariable("TURSO_DATABASE_URL") ?? "";
 var tursoToken = Environment.GetEnvironmentVariable("TURSO_AUTH_TOKEN") ?? "";
 
+// 使用 libSQL 连接 Turso
 builder.Services.AddDbContext<TursoDbContext>(options =>
-    options.UseSqlite($"Data Source={tursoUrl};Mode=ReadWriteCreate;Cache=Shared;AuthToken={tursoToken}")
-);
+{
+    if (!string.IsNullOrEmpty(tursoUrl) && !string.IsNullOrEmpty(tursoToken))
+    {
+        // libSQL 连接字符串格式
+        var connectionString = $"Data Source={tursoUrl};AuthToken={tursoToken}";
+        options.UseSqlite(connectionString);
+        Console.WriteLine("✅ Turso 数据库已配置");
+    }
+    else
+    {
+        // 降级到本地 SQLite
+        options.UseSqlite("Data Source=PersonalSite.db");
+        Console.WriteLine("⚠️ Turso 未配置，使用本地 SQLite");
+    }
+});
 
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
@@ -34,12 +52,15 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<BrevoEmailService>();
 builder.Services.AddScoped<SvgCaptchaService>();
 builder.Services.AddScoped<RateLimitService>();
-builder.Services.AddScoped<DataSyncService>();  // ⭐ 添加
+builder.Services.AddScoped<DataSyncService>();
 
 builder.Services.AddSignalR();
 
 var app = builder.Build();
 
+// ============================================================
+// 初始化数据库
+// ============================================================
 using (var scope = app.Services.CreateScope())
 {
     var localDb = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -50,7 +71,7 @@ using (var scope = app.Services.CreateScope())
     localDb.Database.EnsureCreated();
     Console.WriteLine("✅ 本地 SQLite 数据库已就绪");
 
-    // 创建 Turso 数据库
+    // 创建 Turso 数据库（如果可用）
     try
     {
         tursoDb.Database.EnsureCreated();
@@ -62,7 +83,7 @@ using (var scope = app.Services.CreateScope())
         Console.WriteLine("⚠️ 网站将继续使用本地 SQLite");
     }
 
-    // 确保管理员账号存在（双写）
+    // 确保管理员账号存在
     await dataSync.EnsureAdminExistsAsync();
 }
 
