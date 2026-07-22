@@ -97,26 +97,109 @@ namespace MyPersonalWebsite.Controllers
             {
                 if (isAdmin == 1)
                 {
+                    var oldUsername = user.Username;
                     user.Username = value;
                     user.IsUsernameChangeApproved = true;
+                    
+                    // 发送审核通过邮件
+                    try
+                    {
+                        var emailService = HttpContext.RequestServices.GetService<BrevoEmailService>();
+                        if (emailService != null)
+                        {
+                            await emailService.SendUserActionNotificationAsync(
+                                user.Email,
+                                user.Username,
+                                "username_approve",
+                                $"您的昵称已从「{oldUsername}」改为「{user.Username}」，已通过审核！",
+                                null
+                            );
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"邮件发送失败: {ex.Message}");
+                    }
                 }
                 else
                 {
+                    var oldUsername = user.Username;
                     user.PendingUsername = value;
                     user.IsUsernameChangeApproved = false;
+                    
+                    // ⭐ 发送昵称审核邮件给管理员
+                    try
+                    {
+                        var emailService = HttpContext.RequestServices.GetService<BrevoEmailService>();
+                        if (emailService != null)
+                        {
+                            await emailService.SendAdminUsernameVerificationAsync(
+                                user.Username,
+                                user.Email,
+                                user.Id,
+                                oldUsername,
+                                value
+                            );
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"昵称审核邮件发送失败: {ex.Message}");
+                    }
                 }
             }
             else if (field == "email")
             {
                 if (isAdmin == 1)
                 {
+                    var oldEmail = user.Email;
                     user.Email = value;
                     user.IsEmailChangeApproved = true;
+                    
+                    try
+                    {
+                        var emailService = HttpContext.RequestServices.GetService<BrevoEmailService>();
+                        if (emailService != null)
+                        {
+                            await emailService.SendUserActionNotificationAsync(
+                                user.Email,
+                                user.Username,
+                                "email_approve",
+                                $"您的邮箱已从「{oldEmail}」改为「{user.Email}」，已通过审核！",
+                                null
+                            );
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"邮件发送失败: {ex.Message}");
+                    }
                 }
                 else
                 {
+                    var oldEmail = user.Email;
                     user.PendingEmail = value;
                     user.IsEmailChangeApproved = false;
+                    
+                    // ⭐ 发送邮箱审核邮件给管理员
+                    try
+                    {
+                        var emailService = HttpContext.RequestServices.GetService<BrevoEmailService>();
+                        if (emailService != null)
+                        {
+                            await emailService.SendAdminEmailVerificationAsync(
+                                user.Username,
+                                user.Email,
+                                user.Id,
+                                oldEmail,
+                                value
+                            );
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"邮箱审核邮件发送失败: {ex.Message}");
+                    }
                 }
             }
 
@@ -127,68 +210,103 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // ⭐ 上传头像（完整修复版 - 中文不乱码）
+        // 上传头像
         // ============================================================
         [HttpPost]
-public async Task<IActionResult> UploadAvatar(IFormFile avatar)
-{
-    var userId = HttpContext.Session.GetInt32("UserId");
-    if (!userId.HasValue)
-    {
-        return RedirectToAction("Login", "Auth");
-    }
+        public async Task<IActionResult> UploadAvatar(IFormFile avatar)
+        {
+            var userId = HttpContext.Session.GetInt32("UserId");
+            if (!userId.HasValue)
+            {
+                TempData["AvatarError"] = "请先登录";
+                return RedirectToAction("Login", "Auth");
+            }
 
-    if (avatar == null || avatar.Length == 0)
-    {
-        TempData["AvatarError"] = "请选择图片";
-        return RedirectToAction("Profile");
-    }
+            if (avatar == null || avatar.Length == 0)
+            {
+                TempData["AvatarError"] = "请选择图片";
+                return RedirectToAction("Profile");
+            }
 
-    var allowedTypes = new[] { "image/jpeg", "image/png", "image/gif", "image/webp" };
-    if (!allowedTypes.Contains(avatar.ContentType))
-    {
-        TempData["AvatarError"] = "只支持 JPG, PNG, GIF, WebP 格式";
-        return RedirectToAction("Profile");
-    }
+            var allowedTypes = new[] { "image/jpeg", "image/png", "image/gif", "image/webp" };
+            if (!allowedTypes.Contains(avatar.ContentType))
+            {
+                TempData["AvatarError"] = "只支持 JPG, PNG, GIF, WebP 格式";
+                return RedirectToAction("Profile");
+            }
 
-    if (avatar.Length > 5 * 1024 * 1024)
-    {
-        TempData["AvatarError"] = "图片不能超过 5MB";
-        return RedirectToAction("Profile");
-    }
+            if (avatar.Length > 5 * 1024 * 1024)
+            {
+                TempData["AvatarError"] = "图片不能超过 5MB";
+                return RedirectToAction("Profile");
+            }
 
-    var fileName = $"{Guid.NewGuid():N}_{avatar.FileName}";
-    var uploadPath = Path.Combine("wwwroot", "images", "avatars");
+            var fileName = $"{Guid.NewGuid():N}_{avatar.FileName}";
+            var uploadPath = Path.Combine("wwwroot", "images", "avatars");
 
-    if (!Directory.Exists(uploadPath))
-    {
-        Directory.CreateDirectory(uploadPath);
-    }
+            if (!Directory.Exists(uploadPath))
+            {
+                Directory.CreateDirectory(uploadPath);
+            }
 
-    var filePath = Path.Combine(uploadPath, fileName);
-    using (var stream = new FileStream(filePath, FileMode.Create))
-    {
-        await avatar.CopyToAsync(stream);
-    }
+            var filePath = Path.Combine(uploadPath, fileName);
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await avatar.CopyToAsync(stream);
+            }
 
-    var avatarUrl = $"/images/avatars/{fileName}";
-    var user = await _dataSync.GetUserByIdAsync(userId.Value);
+            var avatarUrl = $"/images/avatars/{fileName}";
+            var user = await _dataSync.GetUserByIdAsync(userId.Value);
 
-    if (user != null)
-    {
-        var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-        user.IsAvatarApproved = isAdmin == 1;
-        user.AvatarUrl = avatarUrl;
-        user.AvatarSubmittedAt = DateTime.Now;
-        await _dataSync.UpdateUserAsync(user);
-    }
+            if (user != null)
+            {
+                var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+                
+                if (isAdmin == 1)
+                {
+                    user.IsAvatarApproved = true;
+                    user.AvatarUrl = avatarUrl;
+                    user.AvatarSubmittedAt = DateTime.Now;
+                    await _dataSync.UpdateUserAsync(user);
+                    
+                    TempData["AvatarSuccess"] = "🎉 头像更新成功！";
+                    TempData["AvatarUrl"] = avatarUrl;
+                }
+                else
+                {
+                    user.IsAvatarApproved = false;
+                    user.AvatarUrl = avatarUrl;
+                    user.AvatarSubmittedAt = DateTime.Now;
+                    await _dataSync.UpdateUserAsync(user);
+                    
+                    // ⭐ 发送头像审核邮件给管理员
+                    try
+                    {
+                        var emailService = HttpContext.RequestServices.GetService<BrevoEmailService>();
+                        if (emailService != null)
+                        {
+                            await emailService.SendAdminAvatarVerificationAsync(
+                                user.Username,
+                                user.Email,
+                                user.Id,
+                                avatarUrl,
+                                DateTime.Now
+                            );
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"头像审核邮件发送失败: {ex.Message}");
+                    }
+                    
+                    TempData["AvatarSuccess"] = "📸 头像已提交，等待管理员审核";
+                    TempData["AvatarUrl"] = avatarUrl;
+                }
+            }
 
-    var message = user?.IsAvatarApproved == true ? "🎉 头像更新成功！" : "📸 头像已提交，等待管理员审核";
-    TempData["AvatarSuccess"] = message;
-    TempData["AvatarUrl"] = avatarUrl;
+            return RedirectToAction("Profile");
+        }
 
-    return RedirectToAction("Profile");
-}
         public IActionResult Contact()
         {
             var userId = HttpContext.Session.GetInt32("UserId");
@@ -285,7 +403,6 @@ public async Task<IActionResult> UploadAvatar(IFormFile avatar)
                 return Json(new { success = false, message = "请输入授权码" });
             }
 
-            // 从数据库查询授权码
             var requests = await _dataSync.GetContactRequestsAsync();
             var request = requests.FirstOrDefault(r => r.AuthorizationCode == code && !r.IsUsed);
 
@@ -294,7 +411,6 @@ public async Task<IActionResult> UploadAvatar(IFormFile avatar)
                 return Json(new { success = false, message = "授权码无效或已使用" });
             }
 
-            // 标记为已使用
             request.IsUsed = true;
             request.UsedTime = DateTime.Now;
             await _dataSync.UpdateContactRequestAsync(request);
@@ -304,7 +420,6 @@ public async Task<IActionResult> UploadAvatar(IFormFile avatar)
                 Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
             };
 
-            // 根据平台返回不同的联系方式
             string contactInfo = request.Platform == "WeChat" ? "💬 微信号：Chris_hopper" : "🐧 QQ号：2908685235";
 
             return Json(new
