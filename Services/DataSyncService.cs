@@ -12,21 +12,6 @@ namespace MyPersonalWebsite.Services
     {
         private readonly TursoService _tursoService;
         private readonly bool _tursoAvailable;
-        // ============================================================
-// 公开方法（供 Program.cs 调用）
-// ============================================================
-
-public async Task<string> QueryAsync(string sql)
-{
-    if (!_tursoAvailable) return "{}";
-    return await _tursoService.QueryAsync(sql);
-}
-
-public async Task<bool> ExecuteSqlAsync(string sql)
-{
-    if (!_tursoAvailable) return false;
-    return await _tursoService.ExecuteSqlAsync(sql);
-}
 
         public DataSyncService(TursoService tursoService)
         {
@@ -59,7 +44,7 @@ public async Task<bool> ExecuteSqlAsync(string sql)
                 IsDeleted, DeletedAt, DeleteReason, DeleteNote,
                 AvatarUrl, IsAvatarApproved, AvatarSubmittedAt,
                 PendingEmail, PendingUsername, IsEmailChangeApproved, IsUsernameChangeApproved,
-                VerificationCode, VerificationCodeExpiry
+                VerificationCode, VerificationCodeExpiry, IsApproved
             ) VALUES (
                 {user.Id}, '{EscapeSql(user.Username)}', '{EscapeSql(user.Email)}',
                 '{EscapeSql(user.PasswordHash)}', {(user.IsEmailVerified ? 1 : 0)},
@@ -80,42 +65,44 @@ public async Task<bool> ExecuteSqlAsync(string sql)
                 {(user.IsEmailChangeApproved ? 1 : 0)},
                 {(user.IsUsernameChangeApproved ? 1 : 0)},
                 {(string.IsNullOrEmpty(user.VerificationCode) ? "NULL" : $"'{EscapeSql(user.VerificationCode)}'")},
-                {(user.VerificationCodeExpiry.HasValue ? $"'{user.VerificationCodeExpiry.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")}
+                {(user.VerificationCodeExpiry.HasValue ? $"'{user.VerificationCodeExpiry.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
+                {(user.IsApproved ? 1 : 0)}
             )";
 
             await _tursoService.ExecuteSqlAsync(sql);
             Console.WriteLine($"✅ 用户 {user.Username} 已写入 Turso");
         }
-// ============================================================
-// 用户相关（排除已删除）
-// ============================================================
 
-public async Task<User?> GetUserByEmailAsync(string email)
-{
-    if (!_tursoAvailable) return null;
+        public async Task<User?> GetUserByEmailAsync(string email)
+        {
+            if (!_tursoAvailable) return null;
 
-    var result = await _tursoService.QueryAsync(
-        $"SELECT * FROM Users WHERE Email = '{EscapeSql(email)}' AND IsDeleted = 0"
-    );
-    return ParseUserFromJson(result);
-}
+            var result = await _tursoService.QueryAsync($"SELECT * FROM Users WHERE Email = '{EscapeSql(email)}' AND IsDeleted = 0");
+            return ParseUserFromJson(result);
+        }
 
-public async Task<User?> GetUserByUsernameAsync(string username)
-{
-    if (!_tursoAvailable) return null;
+        public async Task<User?> GetUserByUsernameAsync(string username)
+        {
+            if (!_tursoAvailable) return null;
 
-    var result = await _tursoService.QueryAsync(
-        $"SELECT * FROM Users WHERE Username = '{EscapeSql(username)}' AND IsDeleted = 0"
-    );
-    return ParseUserFromJson(result);
-}
+            var result = await _tursoService.QueryAsync($"SELECT * FROM Users WHERE Username = '{EscapeSql(username)}' AND IsDeleted = 0");
+            return ParseUserFromJson(result);
+        }
 
         public async Task<User?> GetUserByIdAsync(int id)
         {
             if (!_tursoAvailable) return null;
 
             var result = await _tursoService.QueryAsync($"SELECT * FROM Users WHERE Id = {id}");
-            return ParseUserFromJson(result);
+            var user = ParseUserFromJson(result);
+            
+            // ⭐ 调试日志
+            if (user != null)
+            {
+                Console.WriteLine($"✅ 读取用户: Id={user.Id}, 用户名={user.Username}, IsApproved={user.IsApproved}");
+            }
+            
+            return user;
         }
 
         public async Task UpdateUserAsync(User user)
@@ -144,11 +131,12 @@ public async Task<User?> GetUserByUsernameAsync(string username)
                 IsEmailChangeApproved = {(user.IsEmailChangeApproved ? 1 : 0)},
                 IsUsernameChangeApproved = {(user.IsUsernameChangeApproved ? 1 : 0)},
                 VerificationCode = {(string.IsNullOrEmpty(user.VerificationCode) ? "NULL" : $"'{EscapeSql(user.VerificationCode)}'")},
-                VerificationCodeExpiry = {(user.VerificationCodeExpiry.HasValue ? $"'{user.VerificationCodeExpiry.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")}
+                VerificationCodeExpiry = {(user.VerificationCodeExpiry.HasValue ? $"'{user.VerificationCodeExpiry.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
+                IsApproved = {(user.IsApproved ? 1 : 0)}
             WHERE Id = {user.Id}";
 
             await _tursoService.ExecuteSqlAsync(sql);
-            Console.WriteLine($"✅ 用户 {user.Username} 已更新到 Turso");
+            Console.WriteLine($"✅ 用户 {user.Username} 已更新到 Turso (IsApproved={user.IsApproved})");
         }
 
         public async Task<List<User>> GetAllUsersAsync()
@@ -331,6 +319,7 @@ public async Task<User?> GetUserByUsernameAsync(string username)
                     PasswordHash = "AQAAAAIAAYagAAAAEJ4Zj6zVqZMjSx5k5r5WYg==",
                     IsEmailVerified = true,
                     IsAdmin = true,
+                    IsApproved = true,
                     IsBanned = false,
                     IsDeleted = false,
                     CreatedAt = DateTime.Now
@@ -406,51 +395,65 @@ public async Task<User?> GetUserByUsernameAsync(string username)
         }
 
         // ============================================================
-// AboutMe 相关
-// ============================================================
+        // AboutMe 相关
+        // ============================================================
 
-public async Task<List<AboutMe>> GetAboutMeAsync()
-{
-    if (!_tursoAvailable) return new List<AboutMe>();
+        public async Task<List<AboutMe>> GetAboutMeAsync()
+        {
+            if (!_tursoAvailable) return new List<AboutMe>();
 
-    var result = await _tursoService.QueryAsync("SELECT * FROM AboutMeContents ORDER BY SortOrder");
-    return ParseAboutMeListFromJson(result);
-}
+            var result = await _tursoService.QueryAsync("SELECT * FROM AboutMeContents ORDER BY SortOrder");
+            return ParseAboutMeListFromJson(result);
+        }
 
-public async Task UpdateAboutMeAsync(AboutMe section)
-{
-    if (!_tursoAvailable) return;
+        public async Task UpdateAboutMeAsync(AboutMe section)
+        {
+            if (!_tursoAvailable) return;
 
-    var sql = $@"UPDATE AboutMeContents SET
-        Content = '{EscapeSql(section.Content)}',
-        UpdatedAt = '{section.UpdatedAt:yyyy-MM-dd HH:mm:ss}'
-    WHERE Id = {section.Id}";
+            var sql = $@"UPDATE AboutMeContents SET
+                Content = '{EscapeSql(section.Content)}',
+                UpdatedAt = '{section.UpdatedAt:yyyy-MM-dd HH:mm:ss}'
+            WHERE Id = {section.Id}";
 
-    await _tursoService.ExecuteSqlAsync(sql);
-    Console.WriteLine($"✅ AboutMe {section.SectionKey} 已更新到 Turso");
-}
+            await _tursoService.ExecuteSqlAsync(sql);
+        }
 
-// ⭐ 新增：AddAboutMeAsync
-public async Task AddAboutMeAsync(AboutMe section)
-{
-    if (!_tursoAvailable) return;
+        public async Task AddAboutMeAsync(AboutMe section)
+        {
+            if (!_tursoAvailable) return;
 
-    var maxIdResult = await _tursoService.QueryAsync("SELECT MAX(Id) as MaxId FROM AboutMeContents");
-    var maxId = ParseMaxId(maxIdResult);
-    section.Id = maxId + 1;
+            var maxIdResult = await _tursoService.QueryAsync("SELECT MAX(Id) as MaxId FROM AboutMeContents");
+            var maxId = ParseMaxId(maxIdResult);
+            section.Id = maxId + 1;
 
-    var sql = $@"INSERT INTO AboutMeContents (
-        Id, SectionKey, Title, Content, Icon, SortOrder, UpdatedAt
-    ) VALUES (
-        {section.Id}, '{EscapeSql(section.SectionKey)}',
-        '{EscapeSql(section.Title)}', '{EscapeSql(section.Content)}',
-        {(string.IsNullOrEmpty(section.Icon) ? "NULL" : $"'{EscapeSql(section.Icon)}'")},
-        {section.SortOrder}, '{section.UpdatedAt:yyyy-MM-dd HH:mm:ss}'
-    )";
+            var sql = $@"INSERT INTO AboutMeContents (
+                Id, SectionKey, Title, Content, Icon, SortOrder, UpdatedAt
+            ) VALUES (
+                {section.Id}, '{EscapeSql(section.SectionKey)}',
+                '{EscapeSql(section.Title)}', '{EscapeSql(section.Content)}',
+                {(string.IsNullOrEmpty(section.Icon) ? "NULL" : $"'{EscapeSql(section.Icon)}'")},
+                {section.SortOrder}, '{section.UpdatedAt:yyyy-MM-dd HH:mm:ss}'
+            )";
 
-    await _tursoService.ExecuteSqlAsync(sql);
-    Console.WriteLine($"✅ AboutMe {section.SectionKey} 已写入 Turso");
-}
+            await _tursoService.ExecuteSqlAsync(sql);
+            Console.WriteLine($"✅ AboutMe {section.SectionKey} 已写入 Turso");
+        }
+
+        // ============================================================
+        // 公开方法（供 Program.cs 调用）
+        // ============================================================
+
+        public async Task<string> QueryAsync(string sql)
+        {
+            if (!_tursoAvailable) return "{}";
+            return await _tursoService.QueryAsync(sql);
+        }
+
+        public async Task<bool> ExecuteSqlAsync(string sql)
+        {
+            if (!_tursoAvailable) return false;
+            return await _tursoService.ExecuteSqlAsync(sql);
+        }
 
         // ============================================================
         // 兼容旧接口
@@ -488,7 +491,7 @@ public async Task AddAboutMeAsync(AboutMe section)
                     if (je.ValueKind == JsonValueKind.Null) return 0;
                     if (je.ValueKind == JsonValueKind.Number) return je.GetInt32();
                     if (je.ValueKind == JsonValueKind.String)
-                       return int.TryParse(je.GetString(), out var parsedInt) ? parsedInt : 0;
+                        return int.TryParse(je.GetString(), out var parsed) ? parsed : 0;
                     return 0;
                 }
                 return int.TryParse(val?.ToString(), out var parsed) ? parsed : 0;
@@ -633,6 +636,7 @@ public async Task AddAboutMeAsync(AboutMe section)
                                     case "PasswordHash": user.PasswordHash = GetStringFromRow(element); break;
                                     case "IsEmailVerified": user.IsEmailVerified = GetBoolFromRow(element); break;
                                     case "IsAdmin": user.IsAdmin = GetBoolFromRow(element); break;
+                                    case "IsApproved": user.IsApproved = GetBoolFromRow(element); break;
                                     case "CreatedAt": user.CreatedAt = GetDateTimeFromRow(element) ?? DateTime.Now; break;
                                     case "LastLoginAt": user.LastLoginAt = GetDateTimeFromRow(element); break;
                                     case "IsBanned": user.IsBanned = GetBoolFromRow(element); break;
@@ -710,6 +714,7 @@ public async Task AddAboutMeAsync(AboutMe section)
                                         case "PasswordHash": user.PasswordHash = GetStringFromRow(element); break;
                                         case "IsEmailVerified": user.IsEmailVerified = GetBoolFromRow(element); break;
                                         case "IsAdmin": user.IsAdmin = GetBoolFromRow(element); break;
+                                        case "IsApproved": user.IsApproved = GetBoolFromRow(element); break;
                                         case "CreatedAt": user.CreatedAt = GetDateTimeFromRow(element) ?? DateTime.Now; break;
                                         case "IsBanned": user.IsBanned = GetBoolFromRow(element); break;
                                         case "IsDeleted": user.IsDeleted = GetBoolFromRow(element); break;
