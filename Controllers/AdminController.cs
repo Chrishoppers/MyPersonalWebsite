@@ -194,16 +194,15 @@ namespace MyPersonalWebsite.Controllers
         // ============================================================
         // 用户管理
         // ============================================================
-        public async Task<IActionResult> Users()
-        {
-            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-            if (isAdmin != 1)
-                return RedirectToAction("Login", "Auth");
+       public async Task<IActionResult> Users()
+{
+    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+    if (isAdmin != 1)
+        return RedirectToAction("Login", "Auth");
 
-            var users = await _dataSync.GetAllUsersAsync();
-            return View(users.OrderByDescending(u => u.CreatedAt).ToList());
-        }
-
+    var users = await _dataSync.GetAllUsersAsync();
+    return View(users.OrderByDescending(u => u.CreatedAt).ToList());
+}
         // ============================================================
         // 授权码管理
         // ============================================================
