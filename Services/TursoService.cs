@@ -26,7 +26,6 @@ namespace MyPersonalWebsite.Services
 
             try
             {
-                // 确保 URL 使用 HTTPS
                 var url = _databaseUrl;
                 if (url.StartsWith("libsql://"))
                 {
@@ -80,4 +79,4 @@ namespace MyPersonalWebsite.Services
             }
         }
     }
-}p
+}
