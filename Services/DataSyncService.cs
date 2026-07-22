@@ -29,7 +29,7 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 用户相关
+        // 用户相关（双写 + 优先 Turso）
         // ============================================================
 
         public async Task AddUserAsync(User user)
@@ -120,8 +120,10 @@ namespace MyPersonalWebsite.Services
             return await _localContext.Users.FindAsync(id);
         }
 
+        // ⭐ 关键：UpdateUserAsync 必须同时更新 Turso 和本地
         public async Task UpdateUserAsync(User user)
         {
+            // 1. 更新 Turso
             bool tursoSuccess = false;
             if (_tursoAvailable)
             {
@@ -132,6 +134,7 @@ namespace MyPersonalWebsite.Services
                     Console.WriteLine($"⚠️ 用户 {user.Username} Turso 更新失败");
             }
 
+            // 2. 更新本地（无论 Turso 是否成功）
             _localContext.Users.Update(user);
             await _localContext.SaveChangesAsync();
             Console.WriteLine($"✅ 用户 {user.Username} 已更新到本地 SQLite");
@@ -587,7 +590,7 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // Turso 同步方法
+        // Turso 同步方法（⭐ 必须包含 PasswordHash）
         // ============================================================
 
         private async Task<bool> SyncUserToTursoAsync(User user)
@@ -604,7 +607,8 @@ namespace MyPersonalWebsite.Services
                     VerificationCode, VerificationCodeExpiry
                 ) VALUES (
                     {user.Id}, '{EscapeSql(user.Username)}', '{EscapeSql(user.Email)}',
-                    '{EscapeSql(user.PasswordHash)}', {(user.IsEmailVerified ? 1 : 0)},
+                    '{EscapeSql(user.PasswordHash)}',
+                    {(user.IsEmailVerified ? 1 : 0)},
                     {(user.IsAdmin ? 1 : 0)}, '{user.CreatedAt:yyyy-MM-dd HH:mm:ss}',
                     {(user.LastLoginAt.HasValue ? $"'{user.LastLoginAt.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
                     {(user.IsBanned ? 1 : 0)},
