@@ -391,25 +391,31 @@ namespace MyPersonalWebsite.Controllers
             await _dataSync.UpdateUserAsync(user);
             return Json(new { success = true, message = "头像已拒绝" });
         }
-        // ============================================================
-// 审核用户（通过/拒绝）
+       // ============================================================
+// 审核用户（通过）- 无需登录
 // ============================================================
 
 [HttpGet]
 public async Task<IActionResult> ApproveUser(int userId)
 {
-    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-    if (isAdmin != 1)
-        return Content("权限不足，请登录管理员账号");
-
     var user = await _dataSync.GetUserByIdAsync(userId);
     if (user == null)
-        return Content("用户不存在");
+    {
+        return Content("❌ 用户不存在");
+    }
 
+    // 防止重复审核
+    if (user.IsApproved)
+    {
+        return Content("ℹ️ 该用户已审核通过，无需重复操作");
+    }
+
+    // 更新用户状态
     user.IsApproved = true;
     user.IsAvatarApproved = true;
     await _dataSync.UpdateUserAsync(user);
 
+    // 发送通知邮件给用户
     try
     {
         await _emailService.SendUserActionNotificationAsync(
@@ -428,23 +434,32 @@ public async Task<IActionResult> ApproveUser(int userId)
     return Content("✅ 用户已通过审核！用户将收到通知邮件。");
 }
 
+// ============================================================
+// 审核用户（拒绝）- 无需登录
+// ============================================================
+
 [HttpGet]
 public async Task<IActionResult> RejectUser(int userId)
 {
-    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-    if (isAdmin != 1)
-        return Content("权限不足，请登录管理员账号");
-
     var user = await _dataSync.GetUserByIdAsync(userId);
     if (user == null)
-        return Content("用户不存在");
+    {
+        return Content("❌ 用户不存在");
+    }
 
-    // 软删除或标记拒绝
+    // 防止重复操作
+    if (user.IsDeleted)
+    {
+        return Content("ℹ️ 该用户已被处理，无需重复操作");
+    }
+
+    // 软删除用户
     user.IsDeleted = true;
     user.DeletedAt = DateTime.Now;
     user.DeleteReason = "管理员审核拒绝";
     await _dataSync.UpdateUserAsync(user);
 
+    // 发送通知邮件给用户
     try
     {
         await _emailService.SendUserActionNotificationAsync(
@@ -452,7 +467,7 @@ public async Task<IActionResult> RejectUser(int userId)
             user.Username,
             "reject",
             "您的账号审核未通过，请重新注册或联系管理员。",
-            "如有疑问，请联系管理员 2908685235@qq.com"
+            "如有疑问，请联系管理员 chris-hopper@qq.com"
         );
     }
     catch (Exception ex)
