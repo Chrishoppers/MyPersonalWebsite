@@ -6,6 +6,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace MyPersonalWebsite.Controllers
@@ -125,6 +126,9 @@ namespace MyPersonalWebsite.Controllers
             return RedirectToAction("Profile");
         }
 
+        // ============================================================
+        // ⭐ 上传头像（完整修复版 - 中文不乱码）
+        // ============================================================
         [HttpPost]
         public async Task<IActionResult> UploadAvatar(IFormFile avatar)
         {
@@ -177,7 +181,14 @@ namespace MyPersonalWebsite.Controllers
             }
 
             var message = user?.IsAvatarApproved == true ? "头像更新成功！" : "头像已提交，等待管理员审核";
-            return Json(new { success = true, url = avatarUrl, message = message });
+
+            // ⭐ 修复：确保中文正确显示
+            var options = new JsonSerializerOptions
+            {
+                Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+            };
+
+            return Json(new { success = true, url = avatarUrl, message = message }, options);
         }
 
         public IActionResult Contact()
@@ -226,14 +237,14 @@ namespace MyPersonalWebsite.Controllers
                     Relationship = request.Relationship,
                     Remarks = request.Remarks ?? string.Empty,
                     RequestTime = DateTime.Now,
-                    IsApproved = true,
+                    IsApproved = false,
                     IsUsed = false,
                     UserId = user.Id,
                     Username = user.Username,
                     UserEmail = user.Email
                 };
 
-                // TODO: 保存 contactRequest 到数据库
+                await _dataSync.AddContactRequestAsync(contactRequest);
 
                 try
                 {
@@ -256,7 +267,12 @@ namespace MyPersonalWebsite.Controllers
                     Console.WriteLine($"管理员通知邮件发送失败: {ex.Message}");
                 }
 
-                return Json(new { success = true, code = code });
+                var options = new JsonSerializerOptions
+                {
+                    Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+                };
+
+                return Json(new { success = true, code = code }, options);
             }
             catch (Exception ex)
             {
@@ -271,19 +287,38 @@ namespace MyPersonalWebsite.Controllers
                 return Json(new { success = false, message = "请输入授权码" });
             }
 
-            // TODO: 从数据库查询授权码
+            // 从数据库查询授权码
+            var requests = await _dataSync.GetContactRequestsAsync();
+            var request = requests.FirstOrDefault(r => r.AuthorizationCode == code && !r.IsUsed);
 
-            string contactInfo = "💬 微信号：Chris_hopper";
+            if (request == null)
+            {
+                return Json(new { success = false, message = "授权码无效或已使用" });
+            }
+
+            // 标记为已使用
+            request.IsUsed = true;
+            request.UsedTime = DateTime.Now;
+            await _dataSync.UpdateContactRequestAsync(request);
+
+            var options = new JsonSerializerOptions
+            {
+                Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+            };
+
+            // 根据平台返回不同的联系方式
+            string contactInfo = request.Platform == "WeChat" ? "💬 微信号：Chris_hopper" : "🐧 QQ号：2908685235";
+
             return Json(new
             {
                 success = true,
                 data = new
                 {
-                    Platform = "WeChat",
-                    AuthorizationCode = code,
+                    Platform = request.Platform,
+                    AuthorizationCode = request.AuthorizationCode,
                     ContactInfo = contactInfo
                 }
-            });
+            }, options);
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
