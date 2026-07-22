@@ -120,10 +120,8 @@ namespace MyPersonalWebsite.Services
             return await _localContext.Users.FindAsync(id);
         }
 
-        // ⭐ 关键：UpdateUserAsync 必须同时更新 Turso 和本地
         public async Task UpdateUserAsync(User user)
         {
-            // 1. 更新 Turso
             bool tursoSuccess = false;
             if (_tursoAvailable)
             {
@@ -134,7 +132,6 @@ namespace MyPersonalWebsite.Services
                     Console.WriteLine($"⚠️ 用户 {user.Username} Turso 更新失败");
             }
 
-            // 2. 更新本地（无论 Turso 是否成功）
             _localContext.Users.Update(user);
             await _localContext.SaveChangesAsync();
             Console.WriteLine($"✅ 用户 {user.Username} 已更新到本地 SQLite");
@@ -590,7 +587,7 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // Turso 同步方法（⭐ 必须包含 PasswordHash）
+        // Turso 同步方法
         // ============================================================
 
         private async Task<bool> SyncUserToTursoAsync(User user)
@@ -740,7 +737,7 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // JSON 解析方法（Turso v2 格式）
+        // JSON 解析方法（Turso v2 格式 - 正确修复版）
         // ============================================================
 
         private User? ParseUserFromJson(string json)
@@ -761,11 +758,18 @@ namespace MyPersonalWebsite.Services
                             var row = rows[0];
                             var cols = result.GetProperty("cols");
 
-                            JsonElement values;
-                            if (row.TryGetProperty("values", out var valuesArray))
-                                values = valuesArray;
-                            else
-                                values = row;
+                            // ⭐ 关键修复：从 row 对象中获取 values 数组
+                            if (!row.TryGetProperty("values", out var values))
+                            {
+                                Console.WriteLine("⚠️ 行中没有 values 属性");
+                                return null;
+                            }
+
+                            if (values.ValueKind != JsonValueKind.Array)
+                            {
+                                Console.WriteLine($"⚠️ values 不是数组类型: {values.ValueKind}");
+                                return null;
+                            }
 
                             var user = new User();
 
@@ -836,11 +840,12 @@ namespace MyPersonalWebsite.Services
                             for (int r = 0; r < rows.GetArrayLength(); r++)
                             {
                                 var row = rows[r];
-                                JsonElement values;
-                                if (row.TryGetProperty("values", out var valuesArray))
-                                    values = valuesArray;
-                                else
-                                    values = row;
+
+                                if (!row.TryGetProperty("values", out var values))
+                                    continue;
+
+                                if (values.ValueKind != JsonValueKind.Array)
+                                    continue;
 
                                 var user = new User();
 
@@ -898,11 +903,12 @@ namespace MyPersonalWebsite.Services
                             for (int r = 0; r < rows.GetArrayLength(); r++)
                             {
                                 var row = rows[r];
-                                JsonElement values;
-                                if (row.TryGetProperty("values", out var valuesArray))
-                                    values = valuesArray;
-                                else
-                                    values = row;
+
+                                if (!row.TryGetProperty("values", out var values))
+                                    continue;
+
+                                if (values.ValueKind != JsonValueKind.Array)
+                                    continue;
 
                                 var blog = new Blog();
 
@@ -962,11 +968,12 @@ namespace MyPersonalWebsite.Services
                             for (int r = 0; r < rows.GetArrayLength(); r++)
                             {
                                 var row = rows[r];
-                                JsonElement values;
-                                if (row.TryGetProperty("values", out var valuesArray))
-                                    values = valuesArray;
-                                else
-                                    values = row;
+
+                                if (!row.TryGetProperty("values", out var values))
+                                    continue;
+
+                                if (values.ValueKind != JsonValueKind.Array)
+                                    continue;
 
                                 var msg = new Message();
 
@@ -1031,11 +1038,12 @@ namespace MyPersonalWebsite.Services
                             for (int r = 0; r < rows.GetArrayLength(); r++)
                             {
                                 var row = rows[r];
-                                JsonElement values;
-                                if (row.TryGetProperty("values", out var valuesArray))
-                                    values = valuesArray;
-                                else
-                                    values = row;
+
+                                if (!row.TryGetProperty("values", out var values))
+                                    continue;
+
+                                if (values.ValueKind != JsonValueKind.Array)
+                                    continue;
 
                                 var req = new ContactRequest();
 
@@ -1103,11 +1111,12 @@ namespace MyPersonalWebsite.Services
                             for (int r = 0; r < rows.GetArrayLength(); r++)
                             {
                                 var row = rows[r];
-                                JsonElement values;
-                                if (row.TryGetProperty("values", out var valuesArray))
-                                    values = valuesArray;
-                                else
-                                    values = row;
+
+                                if (!row.TryGetProperty("values", out var values))
+                                    continue;
+
+                                if (values.ValueKind != JsonValueKind.Array)
+                                    continue;
 
                                 var section = new AboutMe();
 
