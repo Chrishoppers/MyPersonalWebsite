@@ -482,22 +482,22 @@ namespace MyPersonalWebsite.Services
         }
 
         private int GetIntFromRow(JsonElement element)
+{
+    try
+    {
+        var val = GetValueFromRow(element);
+        if (val is JsonElement je)
         {
-            try
-            {
-                var val = GetValueFromRow(element);
-                if (val is JsonElement je)
-                {
-                    if (je.ValueKind == JsonValueKind.Null) return 0;
-                    if (je.ValueKind == JsonValueKind.Number) return je.GetInt32();
-                    if (je.ValueKind == JsonValueKind.String)
-                        return int.TryParse(je.GetString(), out var parsed) ? parsed : 0;
-                    return 0;
-                }
-                return int.TryParse(val?.ToString(), out var parsed) ? parsed : 0;
-            }
-            catch { return 0; }
+            if (je.ValueKind == JsonValueKind.Null) return 0;
+            if (je.ValueKind == JsonValueKind.Number) return je.GetInt32();
+            if (je.ValueKind == JsonValueKind.String)
+                return int.TryParse(je.GetString(), out var parsedValue) ? parsedValue : 0;
+            return 0;
         }
+        return int.TryParse(val?.ToString(), out var parsedValue) ? parsedValue : 0;
+    }
+    catch { return 0; }
+}
 
         private string GetStringFromRow(JsonElement element)
         {
