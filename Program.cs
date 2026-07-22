@@ -4,6 +4,8 @@ using MyPersonalWebsite.Models;
 using MyPersonalWebsite.Services;
 using MyPersonalWebsite.Hubs;
 using System.Globalization;
+using System.Text.Encodings.Web;
+using System.Text.Unicode;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,17 +17,25 @@ CultureInfo.DefaultThreadCurrentCulture = new CultureInfo("zh-CN");
 CultureInfo.DefaultThreadCurrentUICulture = new CultureInfo("zh-CN");
 Console.WriteLine($"✅ 时区已设置为: {TimeZoneInfo.Local.DisplayName}");
 
-builder.Services.AddControllersWithViews();
+// ============================================================
+// 添加 MVC 服务 + JSON 中文不乱码配置
+// ============================================================
+builder.Services.AddControllersWithViews()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Encoder = JavaScriptEncoder.Create(UnicodeRanges.All);
+        options.JsonSerializerOptions.WriteIndented = true;
+    });
 
 // ============================================================
-// 本地 SQLite（仅作为缓存/备用）
+// 本地 SQLite（仅作为缓存/备用，不用于主数据）
 // ============================================================
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"))
 );
 
 // ============================================================
-// DataProtection 文件存储
+// DataProtection 使用文件存储（每次部署不会丢失 Session）
 // ============================================================
 builder.Services.AddDataProtection()
     .PersistKeysToFileSystem(new DirectoryInfo("/app/keys"))
