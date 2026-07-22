@@ -143,61 +143,67 @@ namespace MyPersonalWebsite.Controllers
             return View();
         }
 
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> VerifyEmail(string email, string code)
-        {
-            var user = await _dataSync.GetUserByEmailAsync(email);
-            if (user == null)
-            {
-                ModelState.AddModelError("", "用户不存在");
-                return View();
-            }
+        // ============================================================
+// 验证邮箱 - 增加过期删除
+// ============================================================
+[HttpPost]
+[ValidateAntiForgeryToken]
+public async Task<IActionResult> VerifyEmail(string email, string code)
+{
+    var user = await _dataSync.GetUserByEmailAsync(email);
+    if (user == null)
+    {
+        ModelState.AddModelError("", "用户不存在或已被系统自动清理");
+        return View();
+    }
 
-            if (user.IsEmailVerified)
-            {
-                TempData["Message"] = "邮箱已验证，请等待管理员审核";
-                return RedirectToAction("RegisterSuccess");
-            }
+    if (user.IsEmailVerified)
+    {
+        TempData["Message"] = "邮箱已验证，请等待管理员审核";
+        return RedirectToAction("RegisterSuccess");
+    }
 
-            if (user.VerificationCode != code)
-            {
-                ModelState.AddModelError("", "验证码错误");
-                return View();
-            }
+    // ⭐ 检查是否已过期（10分钟）
+    if (user.VerificationCodeExpiry < DateTime.Now)
+    {
+        // 删除过期用户
+        await _dataSync.DeleteUser(user.Id);
+        ModelState.AddModelError("", "验证码已过期，请重新注册");
+        return View();
+    }
 
-            if (user.VerificationCodeExpiry < DateTime.Now)
-            {
-                ModelState.AddModelError("", "验证码已过期，请重新注册");
-                return View();
-            }
+    if (user.VerificationCode != code)
+    {
+        ModelState.AddModelError("", "验证码错误");
+        return View();
+    }
 
-            // 邮箱验证通过，但还需要管理员审核
-            user.IsEmailVerified = true;
-            user.VerificationCode = null;
-            user.VerificationCodeExpiry = null;
+    // 邮箱验证通过
+    user.IsEmailVerified = true;
+    user.VerificationCode = null;
+    user.VerificationCodeExpiry = null;
 
-            await _dataSync.UpdateUserAsync(user);
+    await _dataSync.UpdateUserAsync(user);
 
-            // ⭐ 发送新用户审核邮件给管理员
-            try
-            {
-                await _emailService.SendAdminNewUserVerificationAsync(
-                    user.Username,
-                    user.Email,
-                    user.Id,
-                    user.AvatarUrl,
-                    user.CreatedAt
-                );
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"管理员审核邮件发送失败: {ex.Message}");
-            }
+    // 发送管理员审核邮件
+    try
+    {
+        await _emailService.SendAdminNewUserVerificationAsync(
+            user.Username,
+            user.Email,
+            user.Id,
+            user.AvatarUrl,
+            user.CreatedAt
+        );
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"管理员审核邮件发送失败: {ex.Message}");
+    }
 
-            TempData["RegisterEmail"] = email;
-            return RedirectToAction("RegisterSuccess");
-        }
+    TempData["RegisterEmail"] = email;
+    return RedirectToAction("RegisterSuccess");
+}
 
         // ============================================================
         // 注册成功页面（等待管理员审核）
