@@ -33,6 +33,13 @@ namespace MyPersonalWebsite.Controllers
 
         public async Task<IActionResult> About()
         {
+            var sections = await _dataSync.GetAboutMeAsync();
+            ViewBag.Sections = sections;
+
+            // ⭐ 获取管理员信息（用于显示头像）
+            var adminUser = await _dataSync.GetUserByUsernameAsync("admin");
+            ViewBag.AdminUser = adminUser;
+
             return View();
         }
 
@@ -100,8 +107,7 @@ namespace MyPersonalWebsite.Controllers
                     var oldUsername = user.Username;
                     user.Username = value;
                     user.IsUsernameChangeApproved = true;
-                    
-                    // 发送审核通过邮件
+
                     try
                     {
                         var emailService = HttpContext.RequestServices.GetService<BrevoEmailService>();
@@ -126,8 +132,7 @@ namespace MyPersonalWebsite.Controllers
                     var oldUsername = user.Username;
                     user.PendingUsername = value;
                     user.IsUsernameChangeApproved = false;
-                    
-                    // ⭐ 发送昵称审核邮件给管理员
+
                     try
                     {
                         var emailService = HttpContext.RequestServices.GetService<BrevoEmailService>();
@@ -155,7 +160,7 @@ namespace MyPersonalWebsite.Controllers
                     var oldEmail = user.Email;
                     user.Email = value;
                     user.IsEmailChangeApproved = true;
-                    
+
                     try
                     {
                         var emailService = HttpContext.RequestServices.GetService<BrevoEmailService>();
@@ -180,8 +185,7 @@ namespace MyPersonalWebsite.Controllers
                     var oldEmail = user.Email;
                     user.PendingEmail = value;
                     user.IsEmailChangeApproved = false;
-                    
-                    // ⭐ 发送邮箱审核邮件给管理员
+
                     try
                     {
                         var emailService = HttpContext.RequestServices.GetService<BrevoEmailService>();
@@ -261,14 +265,14 @@ namespace MyPersonalWebsite.Controllers
             if (user != null)
             {
                 var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-                
+
                 if (isAdmin == 1)
                 {
                     user.IsAvatarApproved = true;
                     user.AvatarUrl = avatarUrl;
                     user.AvatarSubmittedAt = DateTime.Now;
                     await _dataSync.UpdateUserAsync(user);
-                    
+
                     TempData["AvatarSuccess"] = "🎉 头像更新成功！";
                     TempData["AvatarUrl"] = avatarUrl;
                 }
@@ -278,8 +282,7 @@ namespace MyPersonalWebsite.Controllers
                     user.AvatarUrl = avatarUrl;
                     user.AvatarSubmittedAt = DateTime.Now;
                     await _dataSync.UpdateUserAsync(user);
-                    
-                    // ⭐ 发送头像审核邮件给管理员
+
                     try
                     {
                         var emailService = HttpContext.RequestServices.GetService<BrevoEmailService>();
@@ -298,7 +301,7 @@ namespace MyPersonalWebsite.Controllers
                     {
                         Console.WriteLine($"头像审核邮件发送失败: {ex.Message}");
                     }
-                    
+
                     TempData["AvatarSuccess"] = "📸 头像已提交，等待管理员审核";
                     TempData["AvatarUrl"] = avatarUrl;
                 }
