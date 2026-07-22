@@ -27,26 +27,45 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 用户相关（完全使用 Turso）
+        // 用户相关
         // ============================================================
 
         public async Task AddUserAsync(User user)
         {
             if (!_tursoAvailable) throw new Exception("Turso 未配置");
 
-            // 生成新 ID
             var maxIdResult = await _tursoService.QueryAsync("SELECT MAX(Id) as MaxId FROM Users");
             var maxId = ParseMaxId(maxIdResult);
             user.Id = maxId + 1;
 
             var sql = $@"INSERT INTO Users (
                 Id, Username, Email, PasswordHash, IsEmailVerified, IsAdmin,
-                CreatedAt, IsBanned, IsDeleted
+                CreatedAt, LastLoginAt, IsBanned, BanExpiry, BanReason,
+                IsDeleted, DeletedAt, DeleteReason, DeleteNote,
+                AvatarUrl, IsAvatarApproved, AvatarSubmittedAt,
+                PendingEmail, PendingUsername, IsEmailChangeApproved, IsUsernameChangeApproved,
+                VerificationCode, VerificationCodeExpiry
             ) VALUES (
                 {user.Id}, '{EscapeSql(user.Username)}', '{EscapeSql(user.Email)}',
                 '{EscapeSql(user.PasswordHash)}', {(user.IsEmailVerified ? 1 : 0)},
                 {(user.IsAdmin ? 1 : 0)}, '{user.CreatedAt:yyyy-MM-dd HH:mm:ss}',
-                {(user.IsBanned ? 1 : 0)}, {(user.IsDeleted ? 1 : 0)}
+                {(user.LastLoginAt.HasValue ? $"'{user.LastLoginAt.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
+                {(user.IsBanned ? 1 : 0)},
+                {(user.BanExpiry.HasValue ? $"'{user.BanExpiry.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
+                {(string.IsNullOrEmpty(user.BanReason) ? "NULL" : $"'{EscapeSql(user.BanReason)}'")},
+                {(user.IsDeleted ? 1 : 0)},
+                {(user.DeletedAt.HasValue ? $"'{user.DeletedAt.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
+                {(string.IsNullOrEmpty(user.DeleteReason) ? "NULL" : $"'{EscapeSql(user.DeleteReason)}'")},
+                {(string.IsNullOrEmpty(user.DeleteNote) ? "NULL" : $"'{EscapeSql(user.DeleteNote)}'")},
+                {(string.IsNullOrEmpty(user.AvatarUrl) ? "NULL" : $"'{EscapeSql(user.AvatarUrl)}'")},
+                {(user.IsAvatarApproved ? 1 : 0)},
+                {(user.AvatarSubmittedAt.HasValue ? $"'{user.AvatarSubmittedAt.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
+                {(string.IsNullOrEmpty(user.PendingEmail) ? "NULL" : $"'{EscapeSql(user.PendingEmail)}'")},
+                {(string.IsNullOrEmpty(user.PendingUsername) ? "NULL" : $"'{EscapeSql(user.PendingUsername)}'")},
+                {(user.IsEmailChangeApproved ? 1 : 0)},
+                {(user.IsUsernameChangeApproved ? 1 : 0)},
+                {(string.IsNullOrEmpty(user.VerificationCode) ? "NULL" : $"'{EscapeSql(user.VerificationCode)}'")},
+                {(user.VerificationCodeExpiry.HasValue ? $"'{user.VerificationCodeExpiry.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")}
             )";
 
             await _tursoService.ExecuteSqlAsync(sql);
@@ -93,12 +112,17 @@ namespace MyPersonalWebsite.Services
                 BanReason = {(string.IsNullOrEmpty(user.BanReason) ? "NULL" : $"'{EscapeSql(user.BanReason)}'")},
                 IsDeleted = {(user.IsDeleted ? 1 : 0)},
                 DeletedAt = {(user.DeletedAt.HasValue ? $"'{user.DeletedAt.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
+                DeleteReason = {(string.IsNullOrEmpty(user.DeleteReason) ? "NULL" : $"'{EscapeSql(user.DeleteReason)}'")},
+                DeleteNote = {(string.IsNullOrEmpty(user.DeleteNote) ? "NULL" : $"'{EscapeSql(user.DeleteNote)}'")},
                 AvatarUrl = {(string.IsNullOrEmpty(user.AvatarUrl) ? "NULL" : $"'{EscapeSql(user.AvatarUrl)}'")},
                 IsAvatarApproved = {(user.IsAvatarApproved ? 1 : 0)},
+                AvatarSubmittedAt = {(user.AvatarSubmittedAt.HasValue ? $"'{user.AvatarSubmittedAt.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
                 PendingEmail = {(string.IsNullOrEmpty(user.PendingEmail) ? "NULL" : $"'{EscapeSql(user.PendingEmail)}'")},
                 PendingUsername = {(string.IsNullOrEmpty(user.PendingUsername) ? "NULL" : $"'{EscapeSql(user.PendingUsername)}'")},
                 IsEmailChangeApproved = {(user.IsEmailChangeApproved ? 1 : 0)},
-                IsUsernameChangeApproved = {(user.IsUsernameChangeApproved ? 1 : 0)}
+                IsUsernameChangeApproved = {(user.IsUsernameChangeApproved ? 1 : 0)},
+                VerificationCode = {(string.IsNullOrEmpty(user.VerificationCode) ? "NULL" : $"'{EscapeSql(user.VerificationCode)}'")},
+                VerificationCodeExpiry = {(user.VerificationCodeExpiry.HasValue ? $"'{user.VerificationCodeExpiry.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")}
             WHERE Id = {user.Id}";
 
             await _tursoService.ExecuteSqlAsync(sql);
@@ -122,7 +146,7 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 博客相关（完全使用 Turso）
+        // 博客相关
         // ============================================================
 
         public async Task AddBlogAsync(Blog blog)
@@ -143,6 +167,7 @@ namespace MyPersonalWebsite.Services
             )";
 
             await _tursoService.ExecuteSqlAsync(sql);
+            Console.WriteLine($"✅ 博客 {blog.Title} 已写入 Turso");
         }
 
         public async Task<List<Blog>> GetBlogsAsync()
@@ -175,16 +200,18 @@ namespace MyPersonalWebsite.Services
             WHERE Id = {blog.Id}";
 
             await _tursoService.ExecuteSqlAsync(sql);
+            Console.WriteLine($"✅ 博客 {blog.Title} 已更新到 Turso");
         }
 
         public async Task DeleteBlogAsync(int id)
         {
             if (!_tursoAvailable) return;
             await _tursoService.ExecuteSqlAsync($"DELETE FROM Blogs WHERE Id = {id}");
+            Console.WriteLine($"✅ 博客 {id} 已从 Turso 删除");
         }
 
         // ============================================================
-        // 留言相关（完全使用 Turso）
+        // 留言相关
         // ============================================================
 
         public async Task AddMessageAsync(Message message)
@@ -209,6 +236,7 @@ namespace MyPersonalWebsite.Services
             )";
 
             await _tursoService.ExecuteSqlAsync(sql);
+            Console.WriteLine($"✅ 留言已写入 Turso");
         }
 
         public async Task<List<Message>> GetMessagesAsync()
@@ -245,12 +273,14 @@ namespace MyPersonalWebsite.Services
             WHERE Id = {message.Id}";
 
             await _tursoService.ExecuteSqlAsync(sql);
+            Console.WriteLine($"✅ 留言已更新到 Turso");
         }
 
         public async Task DeleteMessageAsync(int id)
         {
             if (!_tursoAvailable) return;
             await _tursoService.ExecuteSqlAsync($"DELETE FROM Messages WHERE Id = {id}");
+            Console.WriteLine($"✅ 留言 {id} 已从 Turso 删除");
         }
 
         public async Task SaveChangesAsync()
@@ -262,7 +292,7 @@ namespace MyPersonalWebsite.Services
         // 管理员账号
         // ============================================================
 
-        public async Task EnsureAdminExistsInTursoAsync()
+        public async Task EnsureAdminExistsAsync()
         {
             if (!_tursoAvailable) return;
 
@@ -378,8 +408,110 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
+        // 兼容旧接口
+        // ============================================================
+
+        public async Task<List<User>> GetAllUsersWithFallbackAsync()
+        {
+            return await GetAllUsersAsync();
+        }
+
+        // ============================================================
         // JSON 解析方法
         // ============================================================
+
+        private object? GetValueFromRow(JsonElement element)
+        {
+            if (element.ValueKind == JsonValueKind.Object)
+            {
+                if (element.TryGetProperty("value", out var val))
+                    return val;
+                if (element.TryGetProperty("Value", out var val2))
+                    return val2;
+                return element;
+            }
+            return element;
+        }
+
+        private int GetIntFromRow(JsonElement element)
+        {
+            try
+            {
+                var val = GetValueFromRow(element);
+                if (val is JsonElement je)
+                {
+                    if (je.ValueKind == JsonValueKind.Null) return 0;
+                    if (je.ValueKind == JsonValueKind.Number) return je.GetInt32();
+                    if (je.ValueKind == JsonValueKind.String)
+                        return int.TryParse(je.GetString(), out var parsed) ? parsed : 0;
+                    return 0;
+                }
+                return int.TryParse(val?.ToString(), out var parsed) ? parsed : 0;
+            }
+            catch { return 0; }
+        }
+
+        private string GetStringFromRow(JsonElement element)
+        {
+            try
+            {
+                var val = GetValueFromRow(element);
+                if (val is JsonElement je)
+                    return je.ValueKind == JsonValueKind.Null ? "" : je.GetString() ?? "";
+                return val?.ToString() ?? "";
+            }
+            catch { return ""; }
+        }
+
+        private bool GetBoolFromRow(JsonElement element)
+        {
+            try
+            {
+                var val = GetValueFromRow(element);
+                if (val is JsonElement je)
+                {
+                    if (je.ValueKind == JsonValueKind.Null) return false;
+                    if (je.ValueKind == JsonValueKind.True) return true;
+                    if (je.ValueKind == JsonValueKind.False) return false;
+                    if (je.ValueKind == JsonValueKind.Number) return je.GetInt32() == 1;
+                    if (je.ValueKind == JsonValueKind.String)
+                    {
+                        var str = je.GetString()?.ToLower();
+                        return str == "1" || str == "true" || str == "yes";
+                    }
+                    return false;
+                }
+                var str2 = val?.ToString()?.ToLower();
+                return str2 == "1" || str2 == "true" || str2 == "yes";
+            }
+            catch { return false; }
+        }
+
+        private DateTime? GetDateTimeFromRow(JsonElement element)
+        {
+            try
+            {
+                var val = GetStringFromRow(element);
+                if (string.IsNullOrEmpty(val)) return null;
+                return DateTime.Parse(val);
+            }
+            catch { return null; }
+        }
+
+        private string? GetStringOrNullFromRow(JsonElement element)
+        {
+            try
+            {
+                var val = GetValueFromRow(element);
+                if (val is JsonElement je)
+                {
+                    if (je.ValueKind == JsonValueKind.Null) return null;
+                    return je.GetString();
+                }
+                return val?.ToString();
+            }
+            catch { return null; }
+        }
 
         private int ParseMaxId(string json)
         {
@@ -399,9 +531,14 @@ namespace MyPersonalWebsite.Services
                             var row = rows[0];
                             if (row.ValueKind == JsonValueKind.Array && row.GetArrayLength() > 0)
                             {
-                                var val = row[0];
-                                if (val.ValueKind != JsonValueKind.Null)
-                                    return val.GetInt32();
+                                var val = GetValueFromRow(row[0]);
+                                if (val is JsonElement je && je.ValueKind != JsonValueKind.Null)
+                                {
+                                    if (je.ValueKind == JsonValueKind.Number)
+                                        return je.GetInt32();
+                                    if (je.ValueKind == JsonValueKind.String)
+                                        return int.TryParse(je.GetString(), out var parsed) ? parsed : 0;
+                                }
                             }
                         }
                     }
@@ -410,6 +547,10 @@ namespace MyPersonalWebsite.Services
             }
             catch { return 0; }
         }
+
+        // ============================================================
+        // ParseUserFromJson
+        // ============================================================
 
         private User? ParseUserFromJson(string json)
         {
@@ -441,27 +582,30 @@ namespace MyPersonalWebsite.Services
 
                                 switch (colName)
                                 {
-                                    case "Id": user.Id = element.ValueKind == JsonValueKind.Null ? 0 : element.GetInt32(); break;
-                                    case "Username": user.Username = element.ValueKind == JsonValueKind.Null ? "" : element.GetString() ?? ""; break;
-                                    case "Email": user.Email = element.ValueKind == JsonValueKind.Null ? "" : element.GetString() ?? ""; break;
-                                    case "PasswordHash": user.PasswordHash = element.ValueKind == JsonValueKind.Null ? "" : element.GetString() ?? ""; break;
-                                    case "IsEmailVerified": user.IsEmailVerified = element.ValueKind == JsonValueKind.Null ? false : element.GetInt32() == 1; break;
-                                    case "IsAdmin": user.IsAdmin = element.ValueKind == JsonValueKind.Null ? false : element.GetInt32() == 1; break;
-                                    case "CreatedAt": user.CreatedAt = element.ValueKind == JsonValueKind.Null ? DateTime.Now : DateTime.Parse(element.GetString() ?? DateTime.Now.ToString()); break;
-                                    case "LastLoginAt": user.LastLoginAt = element.ValueKind == JsonValueKind.Null ? null : DateTime.Parse(element.GetString()!); break;
-                                    case "IsBanned": user.IsBanned = element.ValueKind == JsonValueKind.Null ? false : element.GetInt32() == 1; break;
-                                    case "BanExpiry": user.BanExpiry = element.ValueKind == JsonValueKind.Null ? null : DateTime.Parse(element.GetString()!); break;
-                                    case "BanReason": user.BanReason = element.ValueKind == JsonValueKind.Null ? null : element.GetString(); break;
-                                    case "IsDeleted": user.IsDeleted = element.ValueKind == JsonValueKind.Null ? false : element.GetInt32() == 1; break;
-                                    case "DeletedAt": user.DeletedAt = element.ValueKind == JsonValueKind.Null ? null : DateTime.Parse(element.GetString()!); break;
-                                    case "AvatarUrl": user.AvatarUrl = element.ValueKind == JsonValueKind.Null ? null : element.GetString(); break;
-                                    case "IsAvatarApproved": user.IsAvatarApproved = element.ValueKind == JsonValueKind.Null ? false : element.GetInt32() == 1; break;
-                                    case "PendingEmail": user.PendingEmail = element.ValueKind == JsonValueKind.Null ? null : element.GetString(); break;
-                                    case "PendingUsername": user.PendingUsername = element.ValueKind == JsonValueKind.Null ? null : element.GetString(); break;
-                                    case "IsEmailChangeApproved": user.IsEmailChangeApproved = element.ValueKind == JsonValueKind.Null ? false : element.GetInt32() == 1; break;
-                                    case "IsUsernameChangeApproved": user.IsUsernameChangeApproved = element.ValueKind == JsonValueKind.Null ? false : element.GetInt32() == 1; break;
-                                    case "VerificationCode": user.VerificationCode = element.ValueKind == JsonValueKind.Null ? null : element.GetString(); break;
-                                    case "VerificationCodeExpiry": user.VerificationCodeExpiry = element.ValueKind == JsonValueKind.Null ? null : DateTime.Parse(element.GetString()!); break;
+                                    case "Id": user.Id = GetIntFromRow(element); break;
+                                    case "Username": user.Username = GetStringFromRow(element); break;
+                                    case "Email": user.Email = GetStringFromRow(element); break;
+                                    case "PasswordHash": user.PasswordHash = GetStringFromRow(element); break;
+                                    case "IsEmailVerified": user.IsEmailVerified = GetBoolFromRow(element); break;
+                                    case "IsAdmin": user.IsAdmin = GetBoolFromRow(element); break;
+                                    case "CreatedAt": user.CreatedAt = GetDateTimeFromRow(element) ?? DateTime.Now; break;
+                                    case "LastLoginAt": user.LastLoginAt = GetDateTimeFromRow(element); break;
+                                    case "IsBanned": user.IsBanned = GetBoolFromRow(element); break;
+                                    case "BanExpiry": user.BanExpiry = GetDateTimeFromRow(element); break;
+                                    case "BanReason": user.BanReason = GetStringOrNullFromRow(element); break;
+                                    case "IsDeleted": user.IsDeleted = GetBoolFromRow(element); break;
+                                    case "DeletedAt": user.DeletedAt = GetDateTimeFromRow(element); break;
+                                    case "DeleteReason": user.DeleteReason = GetStringOrNullFromRow(element); break;
+                                    case "DeleteNote": user.DeleteNote = GetStringOrNullFromRow(element); break;
+                                    case "AvatarUrl": user.AvatarUrl = GetStringOrNullFromRow(element); break;
+                                    case "IsAvatarApproved": user.IsAvatarApproved = GetBoolFromRow(element); break;
+                                    case "AvatarSubmittedAt": user.AvatarSubmittedAt = GetDateTimeFromRow(element); break;
+                                    case "PendingEmail": user.PendingEmail = GetStringOrNullFromRow(element); break;
+                                    case "PendingUsername": user.PendingUsername = GetStringOrNullFromRow(element); break;
+                                    case "IsEmailChangeApproved": user.IsEmailChangeApproved = GetBoolFromRow(element); break;
+                                    case "IsUsernameChangeApproved": user.IsUsernameChangeApproved = GetBoolFromRow(element); break;
+                                    case "VerificationCode": user.VerificationCode = GetStringOrNullFromRow(element); break;
+                                    case "VerificationCodeExpiry": user.VerificationCodeExpiry = GetDateTimeFromRow(element); break;
                                 }
                             }
                             return user;
@@ -476,6 +620,10 @@ namespace MyPersonalWebsite.Services
                 return null;
             }
         }
+
+        // ============================================================
+        // ParseUserListFromJson
+        // ============================================================
 
         private List<User> ParseUserListFromJson(string json)
         {
@@ -511,15 +659,17 @@ namespace MyPersonalWebsite.Services
 
                                     switch (colName)
                                     {
-                                        case "Id": user.Id = element.ValueKind == JsonValueKind.Null ? 0 : element.GetInt32(); break;
-                                        case "Username": user.Username = element.ValueKind == JsonValueKind.Null ? "" : element.GetString() ?? ""; break;
-                                        case "Email": user.Email = element.ValueKind == JsonValueKind.Null ? "" : element.GetString() ?? ""; break;
-                                        case "PasswordHash": user.PasswordHash = element.ValueKind == JsonValueKind.Null ? "" : element.GetString() ?? ""; break;
-                                        case "IsEmailVerified": user.IsEmailVerified = element.ValueKind == JsonValueKind.Null ? false : element.GetInt32() == 1; break;
-                                        case "IsAdmin": user.IsAdmin = element.ValueKind == JsonValueKind.Null ? false : element.GetInt32() == 1; break;
-                                        case "CreatedAt": user.CreatedAt = element.ValueKind == JsonValueKind.Null ? DateTime.Now : DateTime.Parse(element.GetString() ?? DateTime.Now.ToString()); break;
-                                        case "IsBanned": user.IsBanned = element.ValueKind == JsonValueKind.Null ? false : element.GetInt32() == 1; break;
-                                        case "IsDeleted": user.IsDeleted = element.ValueKind == JsonValueKind.Null ? false : element.GetInt32() == 1; break;
+                                        case "Id": user.Id = GetIntFromRow(element); break;
+                                        case "Username": user.Username = GetStringFromRow(element); break;
+                                        case "Email": user.Email = GetStringFromRow(element); break;
+                                        case "PasswordHash": user.PasswordHash = GetStringFromRow(element); break;
+                                        case "IsEmailVerified": user.IsEmailVerified = GetBoolFromRow(element); break;
+                                        case "IsAdmin": user.IsAdmin = GetBoolFromRow(element); break;
+                                        case "CreatedAt": user.CreatedAt = GetDateTimeFromRow(element) ?? DateTime.Now; break;
+                                        case "IsBanned": user.IsBanned = GetBoolFromRow(element); break;
+                                        case "IsDeleted": user.IsDeleted = GetBoolFromRow(element); break;
+                                        case "AvatarUrl": user.AvatarUrl = GetStringOrNullFromRow(element); break;
+                                        case "IsAvatarApproved": user.IsAvatarApproved = GetBoolFromRow(element); break;
                                     }
                                 }
                                 users.Add(user);
@@ -534,6 +684,10 @@ namespace MyPersonalWebsite.Services
             }
             return users;
         }
+
+        // ============================================================
+        // ParseBlogListFromJson
+        // ============================================================
 
         private List<Blog> ParseBlogListFromJson(string json)
         {
@@ -569,13 +723,13 @@ namespace MyPersonalWebsite.Services
 
                                     switch (colName)
                                     {
-                                        case "Id": blog.Id = element.ValueKind == JsonValueKind.Null ? 0 : element.GetInt32(); break;
-                                        case "Title": blog.Title = element.ValueKind == JsonValueKind.Null ? "" : element.GetString() ?? ""; break;
-                                        case "Content": blog.Content = element.ValueKind == JsonValueKind.Null ? "" : element.GetString() ?? ""; break;
-                                        case "Summary": blog.Summary = element.ValueKind == JsonValueKind.Null ? "" : element.GetString() ?? ""; break;
-                                        case "PublishDate": blog.PublishDate = element.ValueKind == JsonValueKind.Null ? DateTime.Now : DateTime.Parse(element.GetString() ?? DateTime.Now.ToString()); break;
-                                        case "CoverImageUrl": blog.CoverImageUrl = element.ValueKind == JsonValueKind.Null ? null : element.GetString(); break;
-                                        case "LikeCount": blog.LikeCount = element.ValueKind == JsonValueKind.Null ? 0 : element.GetInt32(); break;
+                                        case "Id": blog.Id = GetIntFromRow(element); break;
+                                        case "Title": blog.Title = GetStringFromRow(element); break;
+                                        case "Content": blog.Content = GetStringFromRow(element); break;
+                                        case "Summary": blog.Summary = GetStringFromRow(element); break;
+                                        case "PublishDate": blog.PublishDate = GetDateTimeFromRow(element) ?? DateTime.Now; break;
+                                        case "CoverImageUrl": blog.CoverImageUrl = GetStringOrNullFromRow(element); break;
+                                        case "LikeCount": blog.LikeCount = GetIntFromRow(element); break;
                                     }
                                 }
                                 blogs.Add(blog);
@@ -596,6 +750,10 @@ namespace MyPersonalWebsite.Services
             var blogs = ParseBlogListFromJson(json);
             return blogs.FirstOrDefault();
         }
+
+        // ============================================================
+        // ParseMessageListFromJson
+        // ============================================================
 
         private List<Message> ParseMessageListFromJson(string json)
         {
@@ -631,18 +789,18 @@ namespace MyPersonalWebsite.Services
 
                                     switch (colName)
                                     {
-                                        case "Id": msg.Id = element.ValueKind == JsonValueKind.Null ? 0 : element.GetInt32(); break;
-                                        case "UserId": msg.UserId = element.ValueKind == JsonValueKind.Null ? 0 : element.GetInt32(); break;
-                                        case "VisitorName": msg.VisitorName = element.ValueKind == JsonValueKind.Null ? "" : element.GetString() ?? ""; break;
-                                        case "Email": msg.Email = element.ValueKind == JsonValueKind.Null ? "" : element.GetString() ?? ""; break;
-                                        case "Content": msg.Content = element.ValueKind == JsonValueKind.Null ? "" : element.GetString() ?? ""; break;
-                                        case "CreateTime": msg.CreateTime = element.ValueKind == JsonValueKind.Null ? DateTime.Now : DateTime.Parse(element.GetString() ?? DateTime.Now.ToString()); break;
-                                        case "IsApproved": msg.IsApproved = element.ValueKind == JsonValueKind.Null ? false : element.GetInt32() == 1; break;
-                                        case "LikeCount": msg.LikeCount = element.ValueKind == JsonValueKind.Null ? 0 : element.GetInt32(); break;
-                                        case "AdminReply": msg.AdminReply = element.ValueKind == JsonValueKind.Null ? null : element.GetString(); break;
-                                        case "AdminReplyTime": msg.AdminReplyTime = element.ValueKind == JsonValueKind.Null ? null : DateTime.Parse(element.GetString()!); break;
-                                        case "ReportCount": msg.ReportCount = element.ValueKind == JsonValueKind.Null ? 0 : element.GetInt32(); break;
-                                        case "IsReported": msg.IsReported = element.ValueKind == JsonValueKind.Null ? false : element.GetInt32() == 1; break;
+                                        case "Id": msg.Id = GetIntFromRow(element); break;
+                                        case "UserId": msg.UserId = GetIntFromRow(element); break;
+                                        case "VisitorName": msg.VisitorName = GetStringFromRow(element); break;
+                                        case "Email": msg.Email = GetStringFromRow(element); break;
+                                        case "Content": msg.Content = GetStringFromRow(element); break;
+                                        case "CreateTime": msg.CreateTime = GetDateTimeFromRow(element) ?? DateTime.Now; break;
+                                        case "IsApproved": msg.IsApproved = GetBoolFromRow(element); break;
+                                        case "LikeCount": msg.LikeCount = GetIntFromRow(element); break;
+                                        case "AdminReply": msg.AdminReply = GetStringOrNullFromRow(element); break;
+                                        case "AdminReplyTime": msg.AdminReplyTime = GetDateTimeFromRow(element); break;
+                                        case "ReportCount": msg.ReportCount = GetIntFromRow(element); break;
+                                        case "IsReported": msg.IsReported = GetBoolFromRow(element); break;
                                     }
                                 }
                                 messages.Add(msg);
@@ -663,6 +821,10 @@ namespace MyPersonalWebsite.Services
             var messages = ParseMessageListFromJson(json);
             return messages.FirstOrDefault();
         }
+
+        // ============================================================
+        // ParseContactRequestListFromJson
+        // ============================================================
 
         private List<ContactRequest> ParseContactRequestListFromJson(string json)
         {
@@ -698,21 +860,21 @@ namespace MyPersonalWebsite.Services
 
                                     switch (colName)
                                     {
-                                        case "Id": req.Id = element.ValueKind == JsonValueKind.Null ? 0 : element.GetInt32(); break;
-                                        case "Platform": req.Platform = element.ValueKind == JsonValueKind.Null ? "" : element.GetString() ?? ""; break;
-                                        case "AuthorizationCode": req.AuthorizationCode = element.ValueKind == JsonValueKind.Null ? "" : element.GetString() ?? ""; break;
-                                        case "HowKnowMe": req.HowKnowMe = element.ValueKind == JsonValueKind.Null ? "" : element.GetString() ?? ""; break;
-                                        case "Identity": req.Identity = element.ValueKind == JsonValueKind.Null ? "" : element.GetString() ?? ""; break;
-                                        case "Relationship": req.Relationship = element.ValueKind == JsonValueKind.Null ? "" : element.GetString() ?? ""; break;
-                                        case "Remarks": req.Remarks = element.ValueKind == JsonValueKind.Null ? "" : element.GetString() ?? ""; break;
-                                        case "UserId": req.UserId = element.ValueKind == JsonValueKind.Null ? 0 : element.GetInt32(); break;
-                                        case "Username": req.Username = element.ValueKind == JsonValueKind.Null ? "" : element.GetString() ?? ""; break;
-                                        case "UserEmail": req.UserEmail = element.ValueKind == JsonValueKind.Null ? "" : element.GetString() ?? ""; break;
-                                        case "RequestTime": req.RequestTime = element.ValueKind == JsonValueKind.Null ? DateTime.Now : DateTime.Parse(element.GetString() ?? DateTime.Now.ToString()); break;
-                                        case "IsApproved": req.IsApproved = element.ValueKind == JsonValueKind.Null ? false : element.GetInt32() == 1; break;
-                                        case "IsUsed": req.IsUsed = element.ValueKind == JsonValueKind.Null ? false : element.GetInt32() == 1; break;
-                                        case "UsedTime": req.UsedTime = element.ValueKind == JsonValueKind.Null ? null : DateTime.Parse(element.GetString()!); break;
-                                        case "UsedBy": req.UsedBy = element.ValueKind == JsonValueKind.Null ? null : element.GetString(); break;
+                                        case "Id": req.Id = GetIntFromRow(element); break;
+                                        case "Platform": req.Platform = GetStringFromRow(element); break;
+                                        case "AuthorizationCode": req.AuthorizationCode = GetStringFromRow(element); break;
+                                        case "HowKnowMe": req.HowKnowMe = GetStringFromRow(element); break;
+                                        case "Identity": req.Identity = GetStringFromRow(element); break;
+                                        case "Relationship": req.Relationship = GetStringFromRow(element); break;
+                                        case "Remarks": req.Remarks = GetStringFromRow(element); break;
+                                        case "UserId": req.UserId = GetIntFromRow(element); break;
+                                        case "Username": req.Username = GetStringFromRow(element); break;
+                                        case "UserEmail": req.UserEmail = GetStringFromRow(element); break;
+                                        case "RequestTime": req.RequestTime = GetDateTimeFromRow(element) ?? DateTime.Now; break;
+                                        case "IsApproved": req.IsApproved = GetBoolFromRow(element); break;
+                                        case "IsUsed": req.IsUsed = GetBoolFromRow(element); break;
+                                        case "UsedTime": req.UsedTime = GetDateTimeFromRow(element); break;
+                                        case "UsedBy": req.UsedBy = GetStringOrNullFromRow(element); break;
                                     }
                                 }
                                 requests.Add(req);
@@ -733,6 +895,10 @@ namespace MyPersonalWebsite.Services
             var requests = ParseContactRequestListFromJson(json);
             return requests.FirstOrDefault();
         }
+
+        // ============================================================
+        // ParseAboutMeListFromJson
+        // ============================================================
 
         private List<AboutMe> ParseAboutMeListFromJson(string json)
         {
@@ -768,13 +934,13 @@ namespace MyPersonalWebsite.Services
 
                                     switch (colName)
                                     {
-                                        case "Id": section.Id = element.ValueKind == JsonValueKind.Null ? 0 : element.GetInt32(); break;
-                                        case "SectionKey": section.SectionKey = element.ValueKind == JsonValueKind.Null ? "" : element.GetString() ?? ""; break;
-                                        case "Title": section.Title = element.ValueKind == JsonValueKind.Null ? "" : element.GetString() ?? ""; break;
-                                        case "Content": section.Content = element.ValueKind == JsonValueKind.Null ? "" : element.GetString() ?? ""; break;
-                                        case "Icon": section.Icon = element.ValueKind == JsonValueKind.Null ? null : element.GetString(); break;
-                                        case "SortOrder": section.SortOrder = element.ValueKind == JsonValueKind.Null ? 0 : element.GetInt32(); break;
-                                        case "UpdatedAt": section.UpdatedAt = element.ValueKind == JsonValueKind.Null ? DateTime.Now : DateTime.Parse(element.GetString() ?? DateTime.Now.ToString()); break;
+                                        case "Id": section.Id = GetIntFromRow(element); break;
+                                        case "SectionKey": section.SectionKey = GetStringFromRow(element); break;
+                                        case "Title": section.Title = GetStringFromRow(element); break;
+                                        case "Content": section.Content = GetStringFromRow(element); break;
+                                        case "Icon": section.Icon = GetStringOrNullFromRow(element); break;
+                                        case "SortOrder": section.SortOrder = GetIntFromRow(element); break;
+                                        case "UpdatedAt": section.UpdatedAt = GetDateTimeFromRow(element) ?? DateTime.Now; break;
                                     }
                                 }
                                 sections.Add(section);
@@ -798,12 +964,6 @@ namespace MyPersonalWebsite.Services
         {
             if (string.IsNullOrEmpty(value)) return "";
             return value.Replace("'", "''");
-        }
-
-        // 兼容旧接口
-        public async Task<List<User>> GetAllUsersWithFallbackAsync()
-        {
-            return await GetAllUsersAsync();
         }
     }
 }
