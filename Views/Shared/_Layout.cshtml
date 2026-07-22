@@ -32,6 +32,32 @@
         .container {
             max-width: 1200px;
         }
+        .navbar-nav .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+        .nav-avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1px solid rgba(255,255,255,0.06);
+            flex-shrink: 0;
+        }
+        .nav-avatar-placeholder {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.04);
+            color: rgba(255,255,255,0.3);
+            font-size: 0.7rem;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
     </style>
 </head>
 <body>
@@ -62,6 +88,25 @@
 
                     @if (userId.HasValue)
                     {
+                        // 获取用户头像
+                        MyPersonalWebsite.Models.User? user = null;
+                        string? avatarUrl = null;
+                        bool isAvatarApproved = false;
+                        try
+                        {
+                            var dataSync = Context.RequestServices.GetService<MyPersonalWebsite.Services.DataSyncService>();
+                            if (dataSync != null)
+                            {
+                                user = await dataSync.GetUserByIdAsync(userId.Value);
+                                if (user != null)
+                                {
+                                    avatarUrl = user.AvatarUrl;
+                                    isAvatarApproved = user.IsAvatarApproved;
+                                }
+                            }
+                        }
+                        catch { }
+
                         @if (isAdmin == 1)
                         {
                             <li class="nav-item">
@@ -70,13 +115,19 @@
                                 </a>
                             </li>
                         }
-                        <!-- ⭐ 个人资料入口 -->
                         <li class="nav-item">
                             <a class="nav-link" href="/Home/Profile">
-                                <i class="bi bi-person-circle"></i> @username
+                                @if (!string.IsNullOrEmpty(avatarUrl) && isAvatarApproved)
+                                {
+                                    <img src="@avatarUrl" alt="头像" class="nav-avatar" />
+                                }
+                                else
+                                {
+                                    <span class="nav-avatar-placeholder">@(username?.FirstOrDefault().ToString().ToUpper() ?? "?")</span>
+                                }
+                                <span>@username</span>
                             </a>
                         </li>
-                        <!-- ⭐ 修改密码入口 -->
                         <li class="nav-item">
                             <a class="nav-link" href="/Auth/ChangePassword" style="color:rgba(255,255,255,0.4);">
                                 <i class="bi bi-key"></i>
