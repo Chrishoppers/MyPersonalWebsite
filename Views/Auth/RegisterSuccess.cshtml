@@ -1,0 +1,69 @@
+@{
+    ViewData["Title"] = "注册申请已提交";
+}
+
+<style>
+    .success-container {
+        max-width: 600px;
+        margin: 3rem auto;
+        padding: 2rem;
+        text-align: center;
+        background: rgba(255,255,255,0.02);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255,255,255,0.04);
+        border-radius: 24px;
+    }
+
+    .success-container .icon {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+    }
+
+    .success-container h2 {
+        color: #fff;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    .success-container p {
+        color: rgba(255,255,255,0.5);
+        line-height: 1.8;
+    }
+
+    .success-container .highlight {
+        color: #8B5CF6;
+        font-weight: 600;
+    }
+
+    .btn-home {
+        display: inline-block;
+        margin-top: 1.5rem;
+        padding: 0.8rem 2.5rem;
+        border: none;
+        border-radius: 40px;
+        background: linear-gradient(135deg, #8B5CF6, #EC4899);
+        color: #fff;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+
+    .btn-home:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 32px rgba(108,60,225,0.2);
+        color: #fff;
+    }
+</style>
+
+<div class="success-container">
+    <div class="icon">📧</div>
+    <h2>注册申请已提交！</h2>
+    <p>
+        您的账号已创建，但需要等待管理员审核邮箱才能登录。
+        <br><br>
+        审核结果将通过邮件通知您，请留意查收。
+        <br><br>
+        <span class="highlight">📌 预计审核时间：1-24 小时内</span>
+    </p>
+    <a href="/" class="btn-home">🏠 返回首页</a>
+</div>
