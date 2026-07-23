@@ -132,6 +132,40 @@ public async Task<IActionResult> Register(string username, string email, string 
     TempData["RegisterUserId"] = user.Id;
     return RedirectToAction("VerifyEmail", new { email = email });
 }
+// ============================================================
+// ⭐ 邮件自动登录（点击链接直接登录）
+// ============================================================
+
+[HttpGet]
+public async Task<IActionResult> AutoLogin(string token)
+{
+    if (string.IsNullOrEmpty(token))
+    {
+        TempData["Message"] = "无效的登录链接";
+        return RedirectToAction("Login");
+    }
+
+    var user = await _dataSync.GetUserByLoginTokenAsync(token);
+    if (user == null)
+    {
+        TempData["Message"] = "登录链接无效或已过期";
+        return RedirectToAction("Login");
+    }
+
+    // 清除Token（一次性使用）
+    user.LoginToken = null;
+    user.LoginTokenExpiry = null;
+    await _dataSync.UpdateUserAsync(user);
+
+    // 登录用户
+    HttpContext.Session.SetInt32("UserId", user.Id);
+    HttpContext.Session.SetString("Username", user.Username);
+    HttpContext.Session.SetString("UserEmail", user.Email);
+    HttpContext.Session.SetInt32("IsAdmin", user.IsAdmin ? 1 : 0);
+
+    // 跳转到通知中心
+    return RedirectToAction("Notifications", "Home");
+}
 
         // ============================================================
         // 验证邮箱
