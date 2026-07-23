@@ -137,6 +137,28 @@ namespace MyPersonalWebsite.Services
             await _tursoService.ExecuteSqlAsync(sql);
             Console.WriteLine($"✅ 用户 {user.Username} 已更新到 Turso (头像={user.AvatarUrl}, IsApproved={user.IsApproved})");
         }
+        // ============================================================
+// ⭐ 留言点赞同步（Turso）
+// ============================================================
+
+public async Task AddMessageLikeAsync(int messageId, int userId)
+{
+    if (!_tursoAvailable) return;
+
+    var sql = $@"INSERT INTO MessageLikes (MessageId, UserId, CreateTime)
+                 VALUES ({messageId}, {userId}, '{DateTime.Now:yyyy-MM-dd HH:mm:ss}')";
+    await _tursoService.ExecuteSqlAsync(sql);
+    Console.WriteLine($"✅ 留言点赞已同步: MessageId={messageId}, UserId={userId}");
+}
+
+public async Task DeleteMessageLikeAsync(int messageId, int userId)
+{
+    if (!_tursoAvailable) return;
+
+    var sql = $@"DELETE FROM MessageLikes WHERE MessageId = {messageId} AND UserId = {userId}";
+    await _tursoService.ExecuteSqlAsync(sql);
+    Console.WriteLine($"✅ 留言取消点赞已同步: MessageId={messageId}, UserId={userId}");
+}
 
         public async Task<List<User>> GetAllUsersAsync()
         {
