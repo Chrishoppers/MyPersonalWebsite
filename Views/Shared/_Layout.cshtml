@@ -58,11 +58,189 @@
             font-weight: 600;
             flex-shrink: 0;
         }
+
+        /* ===== 通知样式 ===== */
+        .notif-badge {
+            position: absolute;
+            top: -4px;
+            right: -6px;
+            background: #EC4899;
+            color: #fff;
+            font-size: 0.6rem;
+            font-weight: 700;
+            padding: 0.1rem 0.4rem;
+            border-radius: 20px;
+            min-width: 18px;
+            text-align: center;
+            line-height: 1.4;
+            border: 2px solid #0A0A0F;
+        }
+
+        .notif-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            width: 400px;
+            max-height: 480px;
+            background: #1a1a2e;
+            border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.04);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            display: none;
+            z-index: 1000;
+            overflow: hidden;
+            margin-top: 0.5rem;
+        }
+
+        .notif-dropdown.show {
+            display: block;
+            animation: notifSlideDown 0.25s ease;
+        }
+
+        @@keyframes notifSlideDown {
+            from { opacity: 0; transform: translateY(-10px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .notif-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.8rem 1.2rem;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            color: #fff;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .notif-mark-all {
+            background: none;
+            border: none;
+            color: rgba(255,255,255,0.2);
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .notif-mark-all:hover {
+            color: #8B5CF6;
+        }
+
+        .notif-list {
+            max-height: 340px;
+            overflow-y: auto;
+            padding: 0.2rem 0;
+        }
+
+        .notif-list::-webkit-scrollbar {
+            width: 3px;
+        }
+        .notif-list::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+        }
+
+        .notif-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.8rem;
+            padding: 0.8rem 1.2rem;
+            border-bottom: 1px solid rgba(255,255,255,0.02);
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .notif-item:hover {
+            background: rgba(255,255,255,0.02);
+        }
+
+        .notif-item.read {
+            opacity: 0.4;
+        }
+
+        .notif-item .notif-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            margin-top: 0.2rem;
+        }
+
+        .notif-item .notif-dot.info { background: #4facfe; }
+        .notif-item .notif-dot.success { background: #28a745; }
+        .notif-item .notif-dot.warning { background: #ffc107; }
+        .notif-item .notif-dot.danger { background: #dc3545; }
+
+        .notif-item .notif-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .notif-item .notif-title {
+            color: #fff;
+            font-weight: 500;
+            font-size: 0.85rem;
+        }
+
+        .notif-item .notif-msg {
+            color: rgba(255,255,255,0.4);
+            font-size: 0.8rem;
+            margin-top: 0.1rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .notif-item .notif-time {
+            color: rgba(255,255,255,0.15);
+            font-size: 0.65rem;
+            margin-top: 0.2rem;
+        }
+
+        .notif-empty {
+            text-align: center;
+            padding: 2rem;
+            color: rgba(255,255,255,0.15);
+            font-size: 0.9rem;
+        }
+
+        .notif-footer {
+            padding: 0.6rem 1.2rem;
+            border-top: 1px solid rgba(255,255,255,0.04);
+            text-align: center;
+        }
+
+        .notif-footer a {
+            color: rgba(255,255,255,0.2);
+            text-decoration: none;
+            font-size: 0.8rem;
+            transition: color 0.3s ease;
+        }
+
+        .notif-footer a:hover {
+            color: #8B5CF6;
+        }
+
+        .nav-item.dropdown {
+            position: relative;
+        }
+
+        .nav-link-bell {
+            position: relative;
+            cursor: pointer;
+            padding: 0.5rem 0.8rem;
+            border-radius: 40px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-link-bell:hover {
+            background: rgba(255,255,255,0.04);
+        }
     </style>
 </head>
 <body>
 
-    <!-- ===== 高级导航栏 ===== -->
+    <!-- ===== 导航栏 ===== -->
     <nav class="navbar navbar-expand-lg nav-advanced">
         <div class="container">
             <a class="navbar-brand nav-brand" href="/">
@@ -88,10 +266,12 @@
 
                     @if (userId.HasValue)
                     {
-                        // 获取用户头像
+                        // 获取用户头像和通知
                         MyPersonalWebsite.Models.User? user = null;
                         string? avatarUrl = null;
                         bool isAvatarApproved = false;
+                        int unreadCount = 0;
+                        var notifications = new List<MyPersonalWebsite.Models.Notification>();
                         try
                         {
                             var dataSync = Context.RequestServices.GetService<MyPersonalWebsite.Services.DataSyncService>();
@@ -103,6 +283,8 @@
                                     avatarUrl = user.AvatarUrl;
                                     isAvatarApproved = user.IsAvatarApproved;
                                 }
+                                notifications = await dataSync.GetNotificationsByUserIdAsync(userId.Value);
+                                unreadCount = notifications.Count(n => !n.IsRead);
                             }
                         }
                         catch { }
@@ -115,6 +297,51 @@
                                 </a>
                             </li>
                         }
+
+                        <!-- ⭐ 通知铃铛 -->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link nav-link-bell" onclick="toggleNotifications(event)">
+                                <i class="bi bi-bell" style="font-size:1.2rem;"></i>
+                                @if (unreadCount > 0)
+                                {
+                                    <span class="notif-badge">@(unreadCount > 99 ? "99+" : unreadCount.ToString())</span>
+                                }
+                            </a>
+                            <div class="notif-dropdown" id="notifDropdown">
+                                <div class="notif-header">
+                                    <span>📬 通知</span>
+                                    @if (unreadCount > 0)
+                                    {
+                                        <button onclick="markAllRead()" class="notif-mark-all">全部已读</button>
+                                    }
+                                </div>
+                                <div class="notif-list" id="notifList">
+                                    @if (notifications.Any())
+                                    {
+                                        foreach (var n in notifications.Take(10))
+                                        {
+                                            <div class="notif-item @(n.IsRead ? "read" : "")" data-id="@n.Id" onclick="markNotifRead(@n.Id, this)">
+                                                <div class="notif-dot @n.Type"></div>
+                                                <div class="notif-content">
+                                                    <div class="notif-title">@n.Title</div>
+                                                    <div class="notif-msg">@n.Message</div>
+                                                    <div class="notif-time">@n.CreatedAt.ToString("MM-dd HH:mm")</div>
+                                                </div>
+                                            </div>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <div class="notif-empty">🎉 暂无通知</div>
+                                    }
+                                </div>
+                                <div class="notif-footer">
+                                    <a href="/Home/Notifications">查看全部</a>
+                                </div>
+                            </div>
+                        </li>
+
+                        <!-- 个人资料 -->
                         <li class="nav-item">
                             <a class="nav-link" href="/Home/Profile">
                                 @if (!string.IsNullOrEmpty(avatarUrl) && isAvatarApproved)
@@ -158,7 +385,7 @@
         @RenderBody()
     </main>
 
-    <!-- ===== 高级页脚 ===== -->
+    <!-- ===== 页脚 ===== -->
     <footer style="border-top:1px solid rgba(255,255,255,0.03);padding:2rem 0;margin-top:2rem;">
         <div class="container text-center">
             <p style="color:rgba(255,255,255,0.3);font-size:0.85rem;">
@@ -174,21 +401,93 @@
     <!-- ===== 脚本 ===== -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-    @await RenderSectionAsync("Scripts", required: false)
-
-    <!-- 页面加载动画 -->
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            document.querySelectorAll('.card-advanced, .glass').forEach((el, i) => {
-                el.style.opacity = '0';
-                el.style.transform = 'translateY(30px)';
-                setTimeout(() => {
-                    el.style.transition = 'all 0.6s cubic-bezier(0.23, 1, 0.32, 1)';
-                    el.style.opacity = '1';
-                    el.style.transform = 'translateY(0)';
-                }, 100 + i * 80);
+        // ============================================================
+        // 通知下拉菜单
+        // ============================================================
+        function toggleNotifications(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const dropdown = document.getElementById('notifDropdown');
+            dropdown.classList.toggle('show');
+        }
+
+        document.addEventListener('click', function(e) {
+            const dropdown = document.getElementById('notifDropdown');
+            if (dropdown && !dropdown.contains(e.target) && !e.target.closest('.nav-link-bell')) {
+                dropdown.classList.remove('show');
+            }
+        });
+
+        // ============================================================
+        // 标记单条通知为已读
+        // ============================================================
+        function markNotifRead(id, element) {
+            if (element.classList.contains('read')) return;
+            const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+            fetch('/Home/MarkNotificationRead', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'RequestVerificationToken': token
+                },
+                body: `id=${id}`
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    element.classList.add('read');
+                    const badge = document.querySelector('.notif-badge');
+                    if (badge) {
+                        const count = parseInt(badge.textContent) - 1;
+                        if (count > 0) {
+                            badge.textContent = count;
+                        } else {
+                            badge.remove();
+                        }
+                    }
+                }
             });
+        }
+
+        // ============================================================
+        // 全部标记已读
+        // ============================================================
+        function markAllRead() {
+            const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+            fetch('/Home/MarkAllNotificationsRead', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'RequestVerificationToken': token
+                },
+                body: ''
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    document.querySelectorAll('.notif-item').forEach(el => el.classList.add('read'));
+                    const badge = document.querySelector('.notif-badge');
+                    if (badge) badge.remove();
+                    const btn = document.querySelector('.notif-mark-all');
+                    if (btn) btn.remove();
+                }
+            });
+        }
+
+        // 点击通知项标记已读
+        document.addEventListener('click', function(e) {
+            const item = e.target.closest('.notif-item');
+            if (item && !item.classList.contains('read')) {
+                const id = item.dataset.id;
+                if (id) {
+                    markNotifRead(id, item);
+                }
+            }
         });
     </script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+
 </body>
 </html>
