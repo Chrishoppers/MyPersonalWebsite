@@ -216,7 +216,7 @@ namespace MyPersonalWebsite.Controllers
         // ============================================================
         // 上传头像
         // ============================================================
-       [HttpPost]
+      [HttpPost]
 public async Task<IActionResult> UploadAvatar(IFormFile avatar)
 {
     var userId = HttpContext.Session.GetInt32("UserId");
@@ -245,24 +245,20 @@ public async Task<IActionResult> UploadAvatar(IFormFile avatar)
         return RedirectToAction("Profile");
     }
 
-    // ⭐ 保存图片到服务器
-    var fileName = $"{Guid.NewGuid():N}_{avatar.FileName}";
-    var uploadPath = Path.Combine("wwwroot", "images", "avatars");
+    // ⭐ 读取图片并转为 Base64
+    using var memoryStream = new MemoryStream();
+    await avatar.CopyToAsync(memoryStream);
+    var imageBytes = memoryStream.ToArray();
+    var base64 = Convert.ToBase64String(imageBytes);
+    var avatarData = $"data:{avatar.ContentType};base64,{base64}";
 
-    if (!Directory.Exists(uploadPath))
+    // 验证长度
+    if (avatarData.Length > 500 * 1024) // 500KB
     {
-        Directory.CreateDirectory(uploadPath);
+        TempData["AvatarError"] = "图片过大，请压缩后上传";
+        return RedirectToAction("Profile");
     }
 
-    var filePath = Path.Combine(uploadPath, fileName);
-    using (var stream = new FileStream(filePath, FileMode.Create))
-    {
-        await avatar.CopyToAsync(stream);
-    }
-
-    var avatarUrl = $"/images/avatars/{fileName}";
-
-    // ⭐ 获取用户并更新头像
     var user = await _dataSync.GetUserByIdAsync(userId.Value);
     if (user == null)
     {
@@ -272,8 +268,8 @@ public async Task<IActionResult> UploadAvatar(IFormFile avatar)
 
     var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
 
-    // ⭐ 更新用户对象
-    user.AvatarUrl = avatarUrl;
+    // ⭐ 保存 Base64 到数据库
+    user.AvatarUrl = avatarData;
     user.AvatarSubmittedAt = DateTime.Now;
 
     if (isAdmin == 1)
@@ -281,51 +277,16 @@ public async Task<IActionResult> UploadAvatar(IFormFile avatar)
         user.IsAvatarApproved = true;
         await _dataSync.UpdateUserAsync(user);
         TempData["AvatarSuccess"] = "🎉 头像更新成功！";
-        TempData["AvatarUrl"] = avatarUrl;
     }
     else
     {
         user.IsAvatarApproved = false;
         await _dataSync.UpdateUserAsync(user);
-        
-        // ⭐ 发送头像审核邮件给管理员
-        try
-        {
-            var emailService = HttpContext.RequestServices.GetService<BrevoEmailService>();
-            if (emailService != null)
-            {
-                await emailService.SendAdminAvatarVerificationAsync(
-                    user.Username,
-                    user.Email,
-                    user.Id,
-                    avatarUrl,
-                    DateTime.Now
-                );
-                Console.WriteLine($"✅ 头像审核邮件已发送: {user.Username}");
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"❌ 头像审核邮件发送失败: {ex.Message}");
-        }
-
         TempData["AvatarSuccess"] = "📸 头像已提交，等待管理员审核";
-        TempData["AvatarUrl"] = avatarUrl;
     }
 
     return RedirectToAction("Profile");
 }
-
-        public IActionResult Contact()
-        {
-            var userId = HttpContext.Session.GetInt32("UserId");
-            if (!userId.HasValue)
-            {
-                return RedirectToAction("Login", "Auth");
-            }
-            return View();
-        }
-
         [HttpPost]
         public async Task<IActionResult> RequestContact([FromBody] ContactRequest request)
         {
