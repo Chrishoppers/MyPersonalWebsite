@@ -13,11 +13,13 @@ namespace MyPersonalWebsite.Controllers
     {
         private readonly DataSyncService _dataSync;
         private readonly BrevoEmailService _emailService;
+        private readonly AppDbContext _context;
 
-        public MessageController(DataSyncService dataSync, BrevoEmailService emailService)
+        public MessageController(DataSyncService dataSync, BrevoEmailService emailService, AppDbContext context)
         {
             _dataSync = dataSync;
             _emailService = emailService;
+            _context = context;
         }
 
         public async Task<IActionResult> Index()
@@ -26,6 +28,15 @@ namespace MyPersonalWebsite.Controllers
 
             var userId = HttpContext.Session.GetInt32("UserId");
             var likedIds = new HashSet<int>();
+
+            if (userId.HasValue)
+            {
+                var likes = await _context.MessageLikes
+                    .Where(l => l.UserId == userId.Value)
+                    .Select(l => l.MessageId)
+                    .ToListAsync();
+                likedIds = new HashSet<int>(likes);
+            }
 
             ViewBag.LikedIds = likedIds;
             ViewBag.CurrentUserId = userId;
@@ -96,6 +107,9 @@ namespace MyPersonalWebsite.Controllers
             return View(message);
         }
 
+        // ============================================================
+        // ⭐ 留言点赞（实时更新 + 双写）
+        // ============================================================
         [HttpPost]
         public async Task<IActionResult> ToggleLike(int messageId)
         {
@@ -107,46 +121,72 @@ namespace MyPersonalWebsite.Controllers
 
             try
             {
-                // TODO: 实现留言点赞逻辑
-                return Json(new { success = true, isLiked = true, likeCount = 1, message = "点赞成功" });
+                var message = await _context.Messages.FindAsync(messageId);
+                if (message == null)
+                {
+                    return Json(new { success = false, message = "留言不存在" });
+                }
+
+                // 不能给自己点赞
+                if (message.UserId == userId.Value)
+                {
+                    return Json(new { success = false, message = "不能给自己的留言点赞" });
+                }
+
+                // 检查是否已点赞
+                var existingLike = await _context.MessageLikes
+                    .FirstOrDefaultAsync(l => l.MessageId == messageId && l.UserId == userId.Value);
+
+                if (existingLike != null)
+                {
+                    // 取消点赞
+                    _context.MessageLikes.Remove(existingLike);
+                    message.LikeCount--;
+                    await _context.SaveChangesAsync();
+
+                    // 同步到 Turso
+                    await _dataSync.UpdateMessageAsync(message);
+                    await _dataSync.DeleteMessageLikeAsync(messageId, userId.Value);
+
+                    return Json(new
+                    {
+                        success = true,
+                        isLiked = false,
+                        likeCount = message.LikeCount,
+                        message = "已取消点赞"
+                    });
+                }
+                else
+                {
+                    // 点赞
+                    var like = new MessageLike
+                    {
+                        MessageId = messageId,
+                        UserId = userId.Value,
+                        CreateTime = DateTime.Now
+                    };
+                    _context.MessageLikes.Add(like);
+                    message.LikeCount++;
+                    await _context.SaveChangesAsync();
+
+                    // 同步到 Turso
+                    await _dataSync.UpdateMessageAsync(message);
+                    await _dataSync.AddMessageLikeAsync(messageId, userId.Value);
+
+                    return Json(new
+                    {
+                        success = true,
+                        isLiked = true,
+                        likeCount = message.LikeCount,
+                        message = "点赞成功"
+                    });
+                }
             }
-            catch
+            catch (Exception ex)
             {
-                return Json(new { success = false, message = "点赞失败，请稍后重试" });
+                return Json(new { success = false, message = ex.Message });
             }
         }
-        // ============================================================
-// 获取弹幕数据（API）
-// ============================================================
-[HttpGet]
-public async Task<IActionResult> GetDanmakuData()
-{
-    try
-    {
-        var messages = await _dataSync.GetMessagesAsync();
-        // 只返回已审核的留言
-        var approved = messages.Where(m => m.IsApproved).ToList();
-        return Json(new 
-        { 
-            success = true, 
-            messages = approved.Select(m => new
-            {
-                id = m.Id,
-                userId = m.UserId,
-                visitorName = m.VisitorName,
-                email = m.Email,
-                content = m.Content,
-                createTime = m.CreateTime,
-                likeCount = m.LikeCount,
-                isReported = m.IsReported
-            })
-        });
-    }
-    catch (Exception ex)
-    {
-        return Json(new { success = false, message = ex.Message });
-    }
-}
 
         [HttpPost]
         public async Task<IActionResult> Report(int messageId, string reason)
@@ -157,8 +197,25 @@ public async Task<IActionResult> GetDanmakuData()
                 return Json(new { success = false, message = "请先登录" });
             }
 
-            // TODO: 实现举报逻辑
-            return Json(new { success = true, message = "举报已提交" });
+            try
+            {
+                var message = await _context.Messages.FindAsync(messageId);
+                if (message == null)
+                {
+                    return Json(new { success = false, message = "留言不存在" });
+                }
+
+                message.ReportCount++;
+                message.IsReported = true;
+                await _context.SaveChangesAsync();
+                await _dataSync.UpdateMessageAsync(message);
+
+                return Json(new { success = true, message = "举报已提交" });
+            }
+            catch
+            {
+                return Json(new { success = false, message = "举报失败，请重试" });
+            }
         }
 
         [HttpPost]
