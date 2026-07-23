@@ -109,8 +109,8 @@ public async Task<IActionResult> Create(Message message)
     return View(message);
 }
 
-        // ============================================================
-// ⭐ 留言点赞（实时更新 + 双写）
+       // ============================================================
+// ⭐ 留言点赞（完全使用 Turso）
 // ============================================================
 [HttpPost]
 public async Task<IActionResult> ToggleLike(int messageId)
@@ -123,7 +123,7 @@ public async Task<IActionResult> ToggleLike(int messageId)
 
     try
     {
-        // ⭐ 从 Turso 获取留言
+        // 从 Turso 获取留言
         var message = await _dataSync.GetMessageByIdAsync(messageId);
         if (message == null)
         {
@@ -136,18 +136,16 @@ public async Task<IActionResult> ToggleLike(int messageId)
             return Json(new { success = false, message = "不能给自己的留言点赞" });
         }
 
-        // ⭐ 检查是否已点赞（从本地 SQLite 查询）
-        var existingLike = await _context.MessageLikes
-            .FirstOrDefaultAsync(l => l.MessageId == messageId && l.UserId == userId.Value);
+        // ⭐ 检查是否已点赞（从 Turso 查询）
+        var likeResult = await _dataSync.QueryAsync(
+            $"SELECT * FROM MessageLikes WHERE MessageId = {messageId} AND UserId = {userId.Value}"
+        );
+        var hasLiked = likeResult.Contains("\"rows\":") && !likeResult.Contains("\"rows\":[]");
 
-        if (existingLike != null)
+        if (hasLiked)
         {
             // 取消点赞
-            _context.MessageLikes.Remove(existingLike);
             message.LikeCount--;
-            await _context.SaveChangesAsync();
-
-            // 同步到 Turso
             await _dataSync.UpdateMessageAsync(message);
             await _dataSync.DeleteMessageLikeAsync(messageId, userId.Value);
 
@@ -162,17 +160,7 @@ public async Task<IActionResult> ToggleLike(int messageId)
         else
         {
             // 点赞
-            var like = new MessageLike
-            {
-                MessageId = messageId,
-                UserId = userId.Value,
-                CreateTime = DateTime.Now
-            };
-            _context.MessageLikes.Add(like);
             message.LikeCount++;
-            await _context.SaveChangesAsync();
-
-            // 同步到 Turso
             await _dataSync.UpdateMessageAsync(message);
             await _dataSync.AddMessageLikeAsync(messageId, userId.Value);
 
