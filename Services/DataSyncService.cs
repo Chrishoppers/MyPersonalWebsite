@@ -25,45 +25,6 @@ namespace MyPersonalWebsite.Services
             else
                 Console.WriteLine("⚠️ Turso 未配置");
         }
-        // ============================================================
-// 通知相关
-// ============================================================
-
-public async Task AddNotificationAsync(Notification notification)
-{
-    if (!_tursoAvailable) return;
-
-    var maxIdResult = await _tursoService.QueryAsync("SELECT MAX(Id) as MaxId FROM Notifications");
-    var maxId = ParseMaxId(maxIdResult);
-    notification.Id = maxId + 1;
-
-    var sql = $@"INSERT INTO Notifications (
-        Id, UserId, Title, Message, Type, IsRead, CreatedAt
-    ) VALUES (
-        {notification.Id}, {notification.UserId}, '{EscapeSql(notification.Title)}',
-        '{EscapeSql(notification.Message)}', '{notification.Type}',
-        {(notification.IsRead ? 1 : 0)}, '{notification.CreatedAt:yyyy-MM-dd HH:mm:ss}'
-    )";
-
-    await _tursoService.ExecuteSqlAsync(sql);
-    Console.WriteLine($"✅ 通知已添加: {notification.Title}");
-}
-
-public async Task<List<Notification>> GetNotificationsByUserIdAsync(int userId)
-{
-    if (!_tursoAvailable) return new List<Notification>();
-
-    var result = await _tursoService.QueryAsync($"SELECT * FROM Notifications WHERE UserId = {userId} ORDER BY CreatedAt DESC");
-    return ParseNotificationListFromJson(result);
-}
-
-public async Task MarkNotificationAsReadAsync(int id)
-{
-    if (!_tursoAvailable) return;
-
-    await _tursoService.ExecuteSqlAsync($"UPDATE Notifications SET IsRead = 1 WHERE Id = {id}");
-    Console.WriteLine($"✅ 通知 {id} 已标记为已读");
-}
 
         // ============================================================
         // 用户相关
@@ -161,7 +122,6 @@ public async Task MarkNotificationAsReadAsync(int id)
                 DeletedAt = {(user.DeletedAt.HasValue ? $"'{user.DeletedAt.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
                 DeleteReason = {(string.IsNullOrEmpty(user.DeleteReason) ? "NULL" : $"'{EscapeSql(user.DeleteReason)}'")},
                 DeleteNote = {(string.IsNullOrEmpty(user.DeleteNote) ? "NULL" : $"'{EscapeSql(user.DeleteNote)}'")},
-                -- ⭐ 头像字段
                 AvatarUrl = {(string.IsNullOrEmpty(user.AvatarUrl) ? "NULL" : $"'{EscapeSql(user.AvatarUrl)}'")},
                 IsAvatarApproved = {(user.IsAvatarApproved ? 1 : 0)},
                 AvatarSubmittedAt = {(user.AvatarSubmittedAt.HasValue ? $"'{user.AvatarSubmittedAt.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
@@ -477,6 +437,46 @@ public async Task MarkNotificationAsReadAsync(int id)
 
             await _tursoService.ExecuteSqlAsync(sql);
             Console.WriteLine($"✅ AboutMe {section.SectionKey} 已写入 Turso");
+        }
+
+        // ============================================================
+        // 通知相关
+        // ============================================================
+
+        public async Task AddNotificationAsync(Notification notification)
+        {
+            if (!_tursoAvailable) return;
+
+            var maxIdResult = await _tursoService.QueryAsync("SELECT MAX(Id) as MaxId FROM Notifications");
+            var maxId = ParseMaxId(maxIdResult);
+            notification.Id = maxId + 1;
+
+            var sql = $@"INSERT INTO Notifications (
+                Id, UserId, Title, Message, Type, IsRead, CreatedAt
+            ) VALUES (
+                {notification.Id}, {notification.UserId}, '{EscapeSql(notification.Title)}',
+                '{EscapeSql(notification.Message)}', '{notification.Type}',
+                {(notification.IsRead ? 1 : 0)}, '{notification.CreatedAt:yyyy-MM-dd HH:mm:ss}'
+            )";
+
+            await _tursoService.ExecuteSqlAsync(sql);
+            Console.WriteLine($"✅ 通知已添加: {notification.Title}");
+        }
+
+        public async Task<List<Notification>> GetNotificationsByUserIdAsync(int userId)
+        {
+            if (!_tursoAvailable) return new List<Notification>();
+
+            var result = await _tursoService.QueryAsync($"SELECT * FROM Notifications WHERE UserId = {userId} ORDER BY CreatedAt DESC");
+            return ParseNotificationListFromJson(result);
+        }
+
+        public async Task MarkNotificationAsReadAsync(int id)
+        {
+            if (!_tursoAvailable) return;
+
+            await _tursoService.ExecuteSqlAsync($"UPDATE Notifications SET IsRead = 1 WHERE Id = {id}");
+            Console.WriteLine($"✅ 通知 {id} 已标记为已读");
         }
 
         // ============================================================
@@ -1052,6 +1052,66 @@ public async Task MarkNotificationAsReadAsync(int id)
                 Console.WriteLine($"⚠️ 解析 AboutMe 列表 JSON 失败: {ex.Message}");
             }
             return sections;
+        }
+
+        // ============================================================
+        // ParseNotificationListFromJson
+        // ============================================================
+
+        private List<Notification> ParseNotificationListFromJson(string json)
+        {
+            var notifications = new List<Notification>();
+            try
+            {
+                using var doc = JsonDocument.Parse(json);
+                var root = doc.RootElement;
+
+                if (root.TryGetProperty("results", out var results) && results.GetArrayLength() > 0)
+                {
+                    var firstResult = results[0];
+                    if (firstResult.TryGetProperty("response", out var response) &&
+                        response.TryGetProperty("result", out var result))
+                    {
+                        if (result.TryGetProperty("rows", out var rows) && rows.GetArrayLength() > 0)
+                        {
+                            var cols = result.GetProperty("cols");
+
+                            for (int r = 0; r < rows.GetArrayLength(); r++)
+                            {
+                                var row = rows[r];
+
+                                if (row.ValueKind != JsonValueKind.Array)
+                                    continue;
+
+                                var notification = new Notification();
+
+                                for (int i = 0; i < cols.GetArrayLength(); i++)
+                                {
+                                    var colName = cols[i].GetProperty("name").GetString();
+                                    var element = row[i];
+
+                                    switch (colName)
+                                    {
+                                        case "Id": notification.Id = GetIntFromRow(element); break;
+                                        case "UserId": notification.UserId = GetIntFromRow(element); break;
+                                        case "Title": notification.Title = GetStringFromRow(element); break;
+                                        case "Message": notification.Message = GetStringFromRow(element); break;
+                                        case "Type": notification.Type = GetStringFromRow(element); break;
+                                        case "IsRead": notification.IsRead = GetBoolFromRow(element); break;
+                                        case "CreatedAt": notification.CreatedAt = GetDateTimeFromRow(element) ?? DateTime.Now; break;
+                                    }
+                                }
+                                notifications.Add(notification);
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"⚠️ 解析通知列表 JSON 失败: {ex.Message}");
+            }
+            return notifications;
         }
 
         // ============================================================
