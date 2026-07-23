@@ -101,43 +101,20 @@ namespace MyPersonalWebsite.Services
         // ============================================================
 
         public async Task SendAdminNewUserVerificationAsync(string username, string email, int userId, string? avatarUrl, DateTime registerTime)
-        {
-            var baseUrl = "https://chris-hopper.org";
-            var approveUrl = $"{baseUrl}/Admin/ApproveUser?userId={userId}";
-            var rejectUrl = $"{baseUrl}/Admin/RejectUser?userId={userId}";
+{
+    var baseUrl = "https://chris-hopper.org";
+    var approveUrl = $"{baseUrl}/Admin/ApproveUser?userId={userId}";
+    var rejectUrl = $"{baseUrl}/Admin/RejectUser?userId={userId}";
 
-            var avatarHtml = string.IsNullOrEmpty(avatarUrl)
-                ? "<p style='color:#555;'>未上传头像</p>"
-                : $"<img src='{baseUrl}{avatarUrl}' style='width:80px;height:80px;border-radius:50%;object-fit:cover;border:2px solid #8B5CF6;' />";
+    // ⭐ 在方法内部转换完整 URL
+    var fullAvatarUrl = string.IsNullOrEmpty(avatarUrl) ? null : (avatarUrl.StartsWith("http") ? avatarUrl : $"{baseUrl}{avatarUrl}");
 
-            var html = $@"
-                <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #2a2a3e; border-radius: 16px; background: #0a0a0f; color: #e0e0e0;'>
-                    <h2 style='color: #8B5CF6;'>📝 新用户审核</h2>
-                    <p>有新用户完成邮箱验证，等待审核：</p>
+    var avatarHtml = string.IsNullOrEmpty(fullAvatarUrl)
+        ? "<p style='color:#555;'>未上传头像</p>"
+        : $"<img src='{fullAvatarUrl}' style='width:80px;height:80px;border-radius:50%;object-fit:cover;border:2px solid #8B5CF6;' />";
 
-                    <div style='background: #1a1a2e; border-radius: 12px; padding: 16px; margin: 16px 0; border: 1px solid #2a2a3e;'>
-                        <p><strong>👤 用户名：</strong>{username}</p>
-                        <p><strong>📧 邮箱：</strong>{email}</p>
-                        <p><strong>🆔 用户ID：</strong>{userId}</p>
-                        <p><strong>⏰ 注册时间：</strong>{registerTime:yyyy-MM-dd HH:mm:ss}</p>
-                        <p><strong>🖼️ 头像：</strong></p>
-                        <div style='text-align:center;margin:10px 0;'>{avatarHtml}</div>
-                    </div>
-
-                    <div style='display: flex; gap: 12px; margin: 16px 0; flex-wrap: wrap;'>
-                        <a href='{approveUrl}' style='display: inline-block; padding: 12px 32px; background: #28a745; color: white; text-decoration: none; border-radius: 8px; font-weight: 600;'>✅ 通过审核</a>
-                        <a href='{rejectUrl}' style='display: inline-block; padding: 12px 32px; background: #dc3545; color: white; text-decoration: none; border-radius: 8px; font-weight: 600;'>❌ 拒绝审核</a>
-                    </div>
-
-                    <p style='color: #888; font-size: 14px;'>点击按钮后，系统将自动通知用户。</p>
-                    <hr style='border: none; border-top: 1px solid #2a2a3e;'>
-                    <p style='color: #555; font-size: 12px;'>此邮件由系统自动发送，请勿直接回复。</p>
-                </div>
-            ";
-
-            await SendEmailAsync(_adminEmail, $"📝 新用户审核 - {username}", html);
-        }
-
+    // ... 邮件 HTML ...
+}
         // ============================================================
         // 4. 头像审核邮件（管理员）
         // ============================================================
