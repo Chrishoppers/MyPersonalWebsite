@@ -359,24 +359,23 @@
         <!-- ===== 头像 ===== -->
         <div class="avatar-section">
             <div class="avatar-wrapper">
-
-                <div class="avatar-preview" id="avatarPreview">
-                    @if (!string.IsNullOrEmpty(user.AvatarUrl) && user.IsAvatarApproved)
-                    {
-                        <img src="@user.AvatarUrl" alt="头像" id="avatarImg" />
-                    }
-                    else if (!string.IsNullOrEmpty(user.AvatarUrl) && !user.IsAvatarApproved)
-                    {
-                        <img src="@user.AvatarUrl" alt="头像" id="avatarImg" style="opacity:0.5;filter:grayscale(1);" />
-                        <span class="avatar-status-badge">⏳ 审核中</span>
-                    }
-                    else
-                    {
-                        <div class="avatar-placeholder">
-                            <span>@(user.Username?.FirstOrDefault().ToString().ToUpper() ?? "CH")</span>
-                        </div>
-                    }
-                </div>
+<div class="avatar-preview" id="avatarPreview">
+    @if (!string.IsNullOrEmpty(user.AvatarUrl) && user.IsAvatarApproved)
+    {
+        <img src="@user.AvatarUrl" alt="头像" id="avatarImg" />
+    }
+    else if (!string.IsNullOrEmpty(user.AvatarUrl) && !user.IsAvatarApproved)
+    {
+        <img src="@user.AvatarUrl" alt="头像" id="avatarImg" style="opacity:0.5;filter:grayscale(1);" />
+        <span class="avatar-status-badge">⏳ 审核中</span>
+    }
+    else
+    {
+        <div class="avatar-placeholder">
+            <span>@(user.Username?.FirstOrDefault().ToString().ToUpper() ?? "CH")</span>
+        </div>
+    }
+</div>
 
                 <!-- ⭐ 好看的上传按钮 -->
                 <div class="avatar-upload-btn-wrapper">
