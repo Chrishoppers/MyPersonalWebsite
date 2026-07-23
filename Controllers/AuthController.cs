@@ -43,95 +43,95 @@ namespace MyPersonalWebsite.Controllers
         }
 
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Register(string username, string email, string password, string captchaAnswer, IFormFile? avatar)
+[ValidateAntiForgeryToken]
+public async Task<IActionResult> Register(string username, string email, string password, string captchaAnswer, IFormFile? avatar)
+{
+    var clientIp = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+    if (!_rateLimitService.CanRegister(clientIp))
+    {
+        var remainMinutes = _rateLimitService.GetRemainingMinutes(clientIp);
+        ModelState.AddModelError("", $"注册尝试过于频繁，请等待 {remainMinutes} 分钟后再试");
+        return View();
+    }
+
+    if (!_captchaService.VerifyCaptcha(captchaAnswer))
+    {
+        ModelState.AddModelError("", "验证码错误，请重新输入");
+        return View();
+    }
+    HttpContext.Session.Remove("SvgCaptchaText");
+
+    var existingUser = await _dataSync.GetUserByUsernameAsync(username);
+    if (existingUser != null)
+    {
+        ModelState.AddModelError("", "用户名已被使用");
+        return View();
+    }
+
+    existingUser = await _dataSync.GetUserByEmailAsync(email);
+    if (existingUser != null)
+    {
+        ModelState.AddModelError("", "邮箱已被注册");
+        return View();
+    }
+
+    var code = new Random().Next(100000, 999999).ToString();
+
+    // ⭐ 头像转 Base64
+    string? avatarData = null;
+    if (avatar != null && avatar.Length > 0)
+    {
+        var allowedTypes = new[] { "image/jpeg", "image/png", "image/gif", "image/webp" };
+        if (allowedTypes.Contains(avatar.ContentType) && avatar.Length <= 5 * 1024 * 1024)
         {
-            var clientIp = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
-            if (!_rateLimitService.CanRegister(clientIp))
+            using var memoryStream = new MemoryStream();
+            await avatar.CopyToAsync(memoryStream);
+            var imageBytes = memoryStream.ToArray();
+            var base64 = Convert.ToBase64String(imageBytes);
+            avatarData = $"data:{avatar.ContentType};base64,{base64}";
+
+            // 限制大小
+            if (avatarData.Length > 500 * 1024)
             {
-                var remainMinutes = _rateLimitService.GetRemainingMinutes(clientIp);
-                ModelState.AddModelError("", $"注册尝试过于频繁，请等待 {remainMinutes} 分钟后再试");
+                ModelState.AddModelError("", "图片过大，请压缩后上传（最大500KB）");
                 return View();
             }
-
-            if (!_captchaService.VerifyCaptcha(captchaAnswer))
-            {
-                ModelState.AddModelError("", "验证码错误，请重新输入");
-                return View();
-            }
-            HttpContext.Session.Remove("SvgCaptchaText");
-
-            var existingUser = await _dataSync.GetUserByUsernameAsync(username);
-            if (existingUser != null)
-            {
-                ModelState.AddModelError("", "用户名已被使用");
-                return View();
-            }
-
-            existingUser = await _dataSync.GetUserByEmailAsync(email);
-            if (existingUser != null)
-            {
-                ModelState.AddModelError("", "邮箱已被注册");
-                return View();
-            }
-
-            var code = new Random().Next(100000, 999999).ToString();
-
-            // 处理头像上传
-            string? avatarUrl = null;
-            if (avatar != null && avatar.Length > 0)
-            {
-                var allowedTypes = new[] { "image/jpeg", "image/png", "image/gif", "image/webp" };
-                if (allowedTypes.Contains(avatar.ContentType) && avatar.Length <= 5 * 1024 * 1024)
-                {
-                    var fileName = $"{Guid.NewGuid():N}_{avatar.FileName}";
-                    var uploadPath = Path.Combine("wwwroot", "images", "avatars");
-                    if (!Directory.Exists(uploadPath))
-                        Directory.CreateDirectory(uploadPath);
-
-                    var filePath = Path.Combine(uploadPath, fileName);
-                    using (var stream = new FileStream(filePath, FileMode.Create))
-                    {
-                        await avatar.CopyToAsync(stream);
-                    }
-                    avatarUrl = $"/images/avatars/{fileName}";
-                }
-            }
-
-            var user = new User
-            {
-                Username = username,
-                Email = email,
-                PasswordHash = PasswordHelper.HashPassword(password),
-                VerificationCode = code,
-                VerificationCodeExpiry = DateTime.Now.AddMinutes(10),
-                IsEmailVerified = false,
-                IsAdmin = false,
-                IsApproved = false,
-                IsBanned = false,
-                IsDeleted = false,
-                CreatedAt = DateTime.Now,
-                AvatarUrl = avatarUrl,
-                IsAvatarApproved = false,
-                AvatarSubmittedAt = avatarUrl != null ? DateTime.Now : null
-            };
-
-            await _dataSync.AddUserAsync(user);
-
-            // 发送验证码邮件
-            try
-            {
-                await _emailService.SendVerificationCodeAsync(email, code);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"验证码邮件发送失败: {ex.Message}");
-            }
-
-            TempData["RegisterEmail"] = email;
-            TempData["RegisterUserId"] = user.Id;
-            return RedirectToAction("VerifyEmail", new { email = email });
         }
+    }
+
+    var user = new User
+    {
+        Username = username,
+        Email = email,
+        PasswordHash = PasswordHelper.HashPassword(password),
+        VerificationCode = code,
+        VerificationCodeExpiry = DateTime.Now.AddMinutes(10),
+        IsEmailVerified = false,
+        IsAdmin = false,
+        IsApproved = false,
+        IsBanned = false,
+        IsDeleted = false,
+        CreatedAt = DateTime.Now,
+        AvatarUrl = avatarData,
+        IsAvatarApproved = false,
+        AvatarSubmittedAt = avatarData != null ? DateTime.Now : null
+    };
+
+    await _dataSync.AddUserAsync(user);
+
+    try
+    {
+        await _emailService.SendVerificationCodeAsync(email, code);
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"验证码邮件发送失败: {ex.Message}");
+    }
+
+    TempData["RegisterEmail"] = email;
+    TempData["RegisterUserId"] = user.Id;
+    return RedirectToAction("VerifyEmail", new { email = email });
+}
 
         // ============================================================
         // 验证邮箱
