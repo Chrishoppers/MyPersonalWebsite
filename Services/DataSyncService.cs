@@ -103,6 +103,29 @@ namespace MyPersonalWebsite.Services
             
             return user;
         }
+        // ============================================================
+// 获取所有通知（管理员用）
+// ============================================================
+
+public async Task<List<Notification>> GetAllNotificationsAsync()
+{
+    if (!_tursoAvailable) return new List<Notification>();
+
+    var result = await _tursoService.QueryAsync("SELECT * FROM Notifications ORDER BY CreatedAt DESC");
+    return ParseNotificationListFromJson(result);
+}
+
+// ============================================================
+// 删除通知
+// ============================================================
+
+public async Task DeleteNotificationAsync(int id)
+{
+    if (!_tursoAvailable) return;
+
+    await _tursoService.ExecuteSqlAsync($"DELETE FROM Notifications WHERE Id = {id}");
+    Console.WriteLine($"✅ 通知 {id} 已删除");
+}
 
         public async Task UpdateUserAsync(User user)
         {
