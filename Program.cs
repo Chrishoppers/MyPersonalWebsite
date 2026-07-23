@@ -229,6 +229,15 @@ async Task EnsureTursoTablesAsync(DataSyncService dataSync)
                 CreateTime TEXT
             )"
         },
+        // ⭐ 新增 MessageLikes 表
+        { "MessageLikes", @"
+            CREATE TABLE IF NOT EXISTS MessageLikes (
+                Id INTEGER PRIMARY KEY,
+                MessageId INTEGER NOT NULL,
+                UserId INTEGER NOT NULL,
+                CreateTime TEXT
+            )"
+        },
         { "EmailLogs", @"
             CREATE TABLE IF NOT EXISTS EmailLogs (
                 Id INTEGER PRIMARY KEY,
@@ -260,7 +269,7 @@ async Task EnsureTursoTablesAsync(DataSyncService dataSync)
     {
         try
         {
-            // ⭐ 先检查表是否存在
+            // 先检查表是否存在
             var checkResult = await dataSync.QueryAsync($"SELECT name FROM sqlite_master WHERE type='table' AND name='{table.Key}'");
             if (checkResult.Contains($"\"{table.Key}\""))
             {
