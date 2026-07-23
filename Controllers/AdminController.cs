@@ -96,6 +96,35 @@ public async Task<IActionResult> SendNotification(int userId, string title, stri
     {
         return Json(new { success = false, message = $"邮件发送失败: {ex.Message}" });
     }
+    // ============================================================
+// 通知管理页面
+// ============================================================
+public async Task<IActionResult> Notifications()
+{
+    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+    if (isAdmin != 1)
+        return RedirectToAction("Login", "Auth");
+
+    var users = await _dataSync.GetAllUsersAsync();
+    var notifications = await _dataSync.GetAllNotificationsAsync();
+    
+    ViewBag.Users = users;
+    return View(notifications);
+}
+
+// ============================================================
+// 删除通知
+// ============================================================
+[HttpPost]
+public async Task<IActionResult> DeleteNotification(int id)
+{
+    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+    if (isAdmin != 1)
+        return Json(new { success = false, message = "权限不足" });
+
+    await _dataSync.DeleteNotificationAsync(id);
+    return Json(new { success = true, message = "删除成功" });
+}
 
     // 2. 保存弹窗通知到数据库（新增 Notification 表）
     try
