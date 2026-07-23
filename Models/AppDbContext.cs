@@ -18,11 +18,23 @@ namespace MyPersonalWebsite.Models
         public DbSet<AboutMe> AboutMeContents { get; set; }
         public DbSet<PasswordReset> PasswordResets { get; set; }
         public DbSet<BlogLike> BlogLikes { get; set; }
+        public DbSet<MessageLike> MessageLikes { get; set; }
+        public DbSet<Notification> Notifications { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            // ============================================================
+            // 唯一索引：同一个用户对同一篇博客只能点赞一次
+            // ============================================================
             modelBuilder.Entity<BlogLike>()
                 .HasIndex(l => new { l.BlogId, l.UserId })
+                .IsUnique();
+
+            // ============================================================
+            // 唯一索引：同一个用户对同一条留言只能点赞一次
+            // ============================================================
+            modelBuilder.Entity<MessageLike>()
+                .HasIndex(l => new { l.MessageId, l.UserId })
                 .IsUnique();
 
             // ============================================================
@@ -39,6 +51,8 @@ namespace MyPersonalWebsite.Models
                     IsAdmin = true,
                     IsBanned = false,
                     IsDeleted = false,
+                    IsApproved = true,
+                    IsAvatarApproved = true,
                     CreatedAt = new DateTime(2026, 7, 19, 0, 0, 0)
                 }
             );
@@ -50,7 +64,7 @@ namespace MyPersonalWebsite.Models
                 new Blog
                 {
                     Id = 1,
-                    Title = "欢迎来到 Chris Hopper 的技术空间",
+                    Title = "欢迎来到 Chris hopper 的技术空间",
                     Content = "<p>这是我的第一篇博客，欢迎大家！</p>",
                     Summary = "开篇之作",
                     PublishDate = new DateTime(2026, 7, 19, 10, 0, 0)
@@ -81,7 +95,7 @@ namespace MyPersonalWebsite.Models
                     Id = 1, 
                     SectionKey = "bio", 
                     Title = "🧑‍💻 关于我", 
-                    Content = "你好！我是 Chris Hopper，一个热爱技术的全栈开发者。\n目前专注于 ASP.NET Core 和现代 Web 开发。", 
+                    Content = "你好！我是 Chris hopper，一个热爱技术的全栈开发者。\n目前专注于 ASP.NET Core 和现代 Web 开发。", 
                     Icon = "🧑‍💻", 
                     SortOrder = 1, 
                     UpdatedAt = new DateTime(2026, 7, 19, 0, 0, 0) 
