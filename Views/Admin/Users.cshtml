@@ -519,77 +519,121 @@
         // ============================================================
         // ⭐ 发送通知弹窗（漂亮弹窗）
         // ============================================================
-        function openNotificationModal(userId, username) {
-            Swal.fire({
-                title: `📬 发送通知给 ${username}`,
-                html: `
-                    <div style="text-align:left;">
-                        <div style="margin-bottom:0.8rem;">
-                            <label style="display:block;color:rgba(255,255,255,0.4);font-size:0.8rem;margin-bottom:0.3rem;">📌 标题</label>
-                            <input id="notifyTitle" class="swal2-input" placeholder="请输入通知标题..." maxlength="50" style="width:100%;padding:0.6rem 1rem;border-radius:12px;border:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.02);color:#fff;font-size:0.9rem;outline:none;">
-                            <div style="text-align:right;color:rgba(255,255,255,0.15);font-size:0.7rem;margin-top:0.2rem;"><span id="titleCount">0</span>/50</div>
-                        </div>
-                        <div style="margin-bottom:0.8rem;">
-                            <label style="display:block;color:rgba(255,255,255,0.4);font-size:0.8rem;margin-bottom:0.3rem;">📝 内容</label>
-                            <textarea id="notifyMessage" class="swal2-textarea" placeholder="请输入通知内容..." maxlength="500" style="width:100%;padding:0.6rem 1rem;border-radius:12px;border:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.02);color:#fff;font-size:0.9rem;outline:none;resize:vertical;min-height:80px;font-family:inherit;"></textarea>
-                            <div style="text-align:right;color:rgba(255,255,255,0.15);font-size:0.7rem;margin-top:0.2rem;"><span id="messageCount">0</span>/500</div>
-                        </div>
-                        <div>
-                            <label style="display:block;color:rgba(255,255,255,0.4);font-size:0.8rem;margin-bottom:0.3rem;">🔖 类型</label>
-                            <select id="notifyType" class="swal2-input" style="width:100%;padding:0.6rem 1rem;border-radius:12px;border:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.02);color:#fff;font-size:0.9rem;outline:none;">
-                                <option value="info">ℹ️ 信息</option>
-                                <option value="success">✅ 成功</option>
-                                <option value="warning">⚠️ 警告</option>
-                                <option value="danger">❌ 重要</option>
-                            </select>
-                        </div>
+        // ⭐ 发送通知弹窗（高颜值版）
+function openNotificationModal(userId, username) {
+    Swal.fire({
+        title: `<span style="font-size:1.6rem;">📬 发送通知</span>`,
+        html: `
+            <div style="text-align:left;padding:0.5rem 0;">
+                <!-- 用户信息 -->
+                <div style="display:flex;align-items:center;gap:0.8rem;padding:0.8rem 1rem;background:rgba(139,92,246,0.04);border-radius:12px;border:1px solid rgba(139,92,246,0.06);margin-bottom:1.2rem;">
+                    <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#8B5CF6,#EC4899);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:0.9rem;flex-shrink:0;">${username.charAt(0).toUpperCase()}</div>
+                    <div>
+                        <div style="color:#fff;font-weight:600;font-size:0.95rem;">${username}</div>
+                        <div style="color:rgba(255,255,255,0.2);font-size:0.75rem;">将收到邮件+站内通知</div>
                     </div>
-                `,
-                confirmButtonText: '📤 发送',
-                cancelButtonText: '取消',
-                showCancelButton: true,
-                focusConfirm: false,
-                preConfirm: () => {
-                    const title = document.getElementById('notifyTitle').value.trim();
-                    const message = document.getElementById('notifyMessage').value.trim();
-                    const type = document.getElementById('notifyType').value;
+                </div>
 
-                    if (!title) {
-                        Swal.showValidationMessage('请输入标题');
-                        return false;
-                    }
-                    if (!message) {
-                        Swal.showValidationMessage('请输入内容');
-                        return false;
-                    }
-                    return { userId, title, message, type };
-                }
-            }).then((result) => {
-                if (result.isConfirmed && result.value) {
-                    const { userId, title, message, type } = result.value;
-                    sendNotification(userId, title, message, type);
-                }
-            });
+                <!-- 标题 -->
+                <div style="margin-bottom:0.8rem;">
+                    <label style="display:block;color:rgba(255,255,255,0.4);font-size:0.8rem;font-weight:500;margin-bottom:0.3rem;">📌 标题</label>
+                    <input id="notifyTitle" class="swal2-input" placeholder="输入通知标题..." maxlength="50" style="width:100%;padding:0.7rem 1rem;border-radius:12px;border:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.02);color:#fff;font-size:0.9rem;outline:none;transition:border-color 0.3s;">
+                    <div style="text-align:right;color:rgba(255,255,255,0.12);font-size:0.7rem;margin-top:0.2rem;"><span id="titleCount">0</span>/50</div>
+                </div>
 
-            // 字数统计
-            setTimeout(() => {
-                const titleInput = document.getElementById('notifyTitle');
-                const msgInput = document.getElementById('notifyMessage');
-                const titleCount = document.getElementById('titleCount');
-                const msgCount = document.getElementById('messageCount');
+                <!-- 内容 -->
+                <div style="margin-bottom:0.8rem;">
+                    <label style="display:block;color:rgba(255,255,255,0.4);font-size:0.8rem;font-weight:500;margin-bottom:0.3rem;">📝 内容</label>
+                    <textarea id="notifyMessage" class="swal2-textarea" placeholder="输入通知内容..." maxlength="500" style="width:100%;padding:0.7rem 1rem;border-radius:12px;border:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.02);color:#fff;font-size:0.9rem;outline:none;resize:vertical;min-height:100px;font-family:inherit;transition:border-color 0.3s;"></textarea>
+                    <div style="text-align:right;color:rgba(255,255,255,0.12);font-size:0.7rem;margin-top:0.2rem;"><span id="messageCount">0</span>/500</div>
+                </div>
 
-                if (titleInput) {
-                    titleInput.addEventListener('input', function() {
-                        titleCount.textContent = this.value.length;
-                    });
-                }
-                if (msgInput) {
-                    msgInput.addEventListener('input', function() {
-                        msgCount.textContent = this.value.length;
-                    });
-                }
-            }, 100);
+                <!-- 类型选择 -->
+                <div>
+                    <label style="display:block;color:rgba(255,255,255,0.4);font-size:0.8rem;font-weight:500;margin-bottom:0.3rem;">🔖 通知类型</label>
+                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:0.4rem;">
+                        <div class="type-option" data-type="info" onclick="selectType('info')" style="padding:0.4rem 0.2rem;text-align:center;border-radius:8px;border:2px solid rgba(255,255,255,0.04);background:rgba(255,255,255,0.02);color:rgba(255,255,255,0.3);font-size:0.7rem;cursor:pointer;transition:all 0.3s ease;">ℹ️ 信息</div>
+                        <div class="type-option" data-type="success" onclick="selectType('success')" style="padding:0.4rem 0.2rem;text-align:center;border-radius:8px;border:2px solid rgba(255,255,255,0.04);background:rgba(255,255,255,0.02);color:rgba(255,255,255,0.3);font-size:0.7rem;cursor:pointer;transition:all 0.3s ease;">✅ 成功</div>
+                        <div class="type-option" data-type="warning" onclick="selectType('warning')" style="padding:0.4rem 0.2rem;text-align:center;border-radius:8px;border:2px solid rgba(255,255,255,0.04);background:rgba(255,255,255,0.02);color:rgba(255,255,255,0.3);font-size:0.7rem;cursor:pointer;transition:all 0.3s ease;">⚠️ 警告</div>
+                        <div class="type-option" data-type="danger" onclick="selectType('danger')" style="padding:0.4rem 0.2rem;text-align:center;border-radius:8px;border:2px solid rgba(255,255,255,0.04);background:rgba(255,255,255,0.02);color:rgba(255,255,255,0.3);font-size:0.7rem;cursor:pointer;transition:all 0.3s ease;">🔥 重要</div>
+                    </div>
+                    <input type="hidden" id="notifyType" value="info" />
+                </div>
+            </div>
+        `,
+        confirmButtonText: '📤 发送通知',
+        cancelButtonText: '取消',
+        showCancelButton: true,
+        background: '#1a1a2e',
+        color: '#e0e0e0',
+        confirmButtonColor: '#8B5CF6',
+        cancelButtonColor: '#2a2a3e',
+        focusConfirm: false,
+        width: 520,
+        padding: '2rem',
+        preConfirm: () => {
+            const title = document.getElementById('notifyTitle').value.trim();
+            const message = document.getElementById('notifyMessage').value.trim();
+            const type = document.getElementById('notifyType').value;
+
+            if (!title) {
+                Swal.showValidationMessage('请输入标题');
+                return false;
+            }
+            if (!message) {
+                Swal.showValidationMessage('请输入内容');
+                return false;
+            }
+            return { userId, title, message, type };
         }
+    }).then((result) => {
+        if (result.isConfirmed && result.value) {
+            const { userId, title, message, type } = result.value;
+            sendNotification(userId, title, message, type);
+        }
+    });
+
+    // 字数统计
+    setTimeout(() => {
+        const titleInput = document.getElementById('notifyTitle');
+        const msgInput = document.getElementById('notifyMessage');
+        const titleCount = document.getElementById('titleCount');
+        const msgCount = document.getElementById('messageCount');
+
+        if (titleInput) {
+            titleInput.addEventListener('input', function() {
+                titleCount.textContent = this.value.length;
+                this.style.borderColor = this.value.length > 45 ? 'rgba(220,53,69,0.2)' : 'rgba(255,255,255,0.06)';
+            });
+        }
+        if (msgInput) {
+            msgInput.addEventListener('input', function() {
+                msgCount.textContent = this.value.length;
+                this.style.borderColor = this.value.length > 450 ? 'rgba(220,53,69,0.2)' : 'rgba(255,255,255,0.06)';
+            });
+        }
+    }, 100);
+}
+
+// ⭐ 选择类型
+function selectType(type) {
+    document.getElementById('notifyType').value = type;
+    document.querySelectorAll('.type-option').forEach(el => {
+        el.style.borderColor = 'rgba(255,255,255,0.04)';
+        el.style.background = 'rgba(255,255,255,0.02)';
+        el.style.color = 'rgba(255,255,255,0.3)';
+    });
+    const selected = document.querySelector(`.type-option[data-type="${type}"]`);
+    const colors = {
+        'info': '#4facfe',
+        'success': '#28a745',
+        'warning': '#ffc107',
+        'danger': '#dc3545'
+    };
+    selected.style.borderColor = colors[type];
+    selected.style.background = `${colors[type]}22`;
+    selected.style.color = colors[type];
+}
 
         // ============================================================
         // 发送通知 API
