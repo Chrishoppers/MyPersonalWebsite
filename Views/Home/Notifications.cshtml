@@ -1,0 +1,165 @@
+@model List<MyPersonalWebsite.Models.Notification>
+
+@{
+    ViewData["Title"] = "我的通知";
+}
+
+<style>
+    .notif-page {
+        max-width: 700px;
+        margin: 0 auto;
+        padding: 1rem;
+    }
+
+    .notif-page h2 {
+        color: #fff;
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .notif-page h2 span {
+        font-size: 0.9rem;
+        font-weight: 400;
+        color: rgba(255,255,255,0.2);
+    }
+
+    .notif-card {
+        background: rgba(255,255,255,0.02);
+        border-radius: 16px;
+        border: 1px solid rgba(255,255,255,0.04);
+        padding: 1.2rem 1.5rem;
+        margin-bottom: 0.8rem;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    .notif-card:hover {
+        background: rgba(255,255,255,0.04);
+        border-color: rgba(255,255,255,0.06);
+    }
+
+    .notif-card.read {
+        opacity: 0.4;
+    }
+
+    .notif-card .notif-title {
+        color: #fff;
+        font-weight: 600;
+        font-size: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .notif-card .notif-title .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        display: inline-block;
+        flex-shrink: 0;
+    }
+
+    .notif-card .notif-title .dot.info { background: #4facfe; }
+    .notif-card .notif-title .dot.success { background: #28a745; }
+    .notif-card .notif-title .dot.warning { background: #ffc107; }
+    .notif-card .notif-title .dot.danger { background: #dc3545; }
+
+    .notif-card .notif-msg {
+        color: rgba(255,255,255,0.5);
+        font-size: 0.9rem;
+        margin: 0.3rem 0 0.2rem;
+        line-height: 1.6;
+    }
+
+    .notif-card .notif-time {
+        color: rgba(255,255,255,0.12);
+        font-size: 0.7rem;
+    }
+
+    .notif-empty {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: rgba(255,255,255,0.1);
+    }
+
+    .notif-empty .icon {
+        font-size: 4rem;
+        margin-bottom: 0.5rem;
+        opacity: 0.3;
+    }
+
+    .btn-back {
+        display: inline-block;
+        padding: 0.5rem 1.5rem;
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 40px;
+        background: rgba(255,255,255,0.02);
+        color: rgba(255,255,255,0.3);
+        text-decoration: none;
+        font-size: 0.85rem;
+        transition: all 0.3s ease;
+    }
+
+    .btn-back:hover {
+        background: rgba(255,255,255,0.04);
+        color: #fff;
+    }
+</style>
+
+<div class="notif-page">
+    <h2>
+        📬 我的通知
+        <span>共 @Model.Count 条</span>
+    </h2>
+
+    <div style="margin-bottom:1rem;">
+        <a href="/" class="btn-back">← 返回首页</a>
+    </div>
+
+    @if (Model.Any())
+    {
+        foreach (var n in Model.OrderByDescending(n => n.CreatedAt))
+        {
+            <div class="notif-card @(n.IsRead ? "read" : "")" onclick="markRead(@n.Id, this)">
+                <div class="notif-title">
+                    <span class="dot @n.Type"></span>
+                    @n.Title
+                </div>
+                <div class="notif-msg">@n.Message</div>
+                <div class="notif-time">@n.CreatedAt.ToString("yyyy-MM-dd HH:mm")</div>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="notif-empty">
+            <div class="icon">🔔</div>
+            <p>暂无通知</p>
+        </div>
+    }
+</div>
+
+<script>
+    function markRead(id, element) {
+        if (element.classList.contains('read')) return;
+        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+        fetch('/Home/MarkNotificationRead', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'RequestVerificationToken': token
+            },
+            body: `id=${id}`
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                element.classList.add('read');
+            }
+        })
+        .catch(() => {});
+    }
+</script>
