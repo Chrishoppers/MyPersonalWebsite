@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using MyPersonalWebsite.Models;
 using System;
 using System.Collections.Generic;
+using System.Security.Cryptography;  // ⭐ 添加这一行
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -103,17 +104,29 @@ namespace MyPersonalWebsite.Services
             
             return user;
         }
-        // ============================================================
-// ⭐ 生成登录Token
+       // ============================================================
+// ⭐ 生成登录Token（修复长度问题）
 // ============================================================
 
 public string GenerateLoginToken()
 {
-    return Convert.ToBase64String(Guid.NewGuid().ToByteArray())
+    // 生成 32 字节随机数，转为 Base64 后取前 32 位
+    var bytes = new byte[32];
+    using (var rng = RandomNumberGenerator.Create())
+    {
+        rng.GetBytes(bytes);
+    }
+    var token = Convert.ToBase64String(bytes)
         .Replace("+", "")
         .Replace("/", "")
-        .Replace("=", "")
-        .Substring(0, 32);
+        .Replace("=", "");
+    
+    // 确保长度至少 32 位
+    if (token.Length < 32)
+    {
+        token = token.PadRight(32, '0');
+    }
+    return token.Substring(0, 32);
 }
 
 // ============================================================
