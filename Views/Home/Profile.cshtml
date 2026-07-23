@@ -359,31 +359,34 @@
         <!-- ===== 头像 ===== -->
         <div class="avatar-section">
             <div class="avatar-wrapper">
-<div class="avatar-preview" id="avatarPreview">
-    @if (!string.IsNullOrEmpty(user.AvatarUrl) && user.IsAvatarApproved)
-    {
-        <img src="@user.AvatarUrl" alt="头像" id="avatarImg" />
-    }
-    else if (!string.IsNullOrEmpty(user.AvatarUrl) && !user.IsAvatarApproved)
-    {
-        <img src="@user.AvatarUrl" alt="头像" id="avatarImg" style="opacity:0.5;filter:grayscale(1);" />
-        <span class="avatar-status-badge">⏳ 审核中</span>
-    }
-    else
-    {
-        <div class="avatar-placeholder">
-            <span>@(user.Username?.FirstOrDefault().ToString().ToUpper() ?? "CH")</span>
-        </div>
-    }
-</div>
+
+                <div class="avatar-preview" id="avatarPreview">
+                    @if (!string.IsNullOrEmpty(user.AvatarUrl) && user.IsAvatarApproved)
+                    {
+                        <img src="@user.AvatarUrl" alt="头像" id="avatarImg" />
+                    }
+                    else if (!string.IsNullOrEmpty(user.AvatarUrl) && !user.IsAvatarApproved)
+                    {
+                        <img src="@user.AvatarUrl" alt="头像" id="avatarImg" style="opacity:0.5;filter:grayscale(1);" />
+                        <span class="avatar-status-badge">⏳ 审核中</span>
+                    }
+                    else
+                    {
+                        <div class="avatar-placeholder">
+                            <span>@(user.Username?.FirstOrDefault().ToString().ToUpper() ?? "CH")</span>
+                        </div>
+                    }
+                </div>
 
                 <!-- ⭐ 好看的上传按钮 -->
                 <div class="avatar-upload-btn-wrapper">
-                    <label for="avatarInput" class="avatar-upload-btn">
-                        <i class="bi bi-camera"></i>
-                        <span>更换头像</span>
-                    </label>
-                    <input type="file" id="avatarInput" name="avatar" accept="image/*" style="display:none;" />
+                    <form asp-action="UploadAvatar" method="post" enctype="multipart/form-data" id="avatarForm">
+                        <label for="avatarInput" class="avatar-upload-btn">
+                            <i class="bi bi-camera"></i>
+                            <span>更换头像</span>
+                        </label>
+                        <input type="file" id="avatarInput" name="avatar" accept="image/*" style="display:none;" />
+                    </form>
                 </div>
 
                 @if (!string.IsNullOrEmpty(user.AvatarUrl) && !user.IsAvatarApproved)
@@ -458,7 +461,7 @@
 
 @section Scripts {
     <script>
-        // ===== 头像预览 =====
+        // ===== 头像预览 + 自动提交 =====
         document.getElementById('avatarInput').addEventListener('change', function(e) {
             const file = this.files[0];
             if (!file) return;
@@ -486,8 +489,8 @@
             };
             reader.readAsDataURL(file);
 
-            // 自动提交表单
-            this.form.submit();
+            // ⭐ 自动提交表单
+            document.getElementById('avatarForm').submit();
         });
     </script>
 }
