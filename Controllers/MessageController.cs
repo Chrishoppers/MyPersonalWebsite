@@ -57,55 +57,57 @@ namespace MyPersonalWebsite.Controllers
         }
 
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Message message)
+[ValidateAntiForgeryToken]
+public async Task<IActionResult> Create(Message message)
+{
+    var userId = HttpContext.Session.GetInt32("UserId");
+    if (!userId.HasValue)
+    {
+        return RedirectToAction("Login", "Auth");
+    }
+
+    var user = await _dataSync.GetUserByIdAsync(userId.Value);
+    if (user == null || user.IsBanned)
+    {
+        ModelState.AddModelError("", user?.IsBanned == true ? "您的账号已被封禁" : "请先登录");
+        return View();
+    }
+
+    if (ModelState.IsValid)
+    {
+        message.UserId = userId.Value;
+        message.VisitorName = user.Username;
+        message.Email = user.Email;
+        message.CreateTime = DateTime.Now;
+        message.LikeCount = 0;
+        message.IsApproved = user.IsAdmin;
+
+        // ⭐ 先保存，获取ID
+        await _dataSync.AddMessageAsync(message);
+
+        // ⭐ 现在 message.Id 已经有值了
+        if (!user.IsAdmin)
         {
-            var userId = HttpContext.Session.GetInt32("UserId");
-            if (!userId.HasValue)
+            try
             {
-                return RedirectToAction("Login", "Auth");
+                await _emailService.SendAdminNewMessageNotificationAsync(
+                    message.VisitorName,
+                    message.Content,
+                    message.Id  // ← 改成 message.Id
+                );
             }
-
-            var user = await _dataSync.GetUserByIdAsync(userId.Value);
-            if (user == null || user.IsBanned)
+            catch (Exception ex)
             {
-                ModelState.AddModelError("", user?.IsBanned == true ? "您的账号已被封禁" : "请先登录");
-                return View();
+                Console.WriteLine($"管理员通知邮件发送失败: {ex.Message}");
             }
-
-            if (ModelState.IsValid)
-            {
-                message.UserId = userId.Value;
-                message.VisitorName = user.Username;
-                message.Email = user.Email;
-                message.CreateTime = DateTime.Now;
-                message.LikeCount = 0;
-                message.IsApproved = user.IsAdmin;
-
-                await _dataSync.AddMessageAsync(message);
-
-                if (!user.IsAdmin)
-                {
-                    try
-                    {
-                        await _emailService.SendAdminNewMessageNotificationAsync(
-                            message.VisitorName,
-                            message.Content,
-                            0
-                        );
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"管理员通知邮件发送失败: {ex.Message}");
-                    }
-                }
-
-                TempData["Success"] = user.IsAdmin ? "留言发布成功！" : "留言已提交，等待管理员审核后显示";
-                return RedirectToAction("Index");
-            }
-
-            return View(message);
         }
+
+        TempData["Success"] = user.IsAdmin ? "留言发布成功！" : "留言已提交，等待管理员审核后显示";
+        return RedirectToAction("Index");
+    }
+
+    return View(message);
+}
 
         // ============================================================
         // ⭐ 留言点赞（实时更新 + 双写）
