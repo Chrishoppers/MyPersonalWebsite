@@ -23,7 +23,7 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // 仪表盘
+        // 1. 仪表盘
         // ============================================================
         public async Task<IActionResult> Dashboard()
         {
@@ -53,104 +53,9 @@ namespace MyPersonalWebsite.Controllers
             ViewBag.RecentContactRequests = contactRequests.OrderByDescending(r => r.RequestTime).Take(5).ToList();
             return View();
         }
-        // ============================================================
-// 发送通知给用户（弹窗 + 邮箱）
-// ============================================================
-
-[HttpPost]
-public async Task<IActionResult> SendNotification(int userId, string title, string message, string type)
-{
-    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-    if (isAdmin != 1)
-        return Json(new { success = false, message = "权限不足" });
-
-    var user = await _dataSync.GetUserByIdAsync(userId);
-    if (user == null)
-        return Json(new { success = false, message = "用户不存在" });
-
-    if (user.IsDeleted)
-        return Json(new { success = false, message = "用户已被删除" });
-
-    // 1. 发送邮箱通知
-    try
-    {
-        var emailHtml = $@"
-            <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #2a2a3e; border-radius: 16px; background: #0a0a0f; color: #e0e0e0;'>
-                <h2 style='color: #8B5CF6;'>📬 管理员通知</h2>
-                <p>您好 <strong>{user.Username}</strong>！</p>
-                <div style='background: #1a1a2e; padding: 15px; border-radius: 8px; margin: 10px 0; border: 1px solid #2a2a3e;'>
-                    <p><strong>📌 标题：</strong>{title}</p>
-                    <p><strong>📝 内容：</strong></p>
-                    <p style='color: #ccc;'>{message}</p>
-                </div>
-                <p style='color: #888; font-size: 14px;'>类型：{type}</p>
-                <hr style='border: none; border-top: 1px solid #2a2a3e;'>
-                <p style='color: #555; font-size: 12px;'>💌 系统自动发送，不用回复。</p>
-            </div>
-        ";
-
-        var subject = $"📬 {title} - Chris hopper 个人网站";
-        await _emailService.SendEmailAsync(user.Email, subject, emailHtml);
-    }
-    catch (Exception ex)
-    {
-        return Json(new { success = false, message = $"邮件发送失败: {ex.Message}" });
-    }
-    // ============================================================
-// 通知管理页面
-// ============================================================
-public async Task<IActionResult> Notifications()
-{
-    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-    if (isAdmin != 1)
-        return RedirectToAction("Login", "Auth");
-
-    var users = await _dataSync.GetAllUsersAsync();
-    var notifications = await _dataSync.GetAllNotificationsAsync();
-    
-    ViewBag.Users = users;
-    return View(notifications);
-}
-
-// ============================================================
-// 删除通知
-// ============================================================
-[HttpPost]
-public async Task<IActionResult> DeleteNotification(int id)
-{
-    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-    if (isAdmin != 1)
-        return Json(new { success = false, message = "权限不足" });
-
-    await _dataSync.DeleteNotificationAsync(id);
-    return Json(new { success = true, message = "删除成功" });
-}
-
-    // 2. 保存弹窗通知到数据库（新增 Notification 表）
-    try
-    {
-        var notification = new Notification
-        {
-            UserId = userId,
-            Title = title,
-            Message = message,
-            Type = type,
-            IsRead = false,
-            CreatedAt = DateTime.Now
-        };
-        await _dataSync.AddNotificationAsync(notification);
-    }
-    catch (Exception ex)
-    {
-        // 如果通知表不存在或保存失败，只发邮件
-        Console.WriteLine($"通知保存失败: {ex.Message}");
-    }
-
-    return Json(new { success = true, message = $"✅ 通知已发送给 {user.Username}" });
-}
 
         // ============================================================
-        // 博客管理
+        // 2. 博客管理
         // ============================================================
         public async Task<IActionResult> Blogs()
         {
@@ -162,6 +67,9 @@ public async Task<IActionResult> DeleteNotification(int id)
             return View(blogs);
         }
 
+        // ============================================================
+        // 2.1 创建博客 - GET
+        // ============================================================
         [HttpGet]
         public IActionResult CreateBlog()
         {
@@ -171,6 +79,9 @@ public async Task<IActionResult> DeleteNotification(int id)
             return View();
         }
 
+        // ============================================================
+        // 2.2 创建博客 - POST
+        // ============================================================
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CreateBlog(Blog blog)
@@ -198,6 +109,9 @@ public async Task<IActionResult> DeleteNotification(int id)
             return View(blog);
         }
 
+        // ============================================================
+        // 2.3 编辑博客 - GET
+        // ============================================================
         [HttpGet]
         public async Task<IActionResult> EditBlog(int id)
         {
@@ -211,6 +125,9 @@ public async Task<IActionResult> DeleteNotification(int id)
             return View(blog);
         }
 
+        // ============================================================
+        // 2.4 编辑博客 - POST
+        // ============================================================
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> EditBlog(Blog blog)
@@ -227,6 +144,9 @@ public async Task<IActionResult> DeleteNotification(int id)
             return View(blog);
         }
 
+        // ============================================================
+        // 2.5 删除博客
+        // ============================================================
         [HttpPost]
         public async Task<IActionResult> DeleteBlog(int id)
         {
@@ -238,6 +158,9 @@ public async Task<IActionResult> DeleteNotification(int id)
             return Json(new { success = true, message = "删除成功" });
         }
 
+        // ============================================================
+        // 2.6 上传博客图片
+        // ============================================================
         [HttpPost]
         public async Task<IActionResult> UploadBlogImage(IFormFile image)
         {
@@ -274,7 +197,7 @@ public async Task<IActionResult> DeleteNotification(int id)
         }
 
         // ============================================================
-        // 留言管理
+        // 3. 留言管理
         // ============================================================
         public async Task<IActionResult> Messages()
         {
@@ -287,19 +210,20 @@ public async Task<IActionResult> DeleteNotification(int id)
         }
 
         // ============================================================
-        // 用户管理
+        // 4. 用户管理
         // ============================================================
-       public async Task<IActionResult> Users()
-{
-    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-    if (isAdmin != 1)
-        return RedirectToAction("Login", "Auth");
+        public async Task<IActionResult> Users()
+        {
+            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+            if (isAdmin != 1)
+                return RedirectToAction("Login", "Auth");
 
-    var users = await _dataSync.GetAllUsersAsync();
-    return View(users.OrderByDescending(u => u.CreatedAt).ToList());
-}
+            var users = await _dataSync.GetAllUsersAsync();
+            return View(users.OrderByDescending(u => u.CreatedAt).ToList());
+        }
+
         // ============================================================
-        // 授权码管理
+        // 5. 授权码管理
         // ============================================================
         public async Task<IActionResult> ContactRequests()
         {
@@ -311,6 +235,9 @@ public async Task<IActionResult> DeleteNotification(int id)
             return View(requests);
         }
 
+        // ============================================================
+        // 5.1 标记授权码已使用
+        // ============================================================
         [HttpPost]
         public async Task<IActionResult> MarkContactUsed(int id)
         {
@@ -329,6 +256,9 @@ public async Task<IActionResult> DeleteNotification(int id)
             return Json(new { success = true, message = "已标记为已使用" });
         }
 
+        // ============================================================
+        // 5.2 撤销授权码使用标记
+        // ============================================================
         [HttpPost]
         public async Task<IActionResult> UnmarkContactUsed(int id)
         {
@@ -347,6 +277,9 @@ public async Task<IActionResult> DeleteNotification(int id)
             return Json(new { success = true, message = "已撤销使用标记" });
         }
 
+        // ============================================================
+        // 5.3 授权码详情
+        // ============================================================
         [HttpGet]
         public async Task<IActionResult> ContactDetail(int id)
         {
@@ -379,7 +312,7 @@ public async Task<IActionResult> DeleteNotification(int id)
         }
 
         // ============================================================
-        // 待审核更改（头像/昵称/邮箱）
+        // 6. 待审核更改
         // ============================================================
         public async Task<IActionResult> PendingChanges()
         {
@@ -391,6 +324,9 @@ public async Task<IActionResult> DeleteNotification(int id)
             return View(users);
         }
 
+        // ============================================================
+        // 6.1 批准用户更改
+        // ============================================================
         [HttpPost]
         public async Task<IActionResult> ApproveUserChange(int userId)
         {
@@ -423,6 +359,9 @@ public async Task<IActionResult> DeleteNotification(int id)
             return Json(new { success = true, message = "更改已批准" });
         }
 
+        // ============================================================
+        // 6.2 拒绝用户更改
+        // ============================================================
         [HttpPost]
         public async Task<IActionResult> RejectUserChange(int userId)
         {
@@ -450,9 +389,8 @@ public async Task<IActionResult> DeleteNotification(int id)
         }
 
         // ============================================================
-        // ⭐ 1. 新用户审核（通过）- 无需登录
+        // 7. 新用户审核（通过）- 无需登录
         // ============================================================
-
         [HttpGet]
         public async Task<IActionResult> ApproveUser(int userId)
         {
@@ -511,9 +449,8 @@ public async Task<IActionResult> DeleteNotification(int id)
         }
 
         // ============================================================
-        // ⭐ 1. 新用户审核（拒绝）- 无需登录
+        // 8. 新用户审核（拒绝）- 无需登录
         // ============================================================
-
         [HttpGet]
         public async Task<IActionResult> RejectUser(int userId)
         {
@@ -573,9 +510,8 @@ public async Task<IActionResult> DeleteNotification(int id)
         }
 
         // ============================================================
-        // ⭐ 2. 头像审核（通过）- 无需登录
+        // 9. 头像审核（通过）- 无需登录
         // ============================================================
-
         [HttpGet]
         public async Task<IActionResult> ApproveAvatar(int userId)
         {
@@ -633,9 +569,8 @@ public async Task<IActionResult> DeleteNotification(int id)
         }
 
         // ============================================================
-        // ⭐ 2. 头像审核（拒绝）- 无需登录
+        // 10. 头像审核（拒绝）- 无需登录
         // ============================================================
-
         [HttpGet]
         public async Task<IActionResult> RejectAvatar(int userId)
         {
@@ -684,9 +619,8 @@ public async Task<IActionResult> DeleteNotification(int id)
         }
 
         // ============================================================
-        // ⭐ 3. 昵称修改审核（通过）- 无需登录
+        // 11. 昵称修改审核（通过）- 无需登录
         // ============================================================
-
         [HttpGet]
         public async Task<IActionResult> ApproveUsername(int userId)
         {
@@ -747,9 +681,8 @@ public async Task<IActionResult> DeleteNotification(int id)
         }
 
         // ============================================================
-        // ⭐ 3. 昵称修改审核（拒绝）- 无需登录
+        // 12. 昵称修改审核（拒绝）- 无需登录
         // ============================================================
-
         [HttpGet]
         public async Task<IActionResult> RejectUsername(int userId)
         {
@@ -798,9 +731,8 @@ public async Task<IActionResult> DeleteNotification(int id)
         }
 
         // ============================================================
-        // ⭐ 4. 邮箱修改审核（通过）- 无需登录
+        // 13. 邮箱修改审核（通过）- 无需登录
         // ============================================================
-
         [HttpGet]
         public async Task<IActionResult> ApproveEmail(int userId)
         {
@@ -861,9 +793,8 @@ public async Task<IActionResult> DeleteNotification(int id)
         }
 
         // ============================================================
-        // ⭐ 4. 邮箱修改审核（拒绝）- 无需登录
+        // 14. 邮箱修改审核（拒绝）- 无需登录
         // ============================================================
-
         [HttpGet]
         public async Task<IActionResult> RejectEmail(int userId)
         {
@@ -912,9 +843,8 @@ public async Task<IActionResult> DeleteNotification(int id)
         }
 
         // ============================================================
-        // ⭐ 5. 留言审核（通过）- 无需登录
+        // 15. 留言审核（通过）- 无需登录
         // ============================================================
-
         [HttpGet]
         public async Task<IActionResult> ApproveMessage(int messageId)
         {
@@ -944,7 +874,6 @@ public async Task<IActionResult> DeleteNotification(int id)
             message.IsApproved = true;
             await _dataSync.UpdateMessageAsync(message);
 
-            // 通知留言者
             try
             {
                 await _emailService.SendUserActionNotificationAsync(
@@ -971,9 +900,8 @@ public async Task<IActionResult> DeleteNotification(int id)
         }
 
         // ============================================================
-        // ⭐ 5. 留言审核（删除）- 无需登录
+        // 16. 留言审核（删除）- 无需登录
         // ============================================================
-
         [HttpGet]
         public async Task<IActionResult> RejectMessage(int messageId)
         {
@@ -1017,7 +945,7 @@ public async Task<IActionResult> DeleteNotification(int id)
         }
 
         // ============================================================
-        // 关于我编辑
+        // 17. 关于我编辑
         // ============================================================
         public async Task<IActionResult> About()
         {
@@ -1029,6 +957,9 @@ public async Task<IActionResult> DeleteNotification(int id)
             return View(sections);
         }
 
+        // ============================================================
+        // 17.1 保存关于我
+        // ============================================================
         [HttpPost]
         public async Task<IActionResult> UpdateAboutMe([FromBody] Dictionary<string, string> data)
         {
@@ -1084,7 +1015,76 @@ public async Task<IActionResult> DeleteNotification(int id)
         }
 
         // ============================================================
-        // 用户操作（封禁/解封/删除/激活）
+        // 18. ⭐ 发送通知给用户（弹窗 + 邮件 + 自动登录）
+        // ============================================================
+        [HttpPost]
+        public async Task<IActionResult> SendNotification(int userId, string title, string message, string type)
+        {
+            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+            if (isAdmin != 1)
+                return Json(new { success = false, message = "权限不足" });
+
+            var user = await _dataSync.GetUserByIdAsync(userId);
+            if (user == null)
+                return Json(new { success = false, message = "用户不存在" });
+
+            if (user.IsDeleted)
+                return Json(new { success = false, message = "用户已被删除" });
+
+            var loginToken = await _dataSync.CreateLoginTokenAsync(userId);
+
+            try
+            {
+                var emailHtml = $@"
+                    <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #2a2a3e; border-radius: 16px; background: #0a0a0f; color: #e0e0e0;'>
+                        <h2 style='color: #8B5CF6;'>📬 管理员通知</h2>
+                        <p>您好 <strong>{user.Username}</strong>！</p>
+                        <div style='background: #1a1a2e; padding: 15px; border-radius: 8px; margin: 10px 0; border: 1px solid #2a2a3e;'>
+                            <p><strong>📌 标题：</strong>{title}</p>
+                            <p><strong>📝 内容：</strong></p>
+                            <p style='color: #ccc;'>{message}</p>
+                        </div>
+                        <div style='margin: 20px 0; text-align: center;'>
+                            <a href='https://chris-hopper.org/Auth/AutoLogin?token={loginToken}' style='display: inline-block; padding: 14px 48px; background: linear-gradient(135deg, #8B5CF6, #EC4899); color: white; text-decoration: none; border-radius: 40px; font-weight: 600; font-size: 1rem;'>
+                                👁️ 查看详情
+                            </a>
+                            <p style='color: rgba(255,255,255,0.12); font-size: 0.7rem; margin-top: 0.3rem;'>🔒 点击后自动登录</p>
+                        </div>
+                        <hr style='border: none; border-top: 1px solid #2a2a3e;'>
+                        <p style='color: #555; font-size: 12px;'>💌 系统自动发送，不用回复。</p>
+                    </div>
+                ";
+
+                await _emailService.SendEmailAsync(user.Email, $"📬 {title} - Chris hopper 个人网站", emailHtml);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = $"邮件发送失败: {ex.Message}" });
+            }
+
+            try
+            {
+                var notification = new Notification
+                {
+                    UserId = userId,
+                    Title = title,
+                    Message = message,
+                    Type = type,
+                    IsRead = false,
+                    CreatedAt = DateTime.Now
+                };
+                await _dataSync.AddNotificationAsync(notification);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"通知保存失败: {ex.Message}");
+            }
+
+            return Json(new { success = true, message = $"✅ 通知已发送给 {user.Username}" });
+        }
+
+        // ============================================================
+        // 19. 封禁用户
         // ============================================================
         [HttpPost]
         public async Task<IActionResult> BanUser(int id, int hours, string reason, string note)
@@ -1121,6 +1121,9 @@ public async Task<IActionResult> DeleteNotification(int id)
             return Json(new { success = true, message = $"已封禁用户 {user.Username}" });
         }
 
+        // ============================================================
+        // 20. 解封用户
+        // ============================================================
         [HttpPost]
         public async Task<IActionResult> UnbanUser(int id)
         {
@@ -1152,6 +1155,9 @@ public async Task<IActionResult> DeleteNotification(int id)
             return Json(new { success = true, message = $"已解封用户 {user.Username}" });
         }
 
+        // ============================================================
+        // 21. 删除用户
+        // ============================================================
         [HttpPost]
         public async Task<IActionResult> DeleteUser(int id, string reason, string note)
         {
@@ -1187,6 +1193,9 @@ public async Task<IActionResult> DeleteNotification(int id)
             return Json(new { success = true, message = $"已删除用户 {user.Username}" });
         }
 
+        // ============================================================
+        // 22. 激活用户
+        // ============================================================
         [HttpPost]
         public async Task<IActionResult> ActivateUser(int userId)
         {
