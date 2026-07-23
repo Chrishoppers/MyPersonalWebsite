@@ -21,6 +21,101 @@ namespace MyPersonalWebsite.Controllers
             _dataSync = dataSync;
             _emailService = emailService;
         }
+        // ============================================================
+// ⭐ 批量发送通知
+// ============================================================
+
+[HttpPost]
+public async Task<IActionResult> BatchSendNotification([FromBody] BatchSendRequest request)
+{
+    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+    if (isAdmin != 1)
+        return Json(new { success = false, message = "权限不足" });
+
+    if (request.UserIds == null || !request.UserIds.Any())
+        return Json(new { success = false, message = "请选择至少一位用户" });
+
+    int successCount = 0;
+    int failCount = 0;
+    var errors = new List<string>();
+
+    foreach (var userId in request.UserIds)
+    {
+        try
+        {
+            var user = await _dataSync.GetUserByIdAsync(userId);
+            if (user == null || user.IsDeleted)
+            {
+                failCount++;
+                continue;
+            }
+
+            // 生成登录Token
+            var loginToken = await _dataSync.CreateLoginTokenAsync(userId);
+
+            // 发送邮件
+            var emailHtml = $@"
+                <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #2a2a3e; border-radius: 16px; background: #0a0a0f; color: #e0e0e0;'>
+                    <h2 style='color: #8B5CF6;'>📬 管理员通知</h2>
+                    <p>您好 <strong>{user.Username}</strong>！</p>
+                    <div style='background: #1a1a2e; padding: 15px; border-radius: 8px; margin: 10px 0; border: 1px solid #2a2a3e;'>
+                        <p><strong>📌 标题：</strong>{request.Title}</p>
+                        <p><strong>📝 内容：</strong></p>
+                        <p style='color: #ccc;'>{request.Message}</p>
+                    </div>
+                    <div style='margin: 20px 0; text-align: center;'>
+                        <a href='https://chris-hopper.org/Auth/AutoLogin?token={loginToken}' style='display: inline-block; padding: 14px 48px; background: linear-gradient(135deg, #8B5CF6, #EC4899); color: white; text-decoration: none; border-radius: 40px; font-weight: 600; font-size: 1rem; box-shadow: 0 4px 24px rgba(108,60,225,0.2);'>
+                            👁️ 查看详情
+                        </a>
+                        <p style='color: rgba(255,255,255,0.12); font-size: 0.7rem; margin-top: 0.3rem;'>🔒 点击后自动登录，无需输入密码</p>
+                    </div>
+                    <hr style='border: none; border-top: 1px solid #2a2a3e;'>
+                    <p style='color: #555; font-size: 12px;'>💌 系统自动发送，不用回复。</p>
+                </div>
+            ";
+
+            await _emailService.SendEmailAsync(user.Email, $"📬 {request.Title} - Chris hopper 个人网站", emailHtml);
+
+            // 保存通知到数据库
+            var notification = new Notification
+            {
+                UserId = userId,
+                Title = request.Title,
+                Message = request.Message,
+                Type = request.Type,
+                IsRead = false,
+                CreatedAt = DateTime.Now
+            };
+            await _dataSync.AddNotificationAsync(notification);
+
+            successCount++;
+        }
+        catch (Exception ex)
+        {
+            failCount++;
+            errors.Add($"用户 {userId}: {ex.Message}");
+        }
+    }
+
+    return Json(new
+    {
+        success = true,
+        message = $"✅ 已发送给 {successCount} 位用户{(failCount > 0 ? $"，{failCount} 位失败" : "")}",
+        details = failCount > 0 ? string.Join("; ", errors) : null
+    });
+}
+
+// ============================================================
+// BatchSendRequest 模型
+// ============================================================
+
+public class BatchSendRequest
+{
+    public List<int> UserIds { get; set; } = new List<int>();
+    public string Title { get; set; } = string.Empty;
+    public string Message { get; set; } = string.Empty;
+    public string Type { get; set; } = "info";
+}
 
         // ============================================================
         // 1. 仪表盘
