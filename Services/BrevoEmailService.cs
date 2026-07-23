@@ -20,6 +20,24 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
+        // ⭐ 辅助方法：UTC 转中国时区
+        // ============================================================
+
+        private string FormatChinaTime(DateTime utcTime)
+        {
+            try
+            {
+                var chinaTime = TimeZoneInfo.ConvertTimeFromUtc(utcTime, TimeZoneInfo.FindSystemTimeZoneById("Asia/Shanghai"));
+                return chinaTime.ToString("yyyy-MM-dd HH:mm:ss");
+            }
+            catch
+            {
+                // 如果时区转换失败，直接返回原时间
+                return utcTime.ToString("yyyy-MM-dd HH:mm:ss");
+            }
+        }
+
+        // ============================================================
         // 核心发送方法
         // ============================================================
 
@@ -101,62 +119,94 @@ namespace MyPersonalWebsite.Services
         // ============================================================
 
         public async Task SendAdminNewUserVerificationAsync(string username, string email, int userId, string? avatarUrl, DateTime registerTime)
-{
-    var baseUrl = "https://chris-hopper.org";
-    var approveUrl = $"{baseUrl}/Admin/ApproveUser?userId={userId}";
-    var rejectUrl = $"{baseUrl}/Admin/RejectUser?userId={userId}";
+        {
+            var baseUrl = "https://chris-hopper.org";
+            var approveUrl = $"{baseUrl}/Admin/ApproveUser?userId={userId}";
+            var rejectUrl = $"{baseUrl}/Admin/RejectUser?userId={userId}";
 
-    // ⭐ 在方法内部转换完整 URL
-    var fullAvatarUrl = string.IsNullOrEmpty(avatarUrl) ? null : (avatarUrl.StartsWith("http") ? avatarUrl : $"{baseUrl}{avatarUrl}");
+            // ⭐ 转换为中国时区
+            var registerTimeStr = FormatChinaTime(registerTime);
 
-    var avatarHtml = string.IsNullOrEmpty(fullAvatarUrl)
-        ? "<p style='color:#555;'>未上传头像</p>"
-        : $"<img src='{fullAvatarUrl}' style='width:80px;height:80px;border-radius:50%;object-fit:cover;border:2px solid #8B5CF6;' />";
+            // ⭐ 完整头像 URL
+            var fullAvatarUrl = string.IsNullOrEmpty(avatarUrl) ? null : (avatarUrl.StartsWith("http") ? avatarUrl : $"{baseUrl}{avatarUrl}");
 
-    // ... 邮件 HTML ...
-}
+            var avatarHtml = string.IsNullOrEmpty(fullAvatarUrl)
+                ? "<p style='color:#555;'>未上传头像</p>"
+                : $"<img src='{fullAvatarUrl}' style='width:80px;height:80px;border-radius:50%;object-fit:cover;border:2px solid #8B5CF6;' />";
+
+            var html = $@"
+                <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #2a2a3e; border-radius: 16px; background: #0a0a0f; color: #e0e0e0;'>
+                    <h2 style='color: #8B5CF6;'>📝 新用户审核</h2>
+                    <p>有新用户完成邮箱验证，等待审核：</p>
+
+                    <div style='background: #1a1a2e; border-radius: 12px; padding: 16px; margin: 16px 0; border: 1px solid #2a2a3e;'>
+                        <p><strong>👤 用户名：</strong>{username}</p>
+                        <p><strong>📧 邮箱：</strong>{email}</p>
+                        <p><strong>🆔 用户ID：</strong>{userId}</p>
+                        <p><strong>⏰ 注册时间：</strong>{registerTimeStr}</p>
+                        <p><strong>🖼️ 头像：</strong></p>
+                        <div style='text-align:center;margin:10px 0;'>{avatarHtml}</div>
+                    </div>
+
+                    <div style='display: flex; gap: 12px; margin: 16px 0; flex-wrap: wrap;'>
+                        <a href='{approveUrl}' style='display: inline-block; padding: 12px 32px; background: #28a745; color: white; text-decoration: none; border-radius: 8px; font-weight: 600;'>✅ 通过审核</a>
+                        <a href='{rejectUrl}' style='display: inline-block; padding: 12px 32px; background: #dc3545; color: white; text-decoration: none; border-radius: 8px; font-weight: 600;'>❌ 拒绝审核</a>
+                    </div>
+
+                    <p style='color: #888; font-size: 14px;'>点击按钮后，系统将自动通知用户。</p>
+                    <hr style='border: none; border-top: 1px solid #2a2a3e;'>
+                    <p style='color: #555; font-size: 12px;'>此邮件由系统自动发送，请勿直接回复。</p>
+                </div>
+            ";
+
+            await SendEmailAsync(_adminEmail, $"📝 新用户审核 - {username}", html);
+        }
+
         // ============================================================
         // 4. 头像审核邮件（管理员）
         // ============================================================
 
         public async Task SendAdminAvatarVerificationAsync(string username, string email, int userId, string avatarUrl, DateTime submittedAt)
-{
-    var baseUrl = "https://chris-hopper.org";
-    var approveUrl = $"{baseUrl}/Admin/ApproveAvatar?userId={userId}";
-    var rejectUrl = $"{baseUrl}/Admin/RejectAvatar?userId={userId}";
+        {
+            var baseUrl = "https://chris-hopper.org";
+            var approveUrl = $"{baseUrl}/Admin/ApproveAvatar?userId={userId}";
+            var rejectUrl = $"{baseUrl}/Admin/RejectAvatar?userId={userId}";
 
-    // ⭐ 完整 URL（关键！）
-    var fullAvatarUrl = avatarUrl.StartsWith("http") ? avatarUrl : $"{baseUrl}{avatarUrl}";
+            // ⭐ 转换为中国时区
+            var submittedAtStr = FormatChinaTime(submittedAt);
 
-    var html = $@"
-        <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #2a2a3e; border-radius: 16px; background: #0a0a0f; color: #e0e0e0;'>
-            <h2 style='color: #f59e0b;'>🖼️ 头像审核</h2>
-            <p>用户 <strong>{username}</strong> 上传了新头像，等待审核：</p>
+            // ⭐ 完整头像 URL
+            var fullAvatarUrl = avatarUrl.StartsWith("http") ? avatarUrl : $"{baseUrl}{avatarUrl}";
 
-            <div style='background: #1a1a2e; border-radius: 12px; padding: 16px; margin: 16px 0; border: 1px solid #2a2a3e; text-align:center;'>
-                <p><strong>👤 用户名：</strong>{username}</p>
-                <p><strong>📧 邮箱：</strong>{email}</p>
-                <p><strong>🆔 用户ID：</strong>{userId}</p>
-                <p><strong>⏰ 提交时间：</strong>{submittedAt:yyyy-MM-dd HH:mm:ss}</p>
-                <p><strong>🖼️ 新头像：</strong></p>
-                <div style='margin:10px 0;'>
-                    <img src='{fullAvatarUrl}' style='width:120px;height:120px;border-radius:50%;object-fit:cover;border:2px solid #f59e0b;' />
+            var html = $@"
+                <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #2a2a3e; border-radius: 16px; background: #0a0a0f; color: #e0e0e0;'>
+                    <h2 style='color: #f59e0b;'>🖼️ 头像审核</h2>
+                    <p>用户 <strong>{username}</strong> 上传了新头像，等待审核：</p>
+
+                    <div style='background: #1a1a2e; border-radius: 12px; padding: 16px; margin: 16px 0; border: 1px solid #2a2a3e; text-align:center;'>
+                        <p><strong>👤 用户名：</strong>{username}</p>
+                        <p><strong>📧 邮箱：</strong>{email}</p>
+                        <p><strong>🆔 用户ID：</strong>{userId}</p>
+                        <p><strong>⏰ 提交时间：</strong>{submittedAtStr}</p>
+                        <p><strong>🖼️ 新头像：</strong></p>
+                        <div style='margin:10px 0;'>
+                            <img src='{fullAvatarUrl}' style='width:120px;height:120px;border-radius:50%;object-fit:cover;border:2px solid #f59e0b;' />
+                        </div>
+                    </div>
+
+                    <div style='display: flex; gap: 12px; margin: 16px 0; flex-wrap: wrap;'>
+                        <a href='{approveUrl}' style='display: inline-block; padding: 12px 32px; background: #28a745; color: white; text-decoration: none; border-radius: 8px; font-weight: 600;'>✅ 通过</a>
+                        <a href='{rejectUrl}' style='display: inline-block; padding: 12px 32px; background: #dc3545; color: white; text-decoration: none; border-radius: 8px; font-weight: 600;'>❌ 拒绝</a>
+                    </div>
+
+                    <p style='color: #888; font-size: 14px;'>点击按钮后，系统将自动通知用户。</p>
+                    <hr style='border: none; border-top: 1px solid #2a2a3e;'>
+                    <p style='color: #555; font-size: 12px;'>此邮件由系统自动发送，请勿直接回复。</p>
                 </div>
-            </div>
+            ";
 
-            <div style='display: flex; gap: 12px; margin: 16px 0; flex-wrap: wrap;'>
-                <a href='{approveUrl}' style='display: inline-block; padding: 12px 32px; background: #28a745; color: white; text-decoration: none; border-radius: 8px; font-weight: 600;'>✅ 通过</a>
-                <a href='{rejectUrl}' style='display: inline-block; padding: 12px 32px; background: #dc3545; color: white; text-decoration: none; border-radius: 8px; font-weight: 600;'>❌ 拒绝</a>
-            </div>
-
-            <p style='color: #888; font-size: 14px;'>点击按钮后，系统将自动通知用户。</p>
-            <hr style='border: none; border-top: 1px solid #2a2a3e;'>
-            <p style='color: #555; font-size: 12px;'>此邮件由系统自动发送，请勿直接回复。</p>
-        </div>
-    ";
-
-    await SendEmailAsync(_adminEmail, $"🖼️ 头像审核 - {username}", html);
-}
+            await SendEmailAsync(_adminEmail, $"🖼️ 头像审核 - {username}", html);
+        }
 
         // ============================================================
         // 5. 昵称修改审核邮件（管理员）
@@ -240,6 +290,9 @@ namespace MyPersonalWebsite.Services
             var approveUrl = $"{baseUrl}/Admin/ApproveMessage?messageId={messageId}";
             var rejectUrl = $"{baseUrl}/Admin/RejectMessage?messageId={messageId}";
 
+            // ⭐ 转换为中国时区
+            var createTimeStr = FormatChinaTime(createTime);
+
             var contentPreview = content.Length > 100 ? content.Substring(0, 100) + "..." : content;
 
             var html = $@"
@@ -251,7 +304,7 @@ namespace MyPersonalWebsite.Services
                         <p><strong>👤 留言者：</strong>{visitorName}</p>
                         <p><strong>📧 邮箱：</strong>{email}</p>
                         <p><strong>🆔 留言ID：</strong>{messageId}</p>
-                        <p><strong>⏰ 时间：</strong>{createTime:yyyy-MM-dd HH:mm:ss}</p>
+                        <p><strong>⏰ 时间：</strong>{createTimeStr}</p>
                         <p><strong>💬 内容：</strong></p>
                         <div style='background: #0a0a0f; padding: 12px; border-radius: 8px; color: #ccc; font-style: italic;'>
                             {contentPreview}
@@ -282,7 +335,7 @@ namespace MyPersonalWebsite.Services
                 <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #2a2a3e; border-radius: 16px; background: #0a0a0f; color: #e0e0e0;'>
                     <h2 style='color: #4facfe;'>📖 新博客发布</h2>
                     <p>新博客已发布：<strong>{blogTitle}</strong></p>
-                    <p>时间：{DateTime.Now:yyyy-MM-dd HH:mm}</p>
+                    <p>时间：{FormatChinaTime(DateTime.UtcNow)}</p>
                     <hr style='border: none; border-top: 1px solid #2a2a3e;'>
                     <p style='color: #555; font-size: 12px;'>此邮件由系统自动发送，请勿直接回复。</p>
                 </div>
@@ -308,7 +361,7 @@ namespace MyPersonalWebsite.Services
                     <div style='background: #1a1a2e; padding: 15px; border-radius: 8px; margin: 10px 0; border: 1px solid #2a2a3e;'>
                         <p><strong>留言者：</strong>{visitorName}</p>
                         <p><strong>内容：</strong>{content}</p>
-                        <p><strong>时间：</strong>{DateTime.Now:yyyy-MM-dd HH:mm}</p>
+                        <p><strong>时间：</strong>{FormatChinaTime(DateTime.UtcNow)}</p>
                         <p><strong>留言ID：</strong>{messageId}</p>
                     </div>
                     <div style='display: flex; gap: 12px; margin: 16px 0; flex-wrap: wrap;'>
@@ -338,7 +391,7 @@ namespace MyPersonalWebsite.Services
                         <p><strong>你的留言：</strong>{originalContent}</p>
                         <hr style='border: none; border-top: 1px solid #2a2a3e;'>
                         <p><strong>管理员回复：</strong>{replyContent}</p>
-                        <p style='color: #888; font-size: 14px;'>回复时间：{DateTime.Now:yyyy-MM-dd HH:mm}</p>
+                        <p style='color: #888; font-size: 14px;'>回复时间：{FormatChinaTime(DateTime.UtcNow)}</p>
                     </div>
                     <a href='https://chris-hopper.org/Message/Index' style='display: inline-block; padding: 10px 20px; background: #8B5CF6; color: white; text-decoration: none; border-radius: 8px;'>查看留言板</a>
                     <hr style='border: none; border-top: 1px solid #2a2a3e;'>
@@ -367,7 +420,7 @@ namespace MyPersonalWebsite.Services
                         <p><strong>📧 邮箱：</strong>{userEmail}</p>
                         <p><strong>👋 怎么认识：</strong>{howKnowMe}</p>
                         <p><strong>🤝 关系：</strong>{relationship}</p>
-                        <p><strong>⏰ 时间：</strong>{DateTime.Now:yyyy-MM-dd HH:mm}</p>
+                        <p><strong>⏰ 时间：</strong>{FormatChinaTime(DateTime.UtcNow)}</p>
                     </div>
                     <hr style='border: none; border-top: 1px solid #2a2a3e;'>
                     <p style='color: #555; font-size: 12px;'>此邮件由系统自动发送，请勿直接回复。</p>
@@ -437,7 +490,7 @@ namespace MyPersonalWebsite.Services
                     <div style='background: #1a1a2e; padding: 15px; border-radius: 8px; margin: 10px 0; border: 1px solid #2a2a3e;'>
                         <p><strong>📌 原因：</strong>{reason}</p>
                         {(string.IsNullOrEmpty(note) ? "" : $"<p><strong>📝 备注：</strong>{note}</p>")}
-                        <p><strong>⏰ 时间：</strong>{DateTime.Now:yyyy-MM-dd HH:mm}</p>
+                        <p><strong>⏰ 时间：</strong>{FormatChinaTime(DateTime.UtcNow)}</p>
                     </div>
                     {extraMessage}
                     <p style='color: #888; font-size: 14px;'>如有疑问，请联系管理员。</p>
