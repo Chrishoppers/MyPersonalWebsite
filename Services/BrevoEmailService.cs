@@ -284,46 +284,33 @@ namespace MyPersonalWebsite.Services
         // 7. 留言审核邮件（管理员）
         // ============================================================
 
-        public async Task SendAdminMessageVerificationAsync(string visitorName, string email, int messageId, string content, DateTime createTime)
-        {
-            var baseUrl = "https://chris-hopper.org";
-            var approveUrl = $"{baseUrl}/Admin/ApproveMessage?messageId={messageId}";
-            var rejectUrl = $"{baseUrl}/Admin/RejectMessage?messageId={messageId}";
+       public async Task SendAdminNewMessageNotificationAsync(string visitorName, string content, int messageId)
+{
+    var baseUrl = "https://chris-hopper.org";
+    var approveUrl = $"{baseUrl}/Admin/ApproveMessage?messageId={messageId}";
+    var rejectUrl = $"{baseUrl}/Admin/RejectMessage?messageId={messageId}";
 
-            // ⭐ 转换为中国时区
-            var createTimeStr = FormatChinaTime(createTime);
+    var html = $@"
+        <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #2a2a3e; border-radius: 16px; background: #0a0a0f; color: #e0e0e0;'>
+            <h2 style='color: #4facfe;'>💬 新留言待审核</h2>
+            <p>有新留言需要审核：</p>
+            <div style='background: #1a1a2e; padding: 15px; border-radius: 8px; margin: 10px 0; border: 1px solid #2a2a3e;'>
+                <p><strong>留言者：</strong>{visitorName}</p>
+                <p><strong>内容：</strong>{content}</p>
+                <p><strong>时间：</strong>{DateTime.Now:yyyy-MM-dd HH:mm}</p>
+                <p><strong>留言ID：</strong>{messageId}</p>
+            </div>
+            <div style='display: flex; gap: 12px; margin: 16px 0; flex-wrap: wrap;'>
+                <a href='{approveUrl}' style='display: inline-block; padding: 12px 32px; background: #28a745; color: white; text-decoration: none; border-radius: 8px; font-weight: 600;'>✅ 通过</a>
+                <a href='{rejectUrl}' style='display: inline-block; padding: 12px 32px; background: #dc3545; color: white; text-decoration: none; border-radius: 8px; font-weight: 600;'>🗑️ 删除</a>
+            </div>
+            <hr style='border: none; border-top: 1px solid #2a2a3e;'>
+            <p style='color: #555; font-size: 12px;'>此邮件由系统自动发送，请勿直接回复。</p>
+        </div>
+    ";
 
-            var contentPreview = content.Length > 100 ? content.Substring(0, 100) + "..." : content;
-
-            var html = $@"
-                <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #2a2a3e; border-radius: 16px; background: #0a0a0f; color: #e0e0e0;'>
-                    <h2 style='color: #4facfe;'>💬 留言审核</h2>
-                    <p>有新留言需要审核：</p>
-
-                    <div style='background: #1a1a2e; border-radius: 12px; padding: 16px; margin: 16px 0; border: 1px solid #2a2a3e;'>
-                        <p><strong>👤 留言者：</strong>{visitorName}</p>
-                        <p><strong>📧 邮箱：</strong>{email}</p>
-                        <p><strong>🆔 留言ID：</strong>{messageId}</p>
-                        <p><strong>⏰ 时间：</strong>{createTimeStr}</p>
-                        <p><strong>💬 内容：</strong></p>
-                        <div style='background: #0a0a0f; padding: 12px; border-radius: 8px; color: #ccc; font-style: italic;'>
-                            {contentPreview}
-                        </div>
-                    </div>
-
-                    <div style='display: flex; gap: 12px; margin: 16px 0; flex-wrap: wrap;'>
-                        <a href='{approveUrl}' style='display: inline-block; padding: 12px 32px; background: #28a745; color: white; text-decoration: none; border-radius: 8px; font-weight: 600;'>✅ 通过</a>
-                        <a href='{rejectUrl}' style='display: inline-block; padding: 12px 32px; background: #dc3545; color: white; text-decoration: none; border-radius: 8px; font-weight: 600;'>🗑️ 删除</a>
-                    </div>
-
-                    <p style='color: #888; font-size: 14px;'>点击按钮后，系统将自动通知用户。</p>
-                    <hr style='border: none; border-top: 1px solid #2a2a3e;'>
-                    <p style='color: #555; font-size: 12px;'>此邮件由系统自动发送，请勿直接回复。</p>
-                </div>
-            ";
-
-            await SendEmailAsync(_adminEmail, $"💬 留言审核 - {visitorName}", html);
-        }
+    await SendEmailAsync(_adminEmail, "💬 新留言待审核", html);
+}
 
         // ============================================================
         // 8. 管理员通知：新博客发布
