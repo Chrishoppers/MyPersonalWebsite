@@ -25,6 +25,45 @@ namespace MyPersonalWebsite.Services
             else
                 Console.WriteLine("⚠️ Turso 未配置");
         }
+        // ============================================================
+// 通知相关
+// ============================================================
+
+public async Task AddNotificationAsync(Notification notification)
+{
+    if (!_tursoAvailable) return;
+
+    var maxIdResult = await _tursoService.QueryAsync("SELECT MAX(Id) as MaxId FROM Notifications");
+    var maxId = ParseMaxId(maxIdResult);
+    notification.Id = maxId + 1;
+
+    var sql = $@"INSERT INTO Notifications (
+        Id, UserId, Title, Message, Type, IsRead, CreatedAt
+    ) VALUES (
+        {notification.Id}, {notification.UserId}, '{EscapeSql(notification.Title)}',
+        '{EscapeSql(notification.Message)}', '{notification.Type}',
+        {(notification.IsRead ? 1 : 0)}, '{notification.CreatedAt:yyyy-MM-dd HH:mm:ss}'
+    )";
+
+    await _tursoService.ExecuteSqlAsync(sql);
+    Console.WriteLine($"✅ 通知已添加: {notification.Title}");
+}
+
+public async Task<List<Notification>> GetNotificationsByUserIdAsync(int userId)
+{
+    if (!_tursoAvailable) return new List<Notification>();
+
+    var result = await _tursoService.QueryAsync($"SELECT * FROM Notifications WHERE UserId = {userId} ORDER BY CreatedAt DESC");
+    return ParseNotificationListFromJson(result);
+}
+
+public async Task MarkNotificationAsReadAsync(int id)
+{
+    if (!_tursoAvailable) return;
+
+    await _tursoService.ExecuteSqlAsync($"UPDATE Notifications SET IsRead = 1 WHERE Id = {id}");
+    Console.WriteLine($"✅ 通知 {id} 已标记为已读");
+}
 
         // ============================================================
         // 用户相关
