@@ -36,7 +36,6 @@ namespace MyPersonalWebsite.Controllers
             var sections = await _dataSync.GetAboutMeAsync();
             ViewBag.Sections = sections;
 
-            // ⭐ 获取管理员信息（用于显示头像）
             var adminUser = await _dataSync.GetUserByUsernameAsync("admin");
             ViewBag.AdminUser = adminUser;
 
@@ -214,79 +213,114 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // 上传头像
+        // 上传头像（Base64 存储到数据库）
         // ============================================================
-      [HttpPost]
-public async Task<IActionResult> UploadAvatar(IFormFile avatar)
-{
-    var userId = HttpContext.Session.GetInt32("UserId");
-    if (!userId.HasValue)
-    {
-        TempData["AvatarError"] = "请先登录";
-        return RedirectToAction("Login", "Auth");
-    }
+        [HttpPost]
+        public async Task<IActionResult> UploadAvatar(IFormFile avatar)
+        {
+            var userId = HttpContext.Session.GetInt32("UserId");
+            if (!userId.HasValue)
+            {
+                TempData["AvatarError"] = "请先登录";
+                return RedirectToAction("Login", "Auth");
+            }
 
-    if (avatar == null || avatar.Length == 0)
-    {
-        TempData["AvatarError"] = "请选择图片";
-        return RedirectToAction("Profile");
-    }
+            if (avatar == null || avatar.Length == 0)
+            {
+                TempData["AvatarError"] = "请选择图片";
+                return RedirectToAction("Profile");
+            }
 
-    var allowedTypes = new[] { "image/jpeg", "image/png", "image/gif", "image/webp" };
-    if (!allowedTypes.Contains(avatar.ContentType))
-    {
-        TempData["AvatarError"] = "只支持 JPG, PNG, GIF, WebP 格式";
-        return RedirectToAction("Profile");
-    }
+            var allowedTypes = new[] { "image/jpeg", "image/png", "image/gif", "image/webp" };
+            if (!allowedTypes.Contains(avatar.ContentType))
+            {
+                TempData["AvatarError"] = "只支持 JPG, PNG, GIF, WebP 格式";
+                return RedirectToAction("Profile");
+            }
 
-    if (avatar.Length > 5 * 1024 * 1024)
-    {
-        TempData["AvatarError"] = "图片不能超过 5MB";
-        return RedirectToAction("Profile");
-    }
+            if (avatar.Length > 5 * 1024 * 1024)
+            {
+                TempData["AvatarError"] = "图片不能超过 5MB";
+                return RedirectToAction("Profile");
+            }
 
-    // ⭐ 读取图片并转为 Base64
-    using var memoryStream = new MemoryStream();
-    await avatar.CopyToAsync(memoryStream);
-    var imageBytes = memoryStream.ToArray();
-    var base64 = Convert.ToBase64String(imageBytes);
-    var avatarData = $"data:{avatar.ContentType};base64,{base64}";
+            // ⭐ 读取图片并转为 Base64
+            using var memoryStream = new MemoryStream();
+            await avatar.CopyToAsync(memoryStream);
+            var imageBytes = memoryStream.ToArray();
+            var base64 = Convert.ToBase64String(imageBytes);
+            var avatarData = $"data:{avatar.ContentType};base64,{base64}";
 
-    // 验证长度
-    if (avatarData.Length > 500 * 1024) // 500KB
-    {
-        TempData["AvatarError"] = "图片过大，请压缩后上传";
-        return RedirectToAction("Profile");
-    }
+            // 验证长度（500KB）
+            if (avatarData.Length > 600 * 1024)
+            {
+                TempData["AvatarError"] = "图片过大，请压缩后上传（最大500KB）";
+                return RedirectToAction("Profile");
+            }
 
-    var user = await _dataSync.GetUserByIdAsync(userId.Value);
-    if (user == null)
-    {
-        TempData["AvatarError"] = "用户不存在";
-        return RedirectToAction("Profile");
-    }
+            var user = await _dataSync.GetUserByIdAsync(userId.Value);
+            if (user == null)
+            {
+                TempData["AvatarError"] = "用户不存在";
+                return RedirectToAction("Profile");
+            }
 
-    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
 
-    // ⭐ 保存 Base64 到数据库
-    user.AvatarUrl = avatarData;
-    user.AvatarSubmittedAt = DateTime.Now;
+            // ⭐ 保存 Base64 到数据库
+            user.AvatarUrl = avatarData;
+            user.AvatarSubmittedAt = DateTime.Now;
 
-    if (isAdmin == 1)
-    {
-        user.IsAvatarApproved = true;
-        await _dataSync.UpdateUserAsync(user);
-        TempData["AvatarSuccess"] = "🎉 头像更新成功！";
-    }
-    else
-    {
-        user.IsAvatarApproved = false;
-        await _dataSync.UpdateUserAsync(user);
-        TempData["AvatarSuccess"] = "📸 头像已提交，等待管理员审核";
-    }
+            if (isAdmin == 1)
+            {
+                user.IsAvatarApproved = true;
+                await _dataSync.UpdateUserAsync(user);
+                TempData["AvatarSuccess"] = "🎉 头像更新成功！";
+                TempData["AvatarUrl"] = avatarData;
+            }
+            else
+            {
+                user.IsAvatarApproved = false;
+                await _dataSync.UpdateUserAsync(user);
 
-    return RedirectToAction("Profile");
-}
+                // 发送头像审核邮件给管理员
+                try
+                {
+                    var emailService = HttpContext.RequestServices.GetService<BrevoEmailService>();
+                    if (emailService != null)
+                    {
+                        await emailService.SendAdminAvatarVerificationAsync(
+                            user.Username,
+                            user.Email,
+                            user.Id,
+                            avatarData,
+                            DateTime.Now
+                        );
+                        Console.WriteLine($"✅ 头像审核邮件已发送: {user.Username}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"❌ 头像审核邮件发送失败: {ex.Message}");
+                }
+
+                TempData["AvatarSuccess"] = "📸 头像已提交，等待管理员审核";
+                TempData["AvatarUrl"] = avatarData;
+            }
+
+            return RedirectToAction("Profile");
+        }
+
+        public IActionResult Contact()
+        {
+            var userId = HttpContext.Session.GetInt32("UserId");
+            if (!userId.HasValue)
+            {
+                return RedirectToAction("Login", "Auth");
+            }
+            return View();
+        }
+
         [HttpPost]
         public async Task<IActionResult> RequestContact([FromBody] ContactRequest request)
         {
