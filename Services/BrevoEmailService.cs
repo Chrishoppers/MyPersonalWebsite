@@ -397,72 +397,83 @@ public async Task SendAdminAvatarVerificationAsync(string username, string email
         // 12. 用户操作通知
         // ============================================================
 
-        public async Task SendUserActionNotificationAsync(string toEmail, string username, string actionType, string reason, string note)
-        {
-            var actionMap = new Dictionary<string, string>
-            {
-                { "approve", "审核通过" },
-                { "reject", "审核拒绝" },
-                { "avatar_approve", "头像审核通过" },
-                { "avatar_reject", "头像审核拒绝" },
-                { "username_approve", "昵称修改通过" },
-                { "username_reject", "昵称修改拒绝" },
-                { "email_approve", "邮箱修改通过" },
-                { "email_reject", "邮箱修改拒绝" },
-                { "message_approve", "留言审核通过" },
-                { "message_reject", "留言审核拒绝" },
-                { "ban", "封禁" },
-                { "unban", "解封" },
-                { "delete", "删除账号" },
-                { "activate", "账号激活" }
-            };
+        // ============================================================
+// 用户操作通知（含自动登录的"查看详情"按钮）
+// ============================================================
 
-            var actionName = actionMap.ContainsKey(actionType) ? actionMap[actionType] : actionType;
+public async Task SendUserActionNotificationAsync(string toEmail, string username, string actionType, string reason, string note, string? loginToken = null)
+{
+    var baseUrl = "https://chris-hopper.org";
+    var actionMap = new Dictionary<string, string>
+    {
+        { "approve", "审核通过" },
+        { "reject", "审核拒绝" },
+        { "avatar_approve", "头像审核通过" },
+        { "avatar_reject", "头像审核拒绝" },
+        { "username_approve", "昵称修改通过" },
+        { "username_reject", "昵称修改拒绝" },
+        { "email_approve", "邮箱修改通过" },
+        { "email_reject", "邮箱修改拒绝" },
+        { "message_approve", "留言审核通过" },
+        { "message_reject", "留言审核拒绝" },
+        { "ban", "封禁" },
+        { "unban", "解封" },
+        { "delete", "删除账号" },
+        { "activate", "账号激活" },
+        { "notification", "系统通知" }
+    };
 
-            var color = actionType == "approve" || actionType == "avatar_approve" || actionType == "username_approve" || actionType == "email_approve" || actionType == "message_approve" ? "#28a745" :
-                        actionType == "reject" || actionType == "avatar_reject" || actionType == "username_reject" || actionType == "email_reject" ? "#dc3545" :
-                        actionType == "ban" || actionType == "delete" ? "#dc3545" : "#0D6EFD";
+    var actionName = actionMap.ContainsKey(actionType) ? actionMap[actionType] : actionType;
 
-            var extraMessage = "";
-            if (actionType == "approve")
-                extraMessage = "<p style='color: #28a745; font-weight: 600;'>🎉 欢迎加入 Chris hopper 的个人网站！现在你可以登录了。</p>";
-            else if (actionType == "reject")
-                extraMessage = "<p style='color: #dc3545;'>❌ 如有疑问，请联系管理员。</p>";
-            else if (actionType == "avatar_approve")
-                extraMessage = "<p style='color: #28a745; font-weight: 600;'>🖼️ 你的头像已通过审核，现在可以在个人资料中查看了。</p>";
-            else if (actionType == "avatar_reject")
-                extraMessage = "<p style='color: #dc3545;'>🖼️ 头像审核未通过，请重新上传合规的头像。</p>";
-            else if (actionType == "username_approve")
-                extraMessage = $"<p style='color: #28a745; font-weight: 600;'>✏️ 昵称修改已通过：{reason}</p>";
-            else if (actionType == "username_reject")
-                extraMessage = $"<p style='color: #dc3545;'>✏️ 昵称修改未通过：{reason}</p>";
-            else if (actionType == "email_approve")
-                extraMessage = $"<p style='color: #28a745; font-weight: 600;'>📧 邮箱修改已通过：{reason}</p>";
-            else if (actionType == "email_reject")
-                extraMessage = $"<p style='color: #dc3545;'>📧 邮箱修改未通过：{reason}</p>";
-            else if (actionType == "message_approve")
-                extraMessage = "<p style='color: #28a745; font-weight: 600;'>💬 你的留言已通过审核，现在可以在留言板中看到了。</p>";
-            else if (actionType == "message_reject")
-                extraMessage = "<p style='color: #dc3545;'>💬 你的留言审核未通过，已被删除。</p>";
+    var color = actionType == "approve" || actionType == "avatar_approve" || actionType == "username_approve" || actionType == "email_approve" || actionType == "message_approve" ? "#28a745" :
+                actionType == "reject" || actionType == "avatar_reject" || actionType == "username_reject" || actionType == "email_reject" ? "#dc3545" :
+                actionType == "ban" || actionType == "delete" ? "#dc3545" : "#0D6EFD";
 
-            var html = $@"
-                <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #2a2a3e; border-radius: 16px; background: #0a0a0f; color: #e0e0e0;'>
-                    <h2 style='color: {color};'>📧 账号通知</h2>
-                    <p>您好 <strong>{username}</strong>！</p>
-                    <p>您在 <strong>Chris hopper 个人网站</strong> 的账号已被管理员 <strong>{actionName}</strong>。</p>
-                    <div style='background: #1a1a2e; padding: 15px; border-radius: 8px; margin: 10px 0; border: 1px solid #2a2a3e;'>
-                        <p><strong>📌 原因：</strong>{reason}</p>
-                        {(string.IsNullOrEmpty(note) ? "" : $"<p><strong>📝 备注：</strong>{note}</p>")}
-                        <p><strong>⏰ 时间：</strong>{FormatChinaTime(DateTime.UtcNow)}</p>
-                    </div>
-                    {extraMessage}
-                    <p style='color: #888; font-size: 14px;'>如有疑问，请联系管理员。</p>
-                    <hr style='border: none; border-top: 1px solid #2a2a3e;'>
-                    <p style='color: #555; font-size: 12px;'>💌 系统自动发送，不用回复。</p>
-                </div>
-            ";
+    // ⭐ 自动登录链接（用于"查看详情"按钮）
+    var detailUrl = !string.IsNullOrEmpty(loginToken) 
+        ? $"{baseUrl}/Auth/AutoLogin?token={loginToken}" 
+        : $"{baseUrl}/Home/Notifications";
 
-            await SendEmailAsync(toEmail, $"【Chris hopper 个人网站】账号{actionName}通知", html);
-        }
+    var extraMessage = "";
+    if (actionType == "approve")
+        extraMessage = "<p style='color: #28a745; font-weight: 600;'>🎉 欢迎加入 Chris hopper 的个人网站！</p>";
+    else if (actionType == "reject")
+        extraMessage = "<p style='color: #dc3545;'>❌ 如有疑问，请联系管理员。</p>";
+    else if (actionType == "notification")
+        extraMessage = "<p style='color: #8B5CF6; font-weight: 600;'>📬 这是一条系统通知，点击下方按钮查看详情。</p>";
+    else if (actionType == "message_approve")
+        extraMessage = "<p style='color: #28a745; font-weight: 600;'>💬 你的留言已通过审核，点击下方按钮查看。</p>";
+    else if (actionType == "message_reject")
+        extraMessage = "<p style='color: #dc3545;'>💬 你的留言已被删除，点击下方按钮查看。</p>";
+
+    var html = $@"
+        <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #2a2a3e; border-radius: 16px; background: #0a0a0f; color: #e0e0e0;'>
+            <div style='text-align: center; margin-bottom: 16px;'>
+                <span style='font-size: 2.5rem;'>✌️</span>
+            </div>
+            <h2 style='color: {color}; text-align: center;'>📧 账号通知</h2>
+            <p>您好 <strong>{username}</strong>！</p>
+            <p>您在 <strong>Chris hopper 个人网站</strong> 的账号已被管理员 <strong>{actionName}</strong>。</p>
+            <div style='background: #1a1a2e; padding: 15px; border-radius: 8px; margin: 10px 0; border: 1px solid #2a2a3e;'>
+                <p><strong>📌 原因：</strong>{reason}</p>
+                {(string.IsNullOrEmpty(note) ? "" : $"<p><strong>📝 备注：</strong>{note}</p>")}
+                <p><strong>⏰ 时间：</strong>{FormatChinaTime(DateTime.UtcNow)}</p>
+            </div>
+            {extraMessage}
+            <div style='margin: 20px 0; text-align: center;'>
+                <a href='{detailUrl}' style='display: inline-block; padding: 14px 48px; background: linear-gradient(135deg, #8B5CF6, #EC4899); color: white; text-decoration: none; border-radius: 40px; font-weight: 600; font-size: 1rem; box-shadow: 0 4px 24px rgba(108,60,225,0.2);'>
+                    👁️ 查看详情
+                </a>
+                <p style='color: rgba(255,255,255,0.12); font-size: 0.7rem; margin-top: 0.3rem;'>
+                    🔒 点击后自动登录，无需输入密码
+                </p>
+            </div>
+            <hr style='border: none; border-top: 1px solid #2a2a3e;'>
+            <p style='color: #555; font-size: 12px; text-align: center;'>💌 系统自动发送，不用回复。</p>
+        </div>
+    ";
+
+    await SendEmailAsync(toEmail, $"【Chris hopper 个人网站】账号{actionName}通知", html);
+}
     }
 }
