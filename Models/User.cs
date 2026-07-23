@@ -8,6 +8,8 @@ namespace MyPersonalWebsite.Models
         public int Id { get; set; }
         public string Username { get; set; } = string.Empty;
         public bool IsApproved { get; set; } = false;  // 管理员是否审核通过
+        public string? LoginToken { get; set; }
+public DateTime? LoginTokenExpiry { get; set; }
         public string Email { get; set; } = string.Empty;
         public string PasswordHash { get; set; } = string.Empty;
         public string? VerificationCode { get; set; }
