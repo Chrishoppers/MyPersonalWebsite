@@ -110,85 +110,87 @@ public async Task<IActionResult> Create(Message message)
 }
 
         // ============================================================
-        // ⭐ 留言点赞（实时更新 + 双写）
-        // ============================================================
-        [HttpPost]
-        public async Task<IActionResult> ToggleLike(int messageId)
+// ⭐ 留言点赞（实时更新 + 双写）
+// ============================================================
+[HttpPost]
+public async Task<IActionResult> ToggleLike(int messageId)
+{
+    var userId = HttpContext.Session.GetInt32("UserId");
+    if (!userId.HasValue)
+    {
+        return Json(new { success = false, message = "请先登录" });
+    }
+
+    try
+    {
+        // ⭐ 从 Turso 获取留言
+        var message = await _dataSync.GetMessageByIdAsync(messageId);
+        if (message == null)
         {
-            var userId = HttpContext.Session.GetInt32("UserId");
-            if (!userId.HasValue)
-            {
-                return Json(new { success = false, message = "请先登录" });
-            }
-
-            try
-            {
-                var message = await _context.Messages.FindAsync(messageId);
-                if (message == null)
-                {
-                    return Json(new { success = false, message = "留言不存在" });
-                }
-
-                // 不能给自己点赞
-                if (message.UserId == userId.Value)
-                {
-                    return Json(new { success = false, message = "不能给自己的留言点赞" });
-                }
-
-                // 检查是否已点赞
-                var existingLike = await _context.MessageLikes
-                    .FirstOrDefaultAsync(l => l.MessageId == messageId && l.UserId == userId.Value);
-
-                if (existingLike != null)
-                {
-                    // 取消点赞
-                    _context.MessageLikes.Remove(existingLike);
-                    message.LikeCount--;
-                    await _context.SaveChangesAsync();
-
-                    // 同步到 Turso
-                    await _dataSync.UpdateMessageAsync(message);
-                    await _dataSync.DeleteMessageLikeAsync(messageId, userId.Value);
-
-                    return Json(new
-                    {
-                        success = true,
-                        isLiked = false,
-                        likeCount = message.LikeCount,
-                        message = "已取消点赞"
-                    });
-                }
-                else
-                {
-                    // 点赞
-                    var like = new MessageLike
-                    {
-                        MessageId = messageId,
-                        UserId = userId.Value,
-                        CreateTime = DateTime.Now
-                    };
-                    _context.MessageLikes.Add(like);
-                    message.LikeCount++;
-                    await _context.SaveChangesAsync();
-
-                    // 同步到 Turso
-                    await _dataSync.UpdateMessageAsync(message);
-                    await _dataSync.AddMessageLikeAsync(messageId, userId.Value);
-
-                    return Json(new
-                    {
-                        success = true,
-                        isLiked = true,
-                        likeCount = message.LikeCount,
-                        message = "点赞成功"
-                    });
-                }
-            }
-            catch (Exception ex)
-            {
-                return Json(new { success = false, message = ex.Message });
-            }
+            return Json(new { success = false, message = "留言不存在" });
         }
+
+        // 不能给自己点赞
+        if (message.UserId == userId.Value)
+        {
+            return Json(new { success = false, message = "不能给自己的留言点赞" });
+        }
+
+        // ⭐ 检查是否已点赞（从本地 SQLite 查询）
+        var existingLike = await _context.MessageLikes
+            .FirstOrDefaultAsync(l => l.MessageId == messageId && l.UserId == userId.Value);
+
+        if (existingLike != null)
+        {
+            // 取消点赞
+            _context.MessageLikes.Remove(existingLike);
+            message.LikeCount--;
+            await _context.SaveChangesAsync();
+
+            // 同步到 Turso
+            await _dataSync.UpdateMessageAsync(message);
+            await _dataSync.DeleteMessageLikeAsync(messageId, userId.Value);
+
+            return Json(new
+            {
+                success = true,
+                isLiked = false,
+                likeCount = message.LikeCount,
+                message = "已取消点赞"
+            });
+        }
+        else
+        {
+            // 点赞
+            var like = new MessageLike
+            {
+                MessageId = messageId,
+                UserId = userId.Value,
+                CreateTime = DateTime.Now
+            };
+            _context.MessageLikes.Add(like);
+            message.LikeCount++;
+            await _context.SaveChangesAsync();
+
+            // 同步到 Turso
+            await _dataSync.UpdateMessageAsync(message);
+            await _dataSync.AddMessageLikeAsync(messageId, userId.Value);
+
+            return Json(new
+            {
+                success = true,
+                isLiked = true,
+                likeCount = message.LikeCount,
+                message = "点赞成功"
+            });
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"点赞失败: {ex.Message}");
+        return Json(new { success = false, message = ex.Message });
+    }
+}
 
         [HttpPost]
         public async Task<IActionResult> Report(int messageId, string reason)
