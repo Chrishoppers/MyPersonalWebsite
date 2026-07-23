@@ -153,6 +153,29 @@ namespace MyPersonalWebsite.Services
             await _tursoService.ExecuteSqlAsync($"DELETE FROM Users WHERE Id = {id}");
             Console.WriteLine($"✅ 用户 {id} 已从 Turso 删除");
         }
+        // ============================================================
+// ⭐ 博客点赞同步（Turso）
+// ============================================================
+
+public async Task AddBlogLikeAsync(int blogId, int userId)
+{
+    if (!_tursoAvailable) return;
+
+    var sql = $@"INSERT INTO BlogLikes (BlogId, UserId, CreateTime)
+                 VALUES ({blogId}, {userId}, '{DateTime.Now:yyyy-MM-dd HH:mm:ss}')";
+    await _tursoService.ExecuteSqlAsync(sql);
+    Console.WriteLine($"✅ 博客点赞已同步: BlogId={blogId}, UserId={userId}");
+}
+
+public async Task DeleteBlogLikeAsync(int blogId, int userId)
+{
+    if (!_tursoAvailable) return;
+
+    var sql = $@"DELETE FROM BlogLikes WHERE BlogId = {blogId} AND UserId = {userId}";
+    await _tursoService.ExecuteSqlAsync(sql);
+    Console.WriteLine($"✅ 博客取消点赞已同步: BlogId={blogId}, UserId={userId}");
+}
+
 
         // ============================================================
         // 博客相关
