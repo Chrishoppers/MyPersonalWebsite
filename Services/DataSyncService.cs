@@ -104,6 +104,50 @@ namespace MyPersonalWebsite.Services
             return user;
         }
         // ============================================================
+// ⭐ 生成登录Token
+// ============================================================
+
+public string GenerateLoginToken()
+{
+    return Convert.ToBase64String(Guid.NewGuid().ToByteArray())
+        .Replace("+", "")
+        .Replace("/", "")
+        .Replace("=", "")
+        .Substring(0, 32);
+}
+
+// ============================================================
+// ⭐ 通过登录Token获取用户
+// ============================================================
+
+public async Task<User?> GetUserByLoginTokenAsync(string token)
+{
+    if (!_tursoAvailable) return null;
+
+    var result = await _tursoService.QueryAsync(
+        $"SELECT * FROM Users WHERE LoginToken = '{EscapeSql(token)}' AND LoginTokenExpiry > datetime('now')"
+    );
+    return ParseUserFromJson(result);
+}
+
+// ============================================================
+// ⭐ 生成并保存用户登录Token
+// ============================================================
+
+public async Task<string> CreateLoginTokenAsync(int userId)
+{
+    var token = GenerateLoginToken();
+    var expiry = DateTime.Now.AddDays(7); // 7天有效期
+
+    var sql = $@"UPDATE Users SET 
+        LoginToken = '{token}', 
+        LoginTokenExpiry = '{expiry:yyyy-MM-dd HH:mm:ss}' 
+    WHERE Id = {userId}";
+
+    await _tursoService.ExecuteSqlAsync(sql);
+    return token;
+}
+        // ============================================================
 // 获取所有通知（管理员用）
 // ============================================================
 
