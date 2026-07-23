@@ -56,6 +56,17 @@
         color: #fff;
     }
 
+    .btn-glass.primary {
+        background: linear-gradient(135deg, #8B5CF6, #EC4899);
+        border: none;
+        color: #fff;
+    }
+
+    .btn-glass.primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 32px rgba(108,60,225,0.2);
+    }
+
     .stats-row {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
@@ -88,13 +99,14 @@
         border-radius: 16px;
         border: 1px solid rgba(255,255,255,0.04);
         overflow-x: auto;
+        overflow-y: visible; /* ⭐ 去掉垂直滚动条 */
     }
 
     table {
         width: 100%;
         border-collapse: collapse;
         font-size: 0.85rem;
-        min-width: 1000px;
+        min-width: 1100px; /* ⭐ 宽度调大 */
     }
 
     th {
@@ -119,6 +131,21 @@
 
     tr:hover td {
         background: rgba(255,255,255,0.02);
+    }
+
+    /* ⭐ 复选框样式 */
+    .checkbox-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+    }
+
+    .checkbox-wrapper input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+        accent-color: #8B5CF6;
+        cursor: pointer;
+        flex-shrink: 0;
     }
 
     .user-cell {
@@ -326,11 +353,69 @@
         font-size: 0.75rem;
     }
 
+    /* ⭐ 批量操作栏 */
+    .batch-bar {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 0.8rem 1.5rem;
+        background: rgba(108,60,225,0.04);
+        border-radius: 16px;
+        border: 1px solid rgba(108,60,225,0.06);
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+    }
+
+    .batch-bar .selected-info {
+        color: rgba(255,255,255,0.3);
+        font-size: 0.85rem;
+    }
+
+    .batch-bar .selected-info strong {
+        color: #8B5CF6;
+    }
+
+    .batch-bar .btn-batch {
+        padding: 0.4rem 1.5rem;
+        border: none;
+        border-radius: 40px;
+        background: linear-gradient(135deg, #8B5CF6, #EC4899);
+        color: #fff;
+        font-weight: 500;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .batch-bar .btn-batch:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 32px rgba(108,60,225,0.2);
+    }
+
+    .batch-bar .btn-batch:disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .batch-bar .btn-batch.secondary {
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.06);
+        color: rgba(255,255,255,0.4);
+    }
+
+    .batch-bar .btn-batch.secondary:hover {
+        background: rgba(255,255,255,0.08);
+        box-shadow: none;
+        transform: none;
+    }
+
     @@media (max-width: 768px) {
         .admin-header h1 { font-size: 1.3rem; }
         .filter-bar { flex-direction: column; align-items: stretch; }
         .stats-row { grid-template-columns: repeat(2, 1fr); }
         td, th { padding: 0.4rem 0.5rem; font-size: 0.75rem; }
+        .batch-bar { flex-direction: column; align-items: stretch; text-align: center; }
     }
 </style>
 
@@ -383,11 +468,29 @@
         <button class="btn-action" onclick="resetFilters()" style="padding:0.3rem 1.2rem;background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.4);">重置</button>
     </div>
 
+    <!-- ⭐ 批量操作栏 -->
+    <div class="batch-bar" id="batchBar">
+        <div class="checkbox-wrapper">
+            <input type="checkbox" id="selectAll" onchange="toggleAllUsers()" />
+            <label for="selectAll" style="color:rgba(255,255,255,0.3);font-size:0.85rem;cursor:pointer;">全选</label>
+        </div>
+        <div class="selected-info">
+            已选 <strong id="selectedCount">0</strong> 位用户
+        </div>
+        <button class="btn-batch" id="batchSendBtn" onclick="batchSendNotification()" disabled>
+            📬 批量发送通知
+        </button>
+        <button class="btn-batch secondary" onclick="clearSelection()">取消选择</button>
+    </div>
+
     <!-- 表格 -->
     <div class="table-wrapper">
         <table>
             <thead>
                 <tr>
+                    <th style="width:40px;">
+                        <input type="checkbox" id="selectAllHeader" onchange="toggleAllUsers()" />
+                    </th>
                     <th>用户</th>
                     <th>邮箱</th>
                     <th>角色</th>
@@ -415,7 +518,18 @@
 
                         <tr class="user-row"
                             data-status="@(user.IsDeleted ? "deleted" : (user.IsBanned ? "banned" : (user.IsEmailVerified ? "active" : "unverified")))"
-                            data-search="@(user.Username + " " + user.Email)">
+                            data-search="@(user.Username + " " + user.Email)"
+                            data-userid="@user.Id">
+                            <td>
+                                @if (!user.IsAdmin && !user.IsDeleted)
+                                {
+                                    <input type="checkbox" class="user-checkbox" data-userid="@user.Id" data-username="@user.Username" onchange="updateSelection()" />
+                                }
+                                else
+                                {
+                                    <span style="color:rgba(255,255,255,0.1);font-size:0.7rem;">—</span>
+                                }
+                            </td>
                             <td>
                                 <div class="user-cell">
                                     @if (!string.IsNullOrEmpty(avatarUrl) && isAvatarApproved)
@@ -441,11 +555,11 @@
                             <td>
                                 @if (user.IsDeleted)
                                 {
-                                    <span class="op-none">已删除，无操作</span>
+                                    <span class="op-none">已删除</span>
                                 }
                                 else if (user.IsAdmin)
                                 {
-                                    <span class="op-none">管理员不可操作</span>
+                                    <span class="op-none">管理员</span>
                                 }
                                 else
                                 {
@@ -463,7 +577,6 @@
                                             <button class="btn-action success" onclick="unbanUser(@user.Id)">✅ 解封</button>
                                         }
                                         <button class="btn-action danger" onclick="deleteUser(@user.Id)" style="background:rgba(220,53,69,0.04);color:rgba(220,53,69,0.4);">🗑️ 删除</button>
-                                        <!-- ⭐ 发送通知按钮 -->
                                         <button class="btn-action primary" onclick="openNotificationModal(@user.Id, '@user.Username')">
                                             📬 通知
                                         </button>
@@ -476,7 +589,7 @@
                 else
                 {
                     <tr>
-                        <td colspan="7">
+                        <td colspan="8">
                             <div class="empty-state">📭 暂无用户</div>
                         </td>
                     </tr>
@@ -487,8 +600,11 @@
 
 </div>
 
+<!-- Toast -->
+<div class="toast-container" id="toastContainer"></div>
+
 @section Scripts {
-    <!-- ⭐ 引入 SweetAlert2 -->
+    <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
@@ -517,135 +633,347 @@
         }
 
         // ============================================================
-        // ⭐ 发送通知弹窗（漂亮弹窗）
+        // ⭐ 多选功能
         // ============================================================
-        // ⭐ 发送通知弹窗（高颜值版）
-function openNotificationModal(userId, username) {
-    Swal.fire({
-        title: `<span style="font-size:1.6rem;">📬 发送通知</span>`,
-        html: `
-            <div style="text-align:left;padding:0.5rem 0;">
-                <!-- 用户信息 -->
-                <div style="display:flex;align-items:center;gap:0.8rem;padding:0.8rem 1rem;background:rgba(139,92,246,0.04);border-radius:12px;border:1px solid rgba(139,92,246,0.06);margin-bottom:1.2rem;">
-                    <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#8B5CF6,#EC4899);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:0.9rem;flex-shrink:0;">${username.charAt(0).toUpperCase()}</div>
-                    <div>
-                        <div style="color:#fff;font-weight:600;font-size:0.95rem;">${username}</div>
-                        <div style="color:rgba(255,255,255,0.2);font-size:0.75rem;">将收到邮件+站内通知</div>
-                    </div>
-                </div>
+        let selectedUsers = [];
 
-                <!-- 标题 -->
-                <div style="margin-bottom:0.8rem;">
-                    <label style="display:block;color:rgba(255,255,255,0.4);font-size:0.8rem;font-weight:500;margin-bottom:0.3rem;">📌 标题</label>
-                    <input id="notifyTitle" class="swal2-input" placeholder="输入通知标题..." maxlength="50" style="width:100%;padding:0.7rem 1rem;border-radius:12px;border:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.02);color:#fff;font-size:0.9rem;outline:none;transition:border-color 0.3s;">
-                    <div style="text-align:right;color:rgba(255,255,255,0.12);font-size:0.7rem;margin-top:0.2rem;"><span id="titleCount">0</span>/50</div>
-                </div>
-
-                <!-- 内容 -->
-                <div style="margin-bottom:0.8rem;">
-                    <label style="display:block;color:rgba(255,255,255,0.4);font-size:0.8rem;font-weight:500;margin-bottom:0.3rem;">📝 内容</label>
-                    <textarea id="notifyMessage" class="swal2-textarea" placeholder="输入通知内容..." maxlength="500" style="width:100%;padding:0.7rem 1rem;border-radius:12px;border:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.02);color:#fff;font-size:0.9rem;outline:none;resize:vertical;min-height:100px;font-family:inherit;transition:border-color 0.3s;"></textarea>
-                    <div style="text-align:right;color:rgba(255,255,255,0.12);font-size:0.7rem;margin-top:0.2rem;"><span id="messageCount">0</span>/500</div>
-                </div>
-
-                <!-- 类型选择 -->
-                <div>
-                    <label style="display:block;color:rgba(255,255,255,0.4);font-size:0.8rem;font-weight:500;margin-bottom:0.3rem;">🔖 通知类型</label>
-                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:0.4rem;">
-                        <div class="type-option" data-type="info" onclick="selectType('info')" style="padding:0.4rem 0.2rem;text-align:center;border-radius:8px;border:2px solid rgba(255,255,255,0.04);background:rgba(255,255,255,0.02);color:rgba(255,255,255,0.3);font-size:0.7rem;cursor:pointer;transition:all 0.3s ease;">ℹ️ 信息</div>
-                        <div class="type-option" data-type="success" onclick="selectType('success')" style="padding:0.4rem 0.2rem;text-align:center;border-radius:8px;border:2px solid rgba(255,255,255,0.04);background:rgba(255,255,255,0.02);color:rgba(255,255,255,0.3);font-size:0.7rem;cursor:pointer;transition:all 0.3s ease;">✅ 成功</div>
-                        <div class="type-option" data-type="warning" onclick="selectType('warning')" style="padding:0.4rem 0.2rem;text-align:center;border-radius:8px;border:2px solid rgba(255,255,255,0.04);background:rgba(255,255,255,0.02);color:rgba(255,255,255,0.3);font-size:0.7rem;cursor:pointer;transition:all 0.3s ease;">⚠️ 警告</div>
-                        <div class="type-option" data-type="danger" onclick="selectType('danger')" style="padding:0.4rem 0.2rem;text-align:center;border-radius:8px;border:2px solid rgba(255,255,255,0.04);background:rgba(255,255,255,0.02);color:rgba(255,255,255,0.3);font-size:0.7rem;cursor:pointer;transition:all 0.3s ease;">🔥 重要</div>
-                    </div>
-                    <input type="hidden" id="notifyType" value="info" />
-                </div>
-            </div>
-        `,
-        confirmButtonText: '📤 发送通知',
-        cancelButtonText: '取消',
-        showCancelButton: true,
-        background: '#1a1a2e',
-        color: '#e0e0e0',
-        confirmButtonColor: '#8B5CF6',
-        cancelButtonColor: '#2a2a3e',
-        focusConfirm: false,
-        width: 520,
-        padding: '2rem',
-        preConfirm: () => {
-            const title = document.getElementById('notifyTitle').value.trim();
-            const message = document.getElementById('notifyMessage').value.trim();
-            const type = document.getElementById('notifyType').value;
-
-            if (!title) {
-                Swal.showValidationMessage('请输入标题');
-                return false;
-            }
-            if (!message) {
-                Swal.showValidationMessage('请输入内容');
-                return false;
-            }
-            return { userId, title, message, type };
-        }
-    }).then((result) => {
-        if (result.isConfirmed && result.value) {
-            const { userId, title, message, type } = result.value;
-            sendNotification(userId, title, message, type);
-        }
-    });
-
-    // 字数统计
-    setTimeout(() => {
-        const titleInput = document.getElementById('notifyTitle');
-        const msgInput = document.getElementById('notifyMessage');
-        const titleCount = document.getElementById('titleCount');
-        const msgCount = document.getElementById('messageCount');
-
-        if (titleInput) {
-            titleInput.addEventListener('input', function() {
-                titleCount.textContent = this.value.length;
-                this.style.borderColor = this.value.length > 45 ? 'rgba(220,53,69,0.2)' : 'rgba(255,255,255,0.06)';
+        function updateSelection() {
+            const checkboxes = document.querySelectorAll('.user-checkbox:checked');
+            selectedUsers = [];
+            checkboxes.forEach(cb => {
+                selectedUsers.push({
+                    id: parseInt(cb.dataset.userid),
+                    username: cb.dataset.username
+                });
             });
+
+            document.getElementById('selectedCount').textContent = selectedUsers.length;
+            document.getElementById('batchSendBtn').disabled = selectedUsers.length === 0;
+
+            // 更新全选状态
+            const allCheckboxes = document.querySelectorAll('.user-checkbox');
+            const checkedCheckboxes = document.querySelectorAll('.user-checkbox:checked');
+            const selectAll = document.getElementById('selectAll');
+            const selectAllHeader = document.getElementById('selectAllHeader');
+            if (allCheckboxes.length > 0 && checkedCheckboxes.length === allCheckboxes.length) {
+                selectAll.checked = true;
+                selectAllHeader.checked = true;
+            } else {
+                selectAll.checked = false;
+                selectAllHeader.checked = false;
+            }
         }
-        if (msgInput) {
-            msgInput.addEventListener('input', function() {
-                msgCount.textContent = this.value.length;
-                this.style.borderColor = this.value.length > 450 ? 'rgba(220,53,69,0.2)' : 'rgba(255,255,255,0.06)';
+
+        function toggleAllUsers() {
+            const selectAll = document.getElementById('selectAll');
+            const selectAllHeader = document.getElementById('selectAllHeader');
+            const isChecked = selectAll.checked;
+            selectAllHeader.checked = isChecked;
+
+            document.querySelectorAll('.user-checkbox').forEach(cb => {
+                cb.checked = isChecked;
             });
+            updateSelection();
         }
-    }, 100);
-}
 
-// ⭐ 选择类型
-function selectType(type) {
-    document.getElementById('notifyType').value = type;
-    document.querySelectorAll('.type-option').forEach(el => {
-        el.style.borderColor = 'rgba(255,255,255,0.04)';
-        el.style.background = 'rgba(255,255,255,0.02)';
-        el.style.color = 'rgba(255,255,255,0.3)';
-    });
-    const selected = document.querySelector(`.type-option[data-type="${type}"]`);
-    const colors = {
-        'info': '#4facfe',
-        'success': '#28a745',
-        'warning': '#ffc107',
-        'danger': '#dc3545'
-    };
-    selected.style.borderColor = colors[type];
-    selected.style.background = `${colors[type]}22`;
-    selected.style.color = colors[type];
-}
+        function clearSelection() {
+            document.querySelectorAll('.user-checkbox').forEach(cb => cb.checked = false);
+            document.getElementById('selectAll').checked = false;
+            document.getElementById('selectAllHeader').checked = false;
+            updateSelection();
+        }
 
         // ============================================================
-        // 发送通知 API
+        // ⭐ 批量发送通知
         // ============================================================
-        function sendNotification(userId, title, message, type) {
+        function batchSendNotification() {
+            if (selectedUsers.length === 0) {
+                showToast('请至少选择一位用户', 'error');
+                return;
+            }
+
+            const userNames = selectedUsers.map(u => u.username).join('、');
+
+            Swal.fire({
+                title: `📬 批量发送通知`,
+                html: `
+                    <div style="text-align:left;padding:0.2rem 0;">
+                        <div style="display:flex;align-items:center;gap:0.8rem;padding:0.8rem 1rem;background:rgba(139,92,246,0.04);border-radius:12px;border:1px solid rgba(139,92,246,0.06);margin-bottom:1.2rem;">
+                            <div style="font-size:1.5rem;">👥</div>
+                            <div>
+                                <div style="color:#fff;font-weight:600;font-size:0.95rem;">已选 ${selectedUsers.length} 位用户</div>
+                                <div style="color:rgba(255,255,255,0.2);font-size:0.75rem;">${userNames}</div>
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom:0.8rem;">
+                            <label style="display:block;color:rgba(255,255,255,0.4);font-size:0.8rem;font-weight:500;margin-bottom:0.3rem;">📌 标题</label>
+                            <input id="batchTitle" class="swal2-input" placeholder="请输入通知标题..." maxlength="50" style="width:100%;padding:0.7rem 1rem;border-radius:12px;border:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.02);color:#fff;font-size:0.9rem;outline:none;">
+                            <div style="text-align:right;color:rgba(255,255,255,0.12);font-size:0.7rem;margin-top:0.2rem;"><span id="batchTitleCount">0</span>/50</div>
+                        </div>
+
+                        <div style="margin-bottom:0.8rem;">
+                            <label style="display:block;color:rgba(255,255,255,0.4);font-size:0.8rem;font-weight:500;margin-bottom:0.3rem;">📝 内容</label>
+                            <textarea id="batchMessage" class="swal2-textarea" placeholder="请输入通知内容..." maxlength="500" style="width:100%;padding:0.7rem 1rem;border-radius:12px;border:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.02);color:#fff;font-size:0.9rem;outline:none;resize:vertical;min-height:100px;font-family:inherit;"></textarea>
+                            <div style="text-align:right;color:rgba(255,255,255,0.12);font-size:0.7rem;margin-top:0.2rem;"><span id="batchMessageCount">0</span>/500</div>
+                        </div>
+
+                        <div>
+                            <label style="display:block;color:rgba(255,255,255,0.4);font-size:0.8rem;font-weight:500;margin-bottom:0.3rem;">🔖 类型</label>
+                            <select id="batchType" class="swal2-input" style="width:100%;padding:0.6rem 1rem;border-radius:12px;border:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.02);color:#fff;font-size:0.9rem;outline:none;">
+                                <option value="info">ℹ️ 信息</option>
+                                <option value="success">✅ 成功</option>
+                                <option value="warning">⚠️ 警告</option>
+                                <option value="danger">❌ 重要</option>
+                            </select>
+                        </div>
+                    </div>
+                `,
+                confirmButtonText: `📤 发送给 ${selectedUsers.length} 位用户`,
+                cancelButtonText: '取消',
+                showCancelButton: true,
+                background: '#1a1a2e',
+                color: '#e0e0e0',
+                confirmButtonColor: '#8B5CF6',
+                cancelButtonColor: '#2a2a3e',
+                focusConfirm: false,
+                width: 520,
+                padding: '1.8rem',
+                preConfirm: () => {
+                    const title = document.getElementById('batchTitle').value.trim();
+                    const message = document.getElementById('batchMessage').value.trim();
+                    const type = document.getElementById('batchType').value;
+
+                    if (!title) {
+                        Swal.showValidationMessage('请输入标题');
+                        return false;
+                    }
+                    if (!message) {
+                        Swal.showValidationMessage('请输入内容');
+                        return false;
+                    }
+                    return { title, message, type };
+                }
+            }).then((result) => {
+                if (result.isConfirmed && result.value) {
+                    const { title, message, type } = result.value;
+                    executeBatchSend(title, message, type);
+                }
+            });
+
+            // 字数统计
+            setTimeout(() => {
+                const titleInput = document.getElementById('batchTitle');
+                const msgInput = document.getElementById('batchMessage');
+                const titleCount = document.getElementById('batchTitleCount');
+                const msgCount = document.getElementById('batchMessageCount');
+
+                if (titleInput) {
+                    titleInput.addEventListener('input', function() {
+                        titleCount.textContent = this.value.length;
+                    });
+                }
+                if (msgInput) {
+                    msgInput.addEventListener('input', function() {
+                        msgCount.textContent = this.value.length;
+                    });
+                }
+            }, 100);
+        }
+
+        // ============================================================
+        // ⭐ 执行批量发送
+        // ============================================================
+        function executeBatchSend(title, message, type) {
             Swal.fire({
                 title: '⏳ 发送中...',
-                text: '请稍候',
+                html: `
+                    <div style="margin:0.5rem 0;">
+                        <div style="width:40px;height:40px;border:3px solid rgba(139,92,246,0.1);border-top-color:#8B5CF6;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto;"></div>
+                        <p style="color:rgba(255,255,255,0.3);font-size:0.85rem;margin-top:0.8rem;">正在发送给 ${selectedUsers.length} 位用户...</p>
+                    </div>
+                    <style>
+                        @@keyframes spin { to { transform: rotate(360deg); } }
+                    </style>
+                `,
                 allowOutsideClick: false,
-                didOpen: () => {
-                    Swal.showLoading();
+                showConfirmButton: false,
+                background: '#1a1a2e',
+                color: '#e0e0e0',
+                padding: '2rem',
+                width: 380,
+            });
+
+            const token = getToken();
+            const userIds = selectedUsers.map(u => u.id);
+
+            fetch('/Admin/BatchSendNotification', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': token
+                },
+                body: JSON.stringify({
+                    userIds: userIds,
+                    title: title,
+                    message: message,
+                    type: type
+                })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        title: '✅ 发送完成！',
+                        html: `
+                            <div style="margin:0.5rem 0;">
+                                <div style="font-size:3rem;margin-bottom:0.5rem;">🎉</div>
+                                <p style="color:rgba(255,255,255,0.5);font-size:0.9rem;">${data.message}</p>
+                                ${data.details ? `<p style="color:rgba(255,255,255,0.2);font-size:0.8rem;">${data.details}</p>` : ''}
+                            </div>
+                        `,
+                        icon: 'success',
+                        background: '#1a1a2e',
+                        color: '#e0e0e0',
+                        confirmButtonColor: '#8B5CF6',
+                        confirmButtonText: '✅ 好的',
+                        timer: 2500,
+                        timerProgressBar: true,
+                    });
+                    clearSelection();
+                } else {
+                    Swal.fire({
+                        title: '❌ 发送失败',
+                        text: data.message || '未知错误',
+                        icon: 'error',
+                        background: '#1a1a2e',
+                        color: '#e0e0e0',
+                        confirmButtonColor: '#8B5CF6',
+                        confirmButtonText: '知道了',
+                    });
                 }
+            })
+            .catch(() => {
+                Swal.fire({
+                    title: '❌ 发送失败',
+                    text: '网络错误，请重试',
+                    icon: 'error',
+                    background: '#1a1a2e',
+                    color: '#e0e0e0',
+                    confirmButtonColor: '#8B5CF6',
+                    confirmButtonText: '知道了',
+                });
+            });
+        }
+
+        // ============================================================
+        // 单用户发送通知（保留原有功能）
+        // ============================================================
+        function openNotificationModal(userId, username) {
+            Swal.fire({
+                title: `📬 发送通知给 ${username}`,
+                html: `
+                    <div style="text-align:left;padding:0.2rem 0;">
+                        <div style="display:flex;align-items:center;gap:0.8rem;padding:0.8rem 1rem;background:rgba(139,92,246,0.04);border-radius:12px;border:1px solid rgba(139,92,246,0.06);margin-bottom:1.2rem;">
+                            <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#8B5CF6,#EC4899);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:0.9rem;flex-shrink:0;">${username.charAt(0).toUpperCase()}</div>
+                            <div>
+                                <div style="color:#fff;font-weight:600;font-size:0.95rem;">${username}</div>
+                                <div style="color:rgba(255,255,255,0.2);font-size:0.75rem;">将收到邮件+站内通知</div>
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom:0.8rem;">
+                            <label style="display:block;color:rgba(255,255,255,0.4);font-size:0.8rem;font-weight:500;margin-bottom:0.3rem;">📌 标题</label>
+                            <input id="notifyTitle" class="swal2-input" placeholder="请输入通知标题..." maxlength="50" style="width:100%;padding:0.7rem 1rem;border-radius:12px;border:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.02);color:#fff;font-size:0.9rem;outline:none;">
+                            <div style="text-align:right;color:rgba(255,255,255,0.12);font-size:0.7rem;margin-top:0.2rem;"><span id="titleCount">0</span>/50</div>
+                        </div>
+
+                        <div style="margin-bottom:0.8rem;">
+                            <label style="display:block;color:rgba(255,255,255,0.4);font-size:0.8rem;font-weight:500;margin-bottom:0.3rem;">📝 内容</label>
+                            <textarea id="notifyMessage" class="swal2-textarea" placeholder="请输入通知内容..." maxlength="500" style="width:100%;padding:0.7rem 1rem;border-radius:12px;border:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.02);color:#fff;font-size:0.9rem;outline:none;resize:vertical;min-height:100px;font-family:inherit;"></textarea>
+                            <div style="text-align:right;color:rgba(255,255,255,0.12);font-size:0.7rem;margin-top:0.2rem;"><span id="messageCount">0</span>/500</div>
+                        </div>
+
+                        <div>
+                            <label style="display:block;color:rgba(255,255,255,0.4);font-size:0.8rem;font-weight:500;margin-bottom:0.3rem;">🔖 类型</label>
+                            <select id="notifyType" class="swal2-input" style="width:100%;padding:0.6rem 1rem;border-radius:12px;border:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.02);color:#fff;font-size:0.9rem;outline:none;">
+                                <option value="info">ℹ️ 信息</option>
+                                <option value="success">✅ 成功</option>
+                                <option value="warning">⚠️ 警告</option>
+                                <option value="danger">❌ 重要</option>
+                            </select>
+                        </div>
+                    </div>
+                `,
+                confirmButtonText: '📤 发送通知',
+                cancelButtonText: '取消',
+                showCancelButton: true,
+                background: '#1a1a2e',
+                color: '#e0e0e0',
+                confirmButtonColor: '#8B5CF6',
+                cancelButtonColor: '#2a2a3e',
+                focusConfirm: false,
+                width: 520,
+                padding: '1.8rem',
+                preConfirm: () => {
+                    const title = document.getElementById('notifyTitle').value.trim();
+                    const message = document.getElementById('notifyMessage').value.trim();
+                    const type = document.getElementById('notifyType').value;
+
+                    if (!title) {
+                        Swal.showValidationMessage('请输入标题');
+                        return false;
+                    }
+                    if (!message) {
+                        Swal.showValidationMessage('请输入内容');
+                        return false;
+                    }
+                    return { userId, title, message, type };
+                }
+            }).then((result) => {
+                if (result.isConfirmed && result.value) {
+                    const { userId, title, message, type } = result.value;
+                    sendSingleNotification(userId, title, message, type);
+                }
+            });
+
+            setTimeout(() => {
+                const titleInput = document.getElementById('notifyTitle');
+                const msgInput = document.getElementById('notifyMessage');
+                const titleCount = document.getElementById('titleCount');
+                const msgCount = document.getElementById('messageCount');
+
+                if (titleInput) {
+                    titleInput.addEventListener('input', function() {
+                        titleCount.textContent = this.value.length;
+                    });
+                }
+                if (msgInput) {
+                    msgInput.addEventListener('input', function() {
+                        msgCount.textContent = this.value.length;
+                    });
+                }
+            }, 100);
+        }
+
+        function sendSingleNotification(userId, title, message, type) {
+            Swal.fire({
+                title: '⏳ 发送中...',
+                html: `
+                    <div style="margin:0.5rem 0;">
+                        <div style="width:40px;height:40px;border:3px solid rgba(139,92,246,0.1);border-top-color:#8B5CF6;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto;"></div>
+                        <p style="color:rgba(255,255,255,0.3);font-size:0.85rem;margin-top:0.8rem;">正在发送...</p>
+                    </div>
+                    <style>
+                        @@keyframes spin { to { transform: rotate(360deg); } }
+                    </style>
+                `,
+                allowOutsideClick: false,
+                showConfirmButton: false,
+                background: '#1a1a2e',
+                color: '#e0e0e0',
+                padding: '2rem',
+                width: 380,
             });
 
             const token = getToken();
@@ -668,16 +996,17 @@ function selectType(type) {
                         color: '#e0e0e0',
                         confirmButtonColor: '#8B5CF6',
                         timer: 2000,
-                        timerProgressBar: true
+                        timerProgressBar: true,
                     });
                 } else {
                     Swal.fire({
                         title: '❌ 发送失败',
-                        text: data.message,
+                        text: data.message || '未知错误',
                         icon: 'error',
                         background: '#1a1a2e',
                         color: '#e0e0e0',
-                        confirmButtonColor: '#8B5CF6'
+                        confirmButtonColor: '#8B5CF6',
+                        confirmButtonText: '知道了',
                     });
                 }
             })
@@ -688,13 +1017,14 @@ function selectType(type) {
                     icon: 'error',
                     background: '#1a1a2e',
                     color: '#e0e0e0',
-                    confirmButtonColor: '#8B5CF6'
+                    confirmButtonColor: '#8B5CF6',
+                    confirmButtonText: '知道了',
                 });
             });
         }
 
         // ============================================================
-        // 验证用户
+        // 用户操作（验证/封禁/解封/删除）
         // ============================================================
         function verifyUser(userId) {
             Swal.fire({
@@ -731,9 +1061,6 @@ function selectType(type) {
             });
         }
 
-        // ============================================================
-        // 封禁用户
-        // ============================================================
         function banUser(userId) {
             Swal.fire({
                 title: '🚫 封禁用户',
@@ -791,9 +1118,6 @@ function selectType(type) {
             });
         }
 
-        // ============================================================
-        // 解封用户
-        // ============================================================
         function unbanUser(userId) {
             Swal.fire({
                 title: '确认解封',
@@ -829,9 +1153,6 @@ function selectType(type) {
             });
         }
 
-        // ============================================================
-        // 删除用户
-        // ============================================================
         function deleteUser(userId) {
             Swal.fire({
                 title: '⚠️ 确认删除',
