@@ -30,6 +30,17 @@ namespace MyPersonalWebsite.Controllers
 
             return View();
         }
+        public async Task<IActionResult> Notifications()
+{
+    var userId = HttpContext.Session.GetInt32("UserId");
+    if (!userId.HasValue)
+    {
+        return RedirectToAction("Login", "Auth");
+    }
+
+    var notifications = await _dataSync.GetNotificationsByUserIdAsync(userId.Value);
+    return View(notifications);
+}
 
         public async Task<IActionResult> About()
         {
