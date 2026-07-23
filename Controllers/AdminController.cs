@@ -53,6 +53,72 @@ namespace MyPersonalWebsite.Controllers
             ViewBag.RecentContactRequests = contactRequests.OrderByDescending(r => r.RequestTime).Take(5).ToList();
             return View();
         }
+        // ============================================================
+// 发送通知给用户（弹窗 + 邮箱）
+// ============================================================
+
+[HttpPost]
+public async Task<IActionResult> SendNotification(int userId, string title, string message, string type)
+{
+    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+    if (isAdmin != 1)
+        return Json(new { success = false, message = "权限不足" });
+
+    var user = await _dataSync.GetUserByIdAsync(userId);
+    if (user == null)
+        return Json(new { success = false, message = "用户不存在" });
+
+    if (user.IsDeleted)
+        return Json(new { success = false, message = "用户已被删除" });
+
+    // 1. 发送邮箱通知
+    try
+    {
+        var emailHtml = $@"
+            <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #2a2a3e; border-radius: 16px; background: #0a0a0f; color: #e0e0e0;'>
+                <h2 style='color: #8B5CF6;'>📬 管理员通知</h2>
+                <p>您好 <strong>{user.Username}</strong>！</p>
+                <div style='background: #1a1a2e; padding: 15px; border-radius: 8px; margin: 10px 0; border: 1px solid #2a2a3e;'>
+                    <p><strong>📌 标题：</strong>{title}</p>
+                    <p><strong>📝 内容：</strong></p>
+                    <p style='color: #ccc;'>{message}</p>
+                </div>
+                <p style='color: #888; font-size: 14px;'>类型：{type}</p>
+                <hr style='border: none; border-top: 1px solid #2a2a3e;'>
+                <p style='color: #555; font-size: 12px;'>💌 系统自动发送，不用回复。</p>
+            </div>
+        ";
+
+        var subject = $"📬 {title} - Chris hopper 个人网站";
+        await _emailService.SendEmailAsync(user.Email, subject, emailHtml);
+    }
+    catch (Exception ex)
+    {
+        return Json(new { success = false, message = $"邮件发送失败: {ex.Message}" });
+    }
+
+    // 2. 保存弹窗通知到数据库（新增 Notification 表）
+    try
+    {
+        var notification = new Notification
+        {
+            UserId = userId,
+            Title = title,
+            Message = message,
+            Type = type,
+            IsRead = false,
+            CreatedAt = DateTime.Now
+        };
+        await _dataSync.AddNotificationAsync(notification);
+    }
+    catch (Exception ex)
+    {
+        // 如果通知表不存在或保存失败，只发邮件
+        Console.WriteLine($"通知保存失败: {ex.Message}");
+    }
+
+    return Json(new { success = true, message = $"✅ 通知已发送给 {user.Username}" });
+}
 
         // ============================================================
         // 博客管理
