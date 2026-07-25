@@ -137,7 +137,7 @@ async Task EnsureTursoTablesAsync(DataSyncService dataSync)
         VotedAt TEXT,
         UNIQUE(SuggestionId, UserId)
     )"
-}
+},
         { "Users", @"
             CREATE TABLE IF NOT EXISTS Users (
                 Id INTEGER PRIMARY KEY,
