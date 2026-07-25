@@ -63,6 +63,7 @@ builder.Services.AddScoped<RateLimitService>();
 builder.Services.AddScoped<DataSyncService>();
 builder.Services.AddScoped<TursoService>();
 builder.Services.AddScoped<DailyQuestionService>();
+builder.Services.AddScoped<GameSuggestionService>();
 
 builder.Services.AddSignalR();
 
