@@ -1658,69 +1658,7 @@ private int ParseQuestionIdFromJson(string json)
             public int Difficulty { get; set; } = 1;
             public string Category { get; set; } = "综合";
         }
-                // ============================================================
-        // 📅 未来题目安排
-        // ============================================================
-
-        [HttpGet]
-        public async Task<IActionResult> QuestionSchedule()
-        {
-            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-            if (isAdmin != 1)
-                return RedirectToAction("Login", "Auth");
-
-            var schedule = new List<DailyScheduleItem>();
-            var today = DateTime.Today;
-
-            for (int i = 0; i < 7; i++)
-            {
-                var date = today.AddDays(i);
-                var dateStr = date.ToString("yyyy-MM-dd");
-
-                var result = await _dataSync.QueryAsync($@"
-                    SELECT dq.Id, dq.QuestionId, dq.Date,
-                           b.Question, b.Answer, b.Category, b.Difficulty
-                    FROM DailyQuestions dq
-                    JOIN DailyQuestionBank b ON dq.QuestionId = b.Id
-                    WHERE dq.Date = '{dateStr}'
-                    LIMIT 1
-                ");
-
-                var item = new DailyScheduleItem
-                {
-                    Date = date,
-                    DateStr = dateStr,
-                    IsToday = date == today,
-                    IsPast = date < today
-                };
-
-                var question = ParseDailyQuestionFromJson(result);
-                if (question != null)
-                {
-                    item.QuestionId = question.QuestionId ?? 0;
-                    item.Question = question.Question;
-                    item.Answer = question.Answer;
-                    item.Category = question.Category;
-                    item.Difficulty = question.Difficulty;
-                    item.IsScheduled = true;
-                }
-                else
-                {
-                    item.IsScheduled = false;
-                }
-
-                schedule.Add(item);
-            }
-
-            var bankQuestions = await _dataSync.GetAllBankQuestionsAsync();
-
-            ViewBag.Schedule = schedule;
-            ViewBag.BankQuestions = bankQuestions;
-            ViewBag.Today = today;
-
-            return View();
-        }
-
+                
         // ============================================================
         // 🗓️ 更换某天的题目
         // ============================================================
