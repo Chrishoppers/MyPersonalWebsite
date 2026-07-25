@@ -1,6 +1,5 @@
 using MyPersonalWebsite.Models;
 using System.Text.Json;
-using System.Text;
 
 namespace MyPersonalWebsite.Services
 {
@@ -17,10 +16,15 @@ namespace MyPersonalWebsite.Services
             var url = Environment.GetEnvironmentVariable("TURSO_DATABASE_URL") ?? "";
             var token = Environment.GetEnvironmentVariable("TURSO_AUTH_TOKEN") ?? "";
             _tursoAvailable = !string.IsNullOrEmpty(url) && !string.IsNullOrEmpty(token);
+
+            if (_tursoAvailable)
+                Console.WriteLine("✅ DailyQuestionService: Turso 已连接");
+            else
+                Console.WriteLine("⚠️ DailyQuestionService: Turso 未配置");
         }
 
         // ============================================================
-        // 初始化今日题目（每天自动生成）
+        // 初始化今日题目（从题库中随机选一道未使用的）
         // ============================================================
         public async Task InitializeTodayQuestionAsync()
         {
@@ -39,31 +43,37 @@ namespace MyPersonalWebsite.Services
                 return;
             }
 
-            // 获取默认题库
-            var defaultQuestions = DailyQuestionData.GetDefaultQuestions();
-            var todayQuestion = defaultQuestions.FirstOrDefault(q => q.Date.ToString("yyyy-MM-dd") == today);
+            // 获取当前可用的题库（按使用次数排序，优先选最少使用的）
+            var availableResult = await _tursoService.QueryAsync(
+                @"SELECT Id, Question, Answer, Pinyin, Hint, Difficulty, Category 
+                  FROM DailyQuestionBank 
+                  WHERE IsActive = 1 
+                  ORDER BY UseCount ASC, RANDOM() 
+                  LIMIT 1"
+            );
 
-            if (todayQuestion == null)
+            var available = ParseAvailableQuestion(availableResult);
+            if (available == null)
             {
-                Console.WriteLine($"⚠️ 没有找到 {today} 的题目");
+                Console.WriteLine("⚠️ 题库为空，请先初始化题库");
                 return;
             }
 
             // 插入今日题目
             var sql = $@"INSERT INTO DailyQuestions (
-                Question, Answer, Pinyin, Hint, Difficulty, Date, CreatedAt
+                QuestionId, Date, CreatedAt
             ) VALUES (
-                '{EscapeSql(todayQuestion.Question)}',
-                '{EscapeSql(todayQuestion.Answer)}',
-                '{EscapeSql(todayQuestion.Pinyin)}',
-                {(string.IsNullOrEmpty(todayQuestion.Hint) ? "NULL" : $"'{EscapeSql(todayQuestion.Hint)}'")},
-                {todayQuestion.Difficulty},
-                '{today}',
-                '{DateTime.Now:yyyy-MM-dd HH:mm:ss}'
+                {available.Id}, '{today}', '{DateTime.Now:yyyy-MM-dd HH:mm:ss}'
             )";
 
             await _tursoService.ExecuteSqlAsync(sql);
-            Console.WriteLine($"✅ 今日题目已创建: {todayQuestion.Question}");
+
+            // 更新使用次数
+            await _tursoService.ExecuteSqlAsync(
+                $"UPDATE DailyQuestionBank SET UseCount = UseCount + 1, UsedAt = '{DateTime.Now:yyyy-MM-dd HH:mm:ss}' WHERE Id = {available.Id}"
+            );
+
+            Console.WriteLine($"✅ 今日题目已创建: {available.Question}");
         }
 
         // ============================================================
@@ -74,11 +84,16 @@ namespace MyPersonalWebsite.Services
             if (!_tursoAvailable) return null;
 
             var today = DateTime.Today.ToString("yyyy-MM-dd");
-            var result = await _tursoService.QueryAsync(
-                $"SELECT * FROM DailyQuestions WHERE Date = '{today}'"
-            );
+            var result = await _tursoService.QueryAsync($@"
+                SELECT dq.Id, dq.QuestionId, dq.Date, 
+                       b.Question, b.Answer, b.Pinyin, b.Hint, b.Difficulty, b.Category
+                FROM DailyQuestions dq
+                JOIN DailyQuestionBank b ON dq.QuestionId = b.Id
+                WHERE dq.Date = '{today}'
+                LIMIT 1
+            ");
 
-            return ParseDailyQuestion(result);
+            return ParseDailyQuestionWithCategory(result);
         }
 
         // ============================================================
@@ -99,47 +114,36 @@ namespace MyPersonalWebsite.Services
         // ============================================================
         // 提交答案
         // ============================================================
-        public async Task<(bool Success, bool IsCorrect, int Points, string Message)> SubmitAnswerAsync(
-            int userId, string answer, bool isSkip = false)
+        public async Task<(bool Success, bool IsCorrect, int Points, string Message, string? CorrectAnswer)> 
+            SubmitAnswerAsync(int userId, string answer)
         {
             if (!_tursoAvailable)
-                return (false, false, 0, "数据库不可用");
+                return (false, false, 0, "数据库不可用", null);
 
             // 检查是否已答题
             if (await HasAnsweredTodayAsync(userId))
-                return (false, false, 0, "今天已经答过题了，明天再来吧！");
+                return (false, false, 0, "今天已经答过题了，明天再来吧！", null);
 
             var question = await GetTodayQuestionAsync();
             if (question == null)
-                return (false, false, 0, "今日题目不存在，请稍后再试");
+                return (false, false, 0, "今日题目不存在，请稍后再试", null);
 
-            if (isSkip)
-            {
-                // 跳过不扣分，但记录已答题
-                await RecordAnswerAsync(userId, question.Id, "", false);
-                return (true, false, 0, "⏭️ 已跳过，明天再来吧！");
-            }
-
-            // 拼音匹配
+            // 拼音匹配（忽略大小写，去除空格）
             var isCorrect = MatchByPinyin(answer, question.Pinyin);
 
             if (isCorrect)
             {
-                await RecordAnswerAsync(userId, question.Id, answer, true);
+                await RecordAnswerAsync(userId, question.QuestionId ?? 0, answer, true);
                 await UpdateUserStatsAsync(userId, true);
-
-                // 获取当前积分
                 var stats = await GetUserStatsAsync(userId);
                 var points = stats?.TotalPoints ?? 0;
-
-                return (true, true, points, "🎉 答对了！继续加油！");
+                return (true, true, points, "🎉 答对了！+10分", question.Answer);
             }
             else
             {
-                await RecordAnswerAsync(userId, question.Id, answer, false);
+                await RecordAnswerAsync(userId, question.QuestionId ?? 0, answer, false);
                 await UpdateUserStatsAsync(userId, false);
-
-                return (true, false, 0, $"❌ 答错了，正确答案是：{question.Answer}");
+                return (true, false, 0, "❌ 答错了", question.Answer);
             }
         }
 
@@ -189,24 +193,18 @@ namespace MyPersonalWebsite.Services
                 return;
             }
 
-            // 更新现有记录
             var newStreak = stats.StreakDays;
             var newMaxStreak = stats.MaxStreakDays;
             var newPoints = stats.TotalPoints + (isCorrect ? 10 : 0);
             var newCorrect = stats.TotalCorrect + (isCorrect ? 1 : 0);
 
-            // 检查连续天数
             if (isCorrect)
             {
                 if (stats.LastAnswerDate?.ToString("yyyy-MM-dd") == today.AddDays(-1).ToString("yyyy-MM-dd"))
                 {
                     newStreak++;
                 }
-                else if (stats.LastAnswerDate?.ToString("yyyy-MM-dd") == today.ToString("yyyy-MM-dd"))
-                {
-                    // 今天已经更新过了，不重复计算
-                }
-                else
+                else if (stats.LastAnswerDate?.ToString("yyyy-MM-dd") != today.ToString("yyyy-MM-dd"))
                 {
                     newStreak = 1;
                 }
@@ -293,7 +291,7 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 获取今日答题状态（含题目、用户统计、是否已答）
+        // 获取今日答题状态
         // ============================================================
         public async Task<TodayAnswerStatus> GetTodayStatusAsync(int userId)
         {
@@ -328,26 +326,67 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 拼音匹配（核心）
+        // 拼音匹配
         // ============================================================
         private bool MatchByPinyin(string userInput, string correctPinyin)
         {
             if (string.IsNullOrEmpty(userInput) || string.IsNullOrEmpty(correctPinyin))
                 return false;
 
-            // 去除空格和语气词
             var clean = userInput.Replace(" ", "").Replace("嗯", "").Replace("啊", "").Replace("吧", "");
-
-            // 尝试匹配拼音（用户说的可能是中文，也可能是拼音）
-            // 使用 pinyin-pro 库在前端匹配，这里只做简单包含匹配
-            // 真正的拼音匹配在前端完成
-            return clean.Contains(correctPinyin) || correctPinyin.Contains(clean);
+            return clean.Contains(correctPinyin, StringComparison.OrdinalIgnoreCase) || 
+                   correctPinyin.Contains(clean, StringComparison.OrdinalIgnoreCase);
         }
 
         // ============================================================
         // 解析方法
         // ============================================================
-        private DailyQuestion? ParseDailyQuestion(string json)
+
+        private DailyQuestion? ParseAvailableQuestion(string json)
+        {
+            try
+            {
+                using var doc = JsonDocument.Parse(json);
+                var root = doc.RootElement;
+
+                if (root.TryGetProperty("results", out var results) && results.GetArrayLength() > 0)
+                {
+                    var firstResult = results[0];
+                    if (firstResult.TryGetProperty("response", out var response) &&
+                        response.TryGetProperty("result", out var result))
+                    {
+                        if (result.TryGetProperty("rows", out var rows) && rows.GetArrayLength() > 0)
+                        {
+                            var row = rows[0];
+                            var cols = result.GetProperty("cols");
+
+                            var q = new DailyQuestion();
+                            for (int i = 0; i < cols.GetArrayLength(); i++)
+                            {
+                                var colName = cols[i].GetProperty("name").GetString();
+                                var element = row[i];
+
+                                switch (colName)
+                                {
+                                    case "Id": q.QuestionId = GetIntFromRow(element); break;
+                                    case "Question": q.Question = GetStringFromRow(element); break;
+                                    case "Answer": q.Answer = GetStringFromRow(element); break;
+                                    case "Pinyin": q.Pinyin = GetStringFromRow(element); break;
+                                    case "Hint": q.Hint = GetStringOrNullFromRow(element); break;
+                                    case "Difficulty": q.Difficulty = GetIntFromRow(element); break;
+                                    case "Category": q.Category = GetStringFromRow(element); break;
+                                }
+                            }
+                            return q;
+                        }
+                    }
+                }
+                return null;
+            }
+            catch { return null; }
+        }
+
+        private DailyQuestion? ParseDailyQuestionWithCategory(string json)
         {
             try
             {
@@ -374,12 +413,14 @@ namespace MyPersonalWebsite.Services
                                 switch (colName)
                                 {
                                     case "Id": q.Id = GetIntFromRow(element); break;
+                                    case "QuestionId": q.QuestionId = GetIntFromRow(element); break;
+                                    case "Date": q.Date = DateTime.Parse(GetStringFromRow(element)); break;
                                     case "Question": q.Question = GetStringFromRow(element); break;
                                     case "Answer": q.Answer = GetStringFromRow(element); break;
                                     case "Pinyin": q.Pinyin = GetStringFromRow(element); break;
                                     case "Hint": q.Hint = GetStringOrNullFromRow(element); break;
                                     case "Difficulty": q.Difficulty = GetIntFromRow(element); break;
-                                    case "Date": q.Date = DateTime.Parse(GetStringFromRow(element)); break;
+                                    case "Category": q.Category = GetStringFromRow(element); break;
                                 }
                             }
                             return q;
@@ -388,10 +429,7 @@ namespace MyPersonalWebsite.Services
                 }
                 return null;
             }
-            catch
-            {
-                return null;
-            }
+            catch { return null; }
         }
 
         private UserGameStats? ParseUserStats(string json)
@@ -439,10 +477,7 @@ namespace MyPersonalWebsite.Services
                 }
                 return null;
             }
-            catch
-            {
-                return null;
-            }
+            catch { return null; }
         }
 
         private List<UserGameStats> ParseRankList(string json)
@@ -531,30 +566,66 @@ namespace MyPersonalWebsite.Services
                 }
                 return null;
             }
-            catch
-            {
-                return null;
-            }
+            catch { return null; }
         }
 
         // ============================================================
         // 工具方法
         // ============================================================
+
         private string EscapeSql(string value)
         {
             if (string.IsNullOrEmpty(value)) return "";
             return value.Replace("'", "''");
         }
 
+        private object? GetValueFromRow(JsonElement element)
+        {
+            if (element.ValueKind == JsonValueKind.Object)
+            {
+                if (element.TryGetProperty("value", out var val))
+                    return val;
+                if (element.TryGetProperty("Value", out var val2))
+                    return val2;
+                return element;
+            }
+            return element;
+        }
+
+        private int GetIntFromRow(JsonElement element)
+        {
+            try
+            {
+                var val = GetValueFromRow(element);
+                if (val is JsonElement je)
+                {
+                    if (je.ValueKind == JsonValueKind.Null) return 0;
+                    if (je.ValueKind == JsonValueKind.Number) return je.GetInt32();
+                    if (je.ValueKind == JsonValueKind.String)
+                    {
+                        var str = je.GetString();
+                        if (int.TryParse(str, out var result))
+                            return result;
+                        return 0;
+                    }
+                    return 0;
+                }
+                var strVal = val?.ToString();
+                if (int.TryParse(strVal, out var result2))
+                    return result2;
+                return 0;
+            }
+            catch { return 0; }
+        }
+
         private string GetStringFromRow(JsonElement element)
         {
             try
             {
-                if (element.ValueKind == JsonValueKind.Object && element.TryGetProperty("value", out var val))
-                    return val.GetString() ?? "";
-                if (element.ValueKind == JsonValueKind.String)
-                    return element.GetString() ?? "";
-                return element.ToString();
+                var val = GetValueFromRow(element);
+                if (val is JsonElement je)
+                    return je.ValueKind == JsonValueKind.Null ? "" : je.GetString() ?? "";
+                return val?.ToString() ?? "";
             }
             catch { return ""; }
         }
@@ -563,35 +634,26 @@ namespace MyPersonalWebsite.Services
         {
             try
             {
-                if (element.ValueKind == JsonValueKind.Object && element.TryGetProperty("value", out var val))
-                    return val.ValueKind == JsonValueKind.Null ? null : val.GetString();
-                if (element.ValueKind == JsonValueKind.String)
-                    return element.GetString();
-                if (element.ValueKind == JsonValueKind.Null)
-                    return null;
-                return element.ToString();
+                var val = GetValueFromRow(element);
+                if (val is JsonElement je)
+                {
+                    if (je.ValueKind == JsonValueKind.Null) return null;
+                    return je.GetString();
+                }
+                return val?.ToString();
             }
             catch { return null; }
         }
 
-        private int GetIntFromRow(JsonElement element)
+        private DateTime? GetDateTimeFromRow(JsonElement element)
         {
             try
             {
-                if (element.ValueKind == JsonValueKind.Object && element.TryGetProperty("value", out var val))
-                {
-                    if (val.ValueKind == JsonValueKind.Number)
-                        return val.GetInt32();
-                    if (val.ValueKind == JsonValueKind.String)
-                        return int.TryParse(val.GetString(), out var result) ? result : 0;
-                }
-                if (element.ValueKind == JsonValueKind.Number)
-                    return element.GetInt32();
-                if (element.ValueKind == JsonValueKind.String)
-                    return int.TryParse(element.GetString(), out var result) ? result : 0;
-                return 0;
+                var val = GetStringFromRow(element);
+                if (string.IsNullOrEmpty(val)) return null;
+                return DateTime.Parse(val);
             }
-            catch { return 0; }
+            catch { return null; }
         }
     }
 }
