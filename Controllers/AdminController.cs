@@ -22,6 +22,182 @@ namespace MyPersonalWebsite.Controllers
             _dataSync = dataSync;
             _emailService = emailService;
         }
+        // ============================================================
+// 📅 未来题目安排（自动AI安排 + 手动变更）
+// ============================================================
+
+[HttpGet]
+public async Task<IActionResult> QuestionSchedule()
+{
+    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+    if (isAdmin != 1)
+        return RedirectToAction("Login", "Auth");
+
+    var today = DateTime.Today;
+
+    // ⭐ 自动检查并安排未来7天的题目（智能AI安排）
+    await AutoScheduleMissingDaysAsync();
+
+    var schedule = new List<DailyScheduleItem>();
+
+    for (int i = 0; i < 7; i++)
+    {
+        var date = today.AddDays(i);
+        var dateStr = date.ToString("yyyy-MM-dd");
+
+        var result = await _dataSync.QueryAsync($@"
+            SELECT dq.Id, dq.QuestionId, dq.Date,
+                   b.Question, b.Answer, b.Category, b.Difficulty
+            FROM DailyQuestions dq
+            JOIN DailyQuestionBank b ON dq.QuestionId = b.Id
+            WHERE dq.Date = '{dateStr}'
+            LIMIT 1
+        ");
+
+        var item = new DailyScheduleItem
+        {
+            Date = date,
+            DateStr = dateStr,
+            IsToday = date == today,
+            IsPast = date < today
+        };
+
+        var question = ParseDailyQuestionFromJson(result);
+        if (question != null)
+        {
+            item.QuestionId = question.QuestionId ?? 0;
+            item.Question = question.Question;
+            item.Answer = question.Answer;
+            item.Category = question.Category;
+            item.Difficulty = question.Difficulty;
+            item.IsScheduled = true;
+        }
+        else
+        {
+            item.IsScheduled = false;
+        }
+
+        schedule.Add(item);
+    }
+
+    var bankQuestions = await _dataSync.GetAllBankQuestionsAsync();
+
+    ViewBag.Schedule = schedule;
+    ViewBag.BankQuestions = bankQuestions;
+    ViewBag.Today = today;
+
+    return View();
+}
+
+// ============================================================
+// 🤖 智能AI安排缺失的日期（自动检测并安排）
+// ============================================================
+
+private async Task AutoScheduleMissingDaysAsync()
+{
+    var today = DateTime.Today;
+
+    // 获取所有可用的题目（已激活，按使用次数排序）
+    var allQuestions = await _dataSync.GetAllBankQuestionsAsync();
+    var availableQuestions = allQuestions
+        .Where(q => q.IsActive)
+        .OrderBy(q => q.UseCount)
+        .ThenBy(q => Guid.NewGuid())
+        .ToList();
+
+    if (!availableQuestions.Any()) return;
+
+    var usedQuestions = new HashSet<int>();
+
+    for (int i = 0; i < 7; i++)
+    {
+        var date = today.AddDays(i);
+        var dateStr = date.ToString("yyyy-MM-dd");
+
+        // 检查当天是否已有安排
+        var checkResult = await _dataSync.QueryAsync(
+            $"SELECT QuestionId FROM DailyQuestions WHERE Date = '{dateStr}' LIMIT 1"
+        );
+
+        // 如果已有安排，记录已使用的题目ID
+        if (!checkResult.Contains("\"rows\":[]"))
+        {
+            var existingId = ParseQuestionIdFromJson(checkResult);
+            if (existingId > 0)
+            {
+                usedQuestions.Add(existingId);
+            }
+            continue;
+        }
+
+        // 没有安排，AI自动选择一道题
+        // 跳过已经使用过的题目
+        var candidate = availableQuestions
+            .Where(q => !usedQuestions.Contains(q.Id))
+            .FirstOrDefault();
+
+        if (candidate == null)
+        {
+            // 如果题目不够用，重置使用记录
+            usedQuestions.Clear();
+            candidate = availableQuestions.FirstOrDefault();
+        }
+
+        if (candidate != null)
+        {
+            usedQuestions.Add(candidate.Id);
+
+            var sql = $@"INSERT INTO DailyQuestions (
+                QuestionId, Date, CreatedAt
+            ) VALUES (
+                {candidate.Id}, '{dateStr}', '{DateTime.Now:yyyy-MM-dd HH:mm:ss}'
+            )";
+
+            await _dataSync.ExecuteSqlAsync(sql);
+            Console.WriteLine($"🤖 AI自动安排 {dateStr}: {candidate.Question}");
+        }
+    }
+}
+
+// ============================================================
+// 辅助：从JSON解析QuestionId
+// ============================================================
+
+private int ParseQuestionIdFromJson(string json)
+{
+    try
+    {
+        using var doc = JsonDocument.Parse(json);
+        var root = doc.RootElement;
+
+        if (root.TryGetProperty("results", out var results) && results.GetArrayLength() > 0)
+        {
+            var firstResult = results[0];
+            if (firstResult.TryGetProperty("response", out var response) &&
+                response.TryGetProperty("result", out var result))
+            {
+                if (result.TryGetProperty("rows", out var rows) && rows.GetArrayLength() > 0)
+                {
+                    var row = rows[0];
+                    var cols = result.GetProperty("cols");
+
+                    for (int i = 0; i < cols.GetArrayLength(); i++)
+                    {
+                        var colName = cols[i].GetProperty("name").GetString();
+                        if (colName == "QuestionId")
+                        {
+                            var element = row[i];
+                            var value = element.ValueKind == JsonValueKind.Object && element.TryGetProperty("value", out var v) ? v : element;
+                            return value.ValueKind == JsonValueKind.Number ? value.GetInt32() : 0;
+                        }
+                    }
+                }
+            }
+        }
+        return 0;
+    }
+    catch { return 0; }
+}
 
         // ============================================================
         // ⭐ 批量发送通知
