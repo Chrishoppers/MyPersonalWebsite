@@ -376,18 +376,18 @@
                     </div>
 
                     @if (item.IsScheduled)
-                    {
-                        <div class="question-preview">
-                            <strong style="color:#fff;">@item.Question</strong>
-                            <br />
-                            <span style="color:#8B5CF6;font-size:0.85rem;">答案：@item.Answer</span>
-                        </div>
-                        <div class="question-meta">
-                            <span class="tag">📂 @item.Category</span>
-                            <span class="tag">⭐ @(new string('⭐', item.Difficulty))</span>
-                            <span class="tag">🆔 #@item.QuestionId</span>
-                        </div>
-                    }
+{
+    <div class="question-preview">
+        <strong style="color:#fff;">@item.Question</strong>
+        <br />
+        <span style="color:#8B5CF6;font-size:0.85rem;">答案：@item.Answer</span>
+    </div>
+    <div class="question-meta">
+        <span class="tag">📂 @item.Category</span>
+        <span class="tag">⭐ @(new string('⭐', item.Difficulty))</span>
+        <span class="tag">🆔 #@item.QuestionId</span>
+    </div>
+}
                     else
                     {
                         <div class="question-preview">
