@@ -1059,5 +1059,48 @@ function deduplicateQuestions() {
         if (btn) { btn.disabled = false; btn.textContent = '🗑️ 去重'; }
     });
 }
+// ============================================================
+// ⭐ 进度条弹窗（通用）
+// ============================================================
+function showProgressModal(title, message) {
+    var overlay = document.createElement('div');
+    overlay.id = 'progressOverlay';
+    overlay.style.cssText = 'position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); z-index: 9999; display: flex; align-items: center; justify-content: center;';
+    overlay.innerHTML = '<div style="background: #1a1a2e; border-radius: 24px; padding: 2rem 2.5rem; border: 1px solid rgba(255,255,255,0.04); max-width: 420px; width: 90%; text-align: center;">' +
+        '<div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🔄</div>' +
+        '<h3 style="color: #fff; font-weight: 600; margin-bottom: 0.3rem;">' + title + '</h3>' +
+        '<p id="progressStatus" style="color: rgba(255,255,255,0.3); font-size: 0.85rem; margin-bottom: 1rem;">' + (message || '处理中...') + '</p>' +
+        '<div style="width: 100%; height: 6px; background: rgba(255,255,255,0.04); border-radius: 10px; overflow: hidden;">' +
+            '<div id="progressBar" style="width: 0%; height: 100%; background: linear-gradient(135deg, #8B5CF6, #EC4899); border-radius: 10px; transition: width 0.3s ease;"></div>' +
+        '</div>' +
+        '<p id="progressText" style="color: rgba(255,255,255,0.15); font-size: 0.75rem; margin-top: 0.5rem;">准备中...</p>' +
+    '</div>';
+    document.body.appendChild(overlay);
+
+    // 模拟进度动画
+    var progress = 0;
+    var interval = setInterval(function() {
+        progress += Math.random() * 8 + 2;
+        if (progress > 90) progress = 90;
+        var bar = document.getElementById('progressBar');
+        var text = document.getElementById('progressText');
+        if (bar) bar.style.width = progress + '%';
+        if (text) text.textContent = '处理中 ' + Math.round(progress) + '%...';
+    }, 300);
+
+    overlay._interval = interval;
+}
+
+function closeProgressModal() {
+    var overlay = document.getElementById('progressOverlay');
+    if (overlay) {
+        var bar = document.getElementById('progressBar');
+        var text = document.getElementById('progressText');
+        if (bar) bar.style.width = '100%';
+        if (text) text.textContent = '✅ 完成！';
+        clearInterval(overlay._interval);
+        setTimeout(function() { overlay.remove(); }, 600);
+    }
+}
     </script>
 }
