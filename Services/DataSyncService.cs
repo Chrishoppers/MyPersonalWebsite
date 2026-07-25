@@ -1332,6 +1332,80 @@ namespace MyPersonalWebsite.Services
                                     break;
                             }
                         }
+private List<BankQuestion> ParseBankQuestionList(string json)
+{
+    var list = new List<BankQuestion>();
+    try
+    {
+        using var doc = JsonDocument.Parse(json);
+        var root = doc.RootElement;
+
+        if (root.TryGetProperty("results", out var results) && results.GetArrayLength() > 0)
+        {
+            var firstResult = results[0];
+            if (firstResult.TryGetProperty("response", out var response) &&
+                response.TryGetProperty("result", out var result))
+            {
+                if (result.TryGetProperty("rows", out var rows) && rows.GetArrayLength() > 0)
+                {
+                    var cols = result.GetProperty("cols");
+
+                    for (int r = 0; r < rows.GetArrayLength(); r++)
+                    {
+                        var row = rows[r];
+                        if (row.ValueKind != JsonValueKind.Array) continue;
+
+                        var q = new BankQuestion();
+                        for (int i = 0; i < cols.GetArrayLength(); i++)
+                        {
+                            var colName = cols[i].GetProperty("name").GetString();
+                            var element = row[i];
+
+                            var value = element;
+                            if (element.ValueKind == JsonValueKind.Object && element.TryGetProperty("value", out var v))
+                            {
+                                value = v;
+                            }
+
+                            if (value.ValueKind == JsonValueKind.Null)
+                            {
+                                continue;
+                            }
+
+                            switch (colName)
+                            {
+                                case "Id":
+                                    q.Id = value.ValueKind == JsonValueKind.Number ? value.GetInt32() : 0;
+                                    break;
+                                case "Question":
+                                    q.Question = value.ValueKind == JsonValueKind.String ? value.GetString() ?? "" : "";
+                                    break;
+                                case "Answer":
+                                    q.Answer = value.ValueKind == JsonValueKind.String ? value.GetString() ?? "" : "";
+                                    break;
+                                case "Pinyin":
+                                    q.Pinyin = value.ValueKind == JsonValueKind.String ? value.GetString() ?? "" : "";
+                                    break;
+                                case "Hint":
+                                    q.Hint = value.ValueKind == JsonValueKind.String ? value.GetString() : null;
+                                    break;
+                                case "Difficulty":
+                                    q.Difficulty = value.ValueKind == JsonValueKind.Number ? value.GetInt32() : 1;
+                                    break;
+                                case "Category":
+                                    q.Category = value.ValueKind == JsonValueKind.String ? value.GetString() ?? "综合" : "综合";
+                                    break;
+                                case "IsActive":
+                                    q.IsActive = value.ValueKind == JsonValueKind.Number ? value.GetInt32() == 1 : true;
+                                    break;
+                                case "UseCount":
+                                    q.UseCount = value.ValueKind == JsonValueKind.Number ? value.GetInt32() : 0;
+                                    break;
+                                case "CreatedAt":
+                                    q.CreatedAt = value.ValueKind == JsonValueKind.String ? DateTime.Parse(value.GetString() ?? "") : DateTime.Now;
+                                    break;
+                            }
+                        }
                         list.Add(q);
                     }
                 }
@@ -1343,13 +1417,7 @@ namespace MyPersonalWebsite.Services
         Console.WriteLine($"⚠️ 解析题库 JSON 失败: {ex.Message}");
     }
     return list;
-        }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"⚠️ 解析题库 JSON 失败: {ex.Message}");
-            }
-            return list;
-        }
+}
 
         private BankQuestion? ParseBankQuestion(string json)
         {
