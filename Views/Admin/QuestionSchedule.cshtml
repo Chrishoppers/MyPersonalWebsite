@@ -300,16 +300,21 @@
 
     <!-- 统计 -->
     <div class="stats-row">
+        @{
+            var total = ViewBag.BankQuestions?.Count ?? 0;
+            var used = ViewBag.BankQuestions?.Count(q => q.UseCount > 0) ?? 0;
+            var available = ViewBag.BankQuestions?.Count(q => q.UseCount == 0 && q.IsActive) ?? 0;
+        }
         <div class="stat-card total">
-            <div class="number">@(ViewBag.BankQuestions?.Count ?? 0)</div>
+            <div class="number">@total</div>
             <div class="label">📝 总题库</div>
         </div>
         <div class="stat-card used">
-            <div class="number">@(ViewBag.BankQuestions?.Count(q => q.UseCount > 0) ?? 0)</div>
+            <div class="number">@used</div>
             <div class="label">✅ 已使用</div>
         </div>
         <div class="stat-card available">
-            <div class="number">@(ViewBag.BankQuestions?.Count(q => q.UseCount == 0 && q.IsActive) ?? 0)</div>
+            <div class="number">@available</div>
             <div class="label">📦 未使用</div>
         </div>
     </div>
@@ -318,11 +323,10 @@
     <div class="schedule-grid">
         @if (schedule != null)
         {
-            @foreach (var item in schedule)
+            foreach (var item in schedule)
             {
-                var isToday = item.Date.Date == today.Value.Date;
-                var isPast = item.Date.Date < today.Value.Date;
-                var isFuture = item.Date.Date > today.Value.Date;
+                var isToday = item.Date.Date == today.Date;
+                var isPast = item.Date.Date < today.Date;
 
                 <div class="schedule-card @(isToday ? "today" : "") @(isPast ? "past" : "")">
                     <div class="card-date">
@@ -375,10 +379,10 @@
                                 <option value="">-- 更换题目 --</option>
                                 @if (bankQuestions != null)
                                 {
-                                    @foreach (var q in bankQuestions.Where(q => q.IsActive).OrderBy(q => q.UseCount))
+                                    foreach (var q in bankQuestions.Where(q => q.IsActive).OrderBy(q => q.UseCount))
                                     {
                                         var isSelected = q.Id == item.QuestionId;
-                                        <option value="@q.Id" @(isSelected ? "selected" : "")>
+                                        <option value="@q.Id" selected="@(isSelected ? "selected" : null)">
                                             @q.Question [@q.Category] @(q.UseCount > 0 ? $"(已用{q.UseCount}次)" : "(未使用)")
                                         </option>
                                     }
@@ -403,21 +407,22 @@
     <script>
         const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
 
-        function showToast(message, type = 'info') {
+        function showToast(message, type) {
+            type = type || 'info';
             const container = document.getElementById('toastContainer');
             const toast = document.createElement('div');
-            toast.className = `toast-msg ${type}`;
+            toast.className = 'toast-msg ' + type;
             toast.textContent = message;
             container.appendChild(toast);
-            setTimeout(() => {
+            setTimeout(function() {
                 toast.style.opacity = '0';
                 toast.style.transform = 'translateX(20px)';
-                setTimeout(() => toast.remove(), 300);
+                setTimeout(function() { toast.remove(); }, 300);
             }, 3000);
         }
 
         function replaceQuestion(date) {
-            const select = document.getElementById(`newQuestion_${date}`);
+            const select = document.getElementById('newQuestion_' + date);
             const newQuestionId = select.value;
 
             if (!newQuestionId) {
@@ -425,7 +430,7 @@
                 return;
             }
 
-            if (!confirm(`确定要将 ${date} 的题目更换为选中的题目吗？`)) return;
+            if (!confirm('确定要将 ' + date + ' 的题目更换为选中的题目吗？')) return;
 
             const btn = select.parentElement.querySelector('.btn-replace');
             btn.disabled = true;
@@ -437,20 +442,20 @@
                     'Content-Type': 'application/x-www-form-urlencoded',
                     'RequestVerificationToken': token
                 },
-                body: `date=${date}&newQuestionId=${newQuestionId}`
+                body: 'date=' + encodeURIComponent(date) + '&newQuestionId=' + newQuestionId
             })
-            .then(r => r.json())
-            .then(data => {
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
                 if (data.success) {
                     showToast('✅ 题目已更换', 'success');
-                    setTimeout(() => location.reload(), 1000);
+                    setTimeout(function() { location.reload(); }, 1000);
                 } else {
                     showToast(data.message || '更换失败', 'error');
                     btn.disabled = false;
                     btn.textContent = '🔄 更换';
                 }
             })
-            .catch(() => {
+            .catch(function() {
                 showToast('网络错误，请重试', 'error');
                 btn.disabled = false;
                 btn.textContent = '🔄 更换';
