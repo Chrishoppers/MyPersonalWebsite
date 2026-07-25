@@ -122,6 +122,8 @@ public class BatchSendRequest
         // ============================================================
         public async Task<IActionResult> Dashboard()
         {
+        var notifications = await _dataSync.GetAllNotificationsAsync();
+ViewBag.NotificationCount = notifications.Count;
             var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
             if (isAdmin != 1)
                 return RedirectToAction("Login", "Auth");
