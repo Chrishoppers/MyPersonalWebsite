@@ -446,6 +446,15 @@
         color: #fff;
     }
 
+    .modal-content .form-actions .btn-danger {
+        background: rgba(220,53,69,0.12);
+        color: #dc3545;
+    }
+
+    .modal-content .form-actions .btn-danger:hover {
+        background: rgba(220,53,69,0.2);
+    }
+
     @@media (max-width: 768px) {
         .admin-header h1 { font-size: 1.3rem; }
         .filter-bar { flex-direction: column; align-items: stretch; }
@@ -461,7 +470,10 @@
         <div>
             <a href="/Admin/Dashboard" class="btn-glass">← 返回后台</a>
             <button class="btn-glass primary" onclick="openAddModal()" style="margin-left:0.5rem;">
-                ➕ 批量添加
+                ➕ 添加题目
+            </button>
+            <button class="btn-glass primary" onclick="openBatchAddModal()" style="margin-left:0.5rem;">
+                📚 批量添加
             </button>
         </div>
     </div>
@@ -549,11 +561,11 @@
                             </td>
                             <td style="font-size:0.8rem;color:rgba(255,255,255,0.3);">@q.UseCount 次</td>
                             <td>
-                                <button class="btn-sm primary" onclick="viewDetail(@q.Id)">👁️</button>
+                                <button class="btn-sm primary" onclick="viewDetail(@q.Id)">👁️ 详情</button>
                                 <button class="btn-sm warning" onclick="toggleStatus(@q.Id, @(q.IsActive ? "false" : "true"))">
-                                    @(q.IsActive ? "⛔" : "✅")
+                                    @(q.IsActive ? "⛔ 禁用" : "✅ 启用")
                                 </button>
-                                <button class="btn-sm danger" onclick="deleteQuestion(@q.Id)">🗑️</button>
+                                <button class="btn-sm danger" onclick="deleteQuestion(@q.Id)">🗑️ 删除</button>
                             </td>
                         </tr>
                     }
@@ -562,7 +574,11 @@
                 {
                     <tr>
                         <td colspan="8">
-                            <div class="empty-state">📭 题库为空，请添加题目</div>
+                            <div class="empty-state">
+                                <p style="font-size:1.5rem;margin-bottom:0.5rem;">📭</p>
+                                <p>题库为空</p>
+                                <p style="color:rgba(255,255,255,0.05);font-size:0.8rem;">点击右上角「添加题目」开始创建</p>
+                            </div>
                         </td>
                     </tr>
                 }
@@ -572,7 +588,92 @@
 
 </div>
 
-<!-- 详情弹窗 -->
+<!-- ===== 弹窗 ===== -->
+
+<!-- 1. 单个添加题目弹窗 -->
+<div class="modal-overlay" id="addSingleModal">
+    <div class="modal-content">
+        <button class="close-btn" onclick="closeModal('addSingleModal')">✕</button>
+        <h3>➕ 添加题目</h3>
+        <p style="color:rgba(255,255,255,0.2);font-size:0.85rem;margin-bottom:1rem;">
+            添加一道新题目到题库，所有题目会同步到 Turso 数据库
+        </p>
+
+        <div class="form-group">
+            <label>📝 题目 <span style="color:#dc3545;">*</span></label>
+            <input type="text" id="singleQuestion" placeholder="输入题目内容" />
+        </div>
+
+        <div class="form-group">
+            <label>✅ 答案 <span style="color:#dc3545;">*</span></label>
+            <input type="text" id="singleAnswer" placeholder="输入正确答案" />
+        </div>
+
+        <div class="form-group">
+            <label>🔤 拼音（用于语音识别）</label>
+            <input type="text" id="singlePinyin" placeholder="如：zhongguo" />
+            <div style="color:rgba(255,255,255,0.1);font-size:0.7rem;margin-top:0.2rem;">💡 建议填写，用于语音匹配</div>
+        </div>
+
+        <div class="form-group">
+            <label>💡 提示</label>
+            <input type="text" id="singleHint" placeholder="可选提示信息" />
+        </div>
+
+        <div class="form-group" style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+            <div>
+                <label>⭐ 难度</label>
+                <select id="singleDifficulty">
+                    <option value="1">⭐ 简单</option>
+                    <option value="2">⭐⭐ 适中</option>
+                    <option value="3" selected>⭐⭐⭐ 中等</option>
+                    <option value="4">⭐⭐⭐⭐ 困难</option>
+                    <option value="5">⭐⭐⭐⭐⭐ 极难</option>
+                </select>
+            </div>
+            <div>
+                <label>📂 类别</label>
+                <select id="singleCategory">
+                    <option value="生活">生活</option>
+                    <option value="历史">历史</option>
+                    <option value="文学">文学</option>
+                    <option value="科技">科技</option>
+                    <option value="地理">地理</option>
+                    <option value="综合" selected>综合</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button class="btn-submit" onclick="addSingleQuestion()">✅ 添加题目</button>
+            <button class="btn-cancel" onclick="closeModal('addSingleModal')">取消</button>
+        </div>
+    </div>
+</div>
+
+<!-- 2. 批量添加题目弹窗 -->
+<div class="modal-overlay" id="addBatchModal">
+    <div class="modal-content">
+        <button class="close-btn" onclick="closeModal('addBatchModal')">✕</button>
+        <h3>📚 批量添加题目</h3>
+        <p style="color:rgba(255,255,255,0.2);font-size:0.85rem;margin-bottom:1rem;">
+            一行一题，格式：<br />
+            <code style="color:rgba(255,255,255,0.3);font-size:0.75rem;">题目 | 答案 | 拼音 | 提示 | 难度(1-5) | 类别</code>
+        </p>
+
+        <div class="form-group">
+            <label>📝 题目列表</label>
+            <textarea id="batchQuestions" rows="10" placeholder="示例：&#10;世界上最高的山峰是？ | 珠穆朗玛峰 | zhumulangmafeng | 海拔8848米 | 1 | 地理&#10;中国最长的河流是？ | 长江 | changjiang | 发源于青藏高原 | 1 | 地理"></textarea>
+        </div>
+
+        <div class="form-actions">
+            <button class="btn-submit" onclick="batchAddQuestions()">📤 批量提交</button>
+            <button class="btn-cancel" onclick="closeModal('addBatchModal')">取消</button>
+        </div>
+    </div>
+</div>
+
+<!-- 3. 详情弹窗 -->
 <div class="modal-overlay" id="detailModal">
     <div class="modal-content">
         <button class="close-btn" onclick="closeModal('detailModal')">✕</button>
@@ -588,27 +689,6 @@
             <div class="detail-row"><span class="label">状态</span><span class="value" id="dStatus">-</span></div>
             <div class="detail-row"><span class="label">使用次数</span><span class="value" id="dUseCount">-</span></div>
             <div class="detail-row"><span class="label">创建时间</span><span class="value" id="dCreatedAt">-</span></div>
-        </div>
-    </div>
-</div>
-
-<!-- 批量添加弹窗 -->
-<div class="modal-overlay" id="addModal">
-    <div class="modal-content">
-        <button class="close-btn" onclick="closeModal('addModal')">✕</button>
-        <h3>➕ 批量添加题目</h3>
-        <p style="color:rgba(255,255,255,0.2);font-size:0.85rem;margin-bottom:1rem;">
-            一行一题，格式：题目 | 答案 | 拼音 | 提示 | 难度(1-5) | 类别
-        </p>
-
-        <div class="form-group">
-            <label>📝 题目列表</label>
-            <textarea id="batchQuestions" rows="8" placeholder="示例：&#10;世界上最高的山峰是？ | 珠穆朗玛峰 | zhumulangmafeng | 海拔8848米 | 1 | 地理&#10;中国最长的河流是？ | 长江 | changjiang | 发源于青藏高原 | 1 | 地理"></textarea>
-        </div>
-
-        <div class="form-actions">
-            <button class="btn-submit" onclick="batchAddQuestions()">📤 批量提交</button>
-            <button class="btn-cancel" onclick="closeModal('addModal')">取消</button>
         </div>
     </div>
 </div>
@@ -647,6 +727,19 @@
             document.getElementById(id).classList.remove('active');
         }
 
+        function openAddModal() {
+            document.getElementById('singleQuestion').value = '';
+            document.getElementById('singleAnswer').value = '';
+            document.getElementById('singlePinyin').value = '';
+            document.getElementById('singleHint').value = '';
+            openModal('addSingleModal');
+        }
+
+        function openBatchAddModal() {
+            document.getElementById('batchQuestions').value = '';
+            openModal('addBatchModal');
+        }
+
         // 点击背景关闭
         document.querySelectorAll('.modal-overlay').forEach(el => {
             el.addEventListener('click', function(e) {
@@ -662,6 +755,98 @@
                 document.querySelectorAll('.modal-overlay.active').forEach(el => el.classList.remove('active'));
             }
         });
+
+        // ============================================================
+        // 单个添加
+        // ============================================================
+        function addSingleQuestion() {
+            const question = document.getElementById('singleQuestion').value.trim();
+            const answer = document.getElementById('singleAnswer').value.trim();
+            const pinyin = document.getElementById('singlePinyin').value.trim();
+            const hint = document.getElementById('singleHint').value.trim();
+            const difficulty = document.getElementById('singleDifficulty').value;
+            const category = document.getElementById('singleCategory').value;
+
+            if (!question) { showToast('请输入题目', 'error'); return; }
+            if (!answer) { showToast('请输入答案', 'error'); return; }
+
+            fetch('/Admin/AddSingleQuestion', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': token
+                },
+                body: JSON.stringify({
+                    question: question,
+                    answer: answer,
+                    pinyin: pinyin,
+                    hint: hint,
+                    difficulty: parseInt(difficulty),
+                    category: category
+                })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    showToast('✅ 添加成功', 'success');
+                    closeModal('addSingleModal');
+                    setTimeout(() => location.reload(), 800);
+                } else {
+                    showToast(data.message || '添加失败', 'error');
+                }
+            })
+            .catch(() => showToast('操作失败，请重试', 'error'));
+        }
+
+        // ============================================================
+        // 批量添加
+        // ============================================================
+        function batchAddQuestions() {
+            const text = document.getElementById('batchQuestions').value.trim();
+            if (!text) { showToast('请输入题目', 'error'); return; }
+
+            const lines = text.split('\n').filter(l => l.trim());
+            if (lines.length === 0) { showToast('请输入至少一行题目', 'error'); return; }
+
+            const questions = [];
+            for (let line of lines) {
+                const parts = line.split('|').map(s => s.trim());
+                if (parts.length < 6) {
+                    showToast(`格式错误：${line}`, 'error');
+                    return;
+                }
+                questions.push({
+                    question: parts[0],
+                    answer: parts[1],
+                    pinyin: parts[2] || '',
+                    hint: parts[3] || '',
+                    difficulty: parseInt(parts[4]) || 1,
+                    category: parts[5] || '综合'
+                });
+            }
+
+            if (!confirm(`确定要添加 ${questions.length} 道题吗？`)) return;
+
+            fetch('/Admin/BatchAddQuestions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': token
+                },
+                body: JSON.stringify({ questions: questions })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    showToast(`✅ 成功添加 ${data.count} 道题`, 'success');
+                    closeModal('addBatchModal');
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    showToast(data.message || '添加失败', 'error');
+                }
+            })
+            .catch(() => showToast('操作失败，请重试', 'error'));
+        }
 
         // ============================================================
         // 查看详情
@@ -738,67 +923,6 @@
                     setTimeout(() => location.reload(), 800);
                 } else {
                     showToast(data.message || '删除失败', 'error');
-                }
-            })
-            .catch(() => showToast('操作失败，请重试', 'error'));
-        }
-
-        // ============================================================
-        // 批量添加
-        // ============================================================
-        function openAddModal() {
-            document.getElementById('batchQuestions').value = '';
-            openModal('addModal');
-        }
-
-        function batchAddQuestions() {
-            const text = document.getElementById('batchQuestions').value.trim();
-            if (!text) {
-                showToast('请输入题目', 'error');
-                return;
-            }
-
-            const lines = text.split('\n').filter(l => l.trim());
-            if (lines.length === 0) {
-                showToast('请输入至少一行题目', 'error');
-                return;
-            }
-
-            const questions = [];
-            for (let line of lines) {
-                const parts = line.split('|').map(s => s.trim());
-                if (parts.length < 6) {
-                    showToast(`格式错误：${line}`, 'error');
-                    return;
-                }
-                questions.push({
-                    question: parts[0],
-                    answer: parts[1],
-                    pinyin: parts[2] || '',
-                    hint: parts[3] || '',
-                    difficulty: parseInt(parts[4]) || 1,
-                    category: parts[5] || '综合'
-                });
-            }
-
-            if (!confirm(`确定要添加 ${questions.length} 道题吗？`)) return;
-
-            fetch('/Admin/BatchAddQuestions', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'RequestVerificationToken': token
-                },
-                body: JSON.stringify({ questions: questions })
-            })
-            .then(r => r.json())
-            .then(data => {
-                if (data.success) {
-                    showToast(`✅ 成功添加 ${data.count} 道题`, 'success');
-                    closeModal('addModal');
-                    setTimeout(() => location.reload(), 1000);
-                } else {
-                    showToast(data.message || '添加失败', 'error');
                 }
             })
             .catch(() => showToast('操作失败，请重试', 'error'));
