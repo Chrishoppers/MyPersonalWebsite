@@ -115,6 +115,28 @@ async Task EnsureTursoTablesAsync(DataSyncService dataSync)
 
     var tables = new Dictionary<string, string>
     {
+        // 在 tables 字典中添加
+{ "GameSuggestions", @"
+    CREATE TABLE IF NOT EXISTS GameSuggestions (
+        Id INTEGER PRIMARY KEY,
+        UserId INTEGER NOT NULL,
+        GameName TEXT NOT NULL,
+        Description TEXT,
+        Votes INTEGER DEFAULT 0,
+        Status TEXT DEFAULT 'pending',
+        CreatedAt TEXT,
+        UpdatedAt TEXT
+    )"
+},
+{ "GameSuggestionVotes", @"
+    CREATE TABLE IF NOT EXISTS GameSuggestionVotes (
+        Id INTEGER PRIMARY KEY,
+        SuggestionId INTEGER NOT NULL,
+        UserId INTEGER NOT NULL,
+        VotedAt TEXT,
+        UNIQUE(SuggestionId, UserId)
+    )"
+}
         { "Users", @"
             CREATE TABLE IF NOT EXISTS Users (
                 Id INTEGER PRIMARY KEY,
