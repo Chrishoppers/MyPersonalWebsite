@@ -445,12 +445,47 @@
                         {
                             <div class="admin-actions">
                                 <select onchange="updateStatus(@item.Suggestion.Id, this.value)">
-                                    <option value="pending" @(item.Suggestion.Status == "pending" ? "selected" : "")>⏳ 待审核</option>
-                                    <option value="approved" @(item.Suggestion.Status == "approved" ? "selected" : "")>✅ 已采纳</option>
-                                    <option value="developing" @(item.Suggestion.Status == "developing" ? "selected" : "")>🚧 开发中</option>
-                                    <option value="completed" @(item.Suggestion.Status == "completed" ? "selected" : "")>🎉 已完成</option>
-                                    <option value="rejected" @(item.Suggestion.Status == "rejected" ? "selected" : "")>❌ 已拒绝</option>
-                                </select>
+    @if (item.Suggestion.Status == "pending")
+    {
+        <option value="pending" selected>⏳ 待审核</option>
+    }
+    else
+    {
+        <option value="pending">⏳ 待审核</option>
+    }
+    @if (item.Suggestion.Status == "approved")
+    {
+        <option value="approved" selected>✅ 已采纳</option>
+    }
+    else
+    {
+        <option value="approved">✅ 已采纳</option>
+    }
+    @if (item.Suggestion.Status == "developing")
+    {
+        <option value="developing" selected>🚧 开发中</option>
+    }
+    else
+    {
+        <option value="developing">🚧 开发中</option>
+    }
+    @if (item.Suggestion.Status == "completed")
+    {
+        <option value="completed" selected>🎉 已完成</option>
+    }
+    else
+    {
+        <option value="completed">🎉 已完成</option>
+    }
+    @if (item.Suggestion.Status == "rejected")
+    {
+        <option value="rejected" selected>❌ 已拒绝</option>
+    }
+    else
+    {
+        <option value="rejected">❌ 已拒绝</option>
+    }
+</select>
                                 <button class="btn-sm danger" onclick="deleteSuggestion(@item.Suggestion.Id)">🗑️</button>
                             </div>
                         }
