@@ -68,6 +68,17 @@
         box-shadow: 0 8px 32px rgba(108,60,225,0.2);
     }
 
+    .btn-glass.ai {
+        background: linear-gradient(135deg, #10B981, #34D399);
+        border: none;
+        color: #fff;
+    }
+
+    .btn-glass.ai:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 32px rgba(16,185,129,0.2);
+    }
+
     .schedule-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -295,25 +306,18 @@
         <div>
             <a href="/Admin/Dashboard" class="btn-glass">← 返回后台</a>
             <a href="/Admin/QuestionBank" class="btn-glass primary" style="margin-left:0.5rem;">📚 题库管理</a>
+            <button class="btn-glass ai" onclick="autoScheduleAll()" style="margin-left:0.5rem;">
+                🤖 AI一键安排
+            </button>
         </div>
     </div>
 
     <!-- 统计 -->
     <div class="stats-row">
         @{
-            var total = 0;
-            var used = 0;
-            var available = 0;
-            if (ViewBag.BankQuestions != null)
-            {
-                var list = ViewBag.BankQuestions as List<MyPersonalWebsite.Models.BankQuestion>;
-                if (list != null)
-                {
-                    total = list.Count;
-                    used = list.Count(q => q.UseCount > 0);
-                    available = list.Count(q => q.UseCount == 0 && q.IsActive);
-                }
-            }
+            var total = ViewBag.BankQuestions?.Count ?? 0;
+            var used = ViewBag.BankQuestions?.Count(q => q.UseCount > 0) ?? 0;
+            var available = ViewBag.BankQuestions?.Count(q => q.UseCount == 0 && q.IsActive) ?? 0;
         }
         <div class="stat-card total">
             <div class="number">@total</div>
@@ -353,7 +357,7 @@
                             else if (isPast)
                             {
                                 <span class="badge badge-past">✅ 已过</span>
-                            }
+                        }
                             else
                             {
                                 <span class="badge badge-future">📅 未来</span>
@@ -394,14 +398,14 @@
                                         if (!q.IsActive) continue;
                                         var isSelected = q.Id == item.QuestionId;
                                         var usedText = q.UseCount > 0 ? $"(已用{q.UseCount}次)" : "(未使用)";
-                                        @if (isSelected)
-{
-    <option value="@q.Id" selected>@q.Question [@q.Category] @usedText</option>
-}
-else
-{
-    <option value="@q.Id">@q.Question [@q.Category] @usedText</option>
-}
+                                        if (isSelected)
+                                        {
+                                            <option value="@q.Id" selected>@q.Question [@q.Category] @usedText</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="@q.Id">@q.Question [@q.Category] @usedText</option>
+                                        }
                                     }
                                 }
                             </select>
@@ -437,7 +441,9 @@ else
                 setTimeout(function() { toast.remove(); }, 300);
             }, 3000);
         }
-
+ // ============================================================
+        // 更换题目
+        // ============================================================
         function replaceQuestion(date) {
             var select = document.getElementById('newQuestion_' + date);
             var newQuestionId = select.value;
@@ -476,6 +482,41 @@ else
                 showToast('网络错误，请重试', 'error');
                 btn.disabled = false;
                 btn.textContent = '🔄 更换';
+            });
+        }
+
+        // ============================================================
+        // 🤖 AI一键安排
+        // ============================================================
+        function autoScheduleAll() {
+            if (!confirm('确定要清空未来7天的所有安排，并由AI自动重新安排吗？')) return;
+
+            var btn = document.querySelector('.btn-glass.ai');
+            btn.disabled = true;
+            btn.textContent = '⏳ 安排中...';
+
+            fetch('/Admin/AutoScheduleAll', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'RequestVerificationToken': token
+                }
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    showToast('✅ ' + data.message, 'success');
+                    setTimeout(function() { location.reload(); }, 1000);
+                } else {
+                    showToast(data.message || '安排失败', 'error');
+                    btn.disabled = false;
+                    btn.textContent = '🤖 AI一键安排';
+                }
+            })
+            .catch(function() {
+                showToast('网络错误，请重试', 'error');
+                btn.disabled = false;
+                btn.textContent = '🤖 AI一键安排';
             });
         }
     </script>
