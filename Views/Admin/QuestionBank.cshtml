@@ -1024,5 +1024,40 @@
         document.getElementById('searchInput').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') applyFilters();
         });
+// ============================================================
+// 🗑️ 去重（带进度条）
+// ============================================================
+function deduplicateQuestions() {
+    if (!confirm('⚠️ 确定要删除题库中所有重复的题目吗？\n（系统会根据「题目+答案」判断是否重复）')) return;
+
+    // 显示进度条
+    showProgressModal('正在去重...', '检查重复题目中...');
+
+    var btn = document.querySelector('[onclick="deduplicateQuestions()"]');
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ 处理中...'; }
+
+    fetch('/Admin/DeduplicateQuestions', {
+        method: 'POST',
+        headers: {
+            'RequestVerificationToken': token
+        }
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        closeProgressModal();
+        if (data.success) {
+            showToast(data.message, 'success');
+            setTimeout(function() { location.reload(); }, 1500);
+        } else {
+            showToast(data.message || '去重失败', 'error');
+            if (btn) { btn.disabled = false; btn.textContent = '🗑️ 去重'; }
+        }
+    })
+    .catch(function() {
+        closeProgressModal();
+        showToast('网络错误，请重试', 'error');
+        if (btn) { btn.disabled = false; btn.textContent = '🗑️ 去重'; }
+    });
+}
     </script>
 }
