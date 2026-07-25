@@ -410,6 +410,37 @@ namespace MyPersonalWebsite.Controllers
                 return Json(new { success = false, message = "申请失败，请重试" });
             }
         }
+        // ============================================================
+// 标记通知为已读
+// ============================================================
+[HttpPost]
+public async Task<IActionResult> MarkNotificationRead(int id)
+{
+    var userId = HttpContext.Session.GetInt32("UserId");
+    if (!userId.HasValue)
+        return Json(new { success = false, message = "请先登录" });
+
+    await _dataSync.MarkNotificationAsReadAsync(id);
+    return Json(new { success = true });
+}
+
+// ============================================================
+// 全部标记为已读
+// ============================================================
+[HttpPost]
+public async Task<IActionResult> MarkAllNotificationsRead()
+{
+    var userId = HttpContext.Session.GetInt32("UserId");
+    if (!userId.HasValue)
+        return Json(new { success = false, message = "请先登录" });
+
+    var notifications = await _dataSync.GetNotificationsByUserIdAsync(userId.Value);
+    foreach (var n in notifications.Where(n => !n.IsRead))
+    {
+        await _dataSync.MarkNotificationAsReadAsync(n.Id);
+    }
+    return Json(new { success = true });
+}
 
         public async Task<IActionResult> QueryContact(string code)
         {
