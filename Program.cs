@@ -110,9 +110,46 @@ app.Run();
 async Task EnsureTursoTablesAsync(DataSyncService dataSync)
 {
     Console.WriteLine("📦 检查 Turso 数据表...");
-
     var tables = new Dictionary<string, string>
     {
+         // 在 tables 字典中添加
+{ "DailyQuestions", @"
+    CREATE TABLE IF NOT EXISTS DailyQuestions (
+        Id INTEGER PRIMARY KEY,
+        Question TEXT NOT NULL,
+        Answer TEXT NOT NULL,
+        Pinyin TEXT NOT NULL,
+        Hint TEXT,
+        Difficulty INTEGER DEFAULT 1,
+        Date TEXT UNIQUE NOT NULL,
+        CreatedAt TEXT
+    )"
+},
+{ "UserDailyAnswers", @"
+    CREATE TABLE IF NOT EXISTS UserDailyAnswers (
+        Id INTEGER PRIMARY KEY,
+        UserId INTEGER NOT NULL,
+        QuestionId INTEGER NOT NULL,
+        Answer TEXT,
+        IsCorrect INTEGER DEFAULT 0,
+        AnswerDate TEXT NOT NULL,
+        UNIQUE(UserId, AnswerDate)
+    )"
+},
+{ "UserGameStats", @"
+    CREATE TABLE IF NOT EXISTS UserGameStats (
+        Id INTEGER PRIMARY KEY,
+        UserId INTEGER NOT NULL UNIQUE,
+        TotalPoints INTEGER DEFAULT 0,
+        StreakDays INTEGER DEFAULT 0,       -- 连续答对天数
+        MaxStreakDays INTEGER DEFAULT 0,    -- 最高连续天数
+        TotalCorrect INTEGER DEFAULT 0,
+        TotalAnswered INTEGER DEFAULT 0,
+        LastAnswerDate TEXT,
+        UpdatedAt TEXT
+    )"
+}
+
         { "Users", @"
             CREATE TABLE IF NOT EXISTS Users (
                 Id INTEGER PRIMARY KEY,
