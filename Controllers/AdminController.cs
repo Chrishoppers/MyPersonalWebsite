@@ -10,7 +10,6 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using System.Text.Json;
 
-
 namespace MyPersonalWebsite.Controllers
 {
     public class AdminController : Controller
@@ -23,517 +22,105 @@ namespace MyPersonalWebsite.Controllers
             _dataSync = dataSync;
             _emailService = emailService;
         }
-       
+
         // ============================================================
-// 📅 未来题目安排
-// ============================================================
+        // ⭐ 批量发送通知
+        // ============================================================
 
-[HttpGet]
-public async Task<IActionResult> QuestionSchedule()
-{
-    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-    if (isAdmin != 1)
-        return RedirectToAction("Login", "Auth");
-
-    var schedule = new List<DailyScheduleItem>();
-    var today = DateTime.Today;
-
-    // 获取未来7天的题目安排
-    for (int i = 0; i < 7; i++)
-    {
-        var date = today.AddDays(i);
-        var dateStr = date.ToString("yyyy-MM-dd");
-
-        // 查询当天是否有题目
-        var result = await _dataSync.QueryAsync($@"
-            SELECT dq.Id, dq.QuestionId, dq.Date,
-                   b.Question, b.Answer, b.Category, b.Difficulty
-            FROM DailyQuestions dq
-            JOIN DailyQuestionBank b ON dq.QuestionId = b.Id
-            WHERE dq.Date = '{dateStr}'
-            LIMIT 1
-        ");
-
-        var item = new DailyScheduleItem
+        [HttpPost]
+        public async Task<IActionResult> BatchSendNotification([FromBody] BatchSendRequest request)
         {
-            Date = date,
-            DateStr = dateStr,
-            IsToday = date == today,
-            IsPast = date < today
-        };
+            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+            if (isAdmin != 1)
+                return Json(new { success = false, message = "权限不足" });
 
-        // 解析题目
-        var question = ParseDailyQuestionFromJson(result);
-        if (question != null)
-        {
-            item.QuestionId = question.QuestionId ?? 0;
-            item.Question = question.Question;
-            item.Answer = question.Answer;
-            item.Category = question.Category;
-            item.Difficulty = question.Difficulty;
-            item.IsScheduled = true;
-        }
-        else
-        {
-            item.IsScheduled = false;
-        }
+            if (request.UserIds == null || !request.UserIds.Any())
+                return Json(new { success = false, message = "请选择至少一位用户" });
 
-        schedule.Add(item);
-    }
+            int successCount = 0;
+            int failCount = 0;
+            var errors = new List<string>();
 
-    // 获取所有可用题库（用于更换题目）
-    var bankQuestions = await _dataSync.GetAllBankQuestionsAsync();
-
-    ViewBag.Schedule = schedule;
-    ViewBag.BankQuestions = bankQuestions;
-    ViewBag.Today = today;
-
-    return View();
-}
-
-// ============================================================
-// 🗓️ 更换某天的题目
-// ============================================================
-
-[HttpPost]
-public async Task<IActionResult> ReplaceQuestion(string date, int newQuestionId)
-{
-    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-    if (isAdmin != 1)
-        return Json(new { success = false, message = "权限不足" });
-
-    if (string.IsNullOrEmpty(date) || newQuestionId <= 0)
-        return Json(new { success = false, message = "参数错误" });
-
-    try
-    {
-        // 1. 删除当天的旧题目记录
-        await _dataSync.ExecuteSqlAsync($"DELETE FROM DailyQuestions WHERE Date = '{date}'");
-
-        // 2. 插入新题目
-        var sql = $@"INSERT INTO DailyQuestions (
-            QuestionId, Date, CreatedAt
-        ) VALUES (
-            {newQuestionId}, '{date}', '{DateTime.Now:yyyy-MM-dd HH:mm:ss}'
-        )";
-
-        await _dataSync.ExecuteSqlAsync(sql);
-
-        // 3. 更新使用次数
-        await _dataSync.ExecuteSqlAsync(
-            $"UPDATE DailyQuestionBank SET UseCount = UseCount + 1, UsedAt = '{DateTime.Now:yyyy-MM-dd HH:mm:ss}' WHERE Id = {newQuestionId}"
-        );
-
-        return Json(new { success = true, message = "✅ 题目已更换" });
-    }
-    catch (Exception ex)
-    {
-        return Json(new { success = false, message = $"更换失败: {ex.Message}" });
-    }
-}
- // ============================================================
-// 📋 解析每日题目（简化版）
-// ============================================================
-
-private DailyQuestion? ParseDailyQuestionFromJson(string json)
-{
-    try
-    {
-        using var doc = JsonDocument.Parse(json);
-        var root = doc.RootElement;
-
-        if (root.TryGetProperty("results", out var results) && results.GetArrayLength() > 0)
-        {
-            var firstResult = results[0];
-            if (firstResult.TryGetProperty("response", out var response) &&
-                response.TryGetProperty("result", out var result))
+            foreach (var userId in request.UserIds)
             {
-                if (result.TryGetProperty("rows", out var rows) && rows.GetArrayLength() > 0)
+                try
                 {
-                    var row = rows[0];
-                    var cols = result.GetProperty("cols");
-
-                    var q = new DailyQuestion();
-                    for (int i = 0; i < cols.GetArrayLength(); i++)
+                    var user = await _dataSync.GetUserByIdAsync(userId);
+                    if (user == null || user.IsDeleted)
                     {
-                        var colName = cols[i].GetProperty("name").GetString();
-                        var element = row[i];
-                        var value = element.ValueKind == JsonValueKind.Object && element.TryGetProperty("value", out var v) ? v : element;
-
-                        switch (colName)
-                        {
-                            case "Id": q.Id = value.ValueKind == JsonValueKind.Number ? value.GetInt32() : 0; break;
-                            case "QuestionId": q.QuestionId = value.ValueKind == JsonValueKind.Number ? value.GetInt32() : 0; break;
-                            case "Date": q.Date = value.ValueKind == JsonValueKind.String ? DateTime.Parse(value.GetString() ?? "") : DateTime.Now; break;
-                            case "Question": q.Question = value.ValueKind == JsonValueKind.String ? value.GetString() ?? "" : ""; break;
-                            case "Answer": q.Answer = value.ValueKind == JsonValueKind.String ? value.GetString() ?? "" : ""; break;
-                            case "Category": q.Category = value.ValueKind == JsonValueKind.String ? value.GetString() ?? "综合" : "综合"; break;
-                            case "Difficulty": q.Difficulty = value.ValueKind == JsonValueKind.Number ? value.GetInt32() : 1; break;
-                        }
+                        failCount++;
+                        continue;
                     }
-                    return q;
+
+                    var loginToken = await _dataSync.CreateLoginTokenAsync(userId);
+
+                    var emailHtml = $@"
+                        <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #2a2a3e; border-radius: 16px; background: #0a0a0f; color: #e0e0e0;'>
+                            <h2 style='color: #8B5CF6;'>📬 管理员通知</h2>
+                            <p>您好 <strong>{user.Username}</strong>！</p>
+                            <div style='background: #1a1a2e; padding: 15px; border-radius: 8px; margin: 10px 0; border: 1px solid #2a2a3e;'>
+                                <p><strong>📌 标题：</strong>{request.Title}</p>
+                                <p><strong>📝 内容：</strong></p>
+                                <p style='color: #ccc;'>{request.Message}</p>
+                            </div>
+                            <div style='margin: 20px 0; text-align: center;'>
+                                <a href='https://chris-hopper.org/Auth/AutoLogin?token={loginToken}' style='display: inline-block; padding: 14px 48px; background: linear-gradient(135deg, #8B5CF6, #EC4899); color: white; text-decoration: none; border-radius: 40px; font-weight: 600; font-size: 1rem; box-shadow: 0 4px 24px rgba(108,60,225,0.2);'>
+                                    👁️ 查看详情
+                                </a>
+                                <p style='color: rgba(255,255,255,0.12); font-size: 0.7rem; margin-top: 0.3rem;'>🔒 点击后自动登录，无需输入密码</p>
+                            </div>
+                            <hr style='border: none; border-top: 1px solid #2a2a3e;'>
+                            <p style='color: #555; font-size: 12px;'>💌 系统自动发送，不用回复。</p>
+                        </div>
+                    ";
+
+                    await _emailService.SendEmailAsync(user.Email, $"📬 {request.Title} - Chris hopper 个人网站", emailHtml);
+
+                    var notification = new Notification
+                    {
+                        UserId = userId,
+                        Title = request.Title,
+                        Message = request.Message,
+                        Type = request.Type,
+                        IsRead = false,
+                        CreatedAt = DateTime.Now
+                    };
+                    await _dataSync.AddNotificationAsync(notification);
+
+                    successCount++;
+                }
+                catch (Exception ex)
+                {
+                    failCount++;
+                    errors.Add($"用户 {userId}: {ex.Message}");
                 }
             }
+
+            return Json(new
+            {
+                success = true,
+                message = $"✅ 已发送给 {successCount} 位用户{(failCount > 0 ? $"，{failCount} 位失败" : "")}",
+                details = failCount > 0 ? string.Join("; ", errors) : null
+            });
         }
-        return null;
-    }
-    catch { return null; }
-}
 
-// ============================================================
-// 辅助类
-// ============================================================
-
-public class DailyScheduleItem
-{
-    public DateTime Date { get; set; }
-    public string DateStr { get; set; } = string.Empty;
-    public bool IsToday { get; set; }
-    public bool IsPast { get; set; }
-    public bool IsScheduled { get; set; }
-    public int QuestionId { get; set; }
-    public string Question { get; set; } = string.Empty;
-    public string Answer { get; set; } = string.Empty;
-    public string Category { get; set; } = "综合";
-    public int Difficulty { get; set; } = 1;
-}
         // ============================================================
-// ⭐ 批量发送通知
-// ============================================================
+        // BatchSendRequest 模型
+        // ============================================================
 
-[HttpPost]
-public async Task<IActionResult> BatchSendNotification([FromBody] BatchSendRequest request)
-{
-    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-    if (isAdmin != 1)
-        return Json(new { success = false, message = "权限不足" });
-
-    if (request.UserIds == null || !request.UserIds.Any())
-        return Json(new { success = false, message = "请选择至少一位用户" });
-
-    int successCount = 0;
-    int failCount = 0;
-    var errors = new List<string>();
-
-    foreach (var userId in request.UserIds)
-    {
-        try
+        public class BatchSendRequest
         {
-            var user = await _dataSync.GetUserByIdAsync(userId);
-            if (user == null || user.IsDeleted)
-            {
-                failCount++;
-                continue;
-            }
-
-            // 生成登录Token
-            var loginToken = await _dataSync.CreateLoginTokenAsync(userId);
-
-            // 发送邮件
-            var emailHtml = $@"
-                <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #2a2a3e; border-radius: 16px; background: #0a0a0f; color: #e0e0e0;'>
-                    <h2 style='color: #8B5CF6;'>📬 管理员通知</h2>
-                    <p>您好 <strong>{user.Username}</strong>！</p>
-                    <div style='background: #1a1a2e; padding: 15px; border-radius: 8px; margin: 10px 0; border: 1px solid #2a2a3e;'>
-                        <p><strong>📌 标题：</strong>{request.Title}</p>
-                        <p><strong>📝 内容：</strong></p>
-                        <p style='color: #ccc;'>{request.Message}</p>
-                    </div>
-                    <div style='margin: 20px 0; text-align: center;'>
-                        <a href='https://chris-hopper.org/Auth/AutoLogin?token={loginToken}' style='display: inline-block; padding: 14px 48px; background: linear-gradient(135deg, #8B5CF6, #EC4899); color: white; text-decoration: none; border-radius: 40px; font-weight: 600; font-size: 1rem; box-shadow: 0 4px 24px rgba(108,60,225,0.2);'>
-                            👁️ 查看详情
-                        </a>
-                        <p style='color: rgba(255,255,255,0.12); font-size: 0.7rem; margin-top: 0.3rem;'>🔒 点击后自动登录，无需输入密码</p>
-                    </div>
-                    <hr style='border: none; border-top: 1px solid #2a2a3e;'>
-                    <p style='color: #555; font-size: 12px;'>💌 系统自动发送，不用回复。</p>
-                </div>
-            ";
-
-            await _emailService.SendEmailAsync(user.Email, $"📬 {request.Title} - Chris hopper 个人网站", emailHtml);
-
-            // 保存通知到数据库
-            var notification = new Notification
-            {
-                UserId = userId,
-                Title = request.Title,
-                Message = request.Message,
-                Type = request.Type,
-                IsRead = false,
-                CreatedAt = DateTime.Now
-            };
-            await _dataSync.AddNotificationAsync(notification);
-
-            successCount++;
+            public List<int> UserIds { get; set; } = new List<int>();
+            public string Title { get; set; } = string.Empty;
+            public string Message { get; set; } = string.Empty;
+            public string Type { get; set; } = "info";
         }
-        catch (Exception ex)
-        {
-            failCount++;
-            errors.Add($"用户 {userId}: {ex.Message}");
-        }
-    }
-
-    return Json(new
-    {
-        success = true,
-        message = $"✅ 已发送给 {successCount} 位用户{(failCount > 0 ? $"，{failCount} 位失败" : "")}",
-        details = failCount > 0 ? string.Join("; ", errors) : null
-    });
-}
-
-// ============================================================
-// BatchSendRequest 模型
-// ============================================================
-
-public class BatchSendRequest
-{
-    public List<int> UserIds { get; set; } = new List<int>();
-    public string Title { get; set; } = string.Empty;
-    public string Message { get; set; } = string.Empty;
-    public string Type { get; set; } = "info";
-}
-
-// ============================================================
-// 📚 题库管理 - 增删改查
-// ============================================================
-
-// 题库管理主页
-[HttpGet]
-public async Task<IActionResult> QuestionBank()
-{
-    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-    if (isAdmin != 1)
-        return RedirectToAction("Login", "Auth");
-
-    var questions = await _dataSync.GetAllBankQuestionsAsync();
-    return View(questions);
-}
-
-// 添加单道题
-[HttpPost]
-public async Task<IActionResult> AddSingleQuestion([FromBody] AddQuestionRequest request)
-{
-    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-    if (isAdmin != 1)
-        return Json(new { success = false, message = "权限不足" });
-
-    if (string.IsNullOrEmpty(request.Question) || string.IsNullOrEmpty(request.Answer))
-        return Json(new { success = false, message = "题目和答案不能为空" });
-
-    var question = new BankQuestion
-    {
-        Question = request.Question,
-        Answer = request.Answer,
-        Pinyin = request.Pinyin ?? "",
-        Hint = request.Hint ?? "",
-        Difficulty = request.Difficulty > 0 ? request.Difficulty : 1,
-        Category = string.IsNullOrEmpty(request.Category) ? "综合" : request.Category,
-        IsActive = true,
-        CreatedAt = DateTime.Now
-    };
-
-    await _dataSync.AddBankQuestionAsync(question);
-    return Json(new { success = true });
-}
-
-public class AddQuestionRequest
-{
-    public string Question { get; set; } = string.Empty;
-    public string Answer { get; set; } = string.Empty;
-    public string Pinyin { get; set; } = string.Empty;
-    public string Hint { get; set; } = string.Empty;
-    public int Difficulty { get; set; } = 1;
-    public string Category { get; set; } = "综合";
-}
-
-[HttpGet]
-public async Task<IActionResult> GetQuestionDetail(int id)
-{
-    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-    if (isAdmin != 1)
-        return Json(new { success = false, message = "权限不足" });
-
-    var q = await _dataSync.GetBankQuestionByIdAsync(id);
-    if (q == null)
-        return Json(new { success = false, message = "题目不存在" });
-
-    return Json(new
-    {
-        success = true,
-        data = new
-        {
-            q.Id,
-            q.Question,
-            q.Answer,
-            q.Pinyin,
-            q.Hint,
-            q.Category,
-            q.Difficulty,
-            q.IsActive,
-            q.UseCount,
-            q.CreatedAt
-        }
-    });
-}
-// ============================================================
-// 📚 批量添加题目
-// ============================================================
-
-[HttpPost]
-public async Task<IActionResult> BatchAddQuestions([FromBody] BatchAddRequest request)
-{
-    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-    if (isAdmin != 1)
-        return Json(new { success = false, message = "权限不足" });
-
-    if (request.Questions == null || !request.Questions.Any())
-        return Json(new { success = false, message = "请至少添加一道题" });
-
-    int successCount = 0;
-    int failCount = 0;
-    var errors = new List<string>();
-
-    for (int i = 0; i < request.Questions.Count; i++)
-    {
-        var q = request.Questions[i];
-        try
-        {
-            if (string.IsNullOrEmpty(q.Question) || string.IsNullOrEmpty(q.Answer))
-            {
-                failCount++;
-                errors.Add($"第{i+1}行：题目或答案为空");
-                continue;
-            }
-
-            var question = new BankQuestion
-            {
-                Question = q.Question,
-                Answer = q.Answer,
-                Pinyin = q.Pinyin ?? "",
-                Hint = q.Hint ?? "",
-                Difficulty = q.Difficulty > 0 ? q.Difficulty : 1,
-                Category = string.IsNullOrEmpty(q.Category) ? "综合" : q.Category,
-                IsActive = true,
-                CreatedAt = DateTime.Now
-            };
-
-            await _dataSync.AddBankQuestionAsync(question);
-            successCount++;
-        }
-        catch (Exception ex)
-        {
-            failCount++;
-            errors.Add($"第{i+1}行：{ex.Message}");
-        }
-    }
-
-    return Json(new
-    {
-        success = true,
-        count = successCount,
-        failCount = failCount,
-        errors = errors.Count > 0 ? string.Join("; ", errors.Take(5)) + (errors.Count > 5 ? $" 等{errors.Count - 5}条错误" : "") : null
-    });
-}
-
-// ============================================================
-// 📦 批量添加请求模型
-// ============================================================
-
-public class BatchAddRequest
-{
-    public List<BankQuestionInput> Questions { get; set; } = new();
-}
-
-public class BankQuestionInput
-{
-    public string Question { get; set; } = string.Empty;
-    public string Answer { get; set; } = string.Empty;
-    public string Pinyin { get; set; } = string.Empty;
-    public string Hint { get; set; } = string.Empty;
-    public int Difficulty { get; set; } = 1;
-    public string Category { get; set; } = "综合";
-}
-
-[HttpPost]
-public async Task<IActionResult> ToggleQuestionStatus(int id, bool enable)
-{
-    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-    if (isAdmin != 1)
-        return Json(new { success = false, message = "权限不足" });
-
-    await _dataSync.ToggleQuestionStatusAsync(id, enable);
-    return Json(new { success = true });
-}
-
-[HttpPost]
-public async Task<IActionResult> DeleteQuestion(int id)
-{
-    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-    if (isAdmin != 1)
-        return Json(new { success = false, message = "权限不足" });
-
-    await _dataSync.DeleteBankQuestionAsync(id);
-    return Json(new { success = true });
-}
-
-[HttpPost]
-public async Task<IActionResult> BatchAddQuestions([FromBody] BatchAddRequest request)
-{
-    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-    if (isAdmin != 1)
-        return Json(new { success = false, message = "权限不足" });
-
-    if (request.Questions == null || !request.Questions.Any())
-        return Json(new { success = false, message = "请至少添加一道题" });
-
-    int count = 0;
-    foreach (var q in request.Questions)
-    {
-        if (string.IsNullOrEmpty(q.Question) || string.IsNullOrEmpty(q.Answer))
-            continue;
-
-        var question = new BankQuestion
-        {
-            Question = q.Question,
-            Answer = q.Answer,
-            Pinyin = q.Pinyin ?? "",
-            Hint = q.Hint ?? "",
-            Difficulty = q.Difficulty > 0 ? q.Difficulty : 1,
-            Category = string.IsNullOrEmpty(q.Category) ? "综合" : q.Category,
-            IsActive = true,
-            CreatedAt = DateTime.Now
-        };
-
-        await _dataSync.AddBankQuestionAsync(question);
-        count++;
-    }
-
-    return Json(new { success = true, count = count });
-}
-
-public class BatchAddRequest
-{
-    public List<BankQuestionInput> Questions { get; set; } = new();
-}
-
-public class BankQuestionInput
-{
-    public string Question { get; set; } = string.Empty;
-    public string Answer { get; set; } = string.Empty;
-    public string Pinyin { get; set; } = string.Empty;
-    public string Hint { get; set; } = string.Empty;
-    public int Difficulty { get; set; } = 1;
-    public string Category { get; set; } = "综合";
-}
 
         // ============================================================
         // 1. 仪表盘
         // ============================================================
         public async Task<IActionResult> Dashboard()
         {
-        var notifications = await _dataSync.GetAllNotificationsAsync();
-ViewBag.NotificationCount = notifications.Count;
             var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
             if (isAdmin != 1)
                 return RedirectToAction("Login", "Auth");
@@ -542,6 +129,7 @@ ViewBag.NotificationCount = notifications.Count;
             var blogs = await _dataSync.GetBlogsAsync();
             var messages = await _dataSync.GetMessagesAsync();
             var contactRequests = await _dataSync.GetContactRequestsAsync();
+            var notifications = await _dataSync.GetAllNotificationsAsync();
 
             ViewBag.UserCount = users.Count(u => !u.IsDeleted);
             ViewBag.BlogCount = blogs.Count;
@@ -555,6 +143,7 @@ ViewBag.NotificationCount = notifications.Count;
                     !string.IsNullOrEmpty(u.PendingEmail) ||
                     (!u.IsAvatarApproved && !string.IsNullOrEmpty(u.AvatarUrl))
                 ));
+            ViewBag.NotificationCount = notifications.Count;
 
             ViewBag.RecentMessages = messages.OrderByDescending(m => m.CreateTime).Take(5).ToList();
             ViewBag.RecentContactRequests = contactRequests.OrderByDescending(r => r.RequestTime).Take(5).ToList();
@@ -1729,72 +1318,372 @@ ViewBag.NotificationCount = notifications.Count;
 
             return Json(new { success = true, message = "用户已激活" });
         }
+
         // ============================================================
-// 📬 通知管理列表
-// ============================================================
-public async Task<IActionResult> Notifications()
-{
-    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-    if (isAdmin != 1)
-        return RedirectToAction("Login", "Auth");
+        // 📚 题库管理 - 页面
+        // ============================================================
 
-    var notifications = await _dataSync.GetAllNotificationsAsync();
-    var users = await _dataSync.GetAllUsersAsync();
-    
-    ViewBag.Users = users;
-    return View(notifications);
-}
+        [HttpGet]
+        public async Task<IActionResult> QuestionBank()
+        {
+            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+            if (isAdmin != 1)
+                return RedirectToAction("Login", "Auth");
 
-// ============================================================
-// 🗑️ 删除单条通知
-// ============================================================
-[HttpPost]
-public async Task<IActionResult> DeleteNotification(int id)
-{
-    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-    if (isAdmin != 1)
-        return Json(new { success = false, message = "权限不足" });
+            var questions = await _dataSync.GetAllBankQuestionsAsync();
+            return View(questions);
+        }
 
-    await _dataSync.DeleteNotificationAsync(id);
-    return Json(new { success = true, message = "删除成功" });
-}
+        // ============================================================
+        // 📚 获取题目详情（AJAX）
+        // ============================================================
 
-// ============================================================
-// 🗑️ 批量删除通知
-// ============================================================
-[HttpPost]
-public async Task<IActionResult> ClearAllNotifications()
-{
-    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-    if (isAdmin != 1)
-        return Json(new { success = false, message = "权限不足" });
+        [HttpGet]
+        public async Task<IActionResult> GetQuestionDetail(int id)
+        {
+            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+            if (isAdmin != 1)
+                return Json(new { success = false, message = "权限不足" });
 
-    var notifications = await _dataSync.GetAllNotificationsAsync();
-    foreach (var n in notifications)
-    {
-        await _dataSync.DeleteNotificationAsync(n.Id);
-    }
-    return Json(new { success = true, message = "已清空所有通知" });
-}
+            var q = await _dataSync.GetBankQuestionByIdAsync(id);
+            if (q == null)
+                return Json(new { success = false, message = "题目不存在" });
 
-// ============================================================
-// 📊 通知统计（AJAX）
-// ============================================================
-[HttpGet]
-public async Task<IActionResult> NotificationStats()
-{
-    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-    if (isAdmin != 1)
-        return Json(new { success = false });
+            return Json(new
+            {
+                success = true,
+                data = new
+                {
+                    q.Id,
+                    q.Question,
+                    q.Answer,
+                    q.Pinyin,
+                    q.Hint,
+                    q.Category,
+                    q.Difficulty,
+                    q.IsActive,
+                    q.UseCount,
+                    q.CreatedAt
+                }
+            });
+        }
 
-    var notifications = await _dataSync.GetAllNotificationsAsync();
-    return Json(new
-    {
-        success = true,
-        total = notifications.Count,
-        read = notifications.Count(n => n.IsRead),
-        unread = notifications.Count(n => !n.IsRead)
-    });
-}
+        // ============================================================
+        // 📚 切换题目状态
+        // ============================================================
+
+        [HttpPost]
+        public async Task<IActionResult> ToggleQuestionStatus(int id, bool enable)
+        {
+            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+            if (isAdmin != 1)
+                return Json(new { success = false, message = "权限不足" });
+
+            await _dataSync.ToggleQuestionStatusAsync(id, enable);
+            return Json(new { success = true });
+        }
+
+        // ============================================================
+        // 📚 删除题目
+        // ============================================================
+
+        [HttpPost]
+        public async Task<IActionResult> DeleteQuestion(int id)
+        {
+            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+            if (isAdmin != 1)
+                return Json(new { success = false, message = "权限不足" });
+
+            await _dataSync.DeleteBankQuestionAsync(id);
+            return Json(new { success = true });
+        }
+
+        // ============================================================
+        // 📚 添加单道题
+        // ============================================================
+
+        [HttpPost]
+        public async Task<IActionResult> AddSingleQuestion([FromBody] AddQuestionRequest request)
+        {
+            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+            if (isAdmin != 1)
+                return Json(new { success = false, message = "权限不足" });
+
+            if (string.IsNullOrEmpty(request.Question) || string.IsNullOrEmpty(request.Answer))
+                return Json(new { success = false, message = "题目和答案不能为空" });
+
+            var question = new BankQuestion
+            {
+                Question = request.Question,
+                Answer = request.Answer,
+                Pinyin = request.Pinyin ?? "",
+                Hint = request.Hint ?? "",
+                Difficulty = request.Difficulty > 0 ? request.Difficulty : 1,
+                Category = string.IsNullOrEmpty(request.Category) ? "综合" : request.Category,
+                IsActive = true,
+                CreatedAt = DateTime.Now
+            };
+
+            await _dataSync.AddBankQuestionAsync(question);
+            return Json(new { success = true });
+        }
+
+        public class AddQuestionRequest
+        {
+            public string Question { get; set; } = string.Empty;
+            public string Answer { get; set; } = string.Empty;
+            public string Pinyin { get; set; } = string.Empty;
+            public string Hint { get; set; } = string.Empty;
+            public int Difficulty { get; set; } = 1;
+            public string Category { get; set; } = "综合";
+        }
+
+        // ============================================================
+        // 📚 批量添加题目
+        // ============================================================
+
+        [HttpPost]
+        public async Task<IActionResult> BatchAddQuestions([FromBody] BatchAddRequest request)
+        {
+            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+            if (isAdmin != 1)
+                return Json(new { success = false, message = "权限不足" });
+
+            if (request.Questions == null || !request.Questions.Any())
+                return Json(new { success = false, message = "请至少添加一道题" });
+
+            int successCount = 0;
+            int failCount = 0;
+            var errors = new List<string>();
+
+            for (int i = 0; i < request.Questions.Count; i++)
+            {
+                var q = request.Questions[i];
+                try
+                {
+                    if (string.IsNullOrEmpty(q.Question) || string.IsNullOrEmpty(q.Answer))
+                    {
+                        failCount++;
+                        errors.Add($"第{i + 1}行：题目或答案为空");
+                        continue;
+                    }
+
+                    var question = new BankQuestion
+                    {
+                        Question = q.Question,
+                        Answer = q.Answer,
+                        Pinyin = q.Pinyin ?? "",
+                        Hint = q.Hint ?? "",
+                        Difficulty = q.Difficulty > 0 ? q.Difficulty : 1,
+                        Category = string.IsNullOrEmpty(q.Category) ? "综合" : q.Category,
+                        IsActive = true,
+                        CreatedAt = DateTime.Now
+                    };
+
+                    await _dataSync.AddBankQuestionAsync(question);
+                    successCount++;
+                }
+                catch (Exception ex)
+                {
+                    failCount++;
+                    errors.Add($"第{i + 1}行：{ex.Message}");
+                }
+            }
+
+            return Json(new
+            {
+                success = true,
+                count = successCount,
+                failCount = failCount,
+                errors = errors.Count > 0 ? string.Join("; ", errors.Take(5)) + (errors.Count > 5 ? $" 等{errors.Count - 5}条错误" : "") : null
+            });
+        }
+
+        // ============================================================
+        // 📦 批量添加请求模型
+        // ============================================================
+
+        public class BatchAddRequest
+        {
+            public List<BankQuestionInput> Questions { get; set; } = new();
+        }
+
+        public class BankQuestionInput
+        {
+            public string Question { get; set; } = string.Empty;
+            public string Answer { get; set; } = string.Empty;
+            public string Pinyin { get; set; } = string.Empty;
+            public string Hint { get; set; } = string.Empty;
+            public int Difficulty { get; set; } = 1;
+            public string Category { get; set; } = "综合";
+        }
+
+        // ============================================================
+        // 📅 未来题目安排
+        // ============================================================
+
+        [HttpGet]
+        public async Task<IActionResult> QuestionSchedule()
+        {
+            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+            if (isAdmin != 1)
+                return RedirectToAction("Login", "Auth");
+
+            var schedule = new List<DailyScheduleItem>();
+            var today = DateTime.Today;
+
+            for (int i = 0; i < 7; i++)
+            {
+                var date = today.AddDays(i);
+                var dateStr = date.ToString("yyyy-MM-dd");
+
+                var result = await _dataSync.QueryAsync($@"
+                    SELECT dq.Id, dq.QuestionId, dq.Date,
+                           b.Question, b.Answer, b.Category, b.Difficulty
+                    FROM DailyQuestions dq
+                    JOIN DailyQuestionBank b ON dq.QuestionId = b.Id
+                    WHERE dq.Date = '{dateStr}'
+                    LIMIT 1
+                ");
+
+                var item = new DailyScheduleItem
+                {
+                    Date = date,
+                    DateStr = dateStr,
+                    IsToday = date == today,
+                    IsPast = date < today
+                };
+
+                var question = ParseDailyQuestionFromJson(result);
+                if (question != null)
+                {
+                    item.QuestionId = question.QuestionId ?? 0;
+                    item.Question = question.Question;
+                    item.Answer = question.Answer;
+                    item.Category = question.Category;
+                    item.Difficulty = question.Difficulty;
+                    item.IsScheduled = true;
+                }
+                else
+                {
+                    item.IsScheduled = false;
+                }
+
+                schedule.Add(item);
+            }
+
+            var bankQuestions = await _dataSync.GetAllBankQuestionsAsync();
+
+            ViewBag.Schedule = schedule;
+            ViewBag.BankQuestions = bankQuestions;
+            ViewBag.Today = today;
+
+            return View();
+        }
+
+        // ============================================================
+        // 🗓️ 更换某天的题目
+        // ============================================================
+
+        [HttpPost]
+        public async Task<IActionResult> ReplaceQuestion(string date, int newQuestionId)
+        {
+            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+            if (isAdmin != 1)
+                return Json(new { success = false, message = "权限不足" });
+
+            if (string.IsNullOrEmpty(date) || newQuestionId <= 0)
+                return Json(new { success = false, message = "参数错误" });
+
+            try
+            {
+                await _dataSync.ExecuteSqlAsync($"DELETE FROM DailyQuestions WHERE Date = '{date}'");
+
+                var sql = $@"INSERT INTO DailyQuestions (
+                    QuestionId, Date, CreatedAt
+                ) VALUES (
+                    {newQuestionId}, '{date}', '{DateTime.Now:yyyy-MM-dd HH:mm:ss}'
+                )";
+
+                await _dataSync.ExecuteSqlAsync(sql);
+
+                await _dataSync.ExecuteSqlAsync(
+                    $"UPDATE DailyQuestionBank SET UseCount = UseCount + 1, UsedAt = '{DateTime.Now:yyyy-MM-dd HH:mm:ss}' WHERE Id = {newQuestionId}"
+                );
+
+                return Json(new { success = true, message = "✅ 题目已更换" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = $"更换失败: {ex.Message}" });
+            }
+        }
+
+        // ============================================================
+        // 📋 解析每日题目
+        // ============================================================
+
+        private DailyQuestion? ParseDailyQuestionFromJson(string json)
+        {
+            try
+            {
+                using var doc = JsonDocument.Parse(json);
+                var root = doc.RootElement;
+
+                if (root.TryGetProperty("results", out var results) && results.GetArrayLength() > 0)
+                {
+                    var firstResult = results[0];
+                    if (firstResult.TryGetProperty("response", out var response) &&
+                        response.TryGetProperty("result", out var result))
+                    {
+                        if (result.TryGetProperty("rows", out var rows) && rows.GetArrayLength() > 0)
+                        {
+                            var row = rows[0];
+                            var cols = result.GetProperty("cols");
+
+                            var q = new DailyQuestion();
+                            for (int i = 0; i < cols.GetArrayLength(); i++)
+                            {
+                                var colName = cols[i].GetProperty("name").GetString();
+                                var element = row[i];
+                                var value = element.ValueKind == JsonValueKind.Object && element.TryGetProperty("value", out var v) ? v : element;
+
+                                switch (colName)
+                                {
+                                    case "Id": q.Id = value.ValueKind == JsonValueKind.Number ? value.GetInt32() : 0; break;
+                                    case "QuestionId": q.QuestionId = value.ValueKind == JsonValueKind.Number ? value.GetInt32() : 0; break;
+                                    case "Date": q.Date = value.ValueKind == JsonValueKind.String ? DateTime.Parse(value.GetString() ?? "") : DateTime.Now; break;
+                                    case "Question": q.Question = value.ValueKind == JsonValueKind.String ? value.GetString() ?? "" : ""; break;
+                                    case "Answer": q.Answer = value.ValueKind == JsonValueKind.String ? value.GetString() ?? "" : ""; break;
+                                    case "Category": q.Category = value.ValueKind == JsonValueKind.String ? value.GetString() ?? "综合" : "综合"; break;
+                                    case "Difficulty": q.Difficulty = value.ValueKind == JsonValueKind.Number ? value.GetInt32() : 1; break;
+                                }
+                            }
+                            return q;
+                        }
+                    }
+                }
+                return null;
+            }
+            catch { return null; }
+        }
+
+        // ============================================================
+        // 辅助类
+        // ============================================================
+
+        public class DailyScheduleItem
+        {
+            public DateTime Date { get; set; }
+            public string DateStr { get; set; } = string.Empty;
+            public bool IsToday { get; set; }
+            public bool IsPast { get; set; }
+            public bool IsScheduled { get; set; }
+            public int QuestionId { get; set; }
+            public string Question { get; set; } = string.Empty;
+            public string Answer { get; set; } = string.Empty;
+            public string Category { get; set; } = "综合";
+            public int Difficulty { get; set; } = 1;
+        }
     }
 }
