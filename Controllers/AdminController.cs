@@ -22,38 +22,7 @@ namespace MyPersonalWebsite.Controllers
             _dataSync = dataSync;
             _emailService = emailService;
         }
-        // ============================================================
-// 🤖 一键AI重新安排未来7天
-// ============================================================
-
-[HttpPost]
-public async Task<IActionResult> AutoScheduleAll()
-{
-    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-    if (isAdmin != 1)
-        return Json(new { success = false, message = "权限不足" });
-
-    try
-    {
-        var today = DateTime.Today;
-
-        // 删除未来7天的所有安排
-        for (int i = 0; i < 7; i++)
-        {
-            var dateStr = today.AddDays(i).ToString("yyyy-MM-dd");
-            await _dataSync.ExecuteSqlAsync($"DELETE FROM DailyQuestions WHERE Date = '{dateStr}'");
-        }
-
-        // 重新AI安排
-        await AutoScheduleMissingDaysAsync();
-
-        return Json(new { success = true, message = "✅ 已自动安排未来7天题目" });
-    }
-    catch (Exception ex)
-    {
-        return Json(new { success = false, message = $"安排失败: {ex.Message}" });
-    }
-}
+        
         // ============================================================
 // 📅 未来题目安排（自动AI安排 + 手动变更）
 // ============================================================
@@ -1909,18 +1878,6 @@ public async Task<IActionResult> DeduplicateQuestions()
         return Json(new { success = false, message = $"去重失败: {ex.Message}" });
     }
 }
-                    public class DailyScheduleItem
-        {
-            public DateTime Date { get; set; }
-            public string DateStr { get; set; } = string.Empty;
-            public bool IsToday { get; set; }
-            public bool IsPast { get; set; }
-            public bool IsScheduled { get; set; }
-            public int QuestionId { get; set; }
-            public string Question { get; set; } = string.Empty;
-            public string Answer { get; set; } = string.Empty;
-            public string Category { get; set; } = "综合";
-            public int Difficulty { get; set; } = 1;
-        }
+                    
     }  // ⬅️ AdminController 类结束（只有一个）
 }  // ⬅️ namespace 结束（只有一个）
