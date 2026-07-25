@@ -1668,6 +1668,7 @@ private int ParseQuestionIdFromJson(string json)
 
         // ============================================================
         private DailyQuestion? ParseDailyQuestionFromJson(string json)
+{private DailyQuestion? ParseDailyQuestionFromJson(string json)
 {
     try
     {
@@ -1692,7 +1693,7 @@ private int ParseQuestionIdFromJson(string json)
                         var colName = cols[i].GetProperty("name").GetString();
                         var element = row[i];
 
-                        // ⭐ 处理 Turso 返回的 { value: xxx } 格式
+                        // ⭐ 关键修复：处理 Turso 的 { value: xxx } 格式
                         var value = element;
                         if (element.ValueKind == JsonValueKind.Object && element.TryGetProperty("value", out var v))
                         {
