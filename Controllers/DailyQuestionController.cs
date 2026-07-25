@@ -24,7 +24,6 @@ namespace MyPersonalWebsite.Controllers
                 return RedirectToAction("Login", "Auth");
             }
 
-            // 获取今日状态
             var status = await _dailyService.GetTodayStatusAsync(userId.Value);
             var ranking = await _dailyService.GetRankingAsync(20);
 
@@ -39,7 +38,7 @@ namespace MyPersonalWebsite.Controllers
         // 提交答案（AJAX）
         // ============================================================
         [HttpPost]
-        public async Task<IActionResult> SubmitAnswer(string answer, bool isSkip = false)
+        public async Task<IActionResult> SubmitAnswer(string answer)
         {
             var userId = HttpContext.Session.GetInt32("UserId");
             if (!userId.HasValue)
@@ -47,13 +46,14 @@ namespace MyPersonalWebsite.Controllers
                 return Json(new { success = false, message = "请先登录" });
             }
 
-            var result = await _dailyService.SubmitAnswerAsync(userId.Value, answer, isSkip);
+            var result = await _dailyService.SubmitAnswerAsync(userId.Value, answer);
             return Json(new
             {
                 success = result.Success,
                 isCorrect = result.IsCorrect,
                 points = result.Points,
-                message = result.Message
+                message = result.Message,
+                correctAnswer = result.CorrectAnswer
             });
         }
 
