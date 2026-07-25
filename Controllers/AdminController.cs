@@ -116,10 +116,12 @@ public class BatchSendRequest
     public string Message { get; set; } = string.Empty;
     public string Type { get; set; } = "info";
 }
+
 // ============================================================
-// 📚 题库管理
+// 📚 题库管理 - 增删改查
 // ============================================================
 
+// 题库管理主页
 [HttpGet]
 public async Task<IActionResult> QuestionBank()
 {
@@ -129,6 +131,43 @@ public async Task<IActionResult> QuestionBank()
 
     var questions = await _dataSync.GetAllBankQuestionsAsync();
     return View(questions);
+}
+
+// 添加单道题
+[HttpPost]
+public async Task<IActionResult> AddSingleQuestion([FromBody] AddQuestionRequest request)
+{
+    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+    if (isAdmin != 1)
+        return Json(new { success = false, message = "权限不足" });
+
+    if (string.IsNullOrEmpty(request.Question) || string.IsNullOrEmpty(request.Answer))
+        return Json(new { success = false, message = "题目和答案不能为空" });
+
+    var question = new BankQuestion
+    {
+        Question = request.Question,
+        Answer = request.Answer,
+        Pinyin = request.Pinyin ?? "",
+        Hint = request.Hint ?? "",
+        Difficulty = request.Difficulty > 0 ? request.Difficulty : 1,
+        Category = string.IsNullOrEmpty(request.Category) ? "综合" : request.Category,
+        IsActive = true,
+        CreatedAt = DateTime.Now
+    };
+
+    await _dataSync.AddBankQuestionAsync(question);
+    return Json(new { success = true });
+}
+
+public class AddQuestionRequest
+{
+    public string Question { get; set; } = string.Empty;
+    public string Answer { get; set; } = string.Empty;
+    public string Pinyin { get; set; } = string.Empty;
+    public string Hint { get; set; } = string.Empty;
+    public int Difficulty { get; set; } = 1;
+    public string Category { get; set; } = "综合";
 }
 
 [HttpGet]
