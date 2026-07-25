@@ -10,6 +10,16 @@ using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// ⭐ 添加这行：禁用文件监控
+builder.Host.UseDefaultServiceProvider((context, options) =>
+{
+    options.ValidateScopes = false;
+    options.ValidateOnBuild = false;
+});
+
+// ⭐ 添加这行：设置文件监控为 false
+Environment.SetEnvironmentVariable("DOTNET_USE_POLLING_FILE_WATCHER", "1");
+
 // ============================================================
 // 设置时区为中国时区（北京时间 UTC+8）
 // ============================================================
