@@ -375,6 +375,85 @@ public async Task<IActionResult> GetQuestionDetail(int id)
         }
     });
 }
+// ============================================================
+// 📚 批量添加题目
+// ============================================================
+
+[HttpPost]
+public async Task<IActionResult> BatchAddQuestions([FromBody] BatchAddRequest request)
+{
+    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+    if (isAdmin != 1)
+        return Json(new { success = false, message = "权限不足" });
+
+    if (request.Questions == null || !request.Questions.Any())
+        return Json(new { success = false, message = "请至少添加一道题" });
+
+    int successCount = 0;
+    int failCount = 0;
+    var errors = new List<string>();
+
+    for (int i = 0; i < request.Questions.Count; i++)
+    {
+        var q = request.Questions[i];
+        try
+        {
+            if (string.IsNullOrEmpty(q.Question) || string.IsNullOrEmpty(q.Answer))
+            {
+                failCount++;
+                errors.Add($"第{i+1}行：题目或答案为空");
+                continue;
+            }
+
+            var question = new BankQuestion
+            {
+                Question = q.Question,
+                Answer = q.Answer,
+                Pinyin = q.Pinyin ?? "",
+                Hint = q.Hint ?? "",
+                Difficulty = q.Difficulty > 0 ? q.Difficulty : 1,
+                Category = string.IsNullOrEmpty(q.Category) ? "综合" : q.Category,
+                IsActive = true,
+                CreatedAt = DateTime.Now
+            };
+
+            await _dataSync.AddBankQuestionAsync(question);
+            successCount++;
+        }
+        catch (Exception ex)
+        {
+            failCount++;
+            errors.Add($"第{i+1}行：{ex.Message}");
+        }
+    }
+
+    return Json(new
+    {
+        success = true,
+        count = successCount,
+        failCount = failCount,
+        errors = errors.Count > 0 ? string.Join("; ", errors.Take(5)) + (errors.Count > 5 ? $" 等{errors.Count - 5}条错误" : "") : null
+    });
+}
+
+// ============================================================
+// 📦 批量添加请求模型
+// ============================================================
+
+public class BatchAddRequest
+{
+    public List<BankQuestionInput> Questions { get; set; } = new();
+}
+
+public class BankQuestionInput
+{
+    public string Question { get; set; } = string.Empty;
+    public string Answer { get; set; } = string.Empty;
+    public string Pinyin { get; set; } = string.Empty;
+    public string Hint { get; set; } = string.Empty;
+    public int Difficulty { get; set; } = 1;
+    public string Category { get; set; } = "综合";
+}
 
 [HttpPost]
 public async Task<IActionResult> ToggleQuestionStatus(int id, bool enable)
