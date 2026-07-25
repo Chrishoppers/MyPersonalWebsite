@@ -1909,5 +1909,19 @@ public async Task<IActionResult> DeduplicateQuestions()
         return Json(new { success = false, message = $"去重失败: {ex.Message}" });
     }
 }
-    }
-}
+            public class DailyScheduleItem
+        {
+            public DateTime Date { get; set; }
+            public string DateStr { get; set; } = string.Empty;
+            public bool IsToday { get; set; }
+            public bool IsPast { get; set; }
+            public bool IsScheduled { get; set; }
+            public int QuestionId { get; set; }
+            public string Question { get; set; } = string.Empty;
+            public string Answer { get; set; } = string.Empty;
+            public string Category { get; set; } = "综合";
+            public int Difficulty { get; set; } = 1;
+        }
+    }  // ⬅️ AdminController 类的结束
+}  // ⬅️ namespace 的结束
+    
