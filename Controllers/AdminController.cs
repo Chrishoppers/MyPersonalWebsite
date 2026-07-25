@@ -90,75 +90,7 @@ public async Task<IActionResult> QuestionSchedule()
     return View();
 }
 
-// ============================================================
-// 🤖 智能AI安排缺失的日期（自动检测并安排）
-// ============================================================
 
-private async Task AutoScheduleMissingDaysAsync()
-{
-    var today = DateTime.Today;
-
-    // 获取所有可用的题目（已激活，按使用次数排序）
-    var allQuestions = await _dataSync.GetAllBankQuestionsAsync();
-    var availableQuestions = allQuestions
-        .Where(q => q.IsActive)
-        .OrderBy(q => q.UseCount)
-        .ThenBy(q => Guid.NewGuid())
-        .ToList();
-
-    if (!availableQuestions.Any()) return;
-
-    var usedQuestions = new HashSet<int>();
-
-    for (int i = 0; i < 7; i++)
-    {
-        var date = today.AddDays(i);
-        var dateStr = date.ToString("yyyy-MM-dd");
-
-        // 检查当天是否已有安排
-        var checkResult = await _dataSync.QueryAsync(
-            $"SELECT QuestionId FROM DailyQuestions WHERE Date = '{dateStr}' LIMIT 1"
-        );
-
-        // 如果已有安排，记录已使用的题目ID
-        if (!checkResult.Contains("\"rows\":[]"))
-        {
-            var existingId = ParseQuestionIdFromJson(checkResult);
-            if (existingId > 0)
-            {
-                usedQuestions.Add(existingId);
-            }
-            continue;
-        }
-
-        // 没有安排，AI自动选择一道题
-        // 跳过已经使用过的题目
-        var candidate = availableQuestions
-            .Where(q => !usedQuestions.Contains(q.Id))
-            .FirstOrDefault();
-
-        if (candidate == null)
-        {
-            // 如果题目不够用，重置使用记录
-            usedQuestions.Clear();
-            candidate = availableQuestions.FirstOrDefault();
-        }
-
-        if (candidate != null)
-        {
-            usedQuestions.Add(candidate.Id);
-
-            var sql = $@"INSERT INTO DailyQuestions (
-                QuestionId, Date, CreatedAt
-            ) VALUES (
-                {candidate.Id}, '{dateStr}', '{DateTime.Now:yyyy-MM-dd HH:mm:ss}'
-            )";
-
-            await _dataSync.ExecuteSqlAsync(sql);
-            Console.WriteLine($"🤖 AI自动安排 {dateStr}: {candidate.Question}");
-        }
-    }
-}
 
 // ============================================================
 // 辅助：从JSON解析QuestionId
