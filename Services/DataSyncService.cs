@@ -2,7 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using MyPersonalWebsite.Models;
 using System;
 using System.Collections.Generic;
-using System.Security.Cryptography;  // ⭐ 添加这一行
+using System.Security.Cryptography;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -26,140 +26,6 @@ namespace MyPersonalWebsite.Services
             else
                 Console.WriteLine("⚠️ Turso 未配置");
         }
-        
-        
-        // ============================================================
-// 📚 题库管理方法
-// ============================================================
-
-public async Task<List<BankQuestion>> GetAllBankQuestionsAsync()
-{
-    if (!_tursoAvailable) return new List<BankQuestion>();
-
-    var result = await _tursoService.QueryAsync("SELECT * FROM DailyQuestionBank ORDER BY Id DESC");
-    return ParseBankQuestionList(result);
-}
-
-public async Task<BankQuestion?> GetBankQuestionByIdAsync(int id)
-{
-    if (!_tursoAvailable) return null;
-
-    var result = await _tursoService.QueryAsync($"SELECT * FROM DailyQuestionBank WHERE Id = {id}");
-    return ParseBankQuestion(result);
-}
-
-public async Task AddBankQuestionAsync(BankQuestion question)
-{
-    if (!_tursoAvailable) return;
-
-    var maxIdResult = await _tursoService.QueryAsync("SELECT MAX(Id) as MaxId FROM DailyQuestionBank");
-    var maxId = ParseMaxId(maxIdResult);
-    question.Id = maxId + 1;
-
-    var sql = $@"INSERT INTO DailyQuestionBank (
-        Id, Question, Answer, Pinyin, Hint, Difficulty, Category, IsActive, CreatedAt
-    ) VALUES (
-        {question.Id}, '{EscapeSql(question.Question)}', '{EscapeSql(question.Answer)}',
-        '{EscapeSql(question.Pinyin)}',
-        {(string.IsNullOrEmpty(question.Hint) ? "NULL" : $"'{EscapeSql(question.Hint)}'")},
-        {question.Difficulty}, '{EscapeSql(question.Category)}',
-        {(question.IsActive ? 1 : 0)}, '{question.CreatedAt:yyyy-MM-dd HH:mm:ss}'
-    )";
-
-    await _tursoService.ExecuteSqlAsync(sql);
-}
-
-public async Task ToggleQuestionStatusAsync(int id, bool enable)
-{
-    if (!_tursoAvailable) return;
-
-    await _tursoService.ExecuteSqlAsync(
-        $"UPDATE DailyQuestionBank SET IsActive = {(enable ? 1 : 0)} WHERE Id = {id}"
-    );
-}
-
-public async Task DeleteBankQuestionAsync(int id)
-{
-    if (!_tursoAvailable) return;
-
-    await _tursoService.ExecuteSqlAsync($"DELETE FROM DailyQuestionBank WHERE Id = {id}");
-}
-
-// ============================================================
-// 解析方法
-// ============================================================
-
-private List<BankQuestion> ParseBankQuestionList(string json)
-{
-    var list = new List<BankQuestion>();
-    try
-    {
-        using var doc = JsonDocument.Parse(json);
-        var root = doc.RootElement;
-
-        if (root.TryGetProperty("results", out var results) && results.GetArrayLength() > 0)
-        {
-            var firstResult = results[0];
-            if (firstResult.TryGetProperty("response", out var response) &&
-                response.TryGetProperty("result", out var result))
-            {
-                if (result.TryGetProperty("rows", out var rows) && rows.GetArrayLength() > 0)
-                {
-                    var cols = result.GetProperty("cols");
-
-                    for (int r = 0; r < rows.GetArrayLength(); r++)
-                    {
-                        var row = rows[r];
-                        if (row.ValueKind != JsonValueKind.Array) continue;
-
-                        var q = new BankQuestion();
-                        for (int i = 0; i < cols.GetArrayLength(); i++)
-                        {
-                            var colName = cols[i].GetProperty("name").GetString();
-                            var element = row[i];
-
-                            switch (colName)
-                            {
-                                case "Id": q.Id = GetIntFromRow(element); break;
-                                case "Question": q.Question = GetStringFromRow(element); break;
-                                case "Answer": q.Answer = GetStringFromRow(element); break;
-                                case "Pinyin": q.Pinyin = GetStringFromRow(element); break;
-                                case "Hint": q.Hint = GetStringOrNullFromRow(element); break;
-                                case "Difficulty": q.Difficulty = GetIntFromRow(element); break;
-                                case "Category": q.Category = GetStringFromRow(element); break;
-                                case "IsActive": q.IsActive = GetBoolFromRow(element); break;
-                                case "UseCount": q.UseCount = GetIntFromRow(element); break;
-                                case "CreatedAt": q.CreatedAt = GetDateTimeFromRow(element) ?? DateTime.Now; break;
-                            }
-                        }
-                        list.Add(q);
-                    }
-                }
-            }
-        }
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"⚠️ 解析题库 JSON 失败: {ex.Message}");
-    }
-    return list;
-}
-
-private BankQuestion? ParseBankQuestion(string json)
-{
-    var list = ParseBankQuestionList(json);
-    return list.FirstOrDefault();
-}
-        // ============================================================
-// 🗑️ 清空所有通知（管理员用）
-// ============================================================
-public async Task ClearAllNotificationsAsync()
-{
-    if (!_tursoAvailable) return;
-
-    await _tursoService.ExecuteSqlAsync("DELETE FROM Notifications");
-    Console.WriteLine($"✅ 所有通知已清空");
-}
 
         // ============================================================
         // 用户相关
@@ -179,7 +45,8 @@ public async Task ClearAllNotificationsAsync()
                 IsDeleted, DeletedAt, DeleteReason, DeleteNote,
                 AvatarUrl, IsAvatarApproved, AvatarSubmittedAt,
                 PendingEmail, PendingUsername, IsEmailChangeApproved, IsUsernameChangeApproved,
-                VerificationCode, VerificationCodeExpiry, IsApproved
+                VerificationCode, VerificationCodeExpiry, IsApproved,
+                LoginToken, LoginTokenExpiry
             ) VALUES (
                 {user.Id}, '{EscapeSql(user.Username)}', '{EscapeSql(user.Email)}',
                 '{EscapeSql(user.PasswordHash)}', {(user.IsEmailVerified ? 1 : 0)},
@@ -201,7 +68,9 @@ public async Task ClearAllNotificationsAsync()
                 {(user.IsUsernameChangeApproved ? 1 : 0)},
                 {(string.IsNullOrEmpty(user.VerificationCode) ? "NULL" : $"'{EscapeSql(user.VerificationCode)}'")},
                 {(user.VerificationCodeExpiry.HasValue ? $"'{user.VerificationCodeExpiry.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
-                {(user.IsApproved ? 1 : 0)}
+                {(user.IsApproved ? 1 : 0)},
+                {(string.IsNullOrEmpty(user.LoginToken) ? "NULL" : $"'{EscapeSql(user.LoginToken)}'")},
+                {(user.LoginTokenExpiry.HasValue ? $"'{user.LoginTokenExpiry.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")}
             )";
 
             await _tursoService.ExecuteSqlAsync(sql);
@@ -238,85 +107,49 @@ public async Task ClearAllNotificationsAsync()
             
             return user;
         }
-       // ============================================================
-// ⭐ 生成登录Token（修复长度问题）
-// ============================================================
 
-public string GenerateLoginToken()
-{
-    // 生成 32 字节随机数，转为 Base64 后取前 32 位
-    var bytes = new byte[32];
-    using (var rng = RandomNumberGenerator.Create())
-    {
-        rng.GetBytes(bytes);
-    }
-    var token = Convert.ToBase64String(bytes)
-        .Replace("+", "")
-        .Replace("/", "")
-        .Replace("=", "");
-    
-    // 确保长度至少 32 位
-    if (token.Length < 32)
-    {
-        token = token.PadRight(32, '0');
-    }
-    return token.Substring(0, 32);
-}
+        public string GenerateLoginToken()
+        {
+            var bytes = new byte[32];
+            using (var rng = RandomNumberGenerator.Create())
+            {
+                rng.GetBytes(bytes);
+            }
+            var token = Convert.ToBase64String(bytes)
+                .Replace("+", "")
+                .Replace("/", "")
+                .Replace("=", "");
+            
+            if (token.Length < 32)
+            {
+                token = token.PadRight(32, '0');
+            }
+            return token.Substring(0, 32);
+        }
 
-// ============================================================
-// ⭐ 通过登录Token获取用户
-// ============================================================
+        public async Task<User?> GetUserByLoginTokenAsync(string token)
+        {
+            if (!_tursoAvailable) return null;
 
-public async Task<User?> GetUserByLoginTokenAsync(string token)
-{
-    if (!_tursoAvailable) return null;
+            var result = await _tursoService.QueryAsync(
+                $"SELECT * FROM Users WHERE LoginToken = '{EscapeSql(token)}' AND LoginTokenExpiry > datetime('now')"
+            );
+            return ParseUserFromJson(result);
+        }
 
-    var result = await _tursoService.QueryAsync(
-        $"SELECT * FROM Users WHERE LoginToken = '{EscapeSql(token)}' AND LoginTokenExpiry > datetime('now')"
-    );
-    return ParseUserFromJson(result);
-}
+        public async Task<string> CreateLoginTokenAsync(int userId)
+        {
+            var token = GenerateLoginToken();
+            var expiry = DateTime.Now.AddDays(7);
 
-// ============================================================
-// ⭐ 生成并保存用户登录Token
-// ============================================================
+            var sql = $@"UPDATE Users SET 
+                LoginToken = '{token}', 
+                LoginTokenExpiry = '{expiry:yyyy-MM-dd HH:mm:ss}' 
+            WHERE Id = {userId}";
 
-public async Task<string> CreateLoginTokenAsync(int userId)
-{
-    var token = GenerateLoginToken();
-    var expiry = DateTime.Now.AddDays(7); // 7天有效期
-
-    var sql = $@"UPDATE Users SET 
-        LoginToken = '{token}', 
-        LoginTokenExpiry = '{expiry:yyyy-MM-dd HH:mm:ss}' 
-    WHERE Id = {userId}";
-
-    await _tursoService.ExecuteSqlAsync(sql);
-    return token;
-}
-        // ============================================================
-// 获取所有通知（管理员用）
-// ============================================================
-
-public async Task<List<Notification>> GetAllNotificationsAsync()
-{
-    if (!_tursoAvailable) return new List<Notification>();
-
-    var result = await _tursoService.QueryAsync("SELECT * FROM Notifications ORDER BY CreatedAt DESC");
-    return ParseNotificationListFromJson(result);
-}
-
-// ============================================================
-// 删除通知
-// ============================================================
-
-public async Task DeleteNotificationAsync(int id)
-{
-    if (!_tursoAvailable) return;
-
-    await _tursoService.ExecuteSqlAsync($"DELETE FROM Notifications WHERE Id = {id}");
-    Console.WriteLine($"✅ 通知 {id} 已删除");
-}
+            await _tursoService.ExecuteSqlAsync(sql);
+            return token;
+        }
 
         public async Task UpdateUserAsync(User user)
         {
@@ -351,28 +184,6 @@ public async Task DeleteNotificationAsync(int id)
             await _tursoService.ExecuteSqlAsync(sql);
             Console.WriteLine($"✅ 用户 {user.Username} 已更新到 Turso (头像={user.AvatarUrl}, IsApproved={user.IsApproved})");
         }
-        // ============================================================
-// ⭐ 留言点赞同步（Turso）
-// ============================================================
-
-public async Task AddMessageLikeAsync(int messageId, int userId)
-{
-    if (!_tursoAvailable) return;
-
-    var sql = $@"INSERT INTO MessageLikes (MessageId, UserId, CreateTime)
-                 VALUES ({messageId}, {userId}, '{DateTime.Now:yyyy-MM-dd HH:mm:ss}')";
-    await _tursoService.ExecuteSqlAsync(sql);
-    Console.WriteLine($"✅ 留言点赞已同步: MessageId={messageId}, UserId={userId}");
-}
-
-public async Task DeleteMessageLikeAsync(int messageId, int userId)
-{
-    if (!_tursoAvailable) return;
-
-    var sql = $@"DELETE FROM MessageLikes WHERE MessageId = {messageId} AND UserId = {userId}";
-    await _tursoService.ExecuteSqlAsync(sql);
-    Console.WriteLine($"✅ 留言取消点赞已同步: MessageId={messageId}, UserId={userId}");
-}
 
         public async Task<List<User>> GetAllUsersAsync()
         {
@@ -389,29 +200,39 @@ public async Task DeleteMessageLikeAsync(int messageId, int userId)
             await _tursoService.ExecuteSqlAsync($"DELETE FROM Users WHERE Id = {id}");
             Console.WriteLine($"✅ 用户 {id} 已从 Turso 删除");
         }
-        // ============================================================
-// ⭐ 博客点赞同步（Turso）
-// ============================================================
 
-public async Task AddBlogLikeAsync(int blogId, int userId)
-{
-    if (!_tursoAvailable) return;
+        public async Task EnsureAdminExistsAsync()
+        {
+            if (!_tursoAvailable) return;
 
-    var sql = $@"INSERT INTO BlogLikes (BlogId, UserId, CreateTime)
-                 VALUES ({blogId}, {userId}, '{DateTime.Now:yyyy-MM-dd HH:mm:ss}')";
-    await _tursoService.ExecuteSqlAsync(sql);
-    Console.WriteLine($"✅ 博客点赞已同步: BlogId={blogId}, UserId={userId}");
-}
+            var result = await _tursoService.QueryAsync("SELECT * FROM Users WHERE Username = 'admin'");
+            var admin = ParseUserFromJson(result);
 
-public async Task DeleteBlogLikeAsync(int blogId, int userId)
-{
-    if (!_tursoAvailable) return;
+            if (admin == null)
+            {
+                var newAdmin = new User
+                {
+                    Id = 1,
+                    Username = "admin",
+                    Email = "2908685235@qq.com",
+                    PasswordHash = "AQAAAAIAAYagAAAAEJ4Zj6zVqZMjSx5k5r5WYg==",
+                    IsEmailVerified = true,
+                    IsAdmin = true,
+                    IsApproved = true,
+                    IsBanned = false,
+                    IsDeleted = false,
+                    IsAvatarApproved = true,
+                    CreatedAt = DateTime.Now
+                };
 
-    var sql = $@"DELETE FROM BlogLikes WHERE BlogId = {blogId} AND UserId = {userId}";
-    await _tursoService.ExecuteSqlAsync(sql);
-    Console.WriteLine($"✅ 博客取消点赞已同步: BlogId={blogId}, UserId={userId}");
-}
-
+                await AddUserAsync(newAdmin);
+                Console.WriteLine("✅ 管理员账号已创建到 Turso");
+            }
+            else
+            {
+                Console.WriteLine("✅ 管理员账号已存在于 Turso");
+            }
+        }
 
         // ============================================================
         // 博客相关
@@ -476,6 +297,25 @@ public async Task DeleteBlogLikeAsync(int blogId, int userId)
             if (!_tursoAvailable) return;
             await _tursoService.ExecuteSqlAsync($"DELETE FROM Blogs WHERE Id = {id}");
             Console.WriteLine($"✅ 博客 {id} 已从 Turso 删除");
+        }
+
+        public async Task AddBlogLikeAsync(int blogId, int userId)
+        {
+            if (!_tursoAvailable) return;
+
+            var sql = $@"INSERT INTO BlogLikes (BlogId, UserId, CreateTime)
+                         VALUES ({blogId}, {userId}, '{DateTime.Now:yyyy-MM-dd HH:mm:ss}')";
+            await _tursoService.ExecuteSqlAsync(sql);
+            Console.WriteLine($"✅ 博客点赞已同步: BlogId={blogId}, UserId={userId}");
+        }
+
+        public async Task DeleteBlogLikeAsync(int blogId, int userId)
+        {
+            if (!_tursoAvailable) return;
+
+            var sql = $@"DELETE FROM BlogLikes WHERE BlogId = {blogId} AND UserId = {userId}";
+            await _tursoService.ExecuteSqlAsync(sql);
+            Console.WriteLine($"✅ 博客取消点赞已同步: BlogId={blogId}, UserId={userId}");
         }
 
         // ============================================================
@@ -551,46 +391,23 @@ public async Task DeleteBlogLikeAsync(int blogId, int userId)
             Console.WriteLine($"✅ 留言 {id} 已从 Turso 删除");
         }
 
-        public async Task SaveChangesAsync()
-        {
-            // 不需要，因为直接写 Turso
-        }
-
-        // ============================================================
-        // 管理员账号
-        // ============================================================
-
-        public async Task EnsureAdminExistsAsync()
+        public async Task AddMessageLikeAsync(int messageId, int userId)
         {
             if (!_tursoAvailable) return;
 
-            var result = await _tursoService.QueryAsync("SELECT * FROM Users WHERE Username = 'admin'");
-            var admin = ParseUserFromJson(result);
+            var sql = $@"INSERT INTO MessageLikes (MessageId, UserId, CreateTime)
+                         VALUES ({messageId}, {userId}, '{DateTime.Now:yyyy-MM-dd HH:mm:ss}')";
+            await _tursoService.ExecuteSqlAsync(sql);
+            Console.WriteLine($"✅ 留言点赞已同步: MessageId={messageId}, UserId={userId}");
+        }
 
-            if (admin == null)
-            {
-                var newAdmin = new User
-                {
-                    Id = 1,
-                    Username = "admin",
-                    Email = "2908685235@qq.com",
-                    PasswordHash = "AQAAAAIAAYagAAAAEJ4Zj6zVqZMjSx5k5r5WYg==",
-                    IsEmailVerified = true,
-                    IsAdmin = true,
-                    IsApproved = true,
-                    IsBanned = false,
-                    IsDeleted = false,
-                    IsAvatarApproved = true,
-                    CreatedAt = DateTime.Now
-                };
+        public async Task DeleteMessageLikeAsync(int messageId, int userId)
+        {
+            if (!_tursoAvailable) return;
 
-                await AddUserAsync(newAdmin);
-                Console.WriteLine("✅ 管理员账号已创建到 Turso");
-            }
-            else
-            {
-                Console.WriteLine("✅ 管理员账号已存在于 Turso");
-            }
+            var sql = $@"DELETE FROM MessageLikes WHERE MessageId = {messageId} AND UserId = {userId}";
+            await _tursoService.ExecuteSqlAsync(sql);
+            Console.WriteLine($"✅ 留言取消点赞已同步: MessageId={messageId}, UserId={userId}");
         }
 
         // ============================================================
@@ -730,12 +547,96 @@ public async Task DeleteBlogLikeAsync(int blogId, int userId)
             return ParseNotificationListFromJson(result);
         }
 
+        public async Task<List<Notification>> GetAllNotificationsAsync()
+        {
+            if (!_tursoAvailable) return new List<Notification>();
+
+            var result = await _tursoService.QueryAsync("SELECT * FROM Notifications ORDER BY CreatedAt DESC");
+            return ParseNotificationListFromJson(result);
+        }
+
         public async Task MarkNotificationAsReadAsync(int id)
         {
             if (!_tursoAvailable) return;
 
             await _tursoService.ExecuteSqlAsync($"UPDATE Notifications SET IsRead = 1 WHERE Id = {id}");
             Console.WriteLine($"✅ 通知 {id} 已标记为已读");
+        }
+
+        public async Task DeleteNotificationAsync(int id)
+        {
+            if (!_tursoAvailable) return;
+
+            await _tursoService.ExecuteSqlAsync($"DELETE FROM Notifications WHERE Id = {id}");
+            Console.WriteLine($"✅ 通知 {id} 已删除");
+        }
+
+        public async Task ClearAllNotificationsAsync()
+        {
+            if (!_tursoAvailable) return;
+
+            await _tursoService.ExecuteSqlAsync("DELETE FROM Notifications");
+            Console.WriteLine($"✅ 所有通知已清空");
+        }
+
+        // ============================================================
+        // 📚 题库管理方法（添加到 Turso 数据库）
+        // ============================================================
+
+        public async Task<List<BankQuestion>> GetAllBankQuestionsAsync()
+        {
+            if (!_tursoAvailable) return new List<BankQuestion>();
+
+            var result = await _tursoService.QueryAsync("SELECT * FROM DailyQuestionBank ORDER BY Id DESC");
+            return ParseBankQuestionList(result);
+        }
+
+        public async Task<BankQuestion?> GetBankQuestionByIdAsync(int id)
+        {
+            if (!_tursoAvailable) return null;
+
+            var result = await _tursoService.QueryAsync($"SELECT * FROM DailyQuestionBank WHERE Id = {id}");
+            return ParseBankQuestion(result);
+        }
+
+        public async Task AddBankQuestionAsync(BankQuestion question)
+        {
+            if (!_tursoAvailable) return;
+
+            var maxIdResult = await _tursoService.QueryAsync("SELECT MAX(Id) as MaxId FROM DailyQuestionBank");
+            var maxId = ParseMaxId(maxIdResult);
+            question.Id = maxId + 1;
+
+            var sql = $@"INSERT INTO DailyQuestionBank (
+                Id, Question, Answer, Pinyin, Hint, Difficulty, Category, IsActive, CreatedAt
+            ) VALUES (
+                {question.Id}, '{EscapeSql(question.Question)}', '{EscapeSql(question.Answer)}',
+                '{EscapeSql(question.Pinyin)}',
+                {(string.IsNullOrEmpty(question.Hint) ? "NULL" : $"'{EscapeSql(question.Hint)}'")},
+                {question.Difficulty}, '{EscapeSql(question.Category)}',
+                {(question.IsActive ? 1 : 0)}, '{question.CreatedAt:yyyy-MM-dd HH:mm:ss}'
+            )";
+
+            await _tursoService.ExecuteSqlAsync(sql);
+            Console.WriteLine($"✅ 题目已添加到题库: {question.Question}");
+        }
+
+        public async Task ToggleQuestionStatusAsync(int id, bool enable)
+        {
+            if (!_tursoAvailable) return;
+
+            await _tursoService.ExecuteSqlAsync(
+                $"UPDATE DailyQuestionBank SET IsActive = {(enable ? 1 : 0)} WHERE Id = {id}"
+            );
+            Console.WriteLine($"✅ 题目 {id} 状态已切换为: {(enable ? "启用" : "禁用")}");
+        }
+
+        public async Task DeleteBankQuestionAsync(int id)
+        {
+            if (!_tursoAvailable) return;
+
+            await _tursoService.ExecuteSqlAsync($"DELETE FROM DailyQuestionBank WHERE Id = {id}");
+            Console.WriteLine($"✅ 题目 {id} 已从题库删除");
         }
 
         // ============================================================
@@ -752,15 +653,6 @@ public async Task DeleteBlogLikeAsync(int blogId, int userId)
         {
             if (!_tursoAvailable) return false;
             return await _tursoService.ExecuteSqlAsync(sql);
-        }
-
-        // ============================================================
-        // 兼容旧接口
-        // ============================================================
-
-        public async Task<List<User>> GetAllUsersWithFallbackAsync()
-        {
-            return await GetAllUsersAsync();
         }
 
         // ============================================================
@@ -962,6 +854,8 @@ public async Task DeleteBlogLikeAsync(int blogId, int userId)
                                     case "IsUsernameChangeApproved": user.IsUsernameChangeApproved = GetBoolFromRow(element); break;
                                     case "VerificationCode": user.VerificationCode = GetStringOrNullFromRow(element); break;
                                     case "VerificationCodeExpiry": user.VerificationCodeExpiry = GetDateTimeFromRow(element); break;
+                                    case "LoginToken": user.LoginToken = GetStringOrNullFromRow(element); break;
+                                    case "LoginTokenExpiry": user.LoginTokenExpiry = GetDateTimeFromRow(element); break;
                                 }
                             }
                             return user;
@@ -976,10 +870,6 @@ public async Task DeleteBlogLikeAsync(int blogId, int userId)
                 return null;
             }
         }
-
-        // ============================================================
-        // ParseUserListFromJson
-        // ============================================================
 
         private List<User> ParseUserListFromJson(string json)
         {
@@ -1371,6 +1261,72 @@ public async Task DeleteBlogLikeAsync(int blogId, int userId)
                 Console.WriteLine($"⚠️ 解析通知列表 JSON 失败: {ex.Message}");
             }
             return notifications;
+        }
+
+        // ============================================================
+        // 📚 题库解析方法
+        // ============================================================
+
+        private List<BankQuestion> ParseBankQuestionList(string json)
+        {
+            var list = new List<BankQuestion>();
+            try
+            {
+                using var doc = JsonDocument.Parse(json);
+                var root = doc.RootElement;
+
+                if (root.TryGetProperty("results", out var results) && results.GetArrayLength() > 0)
+                {
+                    var firstResult = results[0];
+                    if (firstResult.TryGetProperty("response", out var response) &&
+                        response.TryGetProperty("result", out var result))
+                    {
+                        if (result.TryGetProperty("rows", out var rows) && rows.GetArrayLength() > 0)
+                        {
+                            var cols = result.GetProperty("cols");
+
+                            for (int r = 0; r < rows.GetArrayLength(); r++)
+                            {
+                                var row = rows[r];
+                                if (row.ValueKind != JsonValueKind.Array) continue;
+
+                                var q = new BankQuestion();
+                                for (int i = 0; i < cols.GetArrayLength(); i++)
+                                {
+                                    var colName = cols[i].GetProperty("name").GetString();
+                                    var element = row[i];
+
+                                    switch (colName)
+                                    {
+                                        case "Id": q.Id = GetIntFromRow(element); break;
+                                        case "Question": q.Question = GetStringFromRow(element); break;
+                                        case "Answer": q.Answer = GetStringFromRow(element); break;
+                                        case "Pinyin": q.Pinyin = GetStringFromRow(element); break;
+                                        case "Hint": q.Hint = GetStringOrNullFromRow(element); break;
+                                        case "Difficulty": q.Difficulty = GetIntFromRow(element); break;
+                                        case "Category": q.Category = GetStringFromRow(element); break;
+                                        case "IsActive": q.IsActive = GetBoolFromRow(element); break;
+                                        case "UseCount": q.UseCount = GetIntFromRow(element); break;
+                                        case "CreatedAt": q.CreatedAt = GetDateTimeFromRow(element) ?? DateTime.Now; break;
+                                    }
+                                }
+                                list.Add(q);
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"⚠️ 解析题库 JSON 失败: {ex.Message}");
+            }
+            return list;
+        }
+
+        private BankQuestion? ParseBankQuestion(string json)
+        {
+            var list = ParseBankQuestionList(json);
+            return list.FirstOrDefault();
         }
 
         // ============================================================
