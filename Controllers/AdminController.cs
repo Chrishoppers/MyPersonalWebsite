@@ -116,6 +116,122 @@ public class BatchSendRequest
     public string Message { get; set; } = string.Empty;
     public string Type { get; set; } = "info";
 }
+// ============================================================
+// 📚 题库管理
+// ============================================================
+
+[HttpGet]
+public async Task<IActionResult> QuestionBank()
+{
+    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+    if (isAdmin != 1)
+        return RedirectToAction("Login", "Auth");
+
+    var questions = await _dataSync.GetAllBankQuestionsAsync();
+    return View(questions);
+}
+
+[HttpGet]
+public async Task<IActionResult> GetQuestionDetail(int id)
+{
+    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+    if (isAdmin != 1)
+        return Json(new { success = false, message = "权限不足" });
+
+    var q = await _dataSync.GetBankQuestionByIdAsync(id);
+    if (q == null)
+        return Json(new { success = false, message = "题目不存在" });
+
+    return Json(new
+    {
+        success = true,
+        data = new
+        {
+            q.Id,
+            q.Question,
+            q.Answer,
+            q.Pinyin,
+            q.Hint,
+            q.Category,
+            q.Difficulty,
+            q.IsActive,
+            q.UseCount,
+            q.CreatedAt
+        }
+    });
+}
+
+[HttpPost]
+public async Task<IActionResult> ToggleQuestionStatus(int id, bool enable)
+{
+    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+    if (isAdmin != 1)
+        return Json(new { success = false, message = "权限不足" });
+
+    await _dataSync.ToggleQuestionStatusAsync(id, enable);
+    return Json(new { success = true });
+}
+
+[HttpPost]
+public async Task<IActionResult> DeleteQuestion(int id)
+{
+    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+    if (isAdmin != 1)
+        return Json(new { success = false, message = "权限不足" });
+
+    await _dataSync.DeleteBankQuestionAsync(id);
+    return Json(new { success = true });
+}
+
+[HttpPost]
+public async Task<IActionResult> BatchAddQuestions([FromBody] BatchAddRequest request)
+{
+    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+    if (isAdmin != 1)
+        return Json(new { success = false, message = "权限不足" });
+
+    if (request.Questions == null || !request.Questions.Any())
+        return Json(new { success = false, message = "请至少添加一道题" });
+
+    int count = 0;
+    foreach (var q in request.Questions)
+    {
+        if (string.IsNullOrEmpty(q.Question) || string.IsNullOrEmpty(q.Answer))
+            continue;
+
+        var question = new BankQuestion
+        {
+            Question = q.Question,
+            Answer = q.Answer,
+            Pinyin = q.Pinyin ?? "",
+            Hint = q.Hint ?? "",
+            Difficulty = q.Difficulty > 0 ? q.Difficulty : 1,
+            Category = string.IsNullOrEmpty(q.Category) ? "综合" : q.Category,
+            IsActive = true,
+            CreatedAt = DateTime.Now
+        };
+
+        await _dataSync.AddBankQuestionAsync(question);
+        count++;
+    }
+
+    return Json(new { success = true, count = count });
+}
+
+public class BatchAddRequest
+{
+    public List<BankQuestionInput> Questions { get; set; } = new();
+}
+
+public class BankQuestionInput
+{
+    public string Question { get; set; } = string.Empty;
+    public string Answer { get; set; } = string.Empty;
+    public string Pinyin { get; set; } = string.Empty;
+    public string Hint { get; set; } = string.Empty;
+    public int Difficulty { get; set; } = 1;
+    public string Category { get; set; } = "综合";
+}
 
         // ============================================================
         // 1. 仪表盘
