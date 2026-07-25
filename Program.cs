@@ -74,6 +74,8 @@ builder.Services.AddScoped<DataSyncService>();
 builder.Services.AddScoped<TursoService>();
 builder.Services.AddScoped<DailyQuestionService>();
 builder.Services.AddScoped<GameSuggestionService>();
+// 注册后台定时服务
+builder.Services.AddHostedService<DailyQuestionScheduler>();
 
 builder.Services.AddSignalR();
 
