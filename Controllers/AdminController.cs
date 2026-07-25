@@ -1696,6 +1696,74 @@ private int ParseQuestionIdFromJson(string json)
                 return Json(new { success = false, message = $"更换失败: {ex.Message}" });
             }
         }
+        private async Task AutoScheduleMissingDaysAsync()
+{
+    var today = DateTime.Today;
+    var random = new Random();
+
+    // 获取所有可用题目
+    var allQuestions = await _dataSync.GetAllBankQuestionsAsync();
+    var availableQuestions = allQuestions
+        .Where(q => q.IsActive)
+        .ToList();
+
+    if (!availableQuestions.Any()) return;
+
+    var usedQuestions = new HashSet<int>();
+
+    for (int i = 0; i < 7; i++)
+    {
+        var date = today.AddDays(i);
+        var dateStr = date.ToString("yyyy-MM-dd");
+
+        // 检查当天是否已有安排
+        var checkResult = await _dataSync.QueryAsync(
+            $"SELECT QuestionId FROM DailyQuestions WHERE Date = '{dateStr}' LIMIT 1"
+        );
+
+        if (!checkResult.Contains("\"rows\":[]"))
+        {
+            var existingId = ParseQuestionIdFromJson(checkResult);
+            if (existingId > 0)
+            {
+                usedQuestions.Add(existingId);
+                continue;
+            }
+        }
+
+        // ⭐ 随机选一道题（优先使用次数少的）
+        var candidate = availableQuestions
+            .Where(q => !usedQuestions.Contains(q.Id))
+            .OrderBy(q => q.UseCount)
+            .ThenBy(q => random.Next())  // 随机排序
+            .FirstOrDefault();
+
+        // 如果所有题目都用完了，重置
+        if (candidate == null)
+        {
+            usedQuestions.Clear();
+            candidate = availableQuestions
+                .Where(q => !usedQuestions.Contains(q.Id))
+                .OrderBy(q => q.UseCount)
+                .ThenBy(q => random.Next())
+                .FirstOrDefault();
+        }
+
+        if (candidate != null)
+        {
+            usedQuestions.Add(candidate.Id);
+
+            var sql = $@"INSERT INTO DailyQuestions (
+                QuestionId, Date, CreatedAt
+            ) VALUES (
+                {candidate.Id}, '{dateStr}', '{DateTime.Now:yyyy-MM-dd HH:mm:ss}'
+            )";
+
+            await _dataSync.ExecuteSqlAsync(sql);
+            Console.WriteLine($"🤖 AI自动安排 {dateStr}: {candidate.Question} (难度: {candidate.Difficulty}⭐)");
+        }
+    }
+}
 
         // ============================================================
         private DailyQuestion? ParseDailyQuestionFromJson(string json)
