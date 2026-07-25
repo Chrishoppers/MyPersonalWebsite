@@ -5,11 +5,13 @@ namespace MyPersonalWebsite.Models
     public class DailyQuestion
     {
         public int Id { get; set; }
+        public int? QuestionId { get; set; }  // 关联 DailyQuestionBank 的 Id
         public string Question { get; set; } = string.Empty;
         public string Answer { get; set; } = string.Empty;
         public string Pinyin { get; set; } = string.Empty;
         public string? Hint { get; set; }
         public int Difficulty { get; set; } = 1;
+        public string Category { get; set; } = "综合";
         public DateTime Date { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.Now;
     }
@@ -37,7 +39,6 @@ namespace MyPersonalWebsite.Models
         public DateTime UpdatedAt { get; set; } = DateTime.Now;
     }
 
-    // 排行榜显示模型
     public class RankItem
     {
         public int UserId { get; set; }
@@ -50,7 +51,6 @@ namespace MyPersonalWebsite.Models
         public int Rank { get; set; }
     }
 
-    // 今日答题状态
     public class TodayAnswerStatus
     {
         public bool HasAnswered { get; set; }
