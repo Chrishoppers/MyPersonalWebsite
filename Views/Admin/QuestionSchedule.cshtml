@@ -315,9 +315,19 @@
     <!-- 统计 -->
     <div class="stats-row">
         @{
-            var total = ViewBag.BankQuestions?.Count ?? 0;
-            var used = ViewBag.BankQuestions?.Count(q => q.UseCount > 0) ?? 0;
-            var available = ViewBag.BankQuestions?.Count(q => q.UseCount == 0 && q.IsActive) ?? 0;
+            var total = 0;
+            var used = 0;
+            var available = 0;
+            if (ViewBag.BankQuestions != null)
+            {
+                var list = ViewBag.BankQuestions as List<MyPersonalWebsite.Models.BankQuestion>;
+                if (list != null)
+                {
+                    total = list.Count;
+                    used = list.Count(q => q.UseCount > 0);
+                    available = list.Count(q => q.UseCount == 0 && q.IsActive);
+                }
+            }
         }
         <div class="stat-card total">
             <div class="number">@total</div>
@@ -357,7 +367,7 @@
                             else if (isPast)
                             {
                                 <span class="badge badge-past">✅ 已过</span>
-                        }
+                            }
                             else
                             {
                                 <span class="badge badge-future">📅 未来</span>
@@ -441,9 +451,7 @@
                 setTimeout(function() { toast.remove(); }, 300);
             }, 3000);
         }
- // ============================================================
-        // 更换题目
-        // ============================================================
+
         function replaceQuestion(date) {
             var select = document.getElementById('newQuestion_' + date);
             var newQuestionId = select.value;
@@ -485,9 +493,6 @@
             });
         }
 
-        // ============================================================
-        // 🤖 AI一键安排
-        // ============================================================
         function autoScheduleAll() {
             if (!confirm('确定要清空未来7天的所有安排，并由AI自动重新安排吗？')) return;
 
