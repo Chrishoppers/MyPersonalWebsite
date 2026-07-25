@@ -394,7 +394,14 @@
                                         if (!q.IsActive) continue;
                                         var isSelected = q.Id == item.QuestionId;
                                         var usedText = q.UseCount > 0 ? $"(已用{q.UseCount}次)" : "(未使用)";
-                                        <option value="@q.Id" @(isSelected ? "selected" : "")>@q.Question [@q.Category] @usedText</option>
+                                        @if (isSelected)
+{
+    <option value="@q.Id" selected>@q.Question [@q.Category] @usedText</option>
+}
+else
+{
+    <option value="@q.Id">@q.Question [@q.Category] @usedText</option>
+}
                                     }
                                 }
                             </select>
