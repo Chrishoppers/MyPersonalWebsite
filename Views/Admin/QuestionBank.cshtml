@@ -469,10 +469,9 @@
         <h1>📚 题库管理</h1>
         <div>
             <a href="/Admin/Dashboard" class="btn-glass">← 返回后台</a>
-<!-- ⭐ 新增：题目安排按钮 -->
-        <a href="/Admin/QuestionSchedule" class="btn-glass" style="margin-left:0.5rem;border-color:rgba(79,172,254,0.2);color:#4facfe;">
-            📅 题目安排
-        </a>
+            <a href="/Admin/QuestionSchedule" class="btn-glass" style="margin-left:0.5rem;border-color:rgba(79,172,254,0.2);color:#4facfe;">
+                📅 题目安排
+            </a>
             <button class="btn-glass primary" onclick="openAddModal()" style="margin-left:0.5rem;">
                 ➕ 添加题目
             </button>
@@ -704,25 +703,20 @@
     <script>
         const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
 
-        // ============================================================
-        // Toast
-        // ============================================================
-        function showToast(message, type = 'info') {
+        function showToast(message, type) {
+            type = type || 'info';
             const container = document.getElementById('toastContainer');
             const toast = document.createElement('div');
-            toast.className = `toast-msg ${type}`;
+            toast.className = 'toast-msg ' + type;
             toast.textContent = message;
             container.appendChild(toast);
-            setTimeout(() => {
+            setTimeout(function() {
                 toast.style.opacity = '0';
                 toast.style.transform = 'translateX(20px)';
-                setTimeout(() => toast.remove(), 300);
+                setTimeout(function() { toast.remove(); }, 300);
             }, 3000);
         }
 
-        // ============================================================
-        // 弹窗控制
-        // ============================================================
         function openModal(id) {
             document.getElementById(id).classList.add('active');
         }
@@ -745,7 +739,7 @@
         }
 
         // 点击背景关闭
-        document.querySelectorAll('.modal-overlay').forEach(el => {
+        document.querySelectorAll('.modal-overlay').forEach(function(el) {
             el.addEventListener('click', function(e) {
                 if (e.target === this) {
                     this.classList.remove('active');
@@ -756,7 +750,9 @@
         // ESC 关闭
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
-                document.querySelectorAll('.modal-overlay.active').forEach(el => el.classList.remove('active'));
+                document.querySelectorAll('.modal-overlay.active').forEach(function(el) {
+                    el.classList.remove('active');
+                });
             }
         });
 
@@ -789,34 +785,34 @@
                     category: category
                 })
             })
-            .then(r => r.json())
-            .then(data => {
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
                 if (data.success) {
                     showToast('✅ 添加成功', 'success');
                     closeModal('addSingleModal');
-                    setTimeout(() => location.reload(), 800);
+                    setTimeout(function() { location.reload(); }, 800);
                 } else {
                     showToast(data.message || '添加失败', 'error');
                 }
             })
-            .catch(() => showToast('操作失败，请重试', 'error'));
+            .catch(function() { showToast('操作失败，请重试', 'error'); });
         }
 
         // ============================================================
-        // 批量添加
+        // 批量添加（带进度条）
         // ============================================================
         function batchAddQuestions() {
             const text = document.getElementById('batchQuestions').value.trim();
             if (!text) { showToast('请输入题目', 'error'); return; }
 
-            const lines = text.split('\n').filter(l => l.trim());
+            const lines = text.split('\n').filter(function(l) { return l.trim(); });
             if (lines.length === 0) { showToast('请输入至少一行题目', 'error'); return; }
 
             const questions = [];
-            for (let line of lines) {
-                const parts = line.split('|').map(s => s.trim());
+            for (var i = 0; i < lines.length; i++) {
+                var parts = lines[i].split('|').map(function(s) { return s.trim(); });
                 if (parts.length < 6) {
-                    showToast(`格式错误：${line}`, 'error');
+                    showToast('格式错误：' + lines[i], 'error');
                     return;
                 }
                 questions.push({
@@ -829,7 +825,7 @@
                 });
             }
 
-            if (!confirm(`确定要添加 ${questions.length} 道题吗？`)) return;
+            showProgressModal(questions.length);
 
             fetch('/Admin/BatchAddQuestions', {
                 method: 'POST',
@@ -839,28 +835,77 @@
                 },
                 body: JSON.stringify({ questions: questions })
             })
-            .then(r => r.json())
-            .then(data => {
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                closeProgressModal();
                 if (data.success) {
-                    showToast(`✅ 成功添加 ${data.count} 道题`, 'success');
-                    closeModal('addBatchModal');
-                    setTimeout(() => location.reload(), 1000);
+                    var msg = '✅ 成功添加 ' + data.count + ' 道题';
+                    if (data.failCount > 0) {
+                        msg += '，' + data.failCount + ' 道失败';
+                        if (data.errors) msg += '\n\n错误：' + data.errors;
+                    }
+                    showToast(msg, data.failCount > 0 ? 'warning' : 'success');
+                    setTimeout(function() { location.reload(); }, 1500);
                 } else {
                     showToast(data.message || '添加失败', 'error');
                 }
             })
-            .catch(() => showToast('操作失败，请重试', 'error'));
+            .catch(function() {
+                closeProgressModal();
+                showToast('网络错误，请重试', 'error');
+            });
+        }
+
+        // ============================================================
+        // 进度条弹窗
+        // ============================================================
+        function showProgressModal(total) {
+            var overlay = document.createElement('div');
+            overlay.id = 'progressOverlay';
+            overlay.style.cssText = 'position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); z-index: 9999; display: flex; align-items: center; justify-content: center;';
+            overlay.innerHTML = '<div style="background: #1a1a2e; border-radius: 24px; padding: 2rem 2.5rem; border: 1px solid rgba(255,255,255,0.04); max-width: 420px; width: 90%; text-align: center;">' +
+                '<div style="font-size: 2.5rem; margin-bottom: 0.5rem;">📚</div>' +
+                '<h3 style="color: #fff; font-weight: 600; margin-bottom: 0.3rem;">正在批量添加...</h3>' +
+                '<p style="color: rgba(255,255,255,0.3); font-size: 0.85rem; margin-bottom: 1rem;">共 <strong id="progressTotal" style="color:#8B5CF6;">' + total + '</strong> 道题</p>' +
+                '<div style="width: 100%; height: 6px; background: rgba(255,255,255,0.04); border-radius: 10px; overflow: hidden;">' +
+                    '<div id="progressBar" style="width: 0%; height: 100%; background: linear-gradient(135deg, #8B5CF6, #EC4899); border-radius: 10px; transition: width 0.3s ease;"></div>' +
+                '</div>' +
+                '<p id="progressText" style="color: rgba(255,255,255,0.15); font-size: 0.75rem; margin-top: 0.5rem;">处理中...</p>' +
+            '</div>';
+            document.body.appendChild(overlay);
+
+            var progress = 0;
+            var interval = setInterval(function() {
+                progress += Math.random() * 8 + 2;
+                if (progress > 90) progress = 90;
+                document.getElementById('progressBar').style.width = progress + '%';
+                document.getElementById('progressText').textContent = '处理中 ' + Math.round(progress) + '%...';
+            }, 300);
+
+            overlay._interval = interval;
+        }
+
+        function closeProgressModal() {
+            var overlay = document.getElementById('progressOverlay');
+            if (overlay) {
+                var bar = document.getElementById('progressBar');
+                var text = document.getElementById('progressText');
+                if (bar) bar.style.width = '100%';
+                if (text) text.textContent = '✅ 完成！';
+                clearInterval(overlay._interval);
+                setTimeout(function() { overlay.remove(); }, 600);
+            }
         }
 
         // ============================================================
         // 查看详情
         // ============================================================
         function viewDetail(id) {
-            fetch(`/Admin/GetQuestionDetail?id=${id}`)
-                .then(r => r.json())
-                .then(data => {
+            fetch('/Admin/GetQuestionDetail?id=' + id)
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
                     if (data.success) {
-                        const q = data.data;
+                        var q = data.data;
                         document.getElementById('dId').textContent = '#' + q.id;
                         document.getElementById('dQuestion').textContent = q.question;
                         document.getElementById('dAnswer').textContent = q.answer;
@@ -876,15 +921,15 @@
                         showToast('加载失败', 'error');
                     }
                 })
-                .catch(() => showToast('加载失败，请重试', 'error'));
+                .catch(function() { showToast('加载失败，请重试', 'error'); });
         }
 
         // ============================================================
         // 切换状态
         // ============================================================
         function toggleStatus(id, enable) {
-            const action = enable ? '启用' : '禁用';
-            if (!confirm(`确定要${action}这道题吗？`)) return;
+            var action = enable ? '启用' : '禁用';
+            if (!confirm('确定要' + action + '这道题吗？')) return;
 
             fetch('/Admin/ToggleQuestionStatus', {
                 method: 'POST',
@@ -892,18 +937,18 @@
                     'Content-Type': 'application/x-www-form-urlencoded',
                     'RequestVerificationToken': token
                 },
-                body: `id=${id}&enable=${enable}`
+                body: 'id=' + id + '&enable=' + enable
             })
-            .then(r => r.json())
-            .then(data => {
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
                 if (data.success) {
-                    showToast(`✅ 已${action}`, 'success');
-                    setTimeout(() => location.reload(), 800);
+                    showToast('✅ 已' + action, 'success');
+                    setTimeout(function() { location.reload(); }, 800);
                 } else {
                     showToast(data.message || '操作失败', 'error');
                 }
             })
-            .catch(() => showToast('操作失败，请重试', 'error'));
+            .catch(function() { showToast('操作失败，请重试', 'error'); });
         }
 
         // ============================================================
@@ -918,38 +963,38 @@
                     'Content-Type': 'application/x-www-form-urlencoded',
                     'RequestVerificationToken': token
                 },
-                body: `id=${id}`
+                body: 'id=' + id
             })
-            .then(r => r.json())
-            .then(data => {
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
                 if (data.success) {
                     showToast('🗑️ 删除成功', 'success');
-                    setTimeout(() => location.reload(), 800);
+                    setTimeout(function() { location.reload(); }, 800);
                 } else {
                     showToast(data.message || '删除失败', 'error');
                 }
             })
-            .catch(() => showToast('操作失败，请重试', 'error'));
+            .catch(function() { showToast('操作失败，请重试', 'error'); });
         }
 
         // ============================================================
         // 筛选功能
         // ============================================================
         function applyFilters() {
-            const category = document.getElementById('filterCategory').value;
-            const difficulty = document.getElementById('filterDifficulty').value;
-            const status = document.getElementById('filterStatus').value;
-            const search = document.getElementById('searchInput').value.toLowerCase();
+            var category = document.getElementById('filterCategory').value;
+            var difficulty = document.getElementById('filterDifficulty').value;
+            var status = document.getElementById('filterStatus').value;
+            var search = document.getElementById('searchInput').value.toLowerCase();
 
-            const rows = document.querySelectorAll('.question-row');
-            let count = 0;
+            var rows = document.querySelectorAll('.question-row');
+            var count = 0;
 
-            rows.forEach(row => {
-                let show = true;
-                const rowCategory = row.dataset.category;
-                const rowDifficulty = row.dataset.difficulty;
-                const rowStatus = row.dataset.status;
-                const rowSearch = row.dataset.search?.toLowerCase() || '';
+            rows.forEach(function(row) {
+                var show = true;
+                var rowCategory = row.dataset.category;
+                var rowDifficulty = row.dataset.difficulty;
+                var rowStatus = row.dataset.status;
+                var rowSearch = row.dataset.search?.toLowerCase() || '';
 
                 if (category !== 'all' && rowCategory !== category) show = false;
                 if (difficulty !== 'all' && rowDifficulty !== difficulty) show = false;
@@ -960,7 +1005,7 @@
                 if (show) count++;
             });
 
-            showToast(`显示 ${count} 条`, 'info');
+            showToast('显示 ' + count + ' 条', 'info');
         }
 
         function resetFilters() {
@@ -968,7 +1013,7 @@
             document.getElementById('filterDifficulty').value = 'all';
             document.getElementById('filterStatus').value = 'all';
             document.getElementById('searchInput').value = '';
-            document.querySelectorAll('.question-row').forEach(row => {
+            document.querySelectorAll('.question-row').forEach(function(row) {
                 row.style.display = '';
             });
             showToast('已重置筛选', 'info');
