@@ -1256,90 +1256,7 @@ namespace MyPersonalWebsite.Services
         // 📚 题库解析方法
         // ============================================================
 
-        private List<BankQuestion> ParseBankQuestionList(string json)
-{
-    var list = new List<BankQuestion>();
-    try
-    {
-        using var doc = JsonDocument.Parse(json);
-        var root = doc.RootElement;
-
-        if (root.TryGetProperty("results", out var results) && results.GetArrayLength() > 0)
-        {
-            var firstResult = results[0];
-            if (firstResult.TryGetProperty("response", out var response) &&
-                response.TryGetProperty("result", out var result))
-            {
-                if (result.TryGetProperty("rows", out var rows) && rows.GetArrayLength() > 0)
-                {
-                    var cols = result.GetProperty("cols");
-
-                    for (int r = 0; r < rows.GetArrayLength(); r++)
-                    {
-                        var row = rows[r];
-                        if (row.ValueKind != JsonValueKind.Array) continue;
-
-                        var q = new BankQuestion();
-                        for (int i = 0; i < cols.GetArrayLength(); i++)
-                        {
-                            var colName = cols[i].GetProperty("name").GetString();
-                            var element = row[i];
-
-                            // ⭐ 处理 Turso 返回的 { value: xxx } 格式
-                            var value = element;
-                            if (element.ValueKind == JsonValueKind.Object && element.TryGetProperty("value", out var v))
-                            {
-                                value = v;
-                            }
-
-                            // 跳过 null 值
-                            if (value.ValueKind == JsonValueKind.Null)
-                            {
-                                continue;
-                            }
-
-                            switch (colName)
-                            {
-                                case "Id":
-                                    q.Id = value.ValueKind == JsonValueKind.Number ? value.GetInt32() : 0;
-                                    break;
-                                case "Question":
-                                    q.Question = value.ValueKind == JsonValueKind.String ? value.GetString() ?? "" : "";
-                                    break;
-                                case "Answer":
-                                    q.Answer = value.ValueKind == JsonValueKind.String ? value.GetString() ?? "" : "";
-                                    break;
-                                case "Pinyin":
-                                    q.Pinyin = value.ValueKind == JsonValueKind.String ? value.GetString() ?? "" : "";
-                                    break;
-                                case "Hint":
-                                    q.Hint = value.ValueKind == JsonValueKind.String ? value.GetString() : null;
-                                    break;
-                                case "Difficulty":
-                                    q.Difficulty = value.ValueKind == JsonValueKind.Number ? value.GetInt32() : 1;
-                                    break;
-                                case "Category":
-                                    q.Category = value.ValueKind == JsonValueKind.String ? value.GetString() ?? "综合" : "综合";
-                                    break;
-                                case "IsActive":
-                                    q.IsActive = value.ValueKind == JsonValueKind.Number ? value.GetInt32() == 1 : true;
-                                    break;
-                                case "UseCount":
-                                    q.UseCount = value.ValueKind == JsonValueKind.Number ? value.GetInt32() : 0;
-                                    break;
-                                case "CreatedAt":
-                                    q.CreatedAt = value.ValueKind == JsonValueKind.String ? DateTime.Parse(value.GetString() ?? "") : DateTime.Now;
-                                    break;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-        }
-            
-private List<BankQuestion> ParseBankQuestionList(string json)
+  private List<BankQuestion> ParseBankQuestionList(string json)
 {
     var list = new List<BankQuestion>();
     try
@@ -1424,7 +1341,8 @@ private List<BankQuestion> ParseBankQuestionList(string json)
         Console.WriteLine($"⚠️ 解析题库 JSON 失败: {ex.Message}");
     }
     return list;
-}
+  }
+
 
         private BankQuestion? ParseBankQuestion(string json)
         {
