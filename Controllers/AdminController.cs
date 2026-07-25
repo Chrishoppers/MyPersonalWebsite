@@ -1698,53 +1698,80 @@ private int ParseQuestionIdFromJson(string json)
         }
 
         // ============================================================
-        // 📋 解析每日题目
-        // ============================================================
-
         private DailyQuestion? ParseDailyQuestionFromJson(string json)
+{
+    try
+    {
+        using var doc = JsonDocument.Parse(json);
+        var root = doc.RootElement;
+
+        if (root.TryGetProperty("results", out var results) && results.GetArrayLength() > 0)
         {
-            try
+            var firstResult = results[0];
+            if (firstResult.TryGetProperty("response", out var response) &&
+                response.TryGetProperty("result", out var result))
             {
-                using var doc = JsonDocument.Parse(json);
-                var root = doc.RootElement;
-
-                if (root.TryGetProperty("results", out var results) && results.GetArrayLength() > 0)
+                if (result.TryGetProperty("rows", out var rows) && rows.GetArrayLength() > 0)
                 {
-                    var firstResult = results[0];
-                    if (firstResult.TryGetProperty("response", out var response) &&
-                        response.TryGetProperty("result", out var result))
+                    var row = rows[0];
+                    var cols = result.GetProperty("cols");
+
+                    var q = new DailyQuestion();
+                    for (int i = 0; i < cols.GetArrayLength(); i++)
                     {
-                        if (result.TryGetProperty("rows", out var rows) && rows.GetArrayLength() > 0)
+                        var colName = cols[i].GetProperty("name").GetString();
+                        var element = row[i];
+
+                        // 处理 Turso 返回的 { value: xxx } 格式
+                        var value = element;
+                        if (element.ValueKind == JsonValueKind.Object && element.TryGetProperty("value", out var v))
                         {
-                            var row = rows[0];
-                            var cols = result.GetProperty("cols");
+                            value = v;
+                        }
 
-                            var q = new DailyQuestion();
-                            for (int i = 0; i < cols.GetArrayLength(); i++)
-                            {
-                                var colName = cols[i].GetProperty("name").GetString();
-                                var element = row[i];
-                                var value = element.ValueKind == JsonValueKind.Object && element.TryGetProperty("value", out var v) ? v : element;
+                        // 处理 null 值
+                        if (value.ValueKind == JsonValueKind.Null)
+                        {
+                            continue;
+                        }
 
-                                switch (colName)
-                                {
-                                    case "Id": q.Id = value.ValueKind == JsonValueKind.Number ? value.GetInt32() : 0; break;
-                                    case "QuestionId": q.QuestionId = value.ValueKind == JsonValueKind.Number ? value.GetInt32() : 0; break;
-                                    case "Date": q.Date = value.ValueKind == JsonValueKind.String ? DateTime.Parse(value.GetString() ?? "") : DateTime.Now; break;
-                                    case "Question": q.Question = value.ValueKind == JsonValueKind.String ? value.GetString() ?? "" : ""; break;
-                                    case "Answer": q.Answer = value.ValueKind == JsonValueKind.String ? value.GetString() ?? "" : ""; break;
-                                    case "Category": q.Category = value.ValueKind == JsonValueKind.String ? value.GetString() ?? "综合" : "综合"; break;
-                                    case "Difficulty": q.Difficulty = value.ValueKind == JsonValueKind.Number ? value.GetInt32() : 1; break;
-                                }
-                            }
-                            return q;
+                        switch (colName)
+                        {
+                            case "Id":
+                                q.Id = value.ValueKind == JsonValueKind.Number ? value.GetInt32() : 0;
+                                break;
+                            case "QuestionId":
+                                q.QuestionId = value.ValueKind == JsonValueKind.Number ? value.GetInt32() : 0;
+                                break;
+                            case "Date":
+                                q.Date = value.ValueKind == JsonValueKind.String ? DateTime.Parse(value.GetString() ?? "") : DateTime.Now;
+                                break;
+                            case "Question":
+                                q.Question = value.ValueKind == JsonValueKind.String ? value.GetString() ?? "" : "";
+                                break;
+                            case "Answer":
+                                q.Answer = value.ValueKind == JsonValueKind.String ? value.GetString() ?? "" : "";
+                                break;
+                            case "Category":
+                                q.Category = value.ValueKind == JsonValueKind.String ? value.GetString() ?? "综合" : "综合";
+                                break;
+                            case "Difficulty":
+                                q.Difficulty = value.ValueKind == JsonValueKind.Number ? value.GetInt32() : 1;
+                                break;
                         }
                     }
+                    return q;
                 }
-                return null;
             }
-            catch { return null; }
         }
+        return null;
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"解析每日题目失败: {ex.Message}");
+        return null;
+    }
+}
 
         // ============================================================
         // 辅助类
@@ -1813,6 +1840,45 @@ public async Task<IActionResult> DeduplicateQuestions()
     {
         return Json(new { success = false, message = $"去重失败: {ex.Message}" });
     }
+}
+private int ParseQuestionIdFromJson(string json)
+{
+    try
+    {
+        using var doc = JsonDocument.Parse(json);
+        var root = doc.RootElement;
+
+        if (root.TryGetProperty("results", out var results) && results.GetArrayLength() > 0)
+        {
+            var firstResult = results[0];
+            if (firstResult.TryGetProperty("response", out var response) &&
+                response.TryGetProperty("result", out var result))
+            {
+                if (result.TryGetProperty("rows", out var rows) && rows.GetArrayLength() > 0)
+                {
+                    var row = rows[0];
+                    var cols = result.GetProperty("cols");
+
+                    for (int i = 0; i < cols.GetArrayLength(); i++)
+                    {
+                        var colName = cols[i].GetProperty("name").GetString();
+                        if (colName == "QuestionId")
+                        {
+                            var element = row[i];
+                            var value = element;
+                            if (element.ValueKind == JsonValueKind.Object && element.TryGetProperty("value", out var v))
+                            {
+                                value = v;
+                            }
+                            return value.ValueKind == JsonValueKind.Number ? value.GetInt32() : 0;
+                        }
+                    }
+                }
+            }
+        }
+        return 0;
+    }
+    catch { return 0; }
 }
     }
 }
