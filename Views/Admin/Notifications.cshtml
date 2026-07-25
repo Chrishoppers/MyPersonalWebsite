@@ -12,12 +12,6 @@
     var total = Model.Count;
     var readCount = Model.Count(n => n.IsRead);
     var unreadCount = total - readCount;
-
-    // 按通知类型统计
-    var infoCount = Model.Count(n => n.Type == "info");
-    var successCount = Model.Count(n => n.Type == "success");
-    var warningCount = Model.Count(n => n.Type == "warning");
-    var dangerCount = Model.Count(n => n.Type == "danger");
 }
 
 <style>
@@ -66,15 +60,14 @@
         color: #fff;
     }
 
-    .btn-glass.primary {
-        background: linear-gradient(135deg, #8B5CF6, #EC4899);
-        border: none;
-        color: #fff;
+    .btn-glass.danger {
+        background: rgba(220,53,69,0.08);
+        border-color: rgba(220,53,69,0.08);
+        color: #dc3545;
     }
 
-    .btn-glass.primary:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 32px rgba(108,60,225,0.2);
+    .btn-glass.danger:hover {
+        background: rgba(220,53,69,0.15);
     }
 
     .stats-grid {
@@ -107,10 +100,6 @@
     .stat-card.total .number { color: #4facfe; }
     .stat-card.read .number { color: #28a745; }
     .stat-card.unread .number { color: #ffc107; }
-    .stat-card.info .number { color: #4facfe; }
-    .stat-card.success .number { color: #28a745; }
-    .stat-card.warning .number { color: #ffc107; }
-    .stat-card.danger .number { color: #dc3545; }
 
     .table-wrapper {
         background: rgba(255,255,255,0.02);
@@ -123,7 +112,7 @@
         width: 100%;
         border-collapse: collapse;
         font-size: 0.85rem;
-        min-width: 800px;
+        min-width: 700px;
     }
 
     th {
@@ -194,37 +183,23 @@
         border: 1px solid rgba(255,193,7,0.04);
     }
 
-    .filter-bar {
-        display: flex;
-        gap: 1rem;
-        flex-wrap: wrap;
-        margin-bottom: 1.5rem;
-        padding: 1rem 1.5rem;
-        background: rgba(255,255,255,0.02);
-        border-radius: 16px;
-        border: 1px solid rgba(255,255,255,0.04);
-        align-items: center;
+    .btn-sm {
+        padding: 0.2rem 0.7rem;
+        border: none;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
     }
 
-    .filter-bar select,
-    .filter-bar input {
-        padding: 0.4rem 1rem;
-        border-radius: 30px;
-        border: 1px solid rgba(255,255,255,0.06);
-        background: rgba(255,255,255,0.04);
-        color: #e0e0e0;
-        font-size: 0.85rem;
-        outline: none;
+    .btn-sm.danger {
+        background: rgba(220,53,69,0.08);
+        color: #dc3545;
     }
 
-    .filter-bar select:focus,
-    .filter-bar input:focus {
-        border-color: rgba(79,172,254,0.3);
-    }
-
-    .filter-bar select option {
-        background: #1a1a2e;
-        color: #e0e0e0;
+    .btn-sm.danger:hover {
+        background: rgba(220,53,69,0.15);
     }
 
     .empty-state {
@@ -265,38 +240,43 @@
         to { opacity: 1; transform: translateY(0) scale(1); }
     }
 
-    .btn-sm {
-        padding: 0.2rem 0.7rem;
+    .batch-bar {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 0.8rem 1.5rem;
+        background: rgba(220,53,69,0.04);
+        border-radius: 16px;
+        border: 1px solid rgba(220,53,69,0.06);
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+    }
+
+    .batch-bar .btn-batch {
+        padding: 0.4rem 1.5rem;
         border: none;
-        border-radius: 20px;
-        font-size: 0.7rem;
+        border-radius: 40px;
+        background: #dc3545;
+        color: #fff;
         font-weight: 500;
+        font-size: 0.85rem;
         cursor: pointer;
-        transition: all 0.2s ease;
+        transition: all 0.3s ease;
     }
 
-    .btn-sm.danger {
-        background: rgba(220,53,69,0.08);
-        color: #dc3545;
+    .batch-bar .btn-batch:hover {
+        opacity: 0.8;
     }
 
-    .btn-sm.danger:hover {
-        background: rgba(220,53,69,0.15);
-    }
-
-    .btn-sm.primary {
-        background: rgba(79,172,254,0.12);
-        color: #4facfe;
-    }
-
-    .btn-sm.primary:hover {
-        background: rgba(79,172,254,0.2);
+    .batch-bar .btn-batch:disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
     }
 
     @@media (max-width: 768px) {
         .admin-header h1 { font-size: 1.3rem; }
-        .filter-bar { flex-direction: column; align-items: stretch; }
         .stats-grid { grid-template-columns: repeat(2, 1fr); }
+        td, th { padding: 0.4rem 0.5rem; font-size: 0.75rem; }
     }
 </style>
 
@@ -306,7 +286,7 @@
         <h1>📬 通知管理</h1>
         <div>
             <a href="/Admin/Dashboard" class="btn-glass">← 返回后台</a>
-            <a href="/Admin/SendNotification" class="btn-glass primary" style="margin-left:0.5rem;">
+            <a href="/Admin/SendNotification" class="btn-glass" style="margin-left:0.5rem;background:linear-gradient(135deg,#8B5CF6,#EC4899);border:none;color:#fff;">
                 ✍️ 发布通知
             </a>
         </div>
@@ -326,43 +306,19 @@
             <div class="number">@unreadCount</div>
             <div class="label">⏳ 未阅读</div>
         </div>
-        <div class="stat-card info">
-            <div class="number">@infoCount</div>
-            <div class="label">ℹ️ 信息</div>
-        </div>
-        <div class="stat-card success">
-            <div class="number">@successCount</div>
-            <div class="label">✅ 成功</div>
-        </div>
-        <div class="stat-card warning">
-            <div class="number">@warningCount</div>
-            <div class="label">⚠️ 警告</div>
-        </div>
-        <div class="stat-card danger">
-            <div class="number">@dangerCount</div>
-            <div class="label">🔥 重要</div>
-        </div>
     </div>
 
-    <!-- 筛选 -->
-    <div class="filter-bar">
-        <span style="color:rgba(255,255,255,0.3);font-size:0.8rem;">🔍 筛选：</span>
-        <select id="filterType">
-            <option value="all">全部类型</option>
-            <option value="info">ℹ️ 信息</option>
-            <option value="success">✅ 成功</option>
-            <option value="warning">⚠️ 警告</option>
-            <option value="danger">🔥 重要</option>
-        </select>
-        <select id="filterStatus">
-            <option value="all">全部状态</option>
-            <option value="read">✅ 已读</option>
-            <option value="unread">⏳ 未读</option>
-        </select>
-        <input type="text" id="searchInput" placeholder="搜索标题或内容..." style="flex:1;min-width:160px;" />
-        <button class="btn-glass" onclick="applyFilters()" style="padding:0.3rem 1.2rem;">应用</button>
-        <button class="btn-glass" onclick="resetFilters()" style="padding:0.3rem 1.2rem;background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.4);">重置</button>
-    </div>
+    <!-- 批量操作 -->
+    @if (Model.Any())
+    {
+        <div class="batch-bar">
+            <span style="color:rgba(255,255,255,0.3);font-size:0.85rem;">📌 全部通知</span>
+            <button class="btn-batch" onclick="clearAllNotifications()">
+                🗑️ 清空所有通知
+            </button>
+            <span style="color:rgba(255,255,255,0.15);font-size:0.75rem;">共 @total 条通知</span>
+        </div>
+    }
 
     <!-- 表格 -->
     <div class="table-wrapper">
@@ -370,11 +326,10 @@
             <thead>
                 <tr>
                     <th>ID</th>
+                    <th>接收用户</th>
                     <th>标题</th>
-                    <th>内容</th>
                     <th>类型</th>
                     <th>状态</th>
-                    <th>接收人</th>
                     <th>发送时间</th>
                     <th>操作</th>
                 </tr>
@@ -391,28 +346,26 @@
                             "danger" => "badge-danger",
                             _ => "badge-info"
                         };
+                        var typeName = n.Type switch
+                        {
+                            "success" => "✅ 成功",
+                            "warning" => "⚠️ 警告",
+                            "danger" => "🔥 重要",
+                            _ => "ℹ️ 信息"
+                        };
                         var statusClass = n.IsRead ? "badge-read" : "badge-unread";
                         var statusText = n.IsRead ? "✅ 已读" : "⏳ 未读";
 
-                        <tr class="notif-row"
-                            data-type="@n.Type"
-                            data-status="@(n.IsRead ? "read" : "unread")"
-                            data-search="@(n.Title + " " + n.Message)">
+                        var targetUser = (ViewBag.Users as List<MyPersonalWebsite.Models.User>)?.FirstOrDefault(u => u.Id == n.UserId);
+
+                        <tr>
                             <td style="color:rgba(255,255,255,0.3);font-size:0.8rem;">#@n.Id</td>
+                            <td style="color:rgba(255,255,255,0.6);font-size:0.85rem;">@(targetUser?.Username ?? "已删除用户")</td>
                             <td><strong style="color:#fff;">@n.Title</strong></td>
-                            <td style="color:rgba(255,255,255,0.5);font-size:0.85rem;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">@n.Message</td>
-                            <td><span class="badge @typeClass">@(n.Type switch { "success" => "✅ 成功", "warning" => "⚠️ 警告", "danger" => "🔥 重要", _ => "ℹ️ 信息" })</span></td>
+                            <td><span class="badge @typeClass">@typeName</span></td>
                             <td><span class="badge @statusClass">@statusText</span></td>
-                            <td style="color:rgba(255,255,255,0.4);font-size:0.8rem;">
-                                @{
-                                    var user = ViewBag.Users as List<MyPersonalWebsite.Models.User>;
-                                    var targetUser = user?.FirstOrDefault(u => u.Id == n.UserId);
-                                    @(targetUser?.Username ?? "已删除用户")
-                                }
-                            </td>
                             <td style="font-size:0.75rem;color:rgba(255,255,255,0.25);">@n.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
                             <td>
-                                <button class="btn-sm primary" onclick="viewNotification(@n.Id)">👁️ 详情</button>
                                 <button class="btn-sm danger" onclick="deleteNotification(@n.Id)">🗑️</button>
                             </td>
                         </tr>
@@ -421,7 +374,7 @@
                 else
                 {
                     <tr>
-                        <td colspan="8">
+                        <td colspan="7">
                             <div class="empty-state">📭 暂无通知记录</div>
                         </td>
                     </tr>
@@ -454,16 +407,6 @@
             }, 3000);
         }
 
-        function viewNotification(id) {
-            // 查看通知详情（可以弹窗显示完整内容）
-            const row = document.querySelector(`.notif-row td:first-child`)?.['parentElement'];
-            if (row) {
-                const title = row.querySelector('td:nth-child(2)')?.textContent || '';
-                const content = row.querySelector('td:nth-child(3)')?.textContent || '';
-                alert(`📬 通知详情\n\n标题：${title}\n内容：${content}`);
-            }
-        }
-
         function deleteNotification(id) {
             if (!confirm('确定删除这条通知吗？')) return;
             const token = getToken();
@@ -487,42 +430,26 @@
             .catch(() => showToast('操作失败，请重试', 'error'));
         }
 
-        function applyFilters() {
-            const type = document.getElementById('filterType').value;
-            const status = document.getElementById('filterStatus').value;
-            const search = document.getElementById('searchInput').value.toLowerCase();
-            const rows = document.querySelectorAll('.notif-row');
-            let count = 0;
-
-            rows.forEach(row => {
-                let show = true;
-                const rowType = row.dataset.type;
-                const rowStatus = row.dataset.status;
-                const rowSearch = row.dataset.search?.toLowerCase() || '';
-
-                if (type !== 'all' && rowType !== type) show = false;
-                if (status !== 'all' && rowStatus !== status) show = false;
-                if (search && !rowSearch.includes(search)) show = false;
-
-                row.style.display = show ? '' : 'none';
-                if (show) count++;
-            });
-
-            showToast(`显示 ${count} 条通知`, 'info');
+        function clearAllNotifications() {
+            if (!confirm('⚠️ 确定要清空所有通知吗？此操作不可恢复！')) return;
+            const token = getToken();
+            fetch('/Admin/ClearAllNotifications', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'RequestVerificationToken': token
+                }
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    showToast('🗑️ 已清空所有通知', 'success');
+                    setTimeout(() => location.reload(), 800);
+                } else {
+                    showToast(data.message || '操作失败', 'error');
+                }
+            })
+            .catch(() => showToast('操作失败，请重试', 'error'));
         }
-
-        function resetFilters() {
-            document.getElementById('filterType').value = 'all';
-            document.getElementById('filterStatus').value = 'all';
-            document.getElementById('searchInput').value = '';
-            document.querySelectorAll('.notif-row').forEach(row => {
-                row.style.display = '';
-            });
-            showToast('已重置筛选', 'info');
-        }
-
-        document.getElementById('searchInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') applyFilters();
-        });
     </script>
 }
