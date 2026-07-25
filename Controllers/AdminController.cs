@@ -1840,7 +1840,7 @@ private int ParseQuestionIdFromJson(string json)
         return null;
     }
 }
-}
+
 
         // ============================================================
         // 辅助类
@@ -1909,7 +1909,7 @@ public async Task<IActionResult> DeduplicateQuestions()
         return Json(new { success = false, message = $"去重失败: {ex.Message}" });
     }
 }
-            public class DailyScheduleItem
+                    public class DailyScheduleItem
         {
             public DateTime Date { get; set; }
             public string DateStr { get; set; } = string.Empty;
@@ -1922,6 +1922,5 @@ public async Task<IActionResult> DeduplicateQuestions()
             public string Category { get; set; } = "综合";
             public int Difficulty { get; set; } = 1;
         }
-    }  // ⬅️ AdminController 类的结束
-}  // ⬅️ namespace 的结束
-    
+    }  // ⬅️ AdminController 类结束（只有一个）
+}  // ⬅️ namespace 结束（只有一个）
