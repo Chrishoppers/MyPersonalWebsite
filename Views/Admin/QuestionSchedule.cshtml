@@ -301,9 +301,19 @@
     <!-- 统计 -->
     <div class="stats-row">
         @{
-            var total = ViewBag.BankQuestions?.Count ?? 0;
-            var used = ViewBag.BankQuestions?.Count(q => q.UseCount > 0) ?? 0;
-            var available = ViewBag.BankQuestions?.Count(q => q.UseCount == 0 && q.IsActive) ?? 0;
+            var total = 0;
+            var used = 0;
+            var available = 0;
+            if (ViewBag.BankQuestions != null)
+            {
+                var list = ViewBag.BankQuestions as List<MyPersonalWebsite.Models.BankQuestion>;
+                if (list != null)
+                {
+                    total = list.Count;
+                    used = list.Count(q => q.UseCount > 0);
+                    available = list.Count(q => q.UseCount == 0 && q.IsActive);
+                }
+            }
         }
         <div class="stat-card total">
             <div class="number">@total</div>
@@ -379,12 +389,12 @@
                                 <option value="">-- 更换题目 --</option>
                                 @if (bankQuestions != null)
                                 {
-                                    foreach (var q in bankQuestions.Where(q => q.IsActive).OrderBy(q => q.UseCount))
+                                    foreach (var q in bankQuestions)
                                     {
+                                        if (!q.IsActive) continue;
                                         var isSelected = q.Id == item.QuestionId;
-                                        <option value="@q.Id" selected="@(isSelected ? "selected" : null)">
-                                            @q.Question [@q.Category] @(q.UseCount > 0 ? $"(已用{q.UseCount}次)" : "(未使用)")
-                                        </option>
+                                        var usedText = q.UseCount > 0 ? $"(已用{q.UseCount}次)" : "(未使用)";
+                                        <option value="@q.Id" @(isSelected ? "selected" : "")>@q.Question [@q.Category] @usedText</option>
                                     }
                                 }
                             </select>
@@ -405,12 +415,12 @@
 
 @section Scripts {
     <script>
-        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+        var token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
 
         function showToast(message, type) {
             type = type || 'info';
-            const container = document.getElementById('toastContainer');
-            const toast = document.createElement('div');
+            var container = document.getElementById('toastContainer');
+            var toast = document.createElement('div');
             toast.className = 'toast-msg ' + type;
             toast.textContent = message;
             container.appendChild(toast);
@@ -422,8 +432,8 @@
         }
 
         function replaceQuestion(date) {
-            const select = document.getElementById('newQuestion_' + date);
-            const newQuestionId = select.value;
+            var select = document.getElementById('newQuestion_' + date);
+            var newQuestionId = select.value;
 
             if (!newQuestionId) {
                 showToast('请选择一道题目', 'error');
@@ -432,7 +442,7 @@
 
             if (!confirm('确定要将 ' + date + ' 的题目更换为选中的题目吗？')) return;
 
-            const btn = select.parentElement.querySelector('.btn-replace');
+            var btn = select.parentElement.querySelector('.btn-replace');
             btn.disabled = true;
             btn.textContent = '⏳ 处理中...';
 
