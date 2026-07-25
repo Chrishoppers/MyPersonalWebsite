@@ -22,6 +22,16 @@ namespace MyPersonalWebsite.Services
             else
                 Console.WriteLine("⚠️ DailyQuestionService: Turso 未配置");
         }
+        private DateTime ChinaNow()
+{
+    var chinaTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Asia/Shanghai");
+    return TimeZoneInfo.ConvertTime(DateTime.UtcNow, chinaTimeZone);
+}
+
+private DateTime ChinaToday()
+{
+    return ChinaNow().Date;
+}
 
         // ============================================================
         // 初始化今日题目
