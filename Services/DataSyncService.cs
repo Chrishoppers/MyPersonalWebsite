@@ -1328,6 +1328,128 @@ namespace MyPersonalWebsite.Services
             var list = ParseBankQuestionList(json);
             return list.FirstOrDefault();
         }
+        // ============================================================
+// 📚 题库管理方法
+// ============================================================
+
+public async Task<List<BankQuestion>> GetAllBankQuestionsAsync()
+{
+    if (!_tursoAvailable) return new List<BankQuestion>();
+
+    var result = await _tursoService.QueryAsync("SELECT * FROM DailyQuestionBank ORDER BY Id DESC");
+    return ParseBankQuestionList(result);
+}
+
+public async Task<BankQuestion?> GetBankQuestionByIdAsync(int id)
+{
+    if (!_tursoAvailable) return null;
+
+    var result = await _tursoService.QueryAsync($"SELECT * FROM DailyQuestionBank WHERE Id = {id}");
+    return ParseBankQuestion(result);
+}
+
+public async Task AddBankQuestionAsync(BankQuestion question)
+{
+    if (!_tursoAvailable) return;
+
+    var maxIdResult = await _tursoService.QueryAsync("SELECT MAX(Id) as MaxId FROM DailyQuestionBank");
+    var maxId = ParseMaxId(maxIdResult);
+    question.Id = maxId + 1;
+
+    var sql = $@"INSERT INTO DailyQuestionBank (
+        Id, Question, Answer, Pinyin, Hint, Difficulty, Category, IsActive, CreatedAt
+    ) VALUES (
+        {question.Id}, '{EscapeSql(question.Question)}', '{EscapeSql(question.Answer)}',
+        '{EscapeSql(question.Pinyin)}',
+        {(string.IsNullOrEmpty(question.Hint) ? "NULL" : $"'{EscapeSql(question.Hint)}'")},
+        {question.Difficulty}, '{EscapeSql(question.Category)}',
+        {(question.IsActive ? 1 : 0)}, '{question.CreatedAt:yyyy-MM-dd HH:mm:ss}'
+    )";
+
+    await _tursoService.ExecuteSqlAsync(sql);
+}
+
+public async Task ToggleQuestionStatusAsync(int id, bool enable)
+{
+    if (!_tursoAvailable) return;
+
+    await _tursoService.ExecuteSqlAsync(
+        $"UPDATE DailyQuestionBank SET IsActive = {(enable ? 1 : 0)} WHERE Id = {id}"
+    );
+}
+
+public async Task DeleteBankQuestionAsync(int id)
+{
+    if (!_tursoAvailable) return;
+
+    await _tursoService.ExecuteSqlAsync($"DELETE FROM DailyQuestionBank WHERE Id = {id}");
+}
+
+// ============================================================
+// 📚 题库解析方法
+// ============================================================
+
+private List<BankQuestion> ParseBankQuestionList(string json)
+{
+    var list = new List<BankQuestion>();
+    try
+    {
+        using var doc = JsonDocument.Parse(json);
+        var root = doc.RootElement;
+
+        if (root.TryGetProperty("results", out var results) && results.GetArrayLength() > 0)
+        {
+            var firstResult = results[0];
+            if (firstResult.TryGetProperty("response", out var response) &&
+                response.TryGetProperty("result", out var result))
+            {
+                if (result.TryGetProperty("rows", out var rows) && rows.GetArrayLength() > 0)
+                {
+                    var cols = result.GetProperty("cols");
+
+                    for (int r = 0; r < rows.GetArrayLength(); r++)
+                    {
+                        var row = rows[r];
+                        if (row.ValueKind != JsonValueKind.Array) continue;
+
+                        var q = new BankQuestion();
+                        for (int i = 0; i < cols.GetArrayLength(); i++)
+                        {
+                            var colName = cols[i].GetProperty("name").GetString();
+                            var element = row[i];
+
+                            switch (colName)
+                            {
+                                case "Id": q.Id = GetIntFromRow(element); break;
+                                case "Question": q.Question = GetStringFromRow(element); break;
+                                case "Answer": q.Answer = GetStringFromRow(element); break;
+                                case "Pinyin": q.Pinyin = GetStringFromRow(element); break;
+                                case "Hint": q.Hint = GetStringOrNullFromRow(element); break;
+                                case "Difficulty": q.Difficulty = GetIntFromRow(element); break;
+                                case "Category": q.Category = GetStringFromRow(element); break;
+                                case "IsActive": q.IsActive = GetBoolFromRow(element); break;
+                                case "UseCount": q.UseCount = GetIntFromRow(element); break;
+                                case "CreatedAt": q.CreatedAt = GetDateTimeFromRow(element) ?? DateTime.Now; break;
+                            }
+                        }
+                        list.Add(q);
+                    }
+                }
+            }
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"⚠️ 解析题库 JSON 失败: {ex.Message}");
+    }
+    return list;
+}
+
+private BankQuestion? ParseBankQuestion(string json)
+{
+    var list = ParseBankQuestionList(json);
+    return list.FirstOrDefault();
+}
 
         // ============================================================
         // 工具方法
@@ -1338,5 +1460,6 @@ namespace MyPersonalWebsite.Services
             if (string.IsNullOrEmpty(value)) return "";
             return value.Replace("'", "''");
         }
+        
     }
 }
