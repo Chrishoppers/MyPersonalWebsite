@@ -26,6 +26,16 @@ namespace MyPersonalWebsite.Services
             else
                 Console.WriteLine("⚠️ Turso 未配置");
         }
+        // ============================================================
+// 🗑️ 清空所有通知（管理员用）
+// ============================================================
+public async Task ClearAllNotificationsAsync()
+{
+    if (!_tursoAvailable) return;
+
+    await _tursoService.ExecuteSqlAsync("DELETE FROM Notifications");
+    Console.WriteLine($"✅ 所有通知已清空");
+}
 
         // ============================================================
         // 用户相关
