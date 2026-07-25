@@ -462,7 +462,7 @@
     <span class="card-icon">📚</span>
     <div class="card-title">题库管理</div>
     <div class="card-desc">管理每日一问题库</div>
-    <span class="card-badge count">@ViewBag.QuestionCount 道题</span>
+    <span class="card-badge count">@(ViewBag.QuestionCount ?? 0) 题</span>
 </a>
     </div>
 
