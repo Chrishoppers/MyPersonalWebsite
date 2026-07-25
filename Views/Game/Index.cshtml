@@ -36,7 +36,6 @@
         margin-top: 0.3rem;
     }
 
-    /* ===== 游戏卡片网格 ===== */
     .game-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -157,7 +156,6 @@
         border: 1px solid rgba(255,193,7,0.04);
     }
 
-    /* 不可点击状态 */
     .game-card.disabled {
         cursor: not-allowed;
         opacity: 0.5;
@@ -172,37 +170,14 @@
         display: none;
     }
 
-    /* ===== 空状态 ===== */
-    .empty-state {
-        text-align: center;
-        padding: 4rem 2rem;
-        color: rgba(255,255,255,0.1);
-    }
-
-    .empty-state .icon {
-        font-size: 4rem;
-        margin-bottom: 1rem;
-        opacity: 0.3;
-    }
-
-    .empty-state .title {
-        font-size: 1.2rem;
-        color: rgba(255,255,255,0.3);
-    }
-
-    .empty-state .desc {
-        font-size: 0.85rem;
-        color: rgba(255,255,255,0.08);
-    }
-
-    /* ===== 统计小标签 ===== */
     .stats-mini {
         display: flex;
         gap: 1.5rem;
         justify-content: center;
         flex-wrap: wrap;
-        margin-top: 0.5rem;
-        padding: 0.5rem 0;
+        margin-top: 2rem;
+        padding: 1rem 0;
+        border-top: 1px solid rgba(255,255,255,0.03);
     }
 
     .stats-mini .stat-item {
@@ -223,25 +198,20 @@
         .game-grid { grid-template-columns: 1fr; gap: 1rem; }
         .game-card { min-height: 160px; padding: 1.2rem 1.2rem; }
         .game-card .card-icon { font-size: 2.2rem; }
-        .stats-mini { gap: 1rem; }
     }
 </style>
 
 <div class="game-center">
 
-    <!-- ===== 头部 ===== -->
     <div class="game-header">
         <h1>🎮 游戏中心</h1>
         <p class="subtitle">选择你想玩的游戏，放松一下！</p>
         <p class="user-greeting">👋 欢迎回来，<strong>@username</strong></p>
     </div>
 
-    <!-- ===== 游戏卡片网格 ===== -->
     <div class="game-grid">
 
-        <!-- ============================================================
-             游戏1：每日一问（已上线）
-             ============================================================ -->
+        <!-- 游戏1：每日一问 -->
         <a href="/DailyQuestion" class="game-card" style="--card-gradient: linear-gradient(135deg, #8B5CF6, #EC4899);">
             <span class="card-status active">✅ 已上线</span>
             <span class="card-icon">📚</span>
@@ -253,23 +223,7 @@
             </div>
         </a>
 
-        <!-- ============================================================
-             游戏2：弹幕留言墙（已上线）
-             ============================================================ -->
-        <a href="/Message/Index" class="game-card" style="--card-gradient: linear-gradient(135deg, #06B6D4, #3B82F6);">
-            <span class="card-status active">✅ 已上线</span>
-            <span class="card-icon">💬</span>
-            <div class="card-title">弹幕留言墙</div>
-            <div class="card-desc">实时弹幕互动，看看大家都在说什么！</div>
-            <div class="card-meta">
-                <span class="tag">💬 互动</span>
-                <span class="tag">🔴 实时</span>
-            </div>
-        </a>
-
-        <!-- ============================================================
-             游戏3：成语填空（开发中）
-             ============================================================ -->
+        <!-- 游戏2：成语填空（开发中） -->
         <div class="game-card disabled" style="--card-gradient: linear-gradient(135deg, #F59E0B, #F97316);">
             <span class="card-status coming">🚧 开发中</span>
             <span class="card-icon">📝</span>
@@ -281,9 +235,7 @@
             </div>
         </div>
 
-        <!-- ============================================================
-             游戏4：打字速度测试（开发中）
-             ============================================================ -->
+        <!-- 游戏3：打字速度测试（开发中） -->
         <div class="game-card disabled" style="--card-gradient: linear-gradient(135deg, #10B981, #34D399);">
             <span class="card-status coming">🚧 开发中</span>
             <span class="card-icon">⌨️</span>
@@ -295,9 +247,7 @@
             </div>
         </div>
 
-        <!-- ============================================================
-             游戏5：记忆翻牌（开发中）
-             ============================================================ -->
+        <!-- 游戏4：记忆翻牌（开发中） -->
         <div class="game-card disabled" style="--card-gradient: linear-gradient(135deg, #8B5CF6, #A78BFA);">
             <span class="card-status coming">🚧 开发中</span>
             <span class="card-icon">🃏</span>
@@ -309,9 +259,7 @@
             </div>
         </div>
 
-        <!-- ============================================================
-             游戏6：谁是卧底？（开发中）
-             ============================================================ -->
+        <!-- 游戏5：谁是卧底？（开发中） -->
         <div class="game-card disabled" style="--card-gradient: linear-gradient(135deg, #EC4899, #F472B6);">
             <span class="card-status coming">🚧 开发中</span>
             <span class="card-icon">🕵️</span>
@@ -323,12 +271,23 @@
             </div>
         </div>
 
+        <!-- 游戏6：单词挑战（开发中） -->
+        <div class="game-card disabled" style="--card-gradient: linear-gradient(135deg, #06B6D4, #3B82F6);">
+            <span class="card-status coming">🚧 开发中</span>
+            <span class="card-icon">🔤</span>
+            <div class="card-title">单词挑战</div>
+            <div class="card-desc">看中文说英文，测试你的词汇量！</div>
+            <div class="card-meta">
+                <span class="tag coming">⏳ 即将上线</span>
+                <span class="tag">🌍 语言</span>
+            </div>
+        </div>
+
     </div>
 
-    <!-- ===== 底部统计 ===== -->
     <div class="stats-mini">
-        <span class="stat-item">🎮 已上线 <strong>2</strong> 款</span>
-        <span class="stat-item">🚧 开发中 <strong>4</strong> 款</span>
+        <span class="stat-item">🎮 已上线 <strong>1</strong> 款</span>
+        <span class="stat-item">🚧 开发中 <strong>5</strong> 款</span>
         <span class="stat-item">📅 最后更新 <strong>@DateTime.Now.ToString("yyyy年MM月dd日")</strong></span>
     </div>
 
