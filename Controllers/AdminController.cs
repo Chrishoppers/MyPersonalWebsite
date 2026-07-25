@@ -1317,5 +1317,72 @@ public class BatchSendRequest
 
             return Json(new { success = true, message = "用户已激活" });
         }
+        // ============================================================
+// 📬 通知管理列表
+// ============================================================
+public async Task<IActionResult> Notifications()
+{
+    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+    if (isAdmin != 1)
+        return RedirectToAction("Login", "Auth");
+
+    var notifications = await _dataSync.GetAllNotificationsAsync();
+    var users = await _dataSync.GetAllUsersAsync();
+    
+    ViewBag.Users = users;
+    return View(notifications);
+}
+
+// ============================================================
+// 🗑️ 删除单条通知
+// ============================================================
+[HttpPost]
+public async Task<IActionResult> DeleteNotification(int id)
+{
+    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+    if (isAdmin != 1)
+        return Json(new { success = false, message = "权限不足" });
+
+    await _dataSync.DeleteNotificationAsync(id);
+    return Json(new { success = true, message = "删除成功" });
+}
+
+// ============================================================
+// 🗑️ 批量删除通知
+// ============================================================
+[HttpPost]
+public async Task<IActionResult> ClearAllNotifications()
+{
+    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+    if (isAdmin != 1)
+        return Json(new { success = false, message = "权限不足" });
+
+    var notifications = await _dataSync.GetAllNotificationsAsync();
+    foreach (var n in notifications)
+    {
+        await _dataSync.DeleteNotificationAsync(n.Id);
+    }
+    return Json(new { success = true, message = "已清空所有通知" });
+}
+
+// ============================================================
+// 📊 通知统计（AJAX）
+// ============================================================
+[HttpGet]
+public async Task<IActionResult> NotificationStats()
+{
+    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+    if (isAdmin != 1)
+        return Json(new { success = false });
+
+    var notifications = await _dataSync.GetAllNotificationsAsync();
+    return Json(new
+    {
+        success = true,
+        total = notifications.Count,
+        read = notifications.Count(n => n.IsRead),
+        unread = notifications.Count(n => !n.IsRead)
+    });
+}
     }
 }
