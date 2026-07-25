@@ -115,8 +115,7 @@ namespace MyPersonalWebsite.Controllers
             public string Message { get; set; } = string.Empty;
             public string Type { get; set; } = "info";
         }
-
-        // ============================================================
+                // ============================================================
         // 1. 仪表盘
         // ============================================================
         public async Task<IActionResult> Dashboard()
@@ -163,9 +162,6 @@ namespace MyPersonalWebsite.Controllers
             return View(blogs);
         }
 
-        // ============================================================
-        // 2.1 创建博客 - GET
-        // ============================================================
         [HttpGet]
         public IActionResult CreateBlog()
         {
@@ -175,9 +171,6 @@ namespace MyPersonalWebsite.Controllers
             return View();
         }
 
-        // ============================================================
-        // 2.2 创建博客 - POST
-        // ============================================================
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CreateBlog(Blog blog)
@@ -205,9 +198,6 @@ namespace MyPersonalWebsite.Controllers
             return View(blog);
         }
 
-        // ============================================================
-        // 2.3 编辑博客 - GET
-        // ============================================================
         [HttpGet]
         public async Task<IActionResult> EditBlog(int id)
         {
@@ -221,9 +211,6 @@ namespace MyPersonalWebsite.Controllers
             return View(blog);
         }
 
-        // ============================================================
-        // 2.4 编辑博客 - POST
-        // ============================================================
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> EditBlog(Blog blog)
@@ -240,9 +227,6 @@ namespace MyPersonalWebsite.Controllers
             return View(blog);
         }
 
-        // ============================================================
-        // 2.5 删除博客
-        // ============================================================
         [HttpPost]
         public async Task<IActionResult> DeleteBlog(int id)
         {
@@ -254,9 +238,6 @@ namespace MyPersonalWebsite.Controllers
             return Json(new { success = true, message = "删除成功" });
         }
 
-        // ============================================================
-        // 2.6 上传博客图片
-        // ============================================================
         [HttpPost]
         public async Task<IActionResult> UploadBlogImage(IFormFile image)
         {
@@ -291,8 +272,7 @@ namespace MyPersonalWebsite.Controllers
                 return Json(new { success = false, message = ex.Message });
             }
         }
-
-        // ============================================================
+                // ============================================================
         // 3. 留言管理
         // ============================================================
         public async Task<IActionResult> Messages()
@@ -331,9 +311,6 @@ namespace MyPersonalWebsite.Controllers
             return View(requests);
         }
 
-        // ============================================================
-        // 5.1 标记授权码已使用
-        // ============================================================
         [HttpPost]
         public async Task<IActionResult> MarkContactUsed(int id)
         {
@@ -352,9 +329,6 @@ namespace MyPersonalWebsite.Controllers
             return Json(new { success = true, message = "已标记为已使用" });
         }
 
-        // ============================================================
-        // 5.2 撤销授权码使用标记
-        // ============================================================
         [HttpPost]
         public async Task<IActionResult> UnmarkContactUsed(int id)
         {
@@ -373,9 +347,6 @@ namespace MyPersonalWebsite.Controllers
             return Json(new { success = true, message = "已撤销使用标记" });
         }
 
-        // ============================================================
-        // 5.3 授权码详情
-        // ============================================================
         [HttpGet]
         public async Task<IActionResult> ContactDetail(int id)
         {
@@ -406,8 +377,7 @@ namespace MyPersonalWebsite.Controllers
                 }
             });
         }
-
-        // ============================================================
+                // ============================================================
         // 6. 待审核更改
         // ============================================================
         public async Task<IActionResult> PendingChanges()
@@ -420,9 +390,6 @@ namespace MyPersonalWebsite.Controllers
             return View(users);
         }
 
-        // ============================================================
-        // 6.1 批准用户更改
-        // ============================================================
         [HttpPost]
         public async Task<IActionResult> ApproveUserChange(int userId)
         {
@@ -455,9 +422,6 @@ namespace MyPersonalWebsite.Controllers
             return Json(new { success = true, message = "更改已批准" });
         }
 
-        // ============================================================
-        // 6.2 拒绝用户更改
-        // ============================================================
         [HttpPost]
         public async Task<IActionResult> RejectUserChange(int userId)
         {
@@ -483,8 +447,7 @@ namespace MyPersonalWebsite.Controllers
             await _dataSync.UpdateUserAsync(user);
             return Json(new { success = true, message = "更改已拒绝" });
         }
-
-        // ============================================================
+                // ============================================================
         // 7. 新用户审核（通过）- 无需登录
         // ============================================================
         [HttpGet]
@@ -1039,8 +1002,7 @@ namespace MyPersonalWebsite.Controllers
                 IconType = "fail"
             });
         }
-
-        // ============================================================
+                // ============================================================
         // 17. 关于我编辑
         // ============================================================
         public async Task<IActionResult> About()
@@ -1053,9 +1015,6 @@ namespace MyPersonalWebsite.Controllers
             return View(sections);
         }
 
-        // ============================================================
-        // 17.1 保存关于我
-        // ============================================================
         [HttpPost]
         public async Task<IActionResult> UpdateAboutMe([FromBody] Dictionary<string, string> data)
         {
@@ -1109,8 +1068,7 @@ namespace MyPersonalWebsite.Controllers
                 return Json(new { success = false, message = ex.Message });
             }
         }
-
-        // ============================================================
+                // ============================================================
         // 18. ⭐ 发送通知给用户（弹窗 + 邮件 + 自动登录）
         // ============================================================
         [HttpPost]
@@ -1318,9 +1276,8 @@ namespace MyPersonalWebsite.Controllers
 
             return Json(new { success = true, message = "用户已激活" });
         }
-
-        // ============================================================
-        // 📚 题库管理 - 页面
+                // ============================================================
+        // 📚 题库管理
         // ============================================================
 
         [HttpGet]
@@ -1333,10 +1290,6 @@ namespace MyPersonalWebsite.Controllers
             var questions = await _dataSync.GetAllBankQuestionsAsync();
             return View(questions);
         }
-
-        // ============================================================
-        // 📚 获取题目详情（AJAX）
-        // ============================================================
 
         [HttpGet]
         public async Task<IActionResult> GetQuestionDetail(int id)
@@ -1368,10 +1321,6 @@ namespace MyPersonalWebsite.Controllers
             });
         }
 
-        // ============================================================
-        // 📚 切换题目状态
-        // ============================================================
-
         [HttpPost]
         public async Task<IActionResult> ToggleQuestionStatus(int id, bool enable)
         {
@@ -1383,10 +1332,6 @@ namespace MyPersonalWebsite.Controllers
             return Json(new { success = true });
         }
 
-        // ============================================================
-        // 📚 删除题目
-        // ============================================================
-
         [HttpPost]
         public async Task<IActionResult> DeleteQuestion(int id)
         {
@@ -1397,10 +1342,6 @@ namespace MyPersonalWebsite.Controllers
             await _dataSync.DeleteBankQuestionAsync(id);
             return Json(new { success = true });
         }
-
-        // ============================================================
-        // 📚 添加单道题
-        // ============================================================
 
         [HttpPost]
         public async Task<IActionResult> AddSingleQuestion([FromBody] AddQuestionRequest request)
@@ -1437,10 +1378,6 @@ namespace MyPersonalWebsite.Controllers
             public int Difficulty { get; set; } = 1;
             public string Category { get; set; } = "综合";
         }
-
-        // ============================================================
-        // 📚 批量添加题目
-        // ============================================================
 
         [HttpPost]
         public async Task<IActionResult> BatchAddQuestions([FromBody] BatchAddRequest request)
@@ -1499,10 +1436,6 @@ namespace MyPersonalWebsite.Controllers
             });
         }
 
-        // ============================================================
-        // 📦 批量添加请求模型
-        // ============================================================
-
         public class BatchAddRequest
         {
             public List<BankQuestionInput> Questions { get; set; } = new();
@@ -1517,8 +1450,7 @@ namespace MyPersonalWebsite.Controllers
             public int Difficulty { get; set; } = 1;
             public string Category { get; set; } = "综合";
         }
-
-        // ============================================================
+                // ============================================================
         // 📅 未来题目安排
         // ============================================================
 
