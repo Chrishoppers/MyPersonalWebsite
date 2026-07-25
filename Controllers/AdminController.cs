@@ -1763,5 +1763,56 @@ private int ParseQuestionIdFromJson(string json)
             public string Category { get; set; } = "综合";
             public int Difficulty { get; set; } = 1;
         }
+        // ============================================================
+// 🗑️ 题库去重（删除重复题目）
+// ============================================================
+
+[HttpPost]
+public async Task<IActionResult> DeduplicateQuestions()
+{
+    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+    if (isAdmin != 1)
+        return Json(new { success = false, message = "权限不足" });
+
+    try
+    {
+        var allQuestions = await _dataSync.GetAllBankQuestionsAsync();
+        var seen = new HashSet<string>();
+        var duplicateIds = new List<int>();
+
+        foreach (var q in allQuestions)
+        {
+            // 用「题目+答案」作为唯一标识
+            var key = $"{q.Question}_{q.Answer}";
+            if (seen.Contains(key))
+            {
+                duplicateIds.Add(q.Id);
+            }
+            else
+            {
+                seen.Add(key);
+            }
+        }
+
+        if (duplicateIds.Any())
+        {
+            foreach (var id in duplicateIds)
+            {
+                await _dataSync.DeleteBankQuestionAsync(id);
+            }
+        }
+
+        return Json(new
+        {
+            success = true,
+            message = $"✅ 已删除 {duplicateIds.Count} 道重复题目",
+            deletedCount = duplicateIds.Count
+        });
+    }
+    catch (Exception ex)
+    {
+        return Json(new { success = false, message = $"去重失败: {ex.Message}" });
+    }
+}
     }
 }
