@@ -1,0 +1,335 @@
+@{
+    ViewData["Title"] = "🎮 游戏中心";
+    var username = ViewBag.Username as string ?? "玩家";
+}
+
+<style>
+    .game-center {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 1rem 1.5rem;
+    }
+
+    .game-header {
+        text-align: center;
+        padding: 2rem 0 1.5rem;
+    }
+
+    .game-header h1 {
+        font-size: 2.8rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, #8B5CF6 0%, #EC4899 50%, #F59E0B 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 0.3rem;
+    }
+
+    .game-header .subtitle {
+        color: rgba(255,255,255,0.3);
+        font-size: 1rem;
+    }
+
+    .game-header .user-greeting {
+        color: rgba(255,255,255,0.15);
+        font-size: 0.85rem;
+        margin-top: 0.3rem;
+    }
+
+    /* ===== 游戏卡片网格 ===== */
+    .game-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.5rem;
+        margin-top: 1.5rem;
+    }
+
+    .game-card {
+        background: rgba(255,255,255,0.02);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255,255,255,0.04);
+        border-radius: 24px;
+        padding: 1.8rem 1.8rem 1.5rem;
+        transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+        text-decoration: none;
+        color: inherit;
+        display: block;
+        position: relative;
+        overflow: hidden;
+        min-height: 200px;
+    }
+
+    .game-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: var(--card-gradient, linear-gradient(135deg, #8B5CF6, #EC4899));
+        opacity: 0;
+        transition: opacity 0.4s ease;
+    }
+
+    .game-card:hover {
+        transform: translateY(-8px);
+        border-color: rgba(255,255,255,0.08);
+        background: rgba(255,255,255,0.04);
+    }
+
+    .game-card:hover::before {
+        opacity: 1;
+    }
+
+    .game-card .card-icon {
+        font-size: 2.8rem;
+        display: block;
+        margin-bottom: 0.5rem;
+    }
+
+    .game-card .card-title {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #fff;
+        margin-bottom: 0.2rem;
+    }
+
+    .game-card .card-desc {
+        font-size: 0.85rem;
+        color: rgba(255,255,255,0.3);
+        line-height: 1.5;
+        margin-bottom: 0.8rem;
+    }
+
+    .game-card .card-meta {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        font-size: 0.75rem;
+        color: rgba(255,255,255,0.15);
+    }
+
+    .game-card .card-meta .tag {
+        padding: 0.1rem 0.6rem;
+        border-radius: 20px;
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.04);
+    }
+
+    .game-card .card-meta .tag.hot {
+        background: rgba(236,72,153,0.12);
+        color: #EC4899;
+        border-color: rgba(236,72,153,0.06);
+    }
+
+    .game-card .card-meta .tag.new {
+        background: rgba(40,167,69,0.12);
+        color: #28a745;
+        border-color: rgba(40,167,69,0.06);
+    }
+
+    .game-card .card-meta .tag.coming {
+        background: rgba(255,193,7,0.08);
+        color: #ffc107;
+        border-color: rgba(255,193,7,0.04);
+    }
+
+    .game-card .card-status {
+        position: absolute;
+        top: 1rem;
+        right: 1.2rem;
+        font-size: 0.65rem;
+        padding: 0.1rem 0.6rem;
+        border-radius: 20px;
+        background: rgba(255,255,255,0.04);
+        color: rgba(255,255,255,0.2);
+    }
+
+    .game-card .card-status.active {
+        background: rgba(40,167,69,0.1);
+        color: #28a745;
+        border: 1px solid rgba(40,167,69,0.06);
+    }
+
+    .game-card .card-status.coming {
+        background: rgba(255,193,7,0.08);
+        color: #ffc107;
+        border: 1px solid rgba(255,193,7,0.04);
+    }
+
+    /* 不可点击状态 */
+    .game-card.disabled {
+        cursor: not-allowed;
+        opacity: 0.5;
+    }
+
+    .game-card.disabled:hover {
+        transform: none;
+        background: rgba(255,255,255,0.02);
+    }
+
+    .game-card.disabled::before {
+        display: none;
+    }
+
+    /* ===== 空状态 ===== */
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: rgba(255,255,255,0.1);
+    }
+
+    .empty-state .icon {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        opacity: 0.3;
+    }
+
+    .empty-state .title {
+        font-size: 1.2rem;
+        color: rgba(255,255,255,0.3);
+    }
+
+    .empty-state .desc {
+        font-size: 0.85rem;
+        color: rgba(255,255,255,0.08);
+    }
+
+    /* ===== 统计小标签 ===== */
+    .stats-mini {
+        display: flex;
+        gap: 1.5rem;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin-top: 0.5rem;
+        padding: 0.5rem 0;
+    }
+
+    .stats-mini .stat-item {
+        color: rgba(255,255,255,0.15);
+        font-size: 0.8rem;
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+
+    .stats-mini .stat-item strong {
+        color: rgba(255,255,255,0.5);
+        font-weight: 600;
+    }
+
+    @@media (max-width: 640px) {
+        .game-header h1 { font-size: 2rem; }
+        .game-grid { grid-template-columns: 1fr; gap: 1rem; }
+        .game-card { min-height: 160px; padding: 1.2rem 1.2rem; }
+        .game-card .card-icon { font-size: 2.2rem; }
+        .stats-mini { gap: 1rem; }
+    }
+</style>
+
+<div class="game-center">
+
+    <!-- ===== 头部 ===== -->
+    <div class="game-header">
+        <h1>🎮 游戏中心</h1>
+        <p class="subtitle">选择你想玩的游戏，放松一下！</p>
+        <p class="user-greeting">👋 欢迎回来，<strong>@username</strong></p>
+    </div>
+
+    <!-- ===== 游戏卡片网格 ===== -->
+    <div class="game-grid">
+
+        <!-- ============================================================
+             游戏1：每日一问（已上线）
+             ============================================================ -->
+        <a href="/DailyQuestion" class="game-card" style="--card-gradient: linear-gradient(135deg, #8B5CF6, #EC4899);">
+            <span class="card-status active">✅ 已上线</span>
+            <span class="card-icon">📚</span>
+            <div class="card-title">每日一问</div>
+            <div class="card-desc">每天一道冷知识，答对积分+10，连续答对有奖励！</div>
+            <div class="card-meta">
+                <span class="tag hot">🔥 热门</span>
+                <span class="tag">🧠 知识</span>
+            </div>
+        </a>
+
+        <!-- ============================================================
+             游戏2：弹幕留言墙（已上线）
+             ============================================================ -->
+        <a href="/Message/Index" class="game-card" style="--card-gradient: linear-gradient(135deg, #06B6D4, #3B82F6);">
+            <span class="card-status active">✅ 已上线</span>
+            <span class="card-icon">💬</span>
+            <div class="card-title">弹幕留言墙</div>
+            <div class="card-desc">实时弹幕互动，看看大家都在说什么！</div>
+            <div class="card-meta">
+                <span class="tag">💬 互动</span>
+                <span class="tag">🔴 实时</span>
+            </div>
+        </a>
+
+        <!-- ============================================================
+             游戏3：成语填空（开发中）
+             ============================================================ -->
+        <div class="game-card disabled" style="--card-gradient: linear-gradient(135deg, #F59E0B, #F97316);">
+            <span class="card-status coming">🚧 开发中</span>
+            <span class="card-icon">📝</span>
+            <div class="card-title">成语填空</div>
+            <div class="card-desc">补全成语中的空缺字，测试你的成语储备！</div>
+            <div class="card-meta">
+                <span class="tag coming">⏳ 即将上线</span>
+                <span class="tag">📖 语文</span>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             游戏4：打字速度测试（开发中）
+             ============================================================ -->
+        <div class="game-card disabled" style="--card-gradient: linear-gradient(135deg, #10B981, #34D399);">
+            <span class="card-status coming">🚧 开发中</span>
+            <span class="card-icon">⌨️</span>
+            <div class="card-title">打字速度测试</div>
+            <div class="card-desc">测试你的打字速度，看看每分钟能打多少个字！</div>
+            <div class="card-meta">
+                <span class="tag coming">⏳ 即将上线</span>
+                <span class="tag">⌨️ 挑战</span>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             游戏5：记忆翻牌（开发中）
+             ============================================================ -->
+        <div class="game-card disabled" style="--card-gradient: linear-gradient(135deg, #8B5CF6, #A78BFA);">
+            <span class="card-status coming">🚧 开发中</span>
+            <span class="card-icon">🃏</span>
+            <div class="card-title">记忆翻牌</div>
+            <div class="card-desc">翻转卡片，配对相同的图案，考验你的记忆力！</div>
+            <div class="card-meta">
+                <span class="tag coming">⏳ 即将上线</span>
+                <span class="tag">🧠 记忆</span>
+            </div>
+        </div>
+
+        <!-- ============================================================
+             游戏6：谁是卧底？（开发中）
+             ============================================================ -->
+        <div class="game-card disabled" style="--card-gradient: linear-gradient(135deg, #EC4899, #F472B6);">
+            <span class="card-status coming">🚧 开发中</span>
+            <span class="card-icon">🕵️</span>
+            <div class="card-title">谁是卧底？</div>
+            <div class="card-desc">找出隐藏在人群中的卧底，考验你的观察力！</div>
+            <div class="card-meta">
+                <span class="tag coming">⏳ 即将上线</span>
+                <span class="tag">🕵️ 推理</span>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ===== 底部统计 ===== -->
+    <div class="stats-mini">
+        <span class="stat-item">🎮 已上线 <strong>2</strong> 款</span>
+        <span class="stat-item">🚧 开发中 <strong>4</strong> 款</span>
+        <span class="stat-item">📅 最后更新 <strong>@DateTime.Now.ToString("yyyy年MM月dd日")</strong></span>
+    </div>
+
+</div>
