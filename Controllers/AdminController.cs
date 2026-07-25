@@ -22,6 +22,179 @@ namespace MyPersonalWebsite.Controllers
             _emailService = emailService;
         }
         // ============================================================
+// 📅 未来题目安排
+// ============================================================
+
+[HttpGet]
+public async Task<IActionResult> QuestionSchedule()
+{
+    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+    if (isAdmin != 1)
+        return RedirectToAction("Login", "Auth");
+
+    var schedule = new List<DailyScheduleItem>();
+    var today = DateTime.Today;
+
+    // 获取未来7天的题目安排
+    for (int i = 0; i < 7; i++)
+    {
+        var date = today.AddDays(i);
+        var dateStr = date.ToString("yyyy-MM-dd");
+
+        // 查询当天是否有题目
+        var result = await _dataSync.QueryAsync($@"
+            SELECT dq.Id, dq.QuestionId, dq.Date,
+                   b.Question, b.Answer, b.Category, b.Difficulty
+            FROM DailyQuestions dq
+            JOIN DailyQuestionBank b ON dq.QuestionId = b.Id
+            WHERE dq.Date = '{dateStr}'
+            LIMIT 1
+        ");
+
+        var item = new DailyScheduleItem
+        {
+            Date = date,
+            DateStr = dateStr,
+            IsToday = date == today,
+            IsPast = date < today
+        };
+
+        // 解析题目
+        var question = ParseDailyQuestionFromJson(result);
+        if (question != null)
+        {
+            item.QuestionId = question.QuestionId ?? 0;
+            item.Question = question.Question;
+            item.Answer = question.Answer;
+            item.Category = question.Category;
+            item.Difficulty = question.Difficulty;
+            item.IsScheduled = true;
+        }
+        else
+        {
+            item.IsScheduled = false;
+        }
+
+        schedule.Add(item);
+    }
+
+    // 获取所有可用题库（用于更换题目）
+    var bankQuestions = await _dataSync.GetAllBankQuestionsAsync();
+
+    ViewBag.Schedule = schedule;
+    ViewBag.BankQuestions = bankQuestions;
+    ViewBag.Today = today;
+
+    return View();
+}
+
+// ============================================================
+// 🗓️ 更换某天的题目
+// ============================================================
+
+[HttpPost]
+public async Task<IActionResult> ReplaceQuestion(string date, int newQuestionId)
+{
+    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+    if (isAdmin != 1)
+        return Json(new { success = false, message = "权限不足" });
+
+    if (string.IsNullOrEmpty(date) || newQuestionId <= 0)
+        return Json(new { success = false, message = "参数错误" });
+
+    try
+    {
+        // 1. 删除当天的旧题目记录
+        await _dataSync.ExecuteSqlAsync($"DELETE FROM DailyQuestions WHERE Date = '{date}'");
+
+        // 2. 插入新题目
+        var sql = $@"INSERT INTO DailyQuestions (
+            QuestionId, Date, CreatedAt
+        ) VALUES (
+            {newQuestionId}, '{date}', '{DateTime.Now:yyyy-MM-dd HH:mm:ss}'
+        )";
+
+        await _dataSync.ExecuteSqlAsync(sql);
+
+        // 3. 更新使用次数
+        await _dataSync.ExecuteSqlAsync(
+            $"UPDATE DailyQuestionBank SET UseCount = UseCount + 1, UsedAt = '{DateTime.Now:yyyy-MM-dd HH:mm:ss}' WHERE Id = {newQuestionId}"
+        );
+
+        return Json(new { success = true, message = "✅ 题目已更换" });
+    }
+    catch (Exception ex)
+    {
+        return Json(new { success = false, message = $"更换失败: {ex.Message}" });
+    }
+}
+
+// ============================================================
+// 📋 解析每日题目（含关联题库信息）
+// ============================================================
+
+private DailyQuestion? ParseDailyQuestionFromJson(string json)
+{
+    try
+    {
+        using var doc = JsonDocument.Parse(json);
+        var root = doc.RootElement;
+
+        if (root.TryGetProperty("results", out var results) && results.GetArrayLength() > 0)
+        {
+            var firstResult = results[0];
+            if (firstResult.TryGetProperty("response", out var response) &&
+                response.TryGetProperty("result", out var result))
+            {
+                if (result.TryGetProperty("rows", out var rows) && rows.GetArrayLength() > 0)
+                {
+                    var row = rows[0];
+                    var cols = result.GetProperty("cols");
+
+                    var q = new DailyQuestion();
+                    for (int i = 0; i < cols.GetArrayLength(); i++)
+                    {
+                        var colName = cols[i].GetProperty("name").GetString();
+                        var element = row[i];
+
+                        switch (colName)
+                        {
+                            case "Id": q.Id = GetIntFromRow(element); break;
+                            case "QuestionId": q.QuestionId = GetIntFromRow(element); break;
+                            case "Date": q.Date = DateTime.Parse(GetStringFromRow(element)); break;
+                            case "Question": q.Question = GetStringFromRow(element); break;
+                            case "Answer": q.Answer = GetStringFromRow(element); break;
+                            case "Category": q.Category = GetStringFromRow(element); break;
+                            case "Difficulty": q.Difficulty = GetIntFromRow(element); break;
+                        }
+                    }
+                    return q;
+                }
+            }
+        }
+        return null;
+    }
+    catch { return null; }
+}
+
+// ============================================================
+// 辅助类
+// ============================================================
+
+public class DailyScheduleItem
+{
+    public DateTime Date { get; set; }
+    public string DateStr { get; set; } = string.Empty;
+    public bool IsToday { get; set; }
+    public bool IsPast { get; set; }
+    public bool IsScheduled { get; set; }
+    public int QuestionId { get; set; }
+    public string Question { get; set; } = string.Empty;
+    public string Answer { get; set; } = string.Empty;
+    public string Category { get; set; } = "综合";
+    public int Difficulty { get; set; } = 1;
+}
+        // ============================================================
 // ⭐ 批量发送通知
 // ============================================================
 
