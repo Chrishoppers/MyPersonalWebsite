@@ -16,15 +16,10 @@ namespace MyPersonalWebsite.Services
             var url = Environment.GetEnvironmentVariable("TURSO_DATABASE_URL") ?? "";
             var token = Environment.GetEnvironmentVariable("TURSO_AUTH_TOKEN") ?? "";
             _tursoAvailable = !string.IsNullOrEmpty(url) && !string.IsNullOrEmpty(token);
-
-            if (_tursoAvailable)
-                Console.WriteLine("✅ DailyQuestionService: Turso 已连接");
-            else
-                Console.WriteLine("⚠️ DailyQuestionService: Turso 未配置");
         }
 
         // ============================================================
-        // 初始化今日题目（从题库中随机选一道未使用的）
+        // 初始化今日题目
         // ============================================================
         public async Task InitializeTodayQuestionAsync()
         {
@@ -32,7 +27,6 @@ namespace MyPersonalWebsite.Services
 
             var today = DateTime.Today.ToString("yyyy-MM-dd");
 
-            // 检查今天是否已有题目
             var checkResult = await _tursoService.QueryAsync(
                 $"SELECT COUNT(*) as Count FROM DailyQuestions WHERE Date = '{today}'"
             );
@@ -43,7 +37,6 @@ namespace MyPersonalWebsite.Services
                 return;
             }
 
-            // 获取当前可用的题库（按使用次数排序，优先选最少使用的）
             var availableResult = await _tursoService.QueryAsync(
                 @"SELECT Id, Question, Answer, Pinyin, Hint, Difficulty, Category 
                   FROM DailyQuestionBank 
@@ -59,7 +52,6 @@ namespace MyPersonalWebsite.Services
                 return;
             }
 
-            // 插入今日题目
             var sql = $@"INSERT INTO DailyQuestions (
                 QuestionId, Date, CreatedAt
             ) VALUES (
@@ -68,7 +60,6 @@ namespace MyPersonalWebsite.Services
 
             await _tursoService.ExecuteSqlAsync(sql);
 
-            // 更新使用次数
             await _tursoService.ExecuteSqlAsync(
                 $"UPDATE DailyQuestionBank SET UseCount = UseCount + 1, UsedAt = '{DateTime.Now:yyyy-MM-dd HH:mm:ss}' WHERE Id = {available.Id}"
             );
@@ -120,7 +111,6 @@ namespace MyPersonalWebsite.Services
             if (!_tursoAvailable)
                 return (false, false, 0, "数据库不可用", null);
 
-            // 检查是否已答题
             if (await HasAnsweredTodayAsync(userId))
                 return (false, false, 0, "今天已经答过题了，明天再来吧！", null);
 
@@ -128,12 +118,11 @@ namespace MyPersonalWebsite.Services
             if (question == null)
                 return (false, false, 0, "今日题目不存在，请稍后再试", null);
 
-            // 拼音匹配（忽略大小写，去除空格）
             var isCorrect = MatchByPinyin(answer, question.Pinyin);
 
             if (isCorrect)
             {
-                await RecordAnswerAsync(userId, question.QuestionId ?? 0, answer, true);
+                await RecordAnswerAsync(userId, question.Id, answer, true);
                 await UpdateUserStatsAsync(userId, true);
                 var stats = await GetUserStatsAsync(userId);
                 var points = stats?.TotalPoints ?? 0;
@@ -141,7 +130,7 @@ namespace MyPersonalWebsite.Services
             }
             else
             {
-                await RecordAnswerAsync(userId, question.QuestionId ?? 0, answer, false);
+                await RecordAnswerAsync(userId, question.Id, answer, false);
                 await UpdateUserStatsAsync(userId, false);
                 return (true, false, 0, "❌ 答错了", question.Answer);
             }
@@ -163,7 +152,6 @@ namespace MyPersonalWebsite.Services
             )";
 
             await _tursoService.ExecuteSqlAsync(sql);
-            Console.WriteLine($"✅ 答案已记录: UserId={userId}, IsCorrect={isCorrect}");
         }
 
         // ============================================================
@@ -178,7 +166,6 @@ namespace MyPersonalWebsite.Services
 
             if (stats == null)
             {
-                // 创建新记录
                 var sql = $@"INSERT INTO UserGameStats (
                     UserId, TotalPoints, StreakDays, MaxStreakDays,
                     TotalCorrect, TotalAnswered, LastAnswerDate, UpdatedAt
@@ -252,10 +239,6 @@ namespace MyPersonalWebsite.Services
             if (!_tursoAvailable) return new List<RankItem>();
 
             var users = await _dataSync.GetAllUsersAsync();
-            var userIds = users.Select(u => u.Id).ToList();
-
-            if (!userIds.Any())
-                return new List<RankItem>();
 
             var result = await _tursoService.QueryAsync(
                 $@"SELECT UserId, TotalPoints, StreakDays, TotalCorrect
@@ -314,11 +297,11 @@ namespace MyPersonalWebsite.Services
                 var result = await _tursoService.QueryAsync(
                     $"SELECT IsCorrect, Answer FROM UserDailyAnswers WHERE UserId = {userId} AND AnswerDate = '{today}'"
                 );
-                var answer = ParseUserAnswer(result);
-                if (answer != null)
+                var answerData = ParseUserAnswer(result);
+                if (answerData != null)
                 {
-                    status.IsCorrect = answer.IsCorrect;
-                    status.UserAnswer = answer.Answer;
+                    status.IsCorrect = answerData.IsCorrect;
+                    status.UserAnswer = answerData.Answer;
                 }
             }
 
@@ -368,7 +351,7 @@ namespace MyPersonalWebsite.Services
 
                                 switch (colName)
                                 {
-                                    case "Id": q.QuestionId = GetIntFromRow(element); break;
+                                    case "Id": q.Id = GetIntFromRow(element); break;
                                     case "Question": q.Question = GetStringFromRow(element); break;
                                     case "Answer": q.Answer = GetStringFromRow(element); break;
                                     case "Pinyin": q.Pinyin = GetStringFromRow(element); break;
@@ -555,9 +538,13 @@ namespace MyPersonalWebsite.Services
                                 var element = row[i];
 
                                 if (colName == "IsCorrect")
+                                {
                                     isCorrect = GetIntFromRow(element) == 1;
-                                if (colName == "Answer")
+                                }
+                                else if (colName == "Answer")
+                                {
                                     answer = GetStringFromRow(element);
+                                }
                             }
 
                             return (isCorrect, answer);
