@@ -22,6 +22,54 @@ namespace MyPersonalWebsite.Controllers
             _emailService = emailService;
         }
         // ============================================================
+// 📋 解析每日题目（简化版）
+// ============================================================
+
+private DailyQuestion? ParseDailyQuestionFromJson(string json)
+{
+    try
+    {
+        using var doc = JsonDocument.Parse(json);
+        var root = doc.RootElement;
+
+        if (root.TryGetProperty("results", out var results) && results.GetArrayLength() > 0)
+        {
+            var firstResult = results[0];
+            if (firstResult.TryGetProperty("response", out var response) &&
+                response.TryGetProperty("result", out var result))
+            {
+                if (result.TryGetProperty("rows", out var rows) && rows.GetArrayLength() > 0)
+                {
+                    var row = rows[0];
+                    var cols = result.GetProperty("cols");
+
+                    var q = new DailyQuestion();
+                    for (int i = 0; i < cols.GetArrayLength(); i++)
+                    {
+                        var colName = cols[i].GetProperty("name").GetString();
+                        var element = row[i];
+                        var value = element.ValueKind == JsonValueKind.Object && element.TryGetProperty("value", out var v) ? v : element;
+
+                        switch (colName)
+                        {
+                            case "Id": q.Id = value.ValueKind == JsonValueKind.Number ? value.GetInt32() : 0; break;
+                            case "QuestionId": q.QuestionId = value.ValueKind == JsonValueKind.Number ? value.GetInt32() : 0; break;
+                            case "Date": q.Date = value.ValueKind == JsonValueKind.String ? DateTime.Parse(value.GetString() ?? "") : DateTime.Now; break;
+                            case "Question": q.Question = value.ValueKind == JsonValueKind.String ? value.GetString() ?? "" : ""; break;
+                            case "Answer": q.Answer = value.ValueKind == JsonValueKind.String ? value.GetString() ?? "" : ""; break;
+                            case "Category": q.Category = value.ValueKind == JsonValueKind.String ? value.GetString() ?? "综合" : "综合"; break;
+                            case "Difficulty": q.Difficulty = value.ValueKind == JsonValueKind.Number ? value.GetInt32() : 1; break;
+                        }
+                    }
+                    return q;
+                }
+            }
+        }
+        return null;
+    }
+    catch { return null; }
+}
+        // ============================================================
 // 📅 未来题目安排
 // ============================================================
 
