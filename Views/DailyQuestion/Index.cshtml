@@ -40,7 +40,7 @@
         border-radius: 24px;
         padding: 2rem 2.2rem;
         margin-bottom: 2rem;
-        min-height: 280px;
+        min-height: 260px;
         transition: all 0.3s ease;
     }
 
@@ -57,13 +57,13 @@
         align-items: center;
     }
 
-    .question-card .question-number .category-badge {
+    .question-card .question-number .badge-tag {
         padding: 0.1rem 0.8rem;
         border-radius: 20px;
-        background: rgba(139,92,246,0.12);
-        color: #8B5CF6;
-        border: 1px solid rgba(139,92,246,0.06);
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.04);
         font-size: 0.7rem;
+        color: rgba(255,255,255,0.2);
     }
 
     .question-card .question-number .difficulty-badge {
@@ -244,12 +244,6 @@
         margin-top: 0.4rem;
     }
 
-    .answered-status .answer-reveal .category-tag {
-        font-size: 0.7rem;
-        font-weight: 400;
-        color: rgba(255,255,255,0.2);
-    }
-
     .answered-status .next-timer {
         margin-top: 0.8rem;
         color: rgba(255,255,255,0.12);
@@ -401,7 +395,6 @@
         color: rgba(255,255,255,0.2);
         min-width: 32px;
         text-align: center;
-        font-variant-numeric: tabular-nums;
     }
 
     .rank-item .rank-num.gold { color: #F59E0B; }
@@ -478,7 +471,6 @@
         font-weight: 700;
         color: #8B5CF6;
         font-size: 1rem;
-        font-variant-numeric: tabular-nums;
         flex-shrink: 0;
     }
 
@@ -681,7 +673,6 @@
                 </div>
                 <div class="answer-reveal">
                     正确答案：@status.Question?.Answer
-                    <span class="category-tag">· 知识</span>
                 </div>
                 <div class="next-timer">⏳ 明天 0:00 更新题目</div>
             </div>
@@ -692,8 +683,8 @@
             <div class="question-number">
                 <span>📌 今日题目</span>
                 <span>
-                    <span class="category-badge">📂 知识</span>
-                    <span class="difficulty-badge">难度 @status.Question.Difficulty</span>
+                    <span class="badge-tag">📂 知识</span>
+                    <span class="difficulty-badge">难度 @(status.Question.Difficulty)</span>
                 </span>
             </div>
 
@@ -779,7 +770,7 @@
                                 }
                                 @if (item.StreakDays > 0)
                                 {
-                                    <span class="streak-badge">🔥 @item.StreakDays天</span>
+                                    <span class="streak-badge">🔥 @item.StreakDays 天</span>
                                 }
                             </span>
                             <div class="detail">答对 @item.TotalCorrect 题</div>
@@ -819,16 +810,17 @@
         const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
         const userId = @userId;
 
-        function showToast(message, type = 'info') {
+        function showToast(message, type) {
+            type = type || 'info';
             const container = document.getElementById('toastContainer');
             const toast = document.createElement('div');
-            toast.className = `toast-msg ${type}`;
+            toast.className = 'toast-msg ' + type;
             toast.textContent = message;
             container.appendChild(toast);
-            setTimeout(() => {
+            setTimeout(function() {
                 toast.style.opacity = '0';
                 toast.style.transform = 'translateX(20px)';
-                setTimeout(() => toast.remove(), 300);
+                setTimeout(function() { toast.remove(); }, 300);
             }, 3000);
         }
 
@@ -853,8 +845,8 @@
                 },
                 body: 'answer=' + encodeURIComponent(answer)
             })
-            .then(r => r.json())
-            .then(data => {
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
                 const box = document.getElementById('resultBox');
                 const icon = document.getElementById('resultIcon');
                 const msg = document.getElementById('resultMessage');
@@ -868,14 +860,13 @@
                     msg.textContent = '🎉 答对了！+10分';
                     answerRow.style.display = 'none';
 
-                    // 更新统计
-                    const pointsEl = document.getElementById('totalPoints');
+                    var pointsEl = document.getElementById('totalPoints');
                     pointsEl.textContent = parseInt(pointsEl.textContent) + 10;
-                    const correctEl = document.getElementById('totalCorrect');
+                    var correctEl = document.getElementById('totalCorrect');
                     correctEl.textContent = parseInt(correctEl.textContent) + 1;
-                    const streakEl = document.getElementById('streakDays');
+                    var streakEl = document.getElementById('streakDays');
                     streakEl.textContent = parseInt(streakEl.textContent) + 1;
-                    const maxStreakEl = document.getElementById('maxStreak');
+                    var maxStreakEl = document.getElementById('maxStreak');
                     if (parseInt(streakEl.textContent) > parseInt(maxStreakEl.textContent)) {
                         maxStreakEl.textContent = streakEl.textContent;
                     }
@@ -883,7 +874,7 @@
                     input.disabled = true;
                     btn.innerHTML = '✅ 已答对';
                     btn.disabled = true;
-                    setTimeout(() => location.reload(), 2500);
+                    setTimeout(function() { location.reload(); }, 2500);
                 } else {
                     msg.textContent = '❌ 答错了~';
                     answerRow.style.display = 'block';
@@ -891,10 +882,10 @@
                     input.disabled = true;
                     btn.innerHTML = '❌ 已答错';
                     btn.disabled = true;
-                    setTimeout(() => location.reload(), 2500);
+                    setTimeout(function() { location.reload(); }, 2500);
                 }
             })
-            .catch(() => {
+            .catch(function() {
                 showToast('网络错误，请重试', 'error');
                 btn.disabled = false;
                 btn.innerHTML = '✍️ 提交';
@@ -902,51 +893,54 @@
         }
 
         function refreshRanking() {
-            const listEl = document.getElementById('rankingList');
+            var listEl = document.getElementById('rankingList');
             listEl.innerHTML = '<div class="empty-state"><span class="loading-spinner"></span>加载中...</div>';
 
             fetch('/DailyQuestion/GetRanking?limit=20', {
                 headers: { 'RequestVerificationToken': token }
             })
-            .then(r => r.json())
-            .then(data => {
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
                 if (data.success && data.data && data.data.length > 0) {
-                    let html = '';
-                    data.data.forEach((item, index) => {
-                        const rank = index + 1;
-                        const rankClass = rank === 1 ? 'gold' : rank === 2 ? 'silver' : rank === 3 ? 'bronze' : '';
-                        const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : '';
-                        const isMyRank = item.userId === userId;
-                        const avatarHtml = item.avatarUrl && item.isAvatarApproved ?
-                            `<img src="${item.avatarUrl}" alt="${item.username}" class="avatar" />` :
-                            `<div class="avatar-placeholder">${(item.username || '?')[0].toUpperCase()}</div>`;
+                    var html = '';
+                    data.data.forEach(function(item, index) {
+                        var rank = index + 1;
+                        var rankClass = rank === 1 ? 'gold' : rank === 2 ? 'silver' : rank === 3 ? 'bronze' : '';
+                        var medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : '';
+                        var isMyRank = item.userId === userId;
+                        var avatarHtml = item.avatarUrl && item.isAvatarApproved ?
+                            '<img src="' + item.avatarUrl + '" alt="' + item.username + '" class="avatar" />' :
+                            '<div class="avatar-placeholder">' + (item.username ? item.username.charAt(0).toUpperCase() : '?') + '</div>';
 
-                        html += `
-                            <div class="rank-item ${isMyRank ? 'my-rank-item' : ''}">
-                                ${medal ? `<span class="rank-medal">${medal}</span>` : `<span class="rank-num ${rankClass}">#${rank}</span>`}
-                                <div class="avatar-container">${avatarHtml}</div>
-                                <div class="info">
-                                    <span class="name">
-                                        ${item.username}
-                                        ${isMyRank ? `<span class="me-badge">👤 我</span>` : ''}
-                                        ${item.streakDays > 0 ? `<span class="streak-badge">🔥 ${item.streakDays}天</span>` : ''}
-                                    </span>
-                                    <div class="detail">答对 ${item.totalCorrect} 题</div>
-                                </div>
-                                <div class="score">${item.totalPoints}</div>
-                            </div>
-                        `;
+                        html += '<div class="rank-item ' + (isMyRank ? 'my-rank-item' : '') + '">';
+                        if (medal) {
+                            html += '<span class="rank-medal">' + medal + '</span>';
+                        } else {
+                            html += '<span class="rank-num ' + rankClass + '">#' + rank + '</span>';
+                        }
+                        html += '<div class="avatar-container">' + avatarHtml + '</div>';
+                        html += '<div class="info">';
+                        html += '<span class="name">' + item.username;
+                        if (isMyRank) {
+                            html += '<span class="me-badge">👤 我</span>';
+                        }
+                        if (item.streakDays > 0) {
+                            html += '<span class="streak-badge">🔥 ' + item.streakDays + ' 天</span>';
+                        }
+                        html += '</span>';
+                        html += '<div class="detail">答对 ' + item.totalCorrect + ' 题</div>';
+                        html += '</div>';
+                        html += '<div class="score">' + item.totalPoints + '</div>';
+                        html += '</div>';
                     });
 
-                    const myRank = data.data.find(r => r.userId === userId);
+                    var myRank = data.data.find(function(r) { return r.userId === userId; });
                     if (myRank) {
-                        const rank = data.data.indexOf(myRank) + 1;
-                        html += `
-                            <div class="my-rank">
-                                <span class="label">👤 我的排名</span>
-                                <span class="value">#${rank} · ${myRank.totalPoints} 分 · ${myRank.streakDays} 天连续</span>
-                            </div>
-                        `;
+                        var rank = data.data.indexOf(myRank) + 1;
+                        html += '<div class="my-rank">';
+                        html += '<span class="label">👤 我的排名</span>';
+                        html += '<span class="value">#' + rank + ' · ' + myRank.totalPoints + ' 分 · ' + myRank.streakDays + ' 天连续</span>';
+                        html += '</div>';
                     }
 
                     listEl.innerHTML = html;
@@ -955,7 +949,7 @@
                     listEl.innerHTML = '<div class="empty-state"><span class="empty-icon">🏆</span><div class="empty-title">暂无排名数据</div><div class="empty-desc">快来答题，争夺榜首吧！</div></div>';
                 }
             })
-            .catch(() => {
+            .catch(function() {
                 listEl.innerHTML = '<div class="empty-state"><span class="empty-icon">❌</span><div class="empty-title">加载失败</div><div class="empty-desc">请重试</div></div>';
                 showToast('加载失败，请重试', 'error');
             });
