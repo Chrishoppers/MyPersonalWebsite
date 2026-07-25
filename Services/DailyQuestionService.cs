@@ -16,6 +16,11 @@ namespace MyPersonalWebsite.Services
             var url = Environment.GetEnvironmentVariable("TURSO_DATABASE_URL") ?? "";
             var token = Environment.GetEnvironmentVariable("TURSO_AUTH_TOKEN") ?? "";
             _tursoAvailable = !string.IsNullOrEmpty(url) && !string.IsNullOrEmpty(token);
+
+            if (_tursoAvailable)
+                Console.WriteLine("✅ DailyQuestionService: Turso 已连接");
+            else
+                Console.WriteLine("⚠️ DailyQuestionService: Turso 未配置");
         }
 
         // ============================================================
@@ -300,8 +305,8 @@ namespace MyPersonalWebsite.Services
                 var answerData = ParseUserAnswer(result);
                 if (answerData != null)
                 {
-                    status.IsCorrect = answerData.IsCorrect;
-                    status.UserAnswer = answerData.Answer;
+                    status.IsCorrect = answerData.Value.IsCorrect;
+                    status.UserAnswer = answerData.Value.Answer;
                 }
             }
 
@@ -511,6 +516,9 @@ namespace MyPersonalWebsite.Services
             return list;
         }
 
+        // ============================================================
+        // 解析用户答案（修复版）
+        // ============================================================
         private (bool IsCorrect, string Answer)? ParseUserAnswer(string json)
         {
             try
@@ -553,7 +561,10 @@ namespace MyPersonalWebsite.Services
                 }
                 return null;
             }
-            catch { return null; }
+            catch
+            {
+                return null;
+            }
         }
 
         // ============================================================
