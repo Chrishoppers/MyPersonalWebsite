@@ -1,0 +1,805 @@
+@{
+    ViewData["Title"] = "每日一问";
+    var status = ViewBag.Status as MyPersonalWebsite.Models.TodayAnswerStatus;
+    var ranking = ViewBag.Ranking as List<MyPersonalWebsite.Models.RankItem>;
+    var username = ViewBag.Username as string;
+    var userId = Context.Session.GetInt32("UserId");
+}
+
+<style>
+    .daily-container {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 1rem 1.5rem;
+    }
+
+    .daily-header {
+        text-align: center;
+        padding: 1.5rem 0 1rem;
+    }
+
+    .daily-header h1 {
+        font-size: 2.2rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, #8B5CF6 0%, #EC4899 50%, #F59E0B 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 0.2rem;
+    }
+
+    .daily-header .subtitle {
+        color: rgba(255,255,255,0.3);
+        font-size: 0.9rem;
+    }
+
+    .question-card {
+        background: rgba(255,255,255,0.02);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255,255,255,0.04);
+        border-radius: 24px;
+        padding: 2rem 2.2rem;
+        margin-bottom: 2rem;
+        min-height: 280px;
+    }
+
+    .question-card .question-text {
+        font-size: 1.4rem;
+        font-weight: 600;
+        color: #fff;
+        line-height: 1.6;
+        margin-bottom: 0.5rem;
+    }
+
+    .question-card .question-meta {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        margin-bottom: 0.8rem;
+        font-size: 0.8rem;
+        color: rgba(255,255,255,0.2);
+    }
+
+    .question-card .question-meta .category-badge {
+        padding: 0.1rem 0.8rem;
+        border-radius: 20px;
+        background: rgba(139,92,246,0.12);
+        color: #8B5CF6;
+        border: 1px solid rgba(139,92,246,0.06);
+        font-size: 0.7rem;
+    }
+
+    .question-card .question-meta .difficulty-badge {
+        padding: 0.1rem 0.6rem;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        background: rgba(255,255,255,0.03);
+        color: rgba(255,255,255,0.3);
+        border: 1px solid rgba(255,255,255,0.04);
+    }
+
+    .question-card .hint {
+        color: rgba(255,255,255,0.3);
+        font-size: 0.85rem;
+        margin-bottom: 1.2rem;
+    }
+
+    .question-card .input-group {
+        display: flex;
+        gap: 0.8rem;
+        flex-wrap: wrap;
+    }
+
+    .question-card .input-group input {
+        flex: 1;
+        min-width: 200px;
+        padding: 0.8rem 1.2rem;
+        border-radius: 16px;
+        border: 1px solid rgba(255,255,255,0.06);
+        background: rgba(255,255,255,0.03);
+        color: #fff;
+        font-size: 1rem;
+        outline: none;
+        transition: all 0.3s ease;
+    }
+
+    .question-card .input-group input:focus {
+        border-color: rgba(108,60,225,0.2);
+        background: rgba(255,255,255,0.05);
+    }
+
+    .question-card .input-group input::placeholder {
+        color: rgba(255,255,255,0.15);
+    }
+
+    .btn-submit {
+        padding: 0.8rem 2rem;
+        border: none;
+        border-radius: 40px;
+        background: linear-gradient(135deg, #8B5CF6, #EC4899);
+        color: #fff;
+        font-weight: 600;
+        font-size: 0.95rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        min-width: 100px;
+    }
+
+    .btn-submit:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 32px rgba(108,60,225,0.2);
+    }
+
+    .btn-submit:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .btn-skip {
+        padding: 0.8rem 1.5rem;
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 40px;
+        background: rgba(255,255,255,0.02);
+        color: rgba(255,255,255,0.3);
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .btn-skip:hover {
+        background: rgba(255,255,255,0.04);
+        color: rgba(255,255,255,0.5);
+    }
+
+    .result-box {
+        margin-top: 1rem;
+        padding: 1rem 1.5rem;
+        border-radius: 16px;
+        display: none;
+        animation: fadeIn 0.4s ease;
+    }
+
+    .result-box.show {
+        display: block;
+    }
+
+    .result-box.correct {
+        background: rgba(40,167,69,0.08);
+        border: 1px solid rgba(40,167,69,0.12);
+        color: #28a745;
+    }
+
+    .result-box.wrong {
+        background: rgba(220,53,69,0.08);
+        border: 1px solid rgba(220,53,69,0.12);
+        color: #dc3545;
+    }
+
+    .result-box.skipped {
+        background: rgba(255,193,7,0.08);
+        border: 1px solid rgba(255,193,7,0.12);
+        color: #ffc107;
+    }
+
+    .result-box .result-icon {
+        font-size: 1.5rem;
+        margin-right: 0.5rem;
+    }
+
+    .answered-status {
+        text-align: center;
+        padding: 0.5rem;
+    }
+
+    .answered-status .big-icon {
+        font-size: 3rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .answered-status .status-text {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #fff;
+    }
+
+    .answered-status .status-sub {
+        color: rgba(255,255,255,0.3);
+        font-size: 0.85rem;
+    }
+
+    .answered-status .answer-reveal {
+        color: #8B5CF6;
+        font-size: 1.2rem;
+        font-weight: 700;
+        margin-top: 0.3rem;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: rgba(255,255,255,0.02);
+        border-radius: 16px;
+        padding: 1rem 1.2rem;
+        border: 1px solid rgba(255,255,255,0.04);
+        text-align: center;
+    }
+
+    .stat-card .number {
+        font-size: 1.6rem;
+        font-weight: 700;
+        color: #fff;
+    }
+
+    .stat-card .label {
+        font-size: 0.7rem;
+        color: rgba(255,255,255,0.3);
+        margin-top: 0.1rem;
+    }
+
+    .stat-card.points .number { color: #8B5CF6; }
+    .stat-card.streak .number { color: #F59E0B; }
+    .stat-card.correct .number { color: #28a745; }
+    .stat-card.max-streak .number { color: #EC4899; }
+
+    .rank-section {
+        background: rgba(255,255,255,0.02);
+        border-radius: 20px;
+        border: 1px solid rgba(255,255,255,0.04);
+        padding: 1.5rem 1.8rem;
+    }
+
+    .rank-section .section-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #fff;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .rank-section .section-title .refresh-btn {
+        background: none;
+        border: none;
+        color: rgba(255,255,255,0.2);
+        cursor: pointer;
+        font-size: 0.8rem;
+        transition: color 0.3s ease;
+    }
+
+    .rank-section .section-title .refresh-btn:hover {
+        color: #8B5CF6;
+    }
+
+    .rank-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 0.6rem 0;
+        border-bottom: 1px solid rgba(255,255,255,0.02);
+    }
+
+    .rank-item:last-child {
+        border-bottom: none;
+    }
+
+    .rank-item .rank-num {
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: rgba(255,255,255,0.2);
+        min-width: 32px;
+    }
+
+    .rank-item .rank-num.gold { color: #F59E0B; }
+    .rank-item .rank-num.silver { color: #9CA3AF; }
+    .rank-item .rank-num.bronze { color: #D97706; }
+
+    .rank-item .avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 1px solid rgba(255,255,255,0.06);
+        flex-shrink: 0;
+        background: rgba(255,255,255,0.03);
+    }
+
+    .rank-item .avatar-placeholder {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, rgba(139,92,246,0.15), rgba(236,72,153,0.15));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: rgba(255,255,255,0.3);
+        flex-shrink: 0;
+    }
+
+    .rank-item .info {
+        flex: 1;
+    }
+
+    .rank-item .info .name {
+        color: #fff;
+        font-weight: 500;
+        font-size: 0.9rem;
+    }
+
+    .rank-item .info .detail {
+        color: rgba(255,255,255,0.2);
+        font-size: 0.7rem;
+    }
+
+    .rank-item .score {
+        font-weight: 700;
+        color: #8B5CF6;
+        font-size: 0.95rem;
+    }
+
+    .rank-item .streak-badge {
+        font-size: 0.65rem;
+        padding: 0.1rem 0.5rem;
+        border-radius: 20px;
+        background: rgba(245,158,11,0.1);
+        color: #F59E0B;
+        border: 1px solid rgba(245,158,11,0.06);
+        margin-left: 0.5rem;
+    }
+
+    .my-rank-item {
+        background: rgba(139,92,246,0.04);
+        border-radius: 8px;
+        padding-left: 0.5rem !important;
+    }
+
+    .my-rank {
+        background: rgba(139,92,246,0.06);
+        border: 1px solid rgba(139,92,246,0.08);
+        border-radius: 12px;
+        padding: 0.6rem 1rem;
+        margin-top: 0.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .my-rank .label {
+        color: rgba(255,255,255,0.3);
+        font-size: 0.8rem;
+    }
+
+    .my-rank .value {
+        color: #8B5CF6;
+        font-weight: 600;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 2rem;
+        color: rgba(255,255,255,0.15);
+    }
+
+    .toast-container {
+        position: fixed;
+        bottom: 2rem;
+        right: 2rem;
+        z-index: 2000;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        align-items: flex-end;
+    }
+
+    .toast-msg {
+        padding: 0.8rem 1.8rem;
+        border-radius: 40px;
+        color: #fff;
+        font-weight: 500;
+        animation: slideUp 0.4s ease;
+        font-size: 0.9rem;
+        backdrop-filter: blur(10px);
+        background: rgba(0,0,0,0.6);
+        border: 1px solid rgba(255,255,255,0.04);
+    }
+
+    .toast-msg.success { background: rgba(40,167,69,0.8); }
+    .toast-msg.error { background: rgba(220,53,69,0.8); }
+    .toast-msg.info { background: rgba(79,172,254,0.8); }
+
+    @@keyframes slideUp {
+        from { opacity: 0; transform: translateY(20px) scale(0.95); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    @@keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .loading-spinner {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 2px solid rgba(255,255,255,0.1);
+        border-top-color: #8B5CF6;
+        border-radius: 50%;
+        animation: spin 0.6s linear infinite;
+        vertical-align: middle;
+        margin-right: 0.5rem;
+    }
+
+    @@keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    @@media (max-width: 640px) {
+        .daily-header h1 { font-size: 1.6rem; }
+        .question-card { padding: 1.5rem; }
+        .question-card .question-text { font-size: 1.1rem; }
+        .question-card .input-group { flex-direction: column; }
+        .btn-submit { width: 100%; }
+        .btn-skip { width: 100%; }
+        .stats-grid { grid-template-columns: repeat(2, 1fr); }
+        .rank-section { padding: 1rem; }
+    }
+</style>
+
+<div class="daily-container">
+
+    <div class="daily-header">
+        <h1>📚 每日一问</h1>
+        <p class="subtitle">每天一道冷知识，答对积分+10，连续答对有奖励！</p>
+    </div>
+
+    <!-- 统计 -->
+    <div class="stats-grid">
+        <div class="stat-card points">
+            <div class="number" id="totalPoints">@(status?.Stats?.TotalPoints ?? 0)</div>
+            <div class="label">🏆 总积分</div>
+        </div>
+        <div class="stat-card streak">
+            <div class="number" id="streakDays">@(status?.Stats?.StreakDays ?? 0)</div>
+            <div class="label">🔥 连续答对</div>
+        </div>
+        <div class="stat-card correct">
+            <div class="number" id="totalCorrect">@(status?.Stats?.TotalCorrect ?? 0)</div>
+            <div class="label">✅ 答对总数</div>
+        </div>
+        <div class="stat-card max-streak">
+            <div class="number" id="maxStreak">@(status?.Stats?.MaxStreakDays ?? 0)</div>
+            <div class="label">💪 最高连续</div>
+        </div>
+    </div>
+
+    <!-- 题目卡片 -->
+    <div class="question-card">
+        @if (status != null && status.HasAnswered)
+        {
+            <div class="answered-status">
+                <div class="big-icon">@(status.IsCorrect ? "🎉" : "😅")</div>
+                <div class="status-text">@(status.IsCorrect ? "答对了！" : "答错了~")</div>
+                <div class="status-sub">你的答案：@(status.UserAnswer ?? "（跳过）")</div>
+                <div class="answer-reveal">正确答案：@(status.Question?.Answer ?? "")</div>
+                <div style="margin-top:0.8rem;color:rgba(255,255,255,0.15);font-size:0.8rem;">
+                    明天 0:00 更新题目 🕐
+                </div>
+            </div>
+        }
+        else if (status?.Question != null)
+        {
+            <div class="question-text">
+                <span style="color:rgba(255,255,255,0.3);font-size:0.9rem;font-weight:400;">📌 第 @status.Question.Id 题</span>
+                <br />
+                @status.Question.Question
+            </div>
+            <div class="question-meta">
+                <span class="category-badge">📂 @status.Question.Category</span>
+                <span class="difficulty-badge">⭐ @(new string('⭐', status.Question.Difficulty))</span>
+            </div>
+            @if (!string.IsNullOrEmpty(status.Question.Hint))
+            {
+                <div class="hint">💡 提示：@status.Question.Hint</div>
+            }
+
+            <div class="input-group">
+                <input type="text" id="answerInput" placeholder="输入你的答案..." onkeydown="if(event.key==='Enter') submitAnswer()" autocomplete="off" />
+                <button class="btn-submit" id="submitBtn" onclick="submitAnswer()">✍️ 提交</button>
+                <button class="btn-skip" onclick="submitSkip()">⏭️ 跳过</button>
+            </div>
+
+            <div class="result-box" id="resultBox">
+                <span class="result-icon" id="resultIcon"></span>
+                <span id="resultMessage"></span>
+            </div>
+        }
+        else
+        {
+            <div class="empty-state">
+                <p style="font-size:1.2rem;">📝 今日题目准备中...</p>
+                <p style="color:rgba(255,255,255,0.1);">请稍后再来</p>
+            </div>
+        }
+    </div>
+
+    <!-- 排行榜 -->
+    <div class="rank-section">
+        <div class="section-title">
+            🏅 排行榜
+            <button class="refresh-btn" onclick="refreshRanking()" title="刷新排行榜">🔄</button>
+        </div>
+
+        <div id="rankingList">
+            @if (ranking != null && ranking.Any())
+            {
+                @foreach (var item in ranking.Take(20))
+                {
+                    var isMyRank = item.UserId == (Context.Session.GetInt32("UserId") ?? 0);
+                    <div class="rank-item @(isMyRank ? "my-rank-item" : "")">
+                        <div class="rank-num @(item.Rank == 1 ? "gold" : item.Rank == 2 ? "silver" : item.Rank == 3 ? "bronze" : "")">
+                            #@item.Rank
+                        </div>
+                        <div class="avatar-container">
+                            @if (!string.IsNullOrEmpty(item.AvatarUrl) && item.IsAvatarApproved)
+                            {
+                                <img src="@item.AvatarUrl" alt="@item.Username" class="avatar" />
+                            }
+                            else
+                            {
+                                <div class="avatar-placeholder">@(item.Username?.FirstOrDefault().ToString().ToUpper() ?? "?")</div>
+                            }
+                        </div>
+                        <div class="info">
+                            <span class="name">@item.Username</span>
+                            @if (item.StreakDays > 0)
+                            {
+                                <span class="streak-badge">🔥 @item.StreakDays天</span>
+                            }
+                            <div class="detail">答对 @item.TotalCorrect 题</div>
+                        </div>
+                        <div class="score">@item.TotalPoints</div>
+                    </div>
+                }
+
+                @{
+                    var myRank = ranking.FirstOrDefault(r => r.UserId == (Context.Session.GetInt32("UserId") ?? 0));
+                    if (myRank != null)
+                    {
+                        <div class="my-rank">
+                            <span class="label">👤 @username 的排名</span>
+                            <span class="value">#@myRank.Rank · @myRank.TotalPoints 分 · @myRank.StreakDays 天连续</span>
+                        </div>
+                    }
+                }
+            }
+            else
+            {
+                <div class="empty-state">暂无排名数据，快来答题吧！</div>
+            }
+        </div>
+    </div>
+
+</div>
+
+<!-- Toast -->
+<div class="toast-container" id="toastContainer"></div>
+
+@section Scripts {
+    <script>
+        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+
+        // ============================================================
+        // Toast 消息
+        // ============================================================
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast-msg ${type}`;
+            toast.textContent = message;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(20px)';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // ============================================================
+        // 提交答案
+        // ============================================================
+        function submitAnswer() {
+            const input = document.getElementById('answerInput');
+            const answer = input.value.trim();
+
+            if (!answer) {
+                showToast('请输入答案', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading-spinner"></span>提交中...';
+
+            fetch('/DailyQuestion/SubmitAnswer', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'RequestVerificationToken': token
+                },
+                body: `answer=${encodeURIComponent(answer)}`
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    if (data.isCorrect) {
+                        showResult(`🎉 答对了！+10分，当前积分：${data.points}分`, 'correct');
+                        updateStats(data.points);
+                    } else {
+                        showResult(`❌ ${data.message}`, 'wrong');
+                    }
+                    setTimeout(() => location.reload(), 2500);
+                } else {
+                    showToast(data.message || '提交失败', 'error');
+                    btn.disabled = false;
+                    btn.innerHTML = '✍️ 提交';
+                }
+            })
+            .catch(() => {
+                showToast('网络错误，请重试', 'error');
+                btn.disabled = false;
+                btn.innerHTML = '✍️ 提交';
+            });
+        }
+
+        // ============================================================
+        // 跳过
+        // ============================================================
+        function submitSkip() {
+            if (!confirm('确定要跳过吗？（不会扣分）')) return;
+
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading-spinner"></span>处理中...';
+
+            fetch('/DailyQuestion/SubmitAnswer', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'RequestVerificationToken': token
+                },
+                body: `isSkip=true`
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    showResult('⏭️ 已跳过，明天再来吧！', 'skipped');
+                    setTimeout(() => location.reload(), 2000);
+                } else {
+                    showToast(data.message || '操作失败', 'error');
+                    btn.disabled = false;
+                    btn.innerHTML = '⏭️ 跳过';
+                }
+            })
+            .catch(() => {
+                showToast('网络错误，请重试', 'error');
+                btn.disabled = false;
+                btn.innerHTML = '⏭️ 跳过';
+            });
+        }
+
+        // ============================================================
+        // 显示结果
+        // ============================================================
+        function showResult(message, type) {
+            const box = document.getElementById('resultBox');
+            const icon = document.getElementById('resultIcon');
+            const msg = document.getElementById('resultMessage');
+
+            box.className = `result-box show ${type}`;
+
+            const icons = {
+                correct: '✅',
+                wrong: '❌',
+                skipped: '⏭️',
+                warning: '⚠️'
+            };
+
+            icon.textContent = icons[type] || '📢';
+            msg.textContent = message;
+        }
+
+        // ============================================================
+        // 更新统计
+        // ============================================================
+        function updateStats(points) {
+            const pointsEl = document.getElementById('totalPoints');
+            const streakEl = document.getElementById('streakDays');
+            const correctEl = document.getElementById('totalCorrect');
+
+            if (pointsEl) {
+                const current = parseInt(pointsEl.textContent) || 0;
+                pointsEl.textContent = current + 10;
+            }
+            if (streakEl) {
+                const current = parseInt(streakEl.textContent) || 0;
+                streakEl.textContent = current + 1;
+            }
+            if (correctEl) {
+                const current = parseInt(correctEl.textContent) || 0;
+                correctEl.textContent = current + 1;
+            }
+        }
+
+        // ============================================================
+        // 刷新排行榜
+        // ============================================================
+        function refreshRanking() {
+            const listEl = document.getElementById('rankingList');
+            listEl.innerHTML = '<div class="empty-state"><span class="loading-spinner"></span>加载中...</div>';
+
+            fetch('/DailyQuestion/GetRanking?limit=20', {
+                headers: { 'RequestVerificationToken': token }
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success && data.data && data.data.length > 0) {
+                    let html = '';
+                    const userId = @(userId ?? 0);
+
+                    data.data.forEach((item, index) => {
+                        const rank = index + 1;
+                        const rankClass = rank === 1 ? 'gold' : rank === 2 ? 'silver' : rank === 3 ? 'bronze' : '';
+                        const isMyRank = item.userId === userId;
+                        const avatarHtml = item.avatarUrl && item.isAvatarApproved ?
+                            `<img src="${item.avatarUrl}" alt="${item.username}" class="avatar" />` :
+                            `<div class="avatar-placeholder">${(item.username || '?')[0].toUpperCase()}</div>`;
+
+                        html += `
+                            <div class="rank-item ${isMyRank ? 'my-rank-item' : ''}">
+                                <div class="rank-num ${rankClass}">#${rank}</div>
+                                <div class="avatar-container">${avatarHtml}</div>
+                                <div class="info">
+                                    <span class="name">${item.username}</span>
+                                    ${item.streakDays > 0 ? `<span class="streak-badge">🔥 ${item.streakDays}天</span>` : ''}
+                                    <div class="detail">答对 ${item.totalCorrect} 题</div>
+                                </div>
+                                <div class="score">${item.totalPoints}</div>
+                            </div>
+                        `;
+                    });
+
+                    // 我的排名
+                    const myRank = data.data.find(r => r.userId === userId);
+                    if (myRank) {
+                        const rank = data.data.indexOf(myRank) + 1;
+                        html += `
+                            <div class="my-rank">
+                                <span class="label">👤 我的排名</span>
+                                <span class="value">#${rank} · ${myRank.totalPoints} 分 · ${myRank.streakDays} 天连续</span>
+                            </div>
+                        `;
+                    }
+
+                    listEl.innerHTML = html;
+                    showToast('✅ 排行榜已更新', 'success');
+                } else {
+                    listEl.innerHTML = '<div class="empty-state">暂无排名数据，快来答题吧！</div>';
+                }
+            })
+            .catch(() => {
+                listEl.innerHTML = '<div class="empty-state">加载失败，请重试</div>';
+                showToast('加载失败，请重试', 'error');
+            });
+        }
+    </script>
+}
