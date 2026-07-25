@@ -399,30 +399,31 @@
                     @if (!isPast)
                     {
                         <div class="replace-area">
-                            <select id="newQuestion_@item.DateStr">
-                                <option value="">-- 更换题目 --</option>
-                                @if (bankQuestions != null)
-                                {
-                                    foreach (var q in bankQuestions)
-                                    {
-                                        if (!q.IsActive) continue;
-                                        var isSelected = q.Id == item.QuestionId;
-                                        var usedText = q.UseCount > 0 ? $"(已用{q.UseCount}次)" : "(未使用)";
-                                        if (isSelected)
-                                        {
-                                            <option value="@q.Id" selected>@q.Question [@q.Category] @usedText</option>
-                                        }
-                                        else
-                                        {
-                                            <option value="@q.Id">@q.Question [@q.Category] @usedText</option>
-                                        }
-                                    }
-                                }
-                            </select>
-                            <button class="btn-replace" onclick="replaceQuestion('@item.DateStr')">
-                                🔄 更换
-                            </button>
-                        </div>
+    <select id="newQuestion_@item.DateStr">
+        <option value="">-- 更换题目 --</option>
+        @if (bankQuestions != null)
+        {
+            foreach (var q in bankQuestions)
+            {
+                if (!q.IsActive) continue;
+                var isSelected = q.Id == item.QuestionId;
+                var usedText = q.UseCount > 0 ? $"(已用{q.UseCount}次)" : "(未使用)";
+                var stars = new string('⭐', q.Difficulty);
+                if (isSelected)
+                {
+                    <option value="@q.Id" selected>@q.Question [@q.Category] @stars @usedText</option>
+                }
+                else
+                {
+                    <option value="@q.Id">@q.Question [@q.Category] @stars @usedText</option>
+                }
+            }
+        }
+    </select>
+    <button class="btn-replace" onclick="replaceQuestion('@item.DateStr')">
+        🔄 更换
+    </button>
+</div>
                     }
                 </div>
             }
