@@ -1809,7 +1809,6 @@ public async Task<IActionResult> DeduplicateQuestions()
 
         foreach (var q in allQuestions)
         {
-            // 用「题目+答案」作为唯一标识
             var key = $"{q.Question}_{q.Answer}";
             if (seen.Contains(key))
             {
@@ -1840,45 +1839,6 @@ public async Task<IActionResult> DeduplicateQuestions()
     {
         return Json(new { success = false, message = $"去重失败: {ex.Message}" });
     }
-}
-private int ParseQuestionIdFromJson(string json)
-{
-    try
-    {
-        using var doc = JsonDocument.Parse(json);
-        var root = doc.RootElement;
-
-        if (root.TryGetProperty("results", out var results) && results.GetArrayLength() > 0)
-        {
-            var firstResult = results[0];
-            if (firstResult.TryGetProperty("response", out var response) &&
-                response.TryGetProperty("result", out var result))
-            {
-                if (result.TryGetProperty("rows", out var rows) && rows.GetArrayLength() > 0)
-                {
-                    var row = rows[0];
-                    var cols = result.GetProperty("cols");
-
-                    for (int i = 0; i < cols.GetArrayLength(); i++)
-                    {
-                        var colName = cols[i].GetProperty("name").GetString();
-                        if (colName == "QuestionId")
-                        {
-                            var element = row[i];
-                            var value = element;
-                            if (element.ValueKind == JsonValueKind.Object && element.TryGetProperty("value", out var v))
-                            {
-                                value = v;
-                            }
-                            return value.ValueKind == JsonValueKind.Number ? value.GetInt32() : 0;
-                        }
-                    }
-                }
-            }
-        }
-        return 0;
-    }
-    catch { return 0; }
 }
     }
 }
