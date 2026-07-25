@@ -1717,19 +1717,19 @@ private int ParseQuestionIdFromJson(string json)
                     var cols = result.GetProperty("cols");
 
                     var q = new DailyQuestion();
+
                     for (int i = 0; i < cols.GetArrayLength(); i++)
                     {
                         var colName = cols[i].GetProperty("name").GetString();
                         var element = row[i];
 
-                        // 处理 Turso 返回的 { value: xxx } 格式
+                        // ⭐ 处理 Turso 返回的 { value: xxx } 格式
                         var value = element;
                         if (element.ValueKind == JsonValueKind.Object && element.TryGetProperty("value", out var v))
                         {
                             value = v;
                         }
 
-                        // 处理 null 值
                         if (value.ValueKind == JsonValueKind.Null)
                         {
                             continue;
@@ -1771,6 +1771,7 @@ private int ParseQuestionIdFromJson(string json)
         Console.WriteLine($"解析每日题目失败: {ex.Message}");
         return null;
     }
+}
 }
 
         // ============================================================
