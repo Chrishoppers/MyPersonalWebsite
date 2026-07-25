@@ -1332,6 +1332,7 @@ namespace MyPersonalWebsite.Services
                                     break;
                             }
                         }
+                    }
 private List<BankQuestion> ParseBankQuestionList(string json)
 {
     var list = new List<BankQuestion>();
