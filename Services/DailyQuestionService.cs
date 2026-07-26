@@ -184,7 +184,7 @@ namespace MyPersonalWebsite.Services
             if (string.IsNullOrWhiteSpace(answer))
                 return (false, false, 0, "请输入答案", null);
 
-            var isCorrect = MatchByPinyin(answer, question.Pinyin);
+            var isCorrect = MatchByPinyin(answer, question.Pinyin, question.Answer);
 
             if (isCorrect)
             {
