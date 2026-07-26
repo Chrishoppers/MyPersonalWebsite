@@ -1434,7 +1434,7 @@ public async Task<IActionResult> QuestionBank()
 
     var questions = await _dataSync.GetAllBankQuestionsAsync();
     // ⭐ 加上排序
-    questions = questions.OrderByDescending(q => q.Id).ToList();
+    questions = questions.OrderBy(q => q.Id).ToList();
     return View(questions);
 }
 
