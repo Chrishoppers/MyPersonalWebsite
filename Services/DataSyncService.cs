@@ -594,27 +594,30 @@ namespace MyPersonalWebsite.Services
             return ParseBankQuestion(result);
         }
 
-        public async Task AddBankQuestionAsync(BankQuestion question)
-        {
-            if (!_tursoAvailable) return;
+       public async Task AddBankQuestionAsync(BankQuestion question)
+{
+    if (!_tursoAvailable) return;
 
-            var maxIdResult = await _tursoService.QueryAsync("SELECT MAX(Id) as MaxId FROM DailyQuestionBank");
-            var maxId = ParseMaxId(maxIdResult);
-            question.Id = maxId + 1;
+    // ⭐ 先查询当前最大 Id
+    var maxIdResult = await _tursoService.QueryAsync("SELECT MAX(Id) as MaxId FROM DailyQuestionBank");
+    var maxId = ParseMaxId(maxIdResult);
+    question.Id = maxId + 1;  // ⭐ 确保这一行存在且执行了
 
-            var sql = $@"INSERT INTO DailyQuestionBank (
-                Id, Question, Answer, Pinyin, Hint, Difficulty, Category, IsActive, CreatedAt
-            ) VALUES (
-                {question.Id}, '{EscapeSql(question.Question)}', '{EscapeSql(question.Answer)}',
-                '{EscapeSql(question.Pinyin)}',
-                {(string.IsNullOrEmpty(question.Hint) ? "NULL" : $"'{EscapeSql(question.Hint)}'")},
-                {question.Difficulty}, '{EscapeSql(question.Category)}',
-                {(question.IsActive ? 1 : 0)}, '{question.CreatedAt:yyyy-MM-dd HH:mm:ss}'
-            )";
+    Console.WriteLine($"📊 新题目 ID: {question.Id}");  // ⭐ 添加日志
 
-            await _tursoService.ExecuteSqlAsync(sql);
-        }
+    var sql = $@"INSERT INTO DailyQuestionBank (
+        Id, Question, Answer, Pinyin, Hint, Difficulty, Category, IsActive, CreatedAt
+    ) VALUES (
+        {question.Id}, '{EscapeSql(question.Question)}', '{EscapeSql(question.Answer)}',
+        '{EscapeSql(question.Pinyin)}',
+        {(string.IsNullOrEmpty(question.Hint) ? "NULL" : $"'{EscapeSql(question.Hint)}'")},
+        {question.Difficulty}, '{EscapeSql(question.Category)}',
+        {(question.IsActive ? 1 : 0)}, '{question.CreatedAt:yyyy-MM-dd HH:mm:ss}'
+    )";
 
+    await _tursoService.ExecuteSqlAsync(sql);
+    Console.WriteLine($"✅ 题目已添加到题库: {question.Question} (ID: {question.Id})");
+}
         public async Task ToggleQuestionStatusAsync(int id, bool enable)
         {
             if (!_tursoAvailable) return;
