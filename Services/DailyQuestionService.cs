@@ -106,16 +106,60 @@ private DateTime ChinaToday()
         // 检查用户今日是否已答题
         // ============================================================
         public async Task<bool> HasAnsweredTodayAsync(int userId)
+{
+    if (!_tursoAvailable) return false;
+
+    var today = DateTime.Today.ToString("yyyy-MM-dd");
+    var result = await _tursoService.QueryAsync(
+        $"SELECT COUNT(*) as Count FROM UserDailyAnswers WHERE UserId = {userId} AND AnswerDate = '{today}'"
+    );
+
+    try
+    {
+        using var doc = JsonDocument.Parse(result);
+        var root = doc.RootElement;
+
+        if (root.TryGetProperty("results", out var results) && results.GetArrayLength() > 0)
         {
-            if (!_tursoAvailable) return false;
-
-            var today = DateTime.Today.ToString("yyyy-MM-dd");
-            var result = await _tursoService.QueryAsync(
-                $"SELECT COUNT(*) as Count FROM UserDailyAnswers WHERE UserId = {userId} AND AnswerDate = '{today}'"
-            );
-
-            return !result.Contains("\"rows\":[]");
+            var firstResult = results[0];
+            if (firstResult.TryGetProperty("response", out var response) &&
+                response.TryGetProperty("result", out var res))
+            {
+                if (res.TryGetProperty("rows", out var rows) && rows.GetArrayLength() > 0)
+                {
+                    var row = rows[0];
+                    if (row.ValueKind == JsonValueKind.Array && row.GetArrayLength() > 0)
+                    {
+                        var element = row[0];
+                        var value = element;
+                        if (element.ValueKind == JsonValueKind.Object && element.TryGetProperty("value", out var v))
+                        {
+                            value = v;
+                        }
+                        if (value.ValueKind == JsonValueKind.Number)
+                        {
+                            var count = value.GetInt32();
+                            return count > 0;  // ⭐ 只有 count > 0 才返回 true
+                        }
+                        if (value.ValueKind == JsonValueKind.String)
+                        {
+                            var str = value.GetString();
+                            if (int.TryParse(str, out var count))
+                            {
+                                return count > 0;
+                            }
+                        }
+                    }
+                }
+            }
         }
+        return false;  // ⭐ 默认返回 false
+    }
+    catch
+    {
+        return false;
+    }
+}
 
         // ============================================================
         // 提交答案
