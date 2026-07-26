@@ -23,6 +23,52 @@ namespace MyPersonalWebsite.Controllers
             _emailService = emailService;
         }
         // ============================================================
+// 📧 开启/关闭连对邮件提醒
+// ============================================================
+
+[HttpPost]
+public async Task<IActionResult> ToggleStreakEmail(bool enable)
+{
+    var userId = HttpContext.Session.GetInt32("UserId");
+    if (!userId.HasValue)
+        return Json(new { success = false, message = "请先登录" });
+
+    var user = await _dataSync.GetUserByIdAsync(userId.Value);
+    if (user == null)
+        return Json(new { success = false, message = "用户不存在" });
+
+    user.IsStreakEmailEnabled = enable;
+    if (enable)
+    {
+        user.StreakEmailOptInAt = DateTime.Now;
+    }
+    else
+    {
+        user.StreakEmailOptInAt = null;
+    }
+
+    await _dataSync.UpdateUserAsync(user);
+    return Json(new
+    {
+        success = true,
+        message = enable ? "✅ 连对邮件提醒已开启！每天10:00准时送达" : "❌ 已关闭连对邮件提醒"
+    });
+}
+
+[HttpGet]
+public async Task<IActionResult> GetStreakEmailStatus()
+{
+    var userId = HttpContext.Session.GetInt32("UserId");
+    if (!userId.HasValue)
+        return Json(new { success = false, isEnabled = false });
+
+    var user = await _dataSync.GetUserByIdAsync(userId.Value);
+    if (user == null)
+        return Json(new { success = false, isEnabled = false });
+
+    return Json(new { success = true, isEnabled = user.IsStreakEmailEnabled });
+}
+        // ============================================================
 // 🗑️ 批量删除题目
 // ============================================================
 
