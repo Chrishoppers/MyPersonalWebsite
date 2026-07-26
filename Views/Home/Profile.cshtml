@@ -455,6 +455,91 @@
                 <span class="value">所有更改自动通过</span>
             </div>
         }
+<!-- 邮件提醒设置 -->
+<div class="setting-row" id="email-settings" style="border-top:1px solid rgba(255,255,255,0.04);padding-top:1rem;margin-top:1rem;">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;">
+        <div>
+            <div style="color:#fff;font-weight:500;">📧 连对邮件提醒</div>
+            <div style="color:rgba(255,255,255,0.2);font-size:0.75rem;">每天10:00发送答题提醒，防止断签</div>
+        </div>
+        <label class="switch">
+            <input type="checkbox" id="streakEmailToggle" onchange="toggleStreakEmail(this.checked)" />
+            <span class="slider"></span>
+        </label>
+    </div>
+    <div id="streakEmailStatus" style="color:rgba(255,255,255,0.1);font-size:0.7rem;margin-top:0.3rem;">加载中...</div>
+</div>
+
+<style>
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 48px;
+    height: 26px;
+    flex-shrink: 0;
+}
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider {
+    position: absolute;
+    cursor: pointer;
+    inset: 0;
+    background: rgba(255,255,255,0.06);
+    transition: .3s;
+    border-radius: 26px;
+}
+.slider::before {
+    content: "";
+    position: absolute;
+    height: 20px;
+    width: 20px;
+    left: 3px;
+    bottom: 3px;
+    background: #fff;
+    transition: .3s;
+    border-radius: 50%;
+}
+.switch input:checked + .slider {
+    background: linear-gradient(135deg, #8B5CF6, #EC4899);
+}
+.switch input:checked + .slider::before {
+    transform: translateX(22px);
+}
+</style>
+
+<script>
+function toggleStreakEmail(enabled) {
+    var token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+    fetch('/Admin/ToggleStreakEmail?enable=' + enabled, {
+        method: 'POST',
+        headers: { 'RequestVerificationToken': token }
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            document.getElementById('streakEmailStatus').textContent = enabled ? '✅ 已开启' : '❌ 已关闭';
+            showToast(data.message, 'success');
+        } else {
+            document.getElementById('streakEmailToggle').checked = !enabled;
+            showToast(data.message || '操作失败', 'error');
+        }
+    })
+    .catch(() => {
+        document.getElementById('streakEmailToggle').checked = !enabled;
+        showToast('网络错误，请重试', 'error');
+    });
+}
+
+// 加载当前状态
+fetch('/Admin/GetStreakEmailStatus')
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            document.getElementById('streakEmailToggle').checked = data.isEnabled;
+            document.getElementById('streakEmailStatus').textContent = data.isEnabled ? '✅ 已开启' : '❌ 已关闭';
+        }
+    })
+    .catch(() => {});
+</script>
 
     </div>
 </div>
