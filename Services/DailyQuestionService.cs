@@ -22,16 +22,20 @@ namespace MyPersonalWebsite.Services
             else
                 Console.WriteLine("⚠️ DailyQuestionService: Turso 未配置");
         }
-        private DateTime ChinaNow()
-{
-    var chinaTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Asia/Shanghai");
-    return TimeZoneInfo.ConvertTime(DateTime.UtcNow, chinaTimeZone);
-}
 
-private DateTime ChinaToday()
-{
-    return ChinaNow().Date;
-}
+        // ============================================================
+        // 中国时区辅助方法
+        // ============================================================
+        private DateTime ChinaNow()
+        {
+            var chinaTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Asia/Shanghai");
+            return TimeZoneInfo.ConvertTime(DateTime.UtcNow, chinaTimeZone);
+        }
+
+        private DateTime ChinaToday()
+        {
+            return ChinaNow().Date;
+        }
 
         // ============================================================
         // 初始化今日题目
@@ -40,7 +44,7 @@ private DateTime ChinaToday()
         {
             if (!_tursoAvailable) return;
 
-            var today = DateTime.Today.ToString("yyyy-MM-dd");
+            var today = ChinaToday().ToString("yyyy-MM-dd");
 
             var checkResult = await _tursoService.QueryAsync(
                 $"SELECT COUNT(*) as Count FROM DailyQuestions WHERE Date = '{today}'"
@@ -70,13 +74,13 @@ private DateTime ChinaToday()
             var sql = $@"INSERT INTO DailyQuestions (
                 QuestionId, Date, CreatedAt
             ) VALUES (
-                {available.Id}, '{today}', '{DateTime.Now:yyyy-MM-dd HH:mm:ss}'
+                {available.Id}, '{today}', '{ChinaNow():yyyy-MM-dd HH:mm:ss}'
             )";
 
             await _tursoService.ExecuteSqlAsync(sql);
 
             await _tursoService.ExecuteSqlAsync(
-                $"UPDATE DailyQuestionBank SET UseCount = UseCount + 1, UsedAt = '{DateTime.Now:yyyy-MM-dd HH:mm:ss}' WHERE Id = {available.Id}"
+                $"UPDATE DailyQuestionBank SET UseCount = UseCount + 1, UsedAt = '{ChinaNow():yyyy-MM-dd HH:mm:ss}' WHERE Id = {available.Id}"
             );
 
             Console.WriteLine($"✅ 今日题目已创建: {available.Question}");
@@ -85,104 +89,119 @@ private DateTime ChinaToday()
         // ============================================================
         // 获取今日题目
         // ============================================================
-       
+        public async Task<DailyQuestion?> GetTodayQuestionAsync()
+        {
+            if (!_tursoAvailable) return null;
+
+            var today = ChinaToday().ToString("yyyy-MM-dd");
+            var result = await _tursoService.QueryAsync($@"
+                SELECT dq.Id, dq.QuestionId, dq.Date, 
+                       b.Question, b.Answer, b.Pinyin, b.Hint, b.Difficulty, b.Category
+                FROM DailyQuestions dq
+                JOIN DailyQuestionBank b ON dq.QuestionId = b.Id
+                WHERE dq.Date = '{today}'
+                LIMIT 1
+            ");
+
+            return ParseDailyQuestionWithCategory(result);
+        }
 
         // ============================================================
         // 检查用户今日是否已答题
         // ============================================================
         public async Task<bool> HasAnsweredTodayAsync(int userId)
-{
-    if (!_tursoAvailable) return false;
-
-    var today = DateTime.Today.ToString("yyyy-MM-dd");
-    var result = await _tursoService.QueryAsync(
-        $"SELECT COUNT(*) as Count FROM UserDailyAnswers WHERE UserId = {userId} AND AnswerDate = '{today}'"
-    );
-
-    try
-    {
-        using var doc = JsonDocument.Parse(result);
-        var root = doc.RootElement;
-
-        if (root.TryGetProperty("results", out var results) && results.GetArrayLength() > 0)
         {
-            var firstResult = results[0];
-            if (firstResult.TryGetProperty("response", out var response) &&
-                response.TryGetProperty("result", out var res))
+            if (!_tursoAvailable) return false;
+
+            var today = ChinaToday().ToString("yyyy-MM-dd");
+            var result = await _tursoService.QueryAsync(
+                $"SELECT COUNT(*) as Count FROM UserDailyAnswers WHERE UserId = {userId} AND AnswerDate = '{today}'"
+            );
+
+            try
             {
-                if (res.TryGetProperty("rows", out var rows) && rows.GetArrayLength() > 0)
+                using var doc = JsonDocument.Parse(result);
+                var root = doc.RootElement;
+
+                if (root.TryGetProperty("results", out var results) && results.GetArrayLength() > 0)
                 {
-                    var row = rows[0];
-                    if (row.ValueKind == JsonValueKind.Array && row.GetArrayLength() > 0)
+                    var firstResult = results[0];
+                    if (firstResult.TryGetProperty("response", out var response) &&
+                        response.TryGetProperty("result", out var res))
                     {
-                        var element = row[0];
-                        var value = element;
-                        if (element.ValueKind == JsonValueKind.Object && element.TryGetProperty("value", out var v))
+                        if (res.TryGetProperty("rows", out var rows) && rows.GetArrayLength() > 0)
                         {
-                            value = v;
-                        }
-                        if (value.ValueKind == JsonValueKind.Number)
-                        {
-                            var count = value.GetInt32();
-                            return count > 0;  // ⭐ 只有 count > 0 才返回 true
-                        }
-                        if (value.ValueKind == JsonValueKind.String)
-                        {
-                            var str = value.GetString();
-                            if (int.TryParse(str, out var count))
+                            var row = rows[0];
+                            if (row.ValueKind == JsonValueKind.Array && row.GetArrayLength() > 0)
                             {
-                                return count > 0;
+                                var element = row[0];
+                                var value = element;
+                                if (element.ValueKind == JsonValueKind.Object && element.TryGetProperty("value", out var v))
+                                {
+                                    value = v;
+                                }
+                                if (value.ValueKind == JsonValueKind.Number)
+                                {
+                                    var count = value.GetInt32();
+                                    return count > 0;
+                                }
+                                if (value.ValueKind == JsonValueKind.String)
+                                {
+                                    var str = value.GetString();
+                                    if (int.TryParse(str, out var count))
+                                    {
+                                        return count > 0;
+                                    }
+                                }
                             }
                         }
                     }
                 }
+                return false;
+            }
+            catch
+            {
+                return false;
             }
         }
-        return false;  // ⭐ 默认返回 false
-    }
-    catch
-    {
-        return false;
-    }
-}
 
         // ============================================================
         // 提交答案
         // ============================================================
         public async Task<(bool Success, bool IsCorrect, int Points, string Message, string? CorrectAnswer)> 
-    SubmitAnswerAsync(int userId, string answer)
-{
-    if (!_tursoAvailable)
-        return (false, false, 0, "数据库不可用", null);
+            SubmitAnswerAsync(int userId, string answer)
+        {
+            if (!_tursoAvailable)
+                return (false, false, 0, "数据库不可用", null);
 
-    if (await HasAnsweredTodayAsync(userId))
-        return (false, false, 0, "今天已经答过题了，明天再来吧！", null);
+            if (await HasAnsweredTodayAsync(userId))
+                return (false, false, 0, "今天已经答过题了，明天再来吧！", null);
 
-    var question = await GetTodayQuestionAsync();
-    if (question == null)
-        return (false, false, 0, "今日题目不存在，请稍后再试", null);
+            var question = await GetTodayQuestionAsync();
+            if (question == null)
+                return (false, false, 0, "今日题目不存在，请稍后再试", null);
 
-    // ⭐ 关键修复：空答案直接返回错误，不记录！
-    if (string.IsNullOrWhiteSpace(answer))
-        return (false, false, 0, "请输入答案", null);
+            if (string.IsNullOrWhiteSpace(answer))
+                return (false, false, 0, "请输入答案", null);
 
-    var isCorrect = MatchByPinyin(answer, question.Pinyin);
+            var isCorrect = MatchByPinyin(answer, question.Pinyin);
 
-    if (isCorrect)
-    {
-        await RecordAnswerAsync(userId, question.Id, answer, true);
-        await UpdateUserStatsAsync(userId, true);
-        var stats = await GetUserStatsAsync(userId);
-        var points = stats?.TotalPoints ?? 0;
-        return (true, true, points, "🎉 答对了！+10分", question.Answer);
-    }
-    else
-    {
-        await RecordAnswerAsync(userId, question.Id, answer, false);
-        await UpdateUserStatsAsync(userId, false);
-        return (true, false, 0, "❌ 答错了", question.Answer);
-    }
-}
+            if (isCorrect)
+            {
+                await RecordAnswerAsync(userId, question.Id, answer, true);
+                await UpdateUserStatsAsync(userId, true);
+                var stats = await GetUserStatsAsync(userId);
+                var points = stats?.TotalPoints ?? 0;
+                return (true, true, points, "🎉 答对了！+10分", question.Answer);
+            }
+            else
+            {
+                await RecordAnswerAsync(userId, question.Id, answer, false);
+                await UpdateUserStatsAsync(userId, false);
+                return (true, false, 0, "❌ 答错了", question.Answer);
+            }
+        }
+
         // ============================================================
         // 记录答案
         // ============================================================
@@ -190,7 +209,7 @@ private DateTime ChinaToday()
         {
             if (!_tursoAvailable) return;
 
-            var today = DateTime.Today.ToString("yyyy-MM-dd");
+            var today = ChinaToday().ToString("yyyy-MM-dd");
             var sql = $@"INSERT INTO UserDailyAnswers (
                 UserId, QuestionId, Answer, IsCorrect, AnswerDate
             ) VALUES (
@@ -209,7 +228,7 @@ private DateTime ChinaToday()
             if (!_tursoAvailable) return;
 
             var stats = await GetUserStatsAsync(userId);
-            var today = DateTime.Today;
+            var today = ChinaToday();
 
             if (stats == null)
             {
@@ -221,7 +240,7 @@ private DateTime ChinaToday()
                     {(isCorrect ? 1 : 0)},
                     {(isCorrect ? 1 : 0)},
                     {(isCorrect ? 1 : 0)},
-                    1, '{today:yyyy-MM-dd}', '{DateTime.Now:yyyy-MM-dd HH:mm:ss}'
+                    1, '{today:yyyy-MM-dd}', '{ChinaNow():yyyy-MM-dd HH:mm:ss}'
                 )";
                 await _tursoService.ExecuteSqlAsync(sql);
                 return;
@@ -258,7 +277,7 @@ private DateTime ChinaToday()
                 TotalCorrect = {newCorrect},
                 TotalAnswered = TotalAnswered + 1,
                 LastAnswerDate = '{today:yyyy-MM-dd}',
-                UpdatedAt = '{DateTime.Now:yyyy-MM-dd HH:mm:ss}'
+                UpdatedAt = '{ChinaNow():yyyy-MM-dd HH:mm:ss}'
             WHERE UserId = {userId}";
 
             await _tursoService.ExecuteSqlAsync(sql2);
@@ -340,7 +359,7 @@ private DateTime ChinaToday()
 
             if (hasAnswered)
             {
-                var today = DateTime.Today.ToString("yyyy-MM-dd");
+                var today = ChinaToday().ToString("yyyy-MM-dd");
                 var result = await _tursoService.QueryAsync(
                     $"SELECT IsCorrect, Answer FROM UserDailyAnswers WHERE UserId = {userId} AND AnswerDate = '{today}'"
                 );
@@ -559,7 +578,7 @@ private DateTime ChinaToday()
         }
 
         // ============================================================
-        // 解析用户答案（修复版）
+        // 解析用户答案
         // ============================================================
         private (bool IsCorrect, string Answer)? ParseUserAnswer(string json)
         {
