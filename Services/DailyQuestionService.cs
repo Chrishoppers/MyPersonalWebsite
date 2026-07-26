@@ -85,22 +85,37 @@ private DateTime ChinaToday()
         // ============================================================
         // 获取今日题目
         // ============================================================
-        public async Task<DailyQuestion?> GetTodayQuestionAsync()
+        public async Task<TodayAnswerStatus> GetTodayStatusAsync(int userId)
+{
+    var status = new TodayAnswerStatus();
+
+    var question = await GetTodayQuestionAsync();
+    if (question != null)
+        status.Question = question;
+
+    var stats = await GetUserStatsAsync(userId);
+    if (stats != null)
+        status.Stats = stats;
+
+    var hasAnswered = await HasAnsweredTodayAsync(userId);
+    status.HasAnswered = hasAnswered;
+
+    if (hasAnswered)
+    {
+        var today = DateTime.Today.ToString("yyyy-MM-dd");
+        var result = await _tursoService.QueryAsync(
+            $"SELECT IsCorrect, Answer FROM UserDailyAnswers WHERE UserId = {userId} AND AnswerDate = '{today}'"
+        );
+        var answerData = ParseUserAnswer(result);
+        if (answerData != null)
         {
-            if (!_tursoAvailable) return null;
-
-            var today = DateTime.Today.ToString("yyyy-MM-dd");
-            var result = await _tursoService.QueryAsync($@"
-                SELECT dq.Id, dq.QuestionId, dq.Date, 
-                       b.Question, b.Answer, b.Pinyin, b.Hint, b.Difficulty, b.Category
-                FROM DailyQuestions dq
-                JOIN DailyQuestionBank b ON dq.QuestionId = b.Id
-                WHERE dq.Date = '{today}'
-                LIMIT 1
-            ");
-
-            return ParseDailyQuestionWithCategory(result);
+            status.IsCorrect = answerData.IsCorrect;
+            status.UserAnswer = answerData.Answer;
         }
+    }
+
+    return status;
+}
 
         // ============================================================
         // 检查用户今日是否已答题
