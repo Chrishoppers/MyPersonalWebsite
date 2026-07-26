@@ -1256,7 +1256,7 @@ namespace MyPersonalWebsite.Services
         // 📚 题库解析方法
         // ============================================================
 
- private List<BankQuestion> ParseBankQuestionList(string json)
+private List<BankQuestion> ParseBankQuestionList(string json)
 {
     var list = new List<BankQuestion>();
     try
@@ -1285,7 +1285,7 @@ namespace MyPersonalWebsite.Services
                             var colName = cols[i].GetProperty("name").GetString();
                             var element = row[i];
 
-                            // ⭐ 关键：提取 Turso 的 { value: xxx } 格式
+                            // ⭐ 关键：处理 Turso 返回的 { value: xxx } 格式
                             var value = element;
                             if (element.ValueKind == JsonValueKind.Object && element.TryGetProperty("value", out var v))
                             {
