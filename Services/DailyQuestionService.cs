@@ -85,37 +85,7 @@ private DateTime ChinaToday()
         // ============================================================
         // 获取今日题目
         // ============================================================
-        public async Task<TodayAnswerStatus> GetTodayStatusAsync(int userId)
-{
-    var status = new TodayAnswerStatus();
-
-    var question = await GetTodayQuestionAsync();
-    if (question != null)
-        status.Question = question;
-
-    var stats = await GetUserStatsAsync(userId);
-    if (stats != null)
-        status.Stats = stats;
-
-    var hasAnswered = await HasAnsweredTodayAsync(userId);
-    status.HasAnswered = hasAnswered;
-
-    if (hasAnswered)
-    {
-        var today = DateTime.Today.ToString("yyyy-MM-dd");
-        var result = await _tursoService.QueryAsync(
-            $"SELECT IsCorrect, Answer FROM UserDailyAnswers WHERE UserId = {userId} AND AnswerDate = '{today}'"
-        );
-        var answerData = ParseUserAnswer(result);
-        if (answerData != null)
-        {
-            status.IsCorrect = answerData.IsCorrect;
-            status.UserAnswer = answerData.Answer;
-        }
-    }
-
-    return status;
-}
+       
 
         // ============================================================
         // 检查用户今日是否已答题
