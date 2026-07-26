@@ -631,17 +631,48 @@
     <div class="table-wrapper">
         <table>
             <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>题目</th>
-                    <th>答案</th>
-                    <th>类别</th>
-                    <th>难度</th>
-                    <th>状态</th>
-                    <th>使用次数</th>
-                    <th>操作</th>
-                </tr>
-            </thead>
+    <tr>
+        <th style="width:40px;">
+            <input type="checkbox" id="selectAllHeader" onchange="toggleAll()" style="display:none;" />
+        </th>
+        <th>ID</th>
+        <th>题目</th>
+        <th>答案</th>
+        <th>类别</th>
+        <th>难度</th>
+        <th>状态</th>
+        <th>使用次数</th>
+        <th>操作</th>
+    </tr>
+</thead>
+<tbody>
+    @foreach (var q in Model)
+    {
+        <tr>
+            <td>
+                <input type="checkbox" class="question-checkbox" data-id="@q.Id" style="display:none;" onchange="updateSelection()" />
+            </td>
+            <td style="color:rgba(255,255,255,0.3);font-size:0.8rem;">#@q.Id</td>
+            <td>@q.Question</td>
+            <td><strong style="color:#8B5CF6;">@q.Answer</strong></td>
+            <td><span class="badge badge-category">@q.Category</span></td>
+            <td>@(new string('⭐', q.Difficulty))</td>
+            <td>
+                <span class="badge @(q.IsActive ? "badge-active" : "badge-inactive")">
+                    @(q.IsActive ? "✅ 启用" : "⛔ 禁用")
+                </span>
+            </td>
+            <td style="font-size:0.8rem;color:rgba(255,255,255,0.3);">@q.UseCount 次</td>
+            <td>
+                <button class="btn-sm primary" onclick="viewDetail(@q.Id)">👁️ 详情</button>
+                <button class="btn-sm warning" onclick="toggleStatus(@q.Id, @(q.IsActive ? "false" : "true"))">
+                    @(q.IsActive ? "⛔ 禁用" : "✅ 启用")
+                </button>
+                <button class="btn-sm danger" onclick="deleteQuestion(@q.Id)">🗑️ 删除</button>
+            </td>
+        </tr>
+    }
+</tbody>
             <tbody id="questionTableBody">
     @if (Model.Any())
     {
