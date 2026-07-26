@@ -1296,64 +1296,48 @@ private List<BankQuestion> ParseBankQuestionList(string json)
                             var element = row[i];
 
                             // ⭐ 直接提取 value
-                            int intValue = 0;
-                            string? stringValue = null;
-
-                            if (element.ValueKind == JsonValueKind.Object)
+                            if (element.ValueKind == JsonValueKind.Object && element.TryGetProperty("value", out var v))
                             {
-                                if (element.TryGetProperty("value", out var v))
+                                if (colName == "Id")
                                 {
-                                    if (v.ValueKind == JsonValueKind.Number)
-                                        intValue = v.GetInt32();
-                                    else if (v.ValueKind == JsonValueKind.String)
-                                        stringValue = v.GetString();
-                                    else if (v.ValueKind == JsonValueKind.True)
-                                        intValue = 1;
-                                    else if (v.ValueKind == JsonValueKind.False)
-                                        intValue = 0;
+                                    q.Id = v.ValueKind == JsonValueKind.Number ? v.GetInt32() : 0;
                                 }
-                            }
-                            else if (element.ValueKind == JsonValueKind.Number)
-                            {
-                                intValue = element.GetInt32();
-                            }
-                            else if (element.ValueKind == JsonValueKind.String)
-                            {
-                                stringValue = element.GetString();
-                            }
-
-                            switch (colName)
-                            {
-                                case "Id":
-                                    q.Id = intValue;
-                                    break;
-                                case "Question":
-                                    q.Question = stringValue ?? "";
-                                    break;
-                                case "Answer":
-                                    q.Answer = stringValue ?? "";
-                                    break;
-                                case "Pinyin":
-                                    q.Pinyin = stringValue ?? "";
-                                    break;
-                                case "Hint":
-                                    q.Hint = stringValue;
-                                    break;
-                                case "Difficulty":
-                                    q.Difficulty = intValue > 0 ? intValue : 1;
-                                    break;
-                                case "Category":
-                                    q.Category = stringValue ?? "综合";
-                                    break;
-                                case "IsActive":
-                                    q.IsActive = intValue == 1;
-                                    break;
-                                case "UseCount":
-                                    q.UseCount = intValue;
-                                    break;
-                                case "CreatedAt":
-                                    q.CreatedAt = stringValue != null ? DateTime.Parse(stringValue) : DateTime.Now;
-                                    break;
+                                else if (colName == "Question")
+                                {
+                                    q.Question = v.ValueKind == JsonValueKind.String ? v.GetString() ?? "" : "";
+                                }
+                                else if (colName == "Answer")
+                                {
+                                    q.Answer = v.ValueKind == JsonValueKind.String ? v.GetString() ?? "" : "";
+                                }
+                                else if (colName == "Pinyin")
+                                {
+                                    q.Pinyin = v.ValueKind == JsonValueKind.String ? v.GetString() ?? "" : "";
+                                }
+                                else if (colName == "Hint")
+                                {
+                                    q.Hint = v.ValueKind == JsonValueKind.String ? v.GetString() : null;
+                                }
+                                else if (colName == "Difficulty")
+                                {
+                                    q.Difficulty = v.ValueKind == JsonValueKind.Number ? v.GetInt32() : 1;
+                                }
+                                else if (colName == "Category")
+                                {
+                                    q.Category = v.ValueKind == JsonValueKind.String ? v.GetString() ?? "综合" : "综合";
+                                }
+                                else if (colName == "IsActive")
+                                {
+                                    q.IsActive = v.ValueKind == JsonValueKind.Number ? v.GetInt32() == 1 : true;
+                                }
+                                else if (colName == "UseCount")
+                                {
+                                    q.UseCount = v.ValueKind == JsonValueKind.Number ? v.GetInt32() : 0;
+                                }
+                                else if (colName == "CreatedAt")
+                                {
+                                    q.CreatedAt = v.ValueKind == JsonValueKind.String ? DateTime.Parse(v.GetString() ?? "") : DateTime.Now;
+                                }
                             }
                         }
                         list.Add(q);
