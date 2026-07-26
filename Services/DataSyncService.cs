@@ -578,14 +578,14 @@ namespace MyPersonalWebsite.Services
         // 📚 题库管理方法
         // ============================================================
 
-        public async Task<List<BankQuestion>> GetAllBankQuestionsAsync()
-        {
-            if (!_tursoAvailable) return new List<BankQuestion>();
+       public async Task<List<BankQuestion>> GetAllBankQuestionsAsync()
+{
+    if (!_tursoAvailable) return new List<BankQuestion>();
 
-            var result = await _tursoService.QueryAsync("SELECT * FROM DailyQuestionBank ORDER BY Id DESC");
-            return ParseBankQuestionList(result);
-        }
-
+    var result = await _tursoService.QueryAsync("SELECT * FROM DailyQuestionBank ORDER BY Id DESC");
+    Console.WriteLine($"📊 查询结果: {result}");  // ⭐ 添加这行
+    return ParseBankQuestionList(result);
+}
         public async Task<BankQuestion?> GetBankQuestionByIdAsync(int id)
         {
             if (!_tursoAvailable) return null;
