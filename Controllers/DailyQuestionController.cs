@@ -38,24 +38,26 @@ namespace MyPersonalWebsite.Controllers
         // 提交答案（AJAX）
         // ============================================================
         [HttpPost]
-        public async Task<IActionResult> SubmitAnswer(string answer)
-        {
-            var userId = HttpContext.Session.GetInt32("UserId");
-            if (!userId.HasValue)
-            {
-                return Json(new { success = false, message = "请先登录" });
-            }
+public async Task<IActionResult> SubmitAnswer(string answer)
+{
+    var userId = HttpContext.Session.GetInt32("UserId");
+    if (!userId.HasValue)
+        return Json(new { success = false, message = "请先登录" });
 
-            var result = await _dailyService.SubmitAnswerAsync(userId.Value, answer);
-            return Json(new
-            {
-                success = result.Success,
-                isCorrect = result.IsCorrect,
-                points = result.Points,
-                message = result.Message,
-                correctAnswer = result.CorrectAnswer
-            });
-        }
+    // ⭐ 前端也校验
+    if (string.IsNullOrWhiteSpace(answer))
+        return Json(new { success = false, message = "请输入答案" });
+
+    var result = await _dailyService.SubmitAnswerAsync(userId.Value, answer);
+    return Json(new
+    {
+        success = result.Success,
+        isCorrect = result.IsCorrect,
+        points = result.Points,
+        message = result.Message,
+        correctAnswer = result.CorrectAnswer
+    });
+}
 
         // ============================================================
         // 获取排行榜（AJAX）
