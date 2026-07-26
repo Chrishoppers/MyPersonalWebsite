@@ -223,66 +223,97 @@ namespace MyPersonalWebsite.Services
         // ============================================================
         // 更新用户统计
         // ============================================================
-        private async Task UpdateUserStatsAsync(int userId, bool isCorrect)
+       private async Task UpdateUserStatsAsync(int userId, bool isCorrect)
+{
+    if (!_tursoAvailable) return;
+
+    var stats = await GetUserStatsAsync(userId);
+    var today = ChinaToday();
+
+    if (stats == null)
+    {
+        // 首次答题，直接加10分，没有连对奖励
+        var sql = $@"INSERT INTO UserGameStats (
+            UserId, TotalPoints, StreakDays, MaxStreakDays,
+            TotalCorrect, TotalAnswered, LastAnswerDate, UpdatedAt
+        ) VALUES (
+            {userId}, {(isCorrect ? 10 : 0)},
+            {(isCorrect ? 1 : 0)},
+            {(isCorrect ? 1 : 0)},
+            {(isCorrect ? 1 : 0)},
+            1, '{today:yyyy-MM-dd}', '{ChinaNow():yyyy-MM-dd HH:mm:ss}'
+        )";
+        await _tursoService.ExecuteSqlAsync(sql);
+        return;
+    }
+
+    var newStreak = stats.StreakDays;
+    var newMaxStreak = stats.MaxStreakDays;
+    var newCorrect = stats.TotalCorrect + (isCorrect ? 1 : 0);
+
+    // ⭐ 基础分（答对10分，答错0分）
+    var basePoints = isCorrect ? 10 : 0;
+    var bonusPoints = 0;
+
+    if (isCorrect)
+    {
+        // 计算新的连续天数
+        if (stats.LastAnswerDate?.ToString("yyyy-MM-dd") == today.AddDays(-1).ToString("yyyy-MM-dd"))
         {
-            if (!_tursoAvailable) return;
-
-            var stats = await GetUserStatsAsync(userId);
-            var today = ChinaToday();
-
-            if (stats == null)
-            {
-                var sql = $@"INSERT INTO UserGameStats (
-                    UserId, TotalPoints, StreakDays, MaxStreakDays,
-                    TotalCorrect, TotalAnswered, LastAnswerDate, UpdatedAt
-                ) VALUES (
-                    {userId}, {(isCorrect ? 10 : 0)},
-                    {(isCorrect ? 1 : 0)},
-                    {(isCorrect ? 1 : 0)},
-                    {(isCorrect ? 1 : 0)},
-                    1, '{today:yyyy-MM-dd}', '{ChinaNow():yyyy-MM-dd HH:mm:ss}'
-                )";
-                await _tursoService.ExecuteSqlAsync(sql);
-                return;
-            }
-
-            var newStreak = stats.StreakDays;
-            var newMaxStreak = stats.MaxStreakDays;
-            var newPoints = stats.TotalPoints + (isCorrect ? 10 : 0);
-            var newCorrect = stats.TotalCorrect + (isCorrect ? 1 : 0);
-
-            if (isCorrect)
-            {
-                if (stats.LastAnswerDate?.ToString("yyyy-MM-dd") == today.AddDays(-1).ToString("yyyy-MM-dd"))
-                {
-                    newStreak++;
-                }
-                else if (stats.LastAnswerDate?.ToString("yyyy-MM-dd") != today.ToString("yyyy-MM-dd"))
-                {
-                    newStreak = 1;
-                }
-
-                if (newStreak > newMaxStreak)
-                    newMaxStreak = newStreak;
-            }
-            else
-            {
-                newStreak = 0;
-            }
-
-            var sql2 = $@"UPDATE UserGameStats SET
-                TotalPoints = {newPoints},
-                StreakDays = {newStreak},
-                MaxStreakDays = {newMaxStreak},
-                TotalCorrect = {newCorrect},
-                TotalAnswered = TotalAnswered + 1,
-                LastAnswerDate = '{today:yyyy-MM-dd}',
-                UpdatedAt = '{ChinaNow():yyyy-MM-dd HH:mm:ss}'
-            WHERE UserId = {userId}";
-
-            await _tursoService.ExecuteSqlAsync(sql2);
+            newStreak++;
+        }
+        else if (stats.LastAnswerDate?.ToString("yyyy-MM-dd") != today.ToString("yyyy-MM-dd"))
+        {
+            newStreak = 1;
         }
 
+        if (newStreak > newMaxStreak)
+            newMaxStreak = newStreak;
+
+        // ⭐ 根据连续天数计算奖励
+        bonusPoints = GetStreakBonus(newStreak);
+    }
+    else
+    {
+        newStreak = 0;
+    }
+
+    // ⭐ 总分 = 基础分 + 奖励分
+    var newPoints = stats.TotalPoints + basePoints + bonusPoints;
+
+    // ⭐ 如果有奖励，打印日志
+    if (bonusPoints > 0)
+    {
+        Console.WriteLine($"🎉 连续 {newStreak} 天！额外奖励 +{bonusPoints} 分");
+    }
+
+    var sql2 = $@"UPDATE UserGameStats SET
+        TotalPoints = {newPoints},
+        StreakDays = {newStreak},
+        MaxStreakDays = {newMaxStreak},
+        TotalCorrect = {newCorrect},
+        TotalAnswered = TotalAnswered + 1,
+        LastAnswerDate = '{today:yyyy-MM-dd}',
+        UpdatedAt = '{ChinaNow():yyyy-MM-dd HH:mm:ss}'
+    WHERE UserId = {userId}";
+
+    await _tursoService.ExecuteSqlAsync(sql2);
+}
+
+// ============================================================
+// ⭐ 连对奖励计算
+// ============================================================
+private int GetStreakBonus(int streakDays)
+{
+    if (streakDays >= 100) return 100;
+    if (streakDays >= 60) return 80;
+    if (streakDays >= 30) return 50;
+    if (streakDays >= 14) return 30;
+    if (streakDays >= 7) return 20;
+    if (streakDays >= 5) return 10;
+    if (streakDays >= 3) return 5;
+    return 0;
+}
         // ============================================================
         // 获取用户统计
         // ============================================================
