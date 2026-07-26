@@ -22,6 +22,42 @@ namespace MyPersonalWebsite.Controllers
             _dataSync = dataSync;
             _emailService = emailService;
         }
+        // ============================================================
+// 🗑️ 批量删除题目
+// ============================================================
+
+[HttpPost]
+public async Task<IActionResult> BatchDeleteQuestions([FromBody] List<int> ids)
+{
+    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+    if (isAdmin != 1)
+        return Json(new { success = false, message = "权限不足" });
+
+    if (ids == null || !ids.Any())
+        return Json(new { success = false, message = "请选择要删除的题目" });
+
+    int successCount = 0;
+    int failCount = 0;
+
+    foreach (var id in ids)
+    {
+        try
+        {
+            await _dataSync.DeleteBankQuestionAsync(id);
+            successCount++;
+        }
+        catch
+        {
+            failCount++;
+        }
+    }
+
+    return Json(new
+    {
+        success = true,
+        message = $"✅ 已删除 {successCount} 道题" + (failCount > 0 ? $"，{failCount} 道失败" : "")
+    });
+}
         
         // ============================================================
 // 📅 未来题目安排（自动AI安排 + 手动变更）
