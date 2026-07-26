@@ -14,6 +14,87 @@
 }
 
 <style>
+.batch-bar {
+    display: none;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.8rem 1.5rem;
+    background: rgba(108,60,225,0.04);
+    border-radius: 16px;
+    border: 1px solid rgba(108,60,225,0.06);
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.batch-bar.active {
+    display: flex;
+}
+
+.batch-bar .checkbox-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.batch-bar .checkbox-wrapper input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: #8B5CF6;
+    cursor: pointer;
+}
+
+.batch-bar .selected-info {
+    color: rgba(255,255,255,0.3);
+    font-size: 0.85rem;
+}
+
+.batch-bar .selected-info strong {
+    color: #8B5CF6;
+}
+
+.batch-bar .btn-batch {
+    padding: 0.4rem 1.5rem;
+    border: none;
+    border-radius: 40px;
+    background: linear-gradient(135deg, #dc3545, #e55353);
+    color: #fff;
+    font-weight: 500;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.batch-bar .btn-batch:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(220,53,69,0.2);
+}
+
+.batch-bar .btn-batch:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.batch-bar .btn-batch.secondary {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.06);
+    color: rgba(255,255,255,0.4);
+}
+
+.batch-bar .btn-batch.secondary:hover {
+    background: rgba(255,255,255,0.08);
+    box-shadow: none;
+    transform: none;
+}
+
+/* 批量模式下的表格行高亮 */
+.batch-mode .question-row:hover {
+    background: rgba(108,60,225,0.04);
+}
+
+.batch-mode .question-row td:first-child {
+    padding-left: 0.5rem;
+}
     .admin-container {
         max-width: 1400px;
         margin: 0 auto;
@@ -531,6 +612,20 @@
         <button class="btn-glass" onclick="applyFilters()" style="padding:0.3rem 1.2rem;">应用</button>
         <button class="btn-glass" onclick="resetFilters()" style="padding:0.3rem 1.2rem;background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.4);">重置</button>
     </div>
+<!-- 批量操作栏（默认隐藏） -->
+<div class="batch-bar" id="batchBar" style="display:none;">
+    <div class="checkbox-wrapper">
+        <input type="checkbox" id="selectAll" onchange="toggleAll()" />
+        <label for="selectAll" style="color:rgba(255,255,255,0.3);font-size:0.85rem;cursor:pointer;">全选</label>
+    </div>
+    <div class="selected-info">
+        已选 <strong id="selectedCount">0</strong> 道题
+    </div>
+    <button class="btn-batch" id="batchDeleteBtn" onclick="batchDelete()" disabled>
+        🗑️ 删除选中
+    </button>
+    <button class="btn-batch secondary" onclick="exitBatchMode()">退出批量模式</button>
+</div>
 
     <!-- 表格 -->
     <div class="table-wrapper">
@@ -548,50 +643,41 @@
                 </tr>
             </thead>
             <tbody id="questionTableBody">
-                @if (Model.Any())
-                {
-                    @foreach (var q in Model.OrderByDescending(q => q.Id))
-                    {
-                        <tr class="question-row @(!q.IsActive ? "disabled" : "")"
-                            data-id="@q.Id"
-                            data-category="@q.Category"
-                            data-difficulty="@q.Difficulty"
-                            data-status="@(q.IsActive ? "1" : "0")"
-                            data-search="@(q.Question + " " + q.Answer)">
-                            <td style="color:rgba(255,255,255,0.3);font-size:0.8rem;">#@q.Id</td>
-                            <td style="max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">@q.Question</td>
-                            <td><strong style="color:#8B5CF6;">@q.Answer</strong></td>
-                            <td><span class="badge badge-category">@q.Category</span></td>
-                            <td>@(new string('⭐', q.Difficulty))</td>
-                            <td>
-                                <span class="badge @(q.IsActive ? "badge-active" : "badge-inactive")">
-                                    @(q.IsActive ? "✅ 启用" : "⛔ 禁用")
-                                </span>
-                            </td>
-                            <td style="font-size:0.8rem;color:rgba(255,255,255,0.3);">@q.UseCount 次</td>
-                            <td>
-                                <button class="btn-sm primary" onclick="viewDetail(@q.Id)">👁️ 详情</button>
-                                <button class="btn-sm warning" onclick="toggleStatus(@q.Id, @(q.IsActive ? "false" : "true"))">
-                                    @(q.IsActive ? "⛔ 禁用" : "✅ 启用")
-                                </button>
-                                <button class="btn-sm danger" onclick="deleteQuestion(@q.Id)">🗑️ 删除</button>
-                            </td>
-                        </tr>
-                    }
-                }
-                else
-                {
-                    <tr>
-                        <td colspan="8">
-                            <div class="empty-state">
-                                <p style="font-size:1.5rem;margin-bottom:0.5rem;">📭</p>
-                                <p>题库为空</p>
-                                <p style="color:rgba(255,255,255,0.05);font-size:0.8rem;">点击右上角「添加题目」开始创建</p>
-                            </div>
-                        </td>
-                    </tr>
-                }
-            </tbody>
+    @if (Model.Any())
+    {
+        @foreach (var q in Model.OrderByDescending(q => q.Id))
+        {
+            <tr class="question-row @(!q.IsActive ? "disabled" : "")"
+                data-id="@q.Id"
+                data-category="@q.Category"
+                data-difficulty="@q.Difficulty"
+                data-status="@(q.IsActive ? "1" : "0")"
+                data-search="@(q.Question + " " + q.Answer)">
+                <td>
+                    <input type="checkbox" class="question-checkbox" data-id="@q.Id" style="display:none;" onchange="updateSelection()" />
+                </td>
+                <td style="color:rgba(255,255,255,0.3);font-size:0.8rem;">#@q.Id</td>
+                <td style="max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">@q.Question</td>
+                <td><strong style="color:#8B5CF6;">@q.Answer</strong></td>
+                <td><span class="badge badge-category">@q.Category</span></td>
+                <td>@(new string('⭐', q.Difficulty))</td>
+                <td>
+                    <span class="badge @(q.IsActive ? "badge-active" : "badge-inactive")">
+                        @(q.IsActive ? "✅ 启用" : "⛔ 禁用")
+                    </span>
+                </td>
+                <td style="font-size:0.8rem;color:rgba(255,255,255,0.3);">@q.UseCount 次</td>
+                <td>
+                    <button class="btn-sm primary" onclick="viewDetail(@q.Id)">👁️ 详情</button>
+                    <button class="btn-sm warning" onclick="toggleStatus(@q.Id, @(q.IsActive ? "false" : "true"))">
+                        @(q.IsActive ? "⛔ 禁用" : "✅ 启用")
+                    </button>
+                    <button class="btn-sm danger" onclick="deleteQuestion(@q.Id)">🗑️ 删除</button>
+                </td>
+            </tr>
+        }
+    }
+</tbody>
         </table>
     </div>
 
@@ -1028,6 +1114,136 @@
         document.getElementById('searchInput').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') applyFilters();
         });
+// ============================================================
+// 批量模式开关
+// ============================================================
+
+var batchModeActive = false;
+
+function toggleBatchMode() {
+    batchModeActive = !batchModeActive;
+    var bar = document.getElementById('batchBar');
+    var checkboxes = document.querySelectorAll('.question-checkbox');
+    var btn = document.getElementById('batchModeBtn');
+
+    if (batchModeActive) {
+        bar.classList.add('active');
+        bar.style.display = 'flex';
+        checkboxes.forEach(function(cb) { cb.style.display = 'inline-block'; });
+        btn.textContent = '❌ 退出批量';
+        btn.style.borderColor = 'rgba(220,53,69,0.2)';
+        btn.style.color = '#dc3545';
+        document.querySelector('.table-wrapper').classList.add('batch-mode');
+        clearSelection();
+    } else {
+        exitBatchMode();
+    }
+}
+
+function exitBatchMode() {
+    batchModeActive = false;
+    var bar = document.getElementById('batchBar');
+    var checkboxes = document.querySelectorAll('.question-checkbox');
+    var btn = document.getElementById('batchModeBtn');
+
+    bar.classList.remove('active');
+    bar.style.display = 'none';
+    checkboxes.forEach(function(cb) {
+        cb.style.display = 'none';
+        cb.checked = false;
+    });
+    btn.textContent = '☑️ 批量管理';
+    btn.style.borderColor = 'rgba(79,172,254,0.2)';
+    btn.style.color = '#4facfe';
+    document.querySelector('.table-wrapper').classList.remove('batch-mode');
+    updateSelection();
+}
+
+// ============================================================
+// 批量选择功能
+// ============================================================
+
+function toggleAll() {
+    var checked = document.getElementById('selectAll').checked;
+    document.querySelectorAll('.question-checkbox').forEach(function(cb) {
+        cb.checked = checked;
+    });
+    updateSelection();
+}
+
+function updateSelection() {
+    var checked = document.querySelectorAll('.question-checkbox:checked');
+    var count = checked.length;
+    document.getElementById('selectedCount').textContent = count;
+    document.getElementById('batchDeleteBtn').disabled = count === 0;
+
+    var all = document.querySelectorAll('.question-checkbox');
+    var selectAll = document.getElementById('selectAll');
+    if (all.length > 0 && checked.length === all.length) {
+        selectAll.checked = true;
+    } else {
+        selectAll.checked = false;
+    }
+}
+
+function clearSelection() {
+    document.querySelectorAll('.question-checkbox').forEach(function(cb) {
+        cb.checked = false;
+    });
+    updateSelection();
+}
+
+// ============================================================
+// 🗑️ 批量删除
+// ============================================================
+
+function batchDelete() {
+    var checked = document.querySelectorAll('.question-checkbox:checked');
+    if (checked.length === 0) {
+        showToast('请至少选择一道题', 'error');
+        return;
+    }
+
+    var ids = [];
+    checked.forEach(function(cb) {
+        ids.push(parseInt(cb.dataset.id));
+    });
+
+    if (!confirm('⚠️ 确定要删除选中的 ' + ids.length + ' 道题吗？此操作不可恢复！')) return;
+
+    var btn = document.getElementById('batchDeleteBtn');
+    btn.disabled = true;
+    btn.textContent = '⏳ 删除中...';
+
+    showProgressModal('正在删除...', '共 ' + ids.length + ' 道题');
+
+    fetch('/Admin/BatchDeleteQuestions', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'RequestVerificationToken': token
+        },
+        body: JSON.stringify(ids)
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        closeProgressModal();
+        if (data.success) {
+            showToast(data.message, 'success');
+            setTimeout(function() { location.reload(); }, 1000);
+        } else {
+            showToast(data.message || '删除失败', 'error');
+        }
+    })
+    .catch(function() {
+        closeProgressModal();
+        showToast('网络错误，请重试', 'error');
+    })
+    .finally(function() {
+        btn.disabled = false;
+        btn.textContent = '🗑️ 删除选中';
+    });
+}
 // ============================================================
 // 🗑️ 去重（带进度条）
 // ============================================================
