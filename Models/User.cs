@@ -33,6 +33,9 @@ public DateTime? LoginTokenExpiry { get; set; }
         public string? PendingUsername { get; set; }
         public bool IsEmailChangeApproved { get; set; } = false;
         public bool IsUsernameChangeApproved { get; set; } = false;
+        public bool IsStreakEmailEnabled { get; set; } = false;  // 是否开启
+    public DateTime? StreakEmailOptInAt { get; set; }        // 开启时间
+    public int LastStreakEmailDay { get; set; } = 0;          // 最后发送时的连续天数
 
         public ICollection<Message>? Messages { get; set; }
     }
