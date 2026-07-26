@@ -58,6 +58,17 @@ public async Task<IActionResult> SubmitAnswer(string answer)
         correctAnswer = result.CorrectAnswer
     });
 }
+[HttpGet]
+public async Task<IActionResult> CheckFirstAnswer()
+{
+    var userId = HttpContext.Session.GetInt32("UserId");
+    if (!userId.HasValue)
+        return Json(new { success = false, isFirstAnswer = false });
+
+    var stats = await _dailyService.GetUserStatsAsync(userId.Value);
+    var isFirstAnswer = stats == null || (stats.TotalAnswered == 0 && stats.TotalPoints == 0);
+    return Json(new { success = true, isFirstAnswer = isFirstAnswer });
+}
 
         // ============================================================
         // 获取排行榜（AJAX）
