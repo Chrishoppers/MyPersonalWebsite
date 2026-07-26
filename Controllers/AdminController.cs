@@ -1425,16 +1425,18 @@ private int ParseQuestionIdFromJson(string json)
         // 📚 题库管理
         // ============================================================
 
-        [HttpGet]
-        public async Task<IActionResult> QuestionBank()
-        {
-            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-            if (isAdmin != 1)
-                return RedirectToAction("Login", "Auth");
+       [HttpGet]
+public async Task<IActionResult> QuestionBank()
+{
+    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+    if (isAdmin != 1)
+        return RedirectToAction("Login", "Auth");
 
-            var questions = await _dataSync.GetAllBankQuestionsAsync();
-            return View(questions);
-        }
+    var questions = await _dataSync.GetAllBankQuestionsAsync();
+    // ⭐ 加上排序
+    questions = questions.OrderByDescending(q => q.Id).ToList();
+    return View(questions);
+}
 
         [HttpGet]
         public async Task<IActionResult> GetQuestionDetail(int id)
