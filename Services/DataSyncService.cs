@@ -1283,54 +1283,70 @@ private List<BankQuestion> ParseBankQuestionList(string json)
                         if (row.ValueKind != JsonValueKind.Array) continue;
 
                         var q = new BankQuestion();
+
                         for (int i = 0; i < cols.GetArrayLength(); i++)
                         {
                             var colName = cols[i].GetProperty("name").GetString();
                             var element = row[i];
 
-                            // ⭐ 关键：处理 Turso 返回的 { value: xxx } 格式
-                            var value = element;
-                            if (element.ValueKind == JsonValueKind.Object && element.TryGetProperty("value", out var v))
-                            {
-                                value = v;
-                            }
+                            // ⭐ 直接提取 value
+                            int intValue = 0;
+                            string? stringValue = null;
 
-                            if (value.ValueKind == JsonValueKind.Null)
+                            if (element.ValueKind == JsonValueKind.Object)
                             {
-                                continue;
+                                if (element.TryGetProperty("value", out var v))
+                                {
+                                    if (v.ValueKind == JsonValueKind.Number)
+                                        intValue = v.GetInt32();
+                                    else if (v.ValueKind == JsonValueKind.String)
+                                        stringValue = v.GetString();
+                                    else if (v.ValueKind == JsonValueKind.True)
+                                        intValue = 1;
+                                    else if (v.ValueKind == JsonValueKind.False)
+                                        intValue = 0;
+                                }
+                            }
+                            else if (element.ValueKind == JsonValueKind.Number)
+                            {
+                                intValue = element.GetInt32();
+                            }
+                            else if (element.ValueKind == JsonValueKind.String)
+                            {
+                                stringValue = element.GetString();
                             }
 
                             switch (colName)
                             {
                                 case "Id":
-                                    q.Id = value.ValueKind == JsonValueKind.Number ? value.GetInt32() : 0;
+                                    q.Id = intValue;
                                     break;
                                 case "Question":
-                                    q.Question = value.ValueKind == JsonValueKind.String ? value.GetString() ?? "" : "";
+                                    q.Question = stringValue ?? "";
                                     break;
                                 case "Answer":
-                                    q.Answer = value.ValueKind == JsonValueKind.String ? value.GetString() ?? "" : "";
+                                    q.Answer = stringValue ?? "";
                                     break;
                                 case "Pinyin":
-                                    q.Pinyin = value.ValueKind == JsonValueKind.String ? value.GetString() ?? "" : "";
+                                    q.Pinyin = stringValue ?? "";
                                     break;
                                 case "Hint":
-                                    q.Hint = value.ValueKind == JsonValueKind.String ? value.GetString() : null;
+                                    q.Hint = stringValue;
                                     break;
                                 case "Difficulty":
-                                    q.Difficulty = value.ValueKind == JsonValueKind.Number ? value.GetInt32() : 1;
+                                    q.Difficulty = intValue > 0 ? intValue : 1;
                                     break;
                                 case "Category":
-                                    q.Category = value.ValueKind == JsonValueKind.String ? value.GetString() ?? "综合" : "综合";
+                                    q.Category = stringValue ?? "综合";
                                     break;
                                 case "IsActive":
-                                    q.IsActive = value.ValueKind == JsonValueKind.Number ? value.GetInt32() == 1 : true;
+                                    q.IsActive = intValue == 1;
                                     break;
                                 case "UseCount":
-                                    q.UseCount = value.ValueKind == JsonValueKind.Number ? value.GetInt32() : 0;
+                                    q.UseCount = intValue;
                                     break;
                                 case "CreatedAt":
-                                    q.CreatedAt = value.ValueKind == JsonValueKind.String ? DateTime.Parse(value.GetString() ?? "") : DateTime.Now;
+                                    q.CreatedAt = stringValue != null ? DateTime.Parse(stringValue) : DateTime.Now;
                                     break;
                             }
                         }
@@ -1346,7 +1362,6 @@ private List<BankQuestion> ParseBankQuestionList(string json)
     }
     return list;
 }
-
 
         private BankQuestion? ParseBankQuestion(string json)
         {
