@@ -1295,12 +1295,25 @@ private List<BankQuestion> ParseBankQuestionList(string json)
                             var colName = cols[i].GetProperty("name").GetString();
                             var element = row[i];
 
-                            // ⭐ 直接提取 value
                             if (element.ValueKind == JsonValueKind.Object && element.TryGetProperty("value", out var v))
                             {
+                                // ⭐ 特殊处理 Id：可能是字符串也可能是数字
                                 if (colName == "Id")
                                 {
-                                    q.Id = v.ValueKind == JsonValueKind.Number ? v.GetInt32() : 0;
+                                    if (v.ValueKind == JsonValueKind.String)
+                                    {
+                                        q.Id = int.TryParse(v.GetString(), out var id) ? id : 0;
+                                    }
+                                    else if (v.ValueKind == JsonValueKind.Number)
+                                    {
+                                        q.Id = v.GetInt32();
+                                    }
+                                    else
+                                    {
+                                        q.Id = 0;
+                                    }
+                                    // ⭐ 添加日志
+                                    Console.WriteLine($"🔍 解析 Id: {q.Id}, 原始值: {v}, 类型: {v.ValueKind}");
                                 }
                                 else if (colName == "Question")
                                 {
