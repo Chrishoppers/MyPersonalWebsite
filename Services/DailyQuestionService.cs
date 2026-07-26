@@ -121,36 +121,39 @@ private DateTime ChinaToday()
         // 提交答案
         // ============================================================
         public async Task<(bool Success, bool IsCorrect, int Points, string Message, string? CorrectAnswer)> 
-            SubmitAnswerAsync(int userId, string answer)
-        {
-            if (!_tursoAvailable)
-                return (false, false, 0, "数据库不可用", null);
+    SubmitAnswerAsync(int userId, string answer)
+{
+    if (!_tursoAvailable)
+        return (false, false, 0, "数据库不可用", null);
 
-            if (await HasAnsweredTodayAsync(userId))
-                return (false, false, 0, "今天已经答过题了，明天再来吧！", null);
+    if (await HasAnsweredTodayAsync(userId))
+        return (false, false, 0, "今天已经答过题了，明天再来吧！", null);
 
-            var question = await GetTodayQuestionAsync();
-            if (question == null)
-                return (false, false, 0, "今日题目不存在，请稍后再试", null);
+    var question = await GetTodayQuestionAsync();
+    if (question == null)
+        return (false, false, 0, "今日题目不存在，请稍后再试", null);
 
-            var isCorrect = MatchByPinyin(answer, question.Pinyin);
+    // ⭐ 关键修复：空答案直接返回错误，不记录！
+    if (string.IsNullOrWhiteSpace(answer))
+        return (false, false, 0, "请输入答案", null);
 
-            if (isCorrect)
-            {
-                await RecordAnswerAsync(userId, question.Id, answer, true);
-                await UpdateUserStatsAsync(userId, true);
-                var stats = await GetUserStatsAsync(userId);
-                var points = stats?.TotalPoints ?? 0;
-                return (true, true, points, "🎉 答对了！+10分", question.Answer);
-            }
-            else
-            {
-                await RecordAnswerAsync(userId, question.Id, answer, false);
-                await UpdateUserStatsAsync(userId, false);
-                return (true, false, 0, "❌ 答错了", question.Answer);
-            }
-        }
+    var isCorrect = MatchByPinyin(answer, question.Pinyin);
 
+    if (isCorrect)
+    {
+        await RecordAnswerAsync(userId, question.Id, answer, true);
+        await UpdateUserStatsAsync(userId, true);
+        var stats = await GetUserStatsAsync(userId);
+        var points = stats?.TotalPoints ?? 0;
+        return (true, true, points, "🎉 答对了！+10分", question.Answer);
+    }
+    else
+    {
+        await RecordAnswerAsync(userId, question.Id, answer, false);
+        await UpdateUserStatsAsync(userId, false);
+        return (true, false, 0, "❌ 答错了", question.Answer);
+    }
+}
         // ============================================================
         // 记录答案
         // ============================================================
