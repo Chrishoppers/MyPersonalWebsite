@@ -377,15 +377,26 @@ namespace MyPersonalWebsite.Services
         // ============================================================
         // 拼音匹配
         // ============================================================
-        private bool MatchByPinyin(string userInput, string correctPinyin)
-        {
-            if (string.IsNullOrEmpty(userInput) || string.IsNullOrEmpty(correctPinyin))
-                return false;
+        private bool MatchByPinyin(string userInput, string correctPinyin, string correctAnswer)
+{
+    if (string.IsNullOrEmpty(userInput)) return false;
 
-            var clean = userInput.Replace(" ", "").Replace("嗯", "").Replace("啊", "").Replace("吧", "");
-            return clean.Contains(correctPinyin, StringComparison.OrdinalIgnoreCase) || 
-                   correctPinyin.Contains(clean, StringComparison.OrdinalIgnoreCase);
-        }
+    var clean = userInput.Replace(" ", "").Replace("嗯", "").Replace("啊", "").Replace("吧", "").Replace("的", "");
+
+    // ⭐ 1. 中文匹配
+    if (string.Equals(clean, correctAnswer, StringComparison.OrdinalIgnoreCase))
+        return true;
+    if (clean.Contains(correctAnswer, StringComparison.OrdinalIgnoreCase))
+        return true;
+    if (correctAnswer.Contains(clean, StringComparison.OrdinalIgnoreCase))
+        return true;
+
+    // ⭐ 2. 拼音匹配
+    if (string.IsNullOrEmpty(correctPinyin)) return false;
+    var cleanPinyin = correctPinyin.Replace(" ", "");
+    return clean.Contains(cleanPinyin, StringComparison.OrdinalIgnoreCase) || 
+           cleanPinyin.Contains(clean, StringComparison.OrdinalIgnoreCase);
+}
 
         // ============================================================
         // 解析方法
