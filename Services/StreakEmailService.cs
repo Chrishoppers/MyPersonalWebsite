@@ -53,9 +53,8 @@ namespace MyPersonalWebsite.Services
             {
                 try
                 {
-                    // 计算到明天 10:00 的时间
                     var now = DateTime.Now;
-                    var targetTime = now.Date.AddDays(1).AddHours(10); // 明天 10:00
+                    var targetTime = now.Date.AddDays(1).AddHours(10);
                     var delay = targetTime - now;
 
                     _logger.LogInformation($"⏳ 下次连对邮件发送时间: {targetTime:yyyy-MM-dd HH:mm}");
@@ -90,7 +89,6 @@ namespace MyPersonalWebsite.Services
                 var emailService = scope.ServiceProvider.GetRequiredService<BrevoEmailService>();
                 var dailyService = scope.ServiceProvider.GetRequiredService<DailyQuestionService>();
 
-                // 获取所有开启邮件提醒的用户
                 var users = await dataSync.GetAllUsersAsync();
                 var subscribedUsers = users.Where(u => u.IsStreakEmailEnabled && !u.IsDeleted).ToList();
 
@@ -102,7 +100,6 @@ namespace MyPersonalWebsite.Services
 
                 _logger.LogInformation($"📧 准备向 {subscribedUsers.Count} 位用户发送连对邮件");
 
-                // 获取今日题目
                 var todayQuestion = await dailyService.GetTodayQuestionAsync();
                 if (todayQuestion == null)
                 {
@@ -117,30 +114,24 @@ namespace MyPersonalWebsite.Services
                 {
                     try
                     {
-                        // 获取用户的连续天数
                         var stats = await dailyService.GetUserStatsAsync(user.Id);
                         var streakDays = stats?.StreakDays ?? 0;
 
-                        // 如果连续天数为0，不发送（但可以选择发送"回来吧"类型邮件）
                         if (streakDays == 0)
                         {
-                            // 连续天数为0，发送"回归"邮件
-                            await SendReturnEmailAsync(user, todayQuestion, emailService, random);
+                            await SendReturnEmailAsync(user, todayQuestion, emailService, dataSync, random);
                             sentCount++;
                             continue;
                         }
 
-                        // 如果今天已经答过题，不发送
                         var hasAnswered = await dailyService.HasAnsweredTodayAsync(user.Id);
                         if (hasAnswered)
                         {
                             continue;
                         }
 
-                        // 生成今日登录Token
                         var loginToken = await dataSync.CreateLoginTokenAsync(user.Id);
 
-                        // 随机选择文案
                         var subject = _subjectLines[random.Next(_subjectLines.Count)]
                             .Replace("{N}", streakDays.ToString());
 
@@ -149,19 +140,16 @@ namespace MyPersonalWebsite.Services
                             .Replace("{percent}", (Math.Min(streakDays * 2, 95)).ToString())
                             .Replace("{question}", todayQuestion.Question);
 
-                        // 构建邮件
                         var html = BuildEmailHtml(user.Username, body, todayQuestion, loginToken, streakDays);
 
                         await emailService.SendEmailAsync(user.Email, subject, html);
 
-                        // 更新最后发送天数
                         user.LastStreakEmailDay = streakDays;
                         await dataSync.UpdateUserAsync(user);
 
                         sentCount++;
                         _logger.LogInformation($"📧 已发送连对邮件给 {user.Username} (连续{streakDays}天)");
 
-                        // 防止发送太快
                         await Task.Delay(100);
                     }
                     catch (Exception ex)
@@ -179,7 +167,7 @@ namespace MyPersonalWebsite.Services
             }
         }
 
-        private async Task SendReturnEmailAsync(User user, DailyQuestion question, BrevoEmailService emailService, Random random)
+        private async Task SendReturnEmailAsync(User user, DailyQuestion question, BrevoEmailService emailService, DataSyncService dataSync, Random random)
         {
             var returnSubjects = new[]
             {
@@ -199,7 +187,7 @@ namespace MyPersonalWebsite.Services
             var body = returnBodies[random.Next(returnBodies.Length)]
                 .Replace("{question}", question.Question);
 
-            var loginToken = await _dataSync.CreateLoginTokenAsync(user.Id);
+            var loginToken = await dataSync.CreateLoginTokenAsync(user.Id);
             var html = BuildEmailHtml(user.Username, body, question, loginToken, 0);
 
             await emailService.SendEmailAsync(user.Email, subject, html);
@@ -210,15 +198,12 @@ namespace MyPersonalWebsite.Services
         {
             var baseUrl = "https://chris-hopper.org";
 
-            // 生成趣味进度条
             var progressBar = GenerateProgressBar(streakDays);
 
             return $@"
             <div style='font-family: 'Inter', -apple-system, sans-serif; max-width: 580px; margin: 0 auto; padding: 0; background: #0a0a0f; border-radius: 24px; border: 1px solid rgba(255,255,255,0.04); overflow: hidden;'>
-                <!-- 顶部渐变条 -->
                 <div style='height: 4px; background: linear-gradient(135deg, #8B5CF6, #EC4899, #F59E0B);'></div>
 
-                <!-- 头部 -->
                 <div style='padding: 28px 32px 0 32px; text-align: center;'>
                     <div style='font-size: 2.8rem; margin-bottom: 4px;'>📚</div>
                     <h2 style='color: #fff; font-weight: 700; font-size: 1.5rem; margin: 0;'>
@@ -229,10 +214,8 @@ namespace MyPersonalWebsite.Services
                     </p>
                 </div>
 
-                <!-- 进度条 -->
                 {progressBar}
 
-                <!-- 正文 -->
                 <div style='padding: 16px 32px 24px 32px;'>
                     <p style='color: rgba(255,255,255,0.4); font-size: 0.95rem; line-height: 1.6; margin: 0 0 12px 0;'>
                         Hi <strong style='color: #fff;'>{username}</strong> 👋
@@ -242,7 +225,6 @@ namespace MyPersonalWebsite.Services
                         {body}
                     </p>
 
-                    <!-- 题目预览 -->
                     <div style='background: rgba(139,92,246,0.04); border: 1px solid rgba(139,92,246,0.06); border-radius: 16px; padding: 16px 20px; margin: 12px 0 20px 0;'>
                         <div style='color: rgba(255,255,255,0.15); font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.04em;'>📌 今日题目</div>
                         <div style='color: #fff; font-size: 1.05rem; font-weight: 500; margin-top: 4px;'>
@@ -254,7 +236,6 @@ namespace MyPersonalWebsite.Services
                         </div>" : "" ) }
                     </div>
 
-                    <!-- 按钮 -->
                     <div style='text-align: center; margin: 20px 0 8px 0;'>
                         <a href='{baseUrl}/Auth/AutoLogin?token={loginToken}&returnUrl=/DailyQuestion'
                            style='display: inline-block; padding: 14px 48px; background: linear-gradient(135deg, #8B5CF6, #EC4899); color: #fff; text-decoration: none; border-radius: 40px; font-weight: 600; font-size: 0.95rem; box-shadow: 0 4px 24px rgba(108,60,225,0.15);'>
@@ -265,7 +246,6 @@ namespace MyPersonalWebsite.Services
                         </p>
                     </div>
 
-                    <!-- 取消订阅 -->
                     <div style='text-align: center; margin-top: 20px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.02);'>
                         <a href='{baseUrl}/Home/Profile#email-settings'
                            style='color: rgba(255,255,255,0.08); text-decoration: none; font-size: 0.65rem;'>
