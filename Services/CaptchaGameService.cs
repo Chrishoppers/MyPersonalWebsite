@@ -1,8 +1,7 @@
-using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
-using System.Text.Json;
 
 namespace MyPersonalWebsite.Services
 {
@@ -10,222 +9,224 @@ namespace MyPersonalWebsite.Services
     {
         private readonly Random _random = new();
 
-        // 颜色映射
-        private readonly Dictionary<string, string> _colorMap = new()
+        // ===== 50+颜色池 =====
+        private readonly List<(string name, string hex)> _colors = new()
         {
-            { "red", "🔴 红色" },
-            { "blue", "🔵 蓝色" },
-            { "green", "🟢 绿色" },
-            { "yellow", "🟡 黄色" },
-            { "purple", "🟣 紫色" },
-            { "orange", "🟠 橙色" },
-            { "pink", "🩷 粉色" },
-            { "cyan", "🩵 青色" }
+            ("红色", "#FF0000"), ("深红", "#CC0000"), ("粉红", "#FF69B4"), ("玫红", "#FF007F"),
+            ("橙红", "#FF4500"), ("朱红", "#FF2400"), ("大红", "#DC143C"), ("暗红", "#8B0000"),
+            ("蓝色", "#0055FF"), ("深蓝", "#00008B"), ("天蓝", "#00BFFF"), ("藏青", "#000080"),
+            ("宝蓝", "#0000CD"), ("湖蓝", "#30D5C8"), ("靛蓝", "#4B0082"), ("蔚蓝", "#007FFF"),
+            ("绿色", "#00AA00"), ("深绿", "#006400"), ("翠绿", "#00CD00"), ("墨绿", "#008B00"),
+            ("草绿", "#7CFC00"), ("碧绿", "#2ECC71"), ("橄榄", "#808000"), ("青绿", "#008080"),
+            ("黄色", "#DDBB00"), ("金色", "#DAA520"), ("橙黄", "#FFA500"), ("柠檬", "#FFF000"),
+            ("土黄", "#CC7722"), ("米黄", "#F5DEB3"), ("香槟", "#F7E7CE"), ("芥末", "#C5B358"),
+            ("紫色", "#8800CC"), ("紫罗兰", "#8B00FF"), ("茄子", "#69359C"), ("淡紫", "#DDA0DD"),
+            ("粉色", "#FFB6C1"), ("桃色", "#FFDAB9"), ("珊瑚", "#FF7F50"), ("玫瑰", "#FF0080"),
+            ("橙色", "#FF6600"), ("深橙", "#E65100"), ("杏色", "#FFD700"), ("琥珀", "#FFBF00"),
+            ("灰色", "#888888"), ("银色", "#C0C0C0"), ("深灰", "#404040"), ("烟灰", "#708090"),
+            ("棕色", "#8B4513"), ("咖啡", "#6F4E37"), ("古铜", "#CD7F32"), ("巧克力", "#7B3F00"),
+            ("黑色", "#000000"), ("白色", "#FFFFFF"), ("米色", "#F5F5DC"), ("象牙", "#FFFFF0")
         };
 
-        private readonly List<string> _colorValues = new()
+        // ===== 生僻字库 =====
+        private readonly (string ch, int stroke)[] _rareChars = new[]
         {
-            "red", "blue", "green", "yellow", "purple", "orange", "pink", "cyan"
+            ("繁", 17), ("體", 23), ("漢", 14), ("學", 16), ("難", 19), ("驗", 23), ("證", 19), ("碼", 15),
+            ("龘", 48), ("爨", 30), ("鬱", 29), ("灩", 28), ("驫", 30), ("鸞", 30), ("麤", 33), ("龖", 32),
+            ("齉", 36), ("齾", 35), ("龗", 33), ("灪", 29), ("籲", 32), ("爩", 33), ("䨻", 44), ("䲜", 28),
+            ("䴙", 25), ("䴘", 24), ("䴗", 23), ("䴖", 22), ("䴕", 21), ("䴔", 20), ("𠀀", 30), ("𠀁", 32),
+            ("𪚥", 64), ("𪚦", 62), ("𪚧", 60), ("𪚨", 58), ("𪚩", 56), ("𪚪", 54), ("𪚫", 52), ("𪚬", 50)
+        };
+
+        // ===== 成语库 =====
+        private readonly List<string> _idioms = new()
+        {
+            "一马当先", "龙飞凤舞", "画蛇添足", "守株待兔", "狐假虎威", "马到成功", "鸟语花香", "鱼目混珠",
+            "鹤立鸡群", "龙腾虎跃", "画龙点睛", "叶公好龙", "亡羊补牢", "杯弓蛇影", "指鹿为马", "鸟尽弓藏",
+            "兔死狐悲", "狼吞虎咽", "马不停蹄", "龙争虎斗", "杯水车薪", "抱薪救火", "纸上谈兵", "鸡犬不宁",
+            "牛刀小试", "羊入虎口", "虎头蛇尾", "狗急跳墙", "狐朋狗友", "牛鬼蛇神", "蝇头小利", "鹤发童颜",
+            "螳臂当车", "鼠目寸光", "虎踞龙盘", "狼心狗肺", "龙潭虎穴", "鸡鸣狗盗", "兔起鹘落", "燕雀安知",
+            "鹏程万里", "鹤唳华亭", "鸾凤和鸣", "龙骧虎步", "虎背熊腰", "狼烟四起", "狐疑不决", "牛头马面"
+        };
+
+        // ===== 生僻成语 =====
+        private readonly List<string> _rareIdioms = new()
+        {
+            "龘龘齉齾", "爨爨灩灪", "鬱鬱灪灩", "驫驫麤麤", "鸞鸞灩灪",
+            "龖龖爨爨", "齉齉齾齾", "灪灪灩灩", "籲籲鬱鬱", "龗龗麤麤",
+            "䨻䨻䲜䲜", "䴙䴘䴗䴖", "䴕䴔䴙䴘", "𠀀𠀁𠀂𠀃", "𪚥𪚦𪚧𪚨"
         };
 
         // ============================================================
-        // 生成挑战（根据关卡难度）
+        // 主入口
         // ============================================================
         public CaptchaChallenge GenerateChallenge(int level)
         {
-            // 根据关卡决定题目类型
-            int type;
-            if (level <= 3)
-                type = _random.Next(0, 2);      // 算术 + 文字
-            else if (level <= 6)
-                type = _random.Next(1, 4);      // 算术 + 笔画 + 颜色
-            else if (level <= 10)
-                type = _random.Next(0, 5);      // 全部类型
-            else
-                type = _random.Next(0, 5);      // 全部类型 + 更高难度
+            var typeIndex = (level - 1) / 5;
+            if (typeIndex >= 20) typeIndex = 19;
 
-            switch (type)
+            switch (typeIndex)
             {
                 case 0: return GenerateTextChallenge(level);
                 case 1: return GenerateArithmeticChallenge(level);
                 case 2: return GenerateStrokeChallenge(level);
                 case 3: return GenerateColorChallenge(level);
                 case 4: return GenerateFindDifferentChallenge(level);
-                default: return GenerateTextChallenge(level);
+                case 5: return GenerateReverseChallenge(level);
+                case 6: return GenerateMissingLetterChallenge(level);
+                case 7: return GenerateQuickTapChallenge(level);
+                case 8: return GenerateIdiomChallenge(level);
+                case 9: return GenerateChineseNumberChallenge(level);
+                case 10: return GenerateHardTextChallenge(level);
+                case 11: return GenerateHardArithmeticChallenge(level);
+                case 12: return GenerateHardStrokeChallenge(level);
+                case 13: return GenerateHardColorChallenge(level);
+                case 14: return GenerateHardFindDifferentChallenge(level);
+                case 15: return GenerateHardReverseChallenge(level);
+                case 16: return GenerateHardMissingLetterChallenge(level);
+                case 17: return GenerateHardQuickTapChallenge(level);
+                case 18: return GenerateHardIdiomChallenge(level);
+                default: return GenerateUltimateChallenge(level);
             }
         }
 
         // ============================================================
-        // 类型0：扭曲文字识别（难度随关卡递增）
+        // 类型0：扭曲文字识别（1-5关）
         // ============================================================
         private CaptchaChallenge GenerateTextChallenge(int level)
         {
-            var length = level <= 3 ? 4 : level <= 8 ? 5 : 6;
-            var text = GenerateRandomText(length);
-            
-            // 难度越高，扭曲越厉害
-            var distortion = Math.Min(level * 2, 40);
-            var svg = GenerateGameSvg(text, distortion);
-
-            var options = GenerateDistractors(text, 3);
+            var progress = (level - 1) % 5 + 1;
+            var len = Math.Min(3 + progress, 6);
+            var chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+            var text = new string(Enumerable.Range(0, len).Select(_ => chars[_random.Next(chars.Length)]).ToArray());
+            var distortion = 5 + progress * 4;
+            var svg = GenerateSvg(text, distortion, 10 + progress * 3);
 
             return new CaptchaChallenge
             {
                 Type = 0,
                 Level = level,
-                Question = GetFunQuestion(level, "👁️", "请输入下方图片中的文字"),
+                Question = GetQuestion(level, "👁️", "请输入下方图片中的文字"),
                 ImageSvg = svg,
                 CorrectAnswer = text.ToUpper(),
-                Options = options,
+                Options = GenerateOptions(text, 4),
                 DisplayType = "image",
-                TimeLimit = level > 10 ? 8 : 15,
-                FunMessage = GetFunMessage(level)
+                TimeLimit = GetTimeLimit(level),
+                Points = GetPoints(level),
+                FunMessage = GetMessage(level)
             };
         }
 
         // ============================================================
-        // 类型1：算术题（难度随关卡递增）
+        // 类型1：算术计算（6-10关）
         // ============================================================
         private CaptchaChallenge GenerateArithmeticChallenge(int level)
         {
-            var maxNum = 10 + level * 3;
+            var progress = (level - 6) % 5 + 1;
+            var maxNum = 10 + progress * 8;
             var a = _random.Next(5, maxNum);
             var b = _random.Next(1, maxNum / 2);
-            var op = _random.Next(0, 3);
-
-            int result;
-            string opStr;
-            string question;
-
-            if (op == 0) { result = a + b; opStr = "+"; question = $"{a} + {b} = ?"; }
-            else if (op == 1) { result = a - b; opStr = "−"; question = $"{a} − {b} = ?"; }
-            else { result = a * b; opStr = "×"; question = $"{a} × {b} = ?"; }
-
-            var options = GenerateNumberDistractors(result, 3, level);
+            var ops = new[] { "+", "-", "×" };
+            var op = ops[_random.Next(3)];
+            int result = op == "+" ? a + b : op == "-" ? a - b : a * b;
 
             return new CaptchaChallenge
             {
                 Type = 1,
                 Level = level,
-                Question = GetFunQuestion(level, "🧮", question),
+                Question = GetQuestion(level, "🧮", $"{a} {op} {b} = ?"),
                 CorrectAnswer = result.ToString(),
-                Options = options,
+                Options = GenerateNumberOptions(result, 4, level),
                 DisplayType = "text",
-                TimeLimit = level > 10 ? 6 : 12,
-                FunMessage = GetFunMessage(level)
+                TimeLimit = GetTimeLimit(level),
+                Points = GetPoints(level),
+                FunMessage = GetMessage(level)
             };
         }
 
         // ============================================================
-        // 类型2：汉字笔画数（难度随关卡递增）
+        // 类型2：汉字笔画数（11-15关）
         // ============================================================
         private CaptchaChallenge GenerateStrokeChallenge(int level)
         {
-            var strokeMap = GetStrokeMap();
-            var keys = new List<char>(strokeMap.Keys);
-            
-            // 高关卡使用生僻字
-            char ch;
-            if (level > 8)
-            {
-                var hardKeys = new List<char> { '龘', '爨', '鬱', '灩', '驫' };
-                ch = hardKeys[_random.Next(hardKeys.Count)];
-            }
-            else
-            {
-                ch = keys[_random.Next(keys.Count)];
-            }
-
-            var stroke = strokeMap.ContainsKey(ch) ? strokeMap[ch] : _random.Next(10, 25);
-
-            var question = $"「{ch}」字有几画？";
-
-            var options = GenerateStrokeDistractors(stroke, 3, level);
+            var chars = "一二三四五六七八九十人大小天地日月水火山石木花草鸟鱼马牛羊虫风云雨雪星光春夏秋冬年好学生学习中国家中";
+            var ch = chars[_random.Next(chars.Length)];
+            var stroke = GetStroke(ch);
 
             return new CaptchaChallenge
             {
                 Type = 2,
                 Level = level,
-                Question = GetFunQuestion(level, "📝", question),
+                Question = GetQuestion(level, "📝", $"「{ch}」字有几画？"),
                 CorrectAnswer = stroke.ToString(),
-                Options = options,
+                Options = GenerateNumberOptions(stroke, 4, level),
                 DisplayType = "text",
-                TimeLimit = level > 10 ? 8 : 15,
-                FunMessage = GetFunMessage(level)
+                TimeLimit = GetTimeLimit(level),
+                Points = GetPoints(level),
+                FunMessage = GetMessage(level)
             };
         }
 
+        private int GetStroke(char ch)
+        {
+            var map = new Dictionary<char, int>
+            {
+                {'一',1},{'二',2},{'三',3},{'四',5},{'五',4},{'六',4},{'七',2},{'八',2},{'九',2},{'十',2},
+                {'人',2},{'大',3},{'天',4},{'地',6},{'日',4},{'月',4},{'水',4},{'火',4},{'山',3},{'石',5},
+                {'木',4},{'花',7},{'草',9},{'鸟',5},{'鱼',8},{'马',3},{'牛',4},{'羊',6},{'虫',6},{'云',4},
+                {'风',4},{'雨',8},{'雪',11},{'星',9},{'光',6},{'春',9},{'夏',10},{'秋',9},{'冬',5},{'年',6},
+                {'好',6},{'学',8},{'生',5},{'中',4},{'国',8},{'家',10},{'心',4},{'爱',10},{'乐',5},{'安',6}
+            };
+            return map.ContainsKey(ch) ? map[ch] : _random.Next(3, 12);
+        }
+
         // ============================================================
-        // 类型3：颜色识别（难度随关卡递增）
+        // 类型3：颜色识别（16-20关）
         // ============================================================
         private CaptchaChallenge GenerateColorChallenge(int level)
         {
-            var colorIndex = _random.Next(_colorValues.Count);
-            var color = _colorValues[colorIndex];
-            var colorName = _colorMap[color];
+            var idx = _random.Next(_colors.Count);
+            var color = _colors[idx];
 
-            // 高关卡使用相近颜色混淆
-            var options = new List<string> { colorName };
-            var wrongColors = new List<string>(_colorValues);
-            wrongColors.Remove(color);
+            var options = new List<string> { color.name };
+            var pool = new List<(string name, string hex)>(_colors);
+            pool.RemoveAt(idx);
 
-            if (level > 5)
+            while (options.Count < 4 && pool.Any())
             {
-                // 高关卡只选相近色
-                var similarColors = GetSimilarColors(color);
-                foreach (var c in similarColors)
-                {
-                    if (options.Count < 4 && _colorMap.ContainsKey(c))
-                        options.Add(_colorMap[c]);
-                }
+                var r = _random.Next(pool.Count);
+                options.Add(pool[r].name);
+                pool.RemoveAt(r);
             }
-
-            while (options.Count < 4)
-            {
-                var wrong = wrongColors[_random.Next(wrongColors.Count)];
-                var wrongName = _colorMap[wrong];
-                if (!options.Contains(wrongName))
-                    options.Add(wrongName);
-            }
-
-            // 打乱选项
             Shuffle(options);
-
-            // 颜色用彩色文字显示
-            var colorText = GetColorText(color);
 
             return new CaptchaChallenge
             {
                 Type = 3,
                 Level = level,
-                Question = GetFunQuestion(level, "🎨", $"下面文字是什么颜色？"),
-                DisplayText = colorText,
-                CorrectAnswer = colorName,
+                Question = GetQuestion(level, "🎨", "下面文字是什么颜色？"),
+                DisplayText = $"<span style=\"color:{color.hex};font-size:2.5rem;font-weight:bold;\">██████</span>",
+                CorrectAnswer = color.name,
                 Options = options,
                 DisplayType = "color",
-                TimeLimit = level > 8 ? 6 : 12,
-                FunMessage = GetFunMessage(level)
+                TimeLimit = GetTimeLimit(level),
+                Points = GetPoints(level),
+                FunMessage = GetMessage(level)
             };
         }
 
         // ============================================================
-        // 类型4：找不同（高关卡专属）
+        // 类型4：找不同（21-25关）
         // ============================================================
         private CaptchaChallenge GenerateFindDifferentChallenge(int level)
         {
             var chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
             var target = chars[_random.Next(chars.Length)];
-            var wrongChar = chars[_random.Next(chars.Length)];
-            
-            while (wrongChar == target)
-                wrongChar = chars[_random.Next(chars.Length)];
-
             var options = new List<string> { target.ToString() };
             while (options.Count < 4)
             {
                 var c = chars[_random.Next(chars.Length)];
-                if (!options.Contains(c.ToString()))
-                    options.Add(c.ToString());
+                if (!options.Contains(c.ToString())) options.Add(c.ToString());
             }
             Shuffle(options);
 
@@ -233,201 +234,601 @@ namespace MyPersonalWebsite.Services
             {
                 Type = 4,
                 Level = level,
-                Question = GetFunQuestion(level, "🔍", "哪个字符与其他的不同？"),
+                Question = GetQuestion(level, "🔍", "哪个字符与其他的不同？"),
                 CorrectAnswer = target.ToString(),
                 Options = options,
                 DisplayType = "text",
-                TimeLimit = level > 8 ? 5 : 10,
-                FunMessage = GetFunMessage(level)
+                TimeLimit = GetTimeLimit(level),
+                Points = GetPoints(level) * 2,
+                FunMessage = GetMessage(level)
             };
         }
 
         // ============================================================
-        // 生成游戏用 SVG（带扭曲）
+        // 类型5：倒序识别（26-30关）
         // ============================================================
-        private string GenerateGameSvg(string text, int distortion)
+        private CaptchaChallenge GenerateReverseChallenge(int level)
         {
-            int width = 300;
-            int height = 80;
+            var progress = (level - 26) % 5 + 1;
+            var len = Math.Min(3 + progress, 5);
+            var chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+            var text = new string(Enumerable.Range(0, len).Select(_ => chars[_random.Next(chars.Length)]).ToArray());
+            var reversed = new string(text.Reverse().ToArray());
+            var svg = GenerateSvg(text, 10 + progress * 4, 10 + progress * 3);
 
-            var svg = new StringBuilder();
-            svg.AppendLine($"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"{width}\" height=\"{height}\" viewBox=\"0 0 {width} {height}\">");
+            return new CaptchaChallenge
+            {
+                Type = 5,
+                Level = level,
+                Question = GetQuestion(level, "🔄", "图片中的文字是什么？（倒过来了）"),
+                ImageSvg = svg,
+                CorrectAnswer = reversed.ToUpper(),
+                Options = GenerateOptions(reversed, 4),
+                DisplayType = "image",
+                TimeLimit = GetTimeLimit(level) + 2,
+                Points = GetPoints(level) * 2,
+                FunMessage = GetMessage(level)
+            };
+        }
 
-            var bgR = _random.Next(230, 255);
-            var bgG = _random.Next(230, 255);
-            var bgB = _random.Next(230, 255);
-            svg.AppendLine($"  <rect width=\"{width}\" height=\"{height}\" rx=\"8\" fill=\"rgb({bgR},{bgG},{bgB})\" />");
+        // ============================================================
+        // 类型6：缺失字母（31-35关）
+        // ============================================================
+        private CaptchaChallenge GenerateMissingLetterChallenge(int level)
+        {
+            var progress = (level - 31) % 5 + 1;
+            var len = Math.Min(3 + progress, 6);
+            var chars = "ABCDEFGHJKLMNPQRSTUVWXYZ";
+            var word = new string(Enumerable.Range(0, len).Select(_ => chars[_random.Next(chars.Length)]).ToArray());
+            var idx = _random.Next(len);
+            var correct = word[idx];
+            var display = word.ToCharArray();
+            display[idx] = '_';
 
-            // 干扰线（数量随难度增加）
-            int lineCount = 10 + distortion / 2;
+            return new CaptchaChallenge
+            {
+                Type = 6,
+                Level = level,
+                Question = GetQuestion(level, "🔤", $"补全单词：{new string(display)}"),
+                CorrectAnswer = correct.ToString(),
+                Options = GenerateOptions(correct.ToString(), 4),
+                DisplayType = "text",
+                TimeLimit = GetTimeLimit(level),
+                Points = GetPoints(level),
+                FunMessage = GetMessage(level)
+            };
+        }
+
+        // ============================================================
+        // 类型7：快速点击（36-40关）
+        // ============================================================
+        private CaptchaChallenge GenerateQuickTapChallenge(int level)
+        {
+            var chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+            var target = chars[_random.Next(chars.Length)];
+            var options = new List<string> { target.ToString() };
+            while (options.Count < 4)
+            {
+                var c = chars[_random.Next(chars.Length)];
+                if (!options.Contains(c.ToString())) options.Add(c.ToString());
+            }
+            Shuffle(options);
+            var svg = GenerateQuickSvg(target);
+
+            return new CaptchaChallenge
+            {
+                Type = 7,
+                Level = level,
+                Question = GetQuestion(level, "⚡", "快速找到目标字符！"),
+                ImageSvg = svg,
+                CorrectAnswer = target.ToString(),
+                Options = options,
+                DisplayType = "image",
+                TimeLimit = Math.Max(3, 8 - level / 8),
+                Points = GetPoints(level) * 2,
+                FunMessage = GetMessage(level)
+            };
+        }
+
+        // ============================================================
+        // 类型8：成语填空（41-45关）
+        // ============================================================
+        private CaptchaChallenge GenerateIdiomChallenge(int level)
+        {
+            var idiom = _idioms[_random.Next(_idioms.Count)];
+            var idx = _random.Next(idiom.Length);
+            var correct = idiom[idx];
+            var display = idiom.ToCharArray();
+            display[idx] = '□';
+
+            return new CaptchaChallenge
+            {
+                Type = 8,
+                Level = level,
+                Question = GetQuestion(level, "📖", $"补全成语：{new string(display)}"),
+                CorrectAnswer = correct.ToString(),
+                Options = GenerateOptions(correct.ToString(), 4),
+                DisplayType = "text",
+                TimeLimit = GetTimeLimit(level),
+                Points = GetPoints(level) * 2,
+                FunMessage = GetMessage(level)
+            };
+        }
+
+        // ============================================================
+        // 类型9：中文数字转阿拉伯（46-50关）
+        // ============================================================
+        private CaptchaChallenge GenerateChineseNumberChallenge(int level)
+        {
+            var cn = new[] { "零", "一", "二", "三", "四", "五", "六", "七", "八", "九", "十" };
+            var num = _random.Next(0, 11);
+            var display = cn[num];
+
+            return new CaptchaChallenge
+            {
+                Type = 9,
+                Level = level,
+                Question = GetQuestion(level, "🔢", $"「{display}」对应的数字是？"),
+                CorrectAnswer = num.ToString(),
+                Options = GenerateNumberOptions(num, 4, level),
+                DisplayType = "text",
+                TimeLimit = GetTimeLimit(level),
+                Points = GetPoints(level),
+                FunMessage = GetMessage(level)
+            };
+        }
+
+        // ============================================================
+        // 类型10：高难度扭曲文字（51-55关）
+        // ============================================================
+        private CaptchaChallenge GenerateHardTextChallenge(int level)
+        {
+            var progress = (level - 51) % 5 + 1;
+            var len = Math.Min(5 + progress, 9);
+            var chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+            var text = new string(Enumerable.Range(0, len).Select(_ => chars[_random.Next(chars.Length)]).ToArray());
+            var distortion = 20 + progress * 6;
+            var svg = GenerateSvg(text, distortion, 30 + progress * 5);
+
+            return new CaptchaChallenge
+            {
+                Type = 10,
+                Level = level,
+                Question = GetHardQuestion(level, "👁️", "请输入下方极度扭曲的文字"),
+                ImageSvg = svg,
+                CorrectAnswer = text.ToUpper(),
+                Options = GenerateOptions(text, 4 + progress / 2),
+                DisplayType = "image",
+                TimeLimit = Math.Max(3, 8 - progress),
+                Points = GetHardPoints(level),
+                FunMessage = GetHardMessage(level)
+            };
+        }
+
+        // ============================================================
+        // 类型11：超大数算术（56-60关）
+        // ============================================================
+        private CaptchaChallenge GenerateHardArithmeticChallenge(int level)
+        {
+            var progress = (level - 56) % 5 + 1;
+            var (a, b, c, op, op2) = progress switch
+            {
+                1 => (_random.Next(100, 500), _random.Next(10, 99), 0, "×", ""),
+                2 => (_random.Next(100, 999), _random.Next(10, 99), 0, "÷", ""),
+                3 => (_random.Next(100, 999), _random.Next(10, 99), _random.Next(1, 50), "×", "+"),
+                4 => (_random.Next(100, 999), _random.Next(10, 99), _random.Next(1, 50), "÷", "-"),
+                _ => (_random.Next(100, 999), _random.Next(10, 99), _random.Next(1, 50), "×", "+")
+            };
+
+            int result;
+            string question;
+            if (string.IsNullOrEmpty(op2))
+            {
+                result = op == "×" ? a * b : a / b;
+                question = $"{a} {op} {b} = ?";
+            }
+            else
+            {
+                var temp = op == "×" ? a * b : a / b;
+                result = op2 == "+" ? temp + c : temp - c;
+                question = $"({a} {op} {b}) {op2} {c} = ?";
+            }
+
+            return new CaptchaChallenge
+            {
+                Type = 11,
+                Level = level,
+                Question = GetHardQuestion(level, "🧮", question),
+                CorrectAnswer = result.ToString(),
+                Options = GenerateNumberOptions(result, 4 + progress / 2, level),
+                DisplayType = "text",
+                TimeLimit = Math.Max(3, 6 - progress),
+                Points = GetHardPoints(level) * 2,
+                FunMessage = GetHardMessage(level)
+            };
+        }
+
+        // ============================================================
+        // 类型12：极生僻字笔画（61-65关）
+        // ============================================================
+        private CaptchaChallenge GenerateHardStrokeChallenge(int level)
+        {
+            var progress = (level - 61) % 5 + 1;
+            var idx = Math.Min((progress - 1) * 2 + _random.Next(0, 2), _rareChars.Length - 1);
+            var (ch, stroke) = _rareChars[idx];
+
+            return new CaptchaChallenge
+            {
+                Type = 12,
+                Level = level,
+                Question = GetHardQuestion(level, "📝", $"「{ch}」字有几画？"),
+                CorrectAnswer = stroke.ToString(),
+                Options = GenerateNumberOptions(stroke, 4 + progress / 2, level),
+                DisplayType = "text",
+                TimeLimit = Math.Max(3, 7 - progress),
+                Points = GetHardPoints(level) * 2,
+                FunMessage = GetHardMessage(level)
+            };
+        }
+
+        // ============================================================
+        // 类型13：相近色识别（66-70关）
+        // ============================================================
+        private CaptchaChallenge GenerateHardColorChallenge(int level)
+        {
+            var progress = (level - 66) % 5 + 1;
+            var optionsCount = Math.Min(4 + progress, 7);
+
+            var colorIdx = _random.Next(_colors.Count);
+            var correct = _colors[colorIdx];
+
+            var options = new List<(string name, string hex)> { correct };
+            var pool = new List<(string name, string hex)>(_colors);
+
+            for (int i = 1; i < optionsCount; i++)
+            {
+                var nearbyIdx = (colorIdx + i * 3 + _random.Next(0, 2)) % _colors.Count;
+                if (nearbyIdx != colorIdx && !options.Contains(_colors[nearbyIdx]))
+                    options.Add(_colors[nearbyIdx]);
+            }
+
+            while (options.Count < optionsCount)
+            {
+                var r = _random.Next(_colors.Count);
+                if (!options.Contains(_colors[r]))
+                    options.Add(_colors[r]);
+            }
+
+            Shuffle(options);
+
+            return new CaptchaChallenge
+            {
+                Type = 13,
+                Level = level,
+                Question = GetHardQuestion(level, "🎨", "下面文字是什么颜色？（仔细看！）"),
+                DisplayText = $"<span style=\"color:{correct.hex};font-size:3rem;font-weight:bold;\">██████</span>",
+                CorrectAnswer = correct.name,
+                Options = options.Select(o => o.name).ToList(),
+                DisplayType = "color",
+                TimeLimit = Math.Max(3, 6 - progress),
+                Points = GetHardPoints(level) * 2,
+                FunMessage = GetHardMessage(level)
+            };
+        }
+
+        // ============================================================
+        // 类型14：超难找不同（71-75关）
+        // ============================================================
+        private CaptchaChallenge GenerateHardFindDifferentChallenge(int level)
+        {
+            var progress = (level - 71) % 5 + 1;
+            var optionsCount = Math.Min(6 + progress, 11);
+            var chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+            var target = chars[_random.Next(chars.Length)];
+
+            var options = new List<string> { target.ToString() };
+            var similar = GetSimilarChars(target);
+
+            for (int i = 0; i < optionsCount - 1 && i < similar.Count; i++)
+            {
+                options.Add(similar[i].ToString());
+            }
+
+            while (options.Count < optionsCount)
+            {
+                var c = chars[_random.Next(chars.Length)];
+                if (!options.Contains(c.ToString()) && c != target)
+                    options.Add(c.ToString());
+            }
+
+            Shuffle(options);
+
+            return new CaptchaChallenge
+            {
+                Type = 14,
+                Level = level,
+                Question = GetHardQuestion(level, "🔍", $"从 {optionsCount} 个字符中找出不同的那个！"),
+                CorrectAnswer = target.ToString(),
+                Options = options,
+                DisplayType = "text",
+                TimeLimit = Math.Max(4, 8 - progress),
+                Points = GetHardPoints(level) * 3,
+                FunMessage = GetHardMessage(level)
+            };
+        }
+
+        private List<char> GetSimilarChars(char c)
+        {
+            var map = new Dictionary<char, char[]>
+            {
+                {'A', new[]{'Ä','À','Á','Â','Ã'}},
+                {'B', new[]{'8','ß','Ɓ','Ƃ'}},
+                {'C', new[]{'Ç','Ć','Č','©'}},
+                {'D', new[]{'Ɗ','Ɖ','Ð'}},
+                {'E', new[]{'É','È','Ê','Ë','Ē'}},
+                {'F', new[]{'Ƒ','ℱ'}},
+                {'G', new[]{'Ğ','Ĝ','Ġ','Ɠ'}},
+                {'H', new[]{'Ĥ','Ħ','Ȟ'}},
+                {'J', new[]{'Ĵ','ȷ'}},
+                {'K', new[]{'Ķ','Ƙ'}},
+                {'L', new[]{'Ĺ','Ļ','Ł'}},
+                {'M', new[]{'Ɯ','ℳ'}},
+                {'N', new[]{'Ń','Ň','Ñ','Ɲ'}},
+                {'P', new[]{'Ƥ','ℙ'}},
+                {'Q', new[]{'ℚ'}},
+                {'R', new[]{'Ŕ','Ř','Ʀ'}},
+                {'S', new[]{'Ś','Š','Ş','Ƨ'}},
+                {'T', new[]{'Ť','Ŧ','Ƭ'}},
+                {'W', new[]{'Ŵ','Ɯ'}},
+                {'X', new[]{'Ẋ','Ẍ','Ʒ'}},
+                {'Y', new[]{'Ÿ','Ý','Ŷ'}},
+                {'Z', new[]{'Ź','Ž','Ƶ'}},
+                {'2', new[]{'Ƨ','Ȝ'}},
+                {'3', new[]{'Ʒ','Ȝ'}},
+                {'4', new[]{'4','Ꮞ'}},
+                {'5', new[]{'Ƽ'}},
+                {'6', new[]{'Ƅ'}},
+                {'7', new[]{'Ɓ'}},
+                {'8', new[]{'B','ß'}},
+                {'9', new[]{'Ɣ'}}
+            };
+            return map.ContainsKey(c) ? map[c].ToList() : new List<char> { c };
+        }
+
+        // ============================================================
+        // 类型15：倒序+最大扭曲（76-80关）
+        // ============================================================
+        private CaptchaChallenge GenerateHardReverseChallenge(int level)
+        {
+            var progress = (level - 76) % 5 + 1;
+            var len = Math.Min(5 + progress, 10);
+            var chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+            var text = new string(Enumerable.Range(0, len).Select(_ => chars[_random.Next(chars.Length)]).ToArray());
+            var reversed = new string(text.Reverse().ToArray());
+            var distortion = 30 + progress * 5;
+            var svg = GenerateSvg(text, distortion, 30 + progress * 5);
+
+            return new CaptchaChallenge
+            {
+                Type = 15,
+                Level = level,
+                Question = GetHardQuestion(level, "🔄", "图片中的文字（倒过来了！）"),
+                ImageSvg = svg,
+                CorrectAnswer = reversed.ToUpper(),
+                Options = GenerateOptions(reversed, 4 + progress / 2),
+                DisplayType = "image",
+                TimeLimit = Math.Max(3, 7 - progress),
+                Points = GetHardPoints(level) * 3,
+                FunMessage = GetHardMessage(level)
+            };
+        }
+
+        // ============================================================
+        // 类型16：双缺失字母（81-85关）
+        // ============================================================
+        private CaptchaChallenge GenerateHardMissingLetterChallenge(int level)
+        {
+            var progress = (level - 81) % 5 + 1;
+            var len = Math.Min(5 + progress, 9);
+            var chars = "ABCDEFGHJKLMNPQRSTUVWXYZ";
+            var word = new string(Enumerable.Range(0, len).Select(_ => chars[_random.Next(chars.Length)]).ToArray());
+
+            var idx1 = _random.Next(len);
+            var idx2 = _random.Next(len);
+            while (idx2 == idx1) idx2 = _random.Next(len);
+
+            var correct1 = word[idx1];
+            var correct2 = word[idx2];
+            var display = word.ToCharArray();
+            display[idx1] = '_';
+            display[idx2] = '_';
+
+            var correct = $"{correct1}{correct2}";
+
+            return new CaptchaChallenge
+            {
+                Type = 16,
+                Level = level,
+                Question = GetHardQuestion(level, "🔤", $"补全两个缺失字母：{new string(display)}"),
+                CorrectAnswer = correct,
+                Options = GenerateOptions(correct, 4 + progress / 2),
+                DisplayType = "text",
+                TimeLimit = Math.Max(3, 6 - progress),
+                Points = GetHardPoints(level) * 3,
+                FunMessage = GetHardMessage(level)
+            };
+        }
+
+        // ============================================================
+        // 类型17：极速点击（86-90关）
+        // ============================================================
+        private CaptchaChallenge GenerateHardQuickTapChallenge(int level)
+        {
+            var progress = (level - 86) % 5 + 1;
+            var optionsCount = Math.Min(4 + progress * 2, 12);
+            var chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+            var target = chars[_random.Next(chars.Length)];
+
+            var options = new List<string> { target.ToString() };
+            while (options.Count < optionsCount)
+            {
+                var c = chars[_random.Next(chars.Length)];
+                if (!options.Contains(c.ToString())) options.Add(c.ToString());
+            }
+            Shuffle(options);
+
+            var svg = GenerateQuickSvg(target);
+
+            return new CaptchaChallenge
+            {
+                Type = 17,
+                Level = level,
+                Question = GetHardQuestion(level, "⚡", $"从 {optionsCount} 个选项中快速找到目标！"),
+                ImageSvg = svg,
+                CorrectAnswer = target.ToString(),
+                Options = options,
+                DisplayType = "image",
+                TimeLimit = Math.Max(2, 5 - progress / 2),
+                Points = GetHardPoints(level) * 4,
+                FunMessage = GetHardMessage(level)
+            };
+        }
+
+        // ============================================================
+        // 类型18：生僻成语（91-95关）
+        // ============================================================
+        private CaptchaChallenge GenerateHardIdiomChallenge(int level)
+        {
+            var progress = (level - 91) % 5 + 1;
+            var idx = Math.Min(progress - 1, _rareIdioms.Count - 1);
+            var idiom = _rareIdioms[idx];
+
+            // 随机挖掉一个字
+            var pos = _random.Next(idiom.Length);
+            var correct = idiom[pos];
+            var display = idiom.ToCharArray();
+            display[pos] = '□';
+
+            var timeLimit = Math.Max(3, 6 - progress);
+
+            return new CaptchaChallenge
+            {
+                Type = 18,
+                Level = level,
+                Question = GetHardQuestion(level, "📖", $"补全生僻成语：{new string(display)}"),
+                CorrectAnswer = correct.ToString(),
+                Options = GenerateOptions(correct.ToString(), 4 + progress / 2),
+                DisplayType = "text",
+                TimeLimit = timeLimit,
+                Points = GetHardPoints(level) * 4,
+                FunMessage = GetHardMessage(level)
+            };
+        }
+
+        // ============================================================
+        // 类型19：终极BOSS（96-100关）
+        // ============================================================
+        private CaptchaChallenge GenerateUltimateChallenge(int level)
+        {
+            var progress = (level - 96) % 5 + 1;
+
+            // 随机选择前面所有类型
+            var types = new[] { 10, 11, 12, 13, 14, 15, 16, 17, 18 };
+            var typeIdx = types[_random.Next(types.Length)];
+
+            CaptchaChallenge challenge;
+
+            switch (typeIdx)
+            {
+                case 10: challenge = GenerateHardTextChallenge(level); break;
+                case 11: challenge = GenerateHardArithmeticChallenge(level); break;
+                case 12: challenge = GenerateHardStrokeChallenge(level); break;
+                case 13: challenge = GenerateHardColorChallenge(level); break;
+                case 14: challenge = GenerateHardFindDifferentChallenge(level); break;
+                case 15: challenge = GenerateHardReverseChallenge(level); break;
+                case 16: challenge = GenerateHardMissingLetterChallenge(level); break;
+                case 17: challenge = GenerateHardQuickTapChallenge(level); break;
+                default: challenge = GenerateHardIdiomChallenge(level); break;
+            }
+
+            // 覆盖为终极难度
+            challenge.Type = 19;
+            challenge.Level = level;
+            challenge.TimeLimit = Math.Max(2, 4 - progress);
+            challenge.Points = GetHardPoints(level) * 5;
+            challenge.Question = GetHardQuestion(level, "💀", $"⚡ 终极BOSS挑战！{challenge.Question.Replace("⚡", "").Replace("💀", "")}");
+            challenge.FunMessage = GetUltimateMessage(level);
+
+            return challenge;
+        }
+
+        // ============================================================
+        // 工具方法
+        // ============================================================
+
+        private string GenerateSvg(string text, int distortion, int lineCount)
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine($"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"320\" height=\"90\" viewBox=\"0 0 320 90\">");
+            sb.AppendLine($"<rect width=\"320\" height=\"90\" rx=\"10\" fill=\"#f0f0f0\"/>");
+
+            // 干扰线
             for (int i = 0; i < lineCount; i++)
             {
                 var r = _random.Next(100, 220);
                 var g = _random.Next(100, 220);
                 var b = _random.Next(100, 220);
-                var x1 = _random.Next(-20, width + 20);
-                var y1 = _random.Next(-20, height + 20);
-                var x2 = _random.Next(-20, width + 20);
-                var y2 = _random.Next(-20, height + 20);
-                svg.AppendLine($"  <line x1=\"{x1}\" y1=\"{y1}\" x2=\"{x2}\" y2=\"{y2}\" stroke=\"rgb({r},{g},{b})\" stroke-width=\"{_random.Next(1, 3)}\" opacity=\"0.4\" />");
+                sb.AppendLine($"<line x1=\"{_random.Next(-20, 340)}\" y1=\"{_random.Next(-20, 110)}\" x2=\"{_random.Next(-20, 340)}\" y2=\"{_random.Next(-20, 110)}\" stroke=\"rgb({r},{g},{b})\" stroke-width=\"{_random.Next(1, 3)}\" opacity=\"0.4\"/>");
             }
 
-            // 绘制字符
+            // 字符
             var chars = text.ToCharArray();
-            int spacing = (width - 40) / chars.Length;
-
+            var spacing = 280 / chars.Length;
             for (int i = 0; i < chars.Length; i++)
             {
-                var cr = _random.Next(10, 80);
-                var cg = _random.Next(10, 80);
-                var cb = _random.Next(10, 80);
-                var angle = _random.Next(-distortion / 2, distortion / 2);
-                var fontSize = 36 + distortion / 4;
+                var r = _random.Next(10, 80);
+                var g = _random.Next(10, 80);
+                var b = _random.Next(10, 80);
+                var angle = _random.Next(-distortion, distortion);
                 var x = 20 + i * spacing + _random.Next(-5, 5);
-                var y = height / 2 + 10 + _random.Next(-8, 8);
-
-                svg.AppendLine($@"
-  <text x=""{x}"" y=""{y}"" 
-        font-family=""Arial, sans-serif"" 
-        font-size=""{fontSize}"" 
-        font-weight=""bold""
-        fill=""rgb({cr},{cg},{cb})""
-        transform=""rotate({angle} {x} {y})""
-        text-anchor=""middle""
-        dominant-baseline=""central"">
-    {chars[i]}
-  </text>");
+                sb.AppendLine($"<text x=\"{x}\" y=\"50\" font-family=\"Arial, sans-serif\" font-size=\"{36 + distortion / 3}\" font-weight=\"bold\" fill=\"rgb({r},{g},{b})\" transform=\"rotate({angle} {x} 50)\" text-anchor=\"middle\" dominant-baseline=\"central\">{chars[i]}</text>");
             }
 
-            svg.AppendLine("</svg>");
-            return svg.ToString();
+            sb.AppendLine("</svg>");
+            return sb.ToString();
         }
 
-        // ============================================================
-        // 辅助方法
-        // ============================================================
-
-        private string GenerateRandomText(int length)
+        private string GenerateQuickSvg(string target)
         {
-            const string chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-            var result = new char[length];
-            for (int i = 0; i < length; i++)
-                result[i] = chars[_random.Next(chars.Length)];
-            return new string(result);
+            return GenerateSvg(target, 10, 10);
         }
 
-        private List<string> GenerateDistractors(string correct, int count)
+        private List<string> GenerateOptions(string correct, int count)
         {
-            const string chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+            var chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
             var options = new List<string> { correct };
-            while (options.Count < count + 1)
+            while (options.Count < count)
             {
-                var fake = new char[correct.Length];
-                for (int i = 0; i < correct.Length; i++)
-                    fake[i] = chars[_random.Next(chars.Length)];
-                var fakeStr = new string(fake);
-                if (!options.Contains(fakeStr) && fakeStr != correct)
-                    options.Add(fakeStr);
+                var fake = new string(Enumerable.Range(0, correct.Length).Select(_ => chars[_random.Next(chars.Length)]).ToArray());
+                if (!options.Contains(fake)) options.Add(fake);
             }
             Shuffle(options);
             return options;
         }
 
-        private List<string> GenerateNumberDistractors(int correct, int count, int level)
-        {
-            var range = 5 + level;
-            var options = new List<string> { correct.ToString() };
-            while (options.Count < count + 1)
-            {
-                var fake = correct + _random.Next(-range, range);
-                var fakeStr = fake.ToString();
-                if (!options.Contains(fakeStr) && fakeStr != correct.ToString())
-                    options.Add(fakeStr);
-            }
-            Shuffle(options);
-            return options;
-        }
-
-        private List<string> GenerateStrokeDistractors(int correct, int count, int level)
+        private List<string> GenerateNumberOptions(int correct, int count, int level)
         {
             var options = new List<string> { correct.ToString() };
-            var range = level <= 3 ? 3 : level <= 6 ? 5 : 8;
-            while (options.Count < count + 1)
+            var range = Math.Max(3, 5 + level / 10);
+            while (options.Count < count)
             {
                 var fake = correct + _random.Next(-range, range);
-                if (fake < 1) fake = _random.Next(1, 10);
-                var fakeStr = fake.ToString();
-                if (!options.Contains(fakeStr) && fakeStr != correct.ToString())
-                    options.Add(fakeStr);
+                if (fake < 0) fake = _random.Next(1, 20);
+                var str = fake.ToString();
+                if (!options.Contains(str) && str != correct.ToString()) options.Add(str);
             }
             Shuffle(options);
             return options;
-        }
-
-        private List<string> GetSimilarColors(string color)
-        {
-            var similar = new Dictionary<string, List<string>>
-            {
-                { "red", new List<string> { "pink", "orange", "purple" } },
-                { "blue", new List<string> { "cyan", "purple", "green" } },
-                { "green", new List<string> { "cyan", "yellow", "blue" } },
-                { "yellow", new List<string> { "orange", "green", "pink" } },
-                { "purple", new List<string> { "pink", "blue", "red" } },
-                { "orange", new List<string> { "yellow", "red", "pink" } },
-                { "pink", new List<string> { "red", "purple", "orange" } },
-                { "cyan", new List<string> { "blue", "green", "purple" } }
-            };
-            return similar.ContainsKey(color) ? similar[color] : new List<string>();
-        }
-
-        private string GetColorText(string color)
-        {
-            var colorHex = new Dictionary<string, string>
-            {
-                { "red", "#FF0000" },
-                { "blue", "#0055FF" },
-                { "green", "#00AA00" },
-                { "yellow", "#DDBB00" },
-                { "purple", "#8800CC" },
-                { "orange", "#FF6600" },
-                { "pink", "#FF4499" },
-                { "cyan", "#00CCCC" }
-            };
-
-            var displayText = "██████████";
-            var hex = colorHex.ContainsKey(color) ? colorHex[color] : "#000000";
-            return $"<span style=\"color:{hex};font-weight:bold;font-size:2rem;\">{displayText}</span>";
-        }
-
-        private string GetFunQuestion(int level, string icon, string question)
-        {
-            var prefixes = level <= 3 ? new[] { "😊 小菜一碟", "👍 简单" } :
-                          level <= 6 ? new[] { "🤔 有点意思", "🧐 仔细看" } :
-                          level <= 10 ? new[] { "😤 来真的了", "🔥 加油" } :
-                          new[] { "💪 你是人类吗", "👑 大佬加油", "⚡ 快到极限了" };
-            var prefix = prefixes[_random.Next(prefixes.Length)];
-            return $"{prefix} · {question}";
-        }
-
-        private string GetFunMessage(int level)
-        {
-            var messages = new Dictionary<int, string[]>
-            {
-                { 1, new[] { "✨ 轻轻松松！", "🎯 精准命中！" } },
-                { 2, new[] { "⚡ 反应不错！", "👀 眼神真好！" } },
-                { 3, new[] { "🔥 开始热身了！", "💪 状态不错！" } },
-                { 4, new[] { "🧠 脑力全开！", "🎮 游戏开始了！" } },
-                { 5, new[] { "🌟 你是人类之光！", "🚀 冲啊！" } },
-                { 6, new[] { "⚡ 连击！太强了！", "🔥 根本停不下来！" } },
-                { 7, new[] { "👑 人类之王！", "💀 AI已崩溃！" } },
-                { 8, new[] { "🤖 你不是AI吧？", "🔱 太逆天了！" } },
-                { 9, new[] { "🚨 警报！真人出没！", "⚡ 你就是验证码克星！" } },
-                { 10, new[] { "🏆 十连击！传说级！", "🌟 你已经是传奇了！" } }
-            };
-
-            var msgs = messages.ContainsKey(level) ? messages[level] : 
-                      new[] { "✨ 继续挑战！", "💪 你是最强的！" };
-            return msgs[_random.Next(msgs.Length)];
         }
 
         private void Shuffle<T>(List<T> list)
@@ -439,21 +840,57 @@ namespace MyPersonalWebsite.Services
             }
         }
 
-        private Dictionary<char, int> GetStrokeMap()
+        private string GetQuestion(int level, string icon, string text)
         {
-            return new Dictionary<char, int>
+            var tags = level <= 20 ? "😊" : level <= 40 ? "🤔" : level <= 60 ? "😤" : level <= 80 ? "💪" : "💀";
+            return $"{tags} {icon} {text}";
+        }
+
+        private string GetHardQuestion(int level, string icon, string text)
+        {
+            var tags = level <= 55 ? "😤" : level <= 70 ? "💪" : level <= 85 ? "🔥" : "💀";
+            return $"{tags} {icon} {text}";
+        }
+
+        private string GetMessage(int level)
+        {
+            var msgs = new[] { "✨ 轻松！", "🔥 继续！", "💪 加油！", "⭐ 太强了！", "🚀 冲！" };
+            return msgs[_random.Next(msgs.Length)];
+        }
+
+        private string GetHardMessage(int level)
+        {
+            var msgs = new[]
             {
-                {'一',1},{'二',2},{'三',3},{'四',5},{'五',4},{'六',4},{'七',2},{'八',2},{'九',2},{'十',2},
-                {'人',2},{'大',3},{'天',4},{'地',6},{'日',4},{'月',4},{'水',4},{'火',4},{'山',3},{'石',5},
-                {'木',4},{'花',7},{'草',9},{'鸟',5},{'鱼',8},{'马',3},{'牛',4},{'羊',6},{'虫',6},{'云',4},
-                {'风',4},{'雨',8},{'雪',11},{'星',9},{'光',6},{'春',9},{'夏',10},{'秋',9},{'冬',5},{'年',6},
-                {'好',6},{'学',8},{'生',5},{'中',4},{'国',8},{'家',10},{'心',4},{'爱',10},{'乐',5},{'安',6},
-                {'永',5},{'远',7},{'梦',11},{'想',13},{'飞',3},{'行',6},{'白',5},{'黑',12},{'红',6},{'绿',11},
-                {'蓝',13},{'紫',12},{'金',8},{'银',11},{'龙',5},{'虎',8},{'凤',4},{'凰',11},{'喜',12},{'欢',6},
-                {'笑',10},{'哭',10},{'甜',11},{'苦',8},{'美',9},{'丽',7},{'明',8},{'亮',9},{'新',13},{'旧',5},
-                {'高',10},{'低',7},{'长',4},{'短',12},{'快',7},{'慢',14},{'多',6},{'少',4},{'真',10},{'假',11},
-                {'善',12},{'恶',10},{'清',11},{'浊',10},{'深',11},{'浅',8},{'浓',10},{'淡',11},{'远',7},{'近',7},
+                "⚡ 速度！", "🔥 燃起来了！", "💪 坚持住！", "👑 你是人类之王！",
+                "💀 AI已崩溃！", "🚀 超神！", "⭐ 完美！", "🎯 精准！"
             };
+            return msgs[_random.Next(msgs.Length)];
+        }
+
+        private string GetUltimateMessage(int level)
+        {
+            var msgs = new[]
+            {
+                "🏆 你赢了！", "💀 连AI都怕你！", "👑 终极王者！",
+                "🚀 人类之光！", "⚡ 太逆天了！", "💪 无敌！"
+            };
+            return msgs[_random.Next(msgs.Length)];
+        }
+
+        private int GetPoints(int level)
+        {
+            return 10 + level / 5;
+        }
+
+        private int GetHardPoints(int level)
+        {
+            return 20 + level / 2;
+        }
+
+        private int GetTimeLimit(int level)
+        {
+            return Math.Max(5, 20 - level / 5);
         }
     }
 
@@ -466,8 +903,9 @@ namespace MyPersonalWebsite.Services
         public string? DisplayText { get; set; }
         public string CorrectAnswer { get; set; } = "";
         public List<string> Options { get; set; } = new();
-        public string DisplayType { get; set; } = "text"; // image, text, color
+        public string DisplayType { get; set; } = "text";
         public int TimeLimit { get; set; } = 15;
+        public int Points { get; set; } = 10;
         public string FunMessage { get; set; } = "";
     }
 }
