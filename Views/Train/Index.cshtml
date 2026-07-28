@@ -159,7 +159,7 @@
             background: rgba(139, 92, 246, 0.1);
         }
 
-        @keyframes particleFloat {
+        @@keyframes particleFloat {
             0% {
                 transform: translateY(100vh) scale(0);
                 opacity: 0;
@@ -196,7 +196,7 @@
             animation: glowPulse 2s ease-in-out infinite;
         }
 
-        @keyframes glowPulse {
+        @@keyframes glowPulse {
             0%,
             100% {
                 opacity: 0.3;
@@ -227,7 +227,7 @@
             animation: trainMove 3s ease-in-out infinite;
         }
 
-        @keyframes trainMove {
+        @@keyframes trainMove {
             0%,
             100% {
                 transform: translateX(0);
@@ -332,7 +332,7 @@
             animation: dropdownIn 0.2s ease;
         }
 
-        @keyframes dropdownIn {
+        @@keyframes dropdownIn {
             from {
                 opacity: 0;
                 transform: translateY(-6px);
@@ -485,7 +485,7 @@
             display: block;
         }
 
-        @keyframes fadeIn {
+        @@keyframes fadeIn {
             from {
                 opacity: 0;
                 transform: translateY(20px);
@@ -778,7 +778,7 @@
             animation: shimmer 2.5s infinite;
         }
 
-        @keyframes shimmer {
+        @@keyframes shimmer {
             0% {
                 transform: translateX(-100%);
             }
@@ -946,7 +946,7 @@
             background: linear-gradient(180deg, #8B5CF6, rgba(139, 92, 246, 0.08));
         }
 
-        @keyframes pulse-dot {
+        @@keyframes pulse-dot {
             0%,
             100% {
                 transform: scale(1);
@@ -1000,7 +1000,7 @@
             font-weight: 400;
         }
 
-        @keyframes pulse-text {
+        @@keyframes pulse-text {
             0%,
             100% {
                 opacity: 1;
@@ -1252,7 +1252,7 @@
             display: flex;
         }
 
-        @keyframes modalFadeIn {
+        @@keyframes modalFadeIn {
             from {
                 opacity: 0;
                 transform: scale(0.95);
@@ -1421,7 +1421,7 @@
             margin-right: 0.4rem;
         }
 
-        @keyframes spin {
+        @@keyframes spin {
             to {
                 transform: rotate(360deg);
             }
@@ -1430,13 +1430,13 @@
         /* ============================================================
            响应式
            ============================================================ */
-        @media (max-width: 1024px) {
+        @@media (max-width: 1024px) {
             .status-cards {
                 grid-template-columns: repeat(3, 1fr);
             }
         }
 
-        @media (max-width: 768px) {
+        @@media (max-width: 768px) {
             .train-container {
                 padding: 0.4rem 0.8rem 0.8rem;
             }
@@ -1544,7 +1544,7 @@
             }
         }
 
-        @media (max-width: 480px) {
+        @@media (max-width: 480px) {
             .train-header h1 {
                 font-size: 1rem;
             }
