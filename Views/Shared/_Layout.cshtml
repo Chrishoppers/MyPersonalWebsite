@@ -251,27 +251,28 @@
                 <span class="navbar-toggler-icon" style="filter:invert(1);"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
+
+                @{
+                    var userId = Context.Session.GetInt32("UserId");
+                    var isAdmin = Context.Session.GetInt32("IsAdmin") ?? 0;
+                    var username = Context.Session.GetString("Username");
+                }
+
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item"><a class="nav-link" href="/"><i class="bi bi-house"></i> 首页</a></li>
                     <li class="nav-item"><a class="nav-link" href="/Blog"><i class="bi bi-journal"></i> 博客</a></li>
                     <li class="nav-item"><a class="nav-link" href="/Home/About"><i class="bi bi-person"></i> 关于</a></li>
                     <li class="nav-item"><a class="nav-link" href="/Home/Contact"><i class="bi bi-envelope"></i> 联系</a></li>
                     <li class="nav-item"><a class="nav-link" href="/Message/Index"><i class="bi bi-chat"></i> 留言</a></li>
-<li class="nav-item"><a class="nav-link" href="/Game"><i class="bi bi-controller"></i> 游戏</a></li>  <!-- ⭐ 游戏中心 -->
-@if (isAdmin == 1)
-{
-    <li class="nav-item">
-        <a class="nav-link" href="/Train" style="color:#8B5CF6;">
-            <i class="bi bi-train-front"></i> 列车追踪
-        </a>
-    </li>
-}
+                    <li class="nav-item"><a class="nav-link" href="/Game"><i class="bi bi-controller"></i> 游戏</a></li>
 
-
-                    @{
-                        var userId = Context.Session.GetInt32("UserId");
-                        var isAdmin = Context.Session.GetInt32("IsAdmin") ?? 0;
-                        var username = Context.Session.GetString("Username");
+                    @if (isAdmin == 1)
+                    {
+                        <li class="nav-item">
+                            <a class="nav-link" href="/Train" style="color:#8B5CF6;">
+                                <i class="bi bi-train-front"></i> 列车追踪
+                            </a>
+                        </li>
                     }
 
                     @if (userId.HasValue)
@@ -365,7 +366,7 @@
                                 <span>@username</span>
                             </a>
                         </li>
-                        
+
                         <li class="nav-item">
                             <a class="nav-link" href="/Auth/Logout" style="color:#EC4899;">
                                 <i class="bi bi-box-arrow-right"></i>
