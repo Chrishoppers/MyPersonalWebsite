@@ -182,24 +182,12 @@ public async Task<IActionResult> VerifyEmail(string email, string code)
         savedExpiry = expiry;
     }
 
-    Console.WriteLine($"🔍 Session 验证码: {savedCode}, 过期: {savedExpiry}");
-
-    // 3. 从 Session 获取用户 ID
+    // 3. 从 Session 读取用户 ID
     var userId = HttpContext.Session.GetInt32("RegisterUserId");
 
-    // 4. 如果 Session 没有验证码或用户 ID，从数据库查
-    if (string.IsNullOrEmpty(savedCode) || savedExpiry == null || userId == null || userId == 0)
-    {
-        var dbUser = await _dataSync.GetUserByEmailAsync(email);
-        if (dbUser != null)
-        {
-            savedCode = dbUser.VerificationCode ?? "";
-            savedExpiry = dbUser.VerificationCodeExpiry;
-            userId = dbUser.Id;
-            Console.WriteLine($"🔍 从数据库读取: ID={userId}, 验证码={savedCode}, 过期={savedExpiry}");
-        }
-    }
+    Console.WriteLine($"🔍 Session 数据: userId={userId}, 验证码={savedCode}, 过期={savedExpiry}");
 
+    // 4. 如果 Session 没有验证码或用户 ID，报错
     if (string.IsNullOrEmpty(savedCode))
     {
         ModelState.AddModelError("", "验证码不存在，请重新注册");
@@ -221,19 +209,18 @@ public async Task<IActionResult> VerifyEmail(string email, string code)
         return View();
     }
 
-    // ===== 验证码校验通过！=====
-
-    // 5. 检查用户是否存在
     if (userId == null || userId == 0)
     {
-        ModelState.AddModelError("", "用户不存在，请重新注册");
+        ModelState.AddModelError("", "用户 ID 丢失，请重新注册");
         ViewBag.Email = email;
         return View();
     }
 
-    Console.WriteLine($"✅ 验证通过，准备更新用户 ID: {userId}");
+    // ===== 验证码校验通过！=====
 
-    // 6. 直接用 SQL 更新（不经过 GetUserByEmailAsync）
+    Console.WriteLine($"✅ 验证通过，直接用 SQL 更新用户 ID: {userId}");
+
+    // 5. 直接用 SQL 更新（完全绕过 GetUserByEmailAsync）
     var updateSql = $@"
         UPDATE Users SET 
             IsEmailVerified = 1,
@@ -254,13 +241,13 @@ public async Task<IActionResult> VerifyEmail(string email, string code)
 
     Console.WriteLine($"✅ 用户 {email} 邮箱验证成功 (ID: {userId})");
 
-    // 7. 清除 Session
+    // 6. 清除 Session
     HttpContext.Session.Remove("RegisterEmail");
     HttpContext.Session.Remove("VerificationCode");
     HttpContext.Session.Remove("VerificationCodeExpiry");
     HttpContext.Session.Remove("RegisterUserId");
 
-    // 8. 发送管理员审核邮件（直接查询数据库）
+    // 7. 发送管理员审核邮件（直接查询数据库）
     try
     {
         var user = await _dataSync.GetUserByEmailAsync(email);
@@ -273,6 +260,10 @@ public async Task<IActionResult> VerifyEmail(string email, string code)
                 user.AvatarUrl,
                 user.CreatedAt
             );
+        }
+        else
+        {
+            Console.WriteLine($"⚠️ 发送邮件时查询不到用户: {email}");
         }
     }
     catch (Exception ex)
