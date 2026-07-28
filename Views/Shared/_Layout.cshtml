@@ -1,325 +1,499 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
-using System.Text.Json;
-using System.Threading.Tasks;
-using MyPersonalWebsite.Models;
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Chris hopper</title>
 
-namespace MyPersonalWebsite.Services
+    <!-- 字体 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+
+    <!-- 高级样式 -->
+    <link rel="stylesheet" href="~/css/site.css" />
+
+    <!-- Bootstrap 5 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+
+    <style>
+        body {
+            background: #0A0A0F;
+            color: #FFFFFF;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        main {
+            padding-top: 1.5rem;
+            padding-bottom: 3rem;
+        }
+        .container {
+            max-width: 1200px;
+        }
+        .navbar-nav .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+        .nav-avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1px solid rgba(255,255,255,0.06);
+            flex-shrink: 0;
+        }
+        .nav-avatar-placeholder {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.04);
+            color: rgba(255,255,255,0.3);
+            font-size: 0.7rem;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        /* ===== 通知样式 ===== */
+        .notif-badge {
+            position: absolute;
+            top: -4px;
+            right: -6px;
+            background: #EC4899;
+            color: #fff;
+            font-size: 0.6rem;
+            font-weight: 700;
+            padding: 0.1rem 0.4rem;
+            border-radius: 20px;
+            min-width: 18px;
+            text-align: center;
+            line-height: 1.4;
+            border: 2px solid #0A0A0F;
+        }
+
+        .notif-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            width: 400px;
+            max-height: 480px;
+            background: #1a1a2e;
+            border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.04);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            display: none;
+            z-index: 1000;
+            overflow: hidden;
+            margin-top: 0.5rem;
+        }
+
+        .notif-dropdown.show {
+            display: block;
+            animation: notifSlideDown 0.25s ease;
+        }
+
+        @@keyframes notifSlideDown {
+            from { opacity: 0; transform: translateY(-10px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .notif-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.8rem 1.2rem;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            color: #fff;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .notif-mark-all {
+            background: none;
+            border: none;
+            color: rgba(255,255,255,0.2);
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .notif-mark-all:hover {
+            color: #8B5CF6;
+        }
+
+        .notif-list {
+            max-height: 340px;
+            overflow-y: auto;
+            padding: 0.2rem 0;
+        }
+
+        .notif-list::-webkit-scrollbar {
+            width: 3px;
+        }
+        .notif-list::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+        }
+
+        .notif-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.8rem;
+            padding: 0.8rem 1.2rem;
+            border-bottom: 1px solid rgba(255,255,255,0.02);
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .notif-item:hover {
+            background: rgba(255,255,255,0.02);
+        }
+
+        .notif-item.read {
+            opacity: 0.4;
+        }
+
+        .notif-item .notif-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            margin-top: 0.2rem;
+        }
+
+        .notif-item .notif-dot.info { background: #4facfe; }
+        .notif-item .notif-dot.success { background: #28a745; }
+        .notif-item .notif-dot.warning { background: #ffc107; }
+        .notif-item .notif-dot.danger { background: #dc3545; }
+
+        .notif-item .notif-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .notif-item .notif-title {
+            color: #fff;
+            font-weight: 500;
+            font-size: 0.85rem;
+        }
+
+        .notif-item .notif-msg {
+            color: rgba(255,255,255,0.4);
+            font-size: 0.8rem;
+            margin-top: 0.1rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .notif-item .notif-time {
+            color: rgba(255,255,255,0.15);
+            font-size: 0.65rem;
+            margin-top: 0.2rem;
+        }
+
+        .notif-empty {
+            text-align: center;
+            padding: 2rem;
+            color: rgba(255,255,255,0.15);
+            font-size: 0.9rem;
+        }
+
+        .notif-footer {
+            padding: 0.6rem 1.2rem;
+            border-top: 1px solid rgba(255,255,255,0.04);
+            text-align: center;
+        }
+
+        .notif-footer a {
+            color: rgba(255,255,255,0.2);
+            text-decoration: none;
+            font-size: 0.8rem;
+            transition: color 0.3s ease;
+        }
+
+        .notif-footer a:hover {
+            color: #8B5CF6;
+        }
+
+        .nav-item.dropdown {
+            position: relative;
+        }
+
+        .nav-link-bell {
+            position: relative;
+            cursor: pointer;
+            padding: 0.5rem 0.8rem;
+            border-radius: 40px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-link-bell:hover {
+            background: rgba(255,255,255,0.04);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ===== 导航栏 ===== -->
+    <nav class="navbar navbar-expand-lg nav-advanced">
+        <div class="container">
+            <a class="navbar-brand nav-brand" href="/">
+                <i class="bi bi-command"></i> Chris hopper
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                    style="border:1px solid rgba(255,255,255,0.06);">
+                <span class="navbar-toggler-icon" style="filter:invert(1);"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="/"><i class="bi bi-house"></i> 首页</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/Blog"><i class="bi bi-journal"></i> 博客</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/Home/About"><i class="bi bi-person"></i> 关于</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/Home/Contact"><i class="bi bi-envelope"></i> 联系</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/Message/Index"><i class="bi bi-chat"></i> 留言</a></li>
+<li class="nav-item"><a class="nav-link" href="/Game"><i class="bi bi-controller"></i> 游戏</a></li>  <!-- ⭐ 游戏中心 -->
+@if (isAdmin == 1)
 {
-    public class TrainService
-    {
-        private readonly HttpClient _httpClient;
-        private readonly ILogger<TrainService> _logger;
+    <li class="nav-item">
+        <a class="nav-link" href="/Train" style="color:#8B5CF6;">
+            <i class="bi bi-train-front"></i> 列车追踪
+        </a>
+    </li>
+}
 
-        public TrainService(HttpClient httpClient, ILogger<TrainService> logger)
-        {
-            _httpClient = httpClient;
-            _logger = logger;
-            _httpClient.Timeout = TimeSpan.FromSeconds(15);
-        }
 
-        // ============================================================
-        // 查询列车完整信息
-        // ============================================================
-        public async Task<TrainFullInfo?> QueryTrainAsync(string trainCode, string? date = null)
-        {
-            try
-            {
-                if (string.IsNullOrEmpty(date))
-                {
-                    date = DateTime.Now.ToString("yyyy-MM-dd");
-                }
-
-                var stops = await GetMockTrainStopsAsync(trainCode);
-
-                if (stops == null || !stops.Any())
-                {
-                    return null;
-                }
-
-                var fullInfo = new TrainFullInfo
-                {
-                    TrainCode = trainCode,
-                    TrainType = GetTrainType(trainCode),
-                    StartStation = stops.First().StationName,
-                    EndStation = stops.Last().StationName,
-                    Stops = stops,
-                    QueryTime = DateTime.Now
-                };
-
-                CalculateRealTimeStatus(fullInfo);
-
-                return fullInfo;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"查询列车信息失败: {ex.Message}");
-                return null;
-            }
-        }
-
-        // ============================================================
-        // 模拟数据
-        // ============================================================
-        private async Task<List<TrainStop>?> GetMockTrainStopsAsync(string trainCode)
-        {
-            await Task.Delay(300);
-
-            var routes = GetRouteData(trainCode);
-            if (routes == null || !routes.Any()) return null;
-
-            var now = DateTime.Now;
-            var random = new Random();
-
-            return routes.Select((s, index) => new TrainStop
-            {
-                StationNo = index + 1,
-                StationName = s,
-                ArriveTime = index == 0 ? "始发" : now.AddMinutes(index * 12 + random.Next(0, 5)).ToString("HH:mm"),
-                DepartTime = index == routes.Count - 1 ? "终到" : now.AddMinutes(index * 12 + 3 + random.Next(0, 3)).ToString("HH:mm"),
-                StopTime = index == 0 || index == routes.Count - 1 ? "—" : $"{random.Next(2, 8)}分钟",
-                IsStart = index == 0,
-                IsEnd = index == routes.Count - 1,
-                DayOffset = index > 10 ? 1 : 0
-            }).ToList();
-        }
-
-        // ============================================================
-        // 路线数据 - 返回 List<string>
-        // ============================================================
-        private List<string> GetRouteData(string trainCode)
-        {
-            var routes = new Dictionary<string, List<string>>
-            {
-                // 京沪高铁
-                { "G1", new List<string> { "北京南", "天津南", "济南西", "南京南", "上海" } },
-                { "G2", new List<string> { "上海", "南京南", "济南西", "天津南", "北京南" } },
-                { "G3", new List<string> { "北京南", "济南西", "南京南", "无锡东", "上海" } },
-                { "G4", new List<string> { "上海", "无锡东", "南京南", "济南西", "北京南" } },
-                { "G5", new List<string> { "北京南", "天津南", "济南西", "徐州东", "南京南", "上海" } },
-                { "G6", new List<string> { "上海", "南京南", "徐州东", "济南西", "天津南", "北京南" } },
-                { "G7", new List<string> { "北京南", "天津南", "济南西", "徐州东", "南京南", "镇江南", "无锡东", "上海" } },
-                { "G8", new List<string> { "上海", "无锡东", "镇江南", "南京南", "徐州东", "济南西", "天津南", "北京南" } },
-                { "G21", new List<string> { "北京南", "济南西", "南京南", "上海" } },
-                { "G22", new List<string> { "上海", "南京南", "济南西", "北京南" } },
-                { "G25", new List<string> { "北京南", "天津南", "济南西", "徐州东", "南京南", "上海" } },
-                { "G26", new List<string> { "上海", "南京南", "徐州东", "济南西", "天津南", "北京南" } },
-
-                // 京广高铁
-                { "G79", new List<string> { "北京西", "石家庄", "郑州东", "武汉", "长沙南", "广州南" } },
-                { "G80", new List<string> { "广州南", "长沙南", "武汉", "郑州东", "石家庄", "北京西" } },
-                { "G81", new List<string> { "北京西", "保定东", "石家庄", "郑州东", "武汉", "长沙南", "广州南" } },
-                { "G82", new List<string> { "广州南", "长沙南", "武汉", "郑州东", "石家庄", "保定东", "北京西" } },
-                { "G27", new List<string> { "北京西", "石家庄", "郑州东", "武汉", "长沙南", "广州南" } },
-                { "G28", new List<string> { "广州南", "长沙南", "武汉", "郑州东", "石家庄", "北京西" } },
-                { "G97", new List<string> { "北京西", "石家庄", "郑州东", "武汉", "长沙南", "衡阳东", "广州南" } },
-                { "G98", new List<string> { "广州南", "衡阳东", "长沙南", "武汉", "郑州东", "石家庄", "北京西" } },
-                { "G99", new List<string> { "北京西", "保定东", "石家庄", "邢台东", "郑州东", "武汉", "长沙南", "广州南" } },
-                { "G100", new List<string> { "广州南", "长沙南", "武汉", "郑州东", "邢台东", "石家庄", "保定东", "北京西" } },
-
-                // 京九高铁
-                { "G89", new List<string> { "北京西", "济南西", "徐州东", "合肥南", "南昌西", "深圳北" } },
-                { "G90", new List<string> { "深圳北", "南昌西", "合肥南", "徐州东", "济南西", "北京西" } },
-
-                // 沪昆高铁
-                { "G85", new List<string> { "上海虹桥", "杭州东", "南昌西", "长沙南", "贵阳北", "昆明南" } },
-                { "G86", new List<string> { "昆明南", "贵阳北", "长沙南", "南昌西", "杭州东", "上海虹桥" } },
-
-                // 西成高铁
-                { "G87", new List<string> { "西安北", "汉中", "广元", "绵阳", "成都东" } },
-                { "G88", new List<string> { "成都东", "绵阳", "广元", "汉中", "西安北" } },
-
-                // 京张高铁
-                { "G89", new List<string> { "北京北", "清河", "八达岭长城", "张家口" } },
-                { "G90", new List<string> { "张家口", "八达岭长城", "清河", "北京北" } },
-
-                // 沿海高铁
-                { "G73", new List<string> { "北京南", "天津", "济南", "徐州", "南京", "上海", "杭州", "宁波", "福州", "厦门" } },
-                { "G74", new List<string> { "厦门", "福州", "宁波", "杭州", "上海", "南京", "徐州", "济南", "天津", "北京南" } },
-
-                // 普速列车
-                { "Z1", new List<string> { "北京", "石家庄", "郑州", "武汉", "长沙", "广州" } },
-                { "Z2", new List<string> { "广州", "长沙", "武汉", "郑州", "石家庄", "北京" } },
-                { "Z3", new List<string> { "北京", "济南", "徐州", "南京", "上海" } },
-                { "Z4", new List<string> { "上海", "南京", "徐州", "济南", "北京" } },
-
-                { "T1", new List<string> { "北京", "保定", "石家庄", "邢台", "邯郸", "郑州", "武汉", "长沙" } },
-                { "T2", new List<string> { "长沙", "武汉", "郑州", "邯郸", "邢台", "石家庄", "保定", "北京" } },
-
-                { "K1", new List<string> { "北京", "廊坊", "天津", "沧州", "德州", "济南", "泰安", "徐州", "南京", "上海" } },
-                { "K2", new List<string> { "上海", "南京", "徐州", "泰安", "济南", "德州", "沧州", "天津", "廊坊", "北京" } },
-
-                // 动车组
-                { "D1", new List<string> { "北京", "天津", "济南", "南京", "上海" } },
-                { "D2", new List<string> { "上海", "南京", "济南", "天津", "北京" } },
-                { "D3", new List<string> { "北京", "石家庄", "郑州", "武汉", "长沙", "广州" } },
-                { "D4", new List<string> { "广州", "长沙", "武汉", "郑州", "石家庄", "北京" } },
-            };
-
-            if (routes.ContainsKey(trainCode))
-            {
-                return routes[trainCode];
-            }
-
-            // 默认返回京沪线
-            return routes["G1"];
-        }
-
-        // ============================================================
-        // 判断列车类型
-        // ============================================================
-        private string GetTrainType(string trainCode)
-        {
-            if (string.IsNullOrEmpty(trainCode)) return "未知";
-            var first = trainCode[0];
-            return first switch
-            {
-                'G' => "高速动车",
-                'D' => "动车组",
-                'C' => "城际列车",
-                'Z' => "直达特快",
-                'T' => "特快列车",
-                'K' => "快速列车",
-                'Y' => "旅游列车",
-                'L' => "临时列车",
-                _ => "普速列车"
-            };
-        }
-
-        // ============================================================
-        // 计算实时状态
-        // ============================================================
-        private void CalculateRealTimeStatus(TrainFullInfo info)
-        {
-            if (info.Stops == null || !info.Stops.Any()) return;
-
-            var now = DateTime.Now;
-            var totalStops = info.Stops.Count;
-            var currentTime = now.TimeOfDay;
-
-            int currentIndex = -1;
-
-            for (int i = 0; i < info.Stops.Count; i++)
-            {
-                var stop = info.Stops[i];
-
-                if (stop.IsStart)
-                {
-                    var departTime = ParseTime(stop.DepartTime);
-                    if (departTime.HasValue && currentTime > departTime.Value)
-                    {
-                        currentIndex = i;
+                    @{
+                        var userId = Context.Session.GetInt32("UserId");
+                        var isAdmin = Context.Session.GetInt32("IsAdmin") ?? 0;
+                        var username = Context.Session.GetString("Username");
                     }
-                    continue;
-                }
 
-                if (stop.IsEnd)
-                {
-                    var arriveTime = ParseTime(stop.ArriveTime);
-                    if (arriveTime.HasValue && currentTime > arriveTime.Value)
+                    @if (userId.HasValue)
                     {
-                        currentIndex = i;
-                        break;
-                    }
-                    continue;
-                }
-
-                var arrive = ParseTime(stop.ArriveTime);
-                var depart = ParseTime(stop.DepartTime);
-
-                if (arrive.HasValue && depart.HasValue)
-                {
-                    if (currentTime >= arrive.Value && currentTime < depart.Value)
-                    {
-                        currentIndex = i;
-                        info.Status = "停靠中";
-                        break;
-                    }
-                    else if (i < info.Stops.Count - 1)
-                    {
-                        var nextArrive = ParseTime(info.Stops[i + 1].ArriveTime);
-                        if (currentTime >= depart.Value && nextArrive.HasValue && currentTime < nextArrive.Value)
+                        // 获取用户头像和通知
+                        MyPersonalWebsite.Models.User? user = null;
+                        string? avatarUrl = null;
+                        bool isAvatarApproved = false;
+                        int unreadCount = 0;
+                        var notifications = new List<MyPersonalWebsite.Models.Notification>();
+                        try
                         {
-                            currentIndex = i;
-                            info.Status = "运行中";
-                            break;
+                            var dataSync = Context.RequestServices.GetService<MyPersonalWebsite.Services.DataSyncService>();
+                            if (dataSync != null)
+                            {
+                                user = await dataSync.GetUserByIdAsync(userId.Value);
+                                if (user != null)
+                                {
+                                    avatarUrl = user.AvatarUrl;
+                                    isAvatarApproved = user.IsAvatarApproved;
+                                }
+                                notifications = await dataSync.GetNotificationsByUserIdAsync(userId.Value);
+                                unreadCount = notifications.Count(n => !n.IsRead);
+                            }
+                        }
+                        catch { }
+
+                        @if (isAdmin == 1)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" href="/Admin/Dashboard" style="color:#8B5CF6;">
+                                    <i class="bi bi-speedometer2"></i> 管理
+                                </a>
+                            </li>
+                        }
+
+                        <!-- ⭐ 通知铃铛 -->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link nav-link-bell" onclick="toggleNotifications(event)">
+                                <i class="bi bi-bell" style="font-size:1.2rem;"></i>
+                                @if (unreadCount > 0)
+                                {
+                                    <span class="notif-badge">@(unreadCount > 99 ? "99+" : unreadCount.ToString())</span>
+                                }
+                            </a>
+                            <div class="notif-dropdown" id="notifDropdown">
+                                <div class="notif-header">
+                                    <span>📬 通知</span>
+                                    @if (unreadCount > 0)
+                                    {
+                                        <button onclick="markAllRead()" class="notif-mark-all">全部已读</button>
+                                    }
+                                </div>
+                                <div class="notif-list" id="notifList">
+                                    @if (notifications.Any())
+                                    {
+                                        foreach (var n in notifications.Take(10))
+                                        {
+                                            <div class="notif-item @(n.IsRead ? "read" : "")" data-id="@n.Id" onclick="markNotifRead(@n.Id, this)">
+                                                <div class="notif-dot @n.Type"></div>
+                                                <div class="notif-content">
+                                                    <div class="notif-title">@n.Title</div>
+                                                    <div class="notif-msg">@n.Message</div>
+                                                    <div class="notif-time">@n.CreatedAt.ToString("MM-dd HH:mm")</div>
+                                                </div>
+                                            </div>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <div class="notif-empty">🎉 暂无通知</div>
+                                    }
+                                </div>
+                                <div class="notif-footer">
+                                    <a href="/Home/Notifications">查看全部</a>
+                                </div>
+                            </div>
+                        </li>
+
+                        <!-- 个人资料 -->
+                        <li class="nav-item">
+                            <a class="nav-link" href="/Home/Profile">
+                                @if (!string.IsNullOrEmpty(avatarUrl) && isAvatarApproved)
+                                {
+                                    <img src="@avatarUrl" alt="头像" class="nav-avatar" />
+                                }
+                                else
+                                {
+                                    <span class="nav-avatar-placeholder">@(username?.FirstOrDefault().ToString().ToUpper() ?? "?")</span>
+                                }
+                                <span>@username</span>
+                            </a>
+                        </li>
+                        
+                        <li class="nav-item">
+                            <a class="nav-link" href="/Auth/Logout" style="color:#EC4899;">
+                                <i class="bi bi-box-arrow-right"></i>
+                            </a>
+                        </li>
+                    }
+                    else
+                    {
+                        <li class="nav-item"><a class="nav-link" href="/Auth/Login"><i class="bi bi-box-arrow-in-right"></i> 登录</a></li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/Auth/Register" style="background:linear-gradient(135deg,#8B5CF6,#EC4899);color:#fff;border-radius:50px;padding:0.4rem 1.2rem;">
+                                注册
+                            </a>
+                        </li>
+                    }
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ===== 主体 ===== -->
+    <main>
+        @RenderBody()
+    </main>
+
+    <!-- ===== 页脚 ===== -->
+    <footer style="border-top:1px solid rgba(255,255,255,0.03);padding:2rem 0;margin-top:2rem;">
+        <div class="container text-center">
+            <p style="color:rgba(255,255,255,0.3);font-size:0.85rem;">
+                © 2026 <span style="background:linear-gradient(135deg,#8B5CF6,#EC4899,#F59E0B);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Chris hopper</span>
+                <br>
+                <span style="font-size:0.75rem;color:rgba(255,255,255,0.15);">
+                    用 <i class="bi bi-heart-fill" style="color:#EC4899;"></i> 和 ASP.NET Core 10.0 构建
+                </span>
+            </p>
+        </div>
+    </footer>
+
+    <!-- ===== 脚本 ===== -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // ============================================================
+        // 通知下拉菜单
+        // ============================================================
+        function toggleNotifications(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const dropdown = document.getElementById('notifDropdown');
+            dropdown.classList.toggle('show');
+        }
+
+        document.addEventListener('click', function(e) {
+            const dropdown = document.getElementById('notifDropdown');
+            if (dropdown && !dropdown.contains(e.target) && !e.target.closest('.nav-link-bell')) {
+                dropdown.classList.remove('show');
+            }
+        });
+
+        // ============================================================
+        // 标记单条通知为已读
+        // ============================================================
+        function markNotifRead(id, element) {
+            if (element.classList.contains('read')) return;
+            const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+            fetch('/Home/MarkNotificationRead', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'RequestVerificationToken': token
+                },
+                body: `id=${id}`
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    element.classList.add('read');
+                    const badge = document.querySelector('.notif-badge');
+                    if (badge) {
+                        const count = parseInt(badge.textContent) - 1;
+                        if (count > 0) {
+                            badge.textContent = count;
+                        } else {
+                            badge.remove();
                         }
                     }
                 }
-            }
-
-            if (currentIndex < 0)
-            {
-                var lastStop = info.Stops.Last();
-                var lastArrive = ParseTime(lastStop.ArriveTime);
-                if (lastArrive.HasValue && currentTime > lastArrive.Value)
-                {
-                    info.Status = "已到达";
-                    info.CurrentStation = lastStop.StationName;
-                    info.ProgressPercent = 100;
-                    return;
-                }
-
-                var firstStop = info.Stops.First();
-                var firstDepart = ParseTime(firstStop.DepartTime);
-                if (firstDepart.HasValue && currentTime < firstDepart.Value)
-                {
-                    info.Status = "未发车";
-                    info.CurrentStation = firstStop.StationName;
-                    info.NextStation = info.Stops.Count > 1 ? info.Stops[1].StationName : "";
-                    info.NextArriveTime = info.Stops.Count > 1 ? info.Stops[1].ArriveTime : "";
-                    info.ProgressPercent = 0;
-                    return;
-                }
-            }
-
-            if (currentIndex >= 0 && currentIndex < info.Stops.Count)
-            {
-                var currentStop = info.Stops[currentIndex];
-                info.CurrentStation = currentStop.StationName;
-                info.ProgressPercent = (int)((double)(currentIndex + 1) / totalStops * 100);
-
-                if (currentIndex + 1 < info.Stops.Count)
-                {
-                    var nextStop = info.Stops[currentIndex + 1];
-                    info.NextStation = nextStop.StationName;
-                    info.NextArriveTime = nextStop.ArriveTime;
-                }
-                else
-                {
-                    info.Status = "已到达";
-                    info.NextStation = "";
-                    info.NextArriveTime = "";
-                    info.ProgressPercent = 100;
-                }
-            }
-
-            info.DelayInfo = new Random().Next(0, 5) == 0 ? $"晚点{new Random().Next(3, 15)}分钟" : "正点";
+            });
         }
 
         // ============================================================
-        // 解析时间
+        // 全部标记已读
         // ============================================================
-        private TimeSpan? ParseTime(string timeStr)
-        {
-            if (string.IsNullOrEmpty(timeStr) || timeStr == "始发" || timeStr == "终到" || timeStr == "—")
-                return null;
-
-            try
-            {
-                var parts = timeStr.Split(':');
-                if (parts.Length == 2)
-                {
-                    return new TimeSpan(int.Parse(parts[0]), int.Parse(parts[1]), 0);
+        function markAllRead() {
+            const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+            fetch('/Home/MarkAllNotificationsRead', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'RequestVerificationToken': token
+                },
+                body: ''
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    document.querySelectorAll('.notif-item').forEach(el => el.classList.add('read'));
+                    const badge = document.querySelector('.notif-badge');
+                    if (badge) badge.remove();
+                    const btn = document.querySelector('.notif-mark-all');
+                    if (btn) btn.remove();
                 }
-                return null;
-            }
-            catch
-            {
-                return null;
-            }
+            });
         }
-    }
-}
+
+        // 点击通知项标记已读
+        document.addEventListener('click', function(e) {
+            const item = e.target.closest('.notif-item');
+            if (item && !item.classList.contains('read')) {
+                const id = item.dataset.id;
+                if (id) {
+                    markNotifRead(id, item);
+                }
+            }
+        });
+    </script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+
+</body>
+</html>
