@@ -91,16 +91,16 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 类型0-9（基础类型，代码省略，保持简洁）
+        // 类型0：扭曲文字识别（1-5关）
         // ============================================================
-
         private CaptchaChallenge GenerateTextChallenge(int level)
         {
             var progress = (level - 1) % 5 + 1;
             var len = Math.Min(3 + progress, 6);
             var chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
             var text = new string(Enumerable.Range(0, len).Select(_ => chars[_random.Next(chars.Length)]).ToArray());
-            var svg = GenerateSvg(text, 5 + progress * 4, 10 + progress * 3);
+            var distortion = 5 + progress * 4;
+            var svg = GenerateSvg(text, distortion, 10 + progress * 3);
 
             return new CaptchaChallenge
             {
@@ -117,6 +117,9 @@ namespace MyPersonalWebsite.Services
             };
         }
 
+        // ============================================================
+        // 类型1：算术计算（6-10关）
+        // ============================================================
         private CaptchaChallenge GenerateArithmeticChallenge(int level)
         {
             var progress = (level - 6) % 5 + 1;
@@ -141,6 +144,9 @@ namespace MyPersonalWebsite.Services
             };
         }
 
+        // ============================================================
+        // 类型2：汉字笔画数（11-15关）
+        // ============================================================
         private CaptchaChallenge GenerateStrokeChallenge(int level)
         {
             var chars = "一二三四五六七八九十人大小天地日月水火山石木花草鸟鱼马牛羊虫风云雨雪星光春夏秋冬年好学生学习中国家中";
@@ -174,13 +180,18 @@ namespace MyPersonalWebsite.Services
             return map.ContainsKey(ch) ? map[ch] : _random.Next(3, 12);
         }
 
+        // ============================================================
+        // 类型3：颜色识别（16-20关）
+        // ============================================================
         private CaptchaChallenge GenerateColorChallenge(int level)
         {
             var idx = _random.Next(_colors.Count);
             var color = _colors[idx];
+
             var options = new List<string> { color.name };
             var pool = new List<(string name, string hex)>(_colors);
             pool.RemoveAt(idx);
+
             while (options.Count < 4 && pool.Any())
             {
                 var r = _random.Next(pool.Count);
@@ -204,6 +215,9 @@ namespace MyPersonalWebsite.Services
             };
         }
 
+        // ============================================================
+        // 类型4：找不同（21-25关）
+        // ============================================================
         private CaptchaChallenge GenerateFindDifferentChallenge(int level)
         {
             var chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -230,6 +244,9 @@ namespace MyPersonalWebsite.Services
             };
         }
 
+        // ============================================================
+        // 类型5：倒序识别（26-30关）
+        // ============================================================
         private CaptchaChallenge GenerateReverseChallenge(int level)
         {
             var progress = (level - 26) % 5 + 1;
@@ -254,6 +271,9 @@ namespace MyPersonalWebsite.Services
             };
         }
 
+        // ============================================================
+        // 类型6：缺失字母（31-35关）
+        // ============================================================
         private CaptchaChallenge GenerateMissingLetterChallenge(int level)
         {
             var progress = (level - 31) % 5 + 1;
@@ -279,6 +299,9 @@ namespace MyPersonalWebsite.Services
             };
         }
 
+        // ============================================================
+        // 类型7：快速点击（36-40关）
+        // ============================================================
         private CaptchaChallenge GenerateQuickTapChallenge(int level)
         {
             var chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -307,6 +330,9 @@ namespace MyPersonalWebsite.Services
             };
         }
 
+        // ============================================================
+        // 类型8：成语填空（41-45关）
+        // ============================================================
         private CaptchaChallenge GenerateIdiomChallenge(int level)
         {
             var idiom = _idioms[_random.Next(_idioms.Count)];
@@ -329,6 +355,9 @@ namespace MyPersonalWebsite.Services
             };
         }
 
+        // ============================================================
+        // 类型9：中文数字转阿拉伯（46-50关）
+        // ============================================================
         private CaptchaChallenge GenerateChineseNumberChallenge(int level)
         {
             var cn = new[] { "零", "一", "二", "三", "四", "五", "六", "七", "八", "九", "十" };
@@ -350,16 +379,16 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 类型10-19（高难度类型）
+        // 类型10：高难度扭曲文字（51-55关）
         // ============================================================
-
         private CaptchaChallenge GenerateHardTextChallenge(int level)
         {
             var progress = (level - 51) % 5 + 1;
             var len = Math.Min(5 + progress, 9);
             var chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
             var text = new string(Enumerable.Range(0, len).Select(_ => chars[_random.Next(chars.Length)]).ToArray());
-            var svg = GenerateSvg(text, 20 + progress * 6, 30 + progress * 5);
+            var distortion = 20 + progress * 6;
+            var svg = GenerateSvg(text, distortion, 30 + progress * 5);
 
             return new CaptchaChallenge
             {
@@ -376,6 +405,9 @@ namespace MyPersonalWebsite.Services
             };
         }
 
+        // ============================================================
+        // 类型11：超大数算术（56-60关）
+        // ============================================================
         private CaptchaChallenge GenerateHardArithmeticChallenge(int level)
         {
             var progress = (level - 56) % 5 + 1;
@@ -416,6 +448,9 @@ namespace MyPersonalWebsite.Services
             };
         }
 
+        // ============================================================
+        // 类型12：极生僻字笔画（61-65关）
+        // ============================================================
         private CaptchaChallenge GenerateHardStrokeChallenge(int level)
         {
             var progress = (level - 61) % 5 + 1;
@@ -436,6 +471,9 @@ namespace MyPersonalWebsite.Services
             };
         }
 
+        // ============================================================
+        // 类型13：相近色识别（66-70关）
+        // ============================================================
         private CaptchaChallenge GenerateHardColorChallenge(int level)
         {
             var progress = (level - 66) % 5 + 1;
@@ -443,6 +481,7 @@ namespace MyPersonalWebsite.Services
 
             var colorIdx = _random.Next(_colors.Count);
             var correct = _colors[colorIdx];
+
             var options = new List<(string name, string hex)> { correct };
             var pool = new List<(string name, string hex)>(_colors);
 
@@ -477,6 +516,9 @@ namespace MyPersonalWebsite.Services
             };
         }
 
+        // ============================================================
+        // 类型14：超难找不同（71-75关）⭐ 方案二修复版
+        // ============================================================
         private CaptchaChallenge GenerateHardFindDifferentChallenge(int level)
         {
             var progress = (level - 71) % 5 + 1;
@@ -487,10 +529,10 @@ namespace MyPersonalWebsite.Services
             var options = new List<string> { target.ToString() };
             var similar = GetSimilarChars(target);
 
-            // ⭐ 修复：使用 ToString() 转换 char 为 string
-            for (int i = 0; i < optionsCount - 1 && i < similar.Count; i++)
+            // ⭐ 方案二修复：直接添加 string，不需要 ToString()
+            foreach (var s in similar.Take(optionsCount - 1))
             {
-                options.Add(similar[i].ToString());
+                options.Add(s);
             }
 
             while (options.Count < optionsCount)
@@ -516,44 +558,9 @@ namespace MyPersonalWebsite.Services
             };
         }
 
-        private List<char> GetSimilarChars(char c)
-        {
-            var map = new Dictionary<char, char[]>
-            {
-                {'A', new[]{'Ä','À','Á','Â','Ã'}},
-                {'B', new[]{'8','ß','Ɓ','Ƃ'}},
-                {'C', new[]{'Ç','Ć','Č','©'}},
-                {'D', new[]{'Ɗ','Ɖ','Ð'}},
-                {'E', new[]{'É','È','Ê','Ë','Ē'}},
-                {'F', new[]{'Ƒ','ℱ'}},
-                {'G', new[]{'Ğ','Ĝ','Ġ','Ɠ'}},
-                {'H', new[]{'Ĥ','Ħ','Ȟ'}},
-                {'J', new[]{'Ĵ','ȷ'}},
-                {'K', new[]{'Ķ','Ƙ'}},
-                {'L', new[]{'Ĺ','Ļ','Ł'}},
-                {'M', new[]{'Ɯ','ℳ'}},
-                {'N', new[]{'Ń','Ň','Ñ','Ɲ'}},
-                {'P', new[]{'Ƥ','ℙ'}},
-                {'Q', new[]{'ℚ'}},
-                {'R', new[]{'Ŕ','Ř','Ʀ'}},
-                {'S', new[]{'Ś','Š','Ş','Ƨ'}},
-                {'T', new[]{'Ť','Ŧ','Ƭ'}},
-                {'W', new[]{'Ŵ','Ɯ'}},
-                {'X', new[]{'Ẋ','Ẍ','Ʒ'}},
-                {'Y', new[]{'Ÿ','Ý','Ŷ'}},
-                {'Z', new[]{'Ź','Ž','Ƶ'}},
-                {'2', new[]{'Ƨ','Ȝ'}},
-                {'3', new[]{'Ʒ','Ȝ'}},
-                {'4', new[]{'4','Ꮞ'}},
-                {'5', new[]{'Ƽ'}},
-                {'6', new[]{'Ƅ'}},
-                {'7', new[]{'Ɓ'}},
-                {'8', new[]{'B','ß'}},
-                {'9', new[]{'Ɣ'}}
-            };
-            return map.ContainsKey(c) ? map[c].ToList() : new List<char> { c };
-        }
-
+        // ============================================================
+        // 类型15：倒序+最大扭曲（76-80关）
+        // ============================================================
         private CaptchaChallenge GenerateHardReverseChallenge(int level)
         {
             var progress = (level - 76) % 5 + 1;
@@ -561,7 +568,8 @@ namespace MyPersonalWebsite.Services
             var chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
             var text = new string(Enumerable.Range(0, len).Select(_ => chars[_random.Next(chars.Length)]).ToArray());
             var reversed = new string(text.Reverse().ToArray());
-            var svg = GenerateSvg(text, 30 + progress * 5, 30 + progress * 5);
+            var distortion = 30 + progress * 5;
+            var svg = GenerateSvg(text, distortion, 30 + progress * 5);
 
             return new CaptchaChallenge
             {
@@ -578,6 +586,9 @@ namespace MyPersonalWebsite.Services
             };
         }
 
+        // ============================================================
+        // 类型16：双缺失字母（81-85关）
+        // ============================================================
         private CaptchaChallenge GenerateHardMissingLetterChallenge(int level)
         {
             var progress = (level - 81) % 5 + 1;
@@ -611,6 +622,9 @@ namespace MyPersonalWebsite.Services
             };
         }
 
+        // ============================================================
+        // 类型17：极速点击（86-90关）
+        // ============================================================
         private CaptchaChallenge GenerateHardQuickTapChallenge(int level)
         {
             var progress = (level - 86) % 5 + 1;
@@ -643,6 +657,9 @@ namespace MyPersonalWebsite.Services
             };
         }
 
+        // ============================================================
+        // 类型18：生僻成语（91-95关）
+        // ============================================================
         private CaptchaChallenge GenerateHardIdiomChallenge(int level)
         {
             var progress = (level - 91) % 5 + 1;
@@ -654,6 +671,8 @@ namespace MyPersonalWebsite.Services
             var display = idiom.ToCharArray();
             display[pos] = '□';
 
+            var timeLimit = Math.Max(3, 6 - progress);
+
             return new CaptchaChallenge
             {
                 Type = 18,
@@ -662,15 +681,19 @@ namespace MyPersonalWebsite.Services
                 CorrectAnswer = correct.ToString(),
                 Options = GenerateOptions(correct.ToString(), 4 + progress / 2),
                 DisplayType = "text",
-                TimeLimit = Math.Max(3, 6 - progress),
+                TimeLimit = timeLimit,
                 Points = GetHardPoints(level) * 4,
                 FunMessage = GetHardMessage(level)
             };
         }
 
+        // ============================================================
+        // 类型19：终极BOSS（96-100关）
+        // ============================================================
         private CaptchaChallenge GenerateUltimateChallenge(int level)
         {
             var progress = (level - 96) % 5 + 1;
+
             var types = new[] { 10, 11, 12, 13, 14, 15, 16, 17, 18 };
             var typeIdx = types[_random.Next(types.Length)];
 
@@ -697,6 +720,47 @@ namespace MyPersonalWebsite.Services
             challenge.FunMessage = GetUltimateMessage(level);
 
             return challenge;
+        }
+
+        // ============================================================
+        // ⭐ 方案二修复：GetSimilarChars 返回 List<string>
+        // ============================================================
+        private List<string> GetSimilarChars(char c)
+        {
+            var map = new Dictionary<char, string[]>
+            {
+                {'A', new[]{"Ä","À","Á","Â","Ã"}},
+                {'B', new[]{"8","ß","Ɓ","Ƃ"}},
+                {'C', new[]{"Ç","Ć","Č","©"}},
+                {'D', new[]{"Ɗ","Ɖ","Ð"}},
+                {'E', new[]{"É","È","Ê","Ë","Ē"}},
+                {'F', new[]{"Ƒ","ℱ"}},
+                {'G', new[]{"Ğ","Ĝ","Ġ","Ɠ"}},
+                {'H', new[]{"Ĥ","Ħ","Ȟ"}},
+                {'J', new[]{"Ĵ","ȷ"}},
+                {'K', new[]{"Ķ","Ƙ"}},
+                {'L', new[]{"Ĺ","Ļ","Ł"}},
+                {'M', new[]{"Ɯ","ℳ"}},
+                {'N', new[]{"Ń","Ň","Ñ","Ɲ"}},
+                {'P', new[]{"Ƥ","ℙ"}},
+                {'Q', new[]{"ℚ"}},
+                {'R', new[]{"Ŕ","Ř","Ʀ"}},
+                {'S', new[]{"Ś","Š","Ş","Ƨ"}},
+                {'T', new[]{"Ť","Ŧ","Ƭ"}},
+                {'W', new[]{"Ŵ","Ɯ"}},
+                {'X', new[]{"Ẋ","Ẍ","Ʒ"}},
+                {'Y', new[]{"Ÿ","Ý","Ŷ"}},
+                {'Z', new[]{"Ź","Ž","Ƶ"}},
+                {'2', new[]{"Ƨ","Ȝ"}},
+                {'3', new[]{"Ʒ","Ȝ"}},
+                {'4', new[]{"4","Ꮞ"}},
+                {'5', new[]{"Ƽ"}},
+                {'6', new[]{"Ƅ"}},
+                {'7', new[]{"Ɓ"}},
+                {'8', new[]{"B","ß"}},
+                {'9', new[]{"Ɣ"}}
+            };
+            return map.ContainsKey(c) ? map[c].ToList() : new List<string> { c.ToString() };
         }
 
         // ============================================================
