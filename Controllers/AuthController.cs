@@ -194,7 +194,7 @@ public async Task<IActionResult> VerifyEmail(string email, string code)
 
     Console.WriteLine($"🔍 Session 数据: userId={userId}, 验证码={savedCode}, 过期={savedExpiry}");
 
-    // 4. 如果 Session 没有验证码或用户 ID，报错
+    // 4. 验证码校验
     if (string.IsNullOrEmpty(savedCode))
     {
         ModelState.AddModelError("", "验证码不存在，请重新注册");
@@ -227,7 +227,7 @@ public async Task<IActionResult> VerifyEmail(string email, string code)
 
     Console.WriteLine($"✅ 验证通过，直接用 SQL 更新用户 ID: {userId}");
 
-    // 5. 直接用 SQL 更新（完全绕过 GetUserByEmailAsync）
+    // 5. 直接用 SQL 更新
     var updateSql = $@"
         UPDATE Users SET 
             IsEmailVerified = 1,
@@ -254,7 +254,7 @@ public async Task<IActionResult> VerifyEmail(string email, string code)
     HttpContext.Session.Remove("VerificationCodeExpiry");
     HttpContext.Session.Remove("RegisterUserId");
 
-    // 7. 发送管理员审核邮件（直接查询数据库）
+    // 7. 发送管理员审核邮件
     try
     {
         var user = await _dataSync.GetUserByEmailAsync(email);
@@ -267,10 +267,6 @@ public async Task<IActionResult> VerifyEmail(string email, string code)
                 user.AvatarUrl,
                 user.CreatedAt
             );
-        }
-        else
-        {
-            Console.WriteLine($"⚠️ 发送邮件时查询不到用户: {email}");
         }
     }
     catch (Exception ex)
