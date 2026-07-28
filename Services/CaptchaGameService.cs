@@ -174,7 +174,7 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 类型4：找不同（21-25关）
+        // 类型4：找不同（21-25关）⭐ 已修复
         // ============================================================
         private CaptchaChallenge GenerateFindDifferentChallenge(int level)
         {
@@ -468,7 +468,7 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 类型14：超难找不同（71-75关）⭐ 完全重写，不用 char[]
+        // 类型14：超难找不同（71-75关）⭐ 已完全修复，无 char 转 string 问题
         // ============================================================
         private CaptchaChallenge GenerateHardFindDifferentChallenge(int level)
         {
@@ -476,26 +476,23 @@ namespace MyPersonalWebsite.Services
             var target = chars[_random.Next(chars.Length)];
             var options = new List<string> { target.ToString() };
 
-            // ⭐ 手动生成相似字符（全部是 string）
-            var similar = new List<string>();
-            if ("AEIOU".Contains(target))
+            // 全部用字符串，不用 char
+            if ("AEIOU".IndexOf(target) >= 0)
             {
-                similar.Add("Ä"); similar.Add("À"); similar.Add("Á");
+                options.Add("Ä");
+                options.Add("À");
+                options.Add("Á");
             }
-            else if ("BCDFGHJKLMNPQRSTVWXYZ".Contains(target))
+            else if ("BCDFGHJKLMNPQRSTVWXYZ".IndexOf(target) >= 0)
             {
-                similar.Add("ß"); similar.Add("Ɓ"); similar.Add("Ƃ");
+                options.Add("ß");
+                options.Add("Ɓ");
+                options.Add("Ƃ");
             }
-            else if (char.IsDigit(target))
+            else if (target >= '0' && target <= '9')
             {
-                similar.Add("Ƨ"); similar.Add("Ʒ");
-            }
-
-            // 添加相似字符到选项
-            foreach (var s in similar)
-            {
-                if (options.Count >= 6) break;
-                if (!options.Contains(s)) options.Add(s);
+                options.Add("Ƨ");
+                options.Add("Ʒ");
             }
 
             while (options.Count < 6)
