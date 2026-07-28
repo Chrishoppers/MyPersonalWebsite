@@ -517,7 +517,7 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 类型14：超难找不同（71-75关）⭐ 方案二修复版
+        // 类型14：超难找不同（71-75关）
         // ============================================================
         private CaptchaChallenge GenerateHardFindDifferentChallenge(int level)
         {
@@ -529,10 +529,10 @@ namespace MyPersonalWebsite.Services
             var options = new List<string> { target.ToString() };
             var similar = GetSimilarChars(target);
 
-            // ⭐ 方案二修复：直接添加 string，不需要 ToString()
-            foreach (var s in similar.Take(optionsCount - 1))
+            foreach (var s in similar)
             {
-                options.Add(s);
+                if (options.Count >= optionsCount) break;
+                if (!options.Contains(s)) options.Add(s);
             }
 
             while (options.Count < optionsCount)
