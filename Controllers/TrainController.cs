@@ -13,22 +13,15 @@ namespace MyPersonalWebsite.Controllers
             _trainService = trainService;
         }
 
-        // ============================================================
-        // 列车查询页面（管理员专用）
-        // ============================================================
         [HttpGet]
         public IActionResult Index()
         {
             var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
             if (isAdmin != 1)
                 return RedirectToAction("Login", "Auth");
-
             return View();
         }
 
-        // ============================================================
-        // 查询列车（AJAX）
-        // ============================================================
         [HttpPost]
         public async Task<IActionResult> Query([FromBody] TrainQueryRequest request)
         {
@@ -47,9 +40,6 @@ namespace MyPersonalWebsite.Controllers
             return Json(new { success = true, data = result });
         }
 
-        // ============================================================
-        // 获取支持的车次列表（自动补全）
-        // ============================================================
         [HttpGet]
         public IActionResult GetSuggestions(string query)
         {
