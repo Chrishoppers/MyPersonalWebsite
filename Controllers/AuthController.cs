@@ -169,7 +169,7 @@ public async Task<IActionResult> VerifyEmail(string email, string code)
         email = TempData["RegisterEmail"] as string ?? "";
     }
 
-    Console.WriteLine($"📧 VerifyEmail POST: email={email}, code={code}");
+    Console.WriteLine($"📧 验证邮箱请求: email={email}, code={code}");
 
     if (string.IsNullOrEmpty(email))
     {
@@ -177,13 +177,7 @@ public async Task<IActionResult> VerifyEmail(string email, string code)
         return View();
     }
 
-    // 在 AuthController.cs 的 VerifyEmail POST 方法中添加
-Console.WriteLine($"🔍 用户 ID: {user.Id}");
-Console.WriteLine($"🔍 VerificationCode: '{user.VerificationCode}'");
-Console.WriteLine($"🔍 VerificationCodeExpiry: '{user.VerificationCodeExpiry?.ToString("yyyy-MM-dd HH:mm:ss") ?? "NULL"}'");
-Console.WriteLine($"🔍 当前时间: '{DateTime.Now:yyyy-MM-dd HH:mm:ss}'");
-Console.WriteLine($"🔍 是否过期: {user.VerificationCodeExpiry < DateTime.Now}");
-
+    // ⭐ 关键修复：先查询用户
     var user = await _dataSync.GetUserByEmailAsync(email);
     if (user == null)
     {
@@ -197,7 +191,7 @@ Console.WriteLine($"🔍 是否过期: {user.VerificationCodeExpiry < DateTime.N
         return RedirectToAction("RegisterSuccess");
     }
 
-    // 检查验证码是否过期（10分钟）
+    // 检查验证码是否过期
     if (user.VerificationCodeExpiry < DateTime.Now)
     {
         // 删除过期用户
@@ -238,7 +232,6 @@ Console.WriteLine($"🔍 是否过期: {user.VerificationCodeExpiry < DateTime.N
     TempData["RegisterEmail"] = email;
     return RedirectToAction("RegisterSuccess");
 }
-
 // ============================================================
 // 注册成功页面（等待管理员审核）
 // ============================================================
