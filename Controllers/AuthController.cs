@@ -64,15 +64,15 @@ public async Task<IActionResult> Register(string username, string email, string 
     }
     HttpContext.Session.Remove("SvgCaptchaText");
 
-    // ⭐ 使用新方法检查（包括已删除用户）
-    var existingUser = await _dataSync.GetUserByUsernameIncludeDeletedAsync(username);
+    // ⭐ 只检查活跃用户（IsDeleted = 0）
+    var existingUser = await _dataSync.GetUserByUsernameAsync(username);
     if (existingUser != null)
     {
         ModelState.AddModelError("", "用户名已被使用，请更换");
         return View();
     }
 
-    existingUser = await _dataSync.GetUserByEmailIncludeDeletedAsync(email);
+    existingUser = await _dataSync.GetUserByEmailAsync(email);
     if (existingUser != null)
     {
         ModelState.AddModelError("", "邮箱已被注册，请更换");
@@ -130,7 +130,6 @@ public async Task<IActionResult> Register(string username, string email, string 
         Console.WriteLine($"验证码邮件发送失败: {ex.Message}");
     }
 
-    // ⭐ 保存到 TempData
     TempData["RegisterEmail"] = email;
     TempData["VerificationCode"] = code;
     TempData["VerificationCodeExpiry"] = DateTime.Now.AddMinutes(10);
@@ -138,7 +137,6 @@ public async Task<IActionResult> Register(string username, string email, string 
 
     return RedirectToAction("VerifyEmail");
 }
-
 // ============================================================
 // 验证邮箱 GET
 // ============================================================
