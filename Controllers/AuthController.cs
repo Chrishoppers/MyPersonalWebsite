@@ -64,7 +64,6 @@ public async Task<IActionResult> Register(string username, string email, string 
     }
     HttpContext.Session.Remove("SvgCaptchaText");
 
-    // ⭐ 只检查活跃用户（IsDeleted = 0）
     var existingUser = await _dataSync.GetUserByUsernameAsync(username);
     if (existingUser != null)
     {
@@ -130,10 +129,11 @@ public async Task<IActionResult> Register(string username, string email, string 
         Console.WriteLine($"验证码邮件发送失败: {ex.Message}");
     }
 
-    TempData["RegisterEmail"] = email;
-    TempData["VerificationCode"] = code;
-    TempData["VerificationCodeExpiry"] = DateTime.Now.AddMinutes(10);
-    TempData["RegisterUserId"] = newUser.Id;
+    // ⭐ 使用 Session 存储（不会在重定向后丢失）
+    HttpContext.Session.SetString("RegisterEmail", email);
+    HttpContext.Session.SetString("VerificationCode", code);
+    HttpContext.Session.SetString("VerificationCodeExpiry", DateTime.Now.AddMinutes(10).ToString("yyyy-MM-dd HH:mm:ss"));
+    HttpContext.Session.SetInt32("RegisterUserId", newUser.Id);
 
     return RedirectToAction("VerifyEmail");
 }
@@ -143,12 +143,12 @@ public async Task<IActionResult> Register(string username, string email, string 
 [HttpGet]
 public IActionResult VerifyEmail()
 {
-    var email = TempData["RegisterEmail"] as string ?? "";
+    // ⭐ 从 Session 读取
+    var email = HttpContext.Session.GetString("RegisterEmail") ?? "";
     Console.WriteLine($"📧 VerifyEmail GET: email={email}");
     ViewBag.Email = email;
     return View();
 }
-
 // ============================================================
 // 验证邮箱 POST - 修复版（无变量冲突）
 // ============================================================
@@ -156,10 +156,10 @@ public IActionResult VerifyEmail()
 [ValidateAntiForgeryToken]
 public async Task<IActionResult> VerifyEmail(string email, string code)
 {
-    // 1. 从 TempData 读取邮箱
+    // ⭐ 1. 从 Session 读取
     if (string.IsNullOrEmpty(email))
     {
-        email = TempData["RegisterEmail"] as string ?? "";
+        email = HttpContext.Session.GetString("RegisterEmail") ?? "";
     }
 
     Console.WriteLine($"📧 验证邮箱请求: email={email}, code={code}");
@@ -171,13 +171,22 @@ public async Task<IActionResult> VerifyEmail(string email, string code)
         return View();
     }
 
-    // 2. 从 TempData 读取验证码
-    var savedCode = TempData["VerificationCode"] as string ?? "";
-    var savedExpiry = TempData["VerificationCodeExpiry"] as DateTime?;
+    // ⭐ 2. 从 Session 读取验证码
+    var savedCode = HttpContext.Session.GetString("VerificationCode") ?? "";
+    var savedExpiryStr = HttpContext.Session.GetString("VerificationCodeExpiry") ?? "";
+    DateTime? savedExpiry = null;
+
+    if (!string.IsNullOrEmpty(savedExpiryStr))
+    {
+        if (DateTime.TryParse(savedExpiryStr, out var expiry))
+        {
+            savedExpiry = expiry;
+        }
+    }
 
     Console.WriteLine($"🔍 保存的验证码: {savedCode}, 过期时间: {savedExpiry}");
 
-    // 3. 如果 TempData 没有验证码，从数据库查
+    // ⭐ 3. 如果 Session 没有，从数据库查
     if (string.IsNullOrEmpty(savedCode) || savedExpiry == null)
     {
         var dbUser = await _dataSync.GetUserByEmailAsync(email);
@@ -185,6 +194,7 @@ public async Task<IActionResult> VerifyEmail(string email, string code)
         {
             savedCode = dbUser.VerificationCode ?? "";
             savedExpiry = dbUser.VerificationCodeExpiry;
+            Console.WriteLine($"🔍 从数据库读取: 验证码={savedCode}, 过期={savedExpiry}");
         }
     }
 
@@ -209,13 +219,12 @@ public async Task<IActionResult> VerifyEmail(string email, string code)
         return View();
     }
 
-    // ===== 验证码校验通过！直接更新用户状态 =====
+    // ===== 验证码校验通过！=====
 
-    // ⭐ 直接从 TempData 获取用户ID，不再查询用户
-    var userId = TempData["RegisterUserId"] as int?;
-    if (userId == null)
+    // ⭐ 4. 从 Session 获取用户 ID
+    var userId = HttpContext.Session.GetInt32("RegisterUserId");
+    if (userId == null || userId == 0)
     {
-        // 如果 TempData 没有，从数据库查
         var dbUser = await _dataSync.GetUserByEmailAsync(email);
         if (dbUser == null)
         {
@@ -226,22 +235,38 @@ public async Task<IActionResult> VerifyEmail(string email, string code)
         userId = dbUser.Id;
     }
 
-    // ⭐ 直接更新用户状态
+    Console.WriteLine($"🔍 准备更新用户 ID: {userId}");
+
+    // ⭐ 5. 直接用 SQL 更新
     var updateSql = $@"
         UPDATE Users SET 
             IsEmailVerified = 1,
             VerificationCode = NULL,
             VerificationCodeExpiry = NULL
-        WHERE Id = {userId} AND Email = '{EscapeSql(email)}'
+        WHERE Id = {userId}
     ";
 
-    await _dataSync.ExecuteSqlAsync(updateSql);
+    var updateResult = await _dataSync.ExecuteSqlAsync(updateSql);
+    Console.WriteLine($"📝 更新结果: {updateResult}");
+
+    if (!updateResult)
+    {
+        ModelState.AddModelError("", "用户验证失败，请重新注册");
+        ViewBag.Email = email;
+        return View();
+    }
+
     Console.WriteLine($"✅ 用户 {email} 邮箱验证成功 (ID: {userId})");
 
-    // 发送管理员审核邮件
+    // ⭐ 6. 清除 Session
+    HttpContext.Session.Remove("RegisterEmail");
+    HttpContext.Session.Remove("VerificationCode");
+    HttpContext.Session.Remove("VerificationCodeExpiry");
+    HttpContext.Session.Remove("RegisterUserId");
+
+    // ⭐ 7. 发送管理员审核邮件
     try
     {
-        // 获取用户信息用于发送邮件
         var user = await _dataSync.GetUserByEmailAsync(email);
         if (user != null)
         {
@@ -259,15 +284,7 @@ public async Task<IActionResult> VerifyEmail(string email, string code)
         Console.WriteLine($"管理员审核邮件发送失败: {ex.Message}");
     }
 
-    TempData["RegisterEmail"] = email;
     return RedirectToAction("RegisterSuccess");
-}
-
-// 添加辅助方法
-private string EscapeSql(string value)
-{
-    if (string.IsNullOrEmpty(value)) return "";
-    return value.Replace("'", "''");
 }
 // ============================================================
 // 注册成功页面（等待管理员审核）
