@@ -30,20 +30,13 @@ namespace MyPersonalWebsite.Services
         // 用户相关
         // ============================================================
 
-       public async Task AddUserAsync(User user)
+     public async Task AddUserAsync(User user)
 {
     if (!_tursoAvailable) throw new Exception("Turso 未配置");
 
-    // 1. 获取最大 ID
-    var maxIdResult = await _tursoService.QueryAsync("SELECT MAX(Id) as MaxId FROM Users");
-    var maxId = ParseMaxId(maxIdResult);
-    user.Id = maxId + 1;
-
-    Console.WriteLine($"📝 新用户 ID: {user.Id}");
-
-    // 2. 构建 SQL
+    // ⭐ 不使用 MaxId，让 Turso 自动生成 ID
     var sql = $@"INSERT INTO Users (
-        Id, Username, Email, PasswordHash, IsEmailVerified, IsAdmin,
+        Username, Email, PasswordHash, IsEmailVerified, IsAdmin,
         CreatedAt, LastLoginAt, IsBanned, BanExpiry, BanReason,
         IsDeleted, DeletedAt, DeleteReason, DeleteNote,
         AvatarUrl, IsAvatarApproved, AvatarSubmittedAt,
@@ -51,7 +44,6 @@ namespace MyPersonalWebsite.Services
         VerificationCode, VerificationCodeExpiry, IsApproved,
         LoginToken, LoginTokenExpiry
     ) VALUES (
-        {user.Id}, 
         '{EscapeSql(user.Username)}', 
         '{EscapeSql(user.Email)}',
         '{EscapeSql(user.PasswordHash)}', 
@@ -80,29 +72,30 @@ namespace MyPersonalWebsite.Services
         {(user.LoginTokenExpiry.HasValue ? $"'{user.LoginTokenExpiry.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")}
     )";
 
-    // ⭐ 完整打印 SQL（关键！）
-    Console.WriteLine($"📝 ===== 完整 SQL =====");
-    Console.WriteLine(sql);
-    Console.WriteLine($"📝 ===== SQL 结束 =====");
+    Console.WriteLine($"📝 AddUserAsync SQL: {sql}");
 
-    // 3. 执行 SQL
     var result = await _tursoService.ExecuteSqlAsync(sql);
     Console.WriteLine($"📝 ExecuteSqlAsync 返回: {result}");
 
     if (result)
     {
-        // ⭐ 立即查询确认
-        var checkSql = $"SELECT * FROM Users WHERE Id = {user.Id}";
+        // ⭐ 查询刚插入的用户，获取 ID
+        var checkSql = $"SELECT * FROM Users WHERE Email = '{EscapeSql(user.Email)}' ORDER BY Id DESC LIMIT 1";
         var checkResult = await _tursoService.QueryAsync(checkSql);
         Console.WriteLine($"🔍 写入后查询结果: {checkResult}");
-        
-        if (checkResult.Contains("\"rows\":[]"))
+
+        if (!checkResult.Contains("\"rows\":[]"))
         {
-            Console.WriteLine($"❌ 警告：写入后查询不到用户！");
+            var parsed = ParseUserFromJson(checkResult);
+            if (parsed != null)
+            {
+                user.Id = parsed.Id;
+                Console.WriteLine($"✅ 用户 {user.Username} 已确认写入 Turso (ID: {user.Id})");
+            }
         }
         else
         {
-            Console.WriteLine($"✅ 用户 {user.Username} (ID: {user.Id}) 已确认写入 Turso");
+            Console.WriteLine($"❌ 写入后查询不到用户，可能写入失败");
         }
     }
     else
