@@ -258,6 +258,14 @@
                     <li class="nav-item"><a class="nav-link" href="/Home/Contact"><i class="bi bi-envelope"></i> 联系</a></li>
                     <li class="nav-item"><a class="nav-link" href="/Message/Index"><i class="bi bi-chat"></i> 留言</a></li>
 <li class="nav-item"><a class="nav-link" href="/Game"><i class="bi bi-controller"></i> 游戏</a></li>  <!-- ⭐ 游戏中心 -->
+@if (isAdmin == 1)
+{
+    <li class="nav-item">
+        <a class="nav-link" href="/Train" style="color:#8B5CF6;">
+            <i class="bi bi-train-front"></i> 列车追踪
+        </a>
+    </li>
+}
 
 
                     @{
