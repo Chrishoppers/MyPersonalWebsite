@@ -118,8 +118,13 @@ public async Task<IActionResult> Register(string username, string email, string 
         AvatarSubmittedAt = avatarData != null ? DateTime.Now : null
     };
 
+    // ⭐ 先写入数据库
     await _dataSync.AddUserAsync(newUser);
 
+    // ⭐ 写入成功后，打印 ID 确认
+    Console.WriteLine($"📝 注册后用户 ID: {newUser.Id}, 邮箱: {newUser.Email}");
+
+    // ⭐ 发送验证码邮件
     try
     {
         await _emailService.SendVerificationCodeAsync(email, code);
@@ -129,11 +134,13 @@ public async Task<IActionResult> Register(string username, string email, string 
         Console.WriteLine($"验证码邮件发送失败: {ex.Message}");
     }
 
-    // ⭐ 使用 Session 存储（不会在重定向后丢失）
+    // ⭐ 保存到 Session（必须在 AddUserAsync 之后）
     HttpContext.Session.SetString("RegisterEmail", email);
     HttpContext.Session.SetString("VerificationCode", code);
     HttpContext.Session.SetString("VerificationCodeExpiry", DateTime.Now.AddMinutes(10).ToString("yyyy-MM-dd HH:mm:ss"));
     HttpContext.Session.SetInt32("RegisterUserId", newUser.Id);
+
+    Console.WriteLine($"✅ Session 已保存: UserId={newUser.Id}, Email={email}, Code={code}");
 
     return RedirectToAction("VerifyEmail");
 }
