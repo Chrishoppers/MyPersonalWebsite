@@ -156,7 +156,7 @@ public IActionResult VerifyEmail()
 [ValidateAntiForgeryToken]
 public async Task<IActionResult> VerifyEmail(string email, string code)
 {
-    // ⭐ 1. 从 Session 读取
+    // 1. 从 Session 读取邮箱
     if (string.IsNullOrEmpty(email))
     {
         email = HttpContext.Session.GetString("RegisterEmail") ?? "";
@@ -171,30 +171,32 @@ public async Task<IActionResult> VerifyEmail(string email, string code)
         return View();
     }
 
-    // ⭐ 2. 从 Session 读取验证码
+    // 2. 从 Session 读取验证码
     var savedCode = HttpContext.Session.GetString("VerificationCode") ?? "";
     var savedExpiryStr = HttpContext.Session.GetString("VerificationCodeExpiry") ?? "";
     DateTime? savedExpiry = null;
 
     if (!string.IsNullOrEmpty(savedExpiryStr))
     {
-        if (DateTime.TryParse(savedExpiryStr, out var expiry))
-        {
-            savedExpiry = expiry;
-        }
+        DateTime.TryParse(savedExpiryStr, out var expiry);
+        savedExpiry = expiry;
     }
 
-    Console.WriteLine($"🔍 保存的验证码: {savedCode}, 过期时间: {savedExpiry}");
+    Console.WriteLine($"🔍 Session 验证码: {savedCode}, 过期: {savedExpiry}");
 
-    // ⭐ 3. 如果 Session 没有，从数据库查
-    if (string.IsNullOrEmpty(savedCode) || savedExpiry == null)
+    // 3. 从 Session 获取用户 ID
+    var userId = HttpContext.Session.GetInt32("RegisterUserId");
+
+    // 4. 如果 Session 没有验证码或用户 ID，从数据库查
+    if (string.IsNullOrEmpty(savedCode) || savedExpiry == null || userId == null || userId == 0)
     {
         var dbUser = await _dataSync.GetUserByEmailAsync(email);
         if (dbUser != null)
         {
             savedCode = dbUser.VerificationCode ?? "";
             savedExpiry = dbUser.VerificationCodeExpiry;
-            Console.WriteLine($"🔍 从数据库读取: 验证码={savedCode}, 过期={savedExpiry}");
+            userId = dbUser.Id;
+            Console.WriteLine($"🔍 从数据库读取: ID={userId}, 验证码={savedCode}, 过期={savedExpiry}");
         }
     }
 
@@ -221,23 +223,17 @@ public async Task<IActionResult> VerifyEmail(string email, string code)
 
     // ===== 验证码校验通过！=====
 
-    // ⭐ 4. 从 Session 获取用户 ID
-    var userId = HttpContext.Session.GetInt32("RegisterUserId");
+    // 5. 检查用户是否存在
     if (userId == null || userId == 0)
     {
-        var dbUser = await _dataSync.GetUserByEmailAsync(email);
-        if (dbUser == null)
-        {
-            ModelState.AddModelError("", "用户不存在，请重新注册");
-            ViewBag.Email = email;
-            return View();
-        }
-        userId = dbUser.Id;
+        ModelState.AddModelError("", "用户不存在，请重新注册");
+        ViewBag.Email = email;
+        return View();
     }
 
-    Console.WriteLine($"🔍 准备更新用户 ID: {userId}");
+    Console.WriteLine($"✅ 验证通过，准备更新用户 ID: {userId}");
 
-    // ⭐ 5. 直接用 SQL 更新
+    // 6. 直接用 SQL 更新（不经过 GetUserByEmailAsync）
     var updateSql = $@"
         UPDATE Users SET 
             IsEmailVerified = 1,
@@ -258,13 +254,13 @@ public async Task<IActionResult> VerifyEmail(string email, string code)
 
     Console.WriteLine($"✅ 用户 {email} 邮箱验证成功 (ID: {userId})");
 
-    // ⭐ 6. 清除 Session
+    // 7. 清除 Session
     HttpContext.Session.Remove("RegisterEmail");
     HttpContext.Session.Remove("VerificationCode");
     HttpContext.Session.Remove("VerificationCodeExpiry");
     HttpContext.Session.Remove("RegisterUserId");
 
-    // ⭐ 7. 发送管理员审核邮件
+    // 8. 发送管理员审核邮件（直接查询数据库）
     try
     {
         var user = await _dataSync.GetUserByEmailAsync(email);
