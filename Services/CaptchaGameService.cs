@@ -477,15 +477,15 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 类型14：超难找不同（71-75关）
+        // 类型14：超难找不同（71-75关）⭐ 已修复 char→string
         // ============================================================
         private CaptchaChallenge GenerateHardFindDifferentChallenge(int level)
         {
             var chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
             var target = chars[_random.Next(chars.Length)];
             var options = new List<string> { target.ToString() };
-            
-            // 生成相似字符
+
+            // ⭐ 修复：GetSimilarChars2 返回 List<string>，直接添加
             var similar = GetSimilarChars2(target);
             foreach (var s in similar)
             {
@@ -514,6 +514,7 @@ namespace MyPersonalWebsite.Services
             };
         }
 
+        // ⭐ 修复：返回 List<string>，char 转 string
         private List<string> GetSimilarChars2(char c)
         {
             var map = new Dictionary<char, string[]>
@@ -693,7 +694,6 @@ namespace MyPersonalWebsite.Services
             sb.AppendLine($"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"320\" height=\"90\" viewBox=\"0 0 320 90\">");
             sb.AppendLine($"<rect width=\"320\" height=\"90\" rx=\"10\" fill=\"#f0f0f0\"/>");
 
-            // 10条干扰线
             for (int i = 0; i < 10; i++)
             {
                 var r = _random.Next(100, 220);
@@ -724,7 +724,6 @@ namespace MyPersonalWebsite.Services
             sb.AppendLine($"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"320\" height=\"90\" viewBox=\"0 0 320 90\">");
             sb.AppendLine($"<rect width=\"320\" height=\"90\" rx=\"10\" fill=\"#f0f0f0\"/>");
 
-            // 20条干扰线（更密集）
             for (int i = 0; i < 20; i++)
             {
                 var r = _random.Next(100, 220);
