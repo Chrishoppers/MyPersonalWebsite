@@ -157,13 +157,13 @@ public IActionResult VerifyEmail()
 }
 
 // ============================================================
-// 验证邮箱 POST
+// 验证邮箱 POST - 完整修复
 // ============================================================
 [HttpPost]
 [ValidateAntiForgeryToken]
 public async Task<IActionResult> VerifyEmail(string email, string code)
 {
-    // 如果 email 为空，从 TempData 读取
+    // ⭐ 如果 email 为空，从 TempData 读取
     if (string.IsNullOrEmpty(email))
     {
         email = TempData["RegisterEmail"] as string ?? "";
@@ -174,14 +174,17 @@ public async Task<IActionResult> VerifyEmail(string email, string code)
     if (string.IsNullOrEmpty(email))
     {
         ModelState.AddModelError("", "邮箱地址丢失，请重新注册");
+        // ⭐ 修复：确保 ViewBag.Email 有值
+        ViewBag.Email = email;
         return View();
     }
 
-    // ⭐ 关键修复：先查询用户
     var user = await _dataSync.GetUserByEmailAsync(email);
     if (user == null)
     {
         ModelState.AddModelError("", "用户不存在或已被系统自动清理");
+        // ⭐ 修复：即使出错也要传递邮箱
+        ViewBag.Email = email;
         return View();
     }
 
@@ -191,18 +194,22 @@ public async Task<IActionResult> VerifyEmail(string email, string code)
         return RedirectToAction("RegisterSuccess");
     }
 
-    // 检查验证码是否过期
+    // ⭐ 调试日志
+    Console.WriteLine($"🔍 验证码过期时间: {user.VerificationCodeExpiry}");
+    Console.WriteLine($"🔍 当前时间: {DateTime.Now}");
+
     if (user.VerificationCodeExpiry < DateTime.Now)
     {
-        // 删除过期用户
         await _dataSync.DeleteUser(user.Id);
         ModelState.AddModelError("", "验证码已过期，请重新注册");
+        ViewBag.Email = email;  // ⭐ 传递邮箱
         return View();
     }
 
     if (user.VerificationCode != code)
     {
         ModelState.AddModelError("", "验证码错误");
+        ViewBag.Email = email;  // ⭐ 传递邮箱
         return View();
     }
 
@@ -213,7 +220,6 @@ public async Task<IActionResult> VerifyEmail(string email, string code)
 
     await _dataSync.UpdateUserAsync(user);
 
-    // 发送管理员审核邮件
     try
     {
         await _emailService.SendAdminNewUserVerificationAsync(
