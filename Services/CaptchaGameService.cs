@@ -529,6 +529,7 @@ namespace MyPersonalWebsite.Services
             var options = new List<string> { target.ToString() };
             var similar = GetSimilarChars(target);
 
+            // ⭐ 修复：similar[i] 是 char，需要 ToString()
             for (int i = 0; i < optionsCount - 1 && i < similar.Count; i++)
             {
                 options.Add(similar[i].ToString());
