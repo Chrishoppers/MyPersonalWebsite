@@ -8,20 +8,35 @@ namespace MyPersonalWebsite.Models
     // ============================================================
     public class StationDetail
     {
-        public string Name { get; set; } = string.Empty;           // 车站名称
-        public string Code { get; set; } = string.Empty;           // 车站代码（三字码）
-        public string Pinyin { get; set; } = string.Empty;         // 拼音
-        public string City { get; set; } = string.Empty;           // 所在城市
-        public string Province { get; set; } = string.Empty;       // 所在省份
-        public string Address { get; set; } = string.Empty;        // 详细地址
-        public string Type { get; set; } = "普通站";               // 车站类型：特等站/一等站/二等站/三等站
-        public string BuildingArea { get; set; } = string.Empty;   // 建筑面积
-        public string PlatformCount { get; set; } = string.Empty;  // 站台数量
-        public string LineCount { get; set; } = string.Empty;      // 线路数量
-        public string NearbyTransport { get; set; } = string.Empty; // 附近交通（地铁/公交）
-        public string Description { get; set; } = string.Empty;    // 简介
-        public double? Latitude { get; set; }                      // 纬度
-        public double? Longitude { get; set; }                     // 经度
+        public string Name { get; set; } = string.Empty;
+        public string Code { get; set; } = string.Empty;
+        public string Pinyin { get; set; } = string.Empty;
+        public string City { get; set; } = string.Empty;
+        public string Province { get; set; } = string.Empty;
+        public string Address { get; set; } = string.Empty;
+        public string Type { get; set; } = "普通站";
+        public string BuildingArea { get; set; } = string.Empty;
+        public string PlatformCount { get; set; } = string.Empty;
+        public string LineCount { get; set; } = string.Empty;
+        public string NearbyTransport { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public double? Latitude { get; set; }
+        public double? Longitude { get; set; }
+    }
+
+    // ============================================================
+    // 经停站信息（基础版）
+    // ============================================================
+    public class TrainStop
+    {
+        public int StationNo { get; set; }
+        public string StationName { get; set; } = string.Empty;
+        public string ArriveTime { get; set; } = string.Empty;
+        public string DepartTime { get; set; } = string.Empty;
+        public string StopTime { get; set; } = string.Empty;
+        public bool IsStart { get; set; }
+        public bool IsEnd { get; set; }
+        public int DayOffset { get; set; }
     }
 
     // ============================================================
@@ -29,38 +44,94 @@ namespace MyPersonalWebsite.Models
     // ============================================================
     public class TrainStopDetail : TrainStop
     {
-        public string Platform { get; set; } = string.Empty;       // 停靠站台（如 16站台、2F）
-        public string DoorDirection { get; set; } = string.Empty;  // 开门方向（左侧/右侧/不固定）
-        public string TrackNumber { get; set; } = string.Empty;    // 股道号
-        public string StationType { get; set; } = string.Empty;    // 车站类型
-        public string WaitingArea { get; set; } = string.Empty;    // 候车区域
-        public StationDetail? StationInfo { get; set; }            // 车站详细信息
-
-        // 进站引导信息
-        public string BoardingGuide { get; set; } = string.Empty;  // 乘车引导说明
-        public string PlatformSide { get; set; } = string.Empty;   // 站台方向（左侧/右侧下车）
-        public string LandmarkColor { get; set; } = string.Empty;  // 地标颜色（黄/绿/蓝/紫）
-        public string CarriageDirection { get; set; } = string.Empty; // 车厢方向（向前/向后）
-        public string SpecialNote { get; set; } = string.Empty;    // 特殊提示（如：换乘通道、无电梯等）
+        public string Platform { get; set; } = string.Empty;
+        public string DoorDirection { get; set; } = string.Empty;
+        public string TrackNumber { get; set; } = string.Empty;
+        public string StationType { get; set; } = string.Empty;
+        public string WaitingArea { get; set; } = string.Empty;
+        public StationDetail? StationInfo { get; set; }
+        public string BoardingGuide { get; set; } = string.Empty;
+        public string PlatformSide { get; set; } = string.Empty;
+        public string LandmarkColor { get; set; } = string.Empty;
+        public string CarriageDirection { get; set; } = string.Empty;
+        public string SpecialNote { get; set; } = string.Empty;
+        public string NearbyTransport { get; set; } = string.Empty;
     }
 
     // ============================================================
-    // 列车完整信息（含详细数据）
+    // 列车完整信息
+    // ============================================================
+    public class TrainFullInfo
+    {
+        public string TrainCode { get; set; } = string.Empty;
+        public string TrainType { get; set; } = string.Empty;
+        public string StartStation { get; set; } = string.Empty;
+        public string EndStation { get; set; } = string.Empty;
+        public DateTime QueryTime { get; set; } = DateTime.Now;
+        public List<TrainStop> Stops { get; set; } = new();
+        public string Status { get; set; } = "未发车";
+        public string CurrentStation { get; set; } = string.Empty;
+        public string NextStation { get; set; } = string.Empty;
+        public string NextArriveTime { get; set; } = string.Empty;
+        public string DelayInfo { get; set; } = "正点";
+        public int ProgressPercent { get; set; } = 0;
+    }
+
+    // ============================================================
+    // 列车完整详细信息（含增强数据）
     // ============================================================
     public class TrainFullDetailInfo : TrainFullInfo
     {
         public List<TrainStopDetail> DetailStops { get; set; } = new();
         public int TotalStops { get; set; }
-        public string TotalDistance { get; set; } = string.Empty;  // 总里程
-        public string TotalDuration { get; set; } = string.Empty;  // 全程用时
-        public string TrainBrand { get; set; } = string.Empty;     // 车型品牌（复兴号/和谐号）
-        public string TrainModel { get; set; } = string.Empty;     // 车型号（CR400AF等）
-        public string Consist { get; set; } = string.Empty;        // 编组（8节/16节）
-        public string MaxSpeed { get; set; } = string.Empty;       // 最高速度
-
-        // 实时状态增强
+        public string TotalDistance { get; set; } = string.Empty;
+        public string TotalDuration { get; set; } = string.Empty;
+        public string TrainBrand { get; set; } = string.Empty;
+        public string TrainModel { get; set; } = string.Empty;
+        public string Consist { get; set; } = string.Empty;
+        public string MaxSpeed { get; set; } = string.Empty;
         public string NextStationPlatform { get; set; } = string.Empty;
         public string NextStationDoorSide { get; set; } = string.Empty;
         public string CurrentStationInfo { get; set; } = string.Empty;
+    }
+
+    // ============================================================
+    // API 请求模型
+    // ============================================================
+    public class TrainQueryRequest
+    {
+        public string TrainCode { get; set; } = string.Empty;
+        public string Date { get; set; } = string.Empty;
+    }
+
+    // ============================================================
+    // 12306 API 响应模型
+    // ============================================================
+    public class McpTrainResponse
+    {
+        public bool Success { get; set; }
+        public string? Message { get; set; }
+        public McpTrainData? Data { get; set; }
+    }
+
+    public class McpTrainData
+    {
+        public string TrainCode { get; set; } = string.Empty;
+        public string TrainType { get; set; } = string.Empty;
+        public string StartStation { get; set; } = string.Empty;
+        public string EndStation { get; set; } = string.Empty;
+        public List<McpTrainStop> Stops { get; set; } = new();
+    }
+
+    public class McpTrainStop
+    {
+        public int StationNo { get; set; }
+        public string StationName { get; set; } = string.Empty;
+        public string ArriveTime { get; set; } = string.Empty;
+        public string DepartTime { get; set; } = string.Empty;
+        public string StopTime { get; set; } = string.Empty;
+        public bool IsStart { get; set; }
+        public bool IsEnd { get; set; }
+        public int DayOffset { get; set; }
     }
 }
