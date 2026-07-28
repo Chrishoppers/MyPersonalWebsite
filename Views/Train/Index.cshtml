@@ -9,71 +9,142 @@
 }
 
 <style>
+    /* ============================================================
+       全局重置 & 字体
+       ============================================================ */
+    * { box-sizing: border-box; }
+    body { background: #0a0a0f; font-family: 'Inter', -apple-system, sans-serif; color: #e0e0e0; }
+
     .train-container {
-        max-width: 1100px;
+        max-width: 1200px;
         margin: 0 auto;
-        padding: 1.5rem;
+        padding: 1.5rem 1.2rem;
     }
 
+    /* ============================================================
+       头部
+       ============================================================ */
     .train-header {
         text-align: center;
-        padding: 1rem 0 1.5rem;
+        padding: 1.5rem 0 2rem;
     }
-
     .train-header h1 {
-        font-size: 2.2rem;
+        font-size: 2.6rem;
         font-weight: 800;
         background: linear-gradient(135deg, #8B5CF6 0%, #EC4899 50%, #F59E0B 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
-        margin-bottom: 0.2rem;
+        margin: 0;
+        letter-spacing: -0.02em;
     }
-
     .train-header .subtitle {
         color: rgba(255,255,255,0.2);
-        font-size: 0.9rem;
+        font-size: 0.95rem;
+        margin-top: 0.2rem;
     }
 
-    /* 搜索栏 */
+    /* ============================================================
+       搜索栏 - 高级玻璃质感
+       ============================================================ */
     .search-box {
         background: rgba(255,255,255,0.02);
-        backdrop-filter: blur(20px);
+        backdrop-filter: blur(40px);
         border: 1px solid rgba(255,255,255,0.04);
-        border-radius: 20px;
-        padding: 1.5rem 2rem;
+        border-radius: 24px;
+        padding: 1.8rem 2.2rem;
         margin-bottom: 2rem;
         display: flex;
         gap: 1rem;
         flex-wrap: wrap;
         align-items: center;
         justify-content: center;
+        box-shadow: 0 8px 48px rgba(0,0,0,0.2);
+        transition: border-color 0.3s ease;
+    }
+    .search-box:focus-within {
+        border-color: rgba(139,92,246,0.15);
     }
 
-    .search-box input {
-        padding: 0.8rem 1.5rem;
+    .search-box .input-wrapper {
+        flex: 1;
+        min-width: 220px;
+        position: relative;
+    }
+    .search-box .input-wrapper .input-icon {
+        position: absolute;
+        left: 1.2rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: rgba(255,255,255,0.08);
+        font-size: 1.1rem;
+    }
+    .search-box .input-wrapper input {
+        width: 100%;
+        padding: 0.9rem 1.2rem 0.9rem 3.2rem;
         border-radius: 40px;
         border: 1px solid rgba(255,255,255,0.06);
         background: rgba(255,255,255,0.03);
         color: #fff;
-        font-size: 1.1rem;
-        min-width: 200px;
+        font-size: 1.05rem;
         outline: none;
         font-family: inherit;
         transition: all 0.3s ease;
+        letter-spacing: 0.5px;
     }
-
-    .search-box input:focus {
+    .search-box .input-wrapper input:focus {
         border-color: rgba(139,92,246,0.2);
         background: rgba(255,255,255,0.05);
+        box-shadow: 0 0 0 4px rgba(139,92,246,0.04);
+    }
+    .search-box .input-wrapper input::placeholder {
+        color: rgba(255,255,255,0.12);
+        font-weight: 300;
     }
 
-    .search-box input::placeholder {
-        color: rgba(255,255,255,0.15);
+    /* 自动补全下拉 */
+    .suggestions-dropdown {
+        position: absolute;
+        top: calc(100% + 6px);
+        left: 0;
+        right: 0;
+        background: rgba(20,20,35,0.98);
+        backdrop-filter: blur(30px);
+        border: 1px solid rgba(255,255,255,0.04);
+        border-radius: 16px;
+        max-height: 220px;
+        overflow-y: auto;
+        display: none;
+        z-index: 100;
+        padding: 0.3rem 0;
+        box-shadow: 0 16px 64px rgba(0,0,0,0.4);
     }
+    .suggestions-dropdown.show { display: block; }
+    .suggestions-dropdown .suggestion-item {
+        padding: 0.6rem 1.2rem;
+        cursor: pointer;
+        color: rgba(255,255,255,0.5);
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+        font-weight: 500;
+    }
+    .suggestions-dropdown .suggestion-item:hover {
+        background: rgba(139,92,246,0.06);
+        color: #fff;
+    }
+    .suggestions-dropdown .suggestion-item .s-tag {
+        font-size: 0.6rem;
+        padding: 0.05rem 0.5rem;
+        border-radius: 20px;
+        background: rgba(255,255,255,0.04);
+        color: rgba(255,255,255,0.15);
+        margin-left: 0.5rem;
+    }
+    .suggestions-dropdown::-webkit-scrollbar { width: 3px; }
+    .suggestions-dropdown::-webkit-scrollbar-thumb { background: rgba(139,92,246,0.2); border-radius: 10px; }
 
     .search-box .btn-search {
-        padding: 0.8rem 2.5rem;
+        padding: 0.9rem 2.8rem;
         border: none;
         border-radius: 40px;
         background: linear-gradient(135deg, #8B5CF6, #EC4899);
@@ -83,378 +154,458 @@
         cursor: pointer;
         transition: all 0.3s ease;
         font-family: inherit;
+        white-space: nowrap;
+        box-shadow: 0 4px 24px rgba(108,60,225,0.15);
     }
-
-    .search-box .btn-search:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 32px rgba(108,60,225,0.2);
+    .search-box .btn-search:hover:not(:disabled) {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 40px rgba(108,60,225,0.25);
     }
-
     .search-box .btn-search:disabled {
         opacity: 0.4;
         cursor: not-allowed;
+        transform: none;
     }
 
-    .search-box .hint-text {
-        color: rgba(255,255,255,0.08);
-        font-size: 0.75rem;
+    /* ============================================================
+       错误信息
+       ============================================================ */
+    .error-msg {
+        background: rgba(220,53,69,0.06);
+        border: 1px solid rgba(220,53,69,0.1);
+        border-radius: 16px;
+        padding: 1.2rem 1.8rem;
+        text-align: center;
+        color: #dc3545;
+        display: none;
+        margin-bottom: 1.5rem;
+        font-weight: 500;
+        animation: fadeIn 0.4s ease;
     }
+    .error-msg.show { display: block; }
 
-    /* ===== 结果面板 ===== */
+    /* ============================================================
+       结果面板
+       ============================================================ */
     .result-panel {
         display: none;
-        animation: fadeIn 0.5s ease;
+        animation: fadeIn 0.6s ease;
+    }
+    .result-panel.active { display: block; }
+
+    @@keyframes fadeIn {
+        from { opacity: 0; transform: translateY(30px); }
+        to { opacity: 1; transform: translateY(0); }
     }
 
-    .result-panel.active {
-        display: block;
-    }
-
-    /* 列车信息头 */
+    /* ============================================================
+       列车信息头 - 高级
+       ============================================================ */
     .train-info-header {
         background: rgba(255,255,255,0.02);
         border: 1px solid rgba(255,255,255,0.04);
         border-radius: 20px;
-        padding: 1.2rem 2rem;
+        padding: 1.5rem 2.2rem;
         margin-bottom: 1.5rem;
         display: flex;
         justify-content: space-between;
         align-items: center;
         flex-wrap: wrap;
         gap: 1rem;
+        position: relative;
+        overflow: hidden;
+    }
+    .train-info-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: linear-gradient(135deg, #8B5CF6, #EC4899, #F59E0B);
+        opacity: 0.3;
     }
 
     .train-info-header .train-code {
-        font-size: 2rem;
+        font-size: 2.4rem;
         font-weight: 800;
         color: #fff;
         display: flex;
         align-items: center;
-        gap: 0.5rem;
+        gap: 0.8rem;
+        letter-spacing: -0.02em;
     }
-
     .train-info-header .train-code .type-badge {
         font-size: 0.7rem;
-        padding: 0.2rem 0.8rem;
+        padding: 0.2rem 1rem;
         border-radius: 20px;
-        background: rgba(139,92,246,0.12);
+        background: rgba(139,92,246,0.1);
         color: #8B5CF6;
         border: 1px solid rgba(139,92,246,0.06);
         font-weight: 500;
+        letter-spacing: 0.04em;
+    }
+    .train-info-header .train-code .brand-badge {
+        font-size: 0.65rem;
+        padding: 0.15rem 0.8rem;
+        border-radius: 20px;
+        background: rgba(236,72,153,0.08);
+        color: #EC4899;
+        border: 1px solid rgba(236,72,153,0.04);
     }
 
     .train-info-header .train-route {
         color: rgba(255,255,255,0.3);
-        font-size: 0.95rem;
+        font-size: 1rem;
         display: flex;
         align-items: center;
-        gap: 0.5rem;
+        gap: 0.8rem;
+        flex-wrap: wrap;
     }
-
+    .train-info-header .train-route .station-name {
+        color: rgba(255,255,255,0.7);
+        font-weight: 500;
+    }
     .train-info-header .train-route .arrow {
         color: rgba(139,92,246,0.3);
+        font-size: 0.8rem;
     }
 
-    .train-info-header .train-time {
-        color: rgba(255,255,255,0.15);
-        font-size: 0.75rem;
+    .train-info-header .train-meta {
+        color: rgba(255,255,255,0.12);
+        font-size: 0.7rem;
+        text-align: right;
+        line-height: 1.6;
     }
 
-    /* ===== 实时状态卡片 ===== */
+    /* ============================================================
+       状态卡片 - 6个高级卡片
+       ============================================================ */
     .status-cards {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-        gap: 1rem;
+        grid-template-columns: repeat(6, 1fr);
+        gap: 0.8rem;
         margin-bottom: 1.5rem;
     }
-
     .status-card {
         background: rgba(255,255,255,0.02);
         border: 1px solid rgba(255,255,255,0.04);
         border-radius: 16px;
-        padding: 1rem 1.2rem;
+        padding: 1rem 0.8rem;
         text-align: center;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
     }
-
+    .status-card:hover {
+        background: rgba(255,255,255,0.04);
+        transform: translateY(-2px);
+        border-color: rgba(255,255,255,0.06);
+    }
     .status-card .label {
-        color: rgba(255,255,255,0.2);
-        font-size: 0.7rem;
+        color: rgba(255,255,255,0.15);
+        font-size: 0.6rem;
         text-transform: uppercase;
-        letter-spacing: 0.04em;
+        letter-spacing: 0.06em;
+        font-weight: 600;
     }
-
     .status-card .value {
         color: #fff;
-        font-size: 1.2rem;
-        font-weight: 600;
+        font-size: 1.05rem;
+        font-weight: 700;
         margin-top: 0.2rem;
+        line-height: 1.3;
     }
-
-    .status-card .value .highlight {
-        color: #8B5CF6;
+    .status-card .value .sub {
+        font-size: 0.7rem;
+        font-weight: 400;
+        color: rgba(255,255,255,0.2);
     }
-
+    .status-card .value .running { color: #4facfe; }
+    .status-card .value .stopping { color: #F59E0B; }
+    .status-card .value .arrived { color: #28a745; }
     .status-card .value .on-time { color: #28a745; }
     .status-card .value .delayed { color: #dc3545; }
-    .status-card .value .running { color: #4facfe; }
-    .status-card .value .arrived { color: #28a745; }
 
-    /* ===== 进度条 ===== */
+    /* ============================================================
+       进度条 - 高级
+       ============================================================ */
     .progress-section {
-        margin-bottom: 1.5rem;
-        padding: 1rem 1.5rem;
         background: rgba(255,255,255,0.02);
-        border-radius: 16px;
         border: 1px solid rgba(255,255,255,0.04);
+        border-radius: 16px;
+        padding: 1.2rem 1.8rem;
+        margin-bottom: 1.5rem;
     }
-
     .progress-section .progress-labels {
         display: flex;
         justify-content: space-between;
         font-size: 0.7rem;
         color: rgba(255,255,255,0.15);
-        margin-bottom: 0.3rem;
+        margin-bottom: 0.4rem;
     }
+    .progress-section .progress-labels .start { color: rgba(139,92,246,0.4); }
+    .progress-section .progress-labels .end { color: rgba(236,72,153,0.4); }
 
     .progress-section .progress-track {
+        position: relative;
         width: 100%;
-        height: 6px;
+        height: 8px;
         background: rgba(255,255,255,0.04);
         border-radius: 10px;
-        overflow: hidden;
-        position: relative;
+        overflow: visible;
     }
-
     .progress-section .progress-track .progress-fill {
         height: 100%;
         border-radius: 10px;
         background: linear-gradient(135deg, #8B5CF6, #EC4899);
-        transition: width 0.5s ease;
+        transition: width 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+        position: relative;
+    }
+    .progress-section .progress-track .progress-fill::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
+        animation: shimmer 2s infinite;
+    }
+    @@keyframes shimmer {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(100%); }
     }
 
     .progress-section .progress-track .progress-dot {
         position: absolute;
         top: 50%;
         transform: translate(-50%, -50%);
-        width: 14px;
-        height: 14px;
+        width: 20px;
+        height: 20px;
         border-radius: 50%;
-        background: #8B5CF6;
-        border: 2px solid #0a0a0f;
-        box-shadow: 0 0 20px rgba(139,92,246,0.3);
-        transition: left 0.5s ease;
+        background: radial-gradient(circle, #8B5CF6, #6D28D9);
+        border: 3px solid #0a0a0f;
+        box-shadow: 0 0 40px rgba(139,92,246,0.3);
+        transition: left 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+        z-index: 2;
+    }
+    .progress-section .progress-track .progress-dot::after {
+        content: '';
+        position: absolute;
+        inset: -6px;
+        border-radius: 50%;
+        border: 1px solid rgba(139,92,246,0.1);
+        animation: pulse-ring 2s infinite;
+    }
+    @@keyframes pulse-ring {
+        0%, 100% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.5); opacity: 0; }
     }
 
     .progress-section .progress-text {
         text-align: center;
-        color: rgba(255,255,255,0.15);
+        color: rgba(255,255,255,0.12);
         font-size: 0.7rem;
-        margin-top: 0.3rem;
+        margin-top: 0.5rem;
+        font-weight: 500;
+    }
+    .progress-section .progress-text strong {
+        color: rgba(255,255,255,0.3);
     }
 
-    /* ===== 经停站流程图 ===== */
-    .stops-flow {
-        position: relative;
-        padding: 1rem 0;
+    /* ============================================================
+       经停站列表 - 高级
+       ============================================================ */
+    .stops-section {
+        background: rgba(255,255,255,0.02);
+        border: 1px solid rgba(255,255,255,0.04);
+        border-radius: 16px;
+        padding: 1.2rem 0.5rem 0.5rem;
+    }
+    .stops-section .stops-header {
+        display: flex;
+        justify-content: space-between;
+        padding: 0 1.2rem 0.8rem;
+        border-bottom: 1px solid rgba(255,255,255,0.03);
+        color: rgba(255,255,255,0.12);
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
     }
 
-    .stops-flow .line {
-        position: absolute;
-        top: 40px;
-        left: 40px;
-        right: 40px;
-        height: 2px;
-        background: rgba(255,255,255,0.04);
+    .stops-scroll {
+        max-height: 480px;
+        overflow-y: auto;
+        padding: 0.2rem 0.5rem 0.5rem;
     }
+    .stops-scroll::-webkit-scrollbar { width: 3px; }
+    .stops-scroll::-webkit-scrollbar-thumb { background: rgba(139,92,246,0.2); border-radius: 10px; }
 
-    .stops-flow .line .line-fill {
-        height: 100%;
-        background: linear-gradient(135deg, #8B5CF6, #EC4899);
-        transition: width 0.5s ease;
-    }
-
+    /* 每个停靠站 */
     .stop-item {
         display: flex;
-        align-items: flex-start;
-        gap: 0.8rem;
-        padding: 0.6rem 1rem;
+        align-items: stretch;
+        padding: 0.6rem 0.8rem;
         border-radius: 12px;
-        margin-bottom: 0.3rem;
         transition: all 0.3s ease;
+        gap: 0.8rem;
         position: relative;
     }
-
     .stop-item:hover {
         background: rgba(255,255,255,0.02);
     }
 
-    .stop-item .stop-dot {
+    /* 左侧时间线 */
+    .stop-timeline {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-width: 36px;
+        padding-top: 0.2rem;
+        position: relative;
+    }
+    .stop-timeline .dot {
         width: 14px;
         height: 14px;
         border-radius: 50%;
+        border: 2px solid rgba(255,255,255,0.04);
+        background: rgba(255,255,255,0.03);
         flex-shrink: 0;
-        margin-top: 0.3rem;
-        border: 2px solid rgba(255,255,255,0.06);
-        background: rgba(255,255,255,0.04);
-        transition: all 0.3s ease;
-        position: relative;
+        transition: all 0.4s ease;
         z-index: 2;
     }
-
-    .stop-item .stop-dot.passed {
+    .stop-timeline .dot.passed {
         background: #8B5CF6;
         border-color: #8B5CF6;
         box-shadow: 0 0 20px rgba(139,92,246,0.15);
     }
-
-    .stop-item .stop-dot.current {
+    .stop-timeline .dot.current {
         background: #EC4899;
         border-color: #EC4899;
         box-shadow: 0 0 30px rgba(236,72,153,0.3);
-        animation: pulse 1.5s ease-in-out infinite;
+        animation: pulse-dot 1.5s ease-in-out infinite;
     }
-
-    .stop-item .stop-dot.future {
-        background: rgba(255,255,255,0.04);
+    .stop-timeline .dot.future {
+        background: rgba(255,255,255,0.03);
         border-color: rgba(255,255,255,0.04);
     }
+    .stop-timeline .line-connector {
+        flex: 1;
+        width: 2px;
+        min-height: 12px;
+        background: rgba(255,255,255,0.04);
+        margin: 2px 0;
+    }
+    .stop-timeline .line-connector.passed {
+        background: linear-gradient(180deg, #8B5CF6, rgba(139,92,246,0.2));
+    }
 
-    @@keyframes pulse {
+    @@keyframes pulse-dot {
         0%, 100% { transform: scale(1); }
         50% { transform: scale(1.3); }
     }
 
-    .stop-item .stop-info {
+    /* 右侧信息 */
+    .stop-info {
         flex: 1;
         display: flex;
         justify-content: space-between;
         align-items: center;
         flex-wrap: wrap;
         gap: 0.5rem;
-        padding-bottom: 0.3rem;
-        border-bottom: 1px solid rgba(255,255,255,0.02);
+        padding: 0.1rem 0 0.1rem 0.3rem;
+        min-height: 44px;
     }
-
-    .stop-item:last-child .stop-info {
-        border-bottom: none;
-    }
-
-    .stop-item .stop-info .station {
+    .stop-info .station {
         font-weight: 500;
-        color: rgba(255,255,255,0.6);
+        color: rgba(255,255,255,0.5);
+        font-size: 0.95rem;
         min-width: 80px;
     }
-
-    .stop-item .stop-info .station .highlight {
+    .stop-info .station .highlight {
         color: #fff;
         font-weight: 600;
     }
-
-    .stop-item .stop-info .station .current-label {
+    .stop-info .station .current-label {
         font-size: 0.55rem;
-        padding: 0.05rem 0.5rem;
+        padding: 0.05rem 0.6rem;
         border-radius: 20px;
         background: rgba(236,72,153,0.12);
         color: #EC4899;
         border: 1px solid rgba(236,72,153,0.06);
         margin-left: 0.5rem;
+        font-weight: 500;
+        animation: pulse-text 1.5s ease-in-out infinite;
+    }
+    @@keyframes pulse-text {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
     }
 
-    .stop-item .stop-info .times {
+    .stop-info .times {
         color: rgba(255,255,255,0.2);
         font-size: 0.75rem;
         display: flex;
         gap: 0.8rem;
         align-items: center;
+        flex-wrap: wrap;
     }
-
-    .stop-item .stop-info .times .arrive {
-        color: rgba(255,255,255,0.15);
-    }
-
-    .stop-item .stop-info .times .depart {
-        color: rgba(255,255,255,0.25);
-    }
-
-    .stop-item .stop-info .times .stop-duration {
-        color: rgba(255,255,255,0.08);
-        font-size: 0.65rem;
-    }
-
-    .stop-item .stop-info .status-tag {
+    .stop-info .times .arrive { color: rgba(255,255,255,0.15); }
+    .stop-info .times .depart { color: rgba(255,255,255,0.2); }
+    .stop-info .times .stop-dur {
+        color: rgba(255,255,255,0.06);
         font-size: 0.6rem;
+        background: rgba(255,255,255,0.02);
+        padding: 0.05rem 0.5rem;
+        border-radius: 20px;
+    }
+    .stop-info .status-tag {
+        font-size: 0.55rem;
         padding: 0.1rem 0.6rem;
         border-radius: 20px;
         font-weight: 500;
+        white-space: nowrap;
     }
-
-    .stop-item .stop-info .status-tag.passed {
-        color: #28a745;
-        background: rgba(40,167,69,0.08);
-        border: 1px solid rgba(40,167,69,0.04);
+    .stop-info .status-tag.passed {
+        color: rgba(139,92,246,0.4);
+        background: rgba(139,92,246,0.04);
+        border: 1px solid rgba(139,92,246,0.04);
     }
-
-    .stop-item .stop-info .status-tag.current {
+    .stop-info .status-tag.current {
         color: #EC4899;
         background: rgba(236,72,153,0.08);
-        border: 1px solid rgba(236,72,153,0.04);
-        animation: pulseText 1.5s ease-in-out infinite;
+        border: 1px solid rgba(236,72,153,0.06);
     }
-
-    .stop-item .stop-info .status-tag.future {
-        color: rgba(255,255,255,0.1);
+    .stop-info .status-tag.future {
+        color: rgba(255,255,255,0.06);
         background: rgba(255,255,255,0.02);
         border: 1px solid rgba(255,255,255,0.02);
     }
-
-    @@keyframes pulseText {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.5; }
-    }
-
-    .stop-item .stop-info .status-tag.end {
+    .stop-info .status-tag.end {
         color: #4facfe;
-        background: rgba(79,172,254,0.08);
+        background: rgba(79,172,254,0.06);
         border: 1px solid rgba(79,172,254,0.04);
     }
 
-    /* 空状态 */
+    .stop-info .platform-info {
+        font-size: 0.6rem;
+        color: rgba(255,255,255,0.08);
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+
+    /* ============================================================
+       空状态 & Loading
+       ============================================================ */
     .empty-state {
         text-align: center;
         padding: 4rem 2rem;
-        color: rgba(255,255,255,0.1);
+        color: rgba(255,255,255,0.06);
     }
-
-    .empty-state .icon {
-        font-size: 4rem;
-        margin-bottom: 0.5rem;
-        opacity: 0.3;
-    }
-
-    .empty-state .title {
-        font-size: 1.2rem;
-        color: rgba(255,255,255,0.2);
-    }
-
-    /* 错误 */
-    .error-msg {
-        background: rgba(220,53,69,0.08);
-        border: 1px solid rgba(220,53,69,0.12);
-        border-radius: 16px;
-        padding: 1.5rem;
-        text-align: center;
-        color: #dc3545;
-        display: none;
-    }
-
-    .error-msg.show {
-        display: block;
-    }
-
-    @@keyframes fadeIn {
-        from { opacity: 0; transform: translateY(20px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
+    .empty-state .icon { font-size: 4rem; margin-bottom: 0.5rem; opacity: 0.2; }
+    .empty-state .title { font-size: 1.2rem; color: rgba(255,255,255,0.1); }
 
     .loading-spinner {
         display: inline-block;
@@ -467,61 +618,65 @@
         vertical-align: middle;
         margin-right: 0.5rem;
     }
+    @@keyframes spin { to { transform: rotate(360deg); } }
 
-    @@keyframes spin {
-        to { transform: rotate(360deg); }
+    /* ============================================================
+       响应式
+       ============================================================ */
+    @@media (max-width: 1024px) {
+        .status-cards { grid-template-columns: repeat(3, 1fr); }
     }
-
-    /* 滚动条 */
-    .stops-scroll {
-        max-height: 500px;
-        overflow-y: auto;
-        padding-right: 0.3rem;
-    }
-
-    .stops-scroll::-webkit-scrollbar {
-        width: 3px;
-    }
-
-    .stops-scroll::-webkit-scrollbar-track {
-        background: rgba(255,255,255,0.02);
-        border-radius: 10px;
-    }
-
-    .stops-scroll::-webkit-scrollbar-thumb {
-        background: rgba(139,92,246,0.2);
-        border-radius: 10px;
-    }
-
-    @@media (max-width: 640px) {
-        .train-header h1 { font-size: 1.6rem; }
-        .search-box { padding: 1rem; }
-        .search-box input { min-width: 100%; }
+    @@media (max-width: 768px) {
+        .train-header h1 { font-size: 1.8rem; }
+        .search-box { padding: 1.2rem; flex-direction: column; }
+        .search-box .input-wrapper { min-width: 100%; }
+        .search-box .btn-search { width: 100%; justify-content: center; }
         .train-info-header { flex-direction: column; align-items: flex-start; }
+        .train-info-header .train-meta { text-align: left; width: 100%; }
+        .status-cards { grid-template-columns: repeat(2, 1fr); gap: 0.5rem; }
+        .status-card .value { font-size: 0.9rem; }
+        .stop-info { flex-direction: column; align-items: flex-start; gap: 0.2rem; }
+        .stop-info .times { flex-wrap: wrap; }
+        .progress-section { padding: 1rem; }
+    }
+    @@media (max-width: 480px) {
+        .train-header h1 { font-size: 1.4rem; }
         .status-cards { grid-template-columns: 1fr 1fr; }
-        .stop-item .stop-info { flex-direction: column; align-items: flex-start; }
-        .stop-item .stop-info .times { flex-wrap: wrap; }
+        .status-card { padding: 0.6rem 0.4rem; }
+        .status-card .value { font-size: 0.8rem; }
+        .train-info-header .train-code { font-size: 1.6rem; flex-wrap: wrap; }
+        .stop-item { padding: 0.4rem 0.3rem; gap: 0.4rem; }
+        .stop-info .station { font-size: 0.8rem; min-width: 60px; }
     }
 </style>
 
 <div class="train-container">
 
+    <!-- ===== 头部 ===== -->
     <div class="train-header">
         <h1>🚄 列车实时追踪</h1>
-        <p class="subtitle">输入车次号，追踪列车实时运行状态</p>
+        <p class="subtitle">输入车次号 · 实时追踪列车运行状态</p>
     </div>
 
-    <!-- 搜索框 -->
+    <!-- ===== 搜索栏 ===== -->
     <div class="search-box">
-        <input type="text" id="trainInput" placeholder="输入车次号，如 G1、Z1、K1..." maxlength="10" autofocus />
-        <button class="btn-search" id="searchBtn" onclick="queryTrain()">🔍 追踪列车</button>
-        <span class="hint-text">支持 G/D/C/Z/T/K 开头车次</span>
+        <div class="input-wrapper">
+            <span class="input-icon">🔍</span>
+            <input type="text" id="trainInput"
+                   placeholder="输入车次号，如 G1、Z1、K1..."
+                   maxlength="10" autofocus
+                   autocomplete="off" />
+            <div class="suggestions-dropdown" id="suggestions"></div>
+        </div>
+        <button class="btn-search" id="searchBtn" onclick="queryTrain()">
+            🚄 追踪列车
+        </button>
     </div>
 
-    <!-- 错误信息 -->
+    <!-- ===== 错误信息 ===== -->
     <div class="error-msg" id="errorMsg"></div>
 
-    <!-- 结果面板 -->
+    <!-- ===== 结果面板 ===== -->
     <div class="result-panel" id="resultPanel">
 
         <!-- 列车信息头 -->
@@ -529,18 +684,21 @@
             <div class="train-code">
                 <span id="trainCode">G1</span>
                 <span class="type-badge" id="trainType">高速动车</span>
+                <span class="brand-badge" id="trainBrand">复兴号</span>
             </div>
             <div class="train-route">
-                <span id="startStation">北京南</span>
+                <span class="station-name" id="startStation">北京南</span>
                 <span class="arrow">→</span>
-                <span id="endStation">上海</span>
+                <span class="station-name" id="endStation">上海虹桥</span>
+                <span style="color:rgba(255,255,255,0.08);font-size:0.7rem;margin-left:0.3rem;" id="trainDistance">--</span>
             </div>
-            <div class="train-time">
-                查询时间：<span id="queryTime">--</span>
+            <div class="train-meta">
+                <div id="queryTime">查询时间：--</div>
+                <div id="trainDuration" style="color:rgba(255,255,255,0.06);">--</div>
             </div>
         </div>
 
-        <!-- 实时状态卡片 -->
+        <!-- 状态卡片 -->
         <div class="status-cards" id="statusCards">
             <div class="status-card">
                 <div class="label">🚦 运行状态</div>
@@ -555,7 +713,7 @@
                 <div class="value" id="nextStation">--</div>
             </div>
             <div class="status-card">
-                <div class="label">⏰ 下一站到达</div>
+                <div class="label">⏰ 到达时间</div>
                 <div class="value" id="nextArrive">--</div>
             </div>
             <div class="status-card">
@@ -571,18 +729,24 @@
         <!-- 进度条 -->
         <div class="progress-section">
             <div class="progress-labels">
-                <span id="startLabel">始发站</span>
-                <span id="endLabel">终点站</span>
+                <span class="start" id="startLabel">🟢 始发站</span>
+                <span class="end" id="endLabel">🏁 终点站</span>
             </div>
             <div class="progress-track">
                 <div class="progress-fill" id="progressFill" style="width:0%"></div>
                 <div class="progress-dot" id="progressDot" style="left:0%"></div>
             </div>
-            <div class="progress-text" id="progressText">0% 已完成</div>
+            <div class="progress-text">
+                已完成 <strong id="progressText">0%</strong>
+            </div>
         </div>
 
-        <!-- 经停站列表 -->
-        <div class="stops-flow">
+        <!-- 经停站 -->
+        <div class="stops-section">
+            <div class="stops-header">
+                <span>📍 经停站</span>
+                <span id="stopsCount">共 0 站</span>
+            </div>
             <div class="stops-scroll" id="stopsList"></div>
         </div>
 
@@ -594,6 +758,7 @@
     <script>
         var token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
         var isQuerying = false;
+        var suggestionTimeout = null;
 
         // ============================================================
         // 查询列车
@@ -603,7 +768,7 @@
             var trainCode = input.value.trim().toUpperCase();
 
             if (!trainCode || trainCode.length < 2) {
-                showError('请输入有效的车次号');
+                showError('请输入有效的车次号（如 G1、Z1、K1）');
                 return;
             }
 
@@ -613,6 +778,7 @@
             btn.disabled = true;
             btn.innerHTML = '<span class="loading-spinner"></span>查询中...';
             document.getElementById('errorMsg').classList.remove('show');
+            document.getElementById('suggestions').classList.remove('show');
 
             fetch('/Train/Query', {
                 method: 'POST',
@@ -637,7 +803,7 @@
             })
             .finally(function() {
                 btn.disabled = false;
-                btn.innerHTML = '🔍 追踪列车';
+                btn.innerHTML = '🚄 追踪列车';
                 isQuerying = false;
             });
         }
@@ -646,42 +812,62 @@
         // 渲染结果
         // ============================================================
         function renderResult(data) {
-            // 基本信息
+            // ---- 基本信息 ----
             document.getElementById('trainCode').textContent = data.trainCode;
             document.getElementById('trainType').textContent = data.trainType || '未知';
+            document.getElementById('trainBrand').textContent = data.trainBrand || '';
             document.getElementById('startStation').textContent = data.startStation;
             document.getElementById('endStation').textContent = data.endStation;
-            document.getElementById('queryTime').textContent = new Date(data.queryTime).toLocaleString();
+            document.getElementById('trainDistance').textContent = '· ' + (data.totalDistance || '--');
+            document.getElementById('trainDuration').textContent = '全程 ' + (data.totalDuration || '--');
 
-            // 状态
+            var queryTime = data.queryTime ? new Date(data.queryTime) : new Date();
+            document.getElementById('queryTime').textContent = '查询时间：' + queryTime.toLocaleString('zh-CN');
+
+            // ---- 状态 ----
             var statusMap = {
                 '未发车': '⏳ 未发车',
                 '运行中': '🚄 运行中',
                 '停靠中': '🚉 停靠中',
                 '已到达': '🏁 已到达'
             };
-            document.getElementById('statusValue').textContent = statusMap[data.status] || data.status;
-            document.getElementById('statusValue').className = 'value ' + (data.status === '已到达' ? 'arrived' : data.status === '运行中' ? 'running' : '');
+            var statusEl = document.getElementById('statusValue');
+            var statusText = statusMap[data.status] || data.status;
+            statusEl.textContent = statusText;
+            statusEl.className = 'value ' + (data.status === '已到达' ? 'arrived' :
+                                             data.status === '停靠中' ? 'stopping' :
+                                             data.status === '运行中' ? 'running' : '');
 
             document.getElementById('currentStation').textContent = data.currentStation || '--';
             document.getElementById('nextStation').textContent = data.nextStation || '已到终点';
             document.getElementById('nextArrive').textContent = data.nextArriveTime || '--';
 
+            // ---- 进度 ----
             var progress = data.progressPercent || 0;
             document.getElementById('progressValue').textContent = progress + '%';
             document.getElementById('progressFill').style.width = progress + '%';
             document.getElementById('progressDot').style.left = progress + '%';
-            document.getElementById('progressText').textContent = progress + '% 已完成';
+            document.getElementById('progressText').textContent = progress + '%';
 
-            var delay = data.delayInfo || '正点';
+            // ---- 正点 ----
             var delayEl = document.getElementById('delayInfo');
+            var delay = data.delayInfo || '正点';
             delayEl.textContent = delay;
             delayEl.className = 'value ' + (delay === '正点' ? 'on-time' : 'delayed');
 
-            // 渲染经停站
-            renderStops(data.stops, data.currentStation);
+            // ---- 经停站 ----
+            renderStops(data.detailStops || data.stops || [], data.currentStation);
+            document.getElementById('stopsCount').textContent = '共 ' + (data.detailStops?.length || data.stops?.length || 0) + ' 站';
 
+            // ---- 显示面板 ----
             document.getElementById('resultPanel').classList.add('active');
+
+            // 更新 URL 参数（方便分享）
+            try {
+                var url = new URL(window.location);
+                url.searchParams.set('train', data.trainCode);
+                window.history.replaceState({}, '', url);
+            } catch(e) {}
         }
 
         // ============================================================
@@ -702,41 +888,42 @@
                 var isEnd = stop.isEnd;
                 var isCurrent = stop.stationName === currentStation && !foundCurrent;
 
-                if (isCurrent) {
-                    foundCurrent = true;
-                }
+                if (isCurrent) foundCurrent = true;
 
-                var dotClass = 'stop-dot';
+                // 判断状态
+                var dotClass = 'dot';
                 var statusClass = 'status-tag future';
                 var stationClass = '';
+                var statusText = '⬜ 未到';
 
-                if (isCurrent) {
+                if (isStart) {
+                    dotClass += ' passed';
+                    statusClass = 'status-tag passed';
+                    statusText = '始发站';
+                } else if (isEnd) {
+                    dotClass += ' passed';
+                    statusClass = 'status-tag end';
+                    statusText = '终点站';
+                } else if (isCurrent) {
                     dotClass += ' current';
                     statusClass = 'status-tag current';
                     stationClass = ' highlight';
-                } else if (foundCurrent || isEnd) {
+                    statusText = '🟢 当前站';
+                } else if (foundCurrent) {
                     dotClass += ' passed';
                     statusClass = 'status-tag passed';
+                    statusText = '✅ 已过';
                 } else {
                     dotClass += ' future';
                     statusClass = 'status-tag future';
+                    statusText = '⬜ 未到';
                 }
 
-                if (isStart) {
-                    dotClass = 'stop-dot passed';
-                    statusClass = 'status-tag passed';
-                }
-                if (isEnd) {
-                    dotClass = 'stop-dot passed';
-                    statusClass = 'status-tag end';
-                }
-
-                var statusText = isStart ? '始发' : isEnd ? '终点' : isCurrent ? '📍 当前' : '';
+                // 时间显示
                 var arriveDisplay = stop.arriveTime || '--';
                 var departDisplay = stop.departTime || '--';
                 var stopTimeDisplay = stop.stopTime || '--';
 
-                // 处理始发/终到特殊显示
                 if (isStart) {
                     arriveDisplay = '始发';
                     departDisplay = stop.departTime || '--';
@@ -746,20 +933,34 @@
                     departDisplay = '终到';
                 }
 
+                // 站台信息
+                var platformInfo = stop.platform || '';
+                var waitingArea = stop.waitingArea || '';
+
+                // 特殊提示
+                var specialNote = stop.specialNote || '';
+
                 html += `
                     <div class="stop-item">
-                        <div class="${dotClass}"></div>
+                        <div class="stop-timeline">
+                            <div class="${dotClass}"></div>
+                            ${index < stops.length - 1 ? `<div class="line-connector ${foundCurrent && !isEnd ? 'passed' : ''}"></div>` : ''}
+                        </div>
                         <div class="stop-info">
                             <div class="station">
                                 <span class="${stationClass}">${stop.stationName}</span>
-                                ${statusText ? `<span class="current-label">${statusText}</span>` : ''}
+                                ${isCurrent ? `<span class="current-label">📍 当前</span>` : ''}
                             </div>
                             <div class="times">
                                 <span class="arrive">🚉 ${arriveDisplay}</span>
                                 <span class="depart">🚄 ${departDisplay}</span>
-                                ${!isStart && !isEnd ? `<span class="stop-duration">⏱ ${stopTimeDisplay}</span>` : ''}
+                                ${!isStart && !isEnd ? `<span class="stop-dur">⏱ ${stopTimeDisplay}</span>` : ''}
                             </div>
-                            <span class="${statusClass}">${isStart ? '始发站' : isEnd ? '终点站' : isCurrent ? '🟢 当前' : '⬜ 未到'}</span>
+                            <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
+                                <span class="${statusClass}">${statusText}</span>
+                                ${platformInfo ? `<span class="platform-info">📍 ${platformInfo}</span>` : ''}
+                                ${specialNote ? `<span class="platform-info" style="color:rgba(255,255,255,0.05);">${specialNote}</span>` : ''}
+                            </div>
                         </div>
                     </div>
                 `;
@@ -768,10 +969,70 @@
             container.innerHTML = html;
 
             // 滚动到当前站
-            var currentItem = container.querySelector('.stop-dot.current');
+            var currentItem = container.querySelector('.dot.current');
             if (currentItem) {
-                currentItem.closest('.stop-item').scrollIntoView({ block: 'center', behavior: 'smooth' });
+                setTimeout(function() {
+                    currentItem.closest('.stop-item').scrollIntoView({ block: 'center', behavior: 'smooth' });
+                }, 300);
             }
+        }
+
+        // ============================================================
+        // 自动补全
+        // ============================================================
+        function setupSuggestions() {
+            var input = document.getElementById('trainInput');
+            var dropdown = document.getElementById('suggestions');
+
+            input.addEventListener('input', function() {
+                var query = this.value.trim().toUpperCase();
+                if (query.length < 1) {
+                    dropdown.classList.remove('show');
+                    return;
+                }
+
+                clearTimeout(suggestionTimeout);
+                suggestionTimeout = setTimeout(function() {
+                    fetch('/Train/GetSuggestions?query=' + encodeURIComponent(query))
+                        .then(function(r) { return r.json(); })
+                        .then(function(data) {
+                            if (data && data.length > 0) {
+                                var html = '';
+                                data.forEach(function(code) {
+                                    var type = code.charAt(0);
+                                    var typeLabel = type === 'G' ? '高铁' : type === 'D' ? '动车' :
+                                                    type === 'C' ? '城际' : type === 'Z' ? '直达' :
+                                                    type === 'T' ? '特快' : type === 'K' ? '快速' : '普速';
+                                    html += `<div class="suggestion-item" onclick="selectSuggestion('${code}')">
+                                                ${code}
+                                                <span class="s-tag">${typeLabel}</span>
+                                            </div>`;
+                                });
+                                dropdown.innerHTML = html;
+                                dropdown.classList.add('show');
+                            } else {
+                                dropdown.classList.remove('show');
+                            }
+                        })
+                        .catch(function() { dropdown.classList.remove('show'); });
+                }, 200);
+            });
+
+            input.addEventListener('blur', function() {
+                setTimeout(function() { dropdown.classList.remove('show'); }, 200);
+            });
+
+            input.addEventListener('focus', function() {
+                if (this.value.trim().length > 0) {
+                    this.dispatchEvent(new Event('input'));
+                }
+            });
+        }
+
+        function selectSuggestion(code) {
+            document.getElementById('trainInput').value = code;
+            document.getElementById('suggestions').classList.remove('show');
+            queryTrain();
         }
 
         // ============================================================
@@ -781,23 +1042,38 @@
             var el = document.getElementById('errorMsg');
             el.textContent = msg;
             el.classList.add('show');
+            setTimeout(function() {
+                el.classList.remove('show');
+            }, 5000);
         }
 
         // ============================================================
-        // 回车键查询
-        // ============================================================
-        document.getElementById('trainInput').addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                queryTrain();
-            }
-        });
-
-        // ============================================================
-        // 自动聚焦
+        // 初始化
         // ============================================================
         document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('trainInput').focus();
+            // 自动补全
+            setupSuggestions();
+
+            // 回车键查询
+            document.getElementById('trainInput').addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    queryTrain();
+                }
+            });
+
+            // 从 URL 参数自动查询
+            var urlParams = new URLSearchParams(window.location.search);
+            var trainParam = urlParams.get('train');
+            if (trainParam) {
+                document.getElementById('trainInput').value = trainParam;
+                setTimeout(queryTrain, 300);
+            }
+
+            // 自动聚焦
+            if (!trainParam) {
+                document.getElementById('trainInput').focus();
+            }
         });
     </script>
 }
