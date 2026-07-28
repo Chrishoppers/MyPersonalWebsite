@@ -1,6 +1,6 @@
-﻿@{
+@{
     ViewData["Title"] = "验证邮箱";
-    var email = ViewBag.Email as string;
+    var email = ViewBag.Email as string ?? "";
 }
 
 <div class="container py-5">
@@ -23,7 +23,7 @@
 
                     <div class="alert alert-info">
                         <i class="bi bi-info-circle"></i> 
-                        验证码已发送至 <strong>@email</strong>，请查看邮箱。
+                        验证码已发送至 <strong>@(!string.IsNullOrEmpty(email) ? email : "您的邮箱")</strong>，请查看邮箱。
                         <br><small>验证码有效期为 <strong>10 分钟</strong></small>
                     </div>
 
