@@ -177,6 +177,13 @@ public async Task<IActionResult> VerifyEmail(string email, string code)
         return View();
     }
 
+    // 在 AuthController.cs 的 VerifyEmail POST 方法中添加
+Console.WriteLine($"🔍 用户 ID: {user.Id}");
+Console.WriteLine($"🔍 VerificationCode: '{user.VerificationCode}'");
+Console.WriteLine($"🔍 VerificationCodeExpiry: '{user.VerificationCodeExpiry?.ToString("yyyy-MM-dd HH:mm:ss") ?? "NULL"}'");
+Console.WriteLine($"🔍 当前时间: '{DateTime.Now:yyyy-MM-dd HH:mm:ss}'");
+Console.WriteLine($"🔍 是否过期: {user.VerificationCodeExpiry < DateTime.Now}");
+
     var user = await _dataSync.GetUserByEmailAsync(email);
     if (user == null)
     {
