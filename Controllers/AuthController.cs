@@ -33,16 +33,19 @@ namespace MyPersonalWebsite.Controllers
             _context = context;
         }
 
-        // ============================================================
-        // 注册
-        // ============================================================
-        [HttpGet]
-        public IActionResult Register()
-        {
-            return View();
-        }
+       // ============================================================
+// 注册 GET
+// ============================================================
+[HttpGet]
+public IActionResult Register()
+{
+    return View();
+}
 
-        [HttpPost]
+// ============================================================
+// 注册 POST
+// ============================================================
+[HttpPost]
 [ValidateAntiForgeryToken]
 public async Task<IActionResult> Register(string username, string email, string password, string captchaAnswer, IFormFile? avatar)
 {
@@ -77,7 +80,7 @@ public async Task<IActionResult> Register(string username, string email, string 
 
     var code = new Random().Next(100000, 999999).ToString();
 
-    // ⭐ 头像转 Base64
+    // 头像转 Base64
     string? avatarData = null;
     if (avatar != null && avatar.Length > 0)
     {
@@ -90,7 +93,6 @@ public async Task<IActionResult> Register(string username, string email, string 
             var base64 = Convert.ToBase64String(imageBytes);
             avatarData = $"data:{avatar.ContentType};base64,{base64}";
 
-            // 限制大小
             if (avatarData.Length > 500 * 1024)
             {
                 ModelState.AddModelError("", "图片过大，请压缩后上传（最大500KB）");
@@ -128,62 +130,53 @@ public async Task<IActionResult> Register(string username, string email, string 
         Console.WriteLine($"验证码邮件发送失败: {ex.Message}");
     }
 
+    // ⭐ 使用 TempData 传递邮箱（关键修复）
     TempData["RegisterEmail"] = email;
     TempData["RegisterUserId"] = user.Id;
-    return RedirectToAction("VerifyEmail", new { email = email });
+    return RedirectToAction("VerifyEmail");
 }
-// ============================================================
-// ⭐ 邮件自动登录（点击链接直接登录）
-// ============================================================
 
+// ============================================================
+// 验证邮箱 GET - 从 TempData 读取邮箱
+// ============================================================
 [HttpGet]
-public async Task<IActionResult> AutoLogin(string token)
+public IActionResult VerifyEmail()
 {
-    if (string.IsNullOrEmpty(token))
+    // 从 TempData 读取邮箱
+    var email = TempData["RegisterEmail"] as string ?? "";
+    
+    // 如果 TempData 为空，尝试从 Query 读取（兼容旧方式）
+    if (string.IsNullOrEmpty(email))
     {
-        TempData["Message"] = "无效的登录链接";
-        return RedirectToAction("Login");
+        email = HttpContext.Request.Query["email"].ToString();
     }
-
-    var user = await _dataSync.GetUserByLoginTokenAsync(token);
-    if (user == null)
-    {
-        TempData["Message"] = "登录链接无效或已过期";
-        return RedirectToAction("Login");
-    }
-
-    // 清除Token（一次性使用）
-    user.LoginToken = null;
-    user.LoginTokenExpiry = null;
-    await _dataSync.UpdateUserAsync(user);
-
-    // 登录用户
-    HttpContext.Session.SetInt32("UserId", user.Id);
-    HttpContext.Session.SetString("Username", user.Username);
-    HttpContext.Session.SetString("UserEmail", user.Email);
-    HttpContext.Session.SetInt32("IsAdmin", user.IsAdmin ? 1 : 0);
-
-    // 跳转到通知中心
-    return RedirectToAction("Notifications", "Home");
+    
+    Console.WriteLine($"📧 VerifyEmail GET: email={email}");
+    ViewBag.Email = email;
+    return View();
 }
 
-        // ============================================================
-        // 验证邮箱
-        // ============================================================
-        [HttpGet]
-        public IActionResult VerifyEmail(string email)
-        {
-            ViewBag.Email = email;
-            return View();
-        }
-
-        // ============================================================
-// 验证邮箱 - 增加过期删除
+// ============================================================
+// 验证邮箱 POST
 // ============================================================
 [HttpPost]
 [ValidateAntiForgeryToken]
 public async Task<IActionResult> VerifyEmail(string email, string code)
 {
+    // 如果 email 为空，从 TempData 读取
+    if (string.IsNullOrEmpty(email))
+    {
+        email = TempData["RegisterEmail"] as string ?? "";
+    }
+
+    Console.WriteLine($"📧 VerifyEmail POST: email={email}, code={code}");
+
+    if (string.IsNullOrEmpty(email))
+    {
+        ModelState.AddModelError("", "邮箱地址丢失，请重新注册");
+        return View();
+    }
+
     var user = await _dataSync.GetUserByEmailAsync(email);
     if (user == null)
     {
@@ -197,7 +190,7 @@ public async Task<IActionResult> VerifyEmail(string email, string code)
         return RedirectToAction("RegisterSuccess");
     }
 
-    // ⭐ 检查是否已过期（10分钟）
+    // 检查验证码是否过期（10分钟）
     if (user.VerificationCodeExpiry < DateTime.Now)
     {
         // 删除过期用户
@@ -239,14 +232,82 @@ public async Task<IActionResult> VerifyEmail(string email, string code)
     return RedirectToAction("RegisterSuccess");
 }
 
-        // ============================================================
-        // 注册成功页面（等待管理员审核）
-        // ============================================================
-        [HttpGet]
-        public IActionResult RegisterSuccess()
+// ============================================================
+// 注册成功页面（等待管理员审核）
+// ============================================================
+[HttpGet]
+public IActionResult RegisterSuccess()
+{
+    return View();
+}
+
+// ============================================================
+// ⭐ 邮件自动登录（点击链接直接登录）
+// ============================================================
+[HttpGet]
+public async Task<IActionResult> AutoLogin(string token)
+{
+    if (string.IsNullOrEmpty(token))
+    {
+        TempData["Message"] = "无效的登录链接";
+        return RedirectToAction("Login");
+    }
+
+    var user = await _dataSync.GetUserByLoginTokenAsync(token);
+    if (user == null)
+    {
+        TempData["Message"] = "登录链接无效或已过期";
+        return RedirectToAction("Login");
+    }
+
+    // 检查用户是否被封禁或删除
+    if (user.IsDeleted)
+    {
+        TempData["Message"] = "账号已被删除";
+        return RedirectToAction("Login");
+    }
+
+    if (user.IsBanned)
+    {
+        if (user.BanExpiry.HasValue && user.BanExpiry.Value > DateTime.Now)
         {
-            return View();
+            TempData["Message"] = $"账号已被封禁至 {user.BanExpiry.Value:yyyy-MM-dd HH:mm}";
+            return RedirectToAction("Login");
         }
+        else if (user.BanExpiry.HasValue && user.BanExpiry.Value <= DateTime.Now)
+        {
+            // 封禁已过期，自动解封
+            user.IsBanned = false;
+            user.BanExpiry = null;
+        }
+        else
+        {
+            TempData["Message"] = "账号已被封禁";
+            return RedirectToAction("Login");
+        }
+    }
+
+    // 检查用户是否已审核通过
+    if (!user.IsAdmin && !user.IsApproved)
+    {
+        TempData["Message"] = "账号正在等待管理员审核，请耐心等待";
+        return RedirectToAction("Login");
+    }
+
+    // 清除Token（一次性使用）
+    user.LoginToken = null;
+    user.LoginTokenExpiry = null;
+    await _dataSync.UpdateUserAsync(user);
+
+    // 登录用户
+    HttpContext.Session.SetInt32("UserId", user.Id);
+    HttpContext.Session.SetString("Username", user.Username);
+    HttpContext.Session.SetString("UserEmail", user.Email);
+    HttpContext.Session.SetInt32("IsAdmin", user.IsAdmin ? 1 : 0);
+
+    // 跳转到通知中心
+    return RedirectToAction("Notifications", "Home");
+}
 
         // ============================================================
         // 登录
