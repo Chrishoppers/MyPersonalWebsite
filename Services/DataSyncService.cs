@@ -30,51 +30,86 @@ namespace MyPersonalWebsite.Services
         // 用户相关
         // ============================================================
 
-        public async Task AddUserAsync(User user)
+       public async Task AddUserAsync(User user)
+{
+    if (!_tursoAvailable) throw new Exception("Turso 未配置");
+
+    // 1. 获取最大 ID
+    var maxIdResult = await _tursoService.QueryAsync("SELECT MAX(Id) as MaxId FROM Users");
+    var maxId = ParseMaxId(maxIdResult);
+    user.Id = maxId + 1;
+
+    Console.WriteLine($"📝 新用户 ID: {user.Id}");
+
+    // 2. 构建 SQL
+    var sql = $@"INSERT INTO Users (
+        Id, Username, Email, PasswordHash, IsEmailVerified, IsAdmin,
+        CreatedAt, LastLoginAt, IsBanned, BanExpiry, BanReason,
+        IsDeleted, DeletedAt, DeleteReason, DeleteNote,
+        AvatarUrl, IsAvatarApproved, AvatarSubmittedAt,
+        PendingEmail, PendingUsername, IsEmailChangeApproved, IsUsernameChangeApproved,
+        VerificationCode, VerificationCodeExpiry, IsApproved,
+        LoginToken, LoginTokenExpiry
+    ) VALUES (
+        {user.Id}, 
+        '{EscapeSql(user.Username)}', 
+        '{EscapeSql(user.Email)}',
+        '{EscapeSql(user.PasswordHash)}', 
+        {(user.IsEmailVerified ? 1 : 0)},
+        {(user.IsAdmin ? 1 : 0)}, 
+        '{user.CreatedAt:yyyy-MM-dd HH:mm:ss}',
+        {(user.LastLoginAt.HasValue ? $"'{user.LastLoginAt.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
+        {(user.IsBanned ? 1 : 0)},
+        {(user.BanExpiry.HasValue ? $"'{user.BanExpiry.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
+        {(string.IsNullOrEmpty(user.BanReason) ? "NULL" : $"'{EscapeSql(user.BanReason)}'")},
+        {(user.IsDeleted ? 1 : 0)},
+        {(user.DeletedAt.HasValue ? $"'{user.DeletedAt.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
+        {(string.IsNullOrEmpty(user.DeleteReason) ? "NULL" : $"'{EscapeSql(user.DeleteReason)}'")},
+        {(string.IsNullOrEmpty(user.DeleteNote) ? "NULL" : $"'{EscapeSql(user.DeleteNote)}'")},
+        {(string.IsNullOrEmpty(user.AvatarUrl) ? "NULL" : $"'{EscapeSql(user.AvatarUrl)}'")},
+        {(user.IsAvatarApproved ? 1 : 0)},
+        {(user.AvatarSubmittedAt.HasValue ? $"'{user.AvatarSubmittedAt.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
+        {(string.IsNullOrEmpty(user.PendingEmail) ? "NULL" : $"'{EscapeSql(user.PendingEmail)}'")},
+        {(string.IsNullOrEmpty(user.PendingUsername) ? "NULL" : $"'{EscapeSql(user.PendingUsername)}'")},
+        {(user.IsEmailChangeApproved ? 1 : 0)},
+        {(user.IsUsernameChangeApproved ? 1 : 0)},
+        {(string.IsNullOrEmpty(user.VerificationCode) ? "NULL" : $"'{EscapeSql(user.VerificationCode)}'")},
+        {(user.VerificationCodeExpiry.HasValue ? $"'{user.VerificationCodeExpiry.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
+        {(user.IsApproved ? 1 : 0)},
+        {(string.IsNullOrEmpty(user.LoginToken) ? "NULL" : $"'{EscapeSql(user.LoginToken)}'")},
+        {(user.LoginTokenExpiry.HasValue ? $"'{user.LoginTokenExpiry.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")}
+    )";
+
+    // ⭐ 完整打印 SQL（关键！）
+    Console.WriteLine($"📝 ===== 完整 SQL =====");
+    Console.WriteLine(sql);
+    Console.WriteLine($"📝 ===== SQL 结束 =====");
+
+    // 3. 执行 SQL
+    var result = await _tursoService.ExecuteSqlAsync(sql);
+    Console.WriteLine($"📝 ExecuteSqlAsync 返回: {result}");
+
+    if (result)
+    {
+        // ⭐ 立即查询确认
+        var checkSql = $"SELECT * FROM Users WHERE Id = {user.Id}";
+        var checkResult = await _tursoService.QueryAsync(checkSql);
+        Console.WriteLine($"🔍 写入后查询结果: {checkResult}");
+        
+        if (checkResult.Contains("\"rows\":[]"))
         {
-            if (!_tursoAvailable) throw new Exception("Turso 未配置");
-
-            var maxIdResult = await _tursoService.QueryAsync("SELECT MAX(Id) as MaxId FROM Users");
-            var maxId = ParseMaxId(maxIdResult);
-            user.Id = maxId + 1;
-
-            var sql = $@"INSERT INTO Users (
-                Id, Username, Email, PasswordHash, IsEmailVerified, IsAdmin,
-                CreatedAt, LastLoginAt, IsBanned, BanExpiry, BanReason,
-                IsDeleted, DeletedAt, DeleteReason, DeleteNote,
-                AvatarUrl, IsAvatarApproved, AvatarSubmittedAt,
-                PendingEmail, PendingUsername, IsEmailChangeApproved, IsUsernameChangeApproved,
-                VerificationCode, VerificationCodeExpiry, IsApproved,
-                LoginToken, LoginTokenExpiry
-            ) VALUES (
-                {user.Id}, '{EscapeSql(user.Username)}', '{EscapeSql(user.Email)}',
-                '{EscapeSql(user.PasswordHash)}', {(user.IsEmailVerified ? 1 : 0)},
-                {(user.IsAdmin ? 1 : 0)}, '{user.CreatedAt:yyyy-MM-dd HH:mm:ss}',
-                {(user.LastLoginAt.HasValue ? $"'{user.LastLoginAt.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
-                {(user.IsBanned ? 1 : 0)},
-                {(user.BanExpiry.HasValue ? $"'{user.BanExpiry.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
-                {(string.IsNullOrEmpty(user.BanReason) ? "NULL" : $"'{EscapeSql(user.BanReason)}'")},
-                {(user.IsDeleted ? 1 : 0)},
-                {(user.DeletedAt.HasValue ? $"'{user.DeletedAt.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
-                {(string.IsNullOrEmpty(user.DeleteReason) ? "NULL" : $"'{EscapeSql(user.DeleteReason)}'")},
-                {(string.IsNullOrEmpty(user.DeleteNote) ? "NULL" : $"'{EscapeSql(user.DeleteNote)}'")},
-                {(string.IsNullOrEmpty(user.AvatarUrl) ? "NULL" : $"'{EscapeSql(user.AvatarUrl)}'")},
-                {(user.IsAvatarApproved ? 1 : 0)},
-                {(user.AvatarSubmittedAt.HasValue ? $"'{user.AvatarSubmittedAt.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
-                {(string.IsNullOrEmpty(user.PendingEmail) ? "NULL" : $"'{EscapeSql(user.PendingEmail)}'")},
-                {(string.IsNullOrEmpty(user.PendingUsername) ? "NULL" : $"'{EscapeSql(user.PendingUsername)}'")},
-                {(user.IsEmailChangeApproved ? 1 : 0)},
-                {(user.IsUsernameChangeApproved ? 1 : 0)},
-                {(string.IsNullOrEmpty(user.VerificationCode) ? "NULL" : $"'{EscapeSql(user.VerificationCode)}'")},
-                {(user.VerificationCodeExpiry.HasValue ? $"'{user.VerificationCodeExpiry.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
-                {(user.IsApproved ? 1 : 0)},
-                {(string.IsNullOrEmpty(user.LoginToken) ? "NULL" : $"'{EscapeSql(user.LoginToken)}'")},
-                {(user.LoginTokenExpiry.HasValue ? $"'{user.LoginTokenExpiry.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")}
-            )";
-
-            await _tursoService.ExecuteSqlAsync(sql);
-            Console.WriteLine($"✅ 用户 {user.Username} 已写入 Turso");
+            Console.WriteLine($"❌ 警告：写入后查询不到用户！");
         }
+        else
+        {
+            Console.WriteLine($"✅ 用户 {user.Username} (ID: {user.Id}) 已确认写入 Turso");
+        }
+    }
+    else
+    {
+        Console.WriteLine($"❌ 用户 {user.Username} 写入失败！");
+    }
+}
 
         public async Task<User?> GetUserByEmailAsync(string email)
         {
