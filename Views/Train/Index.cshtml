@@ -404,4 +404,400 @@
     .stop-item .stop-info .status-tag.future {
         color: rgba(255,255,255,0.1);
         background: rgba(255,255,255,0.02);
-        border: 1px solid rgba(255,255,255
+        border: 1px solid rgba(255,255,255,0.02);
+    }
+
+    @@keyframes pulseText {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+    }
+
+    .stop-item .stop-info .status-tag.end {
+        color: #4facfe;
+        background: rgba(79,172,254,0.08);
+        border: 1px solid rgba(79,172,254,0.04);
+    }
+
+    /* 空状态 */
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: rgba(255,255,255,0.1);
+    }
+
+    .empty-state .icon {
+        font-size: 4rem;
+        margin-bottom: 0.5rem;
+        opacity: 0.3;
+    }
+
+    .empty-state .title {
+        font-size: 1.2rem;
+        color: rgba(255,255,255,0.2);
+    }
+
+    /* 错误 */
+    .error-msg {
+        background: rgba(220,53,69,0.08);
+        border: 1px solid rgba(220,53,69,0.12);
+        border-radius: 16px;
+        padding: 1.5rem;
+        text-align: center;
+        color: #dc3545;
+        display: none;
+    }
+
+    .error-msg.show {
+        display: block;
+    }
+
+    @@keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .loading-spinner {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 2px solid rgba(255,255,255,0.1);
+        border-top-color: #8B5CF6;
+        border-radius: 50%;
+        animation: spin 0.6s linear infinite;
+        vertical-align: middle;
+        margin-right: 0.5rem;
+    }
+
+    @@keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    /* 滚动条 */
+    .stops-scroll {
+        max-height: 500px;
+        overflow-y: auto;
+        padding-right: 0.3rem;
+    }
+
+    .stops-scroll::-webkit-scrollbar {
+        width: 3px;
+    }
+
+    .stops-scroll::-webkit-scrollbar-track {
+        background: rgba(255,255,255,0.02);
+        border-radius: 10px;
+    }
+
+    .stops-scroll::-webkit-scrollbar-thumb {
+        background: rgba(139,92,246,0.2);
+        border-radius: 10px;
+    }
+
+    @@media (max-width: 640px) {
+        .train-header h1 { font-size: 1.6rem; }
+        .search-box { padding: 1rem; }
+        .search-box input { min-width: 100%; }
+        .train-info-header { flex-direction: column; align-items: flex-start; }
+        .status-cards { grid-template-columns: 1fr 1fr; }
+        .stop-item .stop-info { flex-direction: column; align-items: flex-start; }
+        .stop-item .stop-info .times { flex-wrap: wrap; }
+    }
+</style>
+
+<div class="train-container">
+
+    <div class="train-header">
+        <h1>🚄 列车实时追踪</h1>
+        <p class="subtitle">输入车次号，追踪列车实时运行状态</p>
+    </div>
+
+    <!-- 搜索框 -->
+    <div class="search-box">
+        <input type="text" id="trainInput" placeholder="输入车次号，如 G1、Z1、K1..." maxlength="10" autofocus />
+        <button class="btn-search" id="searchBtn" onclick="queryTrain()">🔍 追踪列车</button>
+        <span class="hint-text">支持 G/D/C/Z/T/K 开头车次</span>
+    </div>
+
+    <!-- 错误信息 -->
+    <div class="error-msg" id="errorMsg"></div>
+
+    <!-- 结果面板 -->
+    <div class="result-panel" id="resultPanel">
+
+        <!-- 列车信息头 -->
+        <div class="train-info-header" id="trainHeader">
+            <div class="train-code">
+                <span id="trainCode">G1</span>
+                <span class="type-badge" id="trainType">高速动车</span>
+            </div>
+            <div class="train-route">
+                <span id="startStation">北京南</span>
+                <span class="arrow">→</span>
+                <span id="endStation">上海</span>
+            </div>
+            <div class="train-time">
+                查询时间：<span id="queryTime">--</span>
+            </div>
+        </div>
+
+        <!-- 实时状态卡片 -->
+        <div class="status-cards" id="statusCards">
+            <div class="status-card">
+                <div class="label">🚦 运行状态</div>
+                <div class="value" id="statusValue">--</div>
+            </div>
+            <div class="status-card">
+                <div class="label">📍 当前站</div>
+                <div class="value" id="currentStation">--</div>
+            </div>
+            <div class="status-card">
+                <div class="label">⏭️ 下一站</div>
+                <div class="value" id="nextStation">--</div>
+            </div>
+            <div class="status-card">
+                <div class="label">⏰ 下一站到达</div>
+                <div class="value" id="nextArrive">--</div>
+            </div>
+            <div class="status-card">
+                <div class="label">📊 运行进度</div>
+                <div class="value" id="progressValue">0%</div>
+            </div>
+            <div class="status-card">
+                <div class="label">⏱️ 正点情况</div>
+                <div class="value" id="delayInfo">--</div>
+            </div>
+        </div>
+
+        <!-- 进度条 -->
+        <div class="progress-section">
+            <div class="progress-labels">
+                <span id="startLabel">始发站</span>
+                <span id="endLabel">终点站</span>
+            </div>
+            <div class="progress-track">
+                <div class="progress-fill" id="progressFill" style="width:0%"></div>
+                <div class="progress-dot" id="progressDot" style="left:0%"></div>
+            </div>
+            <div class="progress-text" id="progressText">0% 已完成</div>
+        </div>
+
+        <!-- 经停站列表 -->
+        <div class="stops-flow">
+            <div class="stops-scroll" id="stopsList"></div>
+        </div>
+
+    </div>
+
+</div>
+
+@section Scripts {
+    <script>
+        var token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+        var isQuerying = false;
+
+        // ============================================================
+        // 查询列车
+        // ============================================================
+        function queryTrain() {
+            var input = document.getElementById('trainInput');
+            var trainCode = input.value.trim().toUpperCase();
+
+            if (!trainCode || trainCode.length < 2) {
+                showError('请输入有效的车次号');
+                return;
+            }
+
+            if (isQuerying) return;
+
+            var btn = document.getElementById('searchBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading-spinner"></span>查询中...';
+            document.getElementById('errorMsg').classList.remove('show');
+
+            fetch('/Train/Query', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': token
+                },
+                body: JSON.stringify({ trainCode: trainCode })
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    renderResult(data.data);
+                } else {
+                    showError(data.message || '未找到该车次信息');
+                    document.getElementById('resultPanel').classList.remove('active');
+                }
+            })
+            .catch(function() {
+                showError('网络错误，请重试');
+                document.getElementById('resultPanel').classList.remove('active');
+            })
+            .finally(function() {
+                btn.disabled = false;
+                btn.innerHTML = '🔍 追踪列车';
+                isQuerying = false;
+            });
+        }
+
+        // ============================================================
+        // 渲染结果
+        // ============================================================
+        function renderResult(data) {
+            // 基本信息
+            document.getElementById('trainCode').textContent = data.trainCode;
+            document.getElementById('trainType').textContent = data.trainType || '未知';
+            document.getElementById('startStation').textContent = data.startStation;
+            document.getElementById('endStation').textContent = data.endStation;
+            document.getElementById('queryTime').textContent = new Date(data.queryTime).toLocaleString();
+
+            // 状态
+            var statusMap = {
+                '未发车': '⏳ 未发车',
+                '运行中': '🚄 运行中',
+                '停靠中': '🚉 停靠中',
+                '已到达': '🏁 已到达'
+            };
+            document.getElementById('statusValue').textContent = statusMap[data.status] || data.status;
+            document.getElementById('statusValue').className = 'value ' + (data.status === '已到达' ? 'arrived' : data.status === '运行中' ? 'running' : '');
+
+            document.getElementById('currentStation').textContent = data.currentStation || '--';
+            document.getElementById('nextStation').textContent = data.nextStation || '已到终点';
+            document.getElementById('nextArrive').textContent = data.nextArriveTime || '--';
+
+            var progress = data.progressPercent || 0;
+            document.getElementById('progressValue').textContent = progress + '%';
+            document.getElementById('progressFill').style.width = progress + '%';
+            document.getElementById('progressDot').style.left = progress + '%';
+            document.getElementById('progressText').textContent = progress + '% 已完成';
+
+            var delay = data.delayInfo || '正点';
+            var delayEl = document.getElementById('delayInfo');
+            delayEl.textContent = delay;
+            delayEl.className = 'value ' + (delay === '正点' ? 'on-time' : 'delayed');
+
+            // 渲染经停站
+            renderStops(data.stops, data.currentStation);
+
+            document.getElementById('resultPanel').classList.add('active');
+        }
+
+        // ============================================================
+        // 渲染经停站
+        // ============================================================
+        function renderStops(stops, currentStation) {
+            var container = document.getElementById('stopsList');
+            if (!stops || stops.length === 0) {
+                container.innerHTML = '<div class="empty-state"><div class="icon">🚄</div><div class="title">暂无经停站信息</div></div>';
+                return;
+            }
+
+            var html = '';
+            var foundCurrent = false;
+
+            stops.forEach(function(stop, index) {
+                var isStart = stop.isStart;
+                var isEnd = stop.isEnd;
+                var isCurrent = stop.stationName === currentStation && !foundCurrent;
+
+                if (isCurrent) {
+                    foundCurrent = true;
+                }
+
+                var dotClass = 'stop-dot';
+                var statusClass = 'status-tag future';
+                var stationClass = '';
+
+                if (isCurrent) {
+                    dotClass += ' current';
+                    statusClass = 'status-tag current';
+                    stationClass = ' highlight';
+                } else if (foundCurrent || isEnd) {
+                    dotClass += ' passed';
+                    statusClass = 'status-tag passed';
+                } else {
+                    dotClass += ' future';
+                    statusClass = 'status-tag future';
+                }
+
+                if (isStart) {
+                    dotClass = 'stop-dot passed';
+                    statusClass = 'status-tag passed';
+                }
+                if (isEnd) {
+                    dotClass = 'stop-dot passed';
+                    statusClass = 'status-tag end';
+                }
+
+                var statusText = isStart ? '始发' : isEnd ? '终点' : isCurrent ? '📍 当前' : '';
+                var arriveDisplay = stop.arriveTime || '--';
+                var departDisplay = stop.departTime || '--';
+                var stopTimeDisplay = stop.stopTime || '--';
+
+                // 处理始发/终到特殊显示
+                if (isStart) {
+                    arriveDisplay = '始发';
+                    departDisplay = stop.departTime || '--';
+                }
+                if (isEnd) {
+                    arriveDisplay = stop.arriveTime || '--';
+                    departDisplay = '终到';
+                }
+
+                html += `
+                    <div class="stop-item">
+                        <div class="${dotClass}"></div>
+                        <div class="stop-info">
+                            <div class="station">
+                                <span class="${stationClass}">${stop.stationName}</span>
+                                ${statusText ? `<span class="current-label">${statusText}</span>` : ''}
+                            </div>
+                            <div class="times">
+                                <span class="arrive">🚉 ${arriveDisplay}</span>
+                                <span class="depart">🚄 ${departDisplay}</span>
+                                ${!isStart && !isEnd ? `<span class="stop-duration">⏱ ${stopTimeDisplay}</span>` : ''}
+                            </div>
+                            <span class="${statusClass}">${isStart ? '始发站' : isEnd ? '终点站' : isCurrent ? '🟢 当前' : '⬜ 未到'}</span>
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+
+            // 滚动到当前站
+            var currentItem = container.querySelector('.stop-dot.current');
+            if (currentItem) {
+                currentItem.closest('.stop-item').scrollIntoView({ block: 'center', behavior: 'smooth' });
+            }
+        }
+
+        // ============================================================
+        // 错误提示
+        // ============================================================
+        function showError(msg) {
+            var el = document.getElementById('errorMsg');
+            el.textContent = msg;
+            el.classList.add('show');
+        }
+
+        // ============================================================
+        // 回车键查询
+        // ============================================================
+        document.getElementById('trainInput').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                queryTrain();
+            }
+        });
+
+        // ============================================================
+        // 自动聚焦
+        // ============================================================
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('trainInput').focus();
+        });
+    </script>
+}
