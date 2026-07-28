@@ -703,7 +703,6 @@ namespace MyPersonalWebsite.Services
             var idx = Math.Min(progress - 1, _rareIdioms.Count - 1);
             var idiom = _rareIdioms[idx];
 
-            // 随机挖掉一个字
             var pos = _random.Next(idiom.Length);
             var correct = idiom[pos];
             var display = idiom.ToCharArray();
@@ -732,7 +731,6 @@ namespace MyPersonalWebsite.Services
         {
             var progress = (level - 96) % 5 + 1;
 
-            // 随机选择前面所有类型
             var types = new[] { 10, 11, 12, 13, 14, 15, 16, 17, 18 };
             var typeIdx = types[_random.Next(types.Length)];
 
@@ -751,7 +749,6 @@ namespace MyPersonalWebsite.Services
                 default: challenge = GenerateHardIdiomChallenge(level); break;
             }
 
-            // 覆盖为终极难度
             challenge.Type = 19;
             challenge.Level = level;
             challenge.TimeLimit = Math.Max(2, 4 - progress);
@@ -772,7 +769,6 @@ namespace MyPersonalWebsite.Services
             sb.AppendLine($"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"320\" height=\"90\" viewBox=\"0 0 320 90\">");
             sb.AppendLine($"<rect width=\"320\" height=\"90\" rx=\"10\" fill=\"#f0f0f0\"/>");
 
-            // 干扰线
             for (int i = 0; i < lineCount; i++)
             {
                 var r = _random.Next(100, 220);
@@ -781,7 +777,6 @@ namespace MyPersonalWebsite.Services
                 sb.AppendLine($"<line x1=\"{_random.Next(-20, 340)}\" y1=\"{_random.Next(-20, 110)}\" x2=\"{_random.Next(-20, 340)}\" y2=\"{_random.Next(-20, 110)}\" stroke=\"rgb({r},{g},{b})\" stroke-width=\"{_random.Next(1, 3)}\" opacity=\"0.4\"/>");
             }
 
-            // 字符
             var chars = text.ToCharArray();
             var spacing = 280 / chars.Length;
             for (int i = 0; i < chars.Length; i++)
