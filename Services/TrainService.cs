@@ -94,7 +94,6 @@ namespace MyPersonalWebsite.Services
             var now = DateTime.Now;
             var random = new Random();
             var stops = new List<TrainStopDetail>();
-            var stationDb = StationDataService.GetStationInfo();
 
             for (int i = 0; i < routeNames.Count; i++)
             {
@@ -108,6 +107,13 @@ namespace MyPersonalWebsite.Services
                 {
                     platform = (i == 0 ? "始发" : "终到") + " · " + platform;
                 }
+
+                // ⭐ 修复：使用 if-else 替代 switch
+                int colorIdx = i % 4;
+                string landmarkColor = colorIdx == 0 ? "🟡 黄色（8节正编）" :
+                                       colorIdx == 1 ? "🟢 绿色（16节正编）" :
+                                       colorIdx == 2 ? "🟣 紫色（8节反编）" :
+                                       "🔵 蓝色（16节反编）";
 
                 var stop = new TrainStopDetail
                 {
@@ -126,13 +132,7 @@ namespace MyPersonalWebsite.Services
                     TrackNumber = $"{random.Next(1, 12)}股道",
                     WaitingArea = $"候车区{(char)('A' + random.Next(0, 4))}",
                     PlatformSide = doorDirection == "左侧" ? "⬅️ 左侧下车" : doorDirection == "右侧" ? "➡️ 右侧下车" : "⏺ 不固定",
-                    LandmarkColor = i % 4 switch
-                    {
-                        0 => "🟡 黄色（8节正编）",
-                        1 => "🟢 绿色（16节正编）",
-                        2 => "🟣 紫色（8节反编）",
-                        _ => "🔵 蓝色（16节反编）"
-                    },
+                    LandmarkColor = landmarkColor,
                     CarriageDirection = i % 2 == 0 ? "⏩ 向前（车头方向）" : "⏪ 向后（车尾方向）",
                     BoardingGuide = i == 0 ? "始发站，请根据车票信息在对应检票口候车" :
                                    i == routeNames.Count - 1 ? "终点站，请带好随身物品有序下车" :
@@ -171,6 +171,8 @@ namespace MyPersonalWebsite.Services
                 { "G12", new List<string> { "上海虹桥", "无锡东", "常州北", "南京南", "徐州东", "济南西", "天津南", "北京南" } },
                 { "G13", new List<string> { "北京南", "济南西", "枣庄", "徐州东", "南京南", "上海" } },
                 { "G14", new List<string> { "上海", "南京南", "徐州东", "枣庄", "济南西", "北京南" } },
+                { "G15", new List<string> { "北京南", "天津南", "德州东", "济南西", "徐州东", "南京南", "上海" } },
+                { "G16", new List<string> { "上海", "南京南", "徐州东", "济南西", "德州东", "天津南", "北京南" } },
 
                 // 京广高铁
                 { "G79", new List<string> { "北京西", "石家庄", "郑州东", "武汉", "长沙南", "广州南" } },
@@ -183,78 +185,96 @@ namespace MyPersonalWebsite.Services
                 { "G86", new List<string> { "广州南", "长沙南", "武汉", "郑州东", "石家庄", "高碑店东", "北京西" } },
                 { "G87", new List<string> { "北京西", "石家庄", "郑州东", "武汉", "长沙南", "衡阳东", "广州南" } },
                 { "G88", new List<string> { "广州南", "衡阳东", "长沙南", "武汉", "郑州东", "石家庄", "北京西" } },
+                { "G89", new List<string> { "北京西", "保定东", "石家庄", "郑州东", "武汉", "长沙南", "衡阳东", "广州南" } },
+                { "G90", new List<string> { "广州南", "衡阳东", "长沙南", "武汉", "郑州东", "石家庄", "保定东", "北京西" } },
 
                 // 京九高铁
-                { "G89", new List<string> { "北京西", "济南西", "徐州东", "合肥南", "南昌西", "深圳北" } },
-                { "G90", new List<string> { "深圳北", "南昌西", "合肥南", "徐州东", "济南西", "北京西" } },
+                { "G91", new List<string> { "北京西", "济南西", "徐州东", "合肥南", "南昌西", "深圳北" } },
+                { "G92", new List<string> { "深圳北", "南昌西", "合肥南", "徐州东", "济南西", "北京西" } },
 
                 // 沪昆高铁
-                { "G91", new List<string> { "上海虹桥", "杭州东", "南昌西", "长沙南", "贵阳北", "昆明南" } },
-                { "G92", new List<string> { "昆明南", "贵阳北", "长沙南", "南昌西", "杭州东", "上海虹桥" } },
-                { "G93", new List<string> { "上海虹桥", "嘉兴南", "杭州东", "金华", "南昌西", "长沙南", "贵阳北", "昆明南" } },
-                { "G94", new List<string> { "昆明南", "贵阳北", "长沙南", "南昌西", "金华", "杭州东", "嘉兴南", "上海虹桥" } },
+                { "G93", new List<string> { "上海虹桥", "杭州东", "南昌西", "长沙南", "贵阳北", "昆明南" } },
+                { "G94", new List<string> { "昆明南", "贵阳北", "长沙南", "南昌西", "杭州东", "上海虹桥" } },
+                { "G95", new List<string> { "上海虹桥", "嘉兴南", "杭州东", "金华", "南昌西", "长沙南", "贵阳北", "昆明南" } },
+                { "G96", new List<string> { "昆明南", "贵阳北", "长沙南", "南昌西", "金华", "杭州东", "嘉兴南", "上海虹桥" } },
 
                 // 西成高铁
-                { "G95", new List<string> { "西安北", "汉中", "广元", "绵阳", "成都东" } },
-                { "G96", new List<string> { "成都东", "绵阳", "广元", "汉中", "西安北" } },
+                { "G97", new List<string> { "西安北", "汉中", "广元", "绵阳", "成都东" } },
+                { "G98", new List<string> { "成都东", "绵阳", "广元", "汉中", "西安北" } },
+                { "G99", new List<string> { "西安北", "阿房宫", "汉中", "广元", "绵阳", "成都东" } },
+                { "G100", new List<string> { "成都东", "绵阳", "广元", "汉中", "阿房宫", "西安北" } },
 
                 // 京张高铁
-                { "G97", new List<string> { "北京北", "清河", "八达岭长城", "张家口" } },
-                { "G98", new List<string> { "张家口", "八达岭长城", "清河", "北京北" } },
+                { "G101", new List<string> { "北京北", "清河", "八达岭长城", "张家口" } },
+                { "G102", new List<string> { "张家口", "八达岭长城", "清河", "北京北" } },
 
                 // 沿海高铁
-                { "G99", new List<string> { "北京南", "天津", "济南", "徐州", "南京", "上海", "杭州", "宁波", "福州", "厦门" } },
-                { "G100", new List<string> { "厦门", "福州", "宁波", "杭州", "上海", "南京", "徐州", "济南", "天津", "北京南" } },
+                { "G103", new List<string> { "北京南", "天津", "济南", "徐州", "南京", "上海", "杭州", "宁波", "福州", "厦门" } },
+                { "G104", new List<string> { "厦门", "福州", "宁波", "杭州", "上海", "南京", "徐州", "济南", "天津", "北京南" } },
 
                 // 成渝高铁
-                { "G101", new List<string> { "成都东", "简阳南", "资阳北", "重庆西" } },
-                { "G102", new List<string> { "重庆西", "资阳北", "简阳南", "成都东" } },
-                { "G103", new List<string> { "成都东", "内江北", "重庆西" } },
-                { "G104", new List<string> { "重庆西", "内江北", "成都东" } },
+                { "G105", new List<string> { "成都东", "简阳南", "资阳北", "重庆西" } },
+                { "G106", new List<string> { "重庆西", "资阳北", "简阳南", "成都东" } },
+                { "G107", new List<string> { "成都东", "内江北", "重庆西" } },
+                { "G108", new List<string> { "重庆西", "内江北", "成都东" } },
 
                 // 哈大高铁
-                { "G105", new List<string> { "哈尔滨西", "长春", "沈阳北", "大连北" } },
-                { "G106", new List<string> { "大连北", "沈阳北", "长春", "哈尔滨西" } },
-                { "G107", new List<string> { "哈尔滨西", "长春", "沈阳北", "鞍山西", "大连北" } },
-                { "G108", new List<string> { "大连北", "鞍山西", "沈阳北", "长春", "哈尔滨西" } },
+                { "G109", new List<string> { "哈尔滨西", "长春", "沈阳北", "大连北" } },
+                { "G110", new List<string> { "大连北", "沈阳北", "长春", "哈尔滨西" } },
+                { "G111", new List<string> { "哈尔滨西", "长春", "沈阳北", "鞍山西", "大连北" } },
+                { "G112", new List<string> { "大连北", "鞍山西", "沈阳北", "长春", "哈尔滨西" } },
 
-                // 普速列车
+                // 进港高铁
+                { "G113", new List<string> { "北京西", "石家庄", "郑州东", "武汉", "长沙南", "广州南", "深圳北", "香港西九龙" } },
+                { "G114", new List<string> { "香港西九龙", "深圳北", "广州南", "长沙南", "武汉", "郑州东", "石家庄", "北京西" } },
+
+                // 普速列车 Z
                 { "Z1", new List<string> { "北京", "石家庄", "郑州", "武汉", "长沙", "广州" } },
                 { "Z2", new List<string> { "广州", "长沙", "武汉", "郑州", "石家庄", "北京" } },
                 { "Z3", new List<string> { "北京", "济南", "徐州", "南京", "上海" } },
                 { "Z4", new List<string> { "上海", "南京", "徐州", "济南", "北京" } },
                 { "Z5", new List<string> { "北京", "保定", "石家庄", "郑州", "武汉", "长沙", "广州" } },
                 { "Z6", new List<string> { "广州", "长沙", "武汉", "郑州", "石家庄", "保定", "北京" } },
+                { "Z7", new List<string> { "北京", "天津", "济南", "徐州", "南京", "上海" } },
+                { "Z8", new List<string> { "上海", "南京", "徐州", "济南", "天津", "北京" } },
 
+                // 普速列车 T
                 { "T1", new List<string> { "北京", "保定", "石家庄", "邢台", "邯郸", "郑州", "武汉", "长沙" } },
                 { "T2", new List<string> { "长沙", "武汉", "郑州", "邯郸", "邢台", "石家庄", "保定", "北京" } },
                 { "T3", new List<string> { "北京", "天津", "济南", "徐州", "南京", "上海" } },
                 { "T4", new List<string> { "上海", "南京", "徐州", "济南", "天津", "北京" } },
+                { "T5", new List<string> { "北京", "石家庄", "郑州", "武汉", "长沙", "广州" } },
+                { "T6", new List<string> { "广州", "长沙", "武汉", "郑州", "石家庄", "北京" } },
 
+                // 普速列车 K
                 { "K1", new List<string> { "北京", "廊坊", "天津", "沧州", "德州", "济南", "泰安", "徐州", "南京", "上海" } },
                 { "K2", new List<string> { "上海", "南京", "徐州", "泰安", "济南", "德州", "沧州", "天津", "廊坊", "北京" } },
                 { "K3", new List<string> { "北京", "保定", "石家庄", "邢台", "邯郸", "安阳", "郑州", "武汉", "长沙" } },
                 { "K4", new List<string> { "长沙", "武汉", "郑州", "安阳", "邯郸", "邢台", "石家庄", "保定", "北京" } },
+                { "K5", new List<string> { "北京", "张家口", "大同", "呼和浩特" } },
+                { "K6", new List<string> { "呼和浩特", "大同", "张家口", "北京" } },
+                { "K7", new List<string> { "北京", "天津", "济南", "南京", "上海" } },
+                { "K8", new List<string> { "上海", "南京", "济南", "天津", "北京" } },
 
-                // 动车组
+                // 动车组 D
                 { "D1", new List<string> { "北京", "天津", "济南", "南京", "上海" } },
                 { "D2", new List<string> { "上海", "南京", "济南", "天津", "北京" } },
                 { "D3", new List<string> { "北京", "石家庄", "郑州", "武汉", "长沙", "广州" } },
                 { "D4", new List<string> { "广州", "长沙", "武汉", "郑州", "石家庄", "北京" } },
                 { "D5", new List<string> { "北京", "廊坊", "天津", "沧州", "德州", "济南", "南京", "上海" } },
                 { "D6", new List<string> { "上海", "南京", "济南", "德州", "沧州", "天津", "廊坊", "北京" } },
+                { "D7", new List<string> { "北京", "保定", "石家庄", "郑州", "武汉", "长沙" } },
+                { "D8", new List<string> { "长沙", "武汉", "郑州", "石家庄", "保定", "北京" } },
 
-                // 城际
+                // 城际列车 C
                 { "C1", new List<string> { "北京南", "亦庄", "武清", "天津" } },
                 { "C2", new List<string> { "天津", "武清", "亦庄", "北京南" } },
                 { "C3", new List<string> { "上海", "昆山南", "苏州", "无锡", "常州", "南京" } },
                 { "C4", new List<string> { "南京", "常州", "无锡", "苏州", "昆山南", "上海" } },
                 { "C5", new List<string> { "广州南", "庆盛", "深圳北", "福田" } },
                 { "C6", new List<string> { "福田", "深圳北", "庆盛", "广州南" } },
-
-                // 进港高铁
-                { "G99", new List<string> { "北京西", "石家庄", "郑州东", "武汉", "长沙南", "广州南", "深圳北", "香港西九龙" } },
-                { "G100", new List<string> { "香港西九龙", "深圳北", "广州南", "长沙南", "武汉", "郑州东", "石家庄", "北京西" } },
+                { "C7", new List<string> { "成都东", "简阳南", "资阳北", "重庆西" } },
+                { "C8", new List<string> { "重庆西", "资阳北", "简阳南", "成都东" } },
             };
 
             if (routes.ContainsKey(trainCode))
@@ -267,9 +287,17 @@ namespace MyPersonalWebsite.Services
             {
                 return routes["G1"];
             }
-            else
+            else if (trainCode.StartsWith("Z"))
             {
                 return routes["Z1"];
+            }
+            else if (trainCode.StartsWith("T"))
+            {
+                return routes["T1"];
+            }
+            else
+            {
+                return routes["K1"];
             }
         }
 
@@ -403,7 +431,6 @@ namespace MyPersonalWebsite.Services
                 if (info.Status == "停靠中")
                 {
                     info.CurrentStationInfo += $" · 停靠{currentStop.StopTime}";
-                    // 特殊提示
                     if (!string.IsNullOrEmpty(currentStop.SpecialNote))
                     {
                         info.CurrentStationInfo += $" · {currentStop.SpecialNote}";
