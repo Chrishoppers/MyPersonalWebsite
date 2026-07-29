@@ -83,7 +83,7 @@ builder.Services.AddHttpClient<TrainService>();
 builder.Services.AddScoped<TrainService>();
 // 注册后台定时服务
 builder.Services.AddHostedService<DailyQuestionScheduler>();
-builder.Services.AddRecaptchaService(builder.Configuration.GetSection("ReCaptcha"));
+
 builder.Services.AddHttpClient<ReCaptchaService>();
 builder.Services.AddScoped<ReCaptchaService>();
 builder.Services.AddSignalR();
