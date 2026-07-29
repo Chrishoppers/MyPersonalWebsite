@@ -1,51 +1,53 @@
-﻿using Microsoft.Extensions.Options;
-using MyPersonalWebsite.Models;
+using System;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
 
 namespace MyPersonalWebsite.Services
 {
     public class ReCaptchaService
     {
         private readonly HttpClient _httpClient;
-        private readonly ReCaptchaSettings _settings;
+        private readonly string _secretKey;
 
-        public ReCaptchaService(HttpClient httpClient, IOptions<ReCaptchaSettings> settings)
+        public ReCaptchaService(HttpClient httpClient, IConfiguration configuration)
         {
             _httpClient = httpClient;
-            _settings = settings.Value;
+            _secretKey = configuration["ReCaptcha:SecretKey"] ?? "";
         }
 
         public async Task<bool> VerifyAsync(string token)
         {
-            if (string.IsNullOrEmpty(token)) return false;
+            if (string.IsNullOrEmpty(token))
+                return false;
 
-            // ⭐ 国内用户：把 google.com 改成 recaptcha.net
-            var request = new HttpRequestMessage(
-                HttpMethod.Post,
-                "https://www.recaptcha.net/recaptcha/api/siteverify"
-            )
+            try
             {
-                Content = new FormUrlEncodedContent(new[]
-                {
-                    new KeyValuePair<string, string>("secret", _settings.SecretKey),
-                    new KeyValuePair<string, string>("response", token)
-                })
-            };
+                // ⭐ 使用 recaptcha.net 镜像（国内可访问）
+                var response = await _httpClient.PostAsync(
+                    $"https://www.recaptcha.net/recaptcha/api/siteverify?secret={_secretKey}&response={token}",
+                    null
+                );
 
-            var response = await _httpClient.SendAsync(request);
-            if (!response.IsSuccessStatusCode) return false;
+                var json = await response.Content.ReadAsStringAsync();
+                var result = JsonSerializer.Deserialize<ReCaptchaResponse>(json);
 
-            var json = await response.Content.ReadAsStringAsync();
-            var result = JsonSerializer.Deserialize<ReCaptchaResponse>(json);
-
-            return result?.Success == true;
+                return result?.Success == true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"reCAPTCHA 验证失败: {ex.Message}");
+                return false;
+            }
         }
 
         private class ReCaptchaResponse
         {
             public bool Success { get; set; }
+            public string? ChallengeTs { get; set; }
+            public string? Hostname { get; set; }
+            public string[]? ErrorCodes { get; set; }
         }
     }
 }
