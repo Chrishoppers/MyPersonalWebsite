@@ -8,7 +8,6 @@ using System.Linq;
 using System.IO;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
-using Griesoft.AspNetCore.ReCaptcha;
 
 namespace MyPersonalWebsite.Controllers
 {
@@ -18,17 +17,20 @@ namespace MyPersonalWebsite.Controllers
         private readonly BrevoEmailService _emailService;
         private readonly RateLimitService _rateLimitService;
         private readonly AppDbContext _context;
+        private readonly ReCaptchaService _reCaptchaService;
 
         public AuthController(
             DataSyncService dataSync,
             BrevoEmailService emailService,
             RateLimitService rateLimitService,
-            AppDbContext context)
+            AppDbContext context,
+            ReCaptchaService reCaptchaService)
         {
             _dataSync = dataSync;
             _emailService = emailService;
             _rateLimitService = rateLimitService;
             _context = context;
+            _reCaptchaService = reCaptchaService;
         }
 
         // ============================================================
@@ -41,13 +43,27 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // 注册 POST（⭐ reCAPTCHA 自动验证）
+        // 注册 POST
         // ============================================================
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [ValidateRecaptcha]
-        public async Task<IActionResult> Register(string username, string email, string password, IFormFile? avatar)
+        public async Task<IActionResult> Register(string username, string email, string password, string captchaToken, IFormFile? avatar)
         {
+            // ⭐ 验证 reCAPTCHA
+            if (string.IsNullOrEmpty(captchaToken))
+            {
+                ModelState.AddModelError("", "请完成验证码验证");
+                return View();
+            }
+
+            var isCaptchaValid = await _reCaptchaService.VerifyAsync(captchaToken);
+            if (!isCaptchaValid)
+            {
+                ModelState.AddModelError("", "验证码验证失败，请重试");
+                return View();
+            }
+
+            // 限流检查
             var clientIp = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
             if (!_rateLimitService.CanRegister(clientIp))
             {
@@ -56,6 +72,7 @@ namespace MyPersonalWebsite.Controllers
                 return View();
             }
 
+            // 检查用户名是否已存在
             var existingUser = await _dataSync.GetUserByUsernameAsync(username);
             if (existingUser != null)
             {
@@ -63,6 +80,7 @@ namespace MyPersonalWebsite.Controllers
                 return View();
             }
 
+            // 检查邮箱是否已注册
             existingUser = await _dataSync.GetUserByEmailAsync(email);
             if (existingUser != null)
             {
@@ -70,6 +88,7 @@ namespace MyPersonalWebsite.Controllers
                 return View();
             }
 
+            // 生成验证码
             var code = new Random().Next(100000, 999999).ToString();
 
             // 头像转 Base64
@@ -93,6 +112,7 @@ namespace MyPersonalWebsite.Controllers
                 }
             }
 
+            // 创建用户
             var newUser = new User
             {
                 Username = username,
@@ -113,6 +133,7 @@ namespace MyPersonalWebsite.Controllers
 
             await _dataSync.AddUserAsync(newUser);
 
+            // 发送验证码邮件
             try
             {
                 await _emailService.SendVerificationCodeAsync(email, code);
@@ -134,6 +155,10 @@ namespace MyPersonalWebsite.Controllers
         [HttpGet]
         public IActionResult VerifyEmail(string email)
         {
+            if (string.IsNullOrEmpty(email))
+            {
+                email = TempData["RegisterEmail"] as string ?? "";
+            }
             ViewBag.Email = email;
             return View();
         }
@@ -153,6 +178,7 @@ namespace MyPersonalWebsite.Controllers
             if (string.IsNullOrEmpty(email))
             {
                 ModelState.AddModelError("", "邮箱地址丢失，请重新注册");
+                ViewBag.Email = email;
                 return View();
             }
 
@@ -160,6 +186,7 @@ namespace MyPersonalWebsite.Controllers
             if (user == null)
             {
                 ModelState.AddModelError("", "用户不存在或已被系统自动清理");
+                ViewBag.Email = email;
                 return View();
             }
 
@@ -173,21 +200,24 @@ namespace MyPersonalWebsite.Controllers
             {
                 await _dataSync.DeleteUser(user.Id);
                 ModelState.AddModelError("", "验证码已过期，请重新注册");
+                ViewBag.Email = email;
                 return View();
             }
 
             if (user.VerificationCode != code)
             {
                 ModelState.AddModelError("", "验证码错误");
+                ViewBag.Email = email;
                 return View();
             }
 
+            // 验证通过
             user.IsEmailVerified = true;
             user.VerificationCode = null;
             user.VerificationCodeExpiry = null;
-
             await _dataSync.UpdateUserAsync(user);
 
+            // 发送管理员审核邮件
             try
             {
                 await _emailService.SendAdminNewUserVerificationAsync(
@@ -255,7 +285,7 @@ namespace MyPersonalWebsite.Controllers
                 string banMessage = "您的账号已被封禁";
                 if (user.BanExpiry.HasValue && user.BanExpiry.Value > DateTime.Now)
                 {
-                    banMessage += $"，将于 {user.BanExpiry.Value.ToString("yyyy-MM-dd HH:mm")} 解封";
+                    banMessage += $"，将于 {user.BanExpiry.Value:yyyy-MM-dd HH:mm} 解封";
                 }
                 else if (user.BanExpiry.HasValue && user.BanExpiry.Value <= DateTime.Now)
                 {
@@ -349,6 +379,7 @@ namespace MyPersonalWebsite.Controllers
                 {
                     user.IsBanned = false;
                     user.BanExpiry = null;
+                    await _dataSync.UpdateUserAsync(user);
                 }
                 else
                 {
