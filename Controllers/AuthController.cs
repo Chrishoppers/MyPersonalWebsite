@@ -53,13 +53,16 @@ namespace MyPersonalWebsite.Controllers
             if (string.IsNullOrEmpty(captchaToken))
             {
                 ModelState.AddModelError("", "请完成验证码验证");
+                ViewBag.ResetCaptcha = true;
                 return View();
             }
 
             var isCaptchaValid = await _reCaptchaService.VerifyAsync(captchaToken);
+            
             if (!isCaptchaValid)
             {
-                ModelState.AddModelError("", "验证码验证失败，请重试");
+                ModelState.AddModelError("", "验证码验证失败，请刷新后重试");
+                ViewBag.ResetCaptcha = true;
                 return View();
             }
 
