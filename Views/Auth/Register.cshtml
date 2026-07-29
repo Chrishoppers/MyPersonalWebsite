@@ -97,12 +97,6 @@
         box-shadow: 0 0 0 4px rgba(108,60,225,0.04);
     }
 
-    .auth-card .form-group .hint {
-        color: rgba(255,255,255,0.06);
-        font-size: 0.7rem;
-        margin-top: 0.2rem;
-    }
-
     /* 头像上传 */
     .avatar-upload-area {
         display: flex;
@@ -214,12 +208,6 @@
         color: rgba(255,255,255,0.4);
     }
 
-    .auth-card .alert-success {
-        background: rgba(40,167,69,0.06);
-        border-color: rgba(40,167,69,0.06);
-        color: rgba(255,255,255,0.4);
-    }
-
     /* reCAPTCHA 容器 */
     .recaptcha-wrapper {
         display: flex;
@@ -308,7 +296,7 @@
                 </div>
             </div>
 
-            <!-- reCAPTCHA 验证码 -->
+            <!-- ⭐ reCAPTCHA 验证码 -->
             <div class="form-group">
                 <label>验证码</label>
                 <div class="recaptcha-wrapper">
@@ -331,8 +319,8 @@
     </div>
 </div>
 
-<!-- reCAPTCHA 脚本 -->
-<script src="https://www.google.com/recaptcha/api.js" async defer></script>
+<!-- ⭐ 使用 recaptcha.net 镜像（国内可访问） -->
+<script src="https://www.recaptcha.net/recaptcha/api.js" async defer></script>
 
 <script>
     // reCAPTCHA 回调
