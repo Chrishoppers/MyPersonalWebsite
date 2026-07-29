@@ -296,11 +296,11 @@
                 </div>
             </div>
 
-            <!-- ⭐ reCAPTCHA 验证码 -->
+            <!-- reCAPTCHA 验证码 -->
             <div class="form-group">
                 <label>验证码</label>
                 <div class="recaptcha-wrapper">
-                    <div class="g-recaptcha" data-sitekey="6LcoPWstAAAAAJfXRZWdXDifAaacCYloZQyXtdpf" data-callback="onCaptchaSuccess"></div>
+                    <div class="g-recaptcha" data-sitekey="6LcoPWstAAAAAJAjfXRZWdXDifAaaCYloZQyXtdpf" data-callback="onCaptchaSuccess"></div>
                     <input type="hidden" id="captchaToken" name="captchaToken" />
                 </div>
                 <div style="text-align:center;color:rgba(255,255,255,0.08);font-size:0.6rem;margin-top:0.2rem;">
@@ -319,13 +319,18 @@
     </div>
 </div>
 
-<!-- ⭐ 使用 recaptcha.net 镜像（国内可访问） -->
+<!-- 使用 recaptcha.net 镜像 -->
 <script src="https://www.recaptcha.net/recaptcha/api.js" async defer></script>
 
 <script>
     // reCAPTCHA 回调
     function onCaptchaSuccess(token) {
         document.getElementById('captchaToken').value = token;
+    }
+
+    // reCAPTCHA 过期回调
+    function onCaptchaExpired() {
+        document.getElementById('captchaToken').value = '';
     }
 
     // 头像预览
@@ -355,10 +360,29 @@
         reader.readAsDataURL(file);
     });
 
-    // 提交按钮防重复
+    // 提交表单
     document.getElementById('registerForm').addEventListener('submit', function(e) {
         const btn = document.getElementById('submitBtn');
+        const token = document.getElementById('captchaToken').value;
+        
+        if (!token) {
+            e.preventDefault();
+            alert('请先完成验证码验证');
+            return false;
+        }
+        
         btn.disabled = true;
         btn.textContent = '⏳ 注册中...';
     });
+
+    // ⭐ 如果验证失败，重置 reCAPTCHA
+    @if (ViewBag.ResetCaptcha == true)
+    {
+        <text>
+            if (typeof grecaptcha !== 'undefined') {
+                grecaptcha.reset();
+            }
+            document.getElementById('captchaToken').value = '';
+        </text>
+    }
 </script>
