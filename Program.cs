@@ -75,7 +75,7 @@ builder.Services.AddScoped<DataSyncService>();
 builder.Services.AddScoped<TursoService>();
 builder.Services.AddScoped<DailyQuestionService>();
 builder.Services.AddScoped<GameSuggestionService>();
-builder.Services.AddScoped<CaptchaGameService>();
+//builder.Services.AddScoped<CaptchaGameService>();
 builder.Services.AddHttpClient<TrainService>();
 builder.Services.AddScoped<TrainService>();
 // 在 builder.Services 部分添加
@@ -84,7 +84,8 @@ builder.Services.AddScoped<TrainService>();
 // 注册后台定时服务
 builder.Services.AddHostedService<DailyQuestionScheduler>();
 builder.Services.AddRecaptchaService(builder.Configuration.GetSection("ReCaptcha"));
-
+builder.Services.AddHttpClient<ReCaptchaService>();
+builder.Services.AddScoped<ReCaptchaService>();
 builder.Services.AddSignalR();
 
 var app = builder.Build();
