@@ -27,43 +27,46 @@ namespace MyPersonalWebsite.Services
             }
 
             Console.WriteLine($"🔍 Token 前20字符: {token.Substring(0, Math.Min(20, token.Length))}...");
-            Console.WriteLine($"🔍 SecretKey: {_secretKey}");
 
             try
             {
-                // 尝试用 google.com（备用）
                 var url = $"https://www.google.com/recaptcha/api/siteverify?secret={_secretKey}&response={token}";
-                Console.WriteLine($"🔍 请求 URL: {url}");
+                Console.WriteLine($"🔍 请求 URL: {url.Replace(_secretKey, "***")}");
 
                 var response = await _httpClient.PostAsync(url, null);
                 var json = await response.Content.ReadAsStringAsync();
 
                 Console.WriteLine($"🔍 响应内容: {json}");
 
-                var result = JsonSerializer.Deserialize<ReCaptchaResponse>(json);
+                // ⭐ 直接用 JsonDocument 解析，避免字段名大小写问题
+                using var doc = JsonDocument.Parse(json);
+                var root = doc.RootElement;
 
-                if (result != null)
+                if (root.TryGetProperty("success", out var successElement))
                 {
-                    Console.WriteLine($"✅ Success: {result.Success}");
-                    if (result.ErrorCodes != null && result.ErrorCodes.Length > 0)
+                    var success = successElement.GetBoolean();
+                    Console.WriteLine($"✅ Success: {success}");
+
+                    if (!success && root.TryGetProperty("error-codes", out var errorCodesElement))
                     {
-                        Console.WriteLine($"❌ 错误码: {string.Join(", ", result.ErrorCodes)}");
+                        var errors = errorCodesElement.EnumerateArray();
+                        foreach (var err in errors)
+                        {
+                            Console.WriteLine($"❌ 错误码: {err.GetString()}");
+                        }
                     }
+
+                    return success;
                 }
 
-                return result?.Success == true;
+                Console.WriteLine("❌ 无法解析 success 字段");
+                return false;
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"❌ 异常: {ex.Message}");
                 return false;
             }
-        }
-
-        private class ReCaptchaResponse
-        {
-            public bool Success { get; set; }
-            public string[]? ErrorCodes { get; set; }
         }
     }
 }
