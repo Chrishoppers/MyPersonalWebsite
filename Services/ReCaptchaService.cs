@@ -27,8 +27,8 @@ namespace MyPersonalWebsite.Services
 
             try
             {
-                // ⭐ 使用 recaptcha.cn（国内镜像）
-                var url = $"https://www.recaptcha.cn/recaptcha/api/siteverify?secret={_secretKey}&response={token}";
+                // ⭐ 使用 recaptcha.net
+                var url = $"https://www.recaptcha.net/recaptcha/api/siteverify?secret={_secretKey}&response={token}";
                 Console.WriteLine($"🔍 请求 URL: {url.Replace(_secretKey, "***")}");
 
                 var response = await _httpClient.PostAsync(url, null);
