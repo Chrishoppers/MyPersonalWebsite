@@ -1,10 +1,6 @@
 @{
     ViewData["Title"] = "注册";
-    var isAdmin = Context.Session.GetInt32("IsAdmin") ?? 0;
 }
-
-@using Griesoft.AspNetCore.ReCaptcha
-@addTagHelper *, Griesoft.AspNetCore.ReCaptcha
 
 <style>
     .auth-container {
@@ -224,7 +220,7 @@
         color: rgba(255,255,255,0.4);
     }
 
-    /* ⭐ reCAPTCHA 容器 */
+    /* reCAPTCHA 容器 */
     .recaptcha-wrapper {
         display: flex;
         justify-content: center;
@@ -312,11 +308,12 @@
                 </div>
             </div>
 
-            <!-- ⭐ reCAPTCHA 验证码 -->
+            <!-- reCAPTCHA 验证码 -->
             <div class="form-group">
                 <label>验证码</label>
                 <div class="recaptcha-wrapper">
-                    <recaptcha />
+                    <div class="g-recaptcha" data-sitekey="6LcoPWstAAAAAJfXRZWdXDifAaacCYloZQyXtdpf" data-callback="onCaptchaSuccess"></div>
+                    <input type="hidden" id="captchaToken" name="captchaToken" />
                 </div>
                 <div style="text-align:center;color:rgba(255,255,255,0.08);font-size:0.6rem;margin-top:0.2rem;">
                     💡 点击复选框验证你是人类
@@ -334,40 +331,46 @@
     </div>
 </div>
 
-@section Scripts {
-    <script>
-        // ===== 头像预览 =====
-        document.getElementById('avatarInput').addEventListener('change', function(e) {
-            const file = this.files[0];
-            if (!file) return;
+<!-- reCAPTCHA 脚本 -->
+<script src="https://www.google.com/recaptcha/api.js" async defer></script>
 
-            const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-            if (!allowedTypes.includes(file.type)) {
-                alert('只支持 JPG, PNG, GIF, WebP 格式');
-                this.value = '';
-                return;
-            }
+<script>
+    // reCAPTCHA 回调
+    function onCaptchaSuccess(token) {
+        document.getElementById('captchaToken').value = token;
+    }
 
-            if (file.size > 5 * 1024 * 1024) {
-                alert('图片不能超过 5MB');
-                this.value = '';
-                return;
-            }
+    // 头像预览
+    document.getElementById('avatarInput').addEventListener('change', function(e) {
+        const file = this.files[0];
+        if (!file) return;
 
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const preview = document.getElementById('avatarPreview');
-                preview.innerHTML = `<img src="${e.target.result}" alt="头像" />`;
-                preview.classList.add('has-image');
-            };
-            reader.readAsDataURL(file);
-        });
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+        if (!allowedTypes.includes(file.type)) {
+            alert('只支持 JPG, PNG, GIF, WebP 格式');
+            this.value = '';
+            return;
+        }
 
-        // ===== 提交按钮防重复 =====
-        document.getElementById('registerForm').addEventListener('submit', function(e) {
-            const btn = document.getElementById('submitBtn');
-            btn.disabled = true;
-            btn.textContent = '⏳ 注册中...';
-        });
-    </script>
-}
+        if (file.size > 5 * 1024 * 1024) {
+            alert('图片不能超过 5MB');
+            this.value = '';
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const preview = document.getElementById('avatarPreview');
+            preview.innerHTML = `<img src="${e.target.result}" alt="头像" />`;
+            preview.classList.add('has-image');
+        };
+        reader.readAsDataURL(file);
+    });
+
+    // 提交按钮防重复
+    document.getElementById('registerForm').addEventListener('submit', function(e) {
+        const btn = document.getElementById('submitBtn');
+        btn.disabled = true;
+        btn.textContent = '⏳ 注册中...';
+    });
+</script>
