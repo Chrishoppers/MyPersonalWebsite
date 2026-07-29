@@ -1,6 +1,10 @@
 @{
     ViewData["Title"] = "注册";
+    var isAdmin = Context.Session.GetInt32("IsAdmin") ?? 0;
 }
+
+@using Griesoft.AspNetCore.ReCaptcha
+@addTagHelper *, Griesoft.AspNetCore.ReCaptcha
 
 <style>
     .auth-container {
@@ -103,7 +107,7 @@
         margin-top: 0.2rem;
     }
 
-    /* ⭐ 头像上传 */
+    /* 头像上传 */
     .avatar-upload-area {
         display: flex;
         align-items: center;
@@ -220,61 +224,29 @@
         color: rgba(255,255,255,0.4);
     }
 
-    .captcha-wrapper {
+    /* ⭐ reCAPTCHA 容器 */
+    .recaptcha-wrapper {
         display: flex;
-        align-items: center;
-        gap: 0.8rem;
-        flex-wrap: wrap;
+        justify-content: center;
+        margin: 0.5rem 0;
+        min-height: 78px;
     }
 
-    .captcha-wrapper img {
-        height: 50px;
-        border-radius: 12px;
-        cursor: pointer;
-        border: 1px solid rgba(255,255,255,0.04);
-        background: rgba(255,255,255,0.02);
+    .recaptcha-wrapper .g-recaptcha {
+        transform: scale(0.92);
+        transform-origin: center center;
     }
 
-    .captcha-wrapper .captcha-input {
-        flex: 1;
-        min-width: 120px;
-    }
-
-    .captcha-wrapper .captcha-input input {
-        padding-left: 1rem;
-    }
-
-    .captcha-wrapper .refresh-btn {
-        padding: 0.4rem 1rem;
-        border-radius: 30px;
-        border: 1px solid rgba(255,255,255,0.04);
-        background: rgba(255,255,255,0.02);
-        color: rgba(255,255,255,0.2);
-        cursor: pointer;
-        transition: all 0.3s ease;
-        font-size: 0.8rem;
-    }
-
-    .captcha-wrapper .refresh-btn:hover {
-        background: rgba(255,255,255,0.04);
-        color: rgba(255,255,255,0.4);
-    }
-
+    /* 响应式 */
     @@media (max-width: 480px) {
         .auth-card {
             padding: 2rem 1.5rem;
         }
-        .captcha-wrapper {
-            flex-direction: column;
-            align-items: stretch;
-        }
-        .captcha-wrapper img {
-            height: 60px;
-            width: 100%;
-            object-fit: cover;
-        }
         .avatar-upload-area {
             flex-wrap: wrap;
+        }
+        .recaptcha-wrapper .g-recaptcha {
+            transform: scale(0.78);
         }
     }
 </style>
@@ -323,7 +295,7 @@
                 </div>
             </div>
 
-            <!-- ⭐ 头像上传 -->
+            <!-- 头像上传 -->
             <div class="form-group">
                 <label>头像</label>
                 <div class="avatar-upload-area">
@@ -340,17 +312,14 @@
                 </div>
             </div>
 
-            <!-- SVG 验证码 -->
+            <!-- ⭐ reCAPTCHA 验证码 -->
             <div class="form-group">
                 <label>验证码</label>
-                <div class="captcha-wrapper">
-                    <img id="captchaImage" src="/Captcha/Index" alt="验证码" onclick="refreshCaptcha()" title="点击刷新" />
-                    <div class="captcha-input">
-                        <input type="text" name="captchaAnswer" placeholder="输入验证码" required maxlength="6" style="padding-left:1rem;" autocomplete="off" />
-                    </div>
-                    <button type="button" class="refresh-btn" onclick="refreshCaptcha()">
-                        <i class="bi bi-arrow-clockwise"></i>
-                    </button>
+                <div class="recaptcha-wrapper">
+                    <recaptcha />
+                </div>
+                <div style="text-align:center;color:rgba(255,255,255,0.08);font-size:0.6rem;margin-top:0.2rem;">
+                    💡 点击复选框验证你是人类
                 </div>
             </div>
 
@@ -367,18 +336,11 @@
 
 @section Scripts {
     <script>
-        // ===== 验证码刷新 =====
-        function refreshCaptcha() {
-            const img = document.getElementById('captchaImage');
-            img.src = '/Captcha/Refresh?_=' + new Date().getTime();
-        }
-
         // ===== 头像预览 =====
         document.getElementById('avatarInput').addEventListener('change', function(e) {
             const file = this.files[0];
             if (!file) return;
 
-            // 验证文件类型
             const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
             if (!allowedTypes.includes(file.type)) {
                 alert('只支持 JPG, PNG, GIF, WebP 格式');
@@ -386,14 +348,12 @@
                 return;
             }
 
-            // 验证文件大小（5MB）
             if (file.size > 5 * 1024 * 1024) {
                 alert('图片不能超过 5MB');
                 this.value = '';
                 return;
             }
 
-            // 预览图片
             const reader = new FileReader();
             reader.onload = function(e) {
                 const preview = document.getElementById('avatarPreview');
