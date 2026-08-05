@@ -97,14 +97,7 @@ namespace MyPersonalWebsite.Services
             if (!_tursoAvailable) return null;
 
             var result = await _tursoService.QueryAsync($"SELECT * FROM Users WHERE Id = {id}");
-            var user = ParseUserFromJson(result);
-            
-            if (user != null)
-            {
-                Console.WriteLine($"✅ 读取用户: Id={user.Id}, 用户名={user.Username}, IsApproved={user.IsApproved}, AvatarUrl={user.AvatarUrl}");
-            }
-            
-            return user;
+            return ParseUserFromJson(result);
         }
 
         public async Task<User?> GetUserByLoginTokenAsync(string token)
@@ -162,7 +155,7 @@ namespace MyPersonalWebsite.Services
             WHERE Id = {user.Id}";
 
             await _tursoService.ExecuteSqlAsync(sql);
-            Console.WriteLine($"✅ 用户 {user.Username} 已更新到 Turso (头像={user.AvatarUrl}, IsApproved={user.IsApproved})");
+            Console.WriteLine($"✅ 用户 {user.Username} 已更新到 Turso");
         }
 
         public async Task<List<User>> GetAllUsersAsync()
@@ -618,7 +611,7 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 公开方法（供 Program.cs 调用）
+        // 公开方法
         // ============================================================
 
         public async Task<string> QueryAsync(string sql)
@@ -631,6 +624,59 @@ namespace MyPersonalWebsite.Services
         {
             if (!_tursoAvailable) return false;
             return await _tursoService.ExecuteSqlAsync(sql);
+        }
+
+        // ============================================================
+        // 游戏统计
+        // ============================================================
+
+        public async Task<UserGameStats?> GetUserGameStatsAsync(int userId)
+        {
+            if (!_tursoAvailable) return null;
+
+            var result = await _tursoService.QueryAsync(
+                $"SELECT * FROM UserGameStats WHERE UserId = {userId}"
+            );
+            return ParseUserGameStats(result);
+        }
+
+        public async Task<List<UserGameStats>> GetAllUserGameStatsAsync()
+        {
+            if (!_tursoAvailable) return new List<UserGameStats>();
+
+            var result = await _tursoService.QueryAsync(
+                "SELECT * FROM UserGameStats ORDER BY TotalPoints DESC"
+            );
+            return ParseUserGameStatsList(result);
+        }
+
+        public async Task AddUserGameStatsAsync(UserGameStats stats)
+        {
+            if (!_tursoAvailable) return;
+
+            var sql = $@"INSERT INTO UserGameStats (
+                UserId, TotalPoints, MaxCombo, MaxLevel, GamesPlayed, UpdatedAt
+            ) VALUES (
+                {stats.UserId}, {stats.TotalPoints}, {stats.MaxCombo},
+                {stats.MaxLevel}, {stats.GamesPlayed}, '{stats.UpdatedAt:yyyy-MM-dd HH:mm:ss}'
+            )";
+
+            await _tursoService.ExecuteSqlAsync(sql);
+        }
+
+        public async Task UpdateUserGameStatsAsync(UserGameStats stats)
+        {
+            if (!_tursoAvailable) return;
+
+            var sql = $@"UPDATE UserGameStats SET
+                TotalPoints = {stats.TotalPoints},
+                MaxCombo = {stats.MaxCombo},
+                MaxLevel = {stats.MaxLevel},
+                GamesPlayed = {stats.GamesPlayed},
+                UpdatedAt = '{stats.UpdatedAt:yyyy-MM-dd HH:mm:ss}'
+            WHERE UserId = {stats.UserId}";
+
+            await _tursoService.ExecuteSqlAsync(sql);
         }
 
         // ============================================================
@@ -1322,59 +1368,6 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 游戏统计
-        // ============================================================
-
-        public async Task<UserGameStats?> GetUserGameStatsAsync(int userId)
-        {
-            if (!_tursoAvailable) return null;
-
-            var result = await _tursoService.QueryAsync(
-                $"SELECT * FROM UserGameStats WHERE UserId = {userId}"
-            );
-            return ParseUserGameStats(result);
-        }
-
-        public async Task<List<UserGameStats>> GetAllUserGameStatsAsync()
-        {
-            if (!_tursoAvailable) return new List<UserGameStats>();
-
-            var result = await _tursoService.QueryAsync(
-                "SELECT * FROM UserGameStats ORDER BY TotalPoints DESC"
-            );
-            return ParseUserGameStatsList(result);
-        }
-
-        public async Task AddUserGameStatsAsync(UserGameStats stats)
-        {
-            if (!_tursoAvailable) return;
-
-            var sql = $@"INSERT INTO UserGameStats (
-                UserId, TotalPoints, MaxCombo, MaxLevel, GamesPlayed, UpdatedAt
-            ) VALUES (
-                {stats.UserId}, {stats.TotalPoints}, {stats.MaxCombo},
-                {stats.MaxLevel}, {stats.GamesPlayed}, '{stats.UpdatedAt:yyyy-MM-dd HH:mm:ss}'
-            )";
-
-            await _tursoService.ExecuteSqlAsync(sql);
-        }
-
-        public async Task UpdateUserGameStatsAsync(UserGameStats stats)
-        {
-            if (!_tursoAvailable) return;
-
-            var sql = $@"UPDATE UserGameStats SET
-                TotalPoints = {stats.TotalPoints},
-                MaxCombo = {stats.MaxCombo},
-                MaxLevel = {stats.MaxLevel},
-                GamesPlayed = {stats.GamesPlayed},
-                UpdatedAt = '{stats.UpdatedAt:yyyy-MM-dd HH:mm:ss}'
-            WHERE UserId = {stats.UserId}";
-
-            await _tursoService.ExecuteSqlAsync(sql);
-        }
-
-        // ============================================================
         // 游戏统计解析方法
         // ============================================================
 
@@ -1452,7 +1445,7 @@ namespace MyPersonalWebsite.Services
                 .Replace("+", "")
                 .Replace("/", "")
                 .Replace("=", "");
-            
+
             if (token.Length < 32)
             {
                 token = token.PadRight(32, '0');
@@ -1466,119 +1459,4 @@ namespace MyPersonalWebsite.Services
             return value.Replace("'", "''");
         }
     }
-            // ============================================================
-        // 游戏统计
-        // ============================================================
-
-        public async Task<UserGameStats?> GetUserGameStatsAsync(int userId)
-        {
-            if (!_tursoAvailable) return null;
-
-            var result = await _tursoService.QueryAsync(
-                $"SELECT * FROM UserGameStats WHERE UserId = {userId}"
-            );
-            return ParseUserGameStats(result);
-        }
-
-        public async Task<List<UserGameStats>> GetAllUserGameStatsAsync()
-        {
-            if (!_tursoAvailable) return new List<UserGameStats>();
-
-            var result = await _tursoService.QueryAsync(
-                "SELECT * FROM UserGameStats ORDER BY TotalPoints DESC"
-            );
-            return ParseUserGameStatsList(result);
-        }
-
-        public async Task AddUserGameStatsAsync(UserGameStats stats)
-        {
-            if (!_tursoAvailable) return;
-
-            var sql = $@"INSERT INTO UserGameStats (
-                UserId, TotalPoints, MaxCombo, MaxLevel, GamesPlayed, UpdatedAt
-            ) VALUES (
-                {stats.UserId}, {stats.TotalPoints}, {stats.MaxCombo},
-                {stats.MaxLevel}, {stats.GamesPlayed}, '{stats.UpdatedAt:yyyy-MM-dd HH:mm:ss}'
-            )";
-
-            await _tursoService.ExecuteSqlAsync(sql);
-        }
-
-        public async Task UpdateUserGameStatsAsync(UserGameStats stats)
-        {
-            if (!_tursoAvailable) return;
-
-            var sql = $@"UPDATE UserGameStats SET
-                TotalPoints = {stats.TotalPoints},
-                MaxCombo = {stats.MaxCombo},
-                MaxLevel = {stats.MaxLevel},
-                GamesPlayed = {stats.GamesPlayed},
-                UpdatedAt = '{stats.UpdatedAt:yyyy-MM-dd HH:mm:ss}'
-            WHERE UserId = {stats.UserId}";
-
-            await _tursoService.ExecuteSqlAsync(sql);
-        }
-
-        // ============================================================
-        // 游戏统计解析方法
-        // ============================================================
-
-        private UserGameStats? ParseUserGameStats(string json)
-        {
-            var list = ParseUserGameStatsList(json);
-            return list.FirstOrDefault();
-        }
-
-        private List<UserGameStats> ParseUserGameStatsList(string json)
-        {
-            var list = new List<UserGameStats>();
-            try
-            {
-                using var doc = JsonDocument.Parse(json);
-                var root = doc.RootElement;
-
-                if (root.TryGetProperty("results", out var results) && results.GetArrayLength() > 0)
-                {
-                    var firstResult = results[0];
-                    if (firstResult.TryGetProperty("response", out var response) &&
-                        response.TryGetProperty("result", out var result))
-                    {
-                        if (result.TryGetProperty("rows", out var rows) && rows.GetArrayLength() > 0)
-                        {
-                            var cols = result.GetProperty("cols");
-
-                            for (int r = 0; r < rows.GetArrayLength(); r++)
-                            {
-                                var row = rows[r];
-                                if (row.ValueKind != JsonValueKind.Array) continue;
-
-                                var stats = new UserGameStats();
-                                for (int i = 0; i < cols.GetArrayLength(); i++)
-                                {
-                                    var colName = cols[i].GetProperty("name").GetString();
-                                    var element = row[i];
-
-                                    switch (colName)
-                                    {
-                                        case "Id": stats.Id = GetIntFromRow(element); break;
-                                        case "UserId": stats.UserId = GetIntFromRow(element); break;
-                                        case "TotalPoints": stats.TotalPoints = GetIntFromRow(element); break;
-                                        case "MaxCombo": stats.MaxCombo = GetIntFromRow(element); break;
-                                        case "MaxLevel": stats.MaxLevel = GetIntFromRow(element); break;
-                                        case "GamesPlayed": stats.GamesPlayed = GetIntFromRow(element); break;
-                                        case "UpdatedAt": stats.UpdatedAt = GetDateTimeFromRow(element) ?? DateTime.Now; break;
-                                    }
-                                }
-                                list.Add(stats);
-                            }
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"解析游戏统计失败: {ex.Message}");
-            }
-            return list;
-        }
 }
