@@ -1,11 +1,10 @@
-using Microsoft.EntityFrameworkCore;
-using MyPersonalWebsite.Models;
 using System;
 using System.Collections.Generic;
-using System.Security.Cryptography;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
+using MyPersonalWebsite.Models;
 
 namespace MyPersonalWebsite.Services
 {
@@ -26,83 +25,56 @@ namespace MyPersonalWebsite.Services
             else
                 Console.WriteLine("⚠️ Turso 未配置");
         }
-                // ============================================================
+
+        // ============================================================
         // 用户相关
         // ============================================================
 
-     public async Task AddUserAsync(User user)
-{
-    if (!_tursoAvailable) throw new Exception("Turso 未配置");
-
-    // ⭐ 不使用 MaxId，让 Turso 自动生成 ID
-    var sql = $@"INSERT INTO Users (
-        Username, Email, PasswordHash, IsEmailVerified, IsAdmin,
-        CreatedAt, LastLoginAt, IsBanned, BanExpiry, BanReason,
-        IsDeleted, DeletedAt, DeleteReason, DeleteNote,
-        AvatarUrl, IsAvatarApproved, AvatarSubmittedAt,
-        PendingEmail, PendingUsername, IsEmailChangeApproved, IsUsernameChangeApproved,
-        VerificationCode, VerificationCodeExpiry, IsApproved,
-        LoginToken, LoginTokenExpiry
-    ) VALUES (
-        '{EscapeSql(user.Username)}', 
-        '{EscapeSql(user.Email)}',
-        '{EscapeSql(user.PasswordHash)}', 
-        {(user.IsEmailVerified ? 1 : 0)},
-        {(user.IsAdmin ? 1 : 0)}, 
-        '{user.CreatedAt:yyyy-MM-dd HH:mm:ss}',
-        {(user.LastLoginAt.HasValue ? $"'{user.LastLoginAt.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
-        {(user.IsBanned ? 1 : 0)},
-        {(user.BanExpiry.HasValue ? $"'{user.BanExpiry.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
-        {(string.IsNullOrEmpty(user.BanReason) ? "NULL" : $"'{EscapeSql(user.BanReason)}'")},
-        {(user.IsDeleted ? 1 : 0)},
-        {(user.DeletedAt.HasValue ? $"'{user.DeletedAt.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
-        {(string.IsNullOrEmpty(user.DeleteReason) ? "NULL" : $"'{EscapeSql(user.DeleteReason)}'")},
-        {(string.IsNullOrEmpty(user.DeleteNote) ? "NULL" : $"'{EscapeSql(user.DeleteNote)}'")},
-        {(string.IsNullOrEmpty(user.AvatarUrl) ? "NULL" : $"'{EscapeSql(user.AvatarUrl)}'")},
-        {(user.IsAvatarApproved ? 1 : 0)},
-        {(user.AvatarSubmittedAt.HasValue ? $"'{user.AvatarSubmittedAt.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
-        {(string.IsNullOrEmpty(user.PendingEmail) ? "NULL" : $"'{EscapeSql(user.PendingEmail)}'")},
-        {(string.IsNullOrEmpty(user.PendingUsername) ? "NULL" : $"'{EscapeSql(user.PendingUsername)}'")},
-        {(user.IsEmailChangeApproved ? 1 : 0)},
-        {(user.IsUsernameChangeApproved ? 1 : 0)},
-        {(string.IsNullOrEmpty(user.VerificationCode) ? "NULL" : $"'{EscapeSql(user.VerificationCode)}'")},
-        {(user.VerificationCodeExpiry.HasValue ? $"'{user.VerificationCodeExpiry.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
-        {(user.IsApproved ? 1 : 0)},
-        {(string.IsNullOrEmpty(user.LoginToken) ? "NULL" : $"'{EscapeSql(user.LoginToken)}'")},
-        {(user.LoginTokenExpiry.HasValue ? $"'{user.LoginTokenExpiry.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")}
-    )";
-
-    Console.WriteLine($"📝 AddUserAsync SQL: {sql}");
-
-    var result = await _tursoService.ExecuteSqlAsync(sql);
-    Console.WriteLine($"📝 ExecuteSqlAsync 返回: {result}");
-
-    if (result)
-    {
-        // ⭐ 查询刚插入的用户，获取 ID
-        var checkSql = $"SELECT * FROM Users WHERE Email = '{EscapeSql(user.Email)}' ORDER BY Id DESC LIMIT 1";
-        var checkResult = await _tursoService.QueryAsync(checkSql);
-        Console.WriteLine($"🔍 写入后查询结果: {checkResult}");
-
-        if (!checkResult.Contains("\"rows\":[]"))
+        public async Task AddUserAsync(User user)
         {
-            var parsed = ParseUserFromJson(checkResult);
-            if (parsed != null)
-            {
-                user.Id = parsed.Id;
-                Console.WriteLine($"✅ 用户 {user.Username} 已确认写入 Turso (ID: {user.Id})");
-            }
+            if (!_tursoAvailable) throw new Exception("Turso 未配置");
+
+            var maxIdResult = await _tursoService.QueryAsync("SELECT MAX(Id) as MaxId FROM Users");
+            var maxId = ParseMaxId(maxIdResult);
+            user.Id = maxId + 1;
+
+            var sql = $@"INSERT INTO Users (
+                Id, Username, Email, PasswordHash, IsEmailVerified, IsAdmin,
+                CreatedAt, LastLoginAt, IsBanned, BanExpiry, BanReason,
+                IsDeleted, DeletedAt, DeleteReason, DeleteNote,
+                AvatarUrl, IsAvatarApproved, AvatarSubmittedAt,
+                PendingEmail, PendingUsername, IsEmailChangeApproved, IsUsernameChangeApproved,
+                VerificationCode, VerificationCodeExpiry, IsApproved,
+                LoginToken, LoginTokenExpiry
+            ) VALUES (
+                {user.Id}, '{EscapeSql(user.Username)}', '{EscapeSql(user.Email)}',
+                '{EscapeSql(user.PasswordHash)}', {(user.IsEmailVerified ? 1 : 0)},
+                {(user.IsAdmin ? 1 : 0)}, '{user.CreatedAt:yyyy-MM-dd HH:mm:ss}',
+                {(user.LastLoginAt.HasValue ? $"'{user.LastLoginAt.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
+                {(user.IsBanned ? 1 : 0)},
+                {(user.BanExpiry.HasValue ? $"'{user.BanExpiry.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
+                {(string.IsNullOrEmpty(user.BanReason) ? "NULL" : $"'{EscapeSql(user.BanReason)}'")},
+                {(user.IsDeleted ? 1 : 0)},
+                {(user.DeletedAt.HasValue ? $"'{user.DeletedAt.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
+                {(string.IsNullOrEmpty(user.DeleteReason) ? "NULL" : $"'{EscapeSql(user.DeleteReason)}'")},
+                {(string.IsNullOrEmpty(user.DeleteNote) ? "NULL" : $"'{EscapeSql(user.DeleteNote)}'")},
+                {(string.IsNullOrEmpty(user.AvatarUrl) ? "NULL" : $"'{EscapeSql(user.AvatarUrl)}'")},
+                {(user.IsAvatarApproved ? 1 : 0)},
+                {(user.AvatarSubmittedAt.HasValue ? $"'{user.AvatarSubmittedAt.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
+                {(string.IsNullOrEmpty(user.PendingEmail) ? "NULL" : $"'{EscapeSql(user.PendingEmail)}'")},
+                {(string.IsNullOrEmpty(user.PendingUsername) ? "NULL" : $"'{EscapeSql(user.PendingUsername)}'")},
+                {(user.IsEmailChangeApproved ? 1 : 0)},
+                {(user.IsUsernameChangeApproved ? 1 : 0)},
+                {(string.IsNullOrEmpty(user.VerificationCode) ? "NULL" : $"'{EscapeSql(user.VerificationCode)}'")},
+                {(user.VerificationCodeExpiry.HasValue ? $"'{user.VerificationCodeExpiry.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
+                {(user.IsApproved ? 1 : 0)},
+                {(string.IsNullOrEmpty(user.LoginToken) ? "NULL" : $"'{EscapeSql(user.LoginToken)}'")},
+                {(user.LoginTokenExpiry.HasValue ? $"'{user.LoginTokenExpiry.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")}
+            )";
+
+            await _tursoService.ExecuteSqlAsync(sql);
+            Console.WriteLine($"✅ 用户 {user.Username} 已写入 Turso");
         }
-        else
-        {
-            Console.WriteLine($"❌ 写入后查询不到用户，可能写入失败");
-        }
-    }
-    else
-    {
-        Console.WriteLine($"❌ 用户 {user.Username} 写入失败！");
-    }
-}
 
         public async Task<User?> GetUserByEmailAsync(string email)
         {
@@ -133,25 +105,6 @@ namespace MyPersonalWebsite.Services
             }
             
             return user;
-        }
-
-        public string GenerateLoginToken()
-        {
-            var bytes = new byte[32];
-            using (var rng = RandomNumberGenerator.Create())
-            {
-                rng.GetBytes(bytes);
-            }
-            var token = Convert.ToBase64String(bytes)
-                .Replace("+", "")
-                .Replace("/", "")
-                .Replace("=", "");
-            
-            if (token.Length < 32)
-            {
-                token = token.PadRight(32, '0');
-            }
-            return token.Substring(0, 32);
         }
 
         public async Task<User?> GetUserByLoginTokenAsync(string token)
@@ -260,7 +213,8 @@ namespace MyPersonalWebsite.Services
                 Console.WriteLine("✅ 管理员账号已存在于 Turso");
             }
         }
-                // ============================================================
+
+        // ============================================================
         // 博客相关
         // ============================================================
 
@@ -343,7 +297,8 @@ namespace MyPersonalWebsite.Services
             await _tursoService.ExecuteSqlAsync(sql);
             Console.WriteLine($"✅ 博客取消点赞已同步: BlogId={blogId}, UserId={userId}");
         }
-                // ============================================================
+
+        // ============================================================
         // 留言相关
         // ============================================================
 
@@ -434,7 +389,8 @@ namespace MyPersonalWebsite.Services
             await _tursoService.ExecuteSqlAsync(sql);
             Console.WriteLine($"✅ 留言取消点赞已同步: MessageId={messageId}, UserId={userId}");
         }
-                // ============================================================
+
+        // ============================================================
         // ContactRequest 相关
         // ============================================================
 
@@ -602,24 +558,19 @@ namespace MyPersonalWebsite.Services
             await _tursoService.ExecuteSqlAsync("DELETE FROM Notifications");
             Console.WriteLine($"✅ 所有通知已清空");
         }
-                // ============================================================
-        // 📚 题库管理方法
+
+        // ============================================================
+        // 题库管理
         // ============================================================
 
-      public async Task<List<BankQuestion>> GetAllBankQuestionsAsync()
-{
-    if (!_tursoAvailable) return new List<BankQuestion>();
+        public async Task<List<BankQuestion>> GetAllBankQuestionsAsync()
+        {
+            if (!_tursoAvailable) return new List<BankQuestion>();
 
-    var result = await _tursoService.QueryAsync("SELECT * FROM DailyQuestionBank ORDER BY Id DESC");
-    Console.WriteLine($"📊 查询结果长度: {result.Length}");
-    var list = ParseBankQuestionList(result);
-    Console.WriteLine($"📊 解析后数量: {list.Count}");
-    if (list.Any())
-    {
-        Console.WriteLine($"📊 第一条数据: Id={list.First().Id}, Question={list.First().Question}");
-    }
-    return list;
-}
+            var result = await _tursoService.QueryAsync("SELECT * FROM DailyQuestionBank ORDER BY Id DESC");
+            return ParseBankQuestionList(result);
+        }
+
         public async Task<BankQuestion?> GetBankQuestionByIdAsync(int id)
         {
             if (!_tursoAvailable) return null;
@@ -628,30 +579,28 @@ namespace MyPersonalWebsite.Services
             return ParseBankQuestion(result);
         }
 
-       public async Task AddBankQuestionAsync(BankQuestion question)
-{
-    if (!_tursoAvailable) return;
+        public async Task AddBankQuestionAsync(BankQuestion question)
+        {
+            if (!_tursoAvailable) return;
 
-    // ⭐ 先查询当前最大 Id
-    var maxIdResult = await _tursoService.QueryAsync("SELECT MAX(Id) as MaxId FROM DailyQuestionBank");
-    var maxId = ParseMaxId(maxIdResult);
-    question.Id = maxId + 1;  // ⭐ 确保这一行存在且执行了
+            var maxIdResult = await _tursoService.QueryAsync("SELECT MAX(Id) as MaxId FROM DailyQuestionBank");
+            var maxId = ParseMaxId(maxIdResult);
+            question.Id = maxId + 1;
 
-    Console.WriteLine($"📊 新题目 ID: {question.Id}");  // ⭐ 添加日志
+            var sql = $@"INSERT INTO DailyQuestionBank (
+                Id, Question, Answer, Pinyin, Hint, Difficulty, Category, IsActive, CreatedAt
+            ) VALUES (
+                {question.Id}, '{EscapeSql(question.Question)}', '{EscapeSql(question.Answer)}',
+                '{EscapeSql(question.Pinyin)}',
+                {(string.IsNullOrEmpty(question.Hint) ? "NULL" : $"'{EscapeSql(question.Hint)}'")},
+                {question.Difficulty}, '{EscapeSql(question.Category)}',
+                {(question.IsActive ? 1 : 0)}, '{question.CreatedAt:yyyy-MM-dd HH:mm:ss}'
+            )";
 
-    var sql = $@"INSERT INTO DailyQuestionBank (
-        Id, Question, Answer, Pinyin, Hint, Difficulty, Category, IsActive, CreatedAt
-    ) VALUES (
-        {question.Id}, '{EscapeSql(question.Question)}', '{EscapeSql(question.Answer)}',
-        '{EscapeSql(question.Pinyin)}',
-        {(string.IsNullOrEmpty(question.Hint) ? "NULL" : $"'{EscapeSql(question.Hint)}'")},
-        {question.Difficulty}, '{EscapeSql(question.Category)}',
-        {(question.IsActive ? 1 : 0)}, '{question.CreatedAt:yyyy-MM-dd HH:mm:ss}'
-    )";
+            await _tursoService.ExecuteSqlAsync(sql);
+            Console.WriteLine($"✅ 题目已添加到题库: {question.Question} (ID: {question.Id})");
+        }
 
-    await _tursoService.ExecuteSqlAsync(sql);
-    Console.WriteLine($"✅ 题目已添加到题库: {question.Question} (ID: {question.Id})");
-}
         public async Task ToggleQuestionStatusAsync(int id, bool enable)
         {
             if (!_tursoAvailable) return;
@@ -667,7 +616,8 @@ namespace MyPersonalWebsite.Services
 
             await _tursoService.ExecuteSqlAsync($"DELETE FROM DailyQuestionBank WHERE Id = {id}");
         }
-                // ============================================================
+
+        // ============================================================
         // 公开方法（供 Program.cs 调用）
         // ============================================================
 
@@ -822,9 +772,6 @@ namespace MyPersonalWebsite.Services
             }
             catch { return 0; }
         }
-                // ============================================================
-        // ParseUserFromJson
-        // ============================================================
 
         private User? ParseUserFromJson(string json)
         {
@@ -959,10 +906,6 @@ namespace MyPersonalWebsite.Services
             return users;
         }
 
-        // ============================================================
-        // ParseBlogListFromJson
-        // ============================================================
-
         private List<Blog> ParseBlogListFromJson(string json)
         {
             var blogs = new List<Blog>();
@@ -1024,10 +967,6 @@ namespace MyPersonalWebsite.Services
             var blogs = ParseBlogListFromJson(json);
             return blogs.FirstOrDefault();
         }
-
-        // ============================================================
-        // ParseMessageListFromJson
-        // ============================================================
 
         private List<Message> ParseMessageListFromJson(string json)
         {
@@ -1095,10 +1034,6 @@ namespace MyPersonalWebsite.Services
             var messages = ParseMessageListFromJson(json);
             return messages.FirstOrDefault();
         }
-
-        // ============================================================
-        // ParseContactRequestListFromJson
-        // ============================================================
 
         private List<ContactRequest> ParseContactRequestListFromJson(string json)
         {
@@ -1170,10 +1105,6 @@ namespace MyPersonalWebsite.Services
             return requests.FirstOrDefault();
         }
 
-        // ============================================================
-        // ParseAboutMeListFromJson
-        // ============================================================
-
         private List<AboutMe> ParseAboutMeListFromJson(string json)
         {
             var sections = new List<AboutMe>();
@@ -1230,10 +1161,6 @@ namespace MyPersonalWebsite.Services
             return sections;
         }
 
-        // ============================================================
-        // ParseNotificationListFromJson
-        // ============================================================
-
         private List<Notification> ParseNotificationListFromJson(string json)
         {
             var notifications = new List<Notification>();
@@ -1289,110 +1216,104 @@ namespace MyPersonalWebsite.Services
             }
             return notifications;
         }
-                // ============================================================
-        // 📚 题库解析方法
-        // ============================================================
 
-private List<BankQuestion> ParseBankQuestionList(string json)
-{
-    var list = new List<BankQuestion>();
-    try
-    {
-        using var doc = JsonDocument.Parse(json);
-        var root = doc.RootElement;
-
-        if (root.TryGetProperty("results", out var results) && results.GetArrayLength() > 0)
+        private List<BankQuestion> ParseBankQuestionList(string json)
         {
-            var firstResult = results[0];
-            if (firstResult.TryGetProperty("response", out var response) &&
-                response.TryGetProperty("result", out var result))
+            var list = new List<BankQuestion>();
+            try
             {
-                if (result.TryGetProperty("rows", out var rows) && rows.GetArrayLength() > 0)
+                using var doc = JsonDocument.Parse(json);
+                var root = doc.RootElement;
+
+                if (root.TryGetProperty("results", out var results) && results.GetArrayLength() > 0)
                 {
-                    var cols = result.GetProperty("cols");
-
-                    for (int r = 0; r < rows.GetArrayLength(); r++)
+                    var firstResult = results[0];
+                    if (firstResult.TryGetProperty("response", out var response) &&
+                        response.TryGetProperty("result", out var result))
                     {
-                        var row = rows[r];
-                        if (row.ValueKind != JsonValueKind.Array) continue;
-
-                        var q = new BankQuestion();
-
-                        for (int i = 0; i < cols.GetArrayLength(); i++)
+                        if (result.TryGetProperty("rows", out var rows) && rows.GetArrayLength() > 0)
                         {
-                            var colName = cols[i].GetProperty("name").GetString();
-                            var element = row[i];
+                            var cols = result.GetProperty("cols");
 
-                            if (element.ValueKind == JsonValueKind.Object && element.TryGetProperty("value", out var v))
+                            for (int r = 0; r < rows.GetArrayLength(); r++)
                             {
-                                // ⭐ 特殊处理 Id：可能是字符串也可能是数字
-                                if (colName == "Id")
+                                var row = rows[r];
+                                if (row.ValueKind != JsonValueKind.Array) continue;
+
+                                var q = new BankQuestion();
+
+                                for (int i = 0; i < cols.GetArrayLength(); i++)
                                 {
-                                    if (v.ValueKind == JsonValueKind.String)
+                                    var colName = cols[i].GetProperty("name").GetString();
+                                    var element = row[i];
+
+                                    if (element.ValueKind == JsonValueKind.Object && element.TryGetProperty("value", out var v))
                                     {
-                                        q.Id = int.TryParse(v.GetString(), out var id) ? id : 0;
+                                        if (colName == "Id")
+                                        {
+                                            if (v.ValueKind == JsonValueKind.String)
+                                            {
+                                                q.Id = int.TryParse(v.GetString(), out var id) ? id : 0;
+                                            }
+                                            else if (v.ValueKind == JsonValueKind.Number)
+                                            {
+                                                q.Id = v.GetInt32();
+                                            }
+                                            else
+                                            {
+                                                q.Id = 0;
+                                            }
+                                        }
+                                        else if (colName == "Question")
+                                        {
+                                            q.Question = v.ValueKind == JsonValueKind.String ? v.GetString() ?? "" : "";
+                                        }
+                                        else if (colName == "Answer")
+                                        {
+                                            q.Answer = v.ValueKind == JsonValueKind.String ? v.GetString() ?? "" : "";
+                                        }
+                                        else if (colName == "Pinyin")
+                                        {
+                                            q.Pinyin = v.ValueKind == JsonValueKind.String ? v.GetString() ?? "" : "";
+                                        }
+                                        else if (colName == "Hint")
+                                        {
+                                            q.Hint = v.ValueKind == JsonValueKind.String ? v.GetString() : null;
+                                        }
+                                        else if (colName == "Difficulty")
+                                        {
+                                            q.Difficulty = v.ValueKind == JsonValueKind.Number ? v.GetInt32() : 1;
+                                        }
+                                        else if (colName == "Category")
+                                        {
+                                            q.Category = v.ValueKind == JsonValueKind.String ? v.GetString() ?? "综合" : "综合";
+                                        }
+                                        else if (colName == "IsActive")
+                                        {
+                                            q.IsActive = v.ValueKind == JsonValueKind.Number ? v.GetInt32() == 1 : true;
+                                        }
+                                        else if (colName == "UseCount")
+                                        {
+                                            q.UseCount = v.ValueKind == JsonValueKind.Number ? v.GetInt32() : 0;
+                                        }
+                                        else if (colName == "CreatedAt")
+                                        {
+                                            q.CreatedAt = v.ValueKind == JsonValueKind.String ? DateTime.Parse(v.GetString() ?? "") : DateTime.Now;
+                                        }
                                     }
-                                    else if (v.ValueKind == JsonValueKind.Number)
-                                    {
-                                        q.Id = v.GetInt32();
-                                    }
-                                    else
-                                    {
-                                        q.Id = 0;
-                                    }
-                                    // ⭐ 添加日志
-                                    Console.WriteLine($"🔍 解析 Id: {q.Id}, 原始值: {v}, 类型: {v.ValueKind}");
                                 }
-                                else if (colName == "Question")
-                                {
-                                    q.Question = v.ValueKind == JsonValueKind.String ? v.GetString() ?? "" : "";
-                                }
-                                else if (colName == "Answer")
-                                {
-                                    q.Answer = v.ValueKind == JsonValueKind.String ? v.GetString() ?? "" : "";
-                                }
-                                else if (colName == "Pinyin")
-                                {
-                                    q.Pinyin = v.ValueKind == JsonValueKind.String ? v.GetString() ?? "" : "";
-                                }
-                                else if (colName == "Hint")
-                                {
-                                    q.Hint = v.ValueKind == JsonValueKind.String ? v.GetString() : null;
-                                }
-                                else if (colName == "Difficulty")
-                                {
-                                    q.Difficulty = v.ValueKind == JsonValueKind.Number ? v.GetInt32() : 1;
-                                }
-                                else if (colName == "Category")
-                                {
-                                    q.Category = v.ValueKind == JsonValueKind.String ? v.GetString() ?? "综合" : "综合";
-                                }
-                                else if (colName == "IsActive")
-                                {
-                                    q.IsActive = v.ValueKind == JsonValueKind.Number ? v.GetInt32() == 1 : true;
-                                }
-                                else if (colName == "UseCount")
-                                {
-                                    q.UseCount = v.ValueKind == JsonValueKind.Number ? v.GetInt32() : 0;
-                                }
-                                else if (colName == "CreatedAt")
-                                {
-                                    q.CreatedAt = v.ValueKind == JsonValueKind.String ? DateTime.Parse(v.GetString() ?? "") : DateTime.Now;
-                                }
+                                list.Add(q);
                             }
                         }
-                        list.Add(q);
                     }
                 }
             }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"⚠️ 解析题库 JSON 失败: {ex.Message}");
+            }
+            return list;
         }
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"⚠️ 解析题库 JSON 失败: {ex.Message}");
-    }
-    return list;
-}
 
         private BankQuestion? ParseBankQuestion(string json)
         {
@@ -1401,8 +1322,143 @@ private List<BankQuestion> ParseBankQuestionList(string json)
         }
 
         // ============================================================
+        // 游戏统计
+        // ============================================================
+
+        public async Task<UserGameStats?> GetUserGameStatsAsync(int userId)
+        {
+            if (!_tursoAvailable) return null;
+
+            var result = await _tursoService.QueryAsync(
+                $"SELECT * FROM UserGameStats WHERE UserId = {userId}"
+            );
+            return ParseUserGameStats(result);
+        }
+
+        public async Task<List<UserGameStats>> GetAllUserGameStatsAsync()
+        {
+            if (!_tursoAvailable) return new List<UserGameStats>();
+
+            var result = await _tursoService.QueryAsync(
+                "SELECT * FROM UserGameStats ORDER BY TotalPoints DESC"
+            );
+            return ParseUserGameStatsList(result);
+        }
+
+        public async Task AddUserGameStatsAsync(UserGameStats stats)
+        {
+            if (!_tursoAvailable) return;
+
+            var sql = $@"INSERT INTO UserGameStats (
+                UserId, TotalPoints, MaxCombo, MaxLevel, GamesPlayed, UpdatedAt
+            ) VALUES (
+                {stats.UserId}, {stats.TotalPoints}, {stats.MaxCombo},
+                {stats.MaxLevel}, {stats.GamesPlayed}, '{stats.UpdatedAt:yyyy-MM-dd HH:mm:ss}'
+            )";
+
+            await _tursoService.ExecuteSqlAsync(sql);
+        }
+
+        public async Task UpdateUserGameStatsAsync(UserGameStats stats)
+        {
+            if (!_tursoAvailable) return;
+
+            var sql = $@"UPDATE UserGameStats SET
+                TotalPoints = {stats.TotalPoints},
+                MaxCombo = {stats.MaxCombo},
+                MaxLevel = {stats.MaxLevel},
+                GamesPlayed = {stats.GamesPlayed},
+                UpdatedAt = '{stats.UpdatedAt:yyyy-MM-dd HH:mm:ss}'
+            WHERE UserId = {stats.UserId}";
+
+            await _tursoService.ExecuteSqlAsync(sql);
+        }
+
+        // ============================================================
+        // 游戏统计解析方法
+        // ============================================================
+
+        private UserGameStats? ParseUserGameStats(string json)
+        {
+            var list = ParseUserGameStatsList(json);
+            return list.FirstOrDefault();
+        }
+
+        private List<UserGameStats> ParseUserGameStatsList(string json)
+        {
+            var list = new List<UserGameStats>();
+            try
+            {
+                using var doc = JsonDocument.Parse(json);
+                var root = doc.RootElement;
+
+                if (root.TryGetProperty("results", out var results) && results.GetArrayLength() > 0)
+                {
+                    var firstResult = results[0];
+                    if (firstResult.TryGetProperty("response", out var response) &&
+                        response.TryGetProperty("result", out var result))
+                    {
+                        if (result.TryGetProperty("rows", out var rows) && rows.GetArrayLength() > 0)
+                        {
+                            var cols = result.GetProperty("cols");
+
+                            for (int r = 0; r < rows.GetArrayLength(); r++)
+                            {
+                                var row = rows[r];
+                                if (row.ValueKind != JsonValueKind.Array) continue;
+
+                                var stats = new UserGameStats();
+                                for (int i = 0; i < cols.GetArrayLength(); i++)
+                                {
+                                    var colName = cols[i].GetProperty("name").GetString();
+                                    var element = row[i];
+
+                                    switch (colName)
+                                    {
+                                        case "Id": stats.Id = GetIntFromRow(element); break;
+                                        case "UserId": stats.UserId = GetIntFromRow(element); break;
+                                        case "TotalPoints": stats.TotalPoints = GetIntFromRow(element); break;
+                                        case "MaxCombo": stats.MaxCombo = GetIntFromRow(element); break;
+                                        case "MaxLevel": stats.MaxLevel = GetIntFromRow(element); break;
+                                        case "GamesPlayed": stats.GamesPlayed = GetIntFromRow(element); break;
+                                        case "UpdatedAt": stats.UpdatedAt = GetDateTimeFromRow(element) ?? DateTime.Now; break;
+                                    }
+                                }
+                                list.Add(stats);
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"解析游戏统计失败: {ex.Message}");
+            }
+            return list;
+        }
+
+        // ============================================================
         // 工具方法
         // ============================================================
+
+        private string GenerateLoginToken()
+        {
+            var bytes = new byte[32];
+            using (var rng = System.Security.Cryptography.RandomNumberGenerator.Create())
+            {
+                rng.GetBytes(bytes);
+            }
+            var token = Convert.ToBase64String(bytes)
+                .Replace("+", "")
+                .Replace("/", "")
+                .Replace("=", "");
+            
+            if (token.Length < 32)
+            {
+                token = token.PadRight(32, '0');
+            }
+            return token.Substring(0, 32);
+        }
 
         private string EscapeSql(string value)
         {
@@ -1410,119 +1466,4 @@ private List<BankQuestion> ParseBankQuestionList(string json)
             return value.Replace("'", "''");
         }
     }
-    // ============================================================
-// 游戏统计
-// ============================================================
-
-public async Task<UserGameStats?> GetUserGameStatsAsync(int userId)
-{
-    if (!_tursoAvailable) return null;
-
-    var result = await _tursoService.QueryAsync(
-        $"SELECT * FROM UserGameStats WHERE UserId = {userId}"
-    );
-    return ParseUserGameStats(result);
-}
-
-public async Task<List<UserGameStats>> GetAllUserGameStatsAsync()
-{
-    if (!_tursoAvailable) return new List<UserGameStats>();
-
-    var result = await _tursoService.QueryAsync(
-        "SELECT * FROM UserGameStats ORDER BY TotalPoints DESC"
-    );
-    return ParseUserGameStatsList(result);
-}
-
-public async Task AddUserGameStatsAsync(UserGameStats stats)
-{
-    if (!_tursoAvailable) return;
-
-    var sql = $@"INSERT INTO UserGameStats (
-        UserId, TotalPoints, MaxCombo, MaxLevel, GamesPlayed, UpdatedAt
-    ) VALUES (
-        {stats.UserId}, {stats.TotalPoints}, {stats.MaxCombo},
-        {stats.MaxLevel}, {stats.GamesPlayed}, '{stats.UpdatedAt:yyyy-MM-dd HH:mm:ss}'
-    )";
-
-    await _tursoService.ExecuteSqlAsync(sql);
-}
-
-public async Task UpdateUserGameStatsAsync(UserGameStats stats)
-{
-    if (!_tursoAvailable) return;
-
-    var sql = $@"UPDATE UserGameStats SET
-        TotalPoints = {stats.TotalPoints},
-        MaxCombo = {stats.MaxCombo},
-        MaxLevel = {stats.MaxLevel},
-        GamesPlayed = {stats.GamesPlayed},
-        UpdatedAt = '{stats.UpdatedAt:yyyy-MM-dd HH:mm:ss}'
-    WHERE UserId = {stats.UserId}";
-
-    await _tursoService.ExecuteSqlAsync(sql);
-}
-
-// ============================================================
-// 解析方法
-// ============================================================
-
-private UserGameStats? ParseUserGameStats(string json)
-{
-    var list = ParseUserGameStatsList(json);
-    return list.FirstOrDefault();
-}
-
-private List<UserGameStats> ParseUserGameStatsList(string json)
-{
-    var list = new List<UserGameStats>();
-    try
-    {
-        using var doc = JsonDocument.Parse(json);
-        var root = doc.RootElement;
-
-        if (root.TryGetProperty("results", out var results) && results.GetArrayLength() > 0)
-        {
-            var firstResult = results[0];
-            if (firstResult.TryGetProperty("response", out var response) &&
-                response.TryGetProperty("result", out var result))
-            {
-                if (result.TryGetProperty("rows", out var rows) && rows.GetArrayLength() > 0)
-                {
-                    var cols = result.GetProperty("cols");
-
-                    for (int r = 0; r < rows.GetArrayLength(); r++)
-                    {
-                        var row = rows[r];
-                        if (row.ValueKind != JsonValueKind.Array) continue;
-
-                        var stats = new UserGameStats();
-                        for (int i = 0; i < cols.GetArrayLength(); i++)
-                        {
-                            var colName = cols[i].GetProperty("name").GetString();
-                            var element = row[i];
-
-                            switch (colName)
-                            {
-                                case "Id": stats.Id = GetIntFromRow(element); break;
-                                case "UserId": stats.UserId = GetIntFromRow(element); break;
-                                case "TotalPoints": stats.TotalPoints = GetIntFromRow(element); break;
-                                case "MaxCombo": stats.MaxCombo = GetIntFromRow(element); break;
-                                case "MaxLevel": stats.MaxLevel = GetIntFromRow(element); break;
-                                case "GamesPlayed": stats.GamesPlayed = GetIntFromRow(element); break;
-                                case "UpdatedAt": stats.UpdatedAt = GetDateTimeFromRow(element) ?? DateTime.Now; break;
-                            }
-                        }
-                        list.Add(stats);
-                    }
-                }
-            }
-        }
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"解析游戏统计失败: {ex.Message}");
-    }
-    return list;
-}
 }
