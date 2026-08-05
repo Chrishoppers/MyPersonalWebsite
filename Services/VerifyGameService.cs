@@ -9,7 +9,6 @@ namespace MyPersonalWebsite.Services
     {
         private readonly Random _random = new();
 
-        // ===== 颜色池 =====
         private readonly List<(string name, string hex)> _colors = new()
         {
             ("红色", "#FF0000"), ("蓝色", "#0055FF"), ("绿色", "#00AA00"),
@@ -20,7 +19,6 @@ namespace MyPersonalWebsite.Services
             ("天蓝", "#00BFFF"), ("墨绿", "#008B00"), ("紫罗兰", "#8B00FF")
         };
 
-        // ===== 成语库 =====
         private readonly List<string> _idioms = new()
         {
             "一马当先", "龙飞凤舞", "画蛇添足", "守株待兔", "狐假虎威",
@@ -31,7 +29,6 @@ namespace MyPersonalWebsite.Services
             "蝇头小利", "鹤发童颜", "螳臂当车", "鼠目寸光", "虎踞龙盘"
         };
 
-        // ===== 汉字笔画 =====
         private readonly Dictionary<char, int> _strokeMap = new()
         {
             {'一',1},{'二',2},{'三',3},{'四',5},{'五',4},{'六',4},{'七',2},{'八',2},{'九',2},{'十',2},
@@ -49,12 +46,8 @@ namespace MyPersonalWebsite.Services
             {'齉',36},{'齾',35},{'龗',33},{'灪',29},{'籲',32},{'爩',33},{'䨻',44},{'䲜',28}
         };
 
-        // ===== 中文数字 =====
         private readonly string[] _chineseNumbers = { "零", "一", "二", "三", "四", "五", "六", "七", "八", "九", "十" };
 
-        // ============================================================
-        // 20种类型 × 5关 = 100关
-        // ============================================================
         public CaptchaChallenge GenerateChallenge(int level)
         {
             var typeIndex = (level - 1) / 5;
@@ -86,7 +79,127 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 类型0：文字扭曲识别（1-5关）
+        // 类型0-18 方法保持不变，这里省略重复代码...
+        // ============================================================
+
+        // ⭐ 修复：所有 char 转 string 的方法
+        private List<string> GenerateOptionsFromChar(char correct, int count)
+        {
+            var chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+            var options = new List<string> { correct.ToString() };
+            while (options.Count < count)
+            {
+                var c = chars[_random.Next(chars.Length)];
+                if (!options.Contains(c.ToString())) options.Add(c.ToString());
+            }
+            Shuffle(options);
+            return options;
+        }
+
+        // ⭐ 修复：所有 char 转 string 的通用方法
+        private List<string> GenerateOptions(char correct, int count)
+        {
+            return GenerateOptionsFromChar(correct, count);
+        }
+
+        // 原 GenerateOptions(string correct, int count) 保持不变
+        private List<string> GenerateOptions(string correct, int count)
+        {
+            var chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+            var options = new List<string> { correct };
+            while (options.Count < count)
+            {
+                var fake = new string(Enumerable.Range(0, correct.Length).Select(_ => chars[_random.Next(chars.Length)]).ToArray());
+                if (!options.Contains(fake)) options.Add(fake);
+            }
+            Shuffle(options);
+            return options;
+        }
+
+        private List<string> GenerateNumberOptions(int correct, int count, int level)
+        {
+            var options = new List<string> { correct.ToString() };
+            var range = Math.Max(3, 5 + level / 10);
+            while (options.Count < count)
+            {
+                var fake = correct + _random.Next(-range, range);
+                if (fake < 0) fake = _random.Next(1, 20);
+                var str = fake.ToString();
+                if (!options.Contains(str) && str != correct.ToString()) options.Add(str);
+            }
+            Shuffle(options);
+            return options;
+        }
+
+        private void Shuffle<T>(List<T> list)
+        {
+            for (int i = list.Count - 1; i > 0; i--)
+            {
+                var j = _random.Next(i + 1);
+                (list[i], list[j]) = (list[j], list[i]);
+            }
+        }
+
+        private string GenerateSvg(string text, int distortion, int lineCount)
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine($"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"320\" height=\"90\" viewBox=\"0 0 320 90\">");
+            sb.AppendLine($"<rect width=\"320\" height=\"90\" rx=\"10\" fill=\"#f0f0f0\"/>");
+
+            for (int i = 0; i < lineCount; i++)
+            {
+                var r = _random.Next(100, 220);
+                var g = _random.Next(100, 220);
+                var b = _random.Next(100, 220);
+                sb.AppendLine($"<line x1=\"{_random.Next(0, 320)}\" y1=\"{_random.Next(0, 90)}\" x2=\"{_random.Next(0, 320)}\" y2=\"{_random.Next(0, 90)}\" stroke=\"rgb({r},{g},{b})\" stroke-width=\"{_random.Next(1, 3)}\" opacity=\"0.4\"/>");
+            }
+
+            var chars = text.ToCharArray();
+            var spacing = 280 / chars.Length;
+            for (int i = 0; i < chars.Length; i++)
+            {
+                var r = _random.Next(10, 80);
+                var g = _random.Next(10, 80);
+                var b = _random.Next(10, 80);
+                var angle = _random.Next(-distortion, distortion);
+                var x = 20 + i * spacing + _random.Next(-5, 5);
+                sb.AppendLine($"<text x=\"{x}\" y=\"50\" font-family=\"Arial, sans-serif\" font-size=\"36\" font-weight=\"bold\" fill=\"rgb({r},{g},{b})\" transform=\"rotate({angle} {x} 50)\" text-anchor=\"middle\" dominant-baseline=\"central\">{chars[i]}</text>");
+            }
+
+            sb.AppendLine("</svg>");
+            return sb.ToString();
+        }
+
+        private string GenerateQuickSvg(string target)
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine($"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"320\" height=\"90\" viewBox=\"0 0 320 90\">");
+            sb.AppendLine($"<rect width=\"320\" height=\"90\" rx=\"10\" fill=\"#f0f0f0\"/>");
+            var r = _random.Next(10, 80);
+            var g = _random.Next(10, 80);
+            var b = _random.Next(10, 80);
+            sb.AppendLine($"<text x=\"160\" y=\"50\" font-family=\"Arial, sans-serif\" font-size=\"48\" font-weight=\"bold\" fill=\"rgb({r},{g},{b})\" text-anchor=\"middle\" dominant-baseline=\"central\">{target}</text>");
+            sb.AppendLine("</svg>");
+            return sb.ToString();
+        }
+
+        private int GetPoints(int level) => 10 + level / 5;
+        private int GetTimeLimit(int level) => Math.Max(5, 20 - level / 5);
+
+        private string GetMessage(int level)
+        {
+            var msgs = new[] { "✨ 轻松！", "🔥 继续！", "💪 加油！", "⭐ 太强了！", "🚀 冲！" };
+            return msgs[_random.Next(msgs.Length)];
+        }
+
+        private string GetUltimateMessage(int level)
+        {
+            var msgs = new[] { "🏆 终极王者！", "💀 连AI都怕你！", "👑 你是人类之光！", "🚀 太逆天了！", "⚡ 无敌！" };
+            return msgs[_random.Next(msgs.Length)];
+        }
+
+        // ============================================================
+        // 类型0：文字扭曲识别
         // ============================================================
         private CaptchaChallenge GenerateTextChallenge(int level)
         {
@@ -112,7 +225,7 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 类型1：算术计算（6-10关）
+        // 类型1：算术计算
         // ============================================================
         private CaptchaChallenge GenerateArithmeticChallenge(int level)
         {
@@ -139,7 +252,7 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 类型2：汉字笔画数（11-15关）
+        // 类型2：汉字笔画数
         // ============================================================
         private CaptchaChallenge GenerateStrokeChallenge(int level)
         {
@@ -170,11 +283,10 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 类型3：颜色识别（16-20关）
+        // 类型3：颜色识别
         // ============================================================
         private CaptchaChallenge GenerateColorChallenge(int level)
         {
-            var progress = (level - 16) % 5 + 1;
             var idx = _random.Next(_colors.Count);
             var color = _colors[idx];
 
@@ -204,11 +316,10 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 类型4：找不同（21-25关）
+        // 类型4：找不同
         // ============================================================
         private CaptchaChallenge GenerateFindDifferentChallenge(int level)
         {
-            var progress = (level - 21) % 5 + 1;
             var chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
             var target = chars[_random.Next(chars.Length)];
             var options = new List<string> { target.ToString() };
@@ -234,7 +345,7 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 类型5：倒序识别（26-30关）
+        // 类型5：倒序识别
         // ============================================================
         private CaptchaChallenge GenerateReverseChallenge(int level)
         {
@@ -261,7 +372,7 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 类型6：缺失字母（31-35关）
+        // 类型6：缺失字母
         // ============================================================
         private CaptchaChallenge GenerateMissingLetterChallenge(int level)
         {
@@ -289,7 +400,7 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 类型7：快速点击（36-40关）
+        // 类型7：快速点击
         // ============================================================
         private CaptchaChallenge GenerateQuickTapChallenge(int level)
         {
@@ -320,7 +431,7 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 类型8：成语填空（41-45关）
+        // 类型8：成语填空
         // ============================================================
         private CaptchaChallenge GenerateIdiomChallenge(int level)
         {
@@ -345,7 +456,7 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 类型9：中文数字转阿拉伯（46-50关）
+        // 类型9：中文数字转阿拉伯
         // ============================================================
         private CaptchaChallenge GenerateChineseNumberChallenge(int level)
         {
@@ -367,7 +478,7 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 类型10：大小写转换（51-55关）
+        // 类型10：大小写转换
         // ============================================================
         private CaptchaChallenge GenerateCaseConversionChallenge(int level)
         {
@@ -390,11 +501,11 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 类型11：拼音首字母（56-60关）
+        // 类型11：拼音首字母
         // ============================================================
         private CaptchaChallenge GeneratePinyinChallenge(int level)
         {
-            var chars = new[] { 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'J', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'W', 'X', 'Y', 'Z' };
+            var chars = "ABCDEFGHJKLMNPQRSTUVWXYZ";
             var c = chars[_random.Next(chars.Length)];
             var pinyin = new Dictionary<char, string> {
                 {'A',"ei"},{'B',"bi"},{'C',"xi"},{'D',"di"},{'E',"yi"},{'F',"efu"},{'G',"ji"},{'H',"eichi"},
@@ -417,7 +528,7 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 类型12：反色识别（61-65关）
+        // 类型12：反色识别
         // ============================================================
         private CaptchaChallenge GenerateInverseColorChallenge(int level)
         {
@@ -442,7 +553,7 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 类型13：镜像文字（66-70关）
+        // 类型13：镜像文字
         // ============================================================
         private CaptchaChallenge GenerateMirrorChallenge(int level)
         {
@@ -468,7 +579,7 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 类型14：键盘相邻键（71-75关）
+        // 类型14：键盘相邻键
         // ============================================================
         private CaptchaChallenge GenerateKeyboardNeighborChallenge(int level)
         {
@@ -518,7 +629,7 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 类型15：汉字拆分（76-80关）
+        // 类型15：汉字拆分
         // ============================================================
         private CaptchaChallenge GenerateSplitCharacterChallenge(int level)
         {
@@ -540,7 +651,7 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 类型16：数字记忆（81-85关）
+        // 类型16：数字记忆
         // ============================================================
         private CaptchaChallenge GenerateMemoryChallenge(int level)
         {
@@ -564,7 +675,7 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 类型17：方向判断（86-90关）
+        // 类型17：方向判断
         // ============================================================
         private CaptchaChallenge GenerateDirectionChallenge(int level)
         {
@@ -586,7 +697,7 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 类型18：字符计数（91-95关）
+        // 类型18：字符计数
         // ============================================================
         private CaptchaChallenge GenerateCountChallenge(int level)
         {
@@ -612,7 +723,7 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 类型19：终极混合（96-100关）
+        // 类型19：终极混合
         // ============================================================
         private CaptchaChallenge GenerateUltimateChallenge(int level)
         {
@@ -651,128 +762,6 @@ namespace MyPersonalWebsite.Services
             challenge.FunMessage = GetUltimateMessage(level);
 
             return challenge;
-        }
-
-        // ============================================================
-        // 工具方法
-        // ============================================================
-
-        private string GenerateSvg(string text, int distortion, int lineCount)
-        {
-            var sb = new StringBuilder();
-            sb.AppendLine($"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"320\" height=\"90\" viewBox=\"0 0 320 90\">");
-            sb.AppendLine($"<rect width=\"320\" height=\"90\" rx=\"10\" fill=\"#f0f0f0\"/>");
-
-            for (int i = 0; i < lineCount; i++)
-            {
-                var r = _random.Next(100, 220);
-                var g = _random.Next(100, 220);
-                var b = _random.Next(100, 220);
-                sb.AppendLine($"<line x1=\"{_random.Next(0, 320)}\" y1=\"{_random.Next(0, 90)}\" x2=\"{_random.Next(0, 320)}\" y2=\"{_random.Next(0, 90)}\" stroke=\"rgb({r},{g},{b})\" stroke-width=\"{_random.Next(1, 3)}\" opacity=\"0.4\"/>");
-            }
-
-            var chars = text.ToCharArray();
-            var spacing = 280 / chars.Length;
-            for (int i = 0; i < chars.Length; i++)
-            {
-                var r = _random.Next(10, 80);
-                var g = _random.Next(10, 80);
-                var b = _random.Next(10, 80);
-                var angle = _random.Next(-distortion, distortion);
-                var x = 20 + i * spacing + _random.Next(-5, 5);
-                sb.AppendLine($"<text x=\"{x}\" y=\"50\" font-family=\"Arial, sans-serif\" font-size=\"36\" font-weight=\"bold\" fill=\"rgb({r},{g},{b})\" transform=\"rotate({angle} {x} 50)\" text-anchor=\"middle\" dominant-baseline=\"central\">{chars[i]}</text>");
-            }
-
-            sb.AppendLine("</svg>");
-            return sb.ToString();
-        }
-
-        private string GenerateQuickSvg(string target)
-        {
-            var sb = new StringBuilder();
-            sb.AppendLine($"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"320\" height=\"90\" viewBox=\"0 0 320 90\">");
-            sb.AppendLine($"<rect width=\"320\" height=\"90\" rx=\"10\" fill=\"#f0f0f0\"/>");
-
-            var r = _random.Next(10, 80);
-            var g = _random.Next(10, 80);
-            var b = _random.Next(10, 80);
-            sb.AppendLine($"<text x=\"160\" y=\"50\" font-family=\"Arial, sans-serif\" font-size=\"48\" font-weight=\"bold\" fill=\"rgb({r},{g},{b})\" text-anchor=\"middle\" dominant-baseline=\"central\">{target}</text>");
-
-            sb.AppendLine("</svg>");
-            return sb.ToString();
-        }
-
-        private List<string> GenerateOptions(string correct, int count)
-        {
-            var chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-            var options = new List<string> { correct };
-            while (options.Count < count)
-            {
-                var fake = new string(Enumerable.Range(0, correct.Length).Select(_ => chars[_random.Next(chars.Length)]).ToArray());
-                if (!options.Contains(fake)) options.Add(fake);
-            }
-            Shuffle(options);
-            return options;
-        }
-
-        private List<string> GenerateNumberOptions(int correct, int count, int level)
-        {
-            var options = new List<string> { correct.ToString() };
-            var range = Math.Max(3, 5 + level / 10);
-            while (options.Count < count)
-            {
-                var fake = correct + _random.Next(-range, range);
-                if (fake < 0) fake = _random.Next(1, 20);
-                var str = fake.ToString();
-                if (!options.Contains(str) && str != correct.ToString()) options.Add(str);
-            }
-            Shuffle(options);
-            return options;
-        }
-
-        // ⭐ 修复：所有 char 转 string
-        private List<string> GenerateOptions(char correct, int count)
-        {
-            var chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-            var options = new List<string> { correct.ToString() };
-            while (options.Count < count)
-            {
-                var c = chars[_random.Next(chars.Length)];
-                if (!options.Contains(c.ToString())) options.Add(c.ToString());
-            }
-            Shuffle(options);
-            return options;
-        }
-
-        private void Shuffle<T>(List<T> list)
-        {
-            for (int i = list.Count - 1; i > 0; i--)
-            {
-                var j = _random.Next(i + 1);
-                (list[i], list[j]) = (list[j], list[i]);
-            }
-        }
-
-        private int GetPoints(int level)
-        {
-            return 10 + level / 5;
-        }
-
-        private int GetTimeLimit(int level)
-        {
-            return Math.Max(5, 20 - level / 5);
-        }
-
-        private string GetMessage(int level)
-        {
-            var msgs = new[] { "✨ 轻松！", "🔥 继续！", "💪 加油！", "⭐ 太强了！", "🚀 冲！" };
-            return msgs[_random.Next(msgs.Length)];
-        }
-
-        private string GetUltimateMessage(int level)
-        {
-            var msgs = new[] { "🏆 终极王者！", "💀 连AI都怕你！", "👑 你是人类之光！", "🚀 太逆天了！", "⚡ 无敌！" };
-            return msgs[_random.Next(msgs.Length)];
         }
     }
 
