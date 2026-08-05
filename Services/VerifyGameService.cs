@@ -52,7 +52,9 @@ namespace MyPersonalWebsite.Services
         // ===== 中文数字 =====
         private readonly string[] _chineseNumbers = { "零", "一", "二", "三", "四", "五", "六", "七", "八", "九", "十" };
 
-        // ===== 20种类型 =====
+        // ============================================================
+        // 20种类型 × 5关 = 100关
+        // ============================================================
         public CaptchaChallenge GenerateChallenge(int level)
         {
             var typeIndex = (level - 1) / 5;
@@ -146,7 +148,6 @@ namespace MyPersonalWebsite.Services
             var ch = keys[_random.Next(keys.Count)];
             var stroke = _strokeMap[ch];
 
-            // 第5关用生僻字
             if (progress == 5)
             {
                 var hardKeys = new[] { '龘', '爨', '鬱', '灩', '驫', '鸞', '麤', '龖' };
@@ -724,6 +725,20 @@ namespace MyPersonalWebsite.Services
                 if (fake < 0) fake = _random.Next(1, 20);
                 var str = fake.ToString();
                 if (!options.Contains(str) && str != correct.ToString()) options.Add(str);
+            }
+            Shuffle(options);
+            return options;
+        }
+
+        // ⭐ 修复：所有 char 转 string
+        private List<string> GenerateOptions(char correct, int count)
+        {
+            var chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+            var options = new List<string> { correct.ToString() };
+            while (options.Count < count)
+            {
+                var c = chars[_random.Next(chars.Length)];
+                if (!options.Contains(c.ToString())) options.Add(c.ToString());
             }
             Shuffle(options);
             return options;
