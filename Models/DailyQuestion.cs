@@ -26,18 +26,18 @@ namespace MyPersonalWebsite.Models
         public DateTime AnswerDate { get; set; }
     }
 
-    public class UserGameStats
-    {
-        public int Id { get; set; }
-        public int UserId { get; set; }
-        public int TotalPoints { get; set; }
-        public int StreakDays { get; set; }
-        public int MaxStreakDays { get; set; }
-        public int TotalCorrect { get; set; }
-        public int TotalAnswered { get; set; }
-        public DateTime? LastAnswerDate { get; set; }
-        public DateTime UpdatedAt { get; set; } = DateTime.Now;
-    }
+   public class UserGameStats
+{
+    public int Id { get; set; }
+    public int UserId { get; set; }
+    public int TotalPoints { get; set; } = 0;
+    public int MaxCombo { get; set; } = 0;
+    public int MaxLevel { get; set; } = 0;
+    public int GamesPlayed { get; set; } = 0;
+    public DateTime UpdatedAt { get; set; } = DateTime.Now;
+
+    public User? User { get; set; }
+}
 
     public class RankItem
     {
