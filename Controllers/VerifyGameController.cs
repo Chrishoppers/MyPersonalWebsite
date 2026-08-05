@@ -626,35 +626,35 @@ namespace MyPersonalWebsite.Controllers
         // ============================================================
         // 2. 算术
         // ============================================================
-        private object GenerateArithmetic(int level, int difficulty)
-        {
-            int maxNum = 10 + difficulty * 5;
-            int a = _random.Next(5, maxNum);
-            int b = _random.Next(1, Math.Max(2, maxNum / 2));
+       private object GenerateArithmetic(int level, int difficulty)
+{
+    int maxNum = 10 + difficulty * 5;
+    int a = _random.Next(5, maxNum);
+    int b = _random.Next(1, Math.Max(2, maxNum / 2));
 
-            string[] ops = difficulty > 60 ? new[] { '+', '-', '×', '÷' } :
-                           difficulty > 30 ? new[] { '+', '-', '×', '÷' } :
-                           difficulty > 15 ? new[] { '+', '-', '×' } : new[] { '+', '-' };
+    char[] ops = difficulty > 60 ? new[] { '+', '-', '×', '÷' } :
+                 difficulty > 30 ? new[] { '+', '-', '×', '÷' } :
+                 difficulty > 15 ? new[] { '+', '-', '×' } : new[] { '+', '-' };
 
-            string op = ops[_random.Next(ops.Length)];
-            int result = op == '+' ? a + b : op == '-' ? a - b : op == '×' ? a * b : a / b;
-            if (result < 0) result = Math.Abs(result);
-            if (result == 0) result = a + b;
+    char op = ops[_random.Next(ops.Length)];
+    int result = op == '+' ? a + b : op == '-' ? a - b : op == '×' ? a * b : a / b;
+    if (result < 0) result = Math.Abs(result);
+    if (result == 0) result = a + b;
 
-            var options = GenerateNumberOptions(result, 4 + difficulty / 10);
-            int timeLimit = Math.Max(4, 15 - difficulty / 8);
+    var options = GenerateNumberOptions(result, 4 + difficulty / 10);
+    int timeLimit = Math.Max(4, 15 - difficulty / 8);
 
-            return new
-            {
-                type = "arithmetic",
-                level = level,
-                question = $"🧮 {a} {op} {b} = ?",
-                correctAnswer = result.ToString(),
-                options = options,
-                timeLimit = timeLimit,
-                funMessage = GetFunMessage("arithmetic")
-            };
-        }
+    return new
+    {
+        type = "arithmetic",
+        level = level,
+        question = $"🧮 {a} {op} {b} = ?",
+        correctAnswer = result.ToString(),
+        options = options,
+        timeLimit = timeLimit,
+        funMessage = GetFunMessage("arithmetic")
+    };
+}
 
         private List<string> GenerateNumberOptions(int correct, int count)
         {
