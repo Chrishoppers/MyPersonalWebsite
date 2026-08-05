@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Linq;
 using MyPersonalWebsite.Services;
-using MyPersonalWebsite.Models;
+using MyPersonalWebsite.Models;  // ⬅️ 确保这行存在
 using System.Threading.Tasks;
 
 namespace MyPersonalWebsite.Controllers
