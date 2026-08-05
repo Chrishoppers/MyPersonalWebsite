@@ -1030,14 +1030,14 @@ namespace MyPersonalWebsite.Controllers
 
         private bool IsCommonIdiom(string idiom)
         {
-            var common = new string[] { "一马当先", "龙飞凤舞", "画蛇添足", "守株待兔", "狐假虎威",
+            var common = new HashSet<string> { "一马当先", "龙飞凤舞", "画蛇添足", "守株待兔", "狐假虎威",
                 "马到成功", "鸟语花香", "鱼目混珠", "鹤立鸡群", "龙腾虎跃" };
             return common.Contains(idiom);
         }
 
         private bool IsRareIdiom(string idiom)
         {
-            var rare = new string[] { "魑魅魍魉", "饕餮盛宴", "龙骧虎步", "凤翥鸾翔", "鸾翔凤集",
+            var rare = new HashSet<string> { "魑魅魍魉", "饕餮盛宴", "龙骧虎步", "凤翥鸾翔", "鸾翔凤集",
                 "蜚短流长", "龙蟠虎踞", "龙肝凤髓", "凤毛麟角", "鹤唳华亭",
                 "兔起鹘落", "鹰击长空", "鱼跃龙门", "虎视眈眈", "狼奔豕突" };
             return rare.Contains(idiom);
@@ -1321,7 +1321,7 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // 14. 镜像字母（已修复）
+        // 14. 镜像字母
         // ============================================================
         private object GenerateMirrorLetter(int level, int difficulty)
         {
@@ -1329,7 +1329,6 @@ namespace MyPersonalWebsite.Controllers
                 {'A','A'},{'H','H'},{'I','I'},{'M','M'},{'O','O'},{'T','T'},{'U','U'},{'V','V'},{'W','W'},{'X','X'},{'Y','Y'},
                 {'C','C'},{'D','D'},{'E','E'},{'K','K'},{'P','P'},{'S','S'},{'Z','Z'}
             };
-            // 使用 List<char>
             var keys = new List<char>(mirrorMap.Keys);
             char c = keys[_random.Next(keys.Count)];
             char correct = mirrorMap[c];
