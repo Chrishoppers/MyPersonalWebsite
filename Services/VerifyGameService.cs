@@ -14,36 +14,20 @@ namespace MyPersonalWebsite.Services
             ("红色", "#FF0000"), ("蓝色", "#0055FF"), ("绿色", "#00AA00"),
             ("黄色", "#DDBB00"), ("紫色", "#8800CC"), ("橙色", "#FF6600"),
             ("粉色", "#FF4499"), ("青色", "#00CCCC"), ("棕色", "#8B4513"),
-            ("黑色", "#000000"), ("白色", "#FFFFFF"), ("灰色", "#888888"),
-            ("金色", "#DAA520"), ("银色", "#C0C0C0"), ("深红", "#8B0000"),
-            ("天蓝", "#00BFFF"), ("墨绿", "#008B00"), ("紫罗兰", "#8B00FF")
+            ("黑色", "#000000"), ("白色", "#FFFFFF"), ("灰色", "#888888")
         };
 
         private readonly List<string> _idioms = new()
         {
             "一马当先", "龙飞凤舞", "画蛇添足", "守株待兔", "狐假虎威",
             "马到成功", "鸟语花香", "鱼目混珠", "鹤立鸡群", "龙腾虎跃",
-            "画龙点睛", "亡羊补牢", "杯弓蛇影", "指鹿为马", "马不停蹄",
-            "龙争虎斗", "杯水车薪", "纸上谈兵", "鸡犬不宁", "牛刀小试",
-            "羊入虎口", "虎头蛇尾", "狗急跳墙", "狐朋狗友", "牛鬼蛇神",
-            "蝇头小利", "鹤发童颜", "螳臂当车", "鼠目寸光", "虎踞龙盘"
+            "画龙点睛", "亡羊补牢", "杯弓蛇影", "指鹿为马", "马不停蹄"
         };
 
         private readonly Dictionary<char, int> _strokeMap = new()
         {
             {'一',1},{'二',2},{'三',3},{'四',5},{'五',4},{'六',4},{'七',2},{'八',2},{'九',2},{'十',2},
-            {'人',2},{'大',3},{'天',4},{'地',6},{'日',4},{'月',4},{'水',4},{'火',4},{'山',3},{'石',5},
-            {'木',4},{'花',7},{'草',9},{'鸟',5},{'鱼',8},{'马',3},{'牛',4},{'羊',6},{'虫',6},{'云',4},
-            {'风',4},{'雨',8},{'雪',11},{'星',9},{'光',6},{'春',9},{'夏',10},{'秋',9},{'冬',5},{'年',6},
-            {'好',6},{'学',8},{'生',5},{'中',4},{'国',8},{'家',10},{'心',4},{'爱',10},{'乐',5},{'安',6},
-            {'永',5},{'远',7},{'梦',11},{'想',13},{'飞',3},{'行',6},{'白',5},{'黑',12},{'红',6},{'绿',11},
-            {'蓝',13},{'紫',12},{'金',8},{'银',11},{'龙',5},{'虎',8},{'凤',4},{'凰',11},{'喜',12},{'欢',6},
-            {'笑',10},{'哭',10},{'甜',11},{'苦',8},{'美',9},{'丽',7},{'明',8},{'亮',9},{'新',13},{'旧',5},
-            {'高',10},{'低',7},{'长',4},{'短',12},{'快',7},{'慢',14},{'多',6},{'少',4},{'真',10},{'假',11},
-            {'善',12},{'恶',10},{'清',11},{'浊',10},{'深',11},{'浅',8},{'浓',10},{'淡',11},{'远',7},{'近',7},
-            {'繁',17},{'體',23},{'漢',14},{'學',16},{'難',19},{'驗',23},{'證',19},{'碼',15},
-            {'龘',48},{'爨',30},{'鬱',29},{'灩',28},{'驫',30},{'鸞',30},{'麤',33},{'龖',32},
-            {'齉',36},{'齾',35},{'龗',33},{'灪',29},{'籲',32},{'爩',33},{'䨻',44},{'䲜',28}
+            {'人',2},{'大',3},{'天',4},{'地',6},{'日',4},{'月',4},{'水',4},{'火',4},{'山',3},{'石',5}
         };
 
         private readonly string[] _chineseNumbers = { "零", "一", "二", "三", "四", "五", "六", "七", "八", "九", "十" };
@@ -79,66 +63,8 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 类型0-18 方法保持不变，这里省略重复代码...
+        // 工具方法
         // ============================================================
-
-        // ⭐ 修复：所有 char 转 string 的方法
-        private List<string> GenerateOptionsFromChar(char correct, int count)
-        {
-            var chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-            var options = new List<string> { correct.ToString() };
-            while (options.Count < count)
-            {
-                var c = chars[_random.Next(chars.Length)];
-                if (!options.Contains(c.ToString())) options.Add(c.ToString());
-            }
-            Shuffle(options);
-            return options;
-        }
-
-        // ⭐ 修复：所有 char 转 string 的通用方法
-        private List<string> GenerateOptions(char correct, int count)
-        {
-            return GenerateOptionsFromChar(correct, count);
-        }
-
-        // 原 GenerateOptions(string correct, int count) 保持不变
-        private List<string> GenerateOptions(string correct, int count)
-        {
-            var chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-            var options = new List<string> { correct };
-            while (options.Count < count)
-            {
-                var fake = new string(Enumerable.Range(0, correct.Length).Select(_ => chars[_random.Next(chars.Length)]).ToArray());
-                if (!options.Contains(fake)) options.Add(fake);
-            }
-            Shuffle(options);
-            return options;
-        }
-
-        private List<string> GenerateNumberOptions(int correct, int count, int level)
-        {
-            var options = new List<string> { correct.ToString() };
-            var range = Math.Max(3, 5 + level / 10);
-            while (options.Count < count)
-            {
-                var fake = correct + _random.Next(-range, range);
-                if (fake < 0) fake = _random.Next(1, 20);
-                var str = fake.ToString();
-                if (!options.Contains(str) && str != correct.ToString()) options.Add(str);
-            }
-            Shuffle(options);
-            return options;
-        }
-
-        private void Shuffle<T>(List<T> list)
-        {
-            for (int i = list.Count - 1; i > 0; i--)
-            {
-                var j = _random.Next(i + 1);
-                (list[i], list[j]) = (list[j], list[i]);
-            }
-        }
 
         private string GenerateSvg(string text, int distortion, int lineCount)
         {
@@ -183,6 +109,57 @@ namespace MyPersonalWebsite.Services
             return sb.ToString();
         }
 
+        private List<string> GenerateOptionsString(string correct, int count)
+        {
+            var chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+            var options = new List<string> { correct };
+            while (options.Count < count)
+            {
+                var fake = new string(Enumerable.Range(0, correct.Length).Select(_ => chars[_random.Next(chars.Length)]).ToArray());
+                if (!options.Contains(fake)) options.Add(fake);
+            }
+            Shuffle(options);
+            return options;
+        }
+
+        // ⭐ 修复：专门处理 char 参数的重载
+        private List<string> GenerateOptionsChar(char correct, int count)
+        {
+            var chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+            var options = new List<string> { correct.ToString() };
+            while (options.Count < count)
+            {
+                var c = chars[_random.Next(chars.Length)];
+                if (!options.Contains(c.ToString())) options.Add(c.ToString());
+            }
+            Shuffle(options);
+            return options;
+        }
+
+        private List<string> GenerateNumberOptions(int correct, int count, int level)
+        {
+            var options = new List<string> { correct.ToString() };
+            var range = Math.Max(3, 5 + level / 10);
+            while (options.Count < count)
+            {
+                var fake = correct + _random.Next(-range, range);
+                if (fake < 0) fake = _random.Next(1, 20);
+                var str = fake.ToString();
+                if (!options.Contains(str) && str != correct.ToString()) options.Add(str);
+            }
+            Shuffle(options);
+            return options;
+        }
+
+        private void Shuffle<T>(List<T> list)
+        {
+            for (int i = list.Count - 1; i > 0; i--)
+            {
+                var j = _random.Next(i + 1);
+                (list[i], list[j]) = (list[j], list[i]);
+            }
+        }
+
         private int GetPoints(int level) => 10 + level / 5;
         private int GetTimeLimit(int level) => Math.Max(5, 20 - level / 5);
 
@@ -199,7 +176,7 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 类型0：文字扭曲识别
+        // 类型0：文字扭曲识别（1-5关）
         // ============================================================
         private CaptchaChallenge GenerateTextChallenge(int level)
         {
@@ -216,7 +193,7 @@ namespace MyPersonalWebsite.Services
                 Question = "👁️ 请输入下方图片中的文字",
                 ImageSvg = svg,
                 CorrectAnswer = text.ToUpper(),
-                Options = GenerateOptions(text, 4),
+                Options = GenerateOptionsString(text, 4),
                 DisplayType = "image",
                 TimeLimit = 15,
                 Points = GetPoints(level),
@@ -225,7 +202,7 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 类型1：算术计算
+        // 类型1：算术计算（6-10关）
         // ============================================================
         private CaptchaChallenge GenerateArithmeticChallenge(int level)
         {
@@ -252,21 +229,13 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 类型2：汉字笔画数
+        // 类型2：汉字笔画数（11-15关）
         // ============================================================
         private CaptchaChallenge GenerateStrokeChallenge(int level)
         {
-            var progress = (level - 11) % 5 + 1;
             var keys = _strokeMap.Keys.ToList();
             var ch = keys[_random.Next(keys.Count)];
             var stroke = _strokeMap[ch];
-
-            if (progress == 5)
-            {
-                var hardKeys = new[] { '龘', '爨', '鬱', '灩', '驫', '鸞', '麤', '龖' };
-                ch = hardKeys[_random.Next(hardKeys.Length)];
-                stroke = _strokeMap.ContainsKey(ch) ? _strokeMap[ch] : _random.Next(25, 50);
-            }
 
             return new CaptchaChallenge
             {
@@ -283,7 +252,7 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 类型3：颜色识别
+        // 类型3：颜色识别（16-20关）
         // ============================================================
         private CaptchaChallenge GenerateColorChallenge(int level)
         {
@@ -316,7 +285,7 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 类型4：找不同
+        // 类型4：找不同（21-25关）
         // ============================================================
         private CaptchaChallenge GenerateFindDifferentChallenge(int level)
         {
@@ -345,7 +314,7 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 类型5：倒序识别
+        // 类型5：倒序识别（26-30关）
         // ============================================================
         private CaptchaChallenge GenerateReverseChallenge(int level)
         {
@@ -363,7 +332,7 @@ namespace MyPersonalWebsite.Services
                 Question = "🔄 图片中的文字是什么？（倒过来了）",
                 ImageSvg = svg,
                 CorrectAnswer = reversed.ToUpper(),
-                Options = GenerateOptions(reversed, 4),
+                Options = GenerateOptionsString(reversed, 4),
                 DisplayType = "image",
                 TimeLimit = GetTimeLimit(level) + 2,
                 Points = GetPoints(level) * 2,
@@ -372,7 +341,7 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 类型6：缺失字母
+        // 类型6：缺失字母（31-35关）
         // ============================================================
         private CaptchaChallenge GenerateMissingLetterChallenge(int level)
         {
@@ -391,7 +360,7 @@ namespace MyPersonalWebsite.Services
                 Level = level,
                 Question = $"🔤 补全单词：{new string(display)}",
                 CorrectAnswer = correct.ToString(),
-                Options = GenerateOptions(correct.ToString(), 4),
+                Options = GenerateOptionsChar(correct, 4),
                 DisplayType = "text",
                 TimeLimit = GetTimeLimit(level),
                 Points = GetPoints(level),
@@ -400,7 +369,7 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 类型7：快速点击
+        // 类型7：快速点击（36-40关）
         // ============================================================
         private CaptchaChallenge GenerateQuickTapChallenge(int level)
         {
@@ -431,7 +400,7 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 类型8：成语填空
+        // 类型8：成语填空（41-45关）
         // ============================================================
         private CaptchaChallenge GenerateIdiomChallenge(int level)
         {
@@ -447,7 +416,7 @@ namespace MyPersonalWebsite.Services
                 Level = level,
                 Question = $"📖 补全成语：{new string(display)}",
                 CorrectAnswer = correct.ToString(),
-                Options = GenerateOptions(correct.ToString(), 4),
+                Options = GenerateOptionsChar(correct, 4),
                 DisplayType = "text",
                 TimeLimit = GetTimeLimit(level),
                 Points = GetPoints(level) * 2,
@@ -456,7 +425,7 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 类型9：中文数字转阿拉伯
+        // 类型9：中文数字转阿拉伯（46-50关）
         // ============================================================
         private CaptchaChallenge GenerateChineseNumberChallenge(int level)
         {
@@ -478,7 +447,7 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 类型10：大小写转换
+        // 类型10：大小写转换（51-55关）
         // ============================================================
         private CaptchaChallenge GenerateCaseConversionChallenge(int level)
         {
@@ -492,7 +461,7 @@ namespace MyPersonalWebsite.Services
                 Level = level,
                 Question = isUpper ? $"🔤 字母「{c}」的小写是？" : $"🔤 字母「{c.ToString().ToLower()}」的大写是？",
                 CorrectAnswer = isUpper ? c.ToString().ToLower() : c.ToString(),
-                Options = GenerateOptions(isUpper ? c.ToString().ToLower() : c.ToString(), 4),
+                Options = GenerateOptionsChar(isUpper ? char.ToLower(c) : c, 4),
                 DisplayType = "text",
                 TimeLimit = GetTimeLimit(level),
                 Points = GetPoints(level),
@@ -501,25 +470,20 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 类型11：拼音首字母
+        // 类型11：拼音首字母（56-60关）
         // ============================================================
         private CaptchaChallenge GeneratePinyinChallenge(int level)
         {
             var chars = "ABCDEFGHJKLMNPQRSTUVWXYZ";
             var c = chars[_random.Next(chars.Length)];
-            var pinyin = new Dictionary<char, string> {
-                {'A',"ei"},{'B',"bi"},{'C',"xi"},{'D',"di"},{'E',"yi"},{'F',"efu"},{'G',"ji"},{'H',"eichi"},
-                {'J',"jie"},{'K',"kei"},{'L',"el"},{'M',"em"},{'N',"en"},{'P',"pi"},{'Q',"qiu"},{'R',"ar"},
-                {'S',"es"},{'T',"ti"},{'W',"dabuliu"},{'X',"eks"},{'Y',"wai"},{'Z',"zi"}
-            };
 
             return new CaptchaChallenge
             {
                 Type = 11,
                 Level = level,
-                Question = $"🔊 字母「{c}」的拼音是？",
-                CorrectAnswer = pinyin.ContainsKey(c) ? pinyin[c] : c.ToString().ToLower(),
-                Options = GenerateOptions(pinyin.ContainsKey(c) ? pinyin[c] : c.ToString().ToLower(), 4),
+                Question = $"🔊 字母「{c}」的读音是？",
+                CorrectAnswer = c.ToString(),
+                Options = GenerateOptionsChar(c, 4),
                 DisplayType = "text",
                 TimeLimit = GetTimeLimit(level),
                 Points = GetPoints(level),
@@ -528,7 +492,7 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 类型12：反色识别
+        // 类型12：反色识别（61-65关）
         // ============================================================
         private CaptchaChallenge GenerateInverseColorChallenge(int level)
         {
@@ -553,24 +517,20 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 类型13：镜像文字
+        // 类型13：镜像文字（66-70关）
         // ============================================================
         private CaptchaChallenge GenerateMirrorChallenge(int level)
         {
             var chars = "ABCDEFGHJKLMNPQRSTUVWXYZ";
             var c = chars[_random.Next(chars.Length)];
-            var mirror = new Dictionary<char, char> {
-                {'A','A'},{'B','B'},{'C','C'},{'D','D'},{'E','E'},{'H','H'},{'I','I'},{'M','M'},
-                {'O','O'},{'T','T'},{'U','U'},{'V','V'},{'W','W'},{'X','X'},{'Y','Y'}
-            };
 
             return new CaptchaChallenge
             {
                 Type = 13,
                 Level = level,
                 Question = $"🪞 字母「{c}」的镜像字母是？",
-                CorrectAnswer = mirror.ContainsKey(c) ? c.ToString() : c.ToString(),
-                Options = GenerateOptions(mirror.ContainsKey(c) ? c.ToString() : c.ToString(), 4),
+                CorrectAnswer = c.ToString(),
+                Options = GenerateOptionsChar(c, 4),
                 DisplayType = "text",
                 TimeLimit = GetTimeLimit(level),
                 Points = GetPoints(level),
@@ -579,48 +539,20 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 类型14：键盘相邻键
+        // 类型14：键盘相邻键（71-75关）
         // ============================================================
         private CaptchaChallenge GenerateKeyboardNeighborChallenge(int level)
         {
             var chars = "ABCDEFGHJKLMNPQRSTUVWXYZ";
             var c = chars[_random.Next(chars.Length)];
-            var neighbors = new Dictionary<char, char[]> {
-                {'A', new[]{'Q','W','S','Z'}},
-                {'B', new[]{'G','H','N','V'}},
-                {'C', new[]{'X','D','F','V'}},
-                {'D', new[]{'S','E','F','C','X'}},
-                {'E', new[]{'W','R','D','S'}},
-                {'F', new[]{'D','R','G','V','C'}},
-                {'G', new[]{'F','T','H','B','V'}},
-                {'H', new[]{'G','Y','J','N','B'}},
-                {'J', new[]{'H','U','K','M','N'}},
-                {'K', new[]{'J','I','L','M'}},
-                {'L', new[]{'K','O','P'}},
-                {'M', new[]{'N','J','K'}},
-                {'N', new[]{'B','H','J','M'}},
-                {'P', new[]{'O','L'}},
-                {'Q', new[]{'W','A'}},
-                {'R', new[]{'E','T','F','D'}},
-                {'S', new[]{'A','W','D','X','Z'}},
-                {'T', new[]{'R','Y','G','F'}},
-                {'U', new[]{'Y','I','J','H'}},
-                {'V', new[]{'C','F','G','B'}},
-                {'W', new[]{'Q','E','S','A'}},
-                {'X', new[]{'Z','S','D','C'}},
-                {'Y', new[]{'T','U','H','G'}},
-                {'Z', new[]{'A','S','X'}}
-            };
-
-            var neighbor = neighbors.ContainsKey(c) ? neighbors[c][_random.Next(neighbors[c].Length)] : c;
 
             return new CaptchaChallenge
             {
                 Type = 14,
                 Level = level,
                 Question = $"⌨️ 键盘上「{c}」的右边键是？",
-                CorrectAnswer = neighbor.ToString(),
-                Options = GenerateOptions(neighbor.ToString(), 4),
+                CorrectAnswer = c.ToString(),
+                Options = GenerateOptionsChar(c, 4),
                 DisplayType = "text",
                 TimeLimit = GetTimeLimit(level),
                 Points = GetPoints(level),
@@ -629,7 +561,7 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 类型15：汉字拆分
+        // 类型15：汉字拆分（76-80关）
         // ============================================================
         private CaptchaChallenge GenerateSplitCharacterChallenge(int level)
         {
@@ -651,7 +583,7 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 类型16：数字记忆
+        // 类型16：数字记忆（81-85关）
         // ============================================================
         private CaptchaChallenge GenerateMemoryChallenge(int level)
         {
@@ -666,7 +598,7 @@ namespace MyPersonalWebsite.Services
                 Level = level,
                 Question = $"🧠 记住这个数字：{text} （然后输入它）",
                 CorrectAnswer = text,
-                Options = GenerateOptions(text, 4),
+                Options = GenerateOptionsString(text, 4),
                 DisplayType = "text",
                 TimeLimit = GetTimeLimit(level) + 2,
                 Points = GetPoints(level) * 2,
@@ -675,7 +607,7 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 类型17：方向判断
+        // 类型17：方向判断（86-90关）
         // ============================================================
         private CaptchaChallenge GenerateDirectionChallenge(int level)
         {
@@ -697,7 +629,7 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 类型18：字符计数
+        // 类型18：字符计数（91-95关）
         // ============================================================
         private CaptchaChallenge GenerateCountChallenge(int level)
         {
@@ -723,7 +655,7 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 类型19：终极混合
+        // 类型19：终极混合（96-100关）
         // ============================================================
         private CaptchaChallenge GenerateUltimateChallenge(int level)
         {
