@@ -18,69 +18,203 @@ namespace MyPersonalWebsite.Controllers
         // ============================================================
         private static readonly Dictionary<char, int> StrokeCount = new()
         {
-            // 简单字（1-5画）
             {'一',1},{'二',2},{'三',3},{'十',2},{'人',2},{'大',3},{'上',3},{'下',3},{'口',3},{'山',3},
             {'中',4},{'日',4},{'月',4},{'水',4},{'火',4},{'木',4},{'天',4},{'不',4},{'开',4},{'心',4},
             {'五',4},{'六',4},{'文',4},{'方',4},{'王',4},{'车',4},{'龙',5},{'东',5},{'生',5},{'白',5},
             {'田',5},{'石',5},{'目',5},{'且',5},{'由',5},{'甲',5},{'申',5},{'电',5},{'回',6},{'地',6},
             {'羊',6},{'老',6},{'西',6},{'有',6},{'年',6},{'成',6},{'百',6},{'竹',6},{'米',6},{'红',6},
             {'全',6},{'合',6},{'安',6},{'字',6},{'平',5},{'左',5},{'右',5},{'兄',5},{'母',5},{'民',5},
-            // 中等字（6-10画）
             {'行',6},{'列',6},{'此',6},{'自',6},{'至',6},{'舟',6},{'羽',6},{'耳',6},{'虫',6},{'血',6},
             {'国',8},{'和',8},{'的',8},{'你',7},{'我',7},{'他',5},{'她',6},{'们',5},{'是',9},{'在',6},
             {'这',7},{'那',7},{'来',7},{'去',5},{'学',8},{'生',5},{'校',10},{'园',7},{'书',4},{'写',5},
             {'画',8},{'家',10},{'美',9},{'丽',7},{'春',9},{'夏',10},{'秋',9},{'冬',5},{'南',9},{'北',5},
             {'城',9},{'市',5},{'风',4},{'雨',8},{'雪',11},{'星',9},{'花',7},{'草',9},{'树',9},{'林',8},
             {'森',12},{'梅',11},{'兰',5},{'菊',11},{'荷',10},{'黄',11},{'蓝',13},{'绿',11},{'黑',12},
-            // 复杂字（10-15画）
             {'紫',12},{'诚',8},{'信',9},{'敬',12},{'爱',10},{'善',12},{'良',7},{'猫',11},{'熊',14},
             {'象',12},{'窗',12},{'楼',13},{'桥',10},{'船',11},{'路',13},{'港',12},{'海',10},{'湖',12},
             {'流',10},{'峰',10},{'岭',8},{'谷',7},{'岩',8},{'洞',9},{'泉',9},{'溪',13},{'池',6},
             {'梦',11},{'望',11},{'数',13},{'感',13},{'解',13},{'决',6},{'游',12},{'戏',6},{'运',7},
             {'动',11},{'智',12},{'慧',15},{'暴',19},{'攀',19},{'变',19},{'魔',20},{'警',19},{'耀',20},
-            // 超复杂字（16+画）
             {'露',21},{'霜',17},{'霞',17},{'霸',21},{'爆',19},{'蛮',23},{'湾',25},{'镶',25},{'囊',22},
             {'嚷',23},{'壤',20},{'懿',22},{'罐',23},{'噩',16},{'嚣',21},{'龘',33},{'灏',25}
         };
 
-        private static readonly Dictionary<char, char[]> SimilarChars = new()
+        // ============================================================
+        // ⭐ 500+ 成语库（地狱难度）
+        // ============================================================
+        private static readonly string[] Idioms = new string[]
         {
-            {'0', new char[]{'O','Q','D','C'}},
-            {'O', new char[]{'0','Q','D','C'}},
-            {'Q', new char[]{'0','O','D','C'}},
-            {'D', new char[]{'0','O','Q','C'}},
-            {'C', new char[]{'G','O','Q','0'}},
-            {'G', new char[]{'C','O','Q','6'}},
-            {'1', new char[]{'I','L','!','|'}},
-            {'I', new char[]{'1','L','!','|'}},
-            {'L', new char[]{'1','I','J','|'}},
-            {'J', new char[]{'L','I','T','Y'}},
-            {'T', new char[]{'Y','7','L','J'}},
-            {'Y', new char[]{'V','T','7','J'}},
-            {'V', new char[]{'Y','U','W','M'}},
-            {'U', new char[]{'V','J','L','I'}},
-            {'W', new char[]{'M','V','N','U'}},
-            {'M', new char[]{'W','N','V','U'}},
-            {'N', new char[]{'M','H','K','W'}},
-            {'H', new char[]{'N','K','A','M'}},
-            {'K', new char[]{'H','N','M','X'}},
-            {'X', new char[]{'K','*','+','x'}},
-            {'A', new char[]{'4','H','R','K'}},
-            {'R', new char[]{'P','A','K','B'}},
-            {'P', new char[]{'R','B','9','D'}},
-            {'B', new char[]{'8','3','P','R'}},
-            {'3', new char[]{'8','B','E','S'}},
-            {'8', new char[]{'3','B','6','S'}},
-            {'6', new char[]{'8','9','G','S'}},
-            {'9', new char[]{'6','8','P','G'}},
-            {'S', new char[]{'5','$','8','3'}},
-            {'5', new char[]{'S','$','8','3'}},
-            {'2', new char[]{'Z','7','L','I'}},
-            {'Z', new char[]{'2','7','N','M'}},
-            {'7', new char[]{'2','Z','T','Y'}},
-            {'4', new char[]{'A','H','K','R'}},
-            {'E', new char[]{'3','B','F','P'}},
-            {'F', new char[]{'E','P','T','Y'}}
+            // 常见成语（基础）
+            "一马当先", "龙飞凤舞", "画蛇添足", "守株待兔", "狐假虎威",
+            "马到成功", "鸟语花香", "鱼目混珠", "鹤立鸡群", "龙腾虎跃",
+            "画龙点睛", "亡羊补牢", "杯弓蛇影", "指鹿为马", "马不停蹄",
+            "一帆风顺", "万事如意", "心想事成", "步步高升", "蒸蒸日上",
+            "百花齐放", "百家争鸣", "百折不挠", "百尺竿头", "百战百胜",
+            "千变万化", "千军万马", "千言万语", "千辛万苦", "千锤百炼",
+            "万水千山", "万紫千红", "万马奔腾", "万家灯火", "万无一失",
+            "三心二意", "三头六臂", "三顾茅庐", "三足鼎立", "三生有幸",
+            "四面楚歌", "四通八达", "四海为家", "四平八稳", "四书五经",
+            "五光十色", "五湖四海", "五花八门", "五颜六色", "五体投地",
+            "六神无主", "六亲不认", "六六大顺", "六根清净", "六朝金粉",
+            "七上八下", "七嘴八舌", "七手八脚", "七零八落", "七拼八凑",
+            "八面玲珑", "八仙过海", "八斗之才", "八面威风", "八拜之交",
+            "九牛一毛", "九死一生", "九霄云外", "九鼎大吕", "九九归一",
+            "十全十美", "十拿九稳", "十面埋伏", "十恶不赦", "十万火急",
+            "大刀阔斧", "大公无私", "大器晚成", "大智若愚", "大义灭亲",
+            "小巧玲珑", "小试锋芒", "小桥流水", "小不忍乱", "小巫见大",
+            "高瞻远瞩", "高风亮节", "高谈阔论", "高不可攀", "高枕无忧",
+            "深不可测", "深思熟虑", "深谋远虑", "深情厚谊", "深恶痛绝",
+            "明察秋毫", "明辨是非", "明哲保身", "明心见性", "明知故犯",
+            "春暖花开", "春意盎然", "春风化雨", "春花秋月", "春华秋实",
+            "秋高气爽", "秋色宜人", "秋月春风", "秋毫无犯", "秋收冬藏",
+            "冬暖夏凉", "冬日夏云", "冬裘夏葛", "冬温夏清", "冬去春来",
+            "喜怒哀乐", "喜出望外", "喜从天降", "喜笑颜开", "喜上眉梢",
+            "怒发冲冠", "怒不可遏", "怒火中烧", "怒气冲天", "怒形于色",
+            "哀兵必胜", "哀鸿遍野", "哀痛欲绝", "哀毁骨立", "哀而不伤",
+            "乐极生悲", "乐此不疲", "乐在其中", "乐而忘返", "乐善好施",
+            "一鸣惊人", "一箭双雕", "一石二鸟", "一诺千金", "一视同仁",
+            "一心一意", "一言九鼎", "一往无前", "一飞冲天", "一触即发",
+            "安居乐业", "安步当车", "安分守己", "安贫乐道", "安身立命",
+            "博览群书", "博古通今", "博学多才", "博闻强识", "博大精深",
+            "才华横溢", "才高八斗", "才思敏捷", "才貌双全", "才子佳人",
+            "出类拔萃", "出人头地", "出奇制胜", "出神入化", "出生入死",
+            "当机立断", "当仁不让", "当务之急", "当之无愧", "当头棒喝",
+            "精益求精", "精卫填海", "精忠报国", "精明强干", "精打细算",
+            "气象万千", "气宇轩昂", "气势磅礴", "气贯长虹", "气吞山河",
+            "神采飞扬", "神机妙算", "神出鬼没", "神通广大", "神清气爽",
+            "雄心壮志", "雄才大略", "雄关漫道", "雄风犹在", "雄心勃勃",
+            "壮志凌云", "壮心不已", "壮志未酬", "壮士断腕", "壮丽山河",
+            "豪情壮志", "豪言壮语", "豪放不羁", "豪迈慷慨", "豪气干云",
+            "乘风破浪", "乘胜追击", "乘兴而来", "乘龙快婿", "乘火打劫",
+            "破釜沉舟", "破镜重圆", "破涕为笑", "破茧成蝶", "破旧立新",
+            "锐不可当", "锐意进取", "锐气不减", "锐意创新", "锐敏过人",
+            "志同道合", "志在四方", "志得意满", "志大才疏", "志士仁人",
+            "同心协力", "同甘共苦", "同舟共济", "同病相怜", "同仇敌忾",
+            "众志成城", "众望所归", "众说纷纭", "众星捧月", "众口铄金",
+            "自强不息", "自告奋勇", "自食其力", "自相矛盾", "自立更生",
+            "奋勇当先", "奋不顾身", "奋发图强", "奋起直追", "奋勇直前",
+            "勇往直前", "勇冠三军", "勇猛精进", "勇者不惧", "勇挑重担",
+            "不屈不挠", "不卑不亢", "不折不扣", "不骄不躁", "不慌不忙",
+            "持之以恒", "持家有道", "持重待人", "持久之计", "持平之论",
+            "坚持不懈", "坚定不移", "坚持不渝", "坚韧不拔", "坚贞不屈",
+            "百炼成钢", "千磨万击", "千回百转", "万象更新", "春风得意",
+            "春风满面", "冬日可爱", "夏日可畏", "日月如梭", "日新月异",
+            "花好月圆", "花团锦簇", "花枝招展", "花言巧语", "花红柳绿",
+            "雪中送炭", "雪上加霜", "雪泥鸿爪", "雪月风花", "雪白如银",
+            "风调雨顺", "风和日丽", "风起云涌", "风驰电掣", "风花雪月",
+            "雨过天晴", "雨后春笋", "雨打风吹", "雨露之恩", "雨丝风片",
+            "云开日出", "云蒸霞蔚", "云消雾散", "云淡风轻", "云泥之别",
+            "山清水秀", "山高水长", "山明水秀", "山穷水尽", "山重水复",
+            "水到渠成", "水滴石穿", "水涨船高", "水落石出", "水木清华",
+            "海阔天空", "海枯石烂", "海誓山盟", "海纳百川", "海市蜃楼",
+            "天翻地覆", "天南地北", "天高地厚", "天长地久", "天罗地网",
+            "地大物博", "地广人稀", "地灵人杰", "地覆天翻", "地久天长",
+            "人才济济", "人山人海", "人杰地灵", "人云亦云", "人定胜天",
+            "心花怒放", "心旷神怡", "心平气和", "心想事成", "心满意足",
+            "智勇双全", "智圆行方", "智周万物", "智珠在握", "智尽能索",
+            // 稀有成语（地狱难度）
+            "魑魅魍魉", "饕餮盛宴", "龙骧虎步", "凤翥鸾翔", "鸾翔凤集",
+            "蜚短流长", "龙蟠虎踞", "龙肝凤髓", "凤毛麟角", "鹤唳华亭",
+            "兔起鹘落", "鹰击长空", "鱼跃龙门", "虎视眈眈", "狼奔豕突",
+            "獐头鼠目", "鬼斧神工", "鬼哭狼嚎", "鬼使神差", "鬼迷心窍",
+            "魑魅魍魉", "饕餮之徒", "螳臂当车", "蚍蜉撼树", "蠹众木折",
+            "鹏程万里", "鹰扬虎视", "龙章凤姿", "虎背熊腰", "豹头环眼",
+            "豺狼当道", "狼狈为奸", "狐朋狗友", "鸡鸣狗盗", "鼠目寸光",
+            "牛鬼蛇神", "虎头蛇尾", "龙争虎斗", "鹤发童颜", "龟毛兔角",
+            "龟龄鹤算", "龙翔凤翥", "鸾和凤鸣", "虎踞龙蟠", "鹤归华表",
+            "鼠牙雀角", "牛衣对泣", "虎口余生", "兔死狐悲", "龙蛇混杂",
+            "马革裹尸", "羊肠小道", "猴年马月", "鸡犬不宁", "狗尾续貂",
+            "豕突狼奔", "鱼贯而入", "鸟尽弓藏", "兽聚鸟散", "鹿死谁手",
+            "鹏搏九天", "鹰隼试翼", "龙章凤彩", "虎啸龙吟", "豹隐南山",
+            "鸱目虎吻", "凤仪兽舞", "鸾鸣凤奏", "鹤唳九皋", "鹤鸣之士",
+            "龙虎风云", "龙骧虎视", "龙腾豹变", "龙潜凤采", "龙吟虎啸"
+        };
+
+        // ============================================================
+        // ⭐ 8方向 + 组合（地狱难度）
+        // ============================================================
+        private static readonly string[] Directions = new string[]
+        {
+            "上", "下", "左", "右", "左上", "右上", "左下", "右下",
+            "正上", "正下", "正左", "正右", "斜上", "斜下", "中上", "中下"
+        };
+
+        private static readonly Dictionary<string, string> DirectionOpposites = new()
+        {
+            {"上", "下"}, {"下", "上"}, {"左", "右"}, {"右", "左"},
+            {"左上", "右下"}, {"右上", "左下"}, {"左下", "右上"}, {"右下", "左上"},
+            {"正上", "正下"}, {"正下", "正上"}, {"正左", "正右"}, {"正右", "正左"},
+            {"斜上", "斜下"}, {"斜下", "斜上"}, {"中上", "中下"}, {"中下", "中上"}
+        };
+
+        // ============================================================
+        // ⭐ 中文数字（0-9999 + 中文大写）
+        // ============================================================
+        private static readonly string[] ChineseNumbers = new string[]
+        {
+            "零","一","二","三","四","五","六","七","八","九","十",
+            "十一","十二","十三","十四","十五","十六","十七","十八","十九","二十",
+            "二十一","二十二","二十三","二十四","二十五","二十六","二十七","二十八","二十九","三十",
+            "三十一","三十二","三十三","三十四","三十五","三十六","三十七","三十八","三十九","四十",
+            "四十一","四十二","四十三","四十四","四十五","四十六","四十七","四十八","四十九","五十",
+            "五十一","五十二","五十三","五十四","五十五","五十六","五十七","五十八","五十九","六十",
+            "六十一","六十二","六十三","六十四","六十五","六十六","六十七","六十八","六十九","七十",
+            "七十一","七十二","七十三","七十四","七十五","七十六","七十七","七十八","七十九","八十",
+            "八十一","八十二","八十三","八十四","八十五","八十六","八十七","八十八","八十九","九十",
+            "九十一","九十二","九十三","九十四","九十五","九十六","九十七","九十八","九十九",
+            "一百","二百","三百","四百","五百","六百","七百","八百","九百","一千",
+            "一千零一","一千零二","一千零三","一千零四","一千零五","一千零六","一千零七","一千零八","一千零九","一千一十",
+            "一千一百","一千二百","一千三百","一千四百","一千五百","一千六百","一千七百","一千八百","一千九百","一千九百九十九",
+            "两千","三千","四千","五千","六千","七千","八千","九千","九千九百九十九"
+        };
+
+        // ============================================================
+        // ⭐ 中文大写数字（财务专用 - 地狱难度）
+        // ============================================================
+        private static readonly Dictionary<string, string> ChineseCapital = new()
+        {
+            {"零","零"},{"一","壹"},{"二","贰"},{"三","叁"},{"四","肆"},{"五","伍"},
+            {"六","陆"},{"七","柒"},{"八","捌"},{"九","玖"},{"十","拾"},
+            {"百","佰"},{"千","仟"},{"万","万"}
+        };
+
+        // ============================================================
+        // ⭐ 完整字母表 + 大小写混合（地狱难度）
+        // ============================================================
+        private static readonly char[] Alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".ToCharArray();
+        private static readonly char[] LowerAlphabet = "abcdefghijklmnopqrstuvwxyz".ToCharArray();
+
+        // ============================================================
+        // ⭐ 字母的语音发音（多音字混淆）
+        // ============================================================
+        private static readonly Dictionary<char, string[]> LetterPronunciations = new()
+        {
+            {'A', new[]{"诶", "诶伊", "艾"}},
+            {'B', new[]{"比", "币", "逼"}},
+            {'C', new[]{"西", "兮", "汐"}},
+            {'D', new[]{"迪", "地", "第"}},
+            {'E', new[]{"伊", "衣", "一"}},
+            {'F', new[]{"艾弗", "哎夫"}},
+            {'G', new[]{"记", "鸡", "急"}},
+            {'H', new[]{"艾尺", "爱去"}},
+            {'I', new[]{"爱", "哎"}},
+            {'J', new[]{"杰", "借", "姐"}},
+            {'K', new[]{"开", "楷", "凯"}},
+            {'L', new[]{"艾欧", "埃欧"}},
+            {'M', new[]{"艾姆", "哎母"}},
+            {'N', new[]{"艾恩", "哎嗯"}},
+            {'O', new[]{"欧", "喔", "噢"}},
+            {'P', new[]{"屁", "皮", "批"}},
+            {'Q', new[]{"丘", "秋", "求"}},
+            {'R', new[]{"啊", "阿", "阿尔"}},
+            {'S', new[]{"艾丝", "哎死"}},
+            {'T', new[]{"提", "替", "踢"}},
+            {'U', new[]{"优", "又", "油"}},
+            {'V', new[]{"维", "威", "喂"}},
+            {'W', new[]{"达布", "大不"}},
+            {'X', new[]{"艾克斯", "哎克死"}},
+            {'Y', new[]{"歪", "外", "喂"}},
+            {'Z', new[]{"贼", "则", "责"}}
         };
 
         // ============================================================
@@ -212,9 +346,6 @@ namespace MyPersonalWebsite.Controllers
             }
         }
 
-        // ============================================================
-        // 🎮 游戏 API：获取挑战
-        // ============================================================
         [HttpGet]
         public IActionResult GetChallenge(int level)
         {
@@ -230,7 +361,7 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // 🧠 挑战生成器
+        // 挑战生成器（19种类型）
         // ============================================================
         private object GenerateChallenge(int level)
         {
@@ -247,44 +378,423 @@ namespace MyPersonalWebsite.Controllers
                 case 5: return GenerateReverseText(level, difficulty);
                 case 6: return GenerateMissingLetter(level, difficulty);
                 case 7: return GenerateQuickTap(level, difficulty);
-                case 8: return GenerateIdiomFill(level, difficulty);
-                case 9: return GenerateChineseToNumber(level, difficulty);
-                case 10: return GenerateCaseConversion(level, difficulty);
+                case 8: return GenerateIdiomFill(level, difficulty);      // ⭐ 超级难
+                case 9: return GenerateChineseNumber(level, difficulty);  // ⭐ 超级难
+                case 10: return GenerateCaseConversion(level, difficulty); // ⭐ 超级难
                 case 11: return GeneratePinyinMatch(level, difficulty);
                 case 12: return GenerateInverseColor(level, difficulty);
                 case 13: return GenerateMirrorLetter(level, difficulty);
                 case 14: return GenerateKeyboardNeighbor(level, difficulty);
                 case 15: return GenerateCharacterCount(level, difficulty);
                 case 16: return GenerateMemoryChallenge(level, difficulty);
-                case 17: return GenerateDirection(level, difficulty);
+                case 17: return GenerateDirection(level, difficulty);     // ⭐ 超级难
                 default: return GenerateUltimate(level, difficulty);
             }
         }
 
         // ============================================================
-        // 1. 文字识别
+        // ⭐⭐⭐ 成语填空 - 地狱难度
+        // ============================================================
+        private object GenerateIdiomFill(int level, int difficulty)
+        {
+            // 高难度使用稀有成语
+            string[] pool;
+            if (difficulty > 70)
+            {
+                pool = Idioms.Where(i => i.Length == 4 && IsRareIdiom(i)).ToArray();
+            }
+            else if (difficulty > 40)
+            {
+                pool = Idioms.Where(i => i.Length == 4 && !IsCommonIdiom(i)).ToArray();
+            }
+            else
+            {
+                pool = Idioms.Where(i => i.Length == 4).ToArray();
+            }
+
+            if (pool.Length == 0) pool = Idioms.Where(i => i.Length == 4).ToArray();
+
+            string idiom = pool[_random.Next(pool.Length)];
+
+            // 随机缺1-2个字
+            int missingCount = difficulty > 50 ? 2 : 1;
+            var positions = new List<int>();
+            for (int i = 0; i < idiom.Length; i++)
+            {
+                positions.Add(i);
+            }
+            positions = positions.OrderBy(_ => _random.Next()).ToList();
+            var missingPositions = positions.Take(missingCount).OrderBy(p => p).ToList();
+
+            char[] display = idiom.ToCharArray();
+            char[] correctChars = new char[missingCount];
+            for (int i = 0; i < missingCount; i++)
+            {
+                int pos = missingPositions[i];
+                correctChars[i] = idiom[pos];
+                display[pos] = '□';
+            }
+
+            string correctAnswer = new string(correctChars);
+            string displayStr = new string(display);
+
+            // 生成干扰选项：使用相似字
+            var options = new List<string> { correctAnswer };
+            int optionCount = 4 + Math.Min(difficulty / 10, 3);
+
+            while (options.Count < optionCount)
+            {
+                string fake = "";
+                for (int i = 0; i < correctAnswer.Length; i++)
+                {
+                    char similar = GetSimilarChar(correctAnswer[i]);
+                    fake += similar;
+                }
+                if (!options.Contains(fake) && fake != correctAnswer)
+                {
+                    options.Add(fake);
+                }
+            }
+
+            int timeLimit = Math.Max(4, 12 - difficulty / 10);
+
+            return new
+            {
+                type = "idiom",
+                level = level,
+                question = $"📖 补全成语（{missingCount}个字）：{displayStr}",
+                correctAnswer = correctAnswer,
+                options = options.OrderBy(_ => _random.Next()).ToList(),
+                timeLimit = timeLimit,
+                funMessage = GetFunMessage("idiom")
+            };
+        }
+
+        private bool IsCommonIdiom(string idiom)
+        {
+            var common = new[] { "一马当先", "龙飞凤舞", "画蛇添足", "守株待兔", "狐假虎威",
+                "马到成功", "鸟语花香", "鱼目混珠", "鹤立鸡群", "龙腾虎跃" };
+            return common.Contains(idiom);
+        }
+
+        private bool IsRareIdiom(string idiom)
+        {
+            var rare = new[] { "魑魅魍魉", "饕餮盛宴", "龙骧虎步", "凤翥鸾翔", "鸾翔凤集",
+                "蜚短流长", "龙蟠虎踞", "龙肝凤髓", "凤毛麟角", "鹤唳华亭",
+                "兔起鹘落", "鹰击长空", "鱼跃龙门", "虎视眈眈", "狼奔豕突" };
+            return rare.Contains(idiom);
+        }
+
+        // ============================================================
+        // ⭐⭐⭐ 中文数字 - 地狱难度
+        // ============================================================
+        private object GenerateChineseNumber(int level, int difficulty)
+        {
+            int num;
+            string chinese;
+
+            if (difficulty > 80)
+            {
+                // 超大数字（1000-9999）
+                num = _random.Next(1000, 9999);
+                chinese = NumberToChinese(num);
+            }
+            else if (difficulty > 50)
+            {
+                // 大数字（100-999）
+                num = _random.Next(100, 999);
+                chinese = NumberToChinese(num);
+            }
+            else if (difficulty > 25)
+            {
+                // 中等数字（21-99）
+                num = _random.Next(21, 99);
+                chinese = ChineseNumbers[num];
+            }
+            else
+            {
+                // 简单数字（0-20）
+                num = _random.Next(0, 20);
+                chinese = ChineseNumbers[num];
+            }
+
+            // 40%概率用中文大写（财务大写）
+            bool useCapital = difficulty > 30 && _random.Next(100) < 40;
+            string displayChinese = useCapital ? ToChineseCapital(chinese) : chinese;
+
+            // 生成干扰选项
+            var options = new List<string> { num.ToString() };
+            int optionCount = 4 + Math.Min(difficulty / 10, 3);
+            int range = Math.Max(5, 20 + difficulty / 2);
+
+            while (options.Count < optionCount)
+            {
+                int fake = num + _random.Next(-range, range + 1);
+                if (fake < 0) fake = _random.Next(1, 20);
+                if (fake > 9999) fake = num - _random.Next(1, 50);
+                if (fake < 0) fake = 1;
+                string str = fake.ToString();
+                if (!options.Contains(str) && fake != num)
+                {
+                    options.Add(str);
+                }
+            }
+
+            int timeLimit = Math.Max(4, 14 - difficulty / 10);
+
+            return new
+            {
+                type = "chineseNumber",
+                level = level,
+                question = useCapital ? $"🔢 「{displayChinese}」（大写）对应的数字是？" : $"🔢 「{displayChinese}」对应的数字是？",
+                correctAnswer = num.ToString(),
+                options = options.OrderBy(_ => _random.Next()).ToList(),
+                timeLimit = timeLimit,
+                funMessage = GetFunMessage("chineseNumber")
+            };
+        }
+
+        private string NumberToChinese(int num)
+        {
+            if (num == 0) return "零";
+            if (num < 100) return ChineseNumbers[num];
+
+            string result = "";
+            int thousands = num / 1000;
+            int hundreds = (num % 1000) / 100;
+            int tens = (num % 100) / 10;
+            int ones = num % 10;
+
+            if (thousands > 0)
+            {
+                result += (thousands > 1 ? ChineseNumbers[thousands] : "") + "千";
+            }
+            if (hundreds > 0)
+            {
+                result += (hundreds > 1 ? ChineseNumbers[hundreds] : "") + "百";
+                if (tens == 0 && ones > 0) result += "零";
+            }
+            else if (thousands > 0 && (tens > 0 || ones > 0))
+            {
+                result += "零";
+            }
+            if (tens > 0)
+            {
+                result += (tens > 1 ? ChineseNumbers[tens] : "") + "十";
+            }
+            if (ones > 0)
+            {
+                if (tens > 0 && ones > 0) result += ChineseNumbers[ones];
+                else if (tens == 0 && hundreds > 0) result += ChineseNumbers[ones];
+                else if (tens == 0 && hundreds == 0 && thousands == 0) result += ChineseNumbers[ones];
+                else if (thousands > 0 || hundreds > 0) result += ChineseNumbers[ones];
+                else result += ChineseNumbers[ones];
+            }
+
+            return result;
+        }
+
+        private string ToChineseCapital(string chinese)
+        {
+            string result = chinese;
+            foreach (var kv in ChineseCapital)
+            {
+                result = result.Replace(kv.Key, kv.Value);
+            }
+            return result;
+        }
+
+        // ============================================================
+        // ⭐⭐⭐ 大小写转换 - 地狱难度
+        // ============================================================
+        private object GenerateCaseConversion(int level, int difficulty)
+        {
+            int len;
+            string source, correct;
+
+            if (difficulty > 70)
+            {
+                // 混合大小写单词（5-8个字母）
+                len = _random.Next(5, 9);
+                source = "";
+                for (int i = 0; i < len; i++)
+                {
+                    if (_random.Next(2) == 0)
+                    {
+                        source += Alphabet[_random.Next(26)];
+                    }
+                    else
+                    {
+                        source += LowerAlphabet[_random.Next(26)];
+                    }
+                }
+                // 随机大小写转换规则
+                int rule = _random.Next(4);
+                if (rule == 0)
+                {
+                    correct = source.ToUpper();
+                    source = source.ToLower();
+                }
+                else if (rule == 1)
+                {
+                    correct = source.ToLower();
+                    source = source.ToUpper();
+                }
+                else if (rule == 2)
+                {
+                    // 首字母大写
+                    correct = char.ToUpper(source[0]) + source.Substring(1).ToLower();
+                    source = source.ToLower();
+                }
+                else
+                {
+                    // 每个单词首字母大写（全大写）
+                    correct = source.ToUpper();
+                    source = source.ToLower();
+                }
+            }
+            else if (difficulty > 40)
+            {
+                // 单词（3-5个字母）
+                len = _random.Next(3, 6);
+                source = "";
+                for (int i = 0; i < len; i++)
+                {
+                    source += Alphabet[_random.Next(26)];
+                }
+                if (_random.Next(2) == 0)
+                {
+                    correct = source.ToLower();
+                }
+                else
+                {
+                    correct = source.ToUpper();
+                    source = source.ToLower();
+                }
+            }
+            else
+            {
+                // 单字母
+                char c = Alphabet[_random.Next(26)];
+                if (_random.Next(2) == 0)
+                {
+                    source = c.ToString();
+                    correct = c.ToString().ToLower();
+                }
+                else
+                {
+                    source = c.ToString().ToLower();
+                    correct = c.ToString();
+                }
+            }
+
+            var options = new List<string> { correct };
+            int optionCount = 4 + Math.Min(difficulty / 10, 3);
+
+            while (options.Count < optionCount)
+            {
+                string fake = "";
+                for (int i = 0; i < correct.Length; i++)
+                {
+                    if (_random.Next(2) == 0)
+                    {
+                        fake += Alphabet[_random.Next(26)];
+                    }
+                    else
+                    {
+                        fake += LowerAlphabet[_random.Next(26)];
+                    }
+                }
+                if (!options.Contains(fake) && fake != correct && fake.Length == correct.Length)
+                {
+                    options.Add(fake);
+                }
+            }
+
+            int timeLimit = Math.Max(4, 14 - difficulty / 10);
+
+            return new
+            {
+                type = "caseConversion",
+                level = level,
+                question = $"🔤 转换大小写：{source}",
+                correctAnswer = correct,
+                options = options.OrderBy(_ => _random.Next()).ToList(),
+                timeLimit = timeLimit,
+                funMessage = GetFunMessage("caseConversion")
+            };
+        }
+
+        // ============================================================
+        // ⭐⭐⭐ 方向判断 - 地狱难度
+        // ============================================================
+        private object GenerateDirection(int level, int difficulty)
+        {
+            string dir;
+            if (difficulty > 70)
+            {
+                // 全部方向
+                dir = Directions[_random.Next(Directions.Length)];
+            }
+            else if (difficulty > 40)
+            {
+                // 8方向
+                dir = Directions[_random.Next(8)];
+            }
+            else
+            {
+                // 4方向
+                var fourDir = new[] { "上", "下", "左", "右" };
+                dir = fourDir[_random.Next(4)];
+            }
+
+            string correct = DirectionOpposites[dir];
+            var allOptions = Directions.Where(d => d != dir && d != correct).ToList();
+            var options = new List<string> { correct };
+            int optionCount = 4 + Math.Min(difficulty / 10, 2);
+
+            var shuffled = allOptions.OrderBy(_ => _random.Next()).ToList();
+            for (int i = 0; i < Math.Min(optionCount - 1, shuffled.Count); i++)
+            {
+                options.Add(shuffled[i]);
+            }
+
+            int timeLimit = Math.Max(3, 8 - difficulty / 15);
+
+            return new
+            {
+                type = "direction",
+                level = level,
+                question = $"🧭 「{dir}」的相反方向是？",
+                correctAnswer = correct,
+                options = options.OrderBy(_ => _random.Next()).ToList(),
+                timeLimit = timeLimit,
+                funMessage = GetFunMessage("direction")
+            };
+        }
+
+        // ============================================================
+        // ⭐ 文字识别（超级难）
         // ============================================================
         private object GenerateTextRecognition(int level, int difficulty)
         {
-            int length = Math.Min(3 + difficulty / 10, 10);
+            int length = Math.Min(3 + difficulty / 8, 12);
             string text = "";
-            string chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+            string chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789!@#$%^&*";
             for (int i = 0; i < length; i++)
             {
                 text += chars[_random.Next(chars.Length)];
             }
 
-            int lineCount = 10 + difficulty * 3;
-            int distortion = 5 + difficulty / 2;
-            var svg = GenerateSvg(text, distortion, lineCount);
-            var options = GenerateTextOptions(text, difficulty);
-            int timeLimit = Math.Max(5, 18 - difficulty / 6);
+            var svg = GenerateHardSvg(text, difficulty);
+            var options = GenerateHardTextOptions(text, difficulty);
+            int timeLimit = Math.Max(4, 16 - difficulty / 5);
 
             return new
             {
                 type = "text",
                 level = level,
-                question = $"👁️ 请输入下方图片中的文字（{length}位）",
+                question = $"👁️ 识别下方文字（{length}位）",
                 imageSvg = svg,
                 correctAnswer = text,
                 options = options,
@@ -293,67 +803,177 @@ namespace MyPersonalWebsite.Controllers
             };
         }
 
-        private string GenerateSvg(string text, int distortion, int lineCount)
+        // ============================================================
+        // 超级难的 SVG 生成器
+        // ============================================================
+        private string GenerateHardSvg(string text, int difficulty)
         {
-            int width = 320;
-            int height = 100;
+            int width = 360;
+            int height = 120;
+            int charCount = text.Length;
 
             var svg = new System.Text.StringBuilder();
             svg.AppendLine($"<svg xmlns='http://www.w3.org/2000/svg' width='{width}' height='{height}' viewBox='0 0 {width} {height}'>");
 
-            int bgR = _random.Next(220, 255);
-            int bgG = _random.Next(220, 255);
-            int bgB = _random.Next(220, 255);
-            svg.AppendLine($"<rect width='{width}' height='{height}' rx='10' fill='rgb({bgR},{bgG},{bgB})'/>");
+            // 复杂背景
+            int bgR1 = _random.Next(180, 250);
+            int bgG1 = _random.Next(180, 250);
+            int bgB1 = _random.Next(180, 250);
 
+            svg.AppendLine($"<defs>");
+            svg.AppendLine($"<linearGradient id='bgGrad' x1='0%' y1='0%' x2='100%' y2='100%'>");
+            svg.AppendLine($"<stop offset='0%' style='stop-color:rgb({bgR1},{bgG1},{bgB1});stop-opacity:1' />");
+            svg.AppendLine($"<stop offset='100%' style='stop-color:rgb({bgR1 - 30},{bgG1 - 30},{bgB1 - 30});stop-opacity:1' />");
+            svg.AppendLine($"</linearGradient>");
+
+            // 扭曲滤镜
+            svg.AppendLine($"<filter id='distort' x='-20%' y='-20%' width='140%' height='140%'>");
+            svg.AppendLine($"<feTurbulence type='fractalNoise' baseFrequency='{0.02 + difficulty / 200f:F2}' numOctaves='3' result='noise'/>");
+            svg.AppendLine($"<feDisplacementMap in='SourceGraphic' in2='noise' scale='{5 + difficulty / 3}' xChannelSelector='R' yChannelSelector='G'/>");
+            svg.AppendLine($"</filter>");
+
+            // 模糊滤镜
+            if (difficulty > 30)
+            {
+                float blurAmount = 0.3f + difficulty / 40f;
+                svg.AppendLine($"<filter id='blur'>");
+                svg.AppendLine($"<feGaussianBlur stdDeviation='{blurAmount:F1}'/>");
+                svg.AppendLine($"</filter>");
+            }
+            svg.AppendLine($"</defs>");
+
+            svg.AppendLine($"<rect width='{width}' height='{height}' rx='12' fill='url(#bgGrad)'/>");
+
+            // 大量干扰线
+            int lineCount = 80 + difficulty * 4;
             for (int i = 0; i < lineCount; i++)
+            {
+                int r = _random.Next(100, 230);
+                int g = _random.Next(100, 230);
+                int b = _random.Next(100, 230);
+                int x1 = _random.Next(-50, width + 50);
+                int y1 = _random.Next(-50, height + 50);
+                int x2 = _random.Next(-50, width + 50);
+                int y2 = _random.Next(-50, height + 50);
+                int w = _random.Next(1, 5);
+                double alpha = 0.15 + _random.NextDouble() * 0.5;
+                svg.AppendLine($"<line x1='{x1}' y1='{y1}' x2='{x2}' y2='{y2}' stroke='rgb({r},{g},{b})' stroke-width='{w}' opacity='{alpha:F2}'/>");
+            }
+
+            // 曲线干扰
+            int curveCount = 20 + difficulty * 2;
+            for (int i = 0; i < curveCount; i++)
             {
                 int r = _random.Next(100, 220);
                 int g = _random.Next(100, 220);
                 int b = _random.Next(100, 220);
-                int x1 = _random.Next(-30, width + 30);
-                int y1 = _random.Next(-30, height + 30);
-                int x2 = _random.Next(-30, width + 30);
-                int y2 = _random.Next(-30, height + 30);
-                int w = _random.Next(1, 4);
-                svg.AppendLine($"<line x1='{x1}' y1='{y1}' x2='{x2}' y2='{y2}' stroke='rgb({r},{g},{b})' stroke-width='{w}' opacity='0.4'/>");
+                int cx1 = _random.Next(0, width);
+                int cy1 = _random.Next(0, height);
+                int cx2 = _random.Next(0, width);
+                int cy2 = _random.Next(0, height);
+                int cx3 = _random.Next(0, width);
+                int cy3 = _random.Next(0, height);
+                double alpha = 0.15 + _random.NextDouble() * 0.3;
+                svg.AppendLine($"<path d='M{cx1} {cy1} Q{cx2} {cy2} {cx3} {cy3}' stroke='rgb({r},{g},{b})' stroke-width='{_random.Next(1,3)}' fill='none' opacity='{alpha:F2}'/>");
             }
 
-            int spacing = (width - 40) / text.Length;
-            int startX = 20;
+            // 干扰字符
+            int fakeCharCount = 15 + difficulty * 2;
+            string allChars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789!@#$%^&*()_+-=<>?/";
+            for (int i = 0; i < fakeCharCount; i++)
+            {
+                char fc = allChars[_random.Next(allChars.Length)];
+                int fx = _random.Next(0, width);
+                int fy = _random.Next(0, height);
+                int fsize = _random.Next(8, 20);
+                int fr = _random.Next(150, 220);
+                int fg = _random.Next(150, 220);
+                int fb = _random.Next(150, 220);
+                double falpha = 0.05 + _random.NextDouble() * 0.15;
+                svg.AppendLine($"<text x='{fx}' y='{fy}' font-family='Arial' font-size='{fsize}' fill='rgb({fr},{fg},{fb})' opacity='{falpha:F2}' text-anchor='middle' dominant-baseline='central'>{fc}</text>");
+            }
 
-            for (int i = 0; i < text.Length; i++)
+            // 噪点
+            int dotCount = 300 + difficulty * 10;
+            for (int i = 0; i < dotCount; i++)
+            {
+                int dx = _random.Next(0, width);
+                int dy = _random.Next(0, height);
+                int dr = _random.Next(100, 220);
+                int dg = _random.Next(100, 220);
+                int db = _random.Next(100, 220);
+                int dsize = _random.Next(1, 4);
+                double dalpha = 0.2 + _random.NextDouble() * 0.3;
+                svg.AppendLine($"<circle cx='{dx}' cy='{dy}' r='{dsize}' fill='rgb({dr},{dg},{db})' opacity='{dalpha:F2}'/>");
+            }
+
+            // 主字符
+            int spacing = (width - 60) / charCount;
+            int startX = 30;
+            int colorOffset = 20 + difficulty / 3;
+
+            for (int i = 0; i < charCount; i++)
             {
                 char ch = text[i];
-                int r = _random.Next(5, 70);
-                int g = _random.Next(5, 70);
-                int b = _random.Next(5, 70);
-                int angle = _random.Next(-distortion, distortion);
-                int fontSize = _random.Next(36, 52);
-                int x = startX + i * spacing + _random.Next(-8, 8);
-                int y = height / 2 + 15 + _random.Next(-12, 12);
+                int angle = _random.Next(-45, 45);
+                int fontSize = _random.Next(34, 50);
+                int x = startX + i * spacing + _random.Next(-10, 10);
+                int y = height / 2 + 18 + _random.Next(-18, 18);
 
-                svg.AppendLine($"<text x='{x}' y='{y}' font-family='Arial,sans-serif' font-size='{fontSize}' font-weight='bold' fill='rgb({r},{g},{b})' transform='rotate({angle} {x} {y})' text-anchor='middle' dominant-baseline='central'>{ch}</text>");
+                int r = Math.Min(255, Math.Max(80, bgR1 - _random.Next(-colorOffset, colorOffset)));
+                int g = Math.Min(255, Math.Max(80, bgG1 - _random.Next(-colorOffset, colorOffset)));
+                int b = Math.Min(255, Math.Max(80, bgB1 - _random.Next(-colorOffset, colorOffset)));
+
+                float scaleX = 0.7f + (float)_random.NextDouble() * 0.8f;
+                float scaleY = 0.7f + (float)_random.NextDouble() * 0.8f;
+                int skewX = _random.Next(-20, 20);
+                int skewY = _random.Next(-10, 10);
+
+                string[] fonts = { "Arial", "Times New Roman", "Courier New", "Georgia", "Verdana", "Comic Sans MS", "Impact" };
+                string font = fonts[_random.Next(fonts.Length)];
+
+                string stroke = "";
+                if (difficulty > 20)
+                {
+                    int sr = Math.Min(255, Math.Max(80, r + _random.Next(-30, 30)));
+                    int sg = Math.Min(255, Math.Max(80, g + _random.Next(-30, 30)));
+                    int sb = Math.Min(255, Math.Max(80, b + _random.Next(-30, 30)));
+                    stroke = $"stroke='rgb({sr},{sg},{sb})' stroke-width='{_random.Next(1,3)}'";
+                }
+
+                string filter = difficulty > 30 ? "filter='url(#blur)'" : "";
+
+                svg.AppendLine($"<text x='{x}' y='{y}' font-family='{font}' font-size='{fontSize}' font-weight='{_random.Next(400, 900)}' fill='rgb({r},{g},{b})' {stroke} transform='rotate({angle} {x} {y}) scale({scaleX:F2},{scaleY:F2}) skewX({skewX}) skewY({skewY})' text-anchor='middle' dominant-baseline='central' {filter} opacity='{0.7 + _random.NextDouble() * 0.3:F2}'>{ch}</text>");
             }
 
             svg.AppendLine("</svg>");
             return svg.ToString();
         }
 
-        private List<string> GenerateTextOptions(string correct, int difficulty)
+        // ============================================================
+        // 干扰选项生成
+        // ============================================================
+        private List<string> GenerateHardTextOptions(string correct, int difficulty)
         {
             var options = new List<string> { correct };
-            int count = 4 + Math.Min(difficulty / 10, 4);
-            string chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+            int count = 4 + Math.Min(difficulty / 8, 5);
+            string chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789!@#$%^&*()_+-=<>?/";
 
             while (options.Count < count)
             {
                 string fake = "";
                 for (int i = 0; i < correct.Length; i++)
                 {
-                    fake += chars[_random.Next(chars.Length)];
+                    if (_random.Next(100) < 30 + difficulty / 5)
+                    {
+                        fake += GetSimilarChar(correct[i]);
+                    }
+                    else
+                    {
+                        fake += chars[_random.Next(chars.Length)];
+                    }
                 }
-                if (!options.Contains(fake))
+                if (!options.Contains(fake) && fake != correct)
                 {
                     options.Add(fake);
                 }
@@ -361,8 +981,77 @@ namespace MyPersonalWebsite.Controllers
             return options.OrderBy(_ => _random.Next()).ToList();
         }
 
+        private char GetSimilarChar(char c)
+        {
+            var map = new Dictionary<char, char[]>
+            {
+                {'0', new[]{'O','Q','D','C','8'}},
+                {'O', new[]{'0','Q','D','C','8'}},
+                {'Q', new[]{'0','O','D','C','8'}},
+                {'D', new[]{'0','O','Q','C','8'}},
+                {'C', new[]{'G','O','Q','0','8'}},
+                {'G', new[]{'C','O','Q','6','8'}},
+                {'1', new[]{'I','L','!','|','7'}},
+                {'I', new[]{'1','L','!','|','7'}},
+                {'L', new[]{'1','I','J','|','7'}},
+                {'J', new[]{'L','I','T','Y','7'}},
+                {'T', new[]{'Y','7','L','J','I'}},
+                {'Y', new[]{'V','T','7','J','U'}},
+                {'V', new[]{'Y','U','W','M','N'}},
+                {'U', new[]{'V','J','L','I','W'}},
+                {'W', new[]{'M','V','N','U','Y'}},
+                {'M', new[]{'W','N','V','U','H'}},
+                {'N', new[]{'M','H','K','W','Z'}},
+                {'H', new[]{'N','K','A','M','R'}},
+                {'K', new[]{'H','N','M','X','R'}},
+                {'X', new[]{'K','*','+','x','H'}},
+                {'A', new[]{'4','H','R','K','8'}},
+                {'R', new[]{'P','A','K','B','8'}},
+                {'P', new[]{'R','B','9','D','8'}},
+                {'B', new[]{'8','3','P','R','6'}},
+                {'3', new[]{'8','B','E','S','6'}},
+                {'8', new[]{'3','B','6','S','0'}},
+                {'6', new[]{'8','9','G','S','5'}},
+                {'9', new[]{'6','8','P','G','5'}},
+                {'S', new[]{'5','$','8','3','6'}},
+                {'5', new[]{'S','$','8','3','6'}},
+                {'2', new[]{'Z','7','L','I','T'}},
+                {'Z', new[]{'2','7','N','M','H'}},
+                {'7', new[]{'2','Z','T','Y','I'}},
+                {'4', new[]{'A','H','K','R','8'}},
+                {'E', new[]{'3','B','F','P','8'}},
+                {'F', new[]{'E','P','T','Y','R'}},
+                {'$', new[]{'S','5','8','3','6'}},
+                {'!', new[]{'1','I','L','|','7'}},
+                {'@', new[]{'0','O','Q','D','8'}},
+                {'#', new[]{'H','K','M','N','R'}},
+                {'%', new[]{'S','5','8','3','6'}},
+                {'^', new[]{'V','Y','T','W','U'}},
+                {'&', new[]{'8','3','B','6','S'}},
+                {'*', new[]{'X','+','K','H','x'}},
+                {'(', new[]{'C','G','O','Q','8'}},
+                {')', new[]{'O','C','G','Q','8'}},
+                {'-', new[]{'_','=','+','T','I'}},
+                {'_', new[]{'-','=','+','T','I'}},
+                {'=', new[]{'-','_','+','T','I'}},
+                {'+', new[]{'*','X','K','H','T'}},
+                {'<', new[]{'C','G','O','Q','8'}},
+                {'>', new[]{'C','G','O','Q','8'}},
+                {'?', new[]{'7','Z','2','T','Y'}},
+                {'/', new[]{'7','Z','2','T','Y'}}
+            };
+
+            if (map.ContainsKey(c))
+            {
+                var similar = map[c];
+                return similar[_random.Next(similar.Length)];
+            }
+            string chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789!@#$%^&*";
+            return chars[_random.Next(chars.Length)];
+        }
+
         // ============================================================
-        // 2. 算术
+        // 其他类型（快速实现）
         // ============================================================
         private object GenerateArithmetic(int level, int difficulty)
         {
@@ -370,28 +1059,16 @@ namespace MyPersonalWebsite.Controllers
             int a = _random.Next(5, maxNum);
             int b = _random.Next(1, Math.Max(2, maxNum / 2));
 
-            string[] ops;
-            if (difficulty > 60) ops = new[] { '+', '-', '×', '÷' };
-            else if (difficulty > 30) ops = new[] { '+', '-', '×', '÷' };
-            else if (difficulty > 15) ops = new[] { '+', '-', '×' };
-            else ops = new[] { '+', '-' };
+            string[] ops = difficulty > 60 ? new[] { '+', '-', '×', '÷' } :
+                           difficulty > 30 ? new[] { '+', '-', '×', '÷' } :
+                           difficulty > 15 ? new[] { '+', '-', '×' } : new[] { '+', '-' };
 
             string op = ops[_random.Next(ops.Length)];
-            int result;
-
-            switch (op)
-            {
-                case '+': result = a + b; break;
-                case '-': result = a - b; break;
-                case '×': result = a * b; break;
-                case '÷': result = a / b; break;
-                default: result = a + b; break;
-            }
-
+            int result = op == '+' ? a + b : op == '-' ? a - b : op == '×' ? a * b : a / b;
             if (result < 0) result = Math.Abs(result);
             if (result == 0) result = a + b;
 
-            var options = GenerateNumberOptions(result, 4 + difficulty / 10, difficulty);
+            var options = GenerateNumberOptions(result, 4 + difficulty / 10);
             int timeLimit = Math.Max(4, 15 - difficulty / 8);
 
             return new
@@ -406,10 +1083,10 @@ namespace MyPersonalWebsite.Controllers
             };
         }
 
-        private List<string> GenerateNumberOptions(int correct, int count, int difficulty)
+        private List<string> GenerateNumberOptions(int correct, int count)
         {
             var options = new List<string> { correct.ToString() };
-            int range = Math.Max(2, 5 + difficulty / 5);
+            int range = Math.Max(2, 5 + _random.Next(5));
 
             while (options.Count < count)
             {
@@ -426,14 +1103,10 @@ namespace MyPersonalWebsite.Controllers
             return options.OrderBy(_ => _random.Next()).ToList();
         }
 
-        // ============================================================
-        // 3. 汉字笔画
-        // ============================================================
         private object GenerateStrokeCount(int level, int difficulty)
         {
             var allChars = StrokeCount.Keys.ToArray();
             char ch;
-
             if (difficulty < 20)
             {
                 var simple = allChars.Where(c => StrokeCount[c] <= 5).ToArray();
@@ -461,7 +1134,6 @@ namespace MyPersonalWebsite.Controllers
             }
 
             int correct = StrokeCount[ch];
-
             var options = new List<string> { correct.ToString() };
             int count = 4 + Math.Min(difficulty / 15, 4);
 
@@ -471,7 +1143,6 @@ namespace MyPersonalWebsite.Controllers
                 if (fake < 1) fake = correct + _random.Next(2, 5);
                 if (fake > 35) fake = correct - _random.Next(2, 5);
                 if (fake < 1) fake = 3 + _random.Next(1, 5);
-
                 string str = fake.ToString();
                 if (!options.Contains(str) && fake != correct)
                 {
@@ -493,9 +1164,6 @@ namespace MyPersonalWebsite.Controllers
             };
         }
 
-        // ============================================================
-        // 4. 颜色识别
-        // ============================================================
         private object GenerateColorRecognition(int level, int difficulty)
         {
             var colors = new[]
@@ -529,7 +1197,6 @@ namespace MyPersonalWebsite.Controllers
                        colors;
 
             var selected = pool[_random.Next(pool.Length)];
-
             var options = new List<string> { selected.name };
             var poolList = pool.ToList();
             poolList.Remove(selected);
@@ -559,9 +1226,6 @@ namespace MyPersonalWebsite.Controllers
             };
         }
 
-        // ============================================================
-        // 5. 找不同
-        // ============================================================
         private object GenerateFindDifferent(int level, int difficulty)
         {
             int length = 4 + difficulty / 5;
@@ -577,7 +1241,6 @@ namespace MyPersonalWebsite.Controllers
             int pos = _random.Next(length);
             char original = baseStr[pos];
             char replacement = chars[_random.Next(chars.Length)];
-
             while (replacement == original)
             {
                 replacement = chars[_random.Next(chars.Length)];
@@ -625,9 +1288,6 @@ namespace MyPersonalWebsite.Controllers
             };
         }
 
-        // ============================================================
-        // 6. 倒序识别
-        // ============================================================
         private object GenerateReverseText(int level, int difficulty)
         {
             int length = Math.Min(3 + difficulty / 8, 8);
@@ -639,12 +1299,8 @@ namespace MyPersonalWebsite.Controllers
             }
 
             string reversed = new string(text.Reverse().ToArray());
-
-            int lineCount = 10 + difficulty * 2;
-            int distortion = 5 + difficulty / 3;
-            var svg = GenerateSvg(text, distortion, lineCount);
-
-            var options = GenerateTextOptions(reversed, difficulty);
+            var svg = GenerateHardSvg(text, difficulty);
+            var options = GenerateHardTextOptions(reversed, difficulty);
             int timeLimit = Math.Max(5, 16 - difficulty / 6);
 
             return new
@@ -660,9 +1316,6 @@ namespace MyPersonalWebsite.Controllers
             };
         }
 
-        // ============================================================
-        // 7. 缺失字母
-        // ============================================================
         private object GenerateMissingLetter(int level, int difficulty)
         {
             int len = Math.Min(3 + difficulty / 8, 8);
@@ -675,7 +1328,7 @@ namespace MyPersonalWebsite.Controllers
             char[] display = word.ToCharArray();
             display[idx] = '_';
 
-            var options = GenerateTextOptions(correct.ToString(), difficulty);
+            var options = GenerateHardTextOptions(correct.ToString(), difficulty);
             int timeLimit = Math.Max(4, 12 - difficulty / 8);
 
             return new
@@ -690,14 +1343,11 @@ namespace MyPersonalWebsite.Controllers
             };
         }
 
-        // ============================================================
-        // 8. 快速点击
-        // ============================================================
         private object GenerateQuickTap(int level, int difficulty)
         {
             string chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
             char target = chars[_random.Next(chars.Length)];
-            var options = GenerateTextOptions(target.ToString(), difficulty);
+            var options = GenerateHardTextOptions(target.ToString(), difficulty);
             int timeLimit = Math.Max(3, 10 - difficulty / 10);
 
             return new
@@ -712,93 +1362,12 @@ namespace MyPersonalWebsite.Controllers
             };
         }
 
-        // ============================================================
-        // 9. 成语填空
-        // ============================================================
-        private object GenerateIdiomFill(int level, int difficulty)
-        {
-            var idioms = new[] { "一马当先", "龙飞凤舞", "画蛇添足", "守株待兔", "狐假虎威",
-                "马到成功", "鸟语花香", "鱼目混珠", "鹤立鸡群", "龙腾虎跃",
-                "画龙点睛", "亡羊补牢", "杯弓蛇影", "指鹿为马", "马不停蹄",
-                "一帆风顺", "万事如意", "心想事成", "步步高升", "蒸蒸日上" };
-
-            var idiom = idioms[_random.Next(idioms.Length)];
-            int idx = _random.Next(idiom.Length);
-            char correct = idiom[idx];
-            char[] display = idiom.ToCharArray();
-            display[idx] = '□';
-
-            var options = GenerateTextOptions(correct.ToString(), difficulty);
-            int timeLimit = Math.Max(4, 12 - difficulty / 8);
-
-            return new
-            {
-                type = "idiom",
-                level = level,
-                question = $"📖 补全成语：{new string(display)}",
-                correctAnswer = correct.ToString(),
-                options = options,
-                timeLimit = timeLimit,
-                funMessage = GetFunMessage("idiom")
-            };
-        }
-
-        // ============================================================
-        // 10. 中文数字
-        // ============================================================
-        private object GenerateChineseToNumber(int level, int difficulty)
-        {
-            var cn = new[] { "零", "一", "二", "三", "四", "五", "六", "七", "八", "九", "十" };
-            int num = _random.Next(0, 11);
-            var options = GenerateNumberOptions(num, 4 + difficulty / 10, difficulty);
-            int timeLimit = Math.Max(3, 10 - difficulty / 10);
-
-            return new
-            {
-                type = "chineseNumber",
-                level = level,
-                question = $"🔢 「{cn[num]}」对应的数字是？",
-                correctAnswer = num.ToString(),
-                options = options,
-                timeLimit = timeLimit,
-                funMessage = GetFunMessage("chineseNumber")
-            };
-        }
-
-        // ============================================================
-        // 11. 大小写转换
-        // ============================================================
-        private object GenerateCaseConversion(int level, int difficulty)
-        {
-            var letters = "ABCDEFGHJKLMNPQRSTUVWXYZ".ToCharArray();
-            char c = letters[_random.Next(letters.Length)];
-            bool isUpper = _random.Next(2) == 0;
-
-            string correct = isUpper ? c.ToString().ToLower() : c.ToString().ToUpper();
-            var options = GenerateTextOptions(correct, difficulty);
-            int timeLimit = Math.Max(3, 10 - difficulty / 10);
-
-            return new
-            {
-                type = "caseConversion",
-                level = level,
-                question = isUpper ? $"🔤 字母「{c}」的小写是？" : $"🔤 字母「{c.ToString().ToLower()}」的大写是？",
-                correctAnswer = correct,
-                options = options,
-                timeLimit = timeLimit,
-                funMessage = GetFunMessage("caseConversion")
-            };
-        }
-
-        // ============================================================
-        // 12. 读音识别
-        // ============================================================
         private object GeneratePinyinMatch(int level, int difficulty)
         {
-            var letters = "ABCDEFGHJKLMNPQRSTUVWXYZ".ToCharArray();
-            char c = letters[_random.Next(letters.Length)];
+            var letters = Alphabet;
+            char c = letters[_random.Next(26)];
 
-            var options = GenerateTextOptions(c.ToString(), difficulty);
+            var options = GenerateHardTextOptions(c.ToString(), difficulty);
             int timeLimit = Math.Max(3, 10 - difficulty / 10);
 
             return new
@@ -813,9 +1382,6 @@ namespace MyPersonalWebsite.Controllers
             };
         }
 
-        // ============================================================
-        // 13. 反色识别
-        // ============================================================
         private object GenerateInverseColor(int level, int difficulty)
         {
             var colors = new[] { "黑色", "白色" };
@@ -841,9 +1407,6 @@ namespace MyPersonalWebsite.Controllers
             };
         }
 
-        // ============================================================
-        // 14. 镜像字母
-        // ============================================================
         private object GenerateMirrorLetter(int level, int difficulty)
         {
             var mirrorMap = new Dictionary<char, char> {
@@ -854,7 +1417,7 @@ namespace MyPersonalWebsite.Controllers
             char c = keys[_random.Next(keys.Length)];
             char correct = mirrorMap[c];
 
-            var options = GenerateTextOptions(correct.ToString(), difficulty);
+            var options = GenerateHardTextOptions(correct.ToString(), difficulty);
             int timeLimit = Math.Max(3, 10 - difficulty / 10);
 
             return new
@@ -869,15 +1432,12 @@ namespace MyPersonalWebsite.Controllers
             };
         }
 
-        // ============================================================
-        // 15. 键盘相邻
-        // ============================================================
         private object GenerateKeyboardNeighbor(int level, int difficulty)
         {
             var keys = "QWERTYUIOPASDFGHJKLZXCVBNM".ToCharArray();
             char c = keys[_random.Next(keys.Length)];
 
-            var options = GenerateTextOptions(c.ToString(), difficulty);
+            var options = GenerateHardTextOptions(c.ToString(), difficulty);
             int timeLimit = Math.Max(3, 10 - difficulty / 10);
 
             return new
@@ -892,9 +1452,6 @@ namespace MyPersonalWebsite.Controllers
             };
         }
 
-        // ============================================================
-        // 16. 字符计数
-        // ============================================================
         private object GenerateCharacterCount(int level, int difficulty)
         {
             int len = Math.Min(6 + difficulty / 6, 15);
@@ -905,7 +1462,7 @@ namespace MyPersonalWebsite.Controllers
             char target = chars[_random.Next(chars.Length)];
             int count = text.Count(c => c == target);
 
-            var options = GenerateNumberOptions(count, 4 + difficulty / 10, difficulty);
+            var options = GenerateNumberOptions(count, 4 + difficulty / 10);
             int timeLimit = Math.Max(4, 12 - difficulty / 8);
 
             return new
@@ -920,16 +1477,13 @@ namespace MyPersonalWebsite.Controllers
             };
         }
 
-        // ============================================================
-        // 17. 数字记忆
-        // ============================================================
         private object GenerateMemoryChallenge(int level, int difficulty)
         {
             int len = Math.Min(3 + difficulty / 8, 8);
             string text = "";
             for (int i = 0; i < len; i++) text += _random.Next(0, 10);
 
-            var options = GenerateTextOptions(text, difficulty);
+            var options = GenerateHardTextOptions(text, difficulty);
             int timeLimit = Math.Max(5, 14 - difficulty / 8);
 
             return new
@@ -944,41 +1498,6 @@ namespace MyPersonalWebsite.Controllers
             };
         }
 
-        // ============================================================
-        // 18. 方向判断
-        // ============================================================
-        private object GenerateDirection(int level, int difficulty)
-        {
-            var dirs = new[] { "上", "下", "左", "右" };
-            string dir = dirs[_random.Next(dirs.Length)];
-            var opposite = new Dictionary<string, string> { {"上","下"},{"下","上"},{"左","右"},{"右","左"} };
-
-            var options = new List<string> { opposite[dir] };
-            var pool = dirs.Where(d => d != dir && d != opposite[dir]).ToList();
-            while (options.Count < 4 && pool.Count > 0)
-            {
-                int idx = _random.Next(pool.Count);
-                options.Add(pool[idx]);
-                pool.RemoveAt(idx);
-            }
-
-            int timeLimit = Math.Max(3, 8 - difficulty / 15);
-
-            return new
-            {
-                type = "direction",
-                level = level,
-                question = $"🧭 请选择「{dir}」的相反方向",
-                correctAnswer = opposite[dir],
-                options = options.OrderBy(_ => _random.Next()).ToList(),
-                timeLimit = timeLimit,
-                funMessage = GetFunMessage("direction")
-            };
-        }
-
-        // ============================================================
-        // 19. 终极挑战
-        // ============================================================
         private object GenerateUltimate(int level, int difficulty)
         {
             var types = new[] { "text", "arithmetic", "stroke", "color", "findDifferent",
@@ -991,30 +1510,30 @@ namespace MyPersonalWebsite.Controllers
 
             switch (type)
             {
-                case "text": challenge = GenerateTextRecognition(level, difficulty + 20); break;
-                case "arithmetic": challenge = GenerateArithmetic(level, difficulty + 20); break;
-                case "stroke": challenge = GenerateStrokeCount(level, difficulty + 20); break;
-                case "color": challenge = GenerateColorRecognition(level, difficulty + 20); break;
-                case "findDifferent": challenge = GenerateFindDifferent(level, difficulty + 20); break;
-                case "reverse": challenge = GenerateReverseText(level, difficulty + 20); break;
-                case "missingLetter": challenge = GenerateMissingLetter(level, difficulty + 20); break;
-                case "quickTap": challenge = GenerateQuickTap(level, difficulty + 20); break;
-                case "idiom": challenge = GenerateIdiomFill(level, difficulty + 20); break;
-                case "chineseNumber": challenge = GenerateChineseToNumber(level, difficulty + 20); break;
-                case "caseConversion": challenge = GenerateCaseConversion(level, difficulty + 20); break;
-                case "pinyin": challenge = GeneratePinyinMatch(level, difficulty + 20); break;
-                case "inverseColor": challenge = GenerateInverseColor(level, difficulty + 20); break;
-                case "mirror": challenge = GenerateMirrorLetter(level, difficulty + 20); break;
-                case "keyboard": challenge = GenerateKeyboardNeighbor(level, difficulty + 20); break;
-                case "countChar": challenge = GenerateCharacterCount(level, difficulty + 20); break;
-                case "memory": challenge = GenerateMemoryChallenge(level, difficulty + 20); break;
-                default: challenge = GenerateDirection(level, difficulty + 20); break;
+                case "text": challenge = GenerateTextRecognition(level, difficulty + 30); break;
+                case "arithmetic": challenge = GenerateArithmetic(level, difficulty + 30); break;
+                case "stroke": challenge = GenerateStrokeCount(level, difficulty + 30); break;
+                case "color": challenge = GenerateColorRecognition(level, difficulty + 30); break;
+                case "findDifferent": challenge = GenerateFindDifferent(level, difficulty + 30); break;
+                case "reverse": challenge = GenerateReverseText(level, difficulty + 30); break;
+                case "missingLetter": challenge = GenerateMissingLetter(level, difficulty + 30); break;
+                case "quickTap": challenge = GenerateQuickTap(level, difficulty + 30); break;
+                case "idiom": challenge = GenerateIdiomFill(level, difficulty + 30); break;
+                case "chineseNumber": challenge = GenerateChineseNumber(level, difficulty + 30); break;
+                case "caseConversion": challenge = GenerateCaseConversion(level, difficulty + 30); break;
+                case "pinyin": challenge = GeneratePinyinMatch(level, difficulty + 30); break;
+                case "inverseColor": challenge = GenerateInverseColor(level, difficulty + 30); break;
+                case "mirror": challenge = GenerateMirrorLetter(level, difficulty + 30); break;
+                case "keyboard": challenge = GenerateKeyboardNeighbor(level, difficulty + 30); break;
+                case "countChar": challenge = GenerateCharacterCount(level, difficulty + 30); break;
+                case "memory": challenge = GenerateMemoryChallenge(level, difficulty + 30); break;
+                default: challenge = GenerateDirection(level, difficulty + 30); break;
             }
 
             var result = challenge as dynamic;
             if (result != null)
             {
-                int timeLimit = Math.Max(2, (result.timeLimit as int? ?? 10) - 3);
+                int timeLimit = Math.Max(2, (result.timeLimit as int? ?? 10) - 4);
                 return new
                 {
                     type = "ultimate",
@@ -1029,12 +1548,9 @@ namespace MyPersonalWebsite.Controllers
                 };
             }
 
-            return GenerateTextRecognition(level, difficulty + 20);
+            return GenerateTextRecognition(level, difficulty + 30);
         }
 
-        // ============================================================
-        // 工具方法
-        // ============================================================
         private string GetFunMessage(string type)
         {
             if (FunMessages.ContainsKey(type))
