@@ -1,7 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Linq;
-using MyPersonalWebsite.Services;  // ⭐ 添加这一行
+using MyPersonalWebsite.Services;
+using MyPersonalWebsite.Models;
 using System.Threading.Tasks;
 
 namespace MyPersonalWebsite.Controllers
