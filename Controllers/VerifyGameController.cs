@@ -14,7 +14,7 @@ namespace MyPersonalWebsite.Controllers
         private readonly Random _random = new();
 
         // ============================================================
-        // 汉字笔画数据库（精确）
+        // 汉字笔画数据库
         // ============================================================
         private static readonly Dictionary<char, int> StrokeCount = new()
         {
@@ -126,7 +126,7 @@ namespace MyPersonalWebsite.Controllers
         };
 
         // ============================================================
-        // 8方向 + 组合（地狱难度）
+        // 8方向 + 组合
         // ============================================================
         private static readonly string[] Directions = new string[]
         {
@@ -143,7 +143,7 @@ namespace MyPersonalWebsite.Controllers
         };
 
         // ============================================================
-        // 中文数字（0-9999 + 中文大写）
+        // 中文数字
         // ============================================================
         private static readonly string[] ChineseNumbers = new string[]
         {
@@ -954,7 +954,7 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // 9. 成语填空 - 地狱难度
+        // 9. 成语填空
         // ============================================================
         private object GenerateIdiomFill(int level, int difficulty)
         {
@@ -1030,21 +1030,21 @@ namespace MyPersonalWebsite.Controllers
 
         private bool IsCommonIdiom(string idiom)
         {
-            var common = new[] { "一马当先", "龙飞凤舞", "画蛇添足", "守株待兔", "狐假虎威",
+            var common = new string[] { "一马当先", "龙飞凤舞", "画蛇添足", "守株待兔", "狐假虎威",
                 "马到成功", "鸟语花香", "鱼目混珠", "鹤立鸡群", "龙腾虎跃" };
             return common.Contains(idiom);
         }
 
         private bool IsRareIdiom(string idiom)
         {
-            var rare = new[] { "魑魅魍魉", "饕餮盛宴", "龙骧虎步", "凤翥鸾翔", "鸾翔凤集",
+            var rare = new string[] { "魑魅魍魉", "饕餮盛宴", "龙骧虎步", "凤翥鸾翔", "鸾翔凤集",
                 "蜚短流长", "龙蟠虎踞", "龙肝凤髓", "凤毛麟角", "鹤唳华亭",
                 "兔起鹘落", "鹰击长空", "鱼跃龙门", "虎视眈眈", "狼奔豕突" };
             return rare.Contains(idiom);
         }
 
         // ============================================================
-        // 10. 中文数字 - 地狱难度
+        // 10. 中文数字
         // ============================================================
         private object GenerateChineseNumber(int level, int difficulty)
         {
@@ -1157,7 +1157,7 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // 11. 大小写转换 - 地狱难度
+        // 11. 大小写转换
         // ============================================================
         private object GenerateCaseConversion(int level, int difficulty)
         {
@@ -1329,7 +1329,7 @@ namespace MyPersonalWebsite.Controllers
                 {'A','A'},{'H','H'},{'I','I'},{'M','M'},{'O','O'},{'T','T'},{'U','U'},{'V','V'},{'W','W'},{'X','X'},{'Y','Y'},
                 {'C','C'},{'D','D'},{'E','E'},{'K','K'},{'P','P'},{'S','S'},{'Z','Z'}
             };
-            // 使用 List<char> 而不是 string[]
+            // 使用 List<char>
             var keys = new List<char>(mirrorMap.Keys);
             char c = keys[_random.Next(keys.Count)];
             char correct = mirrorMap[c];
@@ -1425,7 +1425,7 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // 18. 方向判断 - 地狱难度
+        // 18. 方向判断
         // ============================================================
         private object GenerateDirection(int level, int difficulty)
         {
