@@ -26,18 +26,28 @@ namespace MyPersonalWebsite.Models
         public DateTime AnswerDate { get; set; }
     }
 
-   public class UserGameStats
-{
-    public int Id { get; set; }
-    public int UserId { get; set; }
-    public int TotalPoints { get; set; } = 0;
-    public int MaxCombo { get; set; } = 0;
-    public int MaxLevel { get; set; } = 0;
-    public int GamesPlayed { get; set; } = 0;
-    public DateTime UpdatedAt { get; set; } = DateTime.Now;
+    public class UserGameStats
+    {
+        public int Id { get; set; }
+        public int UserId { get; set; }
 
-    public User? User { get; set; }
-}
+        // 每日一问相关
+        public int TotalPoints { get; set; } = 0;
+        public int StreakDays { get; set; } = 0;
+        public int MaxStreakDays { get; set; } = 0;
+        public int TotalCorrect { get; set; } = 0;
+        public int TotalAnswered { get; set; } = 0;
+        public DateTime? LastAnswerDate { get; set; }
+
+        // 验证大闯关相关
+        public int MaxCombo { get; set; } = 0;
+        public int MaxLevel { get; set; } = 0;
+        public int GamesPlayed { get; set; } = 0;
+
+        public DateTime UpdatedAt { get; set; } = DateTime.Now;
+
+        public User? User { get; set; }
+    }
 
     public class RankItem
     {
