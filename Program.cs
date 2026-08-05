@@ -75,6 +75,7 @@ builder.Services.AddScoped<DataSyncService>();
 builder.Services.AddScoped<TursoService>();
 builder.Services.AddScoped<DailyQuestionService>();
 builder.Services.AddScoped<GameSuggestionService>();
+builder.Services.AddScoped<VerifyGameService>();
 //builder.Services.AddScoped<CaptchaGameService>();
 builder.Services.AddHttpClient<TrainService>();
 builder.Services.AddScoped<TrainService>();
