@@ -1323,30 +1323,27 @@ namespace MyPersonalWebsite.Controllers
         // ============================================================
         // 14. 镜像字母
         // ============================================================
-        private object GenerateMirrorLetter(int level, int difficulty)
-        {
-            var mirrorMap = new Dictionary<char, char> {
-                {'A','A'},{'H','H'},{'I','I'},{'M','M'},{'O','O'},{'T','T'},{'U','U'},{'V','V'},{'W','W'},{'X','X'},{'Y','Y'},
-                {'C','C'},{'D','D'},{'E','E'},{'K','K'},{'P','P'},{'S','S'},{'Z','Z'}
-            };
-            var keys = new List<char>(mirrorMap.Keys);
-            char c = keys[_random.Next(keys.Count)];
-            char correct = mirrorMap[c];
+       private object GenerateMirrorLetter(int level, int difficulty)
+{
+    // 直接用数组，不用 List，不用 ToArray()
+    char[] mirrorKeys = new char[] { 'A','H','I','M','O','T','U','V','W','X','Y','C','D','E','K','P','S','Z' };
+    char c = mirrorKeys[_random.Next(mirrorKeys.Length)];
+    char correct = c; // 这些字母的镜像就是自己
 
-            var options = GenerateHardTextOptions(correct.ToString(), difficulty);
-            int timeLimit = Math.Max(3, 10 - difficulty / 10);
+    var options = GenerateHardTextOptions(correct.ToString(), difficulty);
+    int timeLimit = Math.Max(3, 10 - difficulty / 10);
 
-            return new
-            {
-                type = "mirror",
-                level = level,
-                question = $"🪞 字母「{c}」的镜像字母是？",
-                correctAnswer = correct.ToString(),
-                options = options,
-                timeLimit = timeLimit,
-                funMessage = GetFunMessage("mirror")
-            };
-        }
+    return new
+    {
+        type = "mirror",
+        level = level,
+        question = $"🪞 字母「{c}」的镜像字母是？",
+        correctAnswer = correct.ToString(),
+        options = options,
+        timeLimit = timeLimit,
+        funMessage = GetFunMessage("mirror")
+    };
+}
 
         // ============================================================
         // 15. 键盘相邻
