@@ -654,7 +654,7 @@ namespace MyPersonalWebsite.Controllers
             catch { return false; }
         }
 
-        // 5. ⭐ 找不同（记忆+推理型）
+       // 5. ⭐ 找不同（真正地狱难度：无标记 + 乱序 + 相似字符）
 private object GenerateFindDifferent(int level, int difficulty)
 {
     int length = 5 + difficulty / 4;
@@ -670,29 +670,17 @@ private object GenerateFindDifferent(int level, int difficulty)
     // 随机选一个位置替换
     int pos = _random.Next(length);
     char originalChar = original[pos];
-    char replacementChar = chars[_random.Next(chars.Length)];
+    char replacementChar = GetSimilarChar(originalChar);
     while (replacementChar == originalChar) 
-        replacementChar = chars[_random.Next(chars.Length)];
+        replacementChar = GetSimilarChar(originalChar);
 
     // 构建替换后的字符串
     char[] replacedArr = original.ToCharArray();
     replacedArr[pos] = replacementChar;
     string replaced = new string(replacedArr);
 
-    // ⭐ 打乱替换后的字符串顺序
+    // ⭐ 打乱替换后的字符串
     char[] shuffledArr = replaced.ToCharArray();
-    // 记录被替换字符在打乱后的位置
-    int shuffledPos = -1;
-    for (int i = 0; i < shuffledArr.Length; i++)
-    {
-        if (shuffledArr[i] == replacementChar)
-        {
-            // 如果有多个相同字符，随机选一个
-            if (shuffledPos == -1 || _random.Next(2) == 0)
-                shuffledPos = i;
-        }
-    }
-    // 打乱
     for (int i = shuffledArr.Length - 1; i > 0; i--)
     {
         int j = _random.Next(i + 1);
@@ -700,36 +688,29 @@ private object GenerateFindDifferent(int level, int difficulty)
         shuffledArr[i] = shuffledArr[j];
         shuffledArr[j] = temp;
     }
-    // 重新找到被替换字符的位置
-    shuffledPos = -1;
-    for (int i = 0; i < shuffledArr.Length; i++)
-    {
-        if (shuffledArr[i] == replacementChar)
-        {
-            shuffledPos = i;
-            break;
-        }
-    }
     string shuffled = new string(shuffledArr);
 
-    // ⭐ 显示时间随难度变化（越难越短）
-    int displayTime = Math.Max(2, 8 - difficulty / 8);
-
-    // ⭐ 选项：所有被替换的原始字符（玩家要点出被更改的字符）
-    var options = new List<string> { originalChar.ToString() };
-    int count = 4 + Math.Min(difficulty / 12, 3);
-
-    while (options.Count < count)
+    // ⭐ 选项：所有字符（玩家要点出哪个字符被替换了）
+    var options = new List<string>();
+    var charSet = new HashSet<char>();
+    
+    // 添加原始字符和被替换后的字符到选项
+    charSet.Add(originalChar);
+    charSet.Add(replacementChar);
+    
+    // 添加更多干扰字符
+    while (charSet.Count < 4 + Math.Min(difficulty / 12, 3))
     {
         char fake = chars[_random.Next(chars.Length)];
-        if (fake != originalChar && !options.Contains(fake.ToString()))
-        {
-            options.Add(fake.ToString());
-        }
+        charSet.Add(fake);
     }
+    
+    options = charSet.ToList().Select(c => c.ToString()).ToList();
+    // 打乱选项顺序
+    options = options.OrderBy(_ => _random.Next()).ToList();
 
-    int timeLimit = Math.Max(4, 14 - difficulty / 6);
-
+    int displayTime = Math.Max(2, 8 - difficulty / 8);
+    int timeLimit = Math.Max(5, 14 - difficulty / 6);
     string diffLabel = difficulty > 70 ? "💀 地狱" : difficulty > 40 ? "🔥 噩梦" : "⚡ 困难";
 
     return new
@@ -737,14 +718,12 @@ private object GenerateFindDifferent(int level, int difficulty)
         type = "findDifferent",
         level = level,
         question = $"🔍 记住下面的字符，然后找出被更改的那个！（{diffLabel}）",
-        // ⭐ 原始字符串（先显示，然后消失）
         originalDisplay = original,
         displayTime = displayTime,
-        // ⭐ 打乱后的字符串（带红色标记提示玩家点击）
         shuffledDisplay = shuffled,
-        shuffledPos = shuffledPos,
+        // ⭐ 不告诉玩家哪个是被替换的！让玩家自己点
         correctAnswer = originalChar.ToString(),
-        options = options.OrderBy(_ => _random.Next()).ToList(),
+        options = options,  // 选项是所有字符，玩家要选择正确的那个
         timeLimit = timeLimit,
         funMessage = GetFunMessage("findDifferent")
     };
