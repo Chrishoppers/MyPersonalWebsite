@@ -1580,6 +1580,22 @@ private char GetSimilarChar(char c)
     string chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
     return chars[_random.Next(chars.Length)];
 }
+// ⭐ 判断两种颜色是否相似
+private bool IsSimilarColor(string hex1, string hex2)
+{
+    if (hex1 == hex2) return false;
+    try
+    {
+        var c1 = System.Drawing.ColorTranslator.FromHtml(hex1);
+        var c2 = System.Drawing.ColorTranslator.FromHtml(hex2);
+        var diff = Math.Abs(c1.R - c2.R) + Math.Abs(c1.G - c2.G) + Math.Abs(c1.B - c2.B);
+        return diff < 150;
+    }
+    catch
+    {
+        return false;
+    }
+}
 
 // ⭐ 超级相似字符（别名，直接调用 GetSimilarChar）
 private char GetSuperSimilarChar(char c)
