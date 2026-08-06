@@ -45,10 +45,10 @@ namespace MyPersonalWebsite.Controllers
         public VerifyGameController(DataSyncService dataSync)
         {
             _dataSync = dataSync;
-            _fontFamilies = new[] { "Arial", "Times New Roman", "Georgia", "Verdana", "Impact", "Comic Sans MS", "Courier New" };
+            _fontFamilies = new[] { "Arial", "Times New Roman", "Georgia", "Verdana", "Impact", "Comic Sans MS", "Courier New", "Trebuchet MS" };
             _colorNames = _colorHex.Keys.ToArray();
 
-            // 汉字笔画
+            // 汉字笔画（无重复）
             _strokeCount = new Dictionary<char, int>
             {
                 {'一',1},{'二',2},{'三',3},{'十',2},{'人',2},{'大',3},{'上',3},{'下',3},{'口',3},{'山',3},
@@ -198,10 +198,6 @@ namespace MyPersonalWebsite.Controllers
             };
         }
 
-        // ============================================================
-        // 主要 API
-        // ============================================================
-
         [HttpGet]
         public IActionResult Index()
         {
@@ -338,20 +334,18 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // 1. 文字识别（答题后显示黑色文字）
+        // 1. 文字识别（地狱难度）
         // ============================================================
         private object GenerateTextRecognition(int level, int difficulty)
         {
-            int length = Math.Min(4 + difficulty / 5, 12);
-            string chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789!@#$%^&*";
+            int length = Math.Min(4 + difficulty / 5, 14);
+            string chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789!@#$%^&*()_+-=<>?/";
             string text = "";
             for (int i = 0; i < length; i++) text += chars[_random.Next(chars.Length)];
 
-            int lineCount = 40 + difficulty * 4;
-            int distortion = 8 + difficulty / 2;
+            int lineCount = 60 + difficulty * 4;
+            int distortion = 10 + difficulty / 2;
             var svg = GenerateSuperHardSvg(text, distortion, lineCount, difficulty);
-            // ⭐ 生成答案显示SVG（全部黑色）
-            var answerSvg = GenerateAnswerSvg(text);
 
             var options = GenerateSuperHardOptions(text, difficulty);
             int timeLimit = Math.Max(4, 16 - difficulty / 4);
@@ -362,7 +356,6 @@ namespace MyPersonalWebsite.Controllers
                 level = level,
                 question = $"👁️ 识别下方文字（{length}位）",
                 imageSvg = svg,
-                answerSvg = answerSvg,
                 correctAnswer = text,
                 options = options,
                 timeLimit = timeLimit,
@@ -370,38 +363,10 @@ namespace MyPersonalWebsite.Controllers
             };
         }
 
-        // ⭐ 生成答案SVG（所有字符黑色）
-        private string GenerateAnswerSvg(string text)
-        {
-            int width = 360;
-            int height = 110;
-            int charCount = text.Length;
-
-            var svg = new StringBuilder();
-            svg.AppendLine($"<svg xmlns='http://www.w3.org/2000/svg' width='{width}' height='{height}' viewBox='0 0 {width} {height}'>");
-            svg.AppendLine($"<rect width='{width}' height='{height}' rx='10' fill='#1a1a2e'/>");
-
-            int spacing = (width - 60) / charCount;
-            int startX = 30;
-
-            for (int i = 0; i < charCount; i++)
-            {
-                char ch = text[i];
-                int x = startX + i * spacing;
-                int y = height / 2 + 18;
-                int fontSize = 46;
-
-                svg.AppendLine($"<text x='{x}' y='{y}' font-family='Arial' font-size='{fontSize}' font-weight='bold' fill='#000000' text-anchor='middle' dominant-baseline='central'>{ch}</text>");
-            }
-
-            svg.AppendLine("</svg>");
-            return svg.ToString();
-        }
-
         private string GenerateSuperHardSvg(string text, int distortion, int lineCount, int difficulty)
         {
             int width = 360;
-            int height = 110;
+            int height = 120;
             int charCount = text.Length;
 
             var svg = new StringBuilder();
@@ -414,8 +379,9 @@ namespace MyPersonalWebsite.Controllers
             svg.AppendLine($"<defs>");
             svg.AppendLine($"<filter id='distort' x='-20%' y='-20%' width='140%' height='140%'>");
             svg.AppendLine($"<feTurbulence type='fractalNoise' baseFrequency='{0.03 + difficulty / 500f:F2}' numOctaves='3' result='noise'/>");
-            svg.AppendLine($"<feDisplacementMap in='SourceGraphic' in2='noise' scale='{6 + difficulty / 3}' xChannelSelector='R' yChannelSelector='G'/>");
+            svg.AppendLine($"<feDisplacementMap in='SourceGraphic' in2='noise' scale='{8 + difficulty / 3}' xChannelSelector='R' yChannelSelector='G'/>");
             svg.AppendLine($"</filter>");
+
             if (difficulty > 30)
             {
                 float blur = 0.3f + difficulty / 40f;
@@ -425,6 +391,7 @@ namespace MyPersonalWebsite.Controllers
 
             svg.AppendLine($"<rect width='{width}' height='{height}' rx='10' fill='rgb({bgR},{bgG},{bgB})'/>");
 
+            // 干扰线
             for (int i = 0; i < lineCount; i++)
             {
                 int r = _random.Next(80, 230);
@@ -433,6 +400,7 @@ namespace MyPersonalWebsite.Controllers
                 svg.AppendLine($"<line x1='{_random.Next(-50,width+50)}' y1='{_random.Next(-50,height+50)}' x2='{_random.Next(-50,width+50)}' y2='{_random.Next(-50,height+50)}' stroke='rgb({r},{g},{b})' stroke-width='{_random.Next(1,4)}' opacity='{0.1 + _random.NextDouble() * 0.5:F2}'/>");
             }
 
+            // 曲线干扰
             for (int i = 0; i < lineCount / 2; i++)
             {
                 int r = _random.Next(80, 220);
@@ -441,18 +409,21 @@ namespace MyPersonalWebsite.Controllers
                 svg.AppendLine($"<path d='M{_random.Next(0,width)} {_random.Next(0,height)} Q{_random.Next(0,width)} {_random.Next(0,height)} {_random.Next(0,width)} {_random.Next(0,height)}' stroke='rgb({r},{g},{b})' stroke-width='{_random.Next(1,3)}' fill='none' opacity='{0.1 + _random.NextDouble() * 0.3:F2}'/>");
             }
 
+            // 干扰字符
             string allChars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789!@#$%^&*()_+-=<>?/";
-            for (int i = 0; i < 30 + difficulty * 2; i++)
+            for (int i = 0; i < 40 + difficulty * 2; i++)
             {
                 char fc = allChars[_random.Next(allChars.Length)];
                 svg.AppendLine($"<text x='{_random.Next(0,width)}' y='{_random.Next(0,height)}' font-family='Arial' font-size='{_random.Next(10,25)}' fill='rgb({_random.Next(150,220)},{_random.Next(150,220)},{_random.Next(150,220)})' opacity='{0.03 + _random.NextDouble() * 0.1:F2}' text-anchor='middle' dominant-baseline='central'>{fc}</text>");
             }
 
+            // 噪点
             for (int i = 0; i < 400 + difficulty * 15; i++)
             {
                 svg.AppendLine($"<circle cx='{_random.Next(0,width)}' cy='{_random.Next(0,height)}' r='{_random.Next(1,4)}' fill='rgb({_random.Next(100,220)},{_random.Next(100,220)},{_random.Next(100,220)})' opacity='{0.1 + _random.NextDouble() * 0.3:F2}'/>");
             }
 
+            // 主字符
             int spacing = (width - 60) / charCount;
             int startX = 30;
 
@@ -505,21 +476,33 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // 2. 算术（地狱难度）
+        // 2. 算术（地狱难度 - 大数+混合运算）
         // ============================================================
         private object GenerateArithmetic(int level, int difficulty)
         {
-            int maxNum = 15 + difficulty * 6;
-            int a = _random.Next(5, maxNum);
-            int b = _random.Next(1, Math.Max(2, maxNum / 2));
+            int maxNum = 20 + difficulty * 8;
+            int a = _random.Next(10, maxNum);
+            int b = _random.Next(2, Math.Max(3, maxNum / 3));
 
-            char[] ops = difficulty > 60 ? new[] { '+', '-', '×', '÷' } :
-                         difficulty > 30 ? new[] { '+', '-', '×' } : new[] { '+', '-' };
+            char[] ops = difficulty > 60 ? new[] { '+', '-', '×', '÷', '^' } :
+                         difficulty > 30 ? new[] { '+', '-', '×', '÷' } : new[] { '+', '-', '×' };
 
             char op = ops[_random.Next(ops.Length)];
-            int result = op == '+' ? a + b : op == '-' ? a - b : op == '×' ? a * b : a / b;
+            int result;
+
+            switch (op)
+            {
+                case '+': result = a + b; break;
+                case '-': result = a - b; break;
+                case '×': result = a * b; break;
+                case '÷': result = a / b; break;
+                case '^': result = (int)Math.Pow(a % 10, Math.Min(b % 3 + 1, 3)); break;
+                default: result = a + b; break;
+            }
+
             if (result < 0) result = Math.Abs(result);
             if (result == 0) result = a + b;
+            if (result > 99999) result = a + b;
 
             var options = GenerateSuperNumberOptions(result, 4 + difficulty / 10);
             int timeLimit = Math.Max(3, 12 - difficulty / 6);
@@ -539,12 +522,12 @@ namespace MyPersonalWebsite.Controllers
         private List<string> GenerateSuperNumberOptions(int correct, int count)
         {
             var options = new List<string> { correct.ToString() };
-            int range = Math.Max(5, 15);
+            int range = Math.Max(10, 25);
 
             while (options.Count < count)
             {
                 int fake = correct + _random.Next(-range, range + 1);
-                if (fake < 0) fake = _random.Next(1, 30);
+                if (fake < 0) fake = _random.Next(1, 50);
                 string str = fake.ToString();
                 if (!options.Contains(str) && fake != correct)
                 {
@@ -555,7 +538,7 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // 3. 汉字笔画（地狱难度）
+        // 3. 汉字笔画（地狱难度 - 生僻字）
         // ============================================================
         private object GenerateStrokeCount(int level, int difficulty)
         {
@@ -594,10 +577,10 @@ namespace MyPersonalWebsite.Controllers
 
             while (options.Count < count)
             {
-                int fake = correct + _random.Next(-4, 5);
-                if (fake < 1) fake = correct + _random.Next(2, 6);
-                if (fake > 35) fake = correct - _random.Next(2, 6);
-                if (fake < 1) fake = 3 + _random.Next(1, 6);
+                int fake = correct + _random.Next(-5, 6);
+                if (fake < 1) fake = correct + _random.Next(2, 7);
+                if (fake > 35) fake = correct - _random.Next(2, 7);
+                if (fake < 1) fake = 3 + _random.Next(1, 7);
                 string str = fake.ToString();
                 if (!options.Contains(str) && fake != correct)
                 {
@@ -620,24 +603,29 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // 4. 颜色识别（地狱难度）
+        // 4. 颜色识别（地狱难度 - 相似色）
         // ============================================================
         private object GenerateColorRecognition(int level, int difficulty)
         {
             var pool = _colorHex.ToArray();
+
+            // 高难度只选相似色
             var selected = pool[_random.Next(pool.Length)];
+
+            // 找与选中颜色相似的颜色
+            var similarColors = pool.Where(c => IsSimilarColor(c.Value, selected.Value)).ToList();
+            if (similarColors.Count < 3) similarColors = pool.ToList();
 
             var options = new List<string> { selected.Key };
             int count = 4 + Math.Min(difficulty / 10, 4);
-            var poolList = pool.ToList();
-            poolList.Remove(selected);
 
+            var poolList = similarColors.Where(c => c.Key != selected.Key).ToList();
             for (int i = 0; i < count - 1 && i < poolList.Count; i++)
             {
                 options.Add(poolList[i].Key);
             }
 
-            int timeLimit = Math.Max(2, 7 - difficulty / 12);
+            int timeLimit = Math.Max(2, 7 - difficulty / 15);
             string[] texts = { "颜色", "色彩", "鲜艳", "绚丽", "斑斓", "彩色", "炫彩" };
             string displayText = texts[_random.Next(texts.Length)];
 
@@ -646,7 +634,7 @@ namespace MyPersonalWebsite.Controllers
                 type = "color",
                 level = level,
                 question = $"🎨 下面文字是什么颜色？",
-                displayHtml = $"<span style='color:{selected.Value};font-size:2.8rem;font-weight:900;text-shadow:0 0 50px {selected.Value}60;'>{displayText}</span>",
+                displayHtml = $"<span style='color:{selected.Value};font-size:3rem;font-weight:900;text-shadow:0 0 50px {selected.Value}60;'>{displayText}</span>",
                 correctAnswer = selected.Key,
                 options = options.OrderBy(_ => _random.Next()).ToList(),
                 timeLimit = timeLimit,
@@ -654,22 +642,31 @@ namespace MyPersonalWebsite.Controllers
             };
         }
 
+        private bool IsSimilarColor(string hex1, string hex2)
+        {
+            if (hex1 == hex2) return false;
+            var c1 = System.Drawing.ColorTranslator.FromHtml(hex1);
+            var c2 = System.Drawing.ColorTranslator.FromHtml(hex2);
+            var diff = Math.Abs(c1.R - c2.R) + Math.Abs(c1.G - c2.G) + Math.Abs(c1.B - c2.B);
+            return diff < 150;
+        }
+
         // ============================================================
-        // 5. 找不同（地狱难度）
+        // 5. 找不同（地狱难度 - 20+字符）
         // ============================================================
         private object GenerateFindDifferent(int level, int difficulty)
         {
-            int length = 6 + difficulty / 4;
-            if (length > 25) length = 25;
+            int length = 8 + difficulty / 3;
+            if (length > 30) length = 30;
 
-            string chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789!@#$%^&*";
+            string chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789!@#$%^&*()_+-=<>?/";
             string baseStr = "";
             for (int i = 0; i < length; i++) baseStr += chars[_random.Next(chars.Length)];
 
             int pos = _random.Next(length);
             char original = baseStr[pos];
-            char replacement = chars[_random.Next(chars.Length)];
-            while (replacement == original) replacement = chars[_random.Next(chars.Length)];
+            char replacement = GetSuperSimilarChar(original);
+            while (replacement == original) replacement = GetSuperSimilarChar(original);
 
             char correct = original;
 
@@ -713,22 +710,89 @@ namespace MyPersonalWebsite.Controllers
             };
         }
 
+        private char GetSuperSimilarChar(char c)
+        {
+            var map = new Dictionary<char, char[]>
+            {
+                {'0', new[]{'O','Q','D','C','8','G','6'}},
+                {'O', new[]{'0','Q','D','C','8','G','6'}},
+                {'Q', new[]{'0','O','D','C','8','G'}},
+                {'D', new[]{'0','O','Q','C','8'}},
+                {'C', new[]{'G','O','Q','0','8','6'}},
+                {'G', new[]{'C','O','Q','6','8','0'}},
+                {'1', new[]{'I','L','!','|','7','T'}},
+                {'I', new[]{'1','L','!','|','7','T'}},
+                {'L', new[]{'1','I','J','|','7'}},
+                {'J', new[]{'L','I','T','Y','7'}},
+                {'T', new[]{'Y','7','L','J','I'}},
+                {'Y', new[]{'V','T','7','J','U'}},
+                {'V', new[]{'Y','U','W','M','N'}},
+                {'U', new[]{'V','J','L','I','W'}},
+                {'W', new[]{'M','V','N','U','Y'}},
+                {'M', new[]{'W','N','V','U','H'}},
+                {'N', new[]{'M','H','K','W','Z'}},
+                {'H', new[]{'N','K','A','M','R'}},
+                {'K', new[]{'H','N','M','X','R'}},
+                {'X', new[]{'K','*','+','x','H'}},
+                {'A', new[]{'4','H','R','K','8','N'}},
+                {'R', new[]{'P','A','K','B','8'}},
+                {'P', new[]{'R','B','9','D','8'}},
+                {'B', new[]{'8','3','P','R','6','E'}},
+                {'3', new[]{'8','B','E','S','6','5'}},
+                {'8', new[]{'3','B','6','S','0','G'}},
+                {'6', new[]{'8','9','G','S','5','0'}},
+                {'9', new[]{'6','8','P','G','5'}},
+                {'S', new[]{'5','$','8','3','6','%'}},
+                {'5', new[]{'S','$','8','3','6','%'}},
+                {'2', new[]{'Z','7','L','I','T'}},
+                {'Z', new[]{'2','7','N','M','H'}},
+                {'7', new[]{'2','Z','T','Y','I'}},
+                {'4', new[]{'A','H','K','R','8'}},
+                {'E', new[]{'3','B','F','P','8'}},
+                {'F', new[]{'E','P','T','Y','R'}},
+                {'$', new[]{'S','5','8','3','6'}},
+                {'!', new[]{'1','I','L','|','7'}},
+                {'@', new[]{'0','O','Q','D','8'}},
+                {'#', new[]{'H','K','M','N','R'}},
+                {'%', new[]{'S','5','8','3','6'}},
+                {'^', new[]{'V','Y','T','W','U'}},
+                {'&', new[]{'8','3','B','6','S'}},
+                {'*', new[]{'X','+','K','H','x'}},
+                {'(', new[]{'C','G','O','Q','8'}},
+                {')', new[]{'O','C','G','Q','8'}},
+                {'-', new[]{'_','=','+','T','I'}},
+                {'=', new[]{'-','_','+','T','I'}},
+                {'+', new[]{'*','X','K','H','T'}},
+                {'<', new[]{'C','G','O','Q','8'}},
+                {'>', new[]{'C','G','O','Q','8'}},
+                {'?', new[]{'7','Z','2','T','Y'}},
+                {'/', new[]{'7','Z','2','T','Y'}}
+            };
+
+            if (map.ContainsKey(c))
+            {
+                var similar = map[c];
+                return similar[_random.Next(similar.Length)];
+            }
+            string chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789!@#$%^&*()_+-=<>?/";
+            return chars[_random.Next(chars.Length)];
+        }
+
         // ============================================================
-        // 6. 倒序识别（地狱难度）
+        // 6. 倒序识别（地狱难度 - 10位+干扰）
         // ============================================================
         private object GenerateReverseText(int level, int difficulty)
         {
-            int length = Math.Min(4 + difficulty / 5, 10);
-            string chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789!@#$%^&*";
+            int length = Math.Min(5 + difficulty / 4, 12);
+            string chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789!@#$%^&*()_+-=<>?/";
             string text = "";
             for (int i = 0; i < length; i++) text += chars[_random.Next(chars.Length)];
 
             string reversed = new string(text.Reverse().ToArray());
 
-            int lineCount = 40 + difficulty * 4;
-            int distortion = 8 + difficulty / 2;
+            int lineCount = 60 + difficulty * 4;
+            int distortion = 10 + difficulty / 2;
             var svg = GenerateSuperHardSvg(text, distortion, lineCount, difficulty);
-            var answerSvg = GenerateAnswerSvg(text);
 
             var options = GenerateSuperHardOptions(reversed, difficulty);
             int timeLimit = Math.Max(3, 12 - difficulty / 4);
@@ -739,7 +803,6 @@ namespace MyPersonalWebsite.Controllers
                 level = level,
                 question = $"🔄 图片中的文字是什么？（倒过来了）",
                 imageSvg = svg,
-                answerSvg = answerSvg,
                 correctAnswer = reversed,
                 options = options,
                 timeLimit = timeLimit,
@@ -748,16 +811,16 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // 7. 缺失字母（地狱难度）
+        // 7. 缺失字母（地狱难度 - 缺2-3个）
         // ============================================================
         private object GenerateMissingLetter(int level, int difficulty)
         {
-            int len = Math.Min(4 + difficulty / 5, 10);
-            string chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789!@#$%^&*";
+            int len = Math.Min(5 + difficulty / 4, 12);
+            string chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789!@#$%^&*()_+-=<>?/";
             string word = "";
             for (int i = 0; i < len; i++) word += chars[_random.Next(chars.Length)];
 
-            int missingCount = difficulty > 70 ? 2 : 1;
+            int missingCount = difficulty > 70 ? 3 : difficulty > 40 ? 2 : 1;
             var positions = new List<int>();
             for (int i = 0; i < word.Length; i++) positions.Add(i);
             positions = positions.OrderBy(_ => _random.Next()).ToList();
@@ -807,11 +870,11 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // 8. 快速点击（地狱难度）
+        // 8. 快速点击（地狱难度 - 时间极短）
         // ============================================================
         private object GenerateQuickTap(int level, int difficulty)
         {
-            string chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789!@#$%^&*";
+            string chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789!@#$%^&*()_+-=<>?/";
             char target = chars[_random.Next(chars.Length)];
             var options = GenerateSuperHardOptions(target.ToString(), difficulty);
             int timeLimit = Math.Max(2, 8 - difficulty / 10);
@@ -829,7 +892,7 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // 9. 成语填空（地狱难度）
+        // 9. 成语填空（地狱难度 - 缺3个字+生僻成语）
         // ============================================================
         private object GenerateIdiomFill(int level, int difficulty)
         {
@@ -915,59 +978,8 @@ namespace MyPersonalWebsite.Controllers
             return rare.Contains(idiom);
         }
 
-        private char GetSuperSimilarChar(char c)
-        {
-            var map = new Dictionary<char, char[]>
-            {
-                {'0', new[]{'O','Q','D','C','8','G','6'}},
-                {'O', new[]{'0','Q','D','C','8','G','6'}},
-                {'Q', new[]{'0','O','D','C','8','G'}},
-                {'D', new[]{'0','O','Q','C','8'}},
-                {'C', new[]{'G','O','Q','0','8','6'}},
-                {'G', new[]{'C','O','Q','6','8','0'}},
-                {'1', new[]{'I','L','!','|','7','T'}},
-                {'I', new[]{'1','L','!','|','7','T'}},
-                {'L', new[]{'1','I','J','|','7'}},
-                {'J', new[]{'L','I','T','Y','7'}},
-                {'T', new[]{'Y','7','L','J','I'}},
-                {'Y', new[]{'V','T','7','J','U'}},
-                {'V', new[]{'Y','U','W','M','N'}},
-                {'U', new[]{'V','J','L','I','W'}},
-                {'W', new[]{'M','V','N','U','Y'}},
-                {'M', new[]{'W','N','V','U','H'}},
-                {'N', new[]{'M','H','K','W','Z'}},
-                {'H', new[]{'N','K','A','M','R'}},
-                {'K', new[]{'H','N','M','X','R'}},
-                {'X', new[]{'K','*','+','x','H'}},
-                {'A', new[]{'4','H','R','K','8','N'}},
-                {'R', new[]{'P','A','K','B','8'}},
-                {'P', new[]{'R','B','9','D','8'}},
-                {'B', new[]{'8','3','P','R','6','E'}},
-                {'3', new[]{'8','B','E','S','6','5'}},
-                {'8', new[]{'3','B','6','S','0','G'}},
-                {'6', new[]{'8','9','G','S','5','0'}},
-                {'9', new[]{'6','8','P','G','5'}},
-                {'S', new[]{'5','$','8','3','6','%'}},
-                {'5', new[]{'S','$','8','3','6','%'}},
-                {'2', new[]{'Z','7','L','I','T'}},
-                {'Z', new[]{'2','7','N','M','H'}},
-                {'7', new[]{'2','Z','T','Y','I'}},
-                {'4', new[]{'A','H','K','R','8'}},
-                {'E', new[]{'3','B','F','P','8'}},
-                {'F', new[]{'E','P','T','Y','R'}}
-            };
-
-            if (map.ContainsKey(c))
-            {
-                var similar = map[c];
-                return similar[_random.Next(similar.Length)];
-            }
-            string chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789!@#$%^&*";
-            return chars[_random.Next(chars.Length)];
-        }
-
         // ============================================================
-        // 10. 中文数字（地狱难度）
+        // 10. 中文数字（地狱难度 - 大写+大数）
         // ============================================================
         private object GenerateChineseNumber(int level, int difficulty)
         {
@@ -1000,7 +1012,7 @@ namespace MyPersonalWebsite.Controllers
 
             var options = new List<string> { num.ToString() };
             int optionCount = 4 + Math.Min(difficulty / 10, 3);
-            int range = Math.Max(5, 30 + difficulty);
+            int range = Math.Max(10, 50 + difficulty);
 
             while (options.Count < optionCount)
             {
@@ -1080,7 +1092,7 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // 11. 大小写转换（地狱难度）
+        // 11. 大小写转换（地狱难度 - 混合大小写+规则随机）
         // ============================================================
         private object GenerateCaseConversion(int level, int difficulty)
         {
@@ -1089,7 +1101,7 @@ namespace MyPersonalWebsite.Controllers
 
             if (difficulty > 70)
             {
-                len = _random.Next(5, 10);
+                len = _random.Next(6, 12);
                 source = "";
                 for (int i = 0; i < len; i++)
                 {
@@ -1113,13 +1125,21 @@ namespace MyPersonalWebsite.Controllers
                 }
                 else
                 {
-                    correct = source.ToUpper();
-                    source = source.ToLower();
+                    // 每个单词首字母大写（全部大写后转换）
+                    var words = source.Split(' ');
+                    var result = "";
+                    foreach (var w in words)
+                    {
+                        if (w.Length > 0)
+                            result += char.ToUpper(w[0]) + w.Substring(1).ToLower() + " ";
+                    }
+                    correct = result.Trim();
+                    source = source.ToUpper();
                 }
             }
             else if (difficulty > 40)
             {
-                len = _random.Next(3, 7);
+                len = _random.Next(4, 8);
                 source = "";
                 for (int i = 0; i < len; i++) source += _alphabet[_random.Next(26)];
                 correct = _random.Next(2) == 0 ? source.ToLower() : source.ToUpper();
@@ -1192,7 +1212,7 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // 13. 反色识别（地狱难度）
+        // 13. 反色识别（地狱难度 - 3色）
         // ============================================================
         private object GenerateInverseColor(int level, int difficulty)
         {
@@ -1269,12 +1289,12 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // 16. 字符计数（地狱难度）
+        // 16. 字符计数（地狱难度 - 长字符串）
         // ============================================================
         private object GenerateCharacterCount(int level, int difficulty)
         {
-            int len = Math.Min(6 + difficulty / 5, 20);
-            string chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789!@#$%^&*";
+            int len = Math.Min(8 + difficulty / 4, 25);
+            string chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789!@#$%^&*()_+-=<>?/";
             string text = "";
             for (int i = 0; i < len; i++) text += chars[_random.Next(chars.Length)];
 
@@ -1297,11 +1317,11 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // 17. 数字记忆（地狱难度）
+        // 17. 数字记忆（地狱难度 - 14位）
         // ============================================================
         private object GenerateMemoryChallenge(int level, int difficulty)
         {
-            int len = Math.Min(4 + difficulty / 5, 14);
+            int len = Math.Min(5 + difficulty / 4, 16);
             string text = "";
             for (int i = 0; i < len; i++) text += _random.Next(0, 10);
 
@@ -1334,7 +1354,7 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // 18. 方向判断（地狱难度）
+        // 18. 方向判断（地狱难度 - 24方向）
         // ============================================================
         private object GenerateDirection(int level, int difficulty)
         {
@@ -1383,7 +1403,7 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // 19. 逻辑推理（地狱难度）
+        // 19. 逻辑推理（地狱难度 - 三步运算）
         // ============================================================
         private object GenerateMathLogic(int level, int difficulty)
         {
@@ -1393,9 +1413,10 @@ namespace MyPersonalWebsite.Controllers
 
             if (difficulty > 70)
             {
-                a = _random.Next(2, 10);
-                b = _random.Next(2, 10);
-                c = _random.Next(1, 20);
+                // A × B + C = ?
+                a = _random.Next(2, 12);
+                b = _random.Next(2, 12);
+                c = _random.Next(1, 25);
                 int result = a * b + c;
                 missing = _random.Next(3);
                 if (missing == 0)
@@ -1416,46 +1437,48 @@ namespace MyPersonalWebsite.Controllers
             }
             else if (difficulty > 40)
             {
-                a = _random.Next(2, 15);
-                b = _random.Next(2, 15);
-                c = a * b;
+                // A × B = ?
+                a = _random.Next(2, 18);
+                b = _random.Next(2, 18);
+                int result = a * b;
                 missing = _random.Next(3);
                 if (missing == 0)
                 {
-                    question = $"💡 {a} × ? = {c}";
+                    question = $"💡 {a} × ? = {result}";
                     correct = b.ToString();
                 }
                 else if (missing == 1)
                 {
-                    question = $"💡 ? × {b} = {c}";
+                    question = $"💡 ? × {b} = {result}";
                     correct = a.ToString();
                 }
                 else
                 {
                     question = $"💡 {a} × {b} = ?";
-                    correct = c.ToString();
+                    correct = result.ToString();
                 }
             }
             else
             {
-                a = _random.Next(5, 50);
-                b = _random.Next(5, 50);
-                c = a + b;
+                // A + B = ?
+                a = _random.Next(10, 80);
+                b = _random.Next(10, 80);
+                int result = a + b;
                 missing = _random.Next(3);
                 if (missing == 0)
                 {
-                    question = $"💡 {a} + ? = {c}";
+                    question = $"💡 {a} + ? = {result}";
                     correct = b.ToString();
                 }
                 else if (missing == 1)
                 {
-                    question = $"💡 ? + {b} = {c}";
+                    question = $"💡 ? + {b} = {result}";
                     correct = a.ToString();
                 }
                 else
                 {
                     question = $"💡 {a} + {b} = ?";
-                    correct = c.ToString();
+                    correct = result.ToString();
                 }
             }
 
