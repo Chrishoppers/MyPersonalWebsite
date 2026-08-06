@@ -15,6 +15,9 @@ namespace MyPersonalWebsite.Controllers
         private readonly Random _random = new();
         private readonly string[] _fontFamilies;
 
+        // ⭐ 已出现的类型标记
+        private static HashSet<int> _usedTypes = new HashSet<int>();
+
         // ⭐ 35种颜色
         private readonly Dictionary<string, string> _colorHex = new()
         {
@@ -42,7 +45,7 @@ namespace MyPersonalWebsite.Controllers
         private readonly char[] _lowerAlphabet;
         private readonly Dictionary<string, string[]> _funMessages;
 
-        // ⭐ 英文单词库（用于空缺字母）
+        // ⭐ 英文单词库
         private readonly string[] _englishWords = new string[]
         {
             "APPLE", "BANANA", "CHERRY", "DRAGON", "EAGLE", "FALCON", "GOLDEN", "HEAVEN", "ICICLE", "JUNGLE",
@@ -50,7 +53,7 @@ namespace MyPersonalWebsite.Controllers
             "UNITY", "VICTORY", "WISDOM", "XENON", "YOUTH", "ZEBRA", "BLAZE", "CRYSTAL", "DREAM", "ELEPHANT",
             "FLOWER", "GARDEN", "HAPPY", "JACKET", "KITTEN", "LUNCH", "MUSCLE", "NEPHEW", "ORANGE", "PENCIL",
             "QUILT", "ROCKET", "SILVER", "TURTLE", "UMPIRE", "VALLEY", "WINDOW", "YELLOW", "BOTTLE", "CANDLE",
-            "DANCER", "EFFECT", "FOSSIL", "GENTLE", "HONEST", "IGNORE", "JUNGLE", "KINDER", "LITTLE", "MOTHER",
+            "DANCER", "EFFECT", "FOSSIL", "GENTLE", "HONEST", "IGNORE", "KINDER", "LITTLE", "MOTHER",
             "NOTICE", "OFFICE", "PURPLE", "RABBIT", "SAVAGE", "TALENT", "UNIQUE", "VISUAL", "WICKED", "YONDER"
         };
 
@@ -60,7 +63,7 @@ namespace MyPersonalWebsite.Controllers
             _fontFamilies = new[] { "Arial", "Times New Roman", "Georgia", "Verdana", "Impact", "Comic Sans MS", "Courier New", "Trebuchet MS" };
             _colorNames = _colorHex.Keys.ToArray();
 
-            // 汉字笔画（无重复）
+            // 汉字笔画
             _strokeCount = new Dictionary<char, int>
             {
                 {'一',1},{'二',2},{'三',3},{'十',2},{'人',2},{'大',3},{'上',3},{'下',3},{'口',3},{'山',3},
@@ -313,42 +316,61 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // ⭐ 20种类型生成器（每5关一个类型）
+        // ⭐ 随机类型生成器（20种类型随机，全部出现后重置）
         // ============================================================
         private object GenerateChallenge(int level)
         {
-            int typeIndex = (level - 1) % 20;
             int difficulty = level;
+
+            // ⭐ 如果所有20种类型都用完了，清空标记
+            if (_usedTypes.Count >= 20)
+            {
+                _usedTypes.Clear();
+            }
+
+            // ⭐ 从剩余未使用的类型中随机选一个
+            var availableTypes = Enumerable.Range(0, 20).Where(i => !_usedTypes.Contains(i)).ToList();
+            if (availableTypes.Count == 0)
+            {
+                _usedTypes.Clear();
+                availableTypes = Enumerable.Range(0, 20).ToList();
+            }
+
+            int typeIndex = availableTypes[_random.Next(availableTypes.Count)];
+            _usedTypes.Add(typeIndex);
+
+            // ⭐ 记录当前使用的类型索引，前端可显示进度
+            int typesCompleted = _usedTypes.Count;
 
             switch (typeIndex)
             {
-                case 0: return GenerateTextRecognition(level, difficulty);
-                case 1: return GenerateArithmetic(level, difficulty);
-                case 2: return GenerateStrokeCount(level, difficulty);
-                case 3: return GenerateColorRecognition(level, difficulty);
-                case 4: return GenerateFindDifferent(level, difficulty);
-                case 5: return GenerateReverseText(level, difficulty);
-                case 6: return GenerateMissingLetter(level, difficulty);
-                case 7: return GenerateQuickTap(level, difficulty);
-                case 8: return GenerateIdiomFill(level, difficulty);
-                case 9: return GenerateChineseNumber(level, difficulty);
-                case 10: return GenerateCaseConversion(level, difficulty);
-                case 11: return GeneratePinyinMatch(level, difficulty);
-                case 12: return GenerateInverseColor(level, difficulty);
-                case 13: return GenerateMirrorLetter(level, difficulty);
-                case 14: return GenerateKeyboardNeighbor(level, difficulty);
-                case 15: return GenerateCharacterCount(level, difficulty);
-                case 16: return GenerateMemoryChallenge(level, difficulty);
-                case 17: return GenerateDirection(level, difficulty);
-                case 18: return GenerateMathLogic(level, difficulty);
-                default: return GenerateTripleColorInterference(level, difficulty);
+                case 0: return GenerateTextRecognition(level, difficulty, typesCompleted);
+                case 1: return GenerateArithmetic(level, difficulty, typesCompleted);
+                case 2: return GenerateStrokeCount(level, difficulty, typesCompleted);
+                case 3: return GenerateColorRecognition(level, difficulty, typesCompleted);
+                case 4: return GenerateFindDifferent(level, difficulty, typesCompleted);
+                case 5: return GenerateReverseText(level, difficulty, typesCompleted);
+                case 6: return GenerateMissingLetter(level, difficulty, typesCompleted);
+                case 7: return GenerateQuickTap(level, difficulty, typesCompleted);
+                case 8: return GenerateIdiomFill(level, difficulty, typesCompleted);
+                case 9: return GenerateChineseNumber(level, difficulty, typesCompleted);
+                case 10: return GenerateCaseConversion(level, difficulty, typesCompleted);
+                case 11: return GeneratePinyinMatch(level, difficulty, typesCompleted);
+                case 12: return GenerateInverseColor(level, difficulty, typesCompleted);
+                case 13: return GenerateMirrorLetter(level, difficulty, typesCompleted);
+                case 14: return GenerateKeyboardNeighbor(level, difficulty, typesCompleted);
+                case 15: return GenerateCharacterCount(level, difficulty, typesCompleted);
+                case 16: return GenerateMemoryChallenge(level, difficulty, typesCompleted);
+                case 17: return GenerateDirection(level, difficulty, typesCompleted);
+                case 18: return GenerateMathLogic(level, difficulty, typesCompleted);
+                default: return GenerateTripleColorInterference(level, difficulty, typesCompleted);
             }
         }
 
         // ============================================================
         // 1. 文字识别（地狱难度 - 难度递增）
         // ============================================================
-        private object GenerateTextRecognition(int level, int difficulty)
+        private object GenerateTextRecognition(int level, int difficulty, int typesCompleted)
         {
             int length = Math.Min(4 + difficulty / 8, 16);
             string chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789!@#$%^&*()_+-=<>?/";
@@ -362,15 +384,18 @@ namespace MyPersonalWebsite.Controllers
             var options = GenerateSuperHardOptions(text, difficulty);
             int timeLimit = Math.Max(3, 18 - difficulty / 6);
 
+            string diffLabel = GetDifficultyLabel(difficulty);
+
             return new
             {
                 type = "text",
                 level = level,
-                question = $"👁️ 识别下方图片中的文字（{length}位）",
+                question = $"👁️ 识别下方图片中的文字（{length}位 · {diffLabel}）",
                 imageSvg = svg,
                 correctAnswer = text,
                 options = options,
                 timeLimit = timeLimit,
+                typesCompleted = typesCompleted,
                 funMessage = GetFunMessage("text")
             };
         }
@@ -403,7 +428,6 @@ namespace MyPersonalWebsite.Controllers
 
             svg.AppendLine($"<rect width='{width}' height='{height}' rx='10' fill='rgb({bgR},{bgG},{bgB})'/>");
 
-            // 干扰线（难度递增）
             for (int i = 0; i < lineCount; i++)
             {
                 int r = _random.Next(80, 230);
@@ -412,7 +436,6 @@ namespace MyPersonalWebsite.Controllers
                 svg.AppendLine($"<line x1='{_random.Next(-50,width+50)}' y1='{_random.Next(-50,height+50)}' x2='{_random.Next(-50,width+50)}' y2='{_random.Next(-50,height+50)}' stroke='rgb({r},{g},{b})' stroke-width='{_random.Next(1,4)}' opacity='{0.1 + _random.NextDouble() * 0.5:F2}'/>");
             }
 
-            // 曲线干扰
             for (int i = 0; i < lineCount / 2; i++)
             {
                 int r = _random.Next(80, 220);
@@ -421,7 +444,6 @@ namespace MyPersonalWebsite.Controllers
                 svg.AppendLine($"<path d='M{_random.Next(0,width)} {_random.Next(0,height)} Q{_random.Next(0,width)} {_random.Next(0,height)} {_random.Next(0,width)} {_random.Next(0,height)}' stroke='rgb({r},{g},{b})' stroke-width='{_random.Next(1,3)}' fill='none' opacity='{0.1 + _random.NextDouble() * 0.3:F2}'/>");
             }
 
-            // 干扰字符
             string allChars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789!@#$%^&*()_+-=<>?/";
             for (int i = 0; i < 20 + difficulty * 2; i++)
             {
@@ -429,13 +451,11 @@ namespace MyPersonalWebsite.Controllers
                 svg.AppendLine($"<text x='{_random.Next(0,width)}' y='{_random.Next(0,height)}' font-family='Arial' font-size='{_random.Next(10,25)}' fill='rgb({_random.Next(150,220)},{_random.Next(150,220)},{_random.Next(150,220)})' opacity='{0.03 + _random.NextDouble() * 0.1:F2}' text-anchor='middle' dominant-baseline='central'>{fc}</text>");
             }
 
-            // 噪点
             for (int i = 0; i < 200 + difficulty * 10; i++)
             {
                 svg.AppendLine($"<circle cx='{_random.Next(0,width)}' cy='{_random.Next(0,height)}' r='{_random.Next(1,4)}' fill='rgb({_random.Next(100,220)},{_random.Next(100,220)},{_random.Next(100,220)})' opacity='{0.1 + _random.NextDouble() * 0.3:F2}'/>");
             }
 
-            // 主字符
             int spacing = (width - 60) / charCount;
             int startX = 30;
 
@@ -490,7 +510,7 @@ namespace MyPersonalWebsite.Controllers
         // ============================================================
         // 2. 算术（地狱难度 - 难度递增）
         // ============================================================
-        private object GenerateArithmetic(int level, int difficulty)
+        private object GenerateArithmetic(int level, int difficulty, int typesCompleted)
         {
             int maxNum = 10 + difficulty * 5;
             int a = _random.Next(5, maxNum);
@@ -519,14 +539,17 @@ namespace MyPersonalWebsite.Controllers
             var options = GenerateSuperNumberOptions(result, 4 + difficulty / 10);
             int timeLimit = Math.Max(3, 14 - difficulty / 6);
 
+            string diffLabel = GetDifficultyLabel(difficulty);
+
             return new
             {
                 type = "arithmetic",
                 level = level,
-                question = $"🧮 {a} {op} {b} = ?",
+                question = $"🧮 {a} {op} {b} = ? （{diffLabel}）",
                 correctAnswer = result.ToString(),
                 options = options,
                 timeLimit = timeLimit,
+                typesCompleted = typesCompleted,
                 funMessage = GetFunMessage("arithmetic")
             };
         }
@@ -550,49 +573,44 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // 3. 汉字笔画（地狱难度 - 难度递增）
+        // 3. 汉字笔画（难度递增：按笔画数分级）
         // ============================================================
-        private object GenerateStrokeCount(int level, int difficulty)
+        private object GenerateStrokeCount(int level, int difficulty, int typesCompleted)
         {
-            var allChars = _strokeCount.Keys.ToArray();
-            char ch;
+            Dictionary<char, int> strokePool;
 
-            if (difficulty < 20)
+            if (difficulty <= 25)
             {
-                var simple = allChars.Where(c => _strokeCount[c] <= 5).ToArray();
-                ch = simple[_random.Next(simple.Length)];
+                strokePool = _strokeCount.Where(kv => kv.Value <= 5).ToDictionary(kv => kv.Key, kv => kv.Value);
             }
-            else if (difficulty < 40)
+            else if (difficulty <= 50)
             {
-                var medium = allChars.Where(c => _strokeCount[c] >= 6 && _strokeCount[c] <= 10).ToArray();
-                ch = medium[_random.Next(medium.Length)];
+                strokePool = _strokeCount.Where(kv => kv.Value >= 6 && kv.Value <= 10).ToDictionary(kv => kv.Key, kv => kv.Value);
             }
-            else if (difficulty < 60)
+            else if (difficulty <= 75)
             {
-                var complex = allChars.Where(c => _strokeCount[c] >= 11 && _strokeCount[c] <= 15).ToArray();
-                ch = complex[_random.Next(complex.Length)];
-            }
-            else if (difficulty < 80)
-            {
-                var ultra = allChars.Where(c => _strokeCount[c] >= 16 && _strokeCount[c] <= 20).ToArray();
-                ch = ultra[_random.Next(ultra.Length)];
+                strokePool = _strokeCount.Where(kv => kv.Value >= 11 && kv.Value <= 15).ToDictionary(kv => kv.Key, kv => kv.Value);
             }
             else
             {
-                var ultimate = allChars.Where(c => _strokeCount[c] > 20).ToArray();
-                ch = ultimate[_random.Next(ultimate.Length)];
+                strokePool = _strokeCount.Where(kv => kv.Value >= 16).ToDictionary(kv => kv.Key, kv => kv.Value);
             }
 
-            int correct = _strokeCount[ch];
+            if (strokePool.Count == 0) strokePool = _strokeCount;
+
+            var allChars = strokePool.Keys.ToArray();
+            char ch = allChars[_random.Next(allChars.Length)];
+            int correct = strokePool[ch];
+
             var options = new List<string> { correct.ToString() };
-            int count = 4 + Math.Min(difficulty / 12, 4);
+            int count = 4 + Math.Min(difficulty / 15, 4);
 
             while (options.Count < count)
             {
-                int fake = correct + _random.Next(-4, 5);
-                if (fake < 1) fake = correct + _random.Next(2, 6);
-                if (fake > 35) fake = correct - _random.Next(2, 6);
-                if (fake < 1) fake = 3 + _random.Next(1, 6);
+                int fake = correct + _random.Next(-3, 4);
+                if (fake < 1) fake = correct + _random.Next(2, 5);
+                if (fake > 35) fake = correct - _random.Next(2, 5);
+                if (fake < 1) fake = 3 + _random.Next(1, 5);
                 string str = fake.ToString();
                 if (!options.Contains(str) && fake != correct)
                 {
@@ -600,29 +618,30 @@ namespace MyPersonalWebsite.Controllers
                 }
             }
 
-            int timeLimit = Math.Max(3, 12 - difficulty / 8);
+            int timeLimit = Math.Max(3, 14 - difficulty / 8);
+            string diffLabel = GetDifficultyLabel(difficulty);
 
             return new
             {
                 type = "stroke",
                 level = level,
-                question = $"📝 「{ch}」字有几画？",
+                question = $"📝 「{ch}」字有几画？（{diffLabel}）",
                 correctAnswer = correct.ToString(),
                 options = options.OrderBy(_ => _random.Next()).ToList(),
                 timeLimit = timeLimit,
+                typesCompleted = typesCompleted,
                 funMessage = GetFunMessage("stroke")
             };
         }
 
         // ============================================================
-        // 4. 颜色识别（地狱难度 - 难度递增）
+        // 4. 颜色识别
         // ============================================================
-        private object GenerateColorRecognition(int level, int difficulty)
+        private object GenerateColorRecognition(int level, int difficulty, int typesCompleted)
         {
             var pool = _colorHex.ToArray();
             var selected = pool[_random.Next(pool.Length)];
 
-            // 高难度只用相似色
             var similarColors = pool.Where(c => IsSimilarColor(c.Value, selected.Value)).ToList();
             if (similarColors.Count < 3) similarColors = pool.ToList();
 
@@ -637,16 +656,18 @@ namespace MyPersonalWebsite.Controllers
 
             int timeLimit = Math.Max(2, 8 - difficulty / 12);
             string displayWord = _singleColorWords[_random.Next(_singleColorWords.Length)];
+            string diffLabel = GetDifficultyLabel(difficulty);
 
             return new
             {
                 type = "color",
                 level = level,
-                question = $"🎨 下面文字是什么颜色？",
+                question = $"🎨 下面文字是什么颜色？（{diffLabel}）",
                 displayText = $"<span style='color:{selected.Value};font-size:3rem;font-weight:bold;'>{displayWord}</span>",
                 correctAnswer = selected.Key,
                 options = options.OrderBy(_ => _random.Next()).ToList(),
                 timeLimit = timeLimit,
+                typesCompleted = typesCompleted,
                 funMessage = GetFunMessage("color")
             };
         }
@@ -665,9 +686,9 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // 5. ⭐ 找不同（记忆+点击 - 难度递增）
+        // 5. 找不同
         // ============================================================
-        private object GenerateFindDifferent(int level, int difficulty)
+        private object GenerateFindDifferent(int level, int difficulty, int typesCompleted)
         {
             int length = Math.Min(4 + difficulty / 6, 14);
             string chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -685,7 +706,6 @@ namespace MyPersonalWebsite.Controllers
             replacedArr[pos] = replacementChar;
             string replaced = new string(replacedArr);
 
-            // 打乱
             char[] shuffledArr = replaced.ToCharArray();
             for (int i = shuffledArr.Length - 1; i > 0; i--)
             {
@@ -708,26 +728,29 @@ namespace MyPersonalWebsite.Controllers
 
             int displayTime = Math.Max(2, 8 - difficulty / 8);
             int timeLimit = Math.Max(4, 14 - difficulty / 6);
+            string diffLabel = GetDifficultyLabel(difficulty);
 
             return new
             {
                 type = "findDifferent",
                 level = level,
-                question = $"🔍 记住下面的字符，然后找出被更改的那个！",
+                question = $"🔍 记住下面的字符，然后找出被更改的那个！（{diffLabel}）",
                 originalDisplay = original,
                 displayTime = displayTime,
                 shuffledDisplay = shuffled,
                 shuffledPos = shuffledPos,
+                displayText = original,
                 correctAnswer = originalChar.ToString(),
                 timeLimit = timeLimit,
+                typesCompleted = typesCompleted,
                 funMessage = GetFunMessage("findDifferent")
             };
         }
 
         // ============================================================
-        // 6. 倒序识别（地狱难度 - 难度递增）
+        // 6. 倒序识别
         // ============================================================
-        private object GenerateReverseText(int level, int difficulty)
+        private object GenerateReverseText(int level, int difficulty, int typesCompleted)
         {
             int length = Math.Min(4 + difficulty / 6, 12);
             string chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789!@#$%^&*()_+-=<>?/";
@@ -742,26 +765,27 @@ namespace MyPersonalWebsite.Controllers
 
             var options = GenerateSuperHardOptions(reversed, difficulty);
             int timeLimit = Math.Max(3, 14 - difficulty / 5);
+            string diffLabel = GetDifficultyLabel(difficulty);
 
             return new
             {
                 type = "reverse",
                 level = level,
-                question = $"🔄 图片中的文字是什么？（倒过来了）",
+                question = $"🔄 图片中的文字是什么？（倒过来了 · {diffLabel}）",
                 imageSvg = svg,
                 correctAnswer = reversed,
                 options = options,
                 timeLimit = timeLimit,
+                typesCompleted = typesCompleted,
                 funMessage = GetFunMessage("reverse")
             };
         }
 
         // ============================================================
-        // 7. ⭐ 空缺字母（英文单词 - 难度递增）
+        // 7. 空缺字母（英文单词）
         // ============================================================
-        private object GenerateMissingLetter(int level, int difficulty)
+        private object GenerateMissingLetter(int level, int difficulty, int typesCompleted)
         {
-            // 根据难度选不同长度的单词
             string word;
             if (difficulty > 70)
             {
@@ -817,45 +841,49 @@ namespace MyPersonalWebsite.Controllers
             }
 
             int timeLimit = Math.Max(3, 11 - difficulty / 7);
+            string diffLabel = GetDifficultyLabel(difficulty);
 
             return new
             {
                 type = "missingLetter",
                 level = level,
-                question = $"🔤 补全下面的英文单词（{hintText}）：<br><span style='font-size:1.8rem;font-weight:bold;letter-spacing:6px;font-family:monospace;'>{displayStr}</span>",
+                question = $"🔤 补全下面的英文单词（{hintText} · {diffLabel}）：<br><span style='font-size:1.8rem;font-weight:bold;letter-spacing:6px;font-family:monospace;'>{displayStr}</span>",
                 correctAnswer = correctAnswer,
                 options = options.OrderBy(_ => _random.Next()).ToList(),
                 timeLimit = timeLimit,
+                typesCompleted = typesCompleted,
                 funMessage = GetFunMessage("missingLetter")
             };
         }
 
         // ============================================================
-        // 8. ⭐ 快速点击（显示目标字符 - 难度递增）
+        // 8. 快速点击
         // ============================================================
-        private object GenerateQuickTap(int level, int difficulty)
+        private object GenerateQuickTap(int level, int difficulty, int typesCompleted)
         {
             string chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789!@#$%^&*";
             char target = chars[_random.Next(chars.Length)];
             var options = GenerateSuperHardOptions(target.ToString(), difficulty);
             int timeLimit = Math.Max(2, 9 - difficulty / 8);
+            string diffLabel = GetDifficultyLabel(difficulty);
 
             return new
             {
                 type = "quickTap",
                 level = level,
-                question = $"⚡ 从下方选项中，找出字符 <span style='color:#8B5CF6;font-weight:bold;font-size:1.5rem;'>{target}</span>",
+                question = $"⚡ 从下方选项中，找出字符 <span style='color:#8B5CF6;font-weight:bold;font-size:1.5rem;'>{target}</span> （{diffLabel}）",
                 correctAnswer = target.ToString(),
                 options = options,
                 timeLimit = timeLimit,
+                typesCompleted = typesCompleted,
                 funMessage = GetFunMessage("quickTap")
             };
         }
 
         // ============================================================
-        // 9. 成语填空（地狱难度 - 难度递增）
+        // 9. 成语填空
         // ============================================================
-        private object GenerateIdiomFill(int level, int difficulty)
+        private object GenerateIdiomFill(int level, int difficulty, int typesCompleted)
         {
             string[] pool;
             if (difficulty > 70)
@@ -911,15 +939,17 @@ namespace MyPersonalWebsite.Controllers
             }
 
             int timeLimit = Math.Max(3, 11 - difficulty / 8);
+            string diffLabel = GetDifficultyLabel(difficulty);
 
             return new
             {
                 type = "idiom",
                 level = level,
-                question = $"📖 补全成语（缺{missingCount}个字）：{displayStr}",
+                question = $"📖 补全成语（缺{missingCount}个字 · {diffLabel}）：{displayStr}",
                 correctAnswer = correctAnswer,
                 options = options.OrderBy(_ => _random.Next()).ToList(),
                 timeLimit = timeLimit,
+                typesCompleted = typesCompleted,
                 funMessage = GetFunMessage("idiom")
             };
         }
@@ -940,9 +970,9 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // 10. 中文数字（地狱难度 - 难度递增）
+        // 10. 中文数字
         // ============================================================
-        private object GenerateChineseNumber(int level, int difficulty)
+        private object GenerateChineseNumber(int level, int difficulty, int typesCompleted)
         {
             int num;
             string chinese;
@@ -989,15 +1019,17 @@ namespace MyPersonalWebsite.Controllers
             }
 
             int timeLimit = Math.Max(3, 12 - difficulty / 8);
+            string diffLabel = GetDifficultyLabel(difficulty);
 
             return new
             {
                 type = "chineseNumber",
                 level = level,
-                question = useCapital ? $"🔢 「{displayChinese}」（大写）对应的数字是？" : $"🔢 「{displayChinese}」对应的数字是？",
+                question = useCapital ? $"🔢 「{displayChinese}」（大写）对应的数字是？" : $"🔢 「{displayChinese}」对应的数字是？（{diffLabel}）",
                 correctAnswer = num.ToString(),
                 options = options.OrderBy(_ => _random.Next()).ToList(),
                 timeLimit = timeLimit,
+                typesCompleted = typesCompleted,
                 funMessage = GetFunMessage("chineseNumber")
             };
         }
@@ -1053,9 +1085,9 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // 11. 大小写转换（地狱难度 - 难度递增）
+        // 11. 大小写转换
         // ============================================================
-        private object GenerateCaseConversion(int level, int difficulty)
+        private object GenerateCaseConversion(int level, int difficulty, int typesCompleted)
         {
             int len;
             string source, correct;
@@ -1130,44 +1162,48 @@ namespace MyPersonalWebsite.Controllers
             }
 
             int timeLimit = Math.Max(3, 12 - difficulty / 8);
+            string diffLabel = GetDifficultyLabel(difficulty);
 
             return new
             {
                 type = "caseConversion",
                 level = level,
-                question = $"🔤 转换大小写：{source}",
+                question = $"🔤 转换大小写：{source} （{diffLabel}）",
                 correctAnswer = correct,
                 options = options.OrderBy(_ => _random.Next()).ToList(),
                 timeLimit = timeLimit,
+                typesCompleted = typesCompleted,
                 funMessage = GetFunMessage("caseConversion")
             };
         }
 
         // ============================================================
-        // 12. 读音识别（地狱难度 - 难度递增）
+        // 12. 读音识别
         // ============================================================
-        private object GeneratePinyinMatch(int level, int difficulty)
+        private object GeneratePinyinMatch(int level, int difficulty, int typesCompleted)
         {
             char c = _alphabet[_random.Next(26)];
             var options = GenerateSuperHardOptions(c.ToString(), difficulty);
             int timeLimit = Math.Max(2, 9 - difficulty / 8);
+            string diffLabel = GetDifficultyLabel(difficulty);
 
             return new
             {
                 type = "pinyin",
                 level = level,
-                question = $"🔊 字母「{c}」的读音是？",
+                question = $"🔊 字母「{c}」的读音是？（{diffLabel}）",
                 correctAnswer = c.ToString(),
                 options = options,
                 timeLimit = timeLimit,
+                typesCompleted = typesCompleted,
                 funMessage = GetFunMessage("pinyin")
             };
         }
 
         // ============================================================
-        // 13. 反色识别（地狱难度 - 难度递增）
+        // 13. 反色识别
         // ============================================================
-        private object GenerateInverseColor(int level, int difficulty)
+        private object GenerateInverseColor(int level, int difficulty, int typesCompleted)
         {
             var colors = new[] { "黑色", "白色", "灰色", "深灰", "浅灰" };
             int idx = _random.Next(colors.Length);
@@ -1179,24 +1215,26 @@ namespace MyPersonalWebsite.Controllers
             int timeLimit = Math.Max(2, 7 - difficulty / 12);
             string[] texts = { "颜色", "色彩", "文字" };
             string displayText = texts[_random.Next(texts.Length)];
+            string diffLabel = GetDifficultyLabel(difficulty);
 
             return new
             {
                 type = "inverseColor",
                 level = level,
-                question = $"🎨 下面文字是什么颜色？（注意背景）",
+                question = $"🎨 下面文字是什么颜色？（注意背景 · {diffLabel}）",
                 displayText = $"<span style='color:{textColor};background:{bg};padding:0.3rem 1.5rem;border-radius:8px;font-size:2rem;font-weight:bold;'>{displayText}</span>",
                 correctAnswer = color,
                 options = new List<string>(colors),
                 timeLimit = timeLimit,
+                typesCompleted = typesCompleted,
                 funMessage = GetFunMessage("inverseColor")
             };
         }
 
         // ============================================================
-        // 14. 镜像字母（地狱难度 - 难度递增）
+        // 14. 镜像字母
         // ============================================================
-        private object GenerateMirrorLetter(int level, int difficulty)
+        private object GenerateMirrorLetter(int level, int difficulty, int typesCompleted)
         {
             char[] mirrorKeys = new char[] {
                 'A','H','I','M','O','T','U','V','W','X','Y',
@@ -1205,46 +1243,49 @@ namespace MyPersonalWebsite.Controllers
             char c = mirrorKeys[_random.Next(mirrorKeys.Length)];
             var options = GenerateSuperHardOptions(c.ToString(), difficulty);
             int timeLimit = Math.Max(2, 9 - difficulty / 8);
+            string diffLabel = GetDifficultyLabel(difficulty);
 
             return new
             {
                 type = "mirror",
                 level = level,
-                question = $"🪞 字母「{c}」的镜像字母是？",
+                question = $"🪞 字母「{c}」的镜像字母是？（{diffLabel}）",
                 correctAnswer = c.ToString(),
                 options = options,
                 timeLimit = timeLimit,
+                typesCompleted = typesCompleted,
                 funMessage = GetFunMessage("mirror")
             };
         }
 
         // ============================================================
-        // 15. 键盘相邻（地狱难度 - 难度递增）
+        // 15. 键盘相邻
         // ============================================================
-        private object GenerateKeyboardNeighbor(int level, int difficulty)
+        private object GenerateKeyboardNeighbor(int level, int difficulty, int typesCompleted)
         {
             var keys = "QWERTYUIOPASDFGHJKLZXCVBNM".ToCharArray();
             char c = keys[_random.Next(keys.Length)];
-
             var options = GenerateSuperHardOptions(c.ToString(), difficulty);
             int timeLimit = Math.Max(2, 9 - difficulty / 8);
+            string diffLabel = GetDifficultyLabel(difficulty);
 
             return new
             {
                 type = "keyboard",
                 level = level,
-                question = $"⌨️ 键盘上「{c}」的右边键是？",
+                question = $"⌨️ 键盘上「{c}」的右边键是？（{diffLabel}）",
                 correctAnswer = c.ToString(),
                 options = options,
                 timeLimit = timeLimit,
+                typesCompleted = typesCompleted,
                 funMessage = GetFunMessage("keyboard")
             };
         }
 
         // ============================================================
-        // 16. 字符计数（地狱难度 - 难度递增）
+        // 16. 字符计数
         // ============================================================
-        private object GenerateCharacterCount(int level, int difficulty)
+        private object GenerateCharacterCount(int level, int difficulty, int typesCompleted)
         {
             int len = Math.Min(6 + difficulty / 5, 25);
             string chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789!@#$%^&*()_+-=<>?/";
@@ -1256,23 +1297,25 @@ namespace MyPersonalWebsite.Controllers
 
             var options = GenerateSuperNumberOptions(count, 4 + difficulty / 10);
             int timeLimit = Math.Max(3, 11 - difficulty / 7);
+            string diffLabel = GetDifficultyLabel(difficulty);
 
             return new
             {
                 type = "countChar",
                 level = level,
-                question = $"🔢 字符「{target}」在「{text}」中出现几次？",
+                question = $"🔢 字符「{target}」在「{text}」中出现几次？（{diffLabel}）",
                 correctAnswer = count.ToString(),
                 options = options,
                 timeLimit = timeLimit,
+                typesCompleted = typesCompleted,
                 funMessage = GetFunMessage("countChar")
             };
         }
 
         // ============================================================
-        // 17. 数字记忆（地狱难度 - 难度递增）
+        // 17. 数字记忆
         // ============================================================
-        private object GenerateMemoryChallenge(int level, int difficulty)
+        private object GenerateMemoryChallenge(int level, int difficulty, int typesCompleted)
         {
             int len = Math.Min(4 + difficulty / 6, 16);
             string text = "";
@@ -1292,24 +1335,26 @@ namespace MyPersonalWebsite.Controllers
             }
 
             int timeLimit = Math.Max(4, 16 - difficulty / 5);
+            string diffLabel = GetDifficultyLabel(difficulty);
 
             return new
             {
                 type = "memory",
                 level = level,
-                question = $"🧠 记住这个数字：{text}",
+                question = $"🧠 记住这个数字（{len}位 · {diffLabel}）：{text}",
                 displayNumber = text,
                 correctAnswer = text,
                 options = options.OrderBy(_ => _random.Next()).ToList(),
                 timeLimit = timeLimit,
+                typesCompleted = typesCompleted,
                 funMessage = GetFunMessage("memory")
             };
         }
 
         // ============================================================
-        // 18. 方向判断（地狱难度 - 难度递增）
+        // 18. 方向判断
         // ============================================================
-        private object GenerateDirection(int level, int difficulty)
+        private object GenerateDirection(int level, int difficulty, int typesCompleted)
         {
             string dir;
             if (difficulty > 70)
@@ -1342,27 +1387,30 @@ namespace MyPersonalWebsite.Controllers
             }
 
             int timeLimit = Math.Max(2, 8 - difficulty / 14);
+            string diffLabel = GetDifficultyLabel(difficulty);
 
             return new
             {
                 type = "direction",
                 level = level,
-                question = $"🧭 请选择「{dir}」的相反方向",
+                question = $"🧭 请选择「{dir}」的相反方向（{diffLabel}）",
                 correctAnswer = correct,
                 options = options.OrderBy(_ => _random.Next()).ToList(),
                 timeLimit = timeLimit,
+                typesCompleted = typesCompleted,
                 funMessage = GetFunMessage("direction")
             };
         }
 
         // ============================================================
-        // 19. 逻辑推理（地狱难度 - 难度递增）
+        // 19. 逻辑推理
         // ============================================================
-        private object GenerateMathLogic(int level, int difficulty)
+        private object GenerateMathLogic(int level, int difficulty, int typesCompleted)
         {
             int a, b, c, missing;
             string question, correct;
             int timeLimit = Math.Max(3, 11 - difficulty / 7);
+            string diffLabel = GetDifficultyLabel(difficulty);
 
             if (difficulty > 70)
             {
@@ -1442,14 +1490,15 @@ namespace MyPersonalWebsite.Controllers
                 correctAnswer = correct,
                 options = options,
                 timeLimit = timeLimit,
+                typesCompleted = typesCompleted,
                 funMessage = GetFunMessage("logic")
             };
         }
 
         // ============================================================
-        // 20. ⭐ 颜色三重干扰（地狱难度 - 难度递增）
+        // 20. 颜色三重干扰
         // ============================================================
-        private object GenerateTripleColorInterference(int level, int difficulty)
+        private object GenerateTripleColorInterference(int level, int difficulty, int typesCompleted)
         {
             var colorPool = _colorHex.ToArray();
             var selectedColors = new List<KeyValuePair<string, string>>();
@@ -1511,16 +1560,18 @@ namespace MyPersonalWebsite.Controllers
             displayText += "</div>";
 
             int timeLimit = Math.Max(3, 9 - difficulty / 12);
+            string diffLabel = GetDifficultyLabel(difficulty);
 
             return new
             {
                 type = "tripleColor",
                 level = level,
-                question = $"🎯 颜色三重干扰！<br><span style='font-size:0.9rem;color:rgba(255,255,255,0.3);'>{questionText}</span>",
+                question = $"🎯 颜色三重干扰！（{diffLabel}）<br><span style='font-size:0.9rem;color:rgba(255,255,255,0.3);'>{questionText}</span>",
                 displayText = displayText,
                 correctAnswer = correctAnswer,
                 options = options.OrderBy(_ => _random.Next()).ToList(),
                 timeLimit = timeLimit,
+                typesCompleted = typesCompleted,
                 funMessage = GetFunMessage("tripleColor")
             };
         }
@@ -1579,6 +1630,14 @@ namespace MyPersonalWebsite.Controllers
 
             string chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
             return chars[_random.Next(chars.Length)];
+        }
+
+        private string GetDifficultyLabel(int difficulty)
+        {
+            if (difficulty >= 76) return "💀 地狱";
+            if (difficulty >= 51) return "🔥 噩梦";
+            if (difficulty >= 26) return "⚡ 困难";
+            return "📝 入门";
         }
 
         private string GetFunMessage(string type)
