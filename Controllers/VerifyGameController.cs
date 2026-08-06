@@ -322,13 +322,11 @@ namespace MyPersonalWebsite.Controllers
         {
             int difficulty = level;
 
-            // ⭐ 如果所有20种类型都用完了，清空标记
             if (_usedTypes.Count >= 20)
             {
                 _usedTypes.Clear();
             }
 
-            // ⭐ 从剩余未使用的类型中随机选一个
             var availableTypes = Enumerable.Range(0, 20).Where(i => !_usedTypes.Contains(i)).ToList();
             if (availableTypes.Count == 0)
             {
@@ -339,7 +337,6 @@ namespace MyPersonalWebsite.Controllers
             int typeIndex = availableTypes[_random.Next(availableTypes.Count)];
             _usedTypes.Add(typeIndex);
 
-            // ⭐ 记录当前使用的类型索引，前端可显示进度
             int typesCompleted = _usedTypes.Count;
 
             switch (typeIndex)
@@ -368,7 +365,7 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // 1. 文字识别（地狱难度 - 难度递增）
+        // 1. 文字识别
         // ============================================================
         private object GenerateTextRecognition(int level, int difficulty, int typesCompleted)
         {
@@ -508,7 +505,7 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // 2. 算术（地狱难度 - 难度递增）
+        // 2. 算术
         // ============================================================
         private object GenerateArithmetic(int level, int difficulty, int typesCompleted)
         {
@@ -573,7 +570,7 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // 3. 汉字笔画（难度递增：按笔画数分级）
+        // 3. 汉字笔画
         // ============================================================
         private object GenerateStrokeCount(int level, int difficulty, int typesCompleted)
         {
@@ -686,7 +683,7 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // 5. 找不同
+        // 5. ⭐ 找不同（修复：无红色标记，彻底打乱）
         // ============================================================
         private object GenerateFindDifferent(int level, int difficulty, int typesCompleted)
         {
@@ -706,16 +703,38 @@ namespace MyPersonalWebsite.Controllers
             replacedArr[pos] = replacementChar;
             string replaced = new string(replacedArr);
 
+            // ⭐ 彻底打乱（确保每个位置都变了）
             char[] shuffledArr = replaced.ToCharArray();
-            for (int i = shuffledArr.Length - 1; i > 0; i--)
+            bool allSamePosition = true;
+            int maxAttempts = 50;
+            int attempts = 0;
+
+            while (allSamePosition && attempts < maxAttempts)
             {
-                int j = _random.Next(i + 1);
-                char temp = shuffledArr[i];
-                shuffledArr[i] = shuffledArr[j];
-                shuffledArr[j] = temp;
+                for (int i = shuffledArr.Length - 1; i > 0; i--)
+                {
+                    int j = _random.Next(i + 1);
+                    char temp = shuffledArr[i];
+                    shuffledArr[i] = shuffledArr[j];
+                    shuffledArr[j] = temp;
+                }
+
+                // 检查是否所有字符都在原位置
+                allSamePosition = true;
+                for (int i = 0; i < shuffledArr.Length; i++)
+                {
+                    if (shuffledArr[i] != replacedArr[i])
+                    {
+                        allSamePosition = false;
+                        break;
+                    }
+                }
+                attempts++;
             }
+
             string shuffled = new string(shuffledArr);
 
+            // ⭐ 找到被替换字符在打乱后的位置
             int shuffledPos = -1;
             for (int i = 0; i < shuffledArr.Length; i++)
             {
@@ -724,6 +743,12 @@ namespace MyPersonalWebsite.Controllers
                     shuffledPos = i;
                     break;
                 }
+            }
+
+            // ⭐ 如果找不到（极少情况），重新生成
+            if (shuffledPos == -1)
+            {
+                return GenerateFindDifferent(level, difficulty, typesCompleted);
             }
 
             int displayTime = Math.Max(2, 8 - difficulty / 8);
@@ -782,7 +807,7 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // 7. 空缺字母（英文单词）
+        // 7. 空缺字母
         // ============================================================
         private object GenerateMissingLetter(int level, int difficulty, int typesCompleted)
         {
@@ -930,7 +955,8 @@ namespace MyPersonalWebsite.Controllers
                 string fake = "";
                 for (int i = 0; i < correctAnswer.Length; i++)
                 {
-                    fake += GetSimilarChar(correctAnswer[i]);
+                    char similar = GetSimilarChineseChar(correctAnswer[i]);
+                    fake += similar;
                 }
                 if (!options.Contains(fake) && fake != correctAnswer)
                 {
@@ -967,6 +993,99 @@ namespace MyPersonalWebsite.Controllers
                 "蜚短流长", "龙蟠虎踞", "龙肝凤髓", "凤毛麟角", "鹤唳华亭",
                 "兔起鹘落", "鹰击长空", "鱼跃龙门", "虎视眈眈", "狼奔豕突" };
             return rare.Contains(idiom);
+        }
+
+        // ⭐ 相似汉字（用于成语干扰）
+        private char GetSimilarChineseChar(char c)
+        {
+            var map = new Dictionary<char, char[]>
+            {
+                {'一', new[]{'二','三','十'}},
+                {'二', new[]{'一','三','十'}},
+                {'三', new[]{'一','二','五'}},
+                {'十', new[]{'一','二','七'}},
+                {'人', new[]{'入','八','大'}},
+                {'大', new[]{'太','犬','天'}},
+                {'天', new[]{'大','夫','无'}},
+                {'日', new[]{'曰','目','白'}},
+                {'月', new[]{'用','目','丹'}},
+                {'木', new[]{'术','本','未'}},
+                {'王', new[]{'玉','主','正'}},
+                {'土', new[]{'士','王','干'}},
+                {'田', new[]{'由','甲','申'}},
+                {'白', new[]{'日','自','百'}},
+                {'自', new[]{'目','白','首'}},
+                {'我', new[]{'找','伐','成'}},
+                {'你', new[]{'您','尔','称'}},
+                {'他', new[]{'她','地','也'}},
+                {'的', new[]{'得','确','的'}},
+                {'是', new[]{'足','走','定'}},
+                {'不', new[]{'下','上','木'}},
+                {'了', new[]{'子','于','孑'}},
+                {'在', new[]{'存','左','右'}},
+                {'学', new[]{'觉','校','举'}},
+                {'生', new[]{'牛','先','姓'}},
+                {'校', new[]{'较','铰','效'}},
+                {'海', new[]{'每','悔','诲'}},
+                {'湖', new[]{'糊','胡','蝴'}},
+                {'路', new[]{'露','陆','骆'}},
+                {'爱', new[]{'受','暖','缓'}},
+                {'善', new[]{'美','羡','养'}},
+                {'国', new[]{'园','圆','图'}},
+                {'家', new[]{'嫁','稼','加'}},
+                {'春', new[]{'看','着','香'}},
+                {'秋', new[]{'伙','愁','排'}},
+                {'风', new[]{'凤','凡','几'}},
+                {'雨', new[]{'雪','雷','零'}},
+                {'雪', new[]{'云','雨','零'}},
+                {'星', new[]{'醒','生','胜'}},
+                {'花', new[]{'化','华','草'}},
+                {'草', new[]{'早','华','花'}},
+                {'树', new[]{'对','村','权'}},
+                {'林', new[]{'木','森','彬'}},
+                {'森', new[]{'林','木','众'}},
+                {'龙', new[]{'尤','庞','宠'}},
+                {'虎', new[]{'虚','虑','虞'}},
+                {'象', new[]{'像','橡','豫'}},
+                {'猫', new[]{'描','苗','锚'}},
+                {'熊', new[]{'能','态','雄'}},
+                {'窗', new[]{'囱','穿','空'}},
+                {'楼', new[]{'搂','缕','镂'}},
+                {'桥', new[]{'娇','轿','侨'}},
+                {'船', new[]{'沿','铅','舷'}},
+                {'港', new[]{'巷','共','洪'}},
+                {'峰', new[]{'锋','蜂','逢'}},
+                {'岩', new[]{'山','石','宕'}},
+                {'泉', new[]{'白','水','原'}},
+                {'溪', new[]{'奚','蹊','鸡'}},
+                {'梦', new[]{'梦','林','夕'}},
+                {'望', new[]{'忘','芒','亡'}},
+                {'智', new[]{'知','哲','答'}},
+                {'慧', new[]{'惠','穗','心'}},
+                {'暴', new[]{'瀑','爆','晒'}},
+                {'攀', new[]{'樊','潘','番'}},
+                {'变', new[]{'弯','恋','蛮'}},
+                {'魔', new[]{'摩','磨','麟'}},
+                {'警', new[]{'惊','鲸','敬'}},
+                {'耀', new[]{'跃','岳','光'}},
+                {'镶', new[]{'让','壤','襄'}},
+                {'囊', new[]{'嚷','壤','瓤'}},
+                {'懿', new[]{'壹','懿','肆'}},
+                {'罐', new[]{'灌','观','鹳'}},
+                {'噩', new[]{'鄂','鳄','恶'}},
+                {'嚣', new[]{'器','喧','具'}},
+                {'龘', new[]{'龙','龘','爨'}},
+                {'灏', new[]{'景','影','浩'}}
+            };
+
+            if (map.ContainsKey(c))
+            {
+                var similar = map[c];
+                return similar[_random.Next(similar.Length)];
+            }
+
+            string chars = "一二三十人大天日月木王土田白自我你他的是不在学了生海湖路爱善国家春秋风雨雪星花草树林龙虎象猫熊窗楼桥船港峰岩泉溪梦幻智慧暴攀变魔警耀镶囊懿罐噩嚣龘灏";
+            return chars[_random.Next(chars.Length)];
         }
 
         // ============================================================
@@ -1496,7 +1615,7 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // 20. 颜色三重干扰
+        // 20. ⭐ 颜色三重干扰（修复：确保三种颜色完全不同）
         // ============================================================
         private object GenerateTripleColorInterference(int level, int difficulty, int typesCompleted)
         {
@@ -1519,19 +1638,25 @@ namespace MyPersonalWebsite.Controllers
             var bgColor = shuffledColors[1];
             var meaningColor = shuffledColors[2];
 
-            while (bgColor.Key == wordColor.Key)
+            // ⭐ 强制三者完全不同
+            int maxAttempts = 50;
+            int attempts = 0;
+            while ((bgColor.Key == wordColor.Key || meaningColor.Key == wordColor.Key || meaningColor.Key == bgColor.Key) && attempts < maxAttempts)
             {
                 shuffledColors = selectedColors.OrderBy(_ => _random.Next()).ToList();
                 wordColor = shuffledColors[0];
                 bgColor = shuffledColors[1];
                 meaningColor = shuffledColors[2];
+                attempts++;
             }
-            while (meaningColor.Key == wordColor.Key || meaningColor.Key == bgColor.Key)
+
+            // ⭐ 如果还是相同，强制手动修正
+            if (bgColor.Key == wordColor.Key || meaningColor.Key == wordColor.Key || meaningColor.Key == bgColor.Key)
             {
-                shuffledColors = selectedColors.OrderBy(_ => _random.Next()).ToList();
-                wordColor = shuffledColors[0];
-                bgColor = shuffledColors[1];
-                meaningColor = shuffledColors[2];
+                var allColors = _colorHex.ToArray();
+                wordColor = allColors[_random.Next(allColors.Length)];
+                do { bgColor = allColors[_random.Next(allColors.Length)]; } while (bgColor.Key == wordColor.Key);
+                do { meaningColor = allColors[_random.Next(allColors.Length)]; } while (meaningColor.Key == wordColor.Key || meaningColor.Key == bgColor.Key);
             }
 
             string[] questions = new[]
@@ -1555,9 +1680,9 @@ namespace MyPersonalWebsite.Controllers
                 options.Add(shuffled[i]);
             }
 
-            string displayText = $"<div style='background:{bgColor.Value};padding:2rem 3.5rem;border-radius:20px;border:3px solid rgba(255,255,255,0.05);display:inline-block;box-shadow:0 0 60px {bgColor.Value}30;'>";
-            displayText += $"<span style='color:{wordColor.Value};font-size:4rem;font-weight:900;text-shadow:0 0 50px {wordColor.Value}50;letter-spacing:10px;'>{displayWord}</span>";
-            displayText += "</div>";
+            string displayHtml = $"<div style='background:{bgColor.Value};padding:2rem 3.5rem;border-radius:20px;border:3px solid rgba(255,255,255,0.05);display:inline-block;box-shadow:0 0 60px {bgColor.Value}30;'>";
+            displayHtml += $"<span style='color:{wordColor.Value};font-size:4rem;font-weight:900;text-shadow:0 0 50px {wordColor.Value}50;letter-spacing:10px;'>{displayWord}</span>";
+            displayHtml += "</div>";
 
             int timeLimit = Math.Max(3, 9 - difficulty / 12);
             string diffLabel = GetDifficultyLabel(difficulty);
@@ -1567,7 +1692,7 @@ namespace MyPersonalWebsite.Controllers
                 type = "tripleColor",
                 level = level,
                 question = $"🎯 颜色三重干扰！（{diffLabel}）<br><span style='font-size:0.9rem;color:rgba(255,255,255,0.3);'>{questionText}</span>",
-                displayText = displayText,
+                displayText = displayHtml,
                 correctAnswer = correctAnswer,
                 options = options.OrderBy(_ => _random.Next()).ToList(),
                 timeLimit = timeLimit,
