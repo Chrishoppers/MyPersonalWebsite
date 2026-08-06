@@ -643,32 +643,29 @@ private object GenerateColorRecognition(int level, int difficulty)
     };
 }
 
-       // 5. ⭐ 找不同（真正地狱难度：无标记 + 乱序 + 相似字符）
-private object GenerateFindDifferent(int level, int difficulty)
+      private object GenerateFindDifferent(int level, int difficulty)
 {
     int length = 5 + difficulty / 4;
     if (length > 12) length = 12;
 
     string chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
     
-    // 生成原始字符串
     string original = "";
     for (int i = 0; i < length; i++) 
         original += chars[_random.Next(chars.Length)];
 
-    // 随机选一个位置替换
     int pos = _random.Next(length);
     char originalChar = original[pos];
+    
+    // ⭐ 修复：用 GetSimilarChar
     char replacementChar = GetSimilarChar(originalChar);
     while (replacementChar == originalChar) 
         replacementChar = GetSimilarChar(originalChar);
 
-    // 构建替换后的字符串
     char[] replacedArr = original.ToCharArray();
     replacedArr[pos] = replacementChar;
     string replaced = new string(replacedArr);
 
-    // ⭐ 打乱替换后的字符串
     char[] shuffledArr = replaced.ToCharArray();
     for (int i = shuffledArr.Length - 1; i > 0; i--)
     {
@@ -679,27 +676,21 @@ private object GenerateFindDifferent(int level, int difficulty)
     }
     string shuffled = new string(shuffledArr);
 
-    // ⭐ 选项：所有字符（玩家要点出哪个字符被替换了）
-    var options = new List<string>();
-    var charSet = new HashSet<char>();
-    
-    // 添加原始字符和被替换后的字符到选项
-    charSet.Add(originalChar);
-    charSet.Add(replacementChar);
-    
-    // 添加更多干扰字符
-    while (charSet.Count < 4 + Math.Min(difficulty / 12, 3))
+    int displayTime = Math.Max(2, 8 - difficulty / 8);
+
+    var options = new List<string> { originalChar.ToString() };
+    int count = 4 + Math.Min(difficulty / 12, 3);
+
+    while (options.Count < count)
     {
         char fake = chars[_random.Next(chars.Length)];
-        charSet.Add(fake);
+        if (fake != originalChar && !options.Contains(fake.ToString()))
+        {
+            options.Add(fake.ToString());
+        }
     }
-    
-    options = charSet.ToList().Select(c => c.ToString()).ToList();
-    // 打乱选项顺序
-    options = options.OrderBy(_ => _random.Next()).ToList();
 
-    int displayTime = Math.Max(2, 8 - difficulty / 8);
-    int timeLimit = Math.Max(5, 14 - difficulty / 6);
+    int timeLimit = Math.Max(4, 14 - difficulty / 6);
     string diffLabel = difficulty > 70 ? "💀 地狱" : difficulty > 40 ? "🔥 噩梦" : "⚡ 困难";
 
     return new
@@ -710,14 +701,12 @@ private object GenerateFindDifferent(int level, int difficulty)
         originalDisplay = original,
         displayTime = displayTime,
         shuffledDisplay = shuffled,
-        // ⭐ 不告诉玩家哪个是被替换的！让玩家自己点
         correctAnswer = originalChar.ToString(),
-        options = options,  // 选项是所有字符，玩家要选择正确的那个
+        options = options.OrderBy(_ => _random.Next()).ToList(),
         timeLimit = timeLimit,
         funMessage = GetFunMessage("findDifferent")
     };
 }
-
         // ============================================================
         // 6. 倒序识别（地狱难度 - 10位+干扰）
         // ============================================================
