@@ -30,7 +30,7 @@ namespace MyPersonalWebsite.Controllers
         };
 
         private readonly string[] _colorNames;
-        private readonly string[] _colorWords = { "红", "蓝", "绿", "黄", "紫", "橙", "粉", "青", "棕", "灰", "黑", "白", "金", "银", "玫", "柠", "薄", "珊", "巧", "琥", "翡", "宝", "玛" };
+        private readonly string[] _singleColorWords = { "红", "蓝", "绿", "黄", "紫", "橙", "粉", "青" };
 
         private readonly Dictionary<char, int> _strokeCount;
         private readonly string[] _idioms;
@@ -41,6 +41,18 @@ namespace MyPersonalWebsite.Controllers
         private readonly char[] _alphabet;
         private readonly char[] _lowerAlphabet;
         private readonly Dictionary<string, string[]> _funMessages;
+
+        // ⭐ 英文单词库（用于空缺字母）
+        private readonly string[] _englishWords = new string[]
+        {
+            "APPLE", "BANANA", "CHERRY", "DRAGON", "EAGLE", "FALCON", "GOLDEN", "HEAVEN", "ICICLE", "JUNGLE",
+            "KNIGHT", "LION", "MAGIC", "NIGHT", "OCEAN", "PEACE", "QUEEN", "RIVER", "STORM", "TIGER",
+            "UNITY", "VICTORY", "WISDOM", "XENON", "YOUTH", "ZEBRA", "BLAZE", "CRYSTAL", "DREAM", "ELEPHANT",
+            "FLOWER", "GARDEN", "HAPPY", "JACKET", "KITTEN", "LUNCH", "MUSCLE", "NEPHEW", "ORANGE", "PENCIL",
+            "QUILT", "ROCKET", "SILVER", "TURTLE", "UMPIRE", "VALLEY", "WINDOW", "YELLOW", "BOTTLE", "CANDLE",
+            "DANCER", "EFFECT", "FOSSIL", "GENTLE", "HONEST", "IGNORE", "JUNGLE", "KINDER", "LITTLE", "MOTHER",
+            "NOTICE", "OFFICE", "PURPLE", "RABBIT", "SAVAGE", "TALENT", "UNIQUE", "VISUAL", "WICKED", "YONDER"
+        };
 
         public VerifyGameController(DataSyncService dataSync)
         {
@@ -303,36 +315,35 @@ namespace MyPersonalWebsite.Controllers
         // ============================================================
         // ⭐ 20种类型生成器
         // ============================================================
-       private object GenerateChallenge(int level)
-{
-    int typeIndex = (level - 1) % 20;
-    int difficulty = level;
+        private object GenerateChallenge(int level)
+        {
+            int typeIndex = (level - 1) % 20;
+            int difficulty = level;
 
-    switch (typeIndex)
-    {
-        case 0: return GenerateTextRecognition(level, difficulty);
-        case 1: return GenerateArithmetic(level, difficulty);
-        case 2: return GenerateStrokeCount(level, difficulty);
-        case 3: return GenerateColorRecognition(level, difficulty);
-        // case 4: return GenerateFindDifferent(level, difficulty);  // ⭐ 临时注释掉
-        case 4: return GenerateTextRecognition(level, difficulty);  // ⭐ 用文字识别替代
-        case 5: return GenerateReverseText(level, difficulty);
-        case 6: return GenerateMissingLetter(level, difficulty);
-        case 7: return GenerateQuickTap(level, difficulty);
-        case 8: return GenerateIdiomFill(level, difficulty);
-        case 9: return GenerateChineseNumber(level, difficulty);
-        case 10: return GenerateCaseConversion(level, difficulty);
-        case 11: return GeneratePinyinMatch(level, difficulty);
-        case 12: return GenerateInverseColor(level, difficulty);
-        case 13: return GenerateMirrorLetter(level, difficulty);
-        case 14: return GenerateKeyboardNeighbor(level, difficulty);
-        case 15: return GenerateCharacterCount(level, difficulty);
-        case 16: return GenerateMemoryChallenge(level, difficulty);
-        case 17: return GenerateDirection(level, difficulty);
-        case 18: return GenerateMathLogic(level, difficulty);
-        default: return GenerateTripleColorInterference(level, difficulty);
-    }
-}
+            switch (typeIndex)
+            {
+                case 0: return GenerateTextRecognition(level, difficulty);
+                case 1: return GenerateArithmetic(level, difficulty);
+                case 2: return GenerateStrokeCount(level, difficulty);
+                case 3: return GenerateColorRecognition(level, difficulty);
+                case 4: return GenerateFindDifferent(level, difficulty);
+                case 5: return GenerateReverseText(level, difficulty);
+                case 6: return GenerateMissingLetter(level, difficulty);
+                case 7: return GenerateQuickTap(level, difficulty);
+                case 8: return GenerateIdiomFill(level, difficulty);
+                case 9: return GenerateChineseNumber(level, difficulty);
+                case 10: return GenerateCaseConversion(level, difficulty);
+                case 11: return GeneratePinyinMatch(level, difficulty);
+                case 12: return GenerateInverseColor(level, difficulty);
+                case 13: return GenerateMirrorLetter(level, difficulty);
+                case 14: return GenerateKeyboardNeighbor(level, difficulty);
+                case 15: return GenerateCharacterCount(level, difficulty);
+                case 16: return GenerateMemoryChallenge(level, difficulty);
+                case 17: return GenerateDirection(level, difficulty);
+                case 18: return GenerateMathLogic(level, difficulty);
+                default: return GenerateTripleColorInterference(level, difficulty);
+            }
+        }
 
         // ============================================================
         // 1. 文字识别（地狱难度）
@@ -355,7 +366,7 @@ namespace MyPersonalWebsite.Controllers
             {
                 type = "text",
                 level = level,
-                question = $"👁️ 识别下方文字（{length}位）",
+                question = $"👁️ 识别下方图片中的文字（{length}位）",
                 imageSvg = svg,
                 correctAnswer = text,
                 options = options,
@@ -477,7 +488,7 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // 2. 算术（地狱难度 - 大数+混合运算）
+        // 2. 算术（地狱难度）
         // ============================================================
         private object GenerateArithmetic(int level, int difficulty)
         {
@@ -539,7 +550,7 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // 3. 汉字笔画（地狱难度 - 生僻字）
+        // 3. 汉字笔画（地狱难度）
         // ============================================================
         private object GenerateStrokeCount(int level, int difficulty)
         {
@@ -604,112 +615,119 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // 4. ⭐ 颜色识别（修复：使用 displayText）
+        // 4. 颜色识别（地狱难度）
         // ============================================================
-       // 4. ⭐ 颜色识别（修复：用单字颜色词）
-private object GenerateColorRecognition(int level, int difficulty)
-{
-    var pool = _colorHex.ToArray();
-    var selected = pool[_random.Next(pool.Length)];
-
-    // 找相似颜色
-    var similarColors = pool.Where(c => IsSimilarColor(c.Value, selected.Value)).ToList();
-    if (similarColors.Count < 3) similarColors = pool.ToList();
-
-    var options = new List<string> { selected.Key };
-    int count = 4 + Math.Min(difficulty / 10, 4);
-
-    var poolList = similarColors.Where(c => c.Key != selected.Key).ToList();
-    for (int i = 0; i < count - 1 && i < poolList.Count; i++)
-    {
-        options.Add(poolList[i].Key);
-    }
-
-    int timeLimit = Math.Max(2, 7 - difficulty / 15);
-    
-    // ⭐ 只用单字颜色词
-    string[] singleColorWords = { "红", "蓝", "绿", "黄", "紫", "橙", "粉", "青", "棕", "灰", "黑", "白", "金", "银" };
-    string displayWord = singleColorWords[_random.Next(singleColorWords.Length)];
-
-    return new
-    {
-        type = "color",
-        level = level,
-        question = $"🎨 下面文字是什么颜色？",
-        displayText = $"<span style='color:{selected.Value};font-size:3rem;font-weight:bold;'>{displayWord}</span>",
-        correctAnswer = selected.Key,
-        options = options.OrderBy(_ => _random.Next()).ToList(),
-        timeLimit = timeLimit,
-        funMessage = GetFunMessage("color")
-    };
-}
-
-      private object GenerateFindDifferent(int level, int difficulty)
-{
-    int length = 5 + difficulty / 4;
-    if (length > 12) length = 12;
-
-    string chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-    
-    string original = "";
-    for (int i = 0; i < length; i++) 
-        original += chars[_random.Next(chars.Length)];
-
-    int pos = _random.Next(length);
-    char originalChar = original[pos];
-    
-    // ⭐ 修复：用 GetSimilarChar
-    char replacementChar = GetSimilarChar(originalChar);
-    while (replacementChar == originalChar) 
-        replacementChar = GetSimilarChar(originalChar);
-
-    char[] replacedArr = original.ToCharArray();
-    replacedArr[pos] = replacementChar;
-    string replaced = new string(replacedArr);
-
-    char[] shuffledArr = replaced.ToCharArray();
-    for (int i = shuffledArr.Length - 1; i > 0; i--)
-    {
-        int j = _random.Next(i + 1);
-        char temp = shuffledArr[i];
-        shuffledArr[i] = shuffledArr[j];
-        shuffledArr[j] = temp;
-    }
-    string shuffled = new string(shuffledArr);
-
-    int displayTime = Math.Max(2, 8 - difficulty / 8);
-
-    var options = new List<string> { originalChar.ToString() };
-    int count = 4 + Math.Min(difficulty / 12, 3);
-
-    while (options.Count < count)
-    {
-        char fake = chars[_random.Next(chars.Length)];
-        if (fake != originalChar && !options.Contains(fake.ToString()))
+        private object GenerateColorRecognition(int level, int difficulty)
         {
-            options.Add(fake.ToString());
+            var pool = _colorHex.ToArray();
+            var selected = pool[_random.Next(pool.Length)];
+
+            // 找相似颜色
+            var similarColors = pool.Where(c => IsSimilarColor(c.Value, selected.Value)).ToList();
+            if (similarColors.Count < 3) similarColors = pool.ToList();
+
+            var options = new List<string> { selected.Key };
+            int count = 4 + Math.Min(difficulty / 10, 4);
+
+            var poolList = similarColors.Where(c => c.Key != selected.Key).ToList();
+            for (int i = 0; i < count - 1 && i < poolList.Count; i++)
+            {
+                options.Add(poolList[i].Key);
+            }
+
+            int timeLimit = Math.Max(2, 7 - difficulty / 15);
+            string displayWord = _singleColorWords[_random.Next(_singleColorWords.Length)];
+
+            return new
+            {
+                type = "color",
+                level = level,
+                question = $"🎨 下面文字是什么颜色？",
+                displayText = $"<span style='color:{selected.Value};font-size:3rem;font-weight:bold;'>{displayWord}</span>",
+                correctAnswer = selected.Key,
+                options = options.OrderBy(_ => _random.Next()).ToList(),
+                timeLimit = timeLimit,
+                funMessage = GetFunMessage("color")
+            };
         }
-    }
 
-    int timeLimit = Math.Max(4, 14 - difficulty / 6);
-    string diffLabel = difficulty > 70 ? "💀 地狱" : difficulty > 40 ? "🔥 噩梦" : "⚡ 困难";
+        private bool IsSimilarColor(string hex1, string hex2)
+        {
+            if (hex1 == hex2) return false;
+            try
+            {
+                var c1 = System.Drawing.ColorTranslator.FromHtml(hex1);
+                var c2 = System.Drawing.ColorTranslator.FromHtml(hex2);
+                var diff = Math.Abs(c1.R - c2.R) + Math.Abs(c1.G - c2.G) + Math.Abs(c1.B - c2.B);
+                return diff < 150;
+            }
+            catch { return false; }
+        }
 
-    return new
-    {
-        type = "findDifferent",
-        level = level,
-        question = $"🔍 记住下面的字符，然后找出被更改的那个！（{diffLabel}）",
-        originalDisplay = original,
-        displayTime = displayTime,
-        shuffledDisplay = shuffled,
-        correctAnswer = originalChar.ToString(),
-        options = options.OrderBy(_ => _random.Next()).ToList(),
-        timeLimit = timeLimit,
-        funMessage = GetFunMessage("findDifferent")
-    };
-}
         // ============================================================
-        // 6. 倒序识别（地狱难度 - 10位+干扰）
+        // 5. ⭐ 找不同（记忆+点击）
+        // ============================================================
+        private object GenerateFindDifferent(int level, int difficulty)
+        {
+            int length = Math.Min(5 + difficulty / 4, 12);
+            string chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+
+            string original = "";
+            for (int i = 0; i < length; i++)
+                original += chars[_random.Next(chars.Length)];
+
+            int pos = _random.Next(length);
+            char originalChar = original[pos];
+            char replacementChar = GetSimilarChar(originalChar);
+            while (replacementChar == originalChar) replacementChar = GetSimilarChar(originalChar);
+
+            char[] replacedArr = original.ToCharArray();
+            replacedArr[pos] = replacementChar;
+            string replaced = new string(replacedArr);
+
+            // 打乱
+            char[] shuffledArr = replaced.ToCharArray();
+            for (int i = shuffledArr.Length - 1; i > 0; i--)
+            {
+                int j = _random.Next(i + 1);
+                char temp = shuffledArr[i];
+                shuffledArr[i] = shuffledArr[j];
+                shuffledArr[j] = temp;
+            }
+            string shuffled = new string(shuffledArr);
+
+            // 找出被替换字符在打乱后的位置
+            int shuffledPos = -1;
+            for (int i = 0; i < shuffledArr.Length; i++)
+            {
+                if (shuffledArr[i] == replacementChar)
+                {
+                    shuffledPos = i;
+                    break;
+                }
+            }
+
+            int displayTime = Math.Max(2, 8 - difficulty / 8);
+            int timeLimit = Math.Max(4, 14 - difficulty / 6);
+            string diffLabel = difficulty > 70 ? "💀 地狱" : difficulty > 40 ? "🔥 噩梦" : "⚡ 困难";
+
+            return new
+            {
+                type = "findDifferent",
+                level = level,
+                question = $"🔍 记住下面的字符，然后找出被更改的那个！（{diffLabel}）",
+                originalDisplay = original,
+                displayTime = displayTime,
+                shuffledDisplay = shuffled,
+                shuffledPos = shuffledPos,
+                correctAnswer = originalChar.ToString(),
+                timeLimit = timeLimit,
+                funMessage = GetFunMessage("findDifferent")
+            };
+        }
+
+        // ============================================================
+        // 6. 倒序识别（地狱难度）
         // ============================================================
         private object GenerateReverseText(int level, int difficulty)
         {
@@ -741,16 +759,17 @@ private object GenerateColorRecognition(int level, int difficulty)
         }
 
         // ============================================================
-        // 7. 缺失字母（地狱难度 - 缺2-3个）
+        // 7. ⭐ 空缺字母（英文单词版）
         // ============================================================
         private object GenerateMissingLetter(int level, int difficulty)
         {
-            int len = Math.Min(5 + difficulty / 4, 12);
-            string chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789!@#$%^&*()_+-=<>?/";
-            string word = "";
-            for (int i = 0; i < len; i++) word += chars[_random.Next(chars.Length)];
+            // 从英文单词库中选取
+            string word = _englishWords[_random.Next(_englishWords.Length)];
+            
+            // 确保单词足够长
+            while (word.Length < 4) word = _englishWords[_random.Next(_englishWords.Length)];
 
-            int missingCount = difficulty > 70 ? 3 : difficulty > 40 ? 2 : 1;
+            int missingCount = difficulty > 70 ? 2 : 1;
             var positions = new List<int>();
             for (int i = 0; i < word.Length; i++) positions.Add(i);
             positions = positions.OrderBy(_ => _random.Next()).ToList();
@@ -763,11 +782,13 @@ private object GenerateColorRecognition(int level, int difficulty)
             {
                 int pos = missingPos[i];
                 correctChars[i] = word[pos];
-                display[pos] = '□';
+                display[pos] = '_';
             }
 
             string correctAnswer = new string(correctChars);
             string displayStr = new string(display);
+
+            string hintText = missingCount == 1 ? "1个字母被隐藏了" : $"{missingCount}个字母被隐藏了";
 
             var options = new List<string> { correctAnswer };
             int optionCount = 4 + Math.Min(difficulty / 10, 3);
@@ -777,7 +798,7 @@ private object GenerateColorRecognition(int level, int difficulty)
                 string fake = "";
                 for (int i = 0; i < correctAnswer.Length; i++)
                 {
-                    fake += chars[_random.Next(chars.Length)];
+                    fake += _alphabet[_random.Next(26)];
                 }
                 if (!options.Contains(fake) && fake != correctAnswer)
                 {
@@ -791,7 +812,7 @@ private object GenerateColorRecognition(int level, int difficulty)
             {
                 type = "missingLetter",
                 level = level,
-                question = $"🔤 补全（缺{missingCount}个）：{displayStr}",
+                question = $"🔤 补全下面的英文单词（{hintText}）：<br><span style='font-size:1.8rem;font-weight:bold;letter-spacing:6px;font-family:monospace;'>{displayStr}</span>",
                 correctAnswer = correctAnswer,
                 options = options.OrderBy(_ => _random.Next()).ToList(),
                 timeLimit = timeLimit,
@@ -800,11 +821,11 @@ private object GenerateColorRecognition(int level, int difficulty)
         }
 
         // ============================================================
-        // 8. 快速点击（地狱难度 - 时间极短）
+        // 8. ⭐ 快速点击（显示目标字符）
         // ============================================================
         private object GenerateQuickTap(int level, int difficulty)
         {
-            string chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789!@#$%^&*()_+-=<>?/";
+            string chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
             char target = chars[_random.Next(chars.Length)];
             var options = GenerateSuperHardOptions(target.ToString(), difficulty);
             int timeLimit = Math.Max(2, 8 - difficulty / 10);
@@ -813,7 +834,7 @@ private object GenerateColorRecognition(int level, int difficulty)
             {
                 type = "quickTap",
                 level = level,
-                question = $"⚡ 快速找到目标字符！",
+                question = $"⚡ 从下方选项中，找出字符 <span style='color:#8B5CF6;font-weight:bold;font-size:1.5rem;'>{target}</span>",
                 correctAnswer = target.ToString(),
                 options = options,
                 timeLimit = timeLimit,
@@ -822,7 +843,7 @@ private object GenerateColorRecognition(int level, int difficulty)
         }
 
         // ============================================================
-        // 9. 成语填空（地狱难度 - 缺3个字+生僻成语）
+        // 9. 成语填空（地狱难度）
         // ============================================================
         private object GenerateIdiomFill(int level, int difficulty)
         {
@@ -871,7 +892,7 @@ private object GenerateColorRecognition(int level, int difficulty)
                 string fake = "";
                 for (int i = 0; i < correctAnswer.Length; i++)
                 {
-                    fake += GetSuperSimilarChar(correctAnswer[i]);
+                    fake += GetSimilarChar(correctAnswer[i]);
                 }
                 if (!options.Contains(fake) && fake != correctAnswer)
                 {
@@ -909,7 +930,7 @@ private object GenerateColorRecognition(int level, int difficulty)
         }
 
         // ============================================================
-        // 10. 中文数字（地狱难度 - 大写+大数）
+        // 10. 中文数字（地狱难度）
         // ============================================================
         private object GenerateChineseNumber(int level, int difficulty)
         {
@@ -1022,7 +1043,7 @@ private object GenerateColorRecognition(int level, int difficulty)
         }
 
         // ============================================================
-        // 11. 大小写转换（地狱难度 - 混合大小写+规则随机）
+        // 11. 大小写转换（地狱难度）
         // ============================================================
         private object GenerateCaseConversion(int level, int difficulty)
         {
@@ -1055,15 +1076,8 @@ private object GenerateColorRecognition(int level, int difficulty)
                 }
                 else
                 {
-                    var words = source.Split(' ');
-                    var result = "";
-                    foreach (var w in words)
-                    {
-                        if (w.Length > 0)
-                            result += char.ToUpper(w[0]) + w.Substring(1).ToLower() + " ";
-                    }
-                    correct = result.Trim();
-                    source = source.ToUpper();
+                    correct = source.ToUpper();
+                    source = source.ToLower();
                 }
             }
             else if (difficulty > 40)
@@ -1141,7 +1155,7 @@ private object GenerateColorRecognition(int level, int difficulty)
         }
 
         // ============================================================
-        // 13. 反色识别（地狱难度 - 3色）
+        // 13. 反色识别（地狱难度）
         // ============================================================
         private object GenerateInverseColor(int level, int difficulty)
         {
@@ -1218,7 +1232,7 @@ private object GenerateColorRecognition(int level, int difficulty)
         }
 
         // ============================================================
-        // 16. 字符计数（地狱难度 - 长字符串）
+        // 16. 字符计数（地狱难度）
         // ============================================================
         private object GenerateCharacterCount(int level, int difficulty)
         {
@@ -1246,7 +1260,7 @@ private object GenerateColorRecognition(int level, int difficulty)
         }
 
         // ============================================================
-        // 17. 数字记忆（地狱难度 - 14位）
+        // 17. 数字记忆（地狱难度）
         // ============================================================
         private object GenerateMemoryChallenge(int level, int difficulty)
         {
@@ -1283,7 +1297,7 @@ private object GenerateColorRecognition(int level, int difficulty)
         }
 
         // ============================================================
-        // 18. 方向判断（地狱难度 - 24方向）
+        // 18. 方向判断（地狱难度）
         // ============================================================
         private object GenerateDirection(int level, int difficulty)
         {
@@ -1332,7 +1346,7 @@ private object GenerateColorRecognition(int level, int difficulty)
         }
 
         // ============================================================
-        // 19. 逻辑推理（地狱难度 - 三步运算）
+        // 19. 逻辑推理（地狱难度）
         // ============================================================
         private object GenerateMathLogic(int level, int difficulty)
         {
@@ -1422,91 +1436,141 @@ private object GenerateColorRecognition(int level, int difficulty)
             };
         }
 
-       // 20. ⭐ 颜色三重干扰（修复：只用单字颜色词）
-private object GenerateTripleColorInterference(int level, int difficulty)
-{
-    var colorPool = _colorHex.ToArray();
-    var selectedColors = new List<KeyValuePair<string, string>>();
-
-    while (selectedColors.Count < 3)
-    {
-        var c = colorPool[_random.Next(colorPool.Length)];
-        if (!selectedColors.Any(x => x.Key == c.Key))
+        // ============================================================
+        // 20. ⭐ 颜色三重干扰（地狱难度）
+        // ============================================================
+        private object GenerateTripleColorInterference(int level, int difficulty)
         {
-            selectedColors.Add(c);
+            var colorPool = _colorHex.ToArray();
+            var selectedColors = new List<KeyValuePair<string, string>>();
+
+            while (selectedColors.Count < 3)
+            {
+                var c = colorPool[_random.Next(colorPool.Length)];
+                if (!selectedColors.Any(x => x.Key == c.Key))
+                {
+                    selectedColors.Add(c);
+                }
+            }
+
+            string displayWord = _singleColorWords[_random.Next(_singleColorWords.Length)];
+
+            var shuffledColors = selectedColors.OrderBy(_ => _random.Next()).ToList();
+            var wordColor = shuffledColors[0];
+            var bgColor = shuffledColors[1];
+            var meaningColor = shuffledColors[2];
+
+            while (bgColor.Key == wordColor.Key)
+            {
+                shuffledColors = selectedColors.OrderBy(_ => _random.Next()).ToList();
+                wordColor = shuffledColors[0];
+                bgColor = shuffledColors[1];
+                meaningColor = shuffledColors[2];
+            }
+            while (meaningColor.Key == wordColor.Key || meaningColor.Key == bgColor.Key)
+            {
+                shuffledColors = selectedColors.OrderBy(_ => _random.Next()).ToList();
+                wordColor = shuffledColors[0];
+                bgColor = shuffledColors[1];
+                meaningColor = shuffledColors[2];
+            }
+
+            string[] questions = new[]
+            {
+                $"字的颜色是什么？",
+                $"背景是什么颜色？",
+                $"「{displayWord}」这个字本身是什么颜色的？"
+            };
+
+            int qIndex = _random.Next(3);
+            string questionText = questions[qIndex];
+            string correctAnswer = qIndex == 0 ? wordColor.Key : qIndex == 1 ? bgColor.Key : meaningColor.Key;
+
+            var options = new List<string> { correctAnswer };
+            int optionCount = 4 + Math.Min(difficulty / 10, 3);
+            var pool = _colorNames.Where(c => c != correctAnswer).ToList();
+            var shuffled = pool.OrderBy(_ => _random.Next()).ToList();
+
+            for (int i = 0; i < Math.Min(optionCount - 1, shuffled.Count); i++)
+            {
+                options.Add(shuffled[i]);
+            }
+
+            string displayText = $"<div style='background:{bgColor.Value};padding:2rem 3.5rem;border-radius:20px;border:3px solid rgba(255,255,255,0.05);display:inline-block;box-shadow:0 0 60px {bgColor.Value}30;'>";
+            displayText += $"<span style='color:{wordColor.Value};font-size:4rem;font-weight:900;text-shadow:0 0 50px {wordColor.Value}50;letter-spacing:10px;'>{displayWord}</span>";
+            displayText += "</div>";
+
+            int timeLimit = Math.Max(3, 8 - difficulty / 12);
+            string diffLabel = difficulty > 70 ? "💀 地狱" : difficulty > 40 ? "🔥 噩梦" : "⚡ 困难";
+
+            return new
+            {
+                type = "tripleColor",
+                level = level,
+                question = $"🎯 颜色三重干扰！（{diffLabel}）<br><span style='font-size:0.9rem;color:rgba(255,255,255,0.3);'>{questionText}</span>",
+                displayText = displayText,
+                correctAnswer = correctAnswer,
+                options = options.OrderBy(_ => _random.Next()).ToList(),
+                timeLimit = timeLimit,
+                funMessage = GetFunMessage("tripleColor")
+            };
         }
-    }
 
-    // ⭐ 只用单字颜色词
-    string[] singleColorWords = { "红", "蓝", "绿", "黄", "紫", "橙", "粉", "青" };
-    string displayWord = singleColorWords[_random.Next(singleColorWords.Length)];
+        // ============================================================
+        // 辅助方法
+        // ============================================================
 
-    // 分配颜色
-    var shuffledColors = selectedColors.OrderBy(_ => _random.Next()).ToList();
-    var wordColor = shuffledColors[0];
-    var bgColor = shuffledColors[1];
-    var meaningColor = shuffledColors[2];
+        private char GetSimilarChar(char c)
+        {
+            var map = new Dictionary<char, char[]>
+            {
+                {'0', new[]{'O','D','Q'}},
+                {'O', new[]{'0','D','Q'}},
+                {'1', new[]{'I','L','7'}},
+                {'I', new[]{'1','L','7'}},
+                {'L', new[]{'1','I','J'}},
+                {'5', new[]{'S','8'}},
+                {'S', new[]{'5','8'}},
+                {'8', new[]{'B','3','6'}},
+                {'B', new[]{'8','3','6'}},
+                {'3', new[]{'8','B','E'}},
+                {'E', new[]{'3','B','F'}},
+                {'6', new[]{'8','G','9'}},
+                {'9', new[]{'6','P','G'}},
+                {'G', new[]{'6','9','C'}},
+                {'C', new[]{'G','O','0'}},
+                {'D', new[]{'O','0','Q'}},
+                {'Q', new[]{'O','0','D'}},
+                {'2', new[]{'Z','7'}},
+                {'Z', new[]{'2','7'}},
+                {'7', new[]{'2','Z'}},
+                {'T', new[]{'Y','7'}},
+                {'Y', new[]{'T','V'}},
+                {'V', new[]{'Y','U'}},
+                {'W', new[]{'M','V'}},
+                {'M', new[]{'W','N'}},
+                {'N', new[]{'M','H'}},
+                {'H', new[]{'N','A'}},
+                {'A', new[]{'4','H'}},
+                {'R', new[]{'P','A'}},
+                {'P', new[]{'R','B'}},
+                {'K', new[]{'H','N'}},
+                {'X', new[]{'K','H'}},
+                {'J', new[]{'L','I'}},
+                {'U', new[]{'V','W'}},
+                {'4', new[]{'A','H'}},
+                {'F', new[]{'E','P','T'}}
+            };
 
-    // 确保三者不同
-    while (bgColor.Key == wordColor.Key)
-    {
-        shuffledColors = selectedColors.OrderBy(_ => _random.Next()).ToList();
-        wordColor = shuffledColors[0];
-        bgColor = shuffledColors[1];
-        meaningColor = shuffledColors[2];
-    }
-    while (meaningColor.Key == wordColor.Key || meaningColor.Key == bgColor.Key)
-    {
-        shuffledColors = selectedColors.OrderBy(_ => _random.Next()).ToList();
-        wordColor = shuffledColors[0];
-        bgColor = shuffledColors[1];
-        meaningColor = shuffledColors[2];
-    }
+            if (map.ContainsKey(c))
+            {
+                var similar = map[c];
+                return similar[_random.Next(similar.Length)];
+            }
 
-    // 三种提问
-    string[] questions = new[]
-    {
-        $"字的颜色是什么？",
-        $"背景是什么颜色？",
-        $"「{displayWord}」这个字本身是什么颜色？"
-    };
-
-    int qIndex = _random.Next(3);
-    string questionText = questions[qIndex];
-    string correctAnswer = qIndex == 0 ? wordColor.Key : qIndex == 1 ? bgColor.Key : meaningColor.Key;
-
-    // 选项
-    var options = new List<string> { correctAnswer };
-    int optionCount = 4 + Math.Min(difficulty / 10, 3);
-    var pool = _colorNames.Where(c => c != correctAnswer).ToList();
-    var shuffled = pool.OrderBy(_ => _random.Next()).ToList();
-
-    for (int i = 0; i < Math.Min(optionCount - 1, shuffled.Count); i++)
-    {
-        options.Add(shuffled[i]);
-    }
-
-    // ⭐ 生成显示HTML
-    string displayText = $"<div style='background:{bgColor.Value};padding:2rem 3.5rem;border-radius:20px;border:3px solid rgba(255,255,255,0.05);display:inline-block;box-shadow:0 0 60px {bgColor.Value}30;'>";
-    displayText += $"<span style='color:{wordColor.Value};font-size:4rem;font-weight:900;text-shadow:0 0 50px {wordColor.Value}50;letter-spacing:10px;'>{displayWord}</span>";
-    displayText += "</div>";
-
-    int timeLimit = Math.Max(3, 8 - difficulty / 12);
-    string diffLabel = difficulty > 70 ? "💀 地狱" : difficulty > 40 ? "🔥 噩梦" : "⚡ 困难";
-
-    return new
-    {
-        type = "tripleColor",
-        level = level,
-        question = $"🎯 颜色三重干扰！（{diffLabel}）<br><span style='font-size:0.9rem;color:rgba(255,255,255,0.3);'>{questionText}</span>",
-        displayText = displayText,
-        correctAnswer = correctAnswer,
-        options = options.OrderBy(_ => _random.Next()).ToList(),
-        timeLimit = timeLimit,
-        funMessage = GetFunMessage("tripleColor")
-    };
-}
-
+            string chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+            return chars[_random.Next(chars.Length)];
+        }
 
         private string GetFunMessage(string type)
         {
@@ -1517,80 +1581,5 @@ private object GenerateTripleColorInterference(int level, int difficulty)
             }
             return "🎉 太棒了！";
         }
-        // ⭐ 相似字符映射（用于找不同）
-private char GetSimilarChar(char c)
-{
-    var map = new Dictionary<char, char[]>
-    {
-        {'0', new[]{'O','D','Q'}},
-        {'O', new[]{'0','D','Q'}},
-        {'1', new[]{'I','L','7'}},
-        {'I', new[]{'1','L','7'}},
-        {'L', new[]{'1','I','J'}},
-        {'5', new[]{'S','8'}},
-        {'S', new[]{'5','8'}},
-        {'8', new[]{'B','3','6'}},
-        {'B', new[]{'8','3','6'}},
-        {'3', new[]{'8','B','E'}},
-        {'E', new[]{'3','B','F'}},
-        {'6', new[]{'8','G','9'}},
-        {'9', new[]{'6','P','G'}},
-        {'G', new[]{'6','9','C'}},
-        {'C', new[]{'G','O','0'}},
-        {'D', new[]{'O','0','Q'}},
-        {'Q', new[]{'O','0','D'}},
-        {'2', new[]{'Z','7'}},
-        {'Z', new[]{'2','7'}},
-        {'7', new[]{'2','Z'}},
-        {'T', new[]{'Y','7'}},
-        {'Y', new[]{'T','V'}},
-        {'V', new[]{'Y','U'}},
-        {'W', new[]{'M','V'}},
-        {'M', new[]{'W','N'}},
-        {'N', new[]{'M','H'}},
-        {'H', new[]{'N','A'}},
-        {'A', new[]{'4','H'}},
-        {'R', new[]{'P','A'}},
-        {'P', new[]{'R','B'}},
-        {'K', new[]{'H','N'}},
-        {'X', new[]{'K','H'}},
-        {'J', new[]{'L','I'}},
-        {'U', new[]{'V','W'}},
-        {'4', new[]{'A','H'}},
-        {'F', new[]{'E','P','T'}},
-        {'Z', new[]{'2','7'}}
-    };
-
-    if (map.ContainsKey(c))
-    {
-        var similar = map[c];
-        return similar[_random.Next(similar.Length)];
-    }
-    
-    string chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-    return chars[_random.Next(chars.Length)];
-}
-// ⭐ 判断两种颜色是否相似
-private bool IsSimilarColor(string hex1, string hex2)
-{
-    if (hex1 == hex2) return false;
-    try
-    {
-        var c1 = System.Drawing.ColorTranslator.FromHtml(hex1);
-        var c2 = System.Drawing.ColorTranslator.FromHtml(hex2);
-        var diff = Math.Abs(c1.R - c2.R) + Math.Abs(c1.G - c2.G) + Math.Abs(c1.B - c2.B);
-        return diff < 150;
-    }
-    catch
-    {
-        return false;
-    }
-}
-
-// ⭐ 超级相似字符（别名，直接调用 GetSimilarChar）
-private char GetSuperSimilarChar(char c)
-{
-    return GetSimilarChar(c);
-}
     }
 }
