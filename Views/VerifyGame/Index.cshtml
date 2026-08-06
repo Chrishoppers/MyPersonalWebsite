@@ -561,3 +561,522 @@
 </div>
 
 <div class="toast-container" id="toastContainer"></div>
+
+<script>
+    var token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+
+    var gameState = {
+        level: 1,
+        score: 0,
+        lives: 3,
+        combo: 0,
+        maxCombo: 0,
+        passed: 0,
+        isPlaying: false,
+        isAnswered: false,
+        timer: null,
+        timeLeft: 15,
+        totalLevels: 100,
+        currentChallenge: null
+    };
+
+    var dom = {
+        levelDisplay: document.getElementById('levelDisplay'),
+        scoreDisplay: document.getElementById('scoreDisplay'),
+        livesDisplay: document.getElementById('livesDisplay'),
+        comboDisplay: document.getElementById('comboDisplay'),
+        passedDisplay: document.getElementById('passedDisplay'),
+        progressFill: document.getElementById('progressFill'),
+        typeBadge: document.getElementById('typeBadge'),
+        questionText: document.getElementById('questionText'),
+        optionsGrid: document.getElementById('optionsGrid'),
+        imageContainer: document.getElementById('imageContainer'),
+        captchaImage: document.getElementById('captchaImage'),
+        colorContainer: document.getElementById('colorContainer'),
+        colorDisplay: document.getElementById('colorDisplay'),
+        displayTextContainer: document.getElementById('displayTextContainer'),
+        displayText: document.getElementById('displayText'),
+        feedback: document.getElementById('feedback'),
+        timerFill: document.getElementById('timerFill'),
+        timerText: document.getElementById('timerText'),
+        challengeCard: document.getElementById('challengeCard')
+    };
+
+    function startGame() {
+        gameState.level = 1;
+        gameState.score = 0;
+        gameState.lives = 3;
+        gameState.combo = 0;
+        gameState.maxCombo = 0;
+        gameState.passed = 0;
+        gameState.isPlaying = true;
+        gameState.isAnswered = false;
+        updateUI();
+        loadChallenge();
+        document.getElementById('rankSection').style.display = 'none';
+    }
+
+    function loadChallenge() {
+        if (!gameState.isPlaying) return;
+        if (gameState.level > gameState.totalLevels) {
+            gameWin();
+            return;
+        }
+
+        gameState.isAnswered = false;
+        dom.feedback.className = 'feedback';
+        dom.feedback.style.display = 'none';
+        dom.optionsGrid.innerHTML = '';
+        dom.displayTextContainer.style.display = 'none';
+        dom.imageContainer.style.display = 'none';
+        dom.colorContainer.style.display = 'none';
+
+        fetch('/VerifyGame/GetChallenge?level=' + gameState.level)
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    gameState.currentChallenge = data.data;
+                    renderChallenge(data.data);
+                } else {
+                    showToast('加载挑战失败，请重试', 'error');
+                }
+            })
+            .catch(function() {
+                showToast('网络错误，请刷新重试', 'error');
+            });
+    }
+
+    function getTypeName(type) {
+        var names = {
+            'text': '文字识别',
+            'arithmetic': '算术计算',
+            'stroke': '汉字笔画',
+            'color': '颜色识别',
+            'findDifferent': '找不同',
+            'reverse': '倒序识别',
+            'missingLetter': '空缺字母',
+            'quickTap': '快速点击',
+            'idiom': '成语填空',
+            'chineseNumber': '中文数字',
+            'caseConversion': '大小写转换',
+            'pinyin': '读音识别',
+            'inverseColor': '反色识别',
+            'mirror': '镜像字母',
+            'keyboard': '键盘相邻',
+            'countChar': '字符计数',
+            'memory': '数字记忆',
+            'direction': '方向判断',
+            'logic': '逻辑推理',
+            'tripleColor': '颜色三重干扰',
+            'ultimate': '💀 终极挑战'
+        };
+        return names[type] || type;
+    }
+
+    function renderChallenge(challenge) {
+        dom.typeBadge.textContent = '第 ' + challenge.level + ' 关 · ' + getTypeName(challenge.type);
+        dom.questionText.innerHTML = challenge.question;
+
+        dom.imageContainer.style.display = 'none';
+        dom.colorContainer.style.display = 'none';
+        dom.displayTextContainer.style.display = 'none';
+
+        // ⭐ 找不同：先显示原始，再显示打乱后
+        if (challenge.type === 'findDifferent' && challenge.originalDisplay) {
+            dom.displayTextContainer.style.display = 'block';
+            dom.displayText.innerHTML = challenge.originalDisplay;
+            dom.displayText.style.cssText = 'font-size:2.5rem;font-weight:bold;color:#8B5CF6;padding:1.5rem;margin:0.5rem 0;background:rgba(255,255,255,0.02);border-radius:16px;border:1px solid rgba(255,255,255,0.04);text-align:center;letter-spacing:6px;font-family:monospace;';
+
+            var displayTime = challenge.displayTime || 3;
+            setTimeout(function() {
+                dom.displayText.textContent = '⏰ 记住它！';
+                dom.displayText.style.color = '#F59E0B';
+                dom.displayText.style.fontSize = '1.5rem';
+                dom.displayText.style.letterSpacing = 'normal';
+
+                setTimeout(function() {
+                    var shuffled = challenge.shuffledDisplay || '';
+                    var shuffledPos = challenge.shuffledPos || 0;
+                    var html = '';
+                    for (var i = 0; i < shuffled.length; i++) {
+                        var ch = shuffled[i];
+                        var isTarget = (i === shuffledPos);
+                        html += '<span class="char-btn" data-index="' + i + '" data-char="' + ch + '" ' +
+                            'style="display:inline-block;padding:0.2rem 0.6rem;margin:0.1rem;border-radius:8px;cursor:pointer;font-size:2.2rem;font-weight:bold;font-family:monospace;transition:all 0.3s ease;' +
+                            (isTarget ? 'color:#EC4899;background:rgba(236,72,153,0.1);border:2px solid rgba(236,72,153,0.2);' : 'color:#fff;border:2px solid transparent;') + '" ' +
+                            'onclick="selectChar(' + i + ', \'' + ch + '\', this)">' + ch + '</span>';
+                    }
+                    dom.displayText.innerHTML = html;
+                    dom.displayText.style.cssText = 'padding:1.5rem;margin:0.5rem 0;background:rgba(255,255,255,0.02);border-radius:16px;border:1px solid rgba(255,255,255,0.04);text-align:center;letter-spacing:4px;';
+                    dom.displayText.style.color = '#fff';
+                    dom.displayText.style.fontSize = '1rem';
+
+                    dom.displayText.dataset.correctAnswer = challenge.correctAnswer;
+                    dom.displayText.dataset.shuffledPos = shuffledPos;
+
+                    startTimer(challenge.timeLimit || 10);
+                }, 1000);
+            }, displayTime * 1000);
+            return;
+        }
+
+        // ⭐ 颜色三重干扰
+        if (challenge.displayHtml) {
+            dom.colorContainer.style.display = 'block';
+            dom.colorDisplay.innerHTML = challenge.displayHtml;
+        }
+        // ⭐ 数字记忆
+        else if (challenge.displayNumber) {
+            dom.displayTextContainer.style.display = 'block';
+            dom.displayText.textContent = challenge.displayNumber;
+            dom.displayText.style.cssText = 'font-size:3rem;font-weight:bold;color:#8B5CF6;padding:1rem;margin:0.5rem 0;background:rgba(255,255,255,0.02);border-radius:16px;border:1px solid rgba(255,255,255,0.04);text-align:center;';
+            setTimeout(function() {
+                dom.displayText.textContent = '⏰ 记住它！';
+                dom.displayText.style.color = '#F59E0B';
+                setTimeout(function() {
+                    dom.displayText.textContent = '请选择你记住的数字';
+                    dom.displayText.style.color = 'rgba(255,255,255,0.3)';
+                    dom.displayText.style.fontSize = '1rem';
+                }, 1000);
+            }, 4000);
+        }
+        else if (challenge.imageSvg) {
+            dom.imageContainer.style.display = 'block';
+            dom.captchaImage.innerHTML = challenge.imageSvg;
+        }
+        else if (challenge.displayText) {
+            dom.displayTextContainer.style.display = 'block';
+            dom.displayText.innerHTML = challenge.displayText;
+        }
+
+        // 渲染选项
+        var options = challenge.options || ['A', 'B', 'C', 'D'];
+        var letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+        var html = '';
+        for (var i = 0; i < options.length; i++) {
+            html += '<button class="option-btn" data-index="' + i + '" data-answer="' + options[i] + '">' +
+                letters[i] + '. ' + options[i] + '</button>';
+        }
+        dom.optionsGrid.innerHTML = html;
+
+        dom.optionsGrid.querySelectorAll('.option-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                if (gameState.isAnswered) return;
+                var answer = this.dataset.answer;
+                if (answer) submitAnswer(challenge, answer, this);
+            });
+        });
+
+        var timeLimit = challenge.timeLimit || 15;
+        startTimer(timeLimit);
+        updateUI();
+    }
+
+    function selectChar(index, char, element) {
+        if (gameState.isAnswered) return;
+
+        var container = dom.displayText;
+        var correctAnswer = container.dataset.correctAnswer;
+        var shuffledPos = parseInt(container.dataset.shuffledPos);
+
+        var isCorrect = (index === shuffledPos);
+
+        gameState.isAnswered = true;
+        clearInterval(gameState.timer);
+
+        var allChars = container.querySelectorAll('.char-btn');
+        allChars.forEach(function(el, i) {
+            el.style.cursor = 'default';
+            el.onclick = null;
+            if (i === shuffledPos) {
+                el.style.borderColor = '#28a745';
+                el.style.background = 'rgba(40,167,69,0.15)';
+                el.style.color = '#28a745';
+            } else {
+                el.style.borderColor = 'rgba(255,255,255,0.04)';
+                el.style.background = 'rgba(255,255,255,0.02)';
+            }
+        });
+
+        if (isCorrect) {
+            element.style.borderColor = '#28a745';
+            element.style.background = 'rgba(40,167,69,0.2)';
+            element.style.color = '#28a745';
+            showFeedback(true, 10 + Math.floor(gameState.level / 5), challenge.funMessage);
+            gameState.score += 10 + Math.floor(gameState.level / 5);
+            gameState.combo++;
+            gameState.passed++;
+            if (gameState.combo > gameState.maxCombo) {
+                gameState.maxCombo = gameState.combo;
+            }
+        } else {
+            element.style.borderColor = '#dc3545';
+            element.style.background = 'rgba(220,53,69,0.2)';
+            element.style.color = '#dc3545';
+            gameState.combo = 0;
+            gameState.lives--;
+            showFeedback(false, 0, '');
+        }
+
+        updateUI();
+
+        if (gameState.lives <= 0) {
+            setTimeout(gameOver, 1500);
+            return;
+        }
+
+        if (isCorrect) {
+            gameState.level++;
+        }
+        setTimeout(loadChallenge, 2000);
+    }
+
+    function submitAnswer(challenge, answer, btn) {
+        if (gameState.isAnswered) return;
+        gameState.isAnswered = true;
+        clearInterval(gameState.timer);
+
+        var isCorrect = answer === challenge.correctAnswer;
+
+        dom.optionsGrid.querySelectorAll('.option-btn').forEach(function(b) {
+            b.disabled = true;
+            if (b.dataset.answer === challenge.correctAnswer) {
+                b.classList.add('correct');
+            }
+        });
+
+        if (!isCorrect) {
+            btn.classList.add('wrong');
+            dom.challengeCard.classList.add('shake');
+            setTimeout(function() { dom.challengeCard.classList.remove('shake'); }, 500);
+        }
+
+        var points = 0;
+        if (isCorrect) {
+            var bonus = Math.min(gameState.combo, 10);
+            points = 10 + Math.floor(gameState.level / 5) + bonus * 2;
+            gameState.score += points;
+            gameState.combo++;
+            gameState.passed++;
+            if (gameState.combo > gameState.maxCombo) {
+                gameState.maxCombo = gameState.combo;
+            }
+            showFeedback(true, points, challenge.funMessage);
+        } else {
+            gameState.combo = 0;
+            gameState.lives--;
+            showFeedback(false, 0, '');
+        }
+
+        updateUI();
+
+        if (gameState.lives <= 0) {
+            setTimeout(gameOver, 1500);
+            return;
+        }
+
+        if (isCorrect) {
+            gameState.level++;
+        }
+        setTimeout(loadChallenge, 2000);
+    }
+
+    function showFeedback(isCorrect, points, funMessage) {
+        var el = dom.feedback;
+        el.style.display = 'block';
+        el.className = 'feedback show ' + (isCorrect ? 'correct' : 'wrong');
+
+        if (isCorrect) {
+            el.innerHTML = '✅ 答对了！ +' + points + ' 分' +
+                (funMessage ? '<div class="fun-message">' + funMessage + '</div>' : '');
+        } else {
+            el.innerHTML = '❌ 答错了！连击中断';
+        }
+    }
+
+    function startTimer(limit) {
+        clearInterval(gameState.timer);
+        gameState.timeLeft = limit;
+        updateTimerDisplay();
+
+        gameState.timer = setInterval(function() {
+            gameState.timeLeft--;
+            updateTimerDisplay();
+
+            if (gameState.timeLeft <= 0) {
+                clearInterval(gameState.timer);
+                if (!gameState.isAnswered) {
+                    gameState.isAnswered = true;
+                    dom.optionsGrid.querySelectorAll('.option-btn').forEach(function(b) {
+                        b.disabled = true;
+                    });
+                    // 找不同也要禁用点击
+                    dom.displayText.querySelectorAll('.char-btn').forEach(function(el) {
+                        el.style.cursor = 'default';
+                        el.onclick = null;
+                    });
+                    gameState.combo = 0;
+                    gameState.lives--;
+                    updateUI();
+                    showFeedback(false, 0, '⏱ 时间到！');
+                    if (gameState.lives <= 0) {
+                        setTimeout(gameOver, 1200);
+                    } else {
+                        setTimeout(loadChallenge, 1500);
+                    }
+                }
+            }
+        }, 1000);
+    }
+
+    function updateTimerDisplay() {
+        var pct = (gameState.timeLeft / Math.max(3, 20)) * 100;
+        dom.timerFill.style.width = pct + '%';
+        dom.timerText.textContent = '⏱ ' + gameState.timeLeft + 's';
+
+        dom.timerFill.className = 'timer-fill';
+        if (pct < 30) dom.timerFill.classList.add('danger');
+        else if (pct < 50) dom.timerFill.classList.add('warning');
+    }
+
+    function updateUI() {
+        dom.levelDisplay.textContent = gameState.level;
+        dom.scoreDisplay.textContent = gameState.score;
+        dom.comboDisplay.textContent = gameState.combo;
+        dom.passedDisplay.textContent = gameState.passed;
+
+        var hearts = '❤️'.repeat(gameState.lives) + '🖤'.repeat(Math.max(0, 3 - gameState.lives));
+        dom.livesDisplay.textContent = hearts || '💀';
+
+        var progress = (gameState.passed / gameState.totalLevels) * 100;
+        dom.progressFill.style.width = Math.min(progress, 100) + '%';
+    }
+
+    function saveAndShowRanking() {
+        var finalScore = gameState.score;
+        fetch('/VerifyGame/SaveScore', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'RequestVerificationToken': token
+            },
+            body: 'score=' + finalScore + '&level=' + gameState.level + '&maxCombo=' + gameState.maxCombo +
+                '&passed=' + gameState.passed
+        }).then(function() { loadRanking(); });
+    }
+
+    function loadRanking() {
+        fetch('/VerifyGame/GetRanking')
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                var container = document.getElementById('rankList');
+                var section = document.getElementById('rankSection');
+                if (data.success && data.data.length > 0) {
+                    var html = '';
+                    var medals = ['🥇', '🥈', '🥉'];
+                    data.data.forEach(function(item, index) {
+                        var medal = index < 3 ? medals[index] : '#' + (index + 1);
+                        var avatarHtml = item.avatarUrl && item.isAvatarApproved ?
+                            '<img src="' + item.avatarUrl + '" class="rank-avatar" />' :
+                            '<div class="rank-avatar-placeholder">' + (item.username ? item.username
+                                .charAt(0).toUpperCase() : '?') + '</div>';
+                        html += '<div class="rank-item">' +
+                            '<span class="rank-medal">' + medal + '</span>' +
+                            avatarHtml +
+                            '<span class="rank-name">' + item.username + '</span>' +
+                            '<span class="rank-score">' + item.totalPoints + '</span>' +
+                            '</div>';
+                    });
+                    container.innerHTML = html;
+                    section.style.display = 'block';
+                } else {
+                    container.innerHTML = '<div class="rank-empty">暂无排行数据<br>快来挑战吧！</div>';
+                    section.style.display = 'block';
+                }
+            })
+            .catch(function() {
+                document.getElementById('rankList').innerHTML =
+                '<div class="rank-empty">加载排行榜失败</div>';
+                document.getElementById('rankSection').style.display = 'block';
+            });
+    }
+
+    function gameOver() {
+        gameState.isPlaying = false;
+        clearInterval(gameState.timer);
+
+        var finalScore = gameState.score;
+
+        dom.challengeCard.innerHTML = `
+            <div class="game-over">
+                <div class="big-icon">${finalScore > 100 ? '🏆' : '💪'}</div>
+                <div class="title">${finalScore > 100 ? '🎉 挑战结束！' : '😅 继续加油！'}</div>
+                <div class="sub">你成功通过了 ${gameState.passed} 关</div>
+                <div class="final-score">${finalScore}</div>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-value">${gameState.passed}</div>
+                        <div class="stat-label">通关</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">${gameState.maxCombo}</div>
+                        <div class="stat-label">最高连击</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">${gameState.level - 1}</div>
+                        <div class="stat-label">到达关卡</div>
+                    </div>
+                </div>
+                <button class="btn-restart" onclick="startGame()">🔄 再来一次</button>
+            </div>
+        `;
+
+        saveAndShowRanking();
+    }
+
+    function gameWin() {
+        gameState.isPlaying = false;
+        clearInterval(gameState.timer);
+
+        dom.challengeCard.innerHTML = `
+            <div class="game-over">
+                <div class="big-icon">👑</div>
+                <div class="title">🎉 恭喜通关！</div>
+                <div class="sub">你通过了全部 100 关！你是真正的人类之光！</div>
+                <div class="final-score">${gameState.score}</div>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-value">100</div>
+                        <div class="stat-label">通关</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">${gameState.maxCombo}</div>
+                        <div class="stat-label">最高连击</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">🏆</div>
+                        <div class="stat-label">传说</div>
+                    </div>
+                </div>
+                <button class="btn-restart" onclick="startGame()">🔄 再来一次</button>
+            </div>
+        `;
+
+        saveAndShowRanking();
+    }
+
+    function showToast(message, type) {
+        var container = document.getElementById('toastContainer');
+        var toast = document.createElement('div');
+        toast.className = 'toast-msg ' + (type || 'info');
+        toast.textContent = message;
+        container.appendChild(toast);
+        setTimeout(function() {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateX(20px)';
+            setTimeout(function() { toast.remove(); }, 300);
+        }, 3000);
+    }
+
+    document.addEventListener('DOMContentLoaded', startGame);
+</script>
