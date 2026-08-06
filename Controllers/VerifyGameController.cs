@@ -1443,72 +1443,94 @@ private object GenerateFindDifferent(int level, int difficulty)
             };
         }
 
-        // ============================================================
-        // 20. ⭐ 颜色三重干扰（超级地狱难度）
-        // ============================================================
-        private object GenerateTripleColorInterference(int level, int difficulty)
+        // 20. ⭐ 颜色三重干扰（地狱难度）
+private object GenerateTripleColorInterference(int level, int difficulty)
+{
+    var colorPool = _colorHex.ToArray();
+    var selectedColors = new List<KeyValuePair<string, string>>();
+
+    while (selectedColors.Count < 3)
+    {
+        var c = colorPool[_random.Next(colorPool.Length)];
+        if (!selectedColors.Any(x => x.Key == c.Key))
         {
-            var colorPool = _colorHex.ToArray();
-            var selectedColors = new List<KeyValuePair<string, string>>();
-
-            while (selectedColors.Count < 3)
-            {
-                var c = colorPool[_random.Next(colorPool.Length)];
-                if (!selectedColors.Any(x => x.Key == c.Key))
-                {
-                    selectedColors.Add(c);
-                }
-            }
-
-            string displayWord = _colorWords[_random.Next(_colorWords.Length)];
-
-            var wordColor = selectedColors[_random.Next(selectedColors.Count)];
-            var bgColor = selectedColors[_random.Next(selectedColors.Count)];
-            var meaningColor = selectedColors[_random.Next(selectedColors.Count)];
-
-            while (bgColor.Key == wordColor.Key) bgColor = selectedColors[_random.Next(selectedColors.Count)];
-            while (meaningColor.Key == wordColor.Key || meaningColor.Key == bgColor.Key)
-                meaningColor = selectedColors[_random.Next(selectedColors.Count)];
-
-            string[] questions = new[]
-            {
-                $"字的颜色是什么？",
-                $"背景是什么颜色？",
-                $"「{displayWord}」代表什么颜色？"
-            };
-
-            int qIndex = _random.Next(3);
-            string questionText = questions[qIndex];
-            string correctAnswer = qIndex == 0 ? wordColor.Key : qIndex == 1 ? bgColor.Key : meaningColor.Key;
-
-            var options = new List<string> { correctAnswer };
-            int optionCount = 4 + Math.Min(difficulty / 10, 3);
-            var pool = _colorNames.Where(c => c != correctAnswer).ToList();
-            var shuffled = pool.OrderBy(_ => _random.Next()).ToList();
-
-            for (int i = 0; i < Math.Min(optionCount - 1, shuffled.Count); i++)
-            {
-                options.Add(shuffled[i]);
-            }
-
-            string displayHtml = $"<div style='background:{bgColor.Value};padding:2rem 3.5rem;border-radius:20px;border:3px solid rgba(255,255,255,0.05);display:inline-block;box-shadow:0 0 60px {bgColor.Value}30;'>";
-            displayHtml += $"<span style='color:{wordColor.Value};font-size:4rem;font-weight:900;text-shadow:0 0 50px {wordColor.Value}50;letter-spacing:10px;'>{displayWord}</span>";
-            displayHtml += "</div>";
-
-            int timeLimit = Math.Max(3, 8 - difficulty / 12);
-
-            return new
-            {
-                type = "tripleColor",
-                level = level,
-                question = $"🎯 颜色三重干扰！<br><span style='font-size:0.9rem;color:rgba(255,255,255,0.3);'>{questionText}</span>",
-                displayHtml = displayHtml,
-                correctAnswer = correctAnswer,
-                options = options.OrderBy(_ => _random.Next()).ToList(),
-                timeLimit = timeLimit,
-                funMessage = GetFunMessage("tripleColor")
-            };
+            selectedColors.Add(c);
         }
+    }
+
+    // ⭐ 只用一个字的颜色名称
+    string[] colorWords = new string[] { "红", "蓝", "绿", "黄", "紫", "橙", "粉", "青" };
+    string displayWord = colorWords[_random.Next(colorWords.Length)];
+
+    // 随机分配三种颜色（必须不同）
+    var shuffledColors = selectedColors.OrderBy(_ => _random.Next()).ToList();
+    var wordColor = shuffledColors[0];
+    var bgColor = shuffledColors[1];
+    var meaningColor = shuffledColors[2];
+
+    // 确保三者不同
+    while (bgColor.Key == wordColor.Key) 
+    {
+        shuffledColors = selectedColors.OrderBy(_ => _random.Next()).ToList();
+        wordColor = shuffledColors[0];
+        bgColor = shuffledColors[1];
+        meaningColor = shuffledColors[2];
+    }
+    while (meaningColor.Key == wordColor.Key || meaningColor.Key == bgColor.Key)
+    {
+        shuffledColors = selectedColors.OrderBy(_ => _random.Next()).ToList();
+        wordColor = shuffledColors[0];
+        bgColor = shuffledColors[1];
+        meaningColor = shuffledColors[2];
+    }
+
+    // ⭐ 三种提问方式
+    string[] questions = new[]
+    {
+        $"字的颜色是什么？",
+        $"背景是什么颜色？",
+        $"「{displayWord}」这个字本身是什么颜色的？"
+    };
+
+    int qIndex = _random.Next(3);
+    string questionText = questions[qIndex];
+    
+    // 正确答案
+    string correctAnswer = qIndex == 0 ? wordColor.Key : 
+                           qIndex == 1 ? bgColor.Key : 
+                           meaningColor.Key;
+
+    // 生成干扰选项
+    var options = new List<string> { correctAnswer };
+    int optionCount = 4 + Math.Min(difficulty / 10, 3);
+    var pool = _colorNames.Where(c => c != correctAnswer).ToList();
+    var shuffled = pool.OrderBy(_ => _random.Next()).ToList();
+
+    for (int i = 0; i < Math.Min(optionCount - 1, shuffled.Count); i++)
+    {
+        options.Add(shuffled[i]);
+    }
+
+    // ⭐ 显示
+    string displayText = $"<div style='background:{bgColor.Value};padding:2rem 3.5rem;border-radius:20px;border:3px solid rgba(255,255,255,0.05);display:inline-block;box-shadow:0 0 60px {bgColor.Value}30;'>";
+    displayText += $"<span style='color:{wordColor.Value};font-size:4rem;font-weight:900;text-shadow:0 0 50px {wordColor.Value}50;letter-spacing:10px;'>{displayWord}</span>";
+    displayText += "</div>";
+
+    int timeLimit = Math.Max(3, 8 - difficulty / 12);
+    string diffLabel = difficulty > 70 ? "💀 地狱" : difficulty > 40 ? "🔥 噩梦" : "⚡ 困难";
+
+    return new
+    {
+        type = "tripleColor",
+        level = level,
+        question = $"🎯 颜色三重干扰！（{diffLabel}）<br><span style='font-size:0.9rem;color:rgba(255,255,255,0.3);'>{questionText}</span>",
+        displayText = displayText,
+        correctAnswer = correctAnswer,
+        options = options.OrderBy(_ => _random.Next()).ToList(),
+        timeLimit = timeLimit,
+        funMessage = GetFunMessage("tripleColor")
+    };
+}
 
         private string GetFunMessage(string type)
         {
