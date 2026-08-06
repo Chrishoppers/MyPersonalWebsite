@@ -122,6 +122,15 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.MapHub<MessageHub>("/messageHub");
+// 在 app.Run() 之前添加
+app.Lifetime.ApplicationStarted.Register(() => 
+{
+    Console.WriteLine("✅ 应用已启动！");
+});
+app.Lifetime.ApplicationStopping.Register(() => 
+{
+    Console.WriteLine("⏹️ 应用正在停止...");
+});
 
 app.Run();
 
