@@ -22,15 +22,13 @@
     .progress-bar .fill { height: 100%; border-radius: 10px; background: linear-gradient(135deg, #8B5CF6, #EC4899); transition: width 0.5s ease; width: 0%; }
     .challenge-card { background: rgba(255,255,255,0.02); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.04); border-radius: 24px; padding: 1.8rem 2rem; min-height: 320px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; overflow: hidden; transition: all 0.3s ease; }
     .challenge-card .type-badge { position: absolute; top: 0.8rem; right: 1rem; font-size: 0.7rem; padding: 0.15rem 0.8rem; border-radius: 20px; background: rgba(139,92,246,0.08); color: #8B5CF6; border: 1px solid rgba(139,92,246,0.04); font-weight: 500; }
-    .challenge-card .question-text { color: rgba(255,255,255,0.5); font-size: 1.1rem; text-align: center; line-height: 1.8; margin-bottom: 1rem; min-height: 50px; width: 100%; }
-    .challenge-card .question-text .icon { font-size: 1.5rem; }
+    .challenge-card .question-text { color: rgba(255,255,255,0.5); font-size: 1.1rem; text-align: center; line-height: 1.8; margin-bottom: 0.5rem; min-height: 40px; width: 100%; }
     .challenge-card .captcha-image { border-radius: 12px; border: 1px solid rgba(255,255,255,0.04); background: rgba(255,255,255,0.02); max-width: 100%; margin: 0.2rem 0 0.8rem; cursor: pointer; transition: transform 0.3s ease; }
     .challenge-card .captcha-image:hover { transform: scale(1.02); }
     .challenge-card .color-display { font-size: 2.5rem; padding: 0.3rem 1.5rem; border-radius: 12px; background: rgba(255,255,255,0.02); margin: 0.2rem 0 0.8rem; letter-spacing: 4px; }
     .challenge-card .display-text-container { width: 100%; display: none; margin: 0.2rem 0 0.8rem; }
     .challenge-card .display-text-container .display-text { font-size: 1.4rem; padding: 0.5rem 1.5rem; margin: 0.2rem 0 0.8rem; line-height: 2.2; text-align: center; font-family: 'Courier New', monospace; letter-spacing: 3px; width: 100%; }
 
-    /* 数字记忆键盘 */
     .memory-keyboard { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5rem; max-width: 280px; margin: 0.5rem auto; width: 100%; }
     .memory-keyboard .key-btn { padding: 0.8rem 0.5rem; border: 2px solid rgba(255,255,255,0.06); border-radius: 12px; background: rgba(255,255,255,0.03); color: #fff; font-size: 1.4rem; font-weight: 600; cursor: pointer; transition: all 0.2s ease; font-family: inherit; text-align: center; }
     .memory-keyboard .key-btn:hover:not(:disabled) { background: rgba(139,92,246,0.08); border-color: rgba(139,92,246,0.15); transform: scale(1.05); }
@@ -73,7 +71,7 @@
     .feedback.wrong { background: rgba(220,53,69,0.06); color: #dc3545; border: 1px solid rgba(220,53,69,0.06); }
     .feedback .fun-message { font-weight: 400; color: rgba(255,255,255,0.3); font-size: 0.85rem; margin-top: 0.1rem; }
 
-    .game-over { text-align: center; padding: 1.5rem 0.5rem; }
+    .game-over { text-align: center; padding: 1.5rem 0.5rem; width: 100%; }
     .game-over .big-icon { font-size: 4rem; margin-bottom: 0.3rem; }
     .game-over .title { color: #fff; font-size: 1.8rem; font-weight: 700; margin-bottom: 0.2rem; }
     .game-over .sub { color: rgba(255,255,255,0.2); font-size: 0.95rem; margin-bottom: 0.5rem; }
@@ -255,26 +253,117 @@
         rankList: document.getElementById('rankList')
     };
 
+    // ============================================================
+    // ⭐ 重新开始游戏（修复：完全重置）
+    // ============================================================
     function startGame() {
-        gameState.level = 1; gameState.score = 0; gameState.lives = 3;
-        gameState.combo = 0; gameState.maxCombo = 0; gameState.passed = 0;
-        gameState.isPlaying = true; gameState.isAnswered = false;
-        updateUI(); loadChallenge(); dom.rankSection.style.display = 'none';
+        // 清除旧计时器
+        if (gameState.timer) {
+            clearInterval(gameState.timer);
+            gameState.timer = null;
+        }
+
+        // 重置所有状态
+        gameState.level = 1;
+        gameState.score = 0;
+        gameState.lives = 3;
+        gameState.combo = 0;
+        gameState.maxCombo = 0;
+        gameState.passed = 0;
+        gameState.isPlaying = true;
+        gameState.isAnswered = false;
+        gameState.timeLeft = 15;
+        gameState.memoryInput = '';
+        gameState.memoryCorrectAnswer = '';
+        gameState.currentChallenge = null;
+
+        // 重置 UI
+        dom.rankSection.style.display = 'none';
+        dom.feedback.className = 'feedback';
+        dom.feedback.style.display = 'none';
+        dom.feedback.innerHTML = '';
+
+        // 恢复挑战卡片内容（清除游戏结束界面）
+        dom.challengeCard.innerHTML = `
+            <div class="type-badge" id="typeBadge">第 1 关</div>
+            <div class="question-text" id="questionText">加载中...</div>
+            <div id="imageContainer" style="display:none;"><div class="captcha-image" id="captchaImage"></div></div>
+            <div id="colorContainer" style="display:none;"><div class="color-display" id="colorDisplay">██████</div></div>
+            <div class="display-text-container" id="displayTextContainer"><div class="display-text" id="displayText"></div></div>
+            <div id="memoryContainer" style="display:none;width:100%;">
+                <div class="memory-input-display" id="memoryInputDisplay" style="display:none;text-align:center;">_ _ _ _</div>
+                <div class="memory-keyboard" id="memoryKeyboard" style="display:none;"></div>
+                <div class="memory-controls">
+                    <button class="btn-memory submit" onclick="submitMemoryAnswer()" style="display:none;">✅ 确认</button>
+                </div>
+            </div>
+            <div class="options-grid" id="optionsGrid"></div>
+            <div class="color-options-grid" id="colorOptionsGrid" style="display:none;"></div>
+            <div id="puzzleContainer" style="display:none;width:100%;"><div class="puzzle-grid" id="puzzleGrid"></div></div>
+            <div id="sudokuContainer" style="display:none;width:100%;"><div id="sudokuGrid"></div></div>
+            <div class="timer-section">
+                <div class="timer-bar"><div class="timer-fill" id="timerFill"></div></div>
+                <div class="timer-text" id="timerText">⏱ 15s</div>
+            </div>
+            <div class="feedback" id="feedback"></div>
+        `;
+
+        // 重新获取 DOM 引用（因为 innerHTML 重建了元素）
+        dom.typeBadge = document.getElementById('typeBadge');
+        dom.questionText = document.getElementById('questionText');
+        dom.imageContainer = document.getElementById('imageContainer');
+        dom.captchaImage = document.getElementById('captchaImage');
+        dom.colorContainer = document.getElementById('colorContainer');
+        dom.colorDisplay = document.getElementById('colorDisplay');
+        dom.displayTextContainer = document.getElementById('displayTextContainer');
+        dom.displayText = document.getElementById('displayText');
+        dom.memoryContainer = document.getElementById('memoryContainer');
+        dom.memoryKeyboard = document.getElementById('memoryKeyboard');
+        dom.memoryInputDisplay = document.getElementById('memoryInputDisplay');
+        dom.optionsGrid = document.getElementById('optionsGrid');
+        dom.colorOptionsGrid = document.getElementById('colorOptionsGrid');
+        dom.puzzleContainer = document.getElementById('puzzleContainer');
+        dom.puzzleGrid = document.getElementById('puzzleGrid');
+        dom.sudokuContainer = document.getElementById('sudokuContainer');
+        dom.sudokuGrid = document.getElementById('sudokuGrid');
+        dom.feedback = document.getElementById('feedback');
+        dom.timerFill = document.getElementById('timerFill');
+        dom.timerText = document.getElementById('timerText');
+        dom.challengeCard = document.getElementById('challengeCard');
+
+        // 更新 UI
+        updateUI();
+        dom.typeNameDisplay.textContent = '📝 第 1 关 · 入门';
+
+        // 加载第一关
+        loadChallenge();
     }
 
+    // ============================================================
+    // 加载挑战
+    // ============================================================
     function loadChallenge() {
         if (!gameState.isPlaying) return;
-        if (gameState.level > gameState.totalLevels) { gameWin(); return; }
+        if (gameState.level > gameState.totalLevels) {
+            gameWin();
+            return;
+        }
 
         gameState.isAnswered = false;
-        dom.feedback.className = 'feedback'; dom.feedback.style.display = 'none';
-        dom.optionsGrid.innerHTML = ''; dom.optionsGrid.style.display = 'none';
-        dom.colorOptionsGrid.innerHTML = ''; dom.colorOptionsGrid.style.display = 'none';
+        dom.feedback.className = 'feedback';
+        dom.feedback.style.display = 'none';
+        dom.optionsGrid.innerHTML = '';
+        dom.optionsGrid.style.display = 'none';
+        dom.colorOptionsGrid.innerHTML = '';
+        dom.colorOptionsGrid.style.display = 'none';
         dom.displayTextContainer.style.display = 'none';
-        dom.imageContainer.style.display = 'none'; dom.colorContainer.style.display = 'none';
+        dom.imageContainer.style.display = 'none';
+        dom.colorContainer.style.display = 'none';
         dom.memoryContainer.style.display = 'none';
-        dom.puzzleContainer.style.display = 'none'; dom.sudokuContainer.style.display = 'none';
+        dom.puzzleContainer.style.display = 'none';
+        dom.sudokuContainer.style.display = 'none';
 
+        var diffLabel = getDifficultyLabel(gameState.level);
         dom.typeBadge.textContent = '第 ' + gameState.level + ' 关';
 
         fetch('/VerifyGame/GetChallenge?level=' + gameState.level)
@@ -282,23 +371,41 @@
             .then(function(data) {
                 if (data.success) {
                     gameState.currentChallenge = data.data;
-                    if (data.data.typeName) dom.typeNameDisplay.textContent = '🧩 ' + data.data.typeName;
+                    if (data.data.typeName) {
+                        dom.typeNameDisplay.textContent = '🧩 ' + data.data.typeName + ' · ' + diffLabel;
+                    }
                     renderChallenge(data.data);
-                } else { showToast('加载挑战失败，请重试', 'error'); }
+                } else {
+                    showToast('加载挑战失败，请重试', 'error');
+                }
             })
-            .catch(function() { showToast('网络错误，请刷新重试', 'error'); });
+            .catch(function() {
+                showToast('网络错误，请刷新重试', 'error');
+            });
     }
 
+    // ============================================================
+    // 渲染挑战
+    // ============================================================
     function renderChallenge(challenge) {
         gameState.currentChallenge = challenge;
-        var typeName = challenge.typeName || challenge.type || '未知';
-        dom.typeBadge.textContent = '第 ' + challenge.level + ' 关 · ' + typeName;
-        dom.questionText.innerHTML = challenge.question;
 
-        dom.imageContainer.style.display = 'none'; dom.colorContainer.style.display = 'none';
-        dom.displayTextContainer.style.display = 'none'; dom.memoryContainer.style.display = 'none';
-        dom.optionsGrid.style.display = 'none'; dom.colorOptionsGrid.style.display = 'none';
-        dom.puzzleContainer.style.display = 'none'; dom.sudokuContainer.style.display = 'none';
+        var typeName = challenge.typeName || challenge.type || '未知';
+        var diffLabel = getDifficultyLabel(challenge.level);
+        dom.typeBadge.textContent = '第 ' + challenge.level + ' 关 · ' + typeName + ' · ' + diffLabel;
+        dom.typeNameDisplay.textContent = '🧩 ' + typeName + ' · ' + diffLabel;
+
+        // ⭐ 关键修复：题目只显示提示，不显示数字
+        dom.questionText.innerHTML = challenge.question || '请完成以下挑战';
+
+        dom.imageContainer.style.display = 'none';
+        dom.colorContainer.style.display = 'none';
+        dom.displayTextContainer.style.display = 'none';
+        dom.memoryContainer.style.display = 'none';
+        dom.optionsGrid.style.display = 'none';
+        dom.colorOptionsGrid.style.display = 'none';
+        dom.puzzleContainer.style.display = 'none';
+        dom.sudokuContainer.style.display = 'none';
 
         if (challenge.imageSvg) {
             dom.imageContainer.style.display = 'block';
@@ -308,15 +415,14 @@
             dom.colorContainer.style.display = 'block';
             dom.colorDisplay.innerHTML = challenge.displayHtml;
         }
-        if (challenge.displayText) {
+        if (challenge.displayText && challenge.type !== 'memory') {
             dom.displayTextContainer.style.display = 'block';
             dom.displayText.innerHTML = challenge.displayText;
         }
 
-        // ===== 数字记忆 =====
+        // ===== 数字记忆（⭐ 修复：题目不显示数字，数字只在 displayText 中显示） =====
         if (challenge.type === 'memory' && challenge.keyboardRows) {
             dom.memoryContainer.style.display = 'block';
-            // 记忆阶段：隐藏输入框和键盘
             dom.memoryInputDisplay.style.display = 'none';
             dom.memoryKeyboard.style.display = 'none';
             dom.memoryContainer.querySelectorAll('.btn-memory').forEach(function(b) { b.style.display = 'none'; });
@@ -327,13 +433,17 @@
             renderMemoryKeyboard(challenge.keyboardRows);
 
             if (challenge.displayNumber) {
+                // ⭐ 题目只显示提示文字
+                dom.questionText.innerHTML = '🧠 记住下面显示的数字';
+
                 dom.displayTextContainer.style.display = 'block';
-                dom.displayText.textContent = '🧠 记住: ' + challenge.displayNumber;
-                dom.displayText.style.cssText = 'font-size:2.5rem;font-weight:bold;color:#8B5CF6;padding:1rem;margin:0.5rem 0;background:rgba(139,92,246,0.04);border-radius:16px;border:1px solid rgba(139,92,246,0.06);text-align:center;letter-spacing:8px;';
+                dom.displayText.textContent = challenge.displayNumber;
+                dom.displayText.style.cssText = 'font-size:3rem;font-weight:bold;color:#8B5CF6;padding:1.5rem;margin:0.5rem 0;background:rgba(139,92,246,0.04);border-radius:16px;border:1px solid rgba(139,92,246,0.06);text-align:center;letter-spacing:12px;';
 
                 var memoryTime = challenge.memoryTime || 5;
                 dom.timerText.textContent = '⏱ 记忆 ' + memoryTime + 's';
-                dom.timerFill.style.width = '100%'; dom.timerFill.className = 'timer-fill';
+                dom.timerFill.style.width = '100%';
+                dom.timerFill.className = 'timer-fill';
 
                 var memInterval = setInterval(function() {
                     memoryTime--;
@@ -344,7 +454,7 @@
                     else if (pct < 50) dom.timerFill.classList.add('warning');
                     if (memoryTime <= 0) {
                         clearInterval(memInterval);
-                        // ⭐ 记忆结束：显示输入框和键盘
+                        // ⭐ 记忆结束：数字消失，显示输入框
                         dom.displayText.textContent = '✏️ 输入你记住的数字';
                         dom.displayText.style.cssText = 'font-size:1.2rem;color:rgba(255,255,255,0.3);padding:0.5rem;margin:0.5rem 0;text-align:center;';
                         dom.memoryInputDisplay.style.display = 'block';
@@ -352,7 +462,8 @@
                         dom.memoryKeyboard.style.display = 'grid';
                         dom.memoryContainer.querySelectorAll('.btn-memory').forEach(function(b) { b.style.display = 'inline-block'; });
                         dom.timerText.textContent = '⏱ ' + (challenge.timeLimit || 15) + 's';
-                        dom.timerFill.style.width = '100%'; dom.timerFill.className = 'timer-fill';
+                        dom.timerFill.style.width = '100%';
+                        dom.timerFill.className = 'timer-fill';
                         startTimer(challenge.timeLimit || 15);
                     }
                 }, 1000);
@@ -415,7 +526,8 @@
 
             var displayTime = challenge.displayTime || 3;
             dom.timerText.textContent = '⏱ 记忆 ' + displayTime + 's';
-            dom.timerFill.style.width = '100%'; dom.timerFill.className = 'timer-fill';
+            dom.timerFill.style.width = '100%';
+            dom.timerFill.className = 'timer-fill';
 
             var countdownInterval = setInterval(function() {
                 displayTime--;
@@ -825,7 +937,6 @@
         dom.memoryKeyboard.querySelectorAll('.key-btn').forEach(function(b) { b.disabled = true; });
         dom.memoryContainer.querySelectorAll('.btn-memory').forEach(function(b) { b.disabled = true; });
         dom.puzzleGrid.querySelectorAll('.puzzle-cell').forEach(function(cell) { cell.onclick = null; });
-        dom.sudokuGrid.querySelectorAll('.option-btn').forEach(function(b) { b.disabled = true; });
     }
 
     function showFeedback(isCorrect, points, funMessage) {
@@ -902,6 +1013,9 @@
             });
     }
 
+    // ============================================================
+    // ⭐ 游戏结束（修复：使用 restartGame 替代 startGame）
+    // ============================================================
     function gameOver() {
         gameState.isPlaying = false;
         clearInterval(gameState.timer);
@@ -917,7 +1031,7 @@
                     <div class="stat-item"><div class="stat-value">${gameState.maxCombo}</div><div class="stat-label">最高连击</div></div>
                     <div class="stat-item"><div class="stat-value">${gameState.level - 1}</div><div class="stat-label">到达关卡</div></div>
                 </div>
-                <button class="btn-restart" onclick="startGame()">🔄 再来一次</button>
+                <button class="btn-restart" onclick="restartGame()">🔄 再来一次</button>
             </div>
         `;
         saveAndShowRanking();
@@ -937,10 +1051,17 @@
                     <div class="stat-item"><div class="stat-value">${gameState.maxCombo}</div><div class="stat-label">最高连击</div></div>
                     <div class="stat-item"><div class="stat-value">🏆</div><div class="stat-label">传说</div></div>
                 </div>
-                <button class="btn-restart" onclick="startGame()">🔄 再来一次</button>
+                <button class="btn-restart" onclick="restartGame()">🔄 再来一次</button>
             </div>
         `;
         saveAndShowRanking();
+    }
+
+    // ============================================================
+    // ⭐ 重新开始（刷新页面方式，最简单可靠）
+    // ============================================================
+    function restartGame() {
+        window.location.reload();
     }
 
     function showToast(message, type) {
@@ -956,5 +1077,12 @@
         }, 3000);
     }
 
-    document.addEventListener('DOMContentLoaded', startGame);
+    // ============================================================
+    // 启动
+    // ============================================================
+    document.addEventListener('DOMContentLoaded', function() {
+        // 重置状态并开始
+        gameState.isPlaying = true;
+        startGame();
+    });
 </script>
