@@ -263,14 +263,37 @@ namespace MyPersonalWebsite.Controllers
         };
 
         // ============================================================
-        // 数独题库（4×4）
+        // 数独题库（4×4）- 包含完整解决方案
         // ============================================================
-        private readonly int[][][] _sudokuPuzzles = new int[][][]
+        private readonly (int[][] puzzle, int[][] solution)[] _sudokuData = new (int[][], int[][])[]
         {
-            new int[][] { new int[] {0, 0, 3, 0}, new int[] {0, 4, 0, 0}, new int[] {0, 0, 2, 0}, new int[] {0, 3, 0, 0} },
-            new int[][] { new int[] {1, 0, 0, 0}, new int[] {0, 0, 4, 0}, new int[] {0, 3, 0, 0}, new int[] {0, 0, 0, 2} },
-            new int[][] { new int[] {0, 0, 1, 0}, new int[] {0, 2, 0, 0}, new int[] {0, 0, 3, 0}, new int[] {0, 4, 0, 0} },
-            new int[][] { new int[] {0, 1, 0, 0}, new int[] {0, 0, 2, 0}, new int[] {0, 3, 0, 0}, new int[] {0, 0, 4, 0} },
+            // 简单
+            (
+                new int[][] { new int[] {0, 0, 3, 0}, new int[] {0, 4, 0, 0}, new int[] {0, 0, 2, 0}, new int[] {0, 3, 0, 0} },
+                new int[][] { new int[] {2, 1, 3, 4}, new int[] {3, 4, 1, 2}, new int[] {4, 2, 2, 3}, new int[] {1, 3, 4, 1} }
+            ),
+            (
+                new int[][] { new int[] {1, 0, 0, 0}, new int[] {0, 0, 4, 0}, new int[] {0, 3, 0, 0}, new int[] {0, 0, 0, 2} },
+                new int[][] { new int[] {1, 4, 2, 3}, new int[] {2, 3, 4, 1}, new int[] {3, 2, 1, 4}, new int[] {4, 1, 3, 2} }
+            ),
+            // 中等
+            (
+                new int[][] { new int[] {0, 0, 1, 0}, new int[] {0, 2, 0, 0}, new int[] {0, 0, 3, 0}, new int[] {0, 4, 0, 0} },
+                new int[][] { new int[] {3, 4, 1, 2}, new int[] {1, 2, 4, 3}, new int[] {2, 1, 3, 4}, new int[] {4, 3, 2, 1} }
+            ),
+            (
+                new int[][] { new int[] {0, 1, 0, 0}, new int[] {0, 0, 2, 0}, new int[] {0, 3, 0, 0}, new int[] {0, 0, 4, 0} },
+                new int[][] { new int[] {2, 1, 3, 4}, new int[] {4, 3, 2, 1}, new int[] {1, 2, 4, 3}, new int[] {3, 4, 1, 2} }
+            ),
+            // 较难
+            (
+                new int[][] { new int[] {0, 0, 0, 0}, new int[] {0, 0, 0, 0}, new int[] {0, 0, 0, 0}, new int[] {0, 0, 0, 0} },
+                new int[][] { new int[] {1, 2, 3, 4}, new int[] {3, 4, 1, 2}, new int[] {2, 1, 4, 3}, new int[] {4, 3, 2, 1} }
+            ),
+            (
+                new int[][] { new int[] {0, 0, 0, 0}, new int[] {0, 0, 0, 0}, new int[] {0, 0, 0, 0}, new int[] {0, 0, 0, 0} },
+                new int[][] { new int[] {4, 1, 2, 3}, new int[] {2, 3, 4, 1}, new int[] {1, 4, 3, 2}, new int[] {3, 2, 1, 4} }
+            ),
         };
 
         // ============================================================
@@ -472,15 +495,15 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // 获取挑战
+        // 获取挑战 - ⭐ 核心方法
         // ============================================================
         [HttpGet]
         public IActionResult GetChallenge(int level)
         {
             try
             {
-                var challenge = GenerateChallenge(level);
-                return Json(new { success = true, data = challenge });
+                var result = GenerateChallenge(level);
+                return Json(new { success = true, data = result });
             }
             catch (Exception ex)
             {
@@ -512,29 +535,55 @@ namespace MyPersonalWebsite.Controllers
 
             int typesCompleted = _usedTypes.Count;
 
+            // 中文类型名映射
+            string[] typeNames = new string[]
+            {
+                "文字识别", "算术计算", "汉字笔画", "颜色识别", "找不同",
+                "倒序识别", "空缺字母", "快速点击", "成语填空", "数字记忆",
+                "找规律", "颜色混合", "真假判断", "数字华容道", "数独逻辑",
+                "字符计数", "反色识别", "镜像字母", "方向判断", "颜色三重干扰"
+            };
+
+            object result;
             switch (typeIndex)
             {
-                case 0: return GenerateTextRecognition(level, difficulty, typesCompleted);
-                case 1: return GenerateArithmetic(level, difficulty, typesCompleted);
-                case 2: return GenerateStrokeCount(level, difficulty, typesCompleted);
-                case 3: return GenerateColorRecognition(level, difficulty, typesCompleted);
-                case 4: return GenerateFindDifferent(level, difficulty, typesCompleted);
-                case 5: return GenerateReverseText(level, difficulty, typesCompleted);
-                case 6: return GenerateMissingLetter(level, difficulty, typesCompleted);
-                case 7: return GenerateQuickTap(level, difficulty, typesCompleted);
-                case 8: return GenerateIdiomFill(level, difficulty, typesCompleted);
-                case 9: return GenerateMemoryChallenge(level, difficulty, typesCompleted);
-                case 10: return GeneratePatternRecognition(level, difficulty, typesCompleted);
-                case 11: return GenerateColorMix(level, difficulty, typesCompleted);
-                case 12: return GenerateTrueFalse(level, difficulty, typesCompleted);
-                case 13: return GeneratePuzzle(level, difficulty, typesCompleted);
-                case 14: return GenerateSudokuLogic(level, difficulty, typesCompleted);
-                case 15: return GenerateCharacterCount(level, difficulty, typesCompleted);
-                case 16: return GenerateInverseColor(level, difficulty, typesCompleted);
-                case 17: return GenerateMirrorLetter(level, difficulty, typesCompleted);
-                case 18: return GenerateDirection(level, difficulty, typesCompleted);
-                default: return GenerateTripleColorInterference(level, difficulty, typesCompleted);
+                case 0: result = GenerateTextRecognition(level, difficulty, typesCompleted); break;
+                case 1: result = GenerateArithmetic(level, difficulty, typesCompleted); break;
+                case 2: result = GenerateStrokeCount(level, difficulty, typesCompleted); break;
+                case 3: result = GenerateColorRecognition(level, difficulty, typesCompleted); break;
+                case 4: result = GenerateFindDifferent(level, difficulty, typesCompleted); break;
+                case 5: result = GenerateReverseText(level, difficulty, typesCompleted); break;
+                case 6: result = GenerateMissingLetter(level, difficulty, typesCompleted); break;
+                case 7: result = GenerateQuickTap(level, difficulty, typesCompleted); break;
+                case 8: result = GenerateIdiomFill(level, difficulty, typesCompleted); break;
+                case 9: result = GenerateMemoryChallenge(level, difficulty, typesCompleted); break;
+                case 10: result = GeneratePatternRecognition(level, difficulty, typesCompleted); break;
+                case 11: result = GenerateColorMix(level, difficulty, typesCompleted); break;
+                case 12: result = GenerateTrueFalse(level, difficulty, typesCompleted); break;
+                case 13: result = GeneratePuzzle(level, difficulty, typesCompleted); break;
+                case 14: result = GenerateSudokuLogic(level, difficulty, typesCompleted); break;
+                case 15: result = GenerateCharacterCount(level, difficulty, typesCompleted); break;
+                case 16: result = GenerateInverseColor(level, difficulty, typesCompleted); break;
+                case 17: result = GenerateMirrorLetter(level, difficulty, typesCompleted); break;
+                case 18: result = GenerateDirection(level, difficulty, typesCompleted); break;
+                default: result = GenerateTripleColorInterference(level, difficulty, typesCompleted); break;
             }
+
+            // 使用反射或动态添加 typeName
+            var dict = result as Dictionary<string, object>;
+            if (dict == null)
+            {
+                // 如果是匿名对象，转换为字典
+                var props = result.GetType().GetProperties();
+                dict = new Dictionary<string, object>();
+                foreach (var prop in props)
+                {
+                    dict[prop.Name] = prop.GetValue(result);
+                }
+            }
+            dict["typeName"] = typeNames[typeIndex];
+
+            return dict;
         }
 
         // ============================================================
@@ -953,17 +1002,17 @@ namespace MyPersonalWebsite.Controllers
             var options = GenerateOptions(text, 4 + Math.Min(difficulty / 10, 4));
             int timeLimit = Math.Max(3, 18 - difficulty / 6);
 
-            return new
+            return new Dictionary<string, object>
             {
-                type = "text",
-                level = level,
-                question = $"👁️ 识别下方图片中的文字（{length}位）",
-                imageSvg = svg,
-                correctAnswer = text,
-                options = options,
-                timeLimit = timeLimit,
-                typesCompleted = typesCompleted,
-                funMessage = GetFunMessage("text")
+                ["type"] = "text",
+                ["level"] = level,
+                ["question"] = $"👁️ 识别下方图片中的文字（{length}位）",
+                ["imageSvg"] = svg,
+                ["correctAnswer"] = text,
+                ["options"] = options,
+                ["timeLimit"] = timeLimit,
+                ["typesCompleted"] = typesCompleted,
+                ["funMessage"] = GetFunMessage("text")
             };
         }
 
@@ -999,16 +1048,16 @@ namespace MyPersonalWebsite.Controllers
             var options = GenerateNumberOptions(result, 4 + Math.Min(difficulty / 10, 3), Math.Max(5, 15 + result / 10));
             int timeLimit = Math.Max(3, 14 - difficulty / 6);
 
-            return new
+            return new Dictionary<string, object>
             {
-                type = "arithmetic",
-                level = level,
-                question = $"🧮 {a} {op} {b} = ?",
-                correctAnswer = result.ToString(),
-                options = options,
-                timeLimit = timeLimit,
-                typesCompleted = typesCompleted,
-                funMessage = GetFunMessage("arithmetic")
+                ["type"] = "arithmetic",
+                ["level"] = level,
+                ["question"] = $"🧮 {a} {op} {b} = ?",
+                ["correctAnswer"] = result.ToString(),
+                ["options"] = options,
+                ["timeLimit"] = timeLimit,
+                ["typesCompleted"] = typesCompleted,
+                ["funMessage"] = GetFunMessage("arithmetic")
             };
         }
 
@@ -1045,16 +1094,16 @@ namespace MyPersonalWebsite.Controllers
             var options = GenerateNumberOptions(correct, 4 + Math.Min(difficulty / 15, 3), 4);
             int timeLimit = Math.Max(3, 14 - difficulty / 8);
 
-            return new
+            return new Dictionary<string, object>
             {
-                type = "stroke",
-                level = level,
-                question = $"📝 「{ch}」字有几画？",
-                correctAnswer = correct.ToString(),
-                options = options.OrderBy(_ => _random.Next()).ToList(),
-                timeLimit = timeLimit,
-                typesCompleted = typesCompleted,
-                funMessage = GetFunMessage("stroke")
+                ["type"] = "stroke",
+                ["level"] = level,
+                ["question"] = $"📝 「{ch}」字有几画？",
+                ["correctAnswer"] = correct.ToString(),
+                ["options"] = options.OrderBy(_ => _random.Next()).ToList(),
+                ["timeLimit"] = timeLimit,
+                ["typesCompleted"] = typesCompleted,
+                ["funMessage"] = GetFunMessage("stroke")
             };
         }
 
@@ -1081,17 +1130,17 @@ namespace MyPersonalWebsite.Controllers
             int timeLimit = Math.Max(2, 8 - difficulty / 12);
             string displayWord = _singleColorWords[_random.Next(_singleColorWords.Length)];
 
-            return new
+            return new Dictionary<string, object>
             {
-                type = "color",
-                level = level,
-                question = $"🎨 下面文字是什么颜色？",
-                displayHtml = $"<span style='color:{selected.Value};font-size:3rem;font-weight:bold;'>{displayWord}</span>",
-                correctAnswer = selected.Key,
-                options = options.OrderBy(_ => _random.Next()).ToList(),
-                timeLimit = timeLimit,
-                typesCompleted = typesCompleted,
-                funMessage = GetFunMessage("color")
+                ["type"] = "color",
+                ["level"] = level,
+                ["question"] = $"🎨 下面文字是什么颜色？",
+                ["displayHtml"] = $"<span style='color:{selected.Value};font-size:3rem;font-weight:bold;'>{displayWord}</span>",
+                ["correctAnswer"] = selected.Key,
+                ["options"] = options.OrderBy(_ => _random.Next()).ToList(),
+                ["timeLimit"] = timeLimit,
+                ["typesCompleted"] = typesCompleted,
+                ["funMessage"] = GetFunMessage("color")
             };
         }
 
@@ -1176,20 +1225,20 @@ namespace MyPersonalWebsite.Controllers
             int displayTime = Math.Max(2, 8 - difficulty / 8);
             int timeLimit = Math.Max(4, 14 - difficulty / 6);
 
-            return new
+            return new Dictionary<string, object>
             {
-                type = "findDifferent",
-                level = level,
-                question = $"🔍 记住下面的字符，然后找出被更改的那个！",
-                originalDisplay = original,
-                displayTime = displayTime,
-                shuffledDisplay = shuffled,
-                shuffledPos = shuffledPos,
-                displayText = original,
-                correctAnswer = originalChar.ToString(),
-                timeLimit = timeLimit,
-                typesCompleted = typesCompleted,
-                funMessage = GetFunMessage("findDifferent")
+                ["type"] = "findDifferent",
+                ["level"] = level,
+                ["question"] = $"🔍 记住下面的字符，然后找出被更改的那个！",
+                ["originalDisplay"] = original,
+                ["displayTime"] = displayTime,
+                ["shuffledDisplay"] = shuffled,
+                ["shuffledPos"] = shuffledPos,
+                ["displayText"] = original,
+                ["correctAnswer"] = originalChar.ToString(),
+                ["timeLimit"] = timeLimit,
+                ["typesCompleted"] = typesCompleted,
+                ["funMessage"] = GetFunMessage("findDifferent")
             };
         }
                 // ============================================================
@@ -1211,17 +1260,17 @@ namespace MyPersonalWebsite.Controllers
             var options = GenerateOptions(reversed, 4 + Math.Min(difficulty / 10, 4));
             int timeLimit = Math.Max(3, 14 - difficulty / 5);
 
-            return new
+            return new Dictionary<string, object>
             {
-                type = "reverse",
-                level = level,
-                question = $"🔄 图片中的文字是什么？（倒过来了）",
-                imageSvg = svg,
-                correctAnswer = reversed,
-                options = options,
-                timeLimit = timeLimit,
-                typesCompleted = typesCompleted,
-                funMessage = GetFunMessage("reverse")
+                ["type"] = "reverse",
+                ["level"] = level,
+                ["question"] = $"🔄 图片中的文字是什么？（倒过来了）",
+                ["imageSvg"] = svg,
+                ["correctAnswer"] = reversed,
+                ["options"] = options,
+                ["timeLimit"] = timeLimit,
+                ["typesCompleted"] = typesCompleted,
+                ["funMessage"] = GetFunMessage("reverse")
             };
         }
 
@@ -1286,16 +1335,16 @@ namespace MyPersonalWebsite.Controllers
 
             int timeLimit = Math.Max(3, 11 - difficulty / 7);
 
-            return new
+            return new Dictionary<string, object>
             {
-                type = "missingLetter",
-                level = level,
-                question = $"🔤 补全下面的英文单词（{hintText}）：<br><span style='font-size:1.8rem;font-weight:bold;letter-spacing:6px;font-family:monospace;color:#8B5CF6;'>{displayStr}</span>",
-                correctAnswer = correctAnswer,
-                options = options.OrderBy(_ => _random.Next()).ToList(),
-                timeLimit = timeLimit,
-                typesCompleted = typesCompleted,
-                funMessage = GetFunMessage("missingLetter")
+                ["type"] = "missingLetter",
+                ["level"] = level,
+                ["question"] = $"🔤 补全下面的英文单词（{hintText}）：<br><span style='font-size:1.8rem;font-weight:bold;letter-spacing:6px;font-family:monospace;color:#8B5CF6;'>{displayStr}</span>",
+                ["correctAnswer"] = correctAnswer,
+                ["options"] = options.OrderBy(_ => _random.Next()).ToList(),
+                ["timeLimit"] = timeLimit,
+                ["typesCompleted"] = typesCompleted,
+                ["funMessage"] = GetFunMessage("missingLetter")
             };
         }
 
@@ -1309,16 +1358,16 @@ namespace MyPersonalWebsite.Controllers
             var options = GenerateOptions(target.ToString(), 4 + Math.Min(difficulty / 10, 4));
             int timeLimit = Math.Max(2, 9 - difficulty / 8);
 
-            return new
+            return new Dictionary<string, object>
             {
-                type = "quickTap",
-                level = level,
-                question = $"⚡ 从下方选项中，找出字符 <span style='color:#8B5CF6;font-weight:bold;font-size:1.5rem;'>{target}</span>",
-                correctAnswer = target.ToString(),
-                options = options,
-                timeLimit = timeLimit,
-                typesCompleted = typesCompleted,
-                funMessage = GetFunMessage("quickTap")
+                ["type"] = "quickTap",
+                ["level"] = level,
+                ["question"] = $"⚡ 从下方选项中，找出字符 <span style='color:#8B5CF6;font-weight:bold;font-size:1.5rem;'>{target}</span>",
+                ["correctAnswer"] = target.ToString(),
+                ["options"] = options,
+                ["timeLimit"] = timeLimit,
+                ["typesCompleted"] = typesCompleted,
+                ["funMessage"] = GetFunMessage("quickTap")
             };
         }
 
@@ -1383,16 +1432,16 @@ namespace MyPersonalWebsite.Controllers
 
             int timeLimit = Math.Max(3, 11 - difficulty / 8);
 
-            return new
+            return new Dictionary<string, object>
             {
-                type = "idiom",
-                level = level,
-                question = $"📖 补全成语（缺{missingCount}个字）：{displayStr}",
-                correctAnswer = correctAnswer,
-                options = options.OrderBy(_ => _random.Next()).ToList(),
-                timeLimit = timeLimit,
-                typesCompleted = typesCompleted,
-                funMessage = GetFunMessage("idiom")
+                ["type"] = "idiom",
+                ["level"] = level,
+                ["question"] = $"📖 补全成语（缺{missingCount}个字）：{displayStr}",
+                ["correctAnswer"] = correctAnswer,
+                ["options"] = options.OrderBy(_ => _random.Next()).ToList(),
+                ["timeLimit"] = timeLimit,
+                ["typesCompleted"] = typesCompleted,
+                ["funMessage"] = GetFunMessage("idiom")
             };
         }
 
@@ -1440,18 +1489,18 @@ namespace MyPersonalWebsite.Controllers
                 keyboardRows.Add(row);
             }
 
-            return new
+            return new Dictionary<string, object>
             {
-                type = "memory",
-                level = level,
-                question = $"🧠 记住这个数字：<span style='font-size:2.5rem;font-weight:bold;color:#8B5CF6;letter-spacing:8px;'>{text}</span>",
-                displayNumber = text,
-                memoryTime = memoryTime,
-                correctAnswer = text,
-                keyboardRows = keyboardRows,
-                timeLimit = timeLimit,
-                typesCompleted = typesCompleted,
-                funMessage = GetFunMessage("memory")
+                ["type"] = "memory",
+                ["level"] = level,
+                ["question"] = $"🧠 记住这个数字：<span style='font-size:2.5rem;font-weight:bold;color:#8B5CF6;letter-spacing:8px;'>{text}</span>",
+                ["displayNumber"] = text,
+                ["memoryTime"] = memoryTime,
+                ["correctAnswer"] = text,
+                ["keyboardRows"] = keyboardRows,
+                ["timeLimit"] = timeLimit,
+                ["typesCompleted"] = typesCompleted,
+                ["funMessage"] = GetFunMessage("memory")
             };
         }
 
@@ -1470,16 +1519,16 @@ namespace MyPersonalWebsite.Controllers
             var options = GenerateNumberOptions(selected.answer, 4 + Math.Min(difficulty / 10, 3), 15 + difficulty);
             int timeLimit = Math.Max(8, 20 - difficulty / 8);
 
-            return new
+            return new Dictionary<string, object>
             {
-                type = "pattern",
-                level = level,
-                question = $"📐 找规律填空：<br><span style='font-size:1.8rem;font-weight:bold;color:#fff;'>{selected.pattern}</span>",
-                correctAnswer = selected.answer.ToString(),
-                options = options,
-                timeLimit = timeLimit,
-                typesCompleted = typesCompleted,
-                funMessage = GetFunMessage("pattern")
+                ["type"] = "pattern",
+                ["level"] = level,
+                ["question"] = $"📐 找规律填空：<br><span style='font-size:1.8rem;font-weight:bold;color:#fff;'>{selected.pattern}</span>",
+                ["correctAnswer"] = selected.answer.ToString(),
+                ["options"] = options,
+                ["timeLimit"] = timeLimit,
+                ["typesCompleted"] = typesCompleted,
+                ["funMessage"] = GetFunMessage("pattern")
             };
         }
 
@@ -1582,18 +1631,18 @@ namespace MyPersonalWebsite.Controllers
 
             int timeLimit = Math.Max(8, 20 - difficulty / 10);
 
-            return new
+            return new Dictionary<string, object>
             {
-                type = "colorMix",
-                level = level,
-                question = $"🎨 以下颜色混合后是什么颜色？<br><span style='color:rgba(255,255,255,0.15);font-size:0.8rem;'>点击色块选择答案</span>",
-                displayHtml = displayHtml,
-                optionsHtml = optionsHtml,
-                options = options,
-                correctAnswer = resultColor,
-                timeLimit = timeLimit,
-                typesCompleted = typesCompleted,
-                funMessage = GetFunMessage("colorMix")
+                ["type"] = "colorMix",
+                ["level"] = level,
+                ["question"] = $"🎨 以下颜色混合后是什么颜色？<br><span style='color:rgba(255,255,255,0.15);font-size:0.8rem;'>点击色块选择答案</span>",
+                ["displayHtml"] = displayHtml,
+                ["optionsHtml"] = optionsHtml,
+                ["options"] = options,
+                ["correctAnswer"] = resultColor,
+                ["timeLimit"] = timeLimit,
+                ["typesCompleted"] = typesCompleted,
+                ["funMessage"] = GetFunMessage("colorMix")
             };
         }
 
@@ -1614,16 +1663,16 @@ namespace MyPersonalWebsite.Controllers
 
             int timeLimit = 60;
 
-            return new
+            return new Dictionary<string, object>
             {
-                type = "trueFalse",
-                level = level,
-                question = $"⚖️ 判断以下陈述是否正确：<br><span style='font-size:1.3rem;color:#fff;font-weight:500;'>{selected.statement}</span>",
-                correctAnswer = correctAnswer,
-                options = options,
-                timeLimit = timeLimit,
-                typesCompleted = typesCompleted,
-                funMessage = GetFunMessage("trueFalse")
+                ["type"] = "trueFalse",
+                ["level"] = level,
+                ["question"] = $"⚖️ 判断以下陈述是否正确：<br><span style='font-size:1.3rem;color:#fff;font-weight:500;'>{selected.statement}</span>",
+                ["correctAnswer"] = correctAnswer,
+                ["options"] = options,
+                ["timeLimit"] = timeLimit,
+                ["typesCompleted"] = typesCompleted,
+                ["funMessage"] = GetFunMessage("trueFalse")
             };
         }
 
@@ -1635,16 +1684,16 @@ namespace MyPersonalWebsite.Controllers
             var puzzle = Generate3x3Puzzle(difficulty);
             int timeLimit = Math.Min(120, 30 + difficulty / 2);
 
-            return new
+            return new Dictionary<string, object>
             {
-                type = "puzzle",
-                level = level,
-                question = $"🧩 将数字按顺序排列（1-8），空格为0<br><span style='color:rgba(255,255,255,0.15);font-size:0.8rem;'>点击数字移动，限时{timeLimit}秒</span>",
-                puzzle = puzzle,
-                correctAnswer = "solved",
-                timeLimit = timeLimit,
-                typesCompleted = typesCompleted,
-                funMessage = GetFunMessage("puzzle")
+                ["type"] = "puzzle",
+                ["level"] = level,
+                ["question"] = $"🧩 将数字按顺序排列（1-8），空格为0<br><span style='color:rgba(255,255,255,0.15);font-size:0.8rem;'>点击数字移动，限时{timeLimit}秒</span>",
+                ["puzzle"] = puzzle,
+                ["correctAnswer"] = "solved",
+                ["timeLimit"] = timeLimit,
+                ["typesCompleted"] = typesCompleted,
+                ["funMessage"] = GetFunMessage("puzzle")
             };
         }
 
@@ -1717,7 +1766,7 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // ⭐ 题型 14：数独逻辑（4×4）
+        // ⭐ 题型 14：数独逻辑（4×4）- ⭐ 修复：使用完整数据 + 正确传递 gridHtml
         // ============================================================
         private object GenerateSudokuLogic(int level, int difficulty, int typesCompleted)
         {
@@ -1727,11 +1776,13 @@ namespace MyPersonalWebsite.Controllers
             else if (difficulty <= 80) puzzleIndex = 2;
             else puzzleIndex = 3;
 
-            puzzleIndex = Math.Min(puzzleIndex, _sudokuPuzzles.Length - 1);
+            puzzleIndex = Math.Min(puzzleIndex, _sudokuData.Length - 1);
 
-            var puzzle = _sudokuPuzzles[puzzleIndex];
-            var solution = GetSudokuSolution(puzzleIndex);
+            var data = _sudokuData[puzzleIndex];
+            var puzzle = data.puzzle;
+            var solution = data.solution;
 
+            // 找到第一个空格的位置
             int emptyRow = -1, emptyCol = -1;
             for (int r = 0; r < 4; r++)
             {
@@ -1745,6 +1796,13 @@ namespace MyPersonalWebsite.Controllers
                     }
                 }
                 if (emptyRow != -1) break;
+            }
+
+            // 如果没找到空格（理论上不可能），返回默认
+            if (emptyRow == -1)
+            {
+                emptyRow = 0;
+                emptyCol = 0;
             }
 
             int correctAnswer = solution[emptyRow][emptyCol];
@@ -1762,34 +1820,20 @@ namespace MyPersonalWebsite.Controllers
 
             int timeLimit = Math.Max(20, 45 - difficulty / 5);
 
-            return new
+            return new Dictionary<string, object>
             {
-                type = "sudoku",
-                level = level,
-                question = $"🧮 填入缺失的数字（每行每列1-4不重复）<br><span style='color:rgba(255,255,255,0.12);font-size:0.7rem;'>点击选项填空</span>",
-                gridHtml = gridHtml,
-                emptyRow = emptyRow,
-                emptyCol = emptyCol,
-                correctAnswer = correctAnswer.ToString(),
-                options = options,
-                timeLimit = timeLimit,
-                typesCompleted = typesCompleted,
-                funMessage = GetFunMessage("sudoku")
+                ["type"] = "sudoku",
+                ["level"] = level,
+                ["question"] = $"🧮 填入缺失的数字（每行每列1-4不重复）<br><span style='color:rgba(255,255,255,0.12);font-size:0.7rem;'>点击选项填空</span>",
+                ["gridHtml"] = gridHtml,
+                ["emptyRow"] = emptyRow,
+                ["emptyCol"] = emptyCol,
+                ["correctAnswer"] = correctAnswer.ToString(),
+                ["options"] = options,
+                ["timeLimit"] = timeLimit,
+                ["typesCompleted"] = typesCompleted,
+                ["funMessage"] = GetFunMessage("sudoku")
             };
-        }
-
-        private int[][] GetSudokuSolution(int index)
-        {
-            int[][][] solutions = new int[][][]
-            {
-                new int[][] { new int[] { 2, 1, 3, 4 }, new int[] { 4, 3, 1, 2 }, new int[] { 1, 2, 4, 3 }, new int[] { 3, 4, 2, 1 } },
-                new int[][] { new int[] { 1, 4, 2, 3 }, new int[] { 2, 3, 4, 1 }, new int[] { 3, 2, 1, 4 }, new int[] { 4, 1, 3, 2 } },
-                new int[][] { new int[] { 3, 1, 4, 2 }, new int[] { 4, 2, 3, 1 }, new int[] { 1, 4, 2, 3 }, new int[] { 2, 3, 1, 4 } },
-                new int[][] { new int[] { 4, 2, 1, 3 }, new int[] { 1, 3, 4, 2 }, new int[] { 2, 4, 3, 1 }, new int[] { 3, 1, 2, 4 } }
-            };
-
-            index = Math.Min(index, solutions.Length - 1);
-            return solutions[index];
         }
 
         private string GenerateSudokuHtml(int[][] puzzle, int emptyRow, int emptyCol)
@@ -1802,16 +1846,18 @@ namespace MyPersonalWebsite.Controllers
                 for (int c = 0; c < 4; c++)
                 {
                     int val = puzzle[r][c];
+                    // 2x2 宫格边框
                     string borderRight = (c + 1) % 2 == 0 ? "border-right:2px solid rgba(255,255,255,0.06);" : "";
                     string borderBottom = (r + 1) % 2 == 0 ? "border-bottom:2px solid rgba(255,255,255,0.06);" : "";
+                    string extraStyle = borderRight + borderBottom;
 
                     if (r == emptyRow && c == emptyCol)
                     {
-                        sb.Append($"<div style='padding:8px;text-align:center;font-size:1.5rem;font-weight:bold;color:#8B5CF6;background:rgba(139,92,246,0.04);border-radius:4px;{borderRight}{borderBottom}' id='sudokuEmpty'>?</div>");
+                        sb.Append($"<div style='padding:8px;text-align:center;font-size:1.5rem;font-weight:bold;color:#8B5CF6;background:rgba(139,92,246,0.04);border-radius:4px;{extraStyle}' id='sudokuEmpty'>?</div>");
                     }
                     else
                     {
-                        sb.Append($"<div style='padding:8px;text-align:center;font-size:1.5rem;font-weight:bold;color:rgba(255,255,255,0.5);border-radius:4px;{borderRight}{borderBottom}'>{val}</div>");
+                        sb.Append($"<div style='padding:8px;text-align:center;font-size:1.5rem;font-weight:bold;color:rgba(255,255,255,0.5);border-radius:4px;{extraStyle}'>{val}</div>");
                     }
                 }
             }
@@ -1836,16 +1882,16 @@ namespace MyPersonalWebsite.Controllers
             var options = GenerateNumberOptions(count, 4 + difficulty / 10, 5 + difficulty / 5);
             int timeLimit = Math.Max(3, 11 - difficulty / 7);
 
-            return new
+            return new Dictionary<string, object>
             {
-                type = "countChar",
-                level = level,
-                question = $"🔢 字符「{target}」在「{text}」中出现几次？",
-                correctAnswer = count.ToString(),
-                options = options,
-                timeLimit = timeLimit,
-                typesCompleted = typesCompleted,
-                funMessage = GetFunMessage("countChar")
+                ["type"] = "countChar",
+                ["level"] = level,
+                ["question"] = $"🔢 字符「{target}」在「{text}」中出现几次？",
+                ["correctAnswer"] = count.ToString(),
+                ["options"] = options,
+                ["timeLimit"] = timeLimit,
+                ["typesCompleted"] = typesCompleted,
+                ["funMessage"] = GetFunMessage("countChar")
             };
         }
 
@@ -1865,17 +1911,17 @@ namespace MyPersonalWebsite.Controllers
             string[] texts = { "颜色", "色彩", "文字" };
             string displayText = texts[_random.Next(texts.Length)];
 
-            return new
+            return new Dictionary<string, object>
             {
-                type = "inverseColor",
-                level = level,
-                question = $"🎨 下面文字是什么颜色？（注意背景）",
-                displayHtml = $"<span style='color:{textColor};background:{bg};padding:0.3rem 1.5rem;border-radius:8px;font-size:2rem;font-weight:bold;'>{displayText}</span>",
-                correctAnswer = color,
-                options = new List<string>(colors),
-                timeLimit = timeLimit,
-                typesCompleted = typesCompleted,
-                funMessage = GetFunMessage("inverseColor")
+                ["type"] = "inverseColor",
+                ["level"] = level,
+                ["question"] = $"🎨 下面文字是什么颜色？（注意背景）",
+                ["displayHtml"] = $"<span style='color:{textColor};background:{bg};padding:0.3rem 1.5rem;border-radius:8px;font-size:2rem;font-weight:bold;'>{displayText}</span>",
+                ["correctAnswer"] = color,
+                ["options"] = new List<string>(colors),
+                ["timeLimit"] = timeLimit,
+                ["typesCompleted"] = typesCompleted,
+                ["funMessage"] = GetFunMessage("inverseColor")
             };
         }
 
@@ -1892,16 +1938,16 @@ namespace MyPersonalWebsite.Controllers
             var options = GenerateOptions(c.ToString(), 4 + Math.Min(difficulty / 10, 4));
             int timeLimit = Math.Max(2, 9 - difficulty / 8);
 
-            return new
+            return new Dictionary<string, object>
             {
-                type = "mirror",
-                level = level,
-                question = $"🪞 字母「{c}」的镜像字母是？",
-                correctAnswer = c.ToString(),
-                options = options,
-                timeLimit = timeLimit,
-                typesCompleted = typesCompleted,
-                funMessage = GetFunMessage("mirror")
+                ["type"] = "mirror",
+                ["level"] = level,
+                ["question"] = $"🪞 字母「{c}」的镜像字母是？",
+                ["correctAnswer"] = c.ToString(),
+                ["options"] = options,
+                ["timeLimit"] = timeLimit,
+                ["typesCompleted"] = typesCompleted,
+                ["funMessage"] = GetFunMessage("mirror")
             };
         }
 
@@ -1942,16 +1988,16 @@ namespace MyPersonalWebsite.Controllers
 
             int timeLimit = Math.Max(2, 8 - difficulty / 14);
 
-            return new
+            return new Dictionary<string, object>
             {
-                type = "direction",
-                level = level,
-                question = $"🧭 请选择「{dir}」的相反方向",
-                correctAnswer = correct,
-                options = options.OrderBy(_ => _random.Next()).ToList(),
-                timeLimit = timeLimit,
-                typesCompleted = typesCompleted,
-                funMessage = GetFunMessage("direction")
+                ["type"] = "direction",
+                ["level"] = level,
+                ["question"] = $"🧭 请选择「{dir}」的相反方向",
+                ["correctAnswer"] = correct,
+                ["options"] = options.OrderBy(_ => _random.Next()).ToList(),
+                ["timeLimit"] = timeLimit,
+                ["typesCompleted"] = typesCompleted,
+                ["funMessage"] = GetFunMessage("direction")
             };
         }
 
@@ -2025,17 +2071,17 @@ namespace MyPersonalWebsite.Controllers
 
             int timeLimit = Math.Max(3, 9 - difficulty / 12);
 
-            return new
+            return new Dictionary<string, object>
             {
-                type = "tripleColor",
-                level = level,
-                question = $"🎯 颜色三重干扰！<br><span style='font-size:0.9rem;color:rgba(255,255,255,0.3);'>{questionText}</span>",
-                displayHtml = displayHtml,
-                correctAnswer = correctAnswer,
-                options = options.OrderBy(_ => _random.Next()).ToList(),
-                timeLimit = timeLimit,
-                typesCompleted = typesCompleted,
-                funMessage = GetFunMessage("tripleColor")
+                ["type"] = "tripleColor",
+                ["level"] = level,
+                ["question"] = $"🎯 颜色三重干扰！<br><span style='font-size:0.9rem;color:rgba(255,255,255,0.3);'>{questionText}</span>",
+                ["displayHtml"] = displayHtml,
+                ["correctAnswer"] = correctAnswer,
+                ["options"] = options.OrderBy(_ => _random.Next()).ToList(),
+                ["timeLimit"] = timeLimit,
+                ["typesCompleted"] = typesCompleted,
+                ["funMessage"] = GetFunMessage("tripleColor")
             };
         }
     
