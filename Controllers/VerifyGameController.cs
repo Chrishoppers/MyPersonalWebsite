@@ -603,13 +603,12 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // 4. 颜色识别（地狱难度 - 相似色）
+        // 4. ⭐ 颜色识别（修复：使用 displayText）
         // ============================================================
         private object GenerateColorRecognition(int level, int difficulty)
         {
             var pool = _colorHex.ToArray();
 
-            // 高难度只选相似色
             var selected = pool[_random.Next(pool.Length)];
 
             // 找与选中颜色相似的颜色
@@ -634,7 +633,7 @@ namespace MyPersonalWebsite.Controllers
                 type = "color",
                 level = level,
                 question = $"🎨 下面文字是什么颜色？",
-                displayHtml = $"<span style='color:{selected.Value};font-size:3rem;font-weight:900;text-shadow:0 0 50px {selected.Value}60;'>{displayText}</span>",
+                displayText = $"<span style='color:{selected.Value};font-size:3rem;font-weight:bold;'>{displayText}</span>",
                 correctAnswer = selected.Key,
                 options = options.OrderBy(_ => _random.Next()).ToList(),
                 timeLimit = timeLimit,
@@ -645,14 +644,18 @@ namespace MyPersonalWebsite.Controllers
         private bool IsSimilarColor(string hex1, string hex2)
         {
             if (hex1 == hex2) return false;
-            var c1 = System.Drawing.ColorTranslator.FromHtml(hex1);
-            var c2 = System.Drawing.ColorTranslator.FromHtml(hex2);
-            var diff = Math.Abs(c1.R - c2.R) + Math.Abs(c1.G - c2.G) + Math.Abs(c1.B - c2.B);
-            return diff < 150;
+            try
+            {
+                var c1 = System.Drawing.ColorTranslator.FromHtml(hex1);
+                var c2 = System.Drawing.ColorTranslator.FromHtml(hex2);
+                var diff = Math.Abs(c1.R - c2.R) + Math.Abs(c1.G - c2.G) + Math.Abs(c1.B - c2.B);
+                return diff < 150;
+            }
+            catch { return false; }
         }
 
         // ============================================================
-        // 5. 找不同（地狱难度 - 20+字符）
+        // 5. ⭐ 找不同（修复：使用 displayText）
         // ============================================================
         private object GenerateFindDifferent(int level, int difficulty)
         {
@@ -702,7 +705,7 @@ namespace MyPersonalWebsite.Controllers
                 type = "findDifferent",
                 level = level,
                 question = $"🔍 哪个字符被替换了？（{length}个字符）",
-                displayHtml = display,
+                displayText = display,
                 correctAnswer = correct.ToString(),
                 options = options.OrderBy(_ => _random.Next()).ToList(),
                 timeLimit = timeLimit,
@@ -1125,7 +1128,6 @@ namespace MyPersonalWebsite.Controllers
                 }
                 else
                 {
-                    // 每个单词首字母大写（全部大写后转换）
                     var words = source.Split(' ');
                     var result = "";
                     foreach (var w in words)
@@ -1232,7 +1234,7 @@ namespace MyPersonalWebsite.Controllers
                 type = "inverseColor",
                 level = level,
                 question = $"🎨 下面文字是什么颜色？（注意背景）",
-                displayHtml = $"<span style='color:{textColor};background:{bg};padding:0.3rem 1.5rem;border-radius:8px;font-size:2rem;font-weight:bold;'>{displayText}</span>",
+                displayText = $"<span style='color:{textColor};background:{bg};padding:0.3rem 1.5rem;border-radius:8px;font-size:2rem;font-weight:bold;'>{displayText}</span>",
                 correctAnswer = color,
                 options = new List<string> { "黑色", "白色", "灰色" },
                 timeLimit = timeLimit,
@@ -1413,7 +1415,6 @@ namespace MyPersonalWebsite.Controllers
 
             if (difficulty > 70)
             {
-                // A × B + C = ?
                 a = _random.Next(2, 12);
                 b = _random.Next(2, 12);
                 c = _random.Next(1, 25);
@@ -1437,7 +1438,6 @@ namespace MyPersonalWebsite.Controllers
             }
             else if (difficulty > 40)
             {
-                // A × B = ?
                 a = _random.Next(2, 18);
                 b = _random.Next(2, 18);
                 int result = a * b;
@@ -1460,7 +1460,6 @@ namespace MyPersonalWebsite.Controllers
             }
             else
             {
-                // A + B = ?
                 a = _random.Next(10, 80);
                 b = _random.Next(10, 80);
                 int result = a + b;
@@ -1497,7 +1496,7 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // 20. 颜色三重干扰（超级地狱难度）
+        // 20. ⭐ 颜色三重干扰（超级地狱难度）
         // ============================================================
         private object GenerateTripleColorInterference(int level, int difficulty)
         {
