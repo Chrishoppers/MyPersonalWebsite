@@ -1541,5 +1541,64 @@ private object GenerateTripleColorInterference(int level, int difficulty)
             }
             return "🎉 太棒了！";
         }
+        // ⭐ 相似字符映射（用于找不同）
+private char GetSimilarChar(char c)
+{
+    var map = new Dictionary<char, char[]>
+    {
+        {'0', new[]{'O','D','Q'}},
+        {'O', new[]{'0','D','Q'}},
+        {'1', new[]{'I','L','7'}},
+        {'I', new[]{'1','L','7'}},
+        {'L', new[]{'1','I','J'}},
+        {'5', new[]{'S','8'}},
+        {'S', new[]{'5','8'}},
+        {'8', new[]{'B','3','6'}},
+        {'B', new[]{'8','3','6'}},
+        {'3', new[]{'8','B','E'}},
+        {'E', new[]{'3','B','F'}},
+        {'6', new[]{'8','G','9'}},
+        {'9', new[]{'6','P','G'}},
+        {'G', new[]{'6','9','C'}},
+        {'C', new[]{'G','O','0'}},
+        {'D', new[]{'O','0','Q'}},
+        {'Q', new[]{'O','0','D'}},
+        {'2', new[]{'Z','7'}},
+        {'Z', new[]{'2','7'}},
+        {'7', new[]{'2','Z'}},
+        {'T', new[]{'Y','7'}},
+        {'Y', new[]{'T','V'}},
+        {'V', new[]{'Y','U'}},
+        {'W', new[]{'M','V'}},
+        {'M', new[]{'W','N'}},
+        {'N', new[]{'M','H'}},
+        {'H', new[]{'N','A'}},
+        {'A', new[]{'4','H'}},
+        {'R', new[]{'P','A'}},
+        {'P', new[]{'R','B'}},
+        {'K', new[]{'H','N'}},
+        {'X', new[]{'K','H'}},
+        {'J', new[]{'L','I'}},
+        {'U', new[]{'V','W'}},
+        {'4', new[]{'A','H'}},
+        {'F', new[]{'E','P','T'}},
+        {'Z', new[]{'2','7'}}
+    };
+
+    if (map.ContainsKey(c))
+    {
+        var similar = map[c];
+        return similar[_random.Next(similar.Length)];
+    }
+    
+    string chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    return chars[_random.Next(chars.Length)];
+}
+
+// ⭐ 超级相似字符（别名，直接调用 GetSimilarChar）
+private char GetSuperSimilarChar(char c)
+{
+    return GetSimilarChar(c);
+}
     }
 }
