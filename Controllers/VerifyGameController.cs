@@ -654,132 +654,101 @@ namespace MyPersonalWebsite.Controllers
             catch { return false; }
         }
 
-        // ============================================================
-        // 5. ⭐ 找不同（修复：使用 displayText）
-        // ============================================================
-        private object GenerateFindDifferent(int level, int difficulty)
+        // 5. ⭐ 找不同（记忆+推理型）
+private object GenerateFindDifferent(int level, int difficulty)
+{
+    int length = 5 + difficulty / 4;
+    if (length > 12) length = 12;
+
+    string chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    
+    // 生成原始字符串
+    string original = "";
+    for (int i = 0; i < length; i++) 
+        original += chars[_random.Next(chars.Length)];
+
+    // 随机选一个位置替换
+    int pos = _random.Next(length);
+    char originalChar = original[pos];
+    char replacementChar = chars[_random.Next(chars.Length)];
+    while (replacementChar == originalChar) 
+        replacementChar = chars[_random.Next(chars.Length)];
+
+    // 构建替换后的字符串
+    char[] replacedArr = original.ToCharArray();
+    replacedArr[pos] = replacementChar;
+    string replaced = new string(replacedArr);
+
+    // ⭐ 打乱替换后的字符串顺序
+    char[] shuffledArr = replaced.ToCharArray();
+    // 记录被替换字符在打乱后的位置
+    int shuffledPos = -1;
+    for (int i = 0; i < shuffledArr.Length; i++)
+    {
+        if (shuffledArr[i] == replacementChar)
         {
-            int length = 8 + difficulty / 3;
-            if (length > 30) length = 30;
-
-            string chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789!@#$%^&*()_+-=<>?/";
-            string baseStr = "";
-            for (int i = 0; i < length; i++) baseStr += chars[_random.Next(chars.Length)];
-
-            int pos = _random.Next(length);
-            char original = baseStr[pos];
-            char replacement = GetSuperSimilarChar(original);
-            while (replacement == original) replacement = GetSuperSimilarChar(original);
-
-            char correct = original;
-
-            string display = "";
-            for (int i = 0; i < length; i++)
-            {
-                if (i == pos)
-                {
-                    display += $"<span style='color:#EC4899;font-weight:bold;text-decoration:underline;font-size:1.4rem;'>{replacement}</span>";
-                }
-                else
-                {
-                    display += $"<span style='font-size:1.1rem;'>{baseStr[i]}</span>";
-                }
-            }
-
-            var options = new List<string> { correct.ToString() };
-            int count = 4 + Math.Min(difficulty / 12, 4);
-
-            while (options.Count < count)
-            {
-                char fake = chars[_random.Next(chars.Length)];
-                if (fake != correct && !options.Contains(fake.ToString()))
-                {
-                    options.Add(fake.ToString());
-                }
-            }
-
-            int timeLimit = Math.Max(3, 11 - difficulty / 6);
-
-            return new
-            {
-                type = "findDifferent",
-                level = level,
-                question = $"🔍 哪个字符被替换了？（{length}个字符）",
-                displayText = display,
-                correctAnswer = correct.ToString(),
-                options = options.OrderBy(_ => _random.Next()).ToList(),
-                timeLimit = timeLimit,
-                funMessage = GetFunMessage("findDifferent")
-            };
+            // 如果有多个相同字符，随机选一个
+            if (shuffledPos == -1 || _random.Next(2) == 0)
+                shuffledPos = i;
         }
-
-        private char GetSuperSimilarChar(char c)
+    }
+    // 打乱
+    for (int i = shuffledArr.Length - 1; i > 0; i--)
+    {
+        int j = _random.Next(i + 1);
+        char temp = shuffledArr[i];
+        shuffledArr[i] = shuffledArr[j];
+        shuffledArr[j] = temp;
+    }
+    // 重新找到被替换字符的位置
+    shuffledPos = -1;
+    for (int i = 0; i < shuffledArr.Length; i++)
+    {
+        if (shuffledArr[i] == replacementChar)
         {
-            var map = new Dictionary<char, char[]>
-            {
-                {'0', new[]{'O','Q','D','C','8','G','6'}},
-                {'O', new[]{'0','Q','D','C','8','G','6'}},
-                {'Q', new[]{'0','O','D','C','8','G'}},
-                {'D', new[]{'0','O','Q','C','8'}},
-                {'C', new[]{'G','O','Q','0','8','6'}},
-                {'G', new[]{'C','O','Q','6','8','0'}},
-                {'1', new[]{'I','L','!','|','7','T'}},
-                {'I', new[]{'1','L','!','|','7','T'}},
-                {'L', new[]{'1','I','J','|','7'}},
-                {'J', new[]{'L','I','T','Y','7'}},
-                {'T', new[]{'Y','7','L','J','I'}},
-                {'Y', new[]{'V','T','7','J','U'}},
-                {'V', new[]{'Y','U','W','M','N'}},
-                {'U', new[]{'V','J','L','I','W'}},
-                {'W', new[]{'M','V','N','U','Y'}},
-                {'M', new[]{'W','N','V','U','H'}},
-                {'N', new[]{'M','H','K','W','Z'}},
-                {'H', new[]{'N','K','A','M','R'}},
-                {'K', new[]{'H','N','M','X','R'}},
-                {'X', new[]{'K','*','+','x','H'}},
-                {'A', new[]{'4','H','R','K','8','N'}},
-                {'R', new[]{'P','A','K','B','8'}},
-                {'P', new[]{'R','B','9','D','8'}},
-                {'B', new[]{'8','3','P','R','6','E'}},
-                {'3', new[]{'8','B','E','S','6','5'}},
-                {'8', new[]{'3','B','6','S','0','G'}},
-                {'6', new[]{'8','9','G','S','5','0'}},
-                {'9', new[]{'6','8','P','G','5'}},
-                {'S', new[]{'5','$','8','3','6','%'}},
-                {'5', new[]{'S','$','8','3','6','%'}},
-                {'2', new[]{'Z','7','L','I','T'}},
-                {'Z', new[]{'2','7','N','M','H'}},
-                {'7', new[]{'2','Z','T','Y','I'}},
-                {'4', new[]{'A','H','K','R','8'}},
-                {'E', new[]{'3','B','F','P','8'}},
-                {'F', new[]{'E','P','T','Y','R'}},
-                {'$', new[]{'S','5','8','3','6'}},
-                {'!', new[]{'1','I','L','|','7'}},
-                {'@', new[]{'0','O','Q','D','8'}},
-                {'#', new[]{'H','K','M','N','R'}},
-                {'%', new[]{'S','5','8','3','6'}},
-                {'^', new[]{'V','Y','T','W','U'}},
-                {'&', new[]{'8','3','B','6','S'}},
-                {'*', new[]{'X','+','K','H','x'}},
-                {'(', new[]{'C','G','O','Q','8'}},
-                {')', new[]{'O','C','G','Q','8'}},
-                {'-', new[]{'_','=','+','T','I'}},
-                {'=', new[]{'-','_','+','T','I'}},
-                {'+', new[]{'*','X','K','H','T'}},
-                {'<', new[]{'C','G','O','Q','8'}},
-                {'>', new[]{'C','G','O','Q','8'}},
-                {'?', new[]{'7','Z','2','T','Y'}},
-                {'/', new[]{'7','Z','2','T','Y'}}
-            };
-
-            if (map.ContainsKey(c))
-            {
-                var similar = map[c];
-                return similar[_random.Next(similar.Length)];
-            }
-            string chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789!@#$%^&*()_+-=<>?/";
-            return chars[_random.Next(chars.Length)];
+            shuffledPos = i;
+            break;
         }
+    }
+    string shuffled = new string(shuffledArr);
+
+    // ⭐ 显示时间随难度变化（越难越短）
+    int displayTime = Math.Max(2, 8 - difficulty / 8);
+
+    // ⭐ 选项：所有被替换的原始字符（玩家要点出被更改的字符）
+    var options = new List<string> { originalChar.ToString() };
+    int count = 4 + Math.Min(difficulty / 12, 3);
+
+    while (options.Count < count)
+    {
+        char fake = chars[_random.Next(chars.Length)];
+        if (fake != originalChar && !options.Contains(fake.ToString()))
+        {
+            options.Add(fake.ToString());
+        }
+    }
+
+    int timeLimit = Math.Max(4, 14 - difficulty / 6);
+
+    string diffLabel = difficulty > 70 ? "💀 地狱" : difficulty > 40 ? "🔥 噩梦" : "⚡ 困难";
+
+    return new
+    {
+        type = "findDifferent",
+        level = level,
+        question = $"🔍 记住下面的字符，然后找出被更改的那个！（{diffLabel}）",
+        // ⭐ 原始字符串（先显示，然后消失）
+        originalDisplay = original,
+        displayTime = displayTime,
+        // ⭐ 打乱后的字符串（带红色标记提示玩家点击）
+        shuffledDisplay = shuffled,
+        shuffledPos = shuffledPos,
+        correctAnswer = originalChar.ToString(),
+        options = options.OrderBy(_ => _random.Next()).ToList(),
+        timeLimit = timeLimit,
+        funMessage = GetFunMessage("findDifferent")
+    };
+}
 
         // ============================================================
         // 6. 倒序识别（地狱难度 - 10位+干扰）
