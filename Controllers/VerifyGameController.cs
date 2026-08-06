@@ -387,7 +387,7 @@ namespace MyPersonalWebsite.Controllers
             {
                 type = "text",
                 level = level,
-                question = $"👁️ 识别下方图片中的文字（{length}位 · {diffLabel}）",
+                question = $"👁️ 识别下方图片中的文字（{length}位）",
                 imageSvg = svg,
                 correctAnswer = text,
                 options = options,
@@ -536,13 +536,11 @@ namespace MyPersonalWebsite.Controllers
             var options = GenerateSuperNumberOptions(result, 4 + difficulty / 10);
             int timeLimit = Math.Max(3, 14 - difficulty / 6);
 
-            string diffLabel = GetDifficultyLabel(difficulty);
-
             return new
             {
                 type = "arithmetic",
                 level = level,
-                question = $"🧮 {a} {op} {b} = ? （{diffLabel}）",
+                question = $"🧮 {a} {op} {b} = ?",
                 correctAnswer = result.ToString(),
                 options = options,
                 timeLimit = timeLimit,
@@ -616,13 +614,12 @@ namespace MyPersonalWebsite.Controllers
             }
 
             int timeLimit = Math.Max(3, 14 - difficulty / 8);
-            string diffLabel = GetDifficultyLabel(difficulty);
 
             return new
             {
                 type = "stroke",
                 level = level,
-                question = $"📝 「{ch}」字有几画？（{diffLabel}）",
+                question = $"📝 「{ch}」字有几画？",
                 correctAnswer = correct.ToString(),
                 options = options.OrderBy(_ => _random.Next()).ToList(),
                 timeLimit = timeLimit,
@@ -653,13 +650,12 @@ namespace MyPersonalWebsite.Controllers
 
             int timeLimit = Math.Max(2, 8 - difficulty / 12);
             string displayWord = _singleColorWords[_random.Next(_singleColorWords.Length)];
-            string diffLabel = GetDifficultyLabel(difficulty);
 
             return new
             {
                 type = "color",
                 level = level,
-                question = $"🎨 下面文字是什么颜色？（{diffLabel}）",
+                question = $"🎨 下面文字是什么颜色？",
                 displayText = $"<span style='color:{selected.Value};font-size:3rem;font-weight:bold;'>{displayWord}</span>",
                 correctAnswer = selected.Key,
                 options = options.OrderBy(_ => _random.Next()).ToList(),
@@ -683,7 +679,7 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // 5. ⭐ 找不同（修复：无红色标记，彻底打乱）
+        // 5. ⭐ 找不同（无红色标记，彻底打乱）
         // ============================================================
         private object GenerateFindDifferent(int level, int difficulty, int typesCompleted)
         {
@@ -703,7 +699,7 @@ namespace MyPersonalWebsite.Controllers
             replacedArr[pos] = replacementChar;
             string replaced = new string(replacedArr);
 
-            // ⭐ 彻底打乱（确保每个位置都变了）
+            // ⭐ 彻底打乱
             char[] shuffledArr = replaced.ToCharArray();
             bool allSamePosition = true;
             int maxAttempts = 50;
@@ -719,7 +715,6 @@ namespace MyPersonalWebsite.Controllers
                     shuffledArr[j] = temp;
                 }
 
-                // 检查是否所有字符都在原位置
                 allSamePosition = true;
                 for (int i = 0; i < shuffledArr.Length; i++)
                 {
@@ -745,7 +740,6 @@ namespace MyPersonalWebsite.Controllers
                 }
             }
 
-            // ⭐ 如果找不到（极少情况），重新生成
             if (shuffledPos == -1)
             {
                 return GenerateFindDifferent(level, difficulty, typesCompleted);
@@ -753,13 +747,12 @@ namespace MyPersonalWebsite.Controllers
 
             int displayTime = Math.Max(2, 8 - difficulty / 8);
             int timeLimit = Math.Max(4, 14 - difficulty / 6);
-            string diffLabel = GetDifficultyLabel(difficulty);
 
             return new
             {
                 type = "findDifferent",
                 level = level,
-                question = $"🔍 记住下面的字符，然后找出被更改的那个！（{diffLabel}）",
+                question = $"🔍 记住下面的字符，然后找出被更改的那个！",
                 originalDisplay = original,
                 displayTime = displayTime,
                 shuffledDisplay = shuffled,
@@ -790,13 +783,12 @@ namespace MyPersonalWebsite.Controllers
 
             var options = GenerateSuperHardOptions(reversed, difficulty);
             int timeLimit = Math.Max(3, 14 - difficulty / 5);
-            string diffLabel = GetDifficultyLabel(difficulty);
 
             return new
             {
                 type = "reverse",
                 level = level,
-                question = $"🔄 图片中的文字是什么？（倒过来了 · {diffLabel}）",
+                question = $"🔄 图片中的文字是什么？（倒过来了）",
                 imageSvg = svg,
                 correctAnswer = reversed,
                 options = options,
@@ -866,13 +858,12 @@ namespace MyPersonalWebsite.Controllers
             }
 
             int timeLimit = Math.Max(3, 11 - difficulty / 7);
-            string diffLabel = GetDifficultyLabel(difficulty);
 
             return new
             {
                 type = "missingLetter",
                 level = level,
-                question = $"🔤 补全下面的英文单词（{hintText} · {diffLabel}）：<br><span style='font-size:1.8rem;font-weight:bold;letter-spacing:6px;font-family:monospace;'>{displayStr}</span>",
+                question = $"🔤 补全下面的英文单词（{hintText}）：<br><span style='font-size:1.8rem;font-weight:bold;letter-spacing:6px;font-family:monospace;color:#8B5CF6;'>{displayStr}</span>",
                 correctAnswer = correctAnswer,
                 options = options.OrderBy(_ => _random.Next()).ToList(),
                 timeLimit = timeLimit,
@@ -890,13 +881,12 @@ namespace MyPersonalWebsite.Controllers
             char target = chars[_random.Next(chars.Length)];
             var options = GenerateSuperHardOptions(target.ToString(), difficulty);
             int timeLimit = Math.Max(2, 9 - difficulty / 8);
-            string diffLabel = GetDifficultyLabel(difficulty);
 
             return new
             {
                 type = "quickTap",
                 level = level,
-                question = $"⚡ 从下方选项中，找出字符 <span style='color:#8B5CF6;font-weight:bold;font-size:1.5rem;'>{target}</span> （{diffLabel}）",
+                question = $"⚡ 从下方选项中，找出字符 <span style='color:#8B5CF6;font-weight:bold;font-size:1.5rem;'>{target}</span>",
                 correctAnswer = target.ToString(),
                 options = options,
                 timeLimit = timeLimit,
@@ -965,13 +955,12 @@ namespace MyPersonalWebsite.Controllers
             }
 
             int timeLimit = Math.Max(3, 11 - difficulty / 8);
-            string diffLabel = GetDifficultyLabel(difficulty);
 
             return new
             {
                 type = "idiom",
                 level = level,
-                question = $"📖 补全成语（缺{missingCount}个字 · {diffLabel}）：{displayStr}",
+                question = $"📖 补全成语（缺{missingCount}个字）：{displayStr}",
                 correctAnswer = correctAnswer,
                 options = options.OrderBy(_ => _random.Next()).ToList(),
                 timeLimit = timeLimit,
@@ -1138,13 +1127,12 @@ namespace MyPersonalWebsite.Controllers
             }
 
             int timeLimit = Math.Max(3, 12 - difficulty / 8);
-            string diffLabel = GetDifficultyLabel(difficulty);
 
             return new
             {
                 type = "chineseNumber",
                 level = level,
-                question = useCapital ? $"🔢 「{displayChinese}」（大写）对应的数字是？" : $"🔢 「{displayChinese}」对应的数字是？（{diffLabel}）",
+                question = useCapital ? $"🔢 「{displayChinese}」（大写）对应的数字是？" : $"🔢 「{displayChinese}」对应的数字是？",
                 correctAnswer = num.ToString(),
                 options = options.OrderBy(_ => _random.Next()).ToList(),
                 timeLimit = timeLimit,
@@ -1281,13 +1269,12 @@ namespace MyPersonalWebsite.Controllers
             }
 
             int timeLimit = Math.Max(3, 12 - difficulty / 8);
-            string diffLabel = GetDifficultyLabel(difficulty);
 
             return new
             {
                 type = "caseConversion",
                 level = level,
-                question = $"🔤 转换大小写：{source} （{diffLabel}）",
+                question = $"🔤 转换大小写：{source}",
                 correctAnswer = correct,
                 options = options.OrderBy(_ => _random.Next()).ToList(),
                 timeLimit = timeLimit,
@@ -1304,13 +1291,12 @@ namespace MyPersonalWebsite.Controllers
             char c = _alphabet[_random.Next(26)];
             var options = GenerateSuperHardOptions(c.ToString(), difficulty);
             int timeLimit = Math.Max(2, 9 - difficulty / 8);
-            string diffLabel = GetDifficultyLabel(difficulty);
 
             return new
             {
                 type = "pinyin",
                 level = level,
-                question = $"🔊 字母「{c}」的读音是？（{diffLabel}）",
+                question = $"🔊 字母「{c}」的读音是？",
                 correctAnswer = c.ToString(),
                 options = options,
                 timeLimit = timeLimit,
@@ -1334,13 +1320,12 @@ namespace MyPersonalWebsite.Controllers
             int timeLimit = Math.Max(2, 7 - difficulty / 12);
             string[] texts = { "颜色", "色彩", "文字" };
             string displayText = texts[_random.Next(texts.Length)];
-            string diffLabel = GetDifficultyLabel(difficulty);
 
             return new
             {
                 type = "inverseColor",
                 level = level,
-                question = $"🎨 下面文字是什么颜色？（注意背景 · {diffLabel}）",
+                question = $"🎨 下面文字是什么颜色？（注意背景）",
                 displayText = $"<span style='color:{textColor};background:{bg};padding:0.3rem 1.5rem;border-radius:8px;font-size:2rem;font-weight:bold;'>{displayText}</span>",
                 correctAnswer = color,
                 options = new List<string>(colors),
@@ -1362,13 +1347,12 @@ namespace MyPersonalWebsite.Controllers
             char c = mirrorKeys[_random.Next(mirrorKeys.Length)];
             var options = GenerateSuperHardOptions(c.ToString(), difficulty);
             int timeLimit = Math.Max(2, 9 - difficulty / 8);
-            string diffLabel = GetDifficultyLabel(difficulty);
 
             return new
             {
                 type = "mirror",
                 level = level,
-                question = $"🪞 字母「{c}」的镜像字母是？（{diffLabel}）",
+                question = $"🪞 字母「{c}」的镜像字母是？",
                 correctAnswer = c.ToString(),
                 options = options,
                 timeLimit = timeLimit,
@@ -1386,13 +1370,12 @@ namespace MyPersonalWebsite.Controllers
             char c = keys[_random.Next(keys.Length)];
             var options = GenerateSuperHardOptions(c.ToString(), difficulty);
             int timeLimit = Math.Max(2, 9 - difficulty / 8);
-            string diffLabel = GetDifficultyLabel(difficulty);
 
             return new
             {
                 type = "keyboard",
                 level = level,
-                question = $"⌨️ 键盘上「{c}」的右边键是？（{diffLabel}）",
+                question = $"⌨️ 键盘上「{c}」的右边键是？",
                 correctAnswer = c.ToString(),
                 options = options,
                 timeLimit = timeLimit,
@@ -1416,13 +1399,12 @@ namespace MyPersonalWebsite.Controllers
 
             var options = GenerateSuperNumberOptions(count, 4 + difficulty / 10);
             int timeLimit = Math.Max(3, 11 - difficulty / 7);
-            string diffLabel = GetDifficultyLabel(difficulty);
 
             return new
             {
                 type = "countChar",
                 level = level,
-                question = $"🔢 字符「{target}」在「{text}」中出现几次？（{diffLabel}）",
+                question = $"🔢 字符「{target}」在「{text}」中出现几次？",
                 correctAnswer = count.ToString(),
                 options = options,
                 timeLimit = timeLimit,
@@ -1454,13 +1436,12 @@ namespace MyPersonalWebsite.Controllers
             }
 
             int timeLimit = Math.Max(4, 16 - difficulty / 5);
-            string diffLabel = GetDifficultyLabel(difficulty);
 
             return new
             {
                 type = "memory",
                 level = level,
-                question = $"🧠 记住这个数字（{len}位 · {diffLabel}）：{text}",
+                question = $"🧠 记住这个数字：{text}",
                 displayNumber = text,
                 correctAnswer = text,
                 options = options.OrderBy(_ => _random.Next()).ToList(),
@@ -1506,13 +1487,12 @@ namespace MyPersonalWebsite.Controllers
             }
 
             int timeLimit = Math.Max(2, 8 - difficulty / 14);
-            string diffLabel = GetDifficultyLabel(difficulty);
 
             return new
             {
                 type = "direction",
                 level = level,
-                question = $"🧭 请选择「{dir}」的相反方向（{diffLabel}）",
+                question = $"🧭 请选择「{dir}」的相反方向",
                 correctAnswer = correct,
                 options = options.OrderBy(_ => _random.Next()).ToList(),
                 timeLimit = timeLimit,
@@ -1529,7 +1509,6 @@ namespace MyPersonalWebsite.Controllers
             int a, b, c, missing;
             string question, correct;
             int timeLimit = Math.Max(3, 11 - difficulty / 7);
-            string diffLabel = GetDifficultyLabel(difficulty);
 
             if (difficulty > 70)
             {
@@ -1615,7 +1594,7 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // 20. ⭐ 颜色三重干扰（修复：确保三种颜色完全不同）
+        // 20. ⭐ 颜色三重干扰（确保三种颜色完全不同）
         // ============================================================
         private object GenerateTripleColorInterference(int level, int difficulty, int typesCompleted)
         {
@@ -1685,13 +1664,12 @@ namespace MyPersonalWebsite.Controllers
             displayHtml += "</div>";
 
             int timeLimit = Math.Max(3, 9 - difficulty / 12);
-            string diffLabel = GetDifficultyLabel(difficulty);
 
             return new
             {
                 type = "tripleColor",
                 level = level,
-                question = $"🎯 颜色三重干扰！（{diffLabel}）<br><span style='font-size:0.9rem;color:rgba(255,255,255,0.3);'>{questionText}</span>",
+                question = $"🎯 颜色三重干扰！<br><span style='font-size:0.9rem;color:rgba(255,255,255,0.3);'>{questionText}</span>",
                 displayText = displayHtml,
                 correctAnswer = correctAnswer,
                 options = options.OrderBy(_ => _random.Next()).ToList(),
