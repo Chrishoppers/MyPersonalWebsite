@@ -1,5 +1,6 @@
 @{
     ViewData["Title"] = "🧩 验证大闯关";
+    var username = Context.Session.GetString("Username") ?? "玩家";
 }
 
 <style>
@@ -33,6 +34,17 @@
     .game-header .subtitle {
         color: rgba(255, 255, 255, 0.15);
         font-size: 0.85rem;
+    }
+
+    .game-header .type-badge-header {
+        display: inline-block;
+        margin-top: 0.2rem;
+        padding: 0.1rem 1rem;
+        border-radius: 20px;
+        background: rgba(139, 92, 246, 0.08);
+        color: #8B5CF6;
+        font-size: 0.75rem;
+        border: 1px solid rgba(139, 92, 246, 0.04);
     }
 
     .status-bar {
@@ -76,6 +88,10 @@
     }
     .status-item .value.combo {
         color: #34D399;
+        font-size: 1.3rem;
+    }
+    .status-item .value.passed {
+        color: #8B5CF6;
         font-size: 1.3rem;
     }
 
@@ -171,8 +187,6 @@
     .challenge-card .display-text-container .display-text {
         font-size: 1.4rem;
         padding: 0.5rem 1.5rem;
-        border-radius: 12px;
-        background: rgba(255, 255, 255, 0.02);
         margin: 0.2rem 0 0.8rem;
         line-height: 2.2;
         text-align: center;
@@ -181,6 +195,115 @@
         width: 100%;
     }
 
+    /* ===== 数字记忆键盘 - 4列布局，回退键在右下角 ===== */
+    .memory-keyboard {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 0.5rem;
+        max-width: 280px;
+        margin: 0.5rem auto;
+        width: 100%;
+    }
+
+    .memory-keyboard .key-btn {
+        padding: 0.8rem 0.5rem;
+        border: 2px solid rgba(255, 255, 255, 0.06);
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.03);
+        color: #fff;
+        font-size: 1.4rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-family: inherit;
+        text-align: center;
+    }
+
+    .memory-keyboard .key-btn:hover:not(:disabled) {
+        background: rgba(139, 92, 246, 0.08);
+        border-color: rgba(139, 92, 246, 0.15);
+        transform: scale(1.05);
+    }
+
+    .memory-keyboard .key-btn:disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .memory-keyboard .key-btn.backspace {
+        color: #EC4899;
+        border-color: rgba(236, 72, 153, 0.15);
+        font-size: 1.2rem;
+    }
+
+    .memory-keyboard .key-btn.backspace:hover:not(:disabled) {
+        background: rgba(236, 72, 153, 0.08);
+        border-color: rgba(236, 72, 153, 0.2);
+    }
+
+    .memory-input-display {
+        text-align: center;
+        padding: 0.5rem;
+        min-height: 50px;
+        font-size: 2rem;
+        font-weight: bold;
+        color: #8B5CF6;
+        letter-spacing: 8px;
+        font-family: 'Courier New', monospace;
+        background: rgba(255, 255, 255, 0.02);
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.04);
+        margin-bottom: 0.5rem;
+        width: 100%;
+        max-width: 280px;
+    }
+
+    .memory-controls {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: center;
+        margin-top: 0.3rem;
+    }
+
+    .memory-controls .btn-memory {
+        padding: 0.5rem 1.5rem;
+        border: none;
+        border-radius: 40px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-family: inherit;
+    }
+
+    .memory-controls .btn-memory.submit {
+        background: linear-gradient(135deg, #8B5CF6, #EC4899);
+        color: #fff;
+    }
+
+    .memory-controls .btn-memory.submit:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 32px rgba(108, 60, 225, 0.2);
+    }
+
+    .memory-controls .btn-memory.clear {
+        background: rgba(255, 255, 255, 0.04);
+        color: rgba(255, 255, 255, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.04);
+    }
+
+    .memory-controls .btn-memory.clear:hover:not(:disabled) {
+        background: rgba(255, 255, 255, 0.08);
+    }
+
+    .memory-controls .btn-memory:disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    /* ===== 选项按钮 ===== */
     .options-grid {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
@@ -225,6 +348,63 @@
         border-color: #dc3545;
         background: rgba(220, 53, 69, 0.08);
         color: #dc3545;
+    }
+
+    /* ===== 颜色选项（方形色块） ===== */
+    .color-options-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.6rem;
+        width: 100%;
+        max-width: 360px;
+        margin: 0 auto;
+    }
+
+    .color-options-grid .color-option-btn {
+        padding: 0.5rem 0.3rem;
+        border: 2px solid rgba(255, 255, 255, 0.04);
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.02);
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .color-options-grid .color-option-btn:hover:not(:disabled) {
+        border-color: rgba(139, 92, 246, 0.2);
+        background: rgba(139, 92, 246, 0.04);
+        transform: translateY(-2px);
+    }
+
+    .color-options-grid .color-option-btn:disabled {
+        cursor: not-allowed;
+        opacity: 0.3;
+    }
+
+    .color-options-grid .color-option-btn .color-block {
+        width: 48px;
+        height: 48px;
+        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    .color-options-grid .color-option-btn .color-label {
+        color: rgba(255, 255, 255, 0.12);
+        font-size: 0.5rem;
+    }
+
+    .color-options-grid .color-option-btn.correct {
+        border-color: #28a745;
+        background: rgba(40, 167, 69, 0.08);
+    }
+
+    .color-options-grid .color-option-btn.wrong {
+        border-color: #dc3545;
+        background: rgba(220, 53, 69, 0.08);
     }
 
     .timer-section {
@@ -510,7 +690,7 @@
         background: transparent;
     }
 
-    .char-btn:hover {
+    .char-btn:hover:not(.disabled) {
         transform: scale(1.1);
         background: rgba(139, 92, 246, 0.08);
     }
@@ -519,6 +699,7 @@
         cursor: default;
         opacity: 0.5;
         background: transparent !important;
+        transform: none !important;
     }
 
     .char-btn.correct-answer {
@@ -531,6 +712,67 @@
         border-color: #dc3545 !important;
         background: rgba(220, 53, 69, 0.15) !important;
         color: #dc3545 !important;
+    }
+
+    /* ===== 数独格子 ===== */
+    #sudokuGrid .sudoku-cell {
+        padding: 8px;
+        text-align: center;
+        font-size: 1.5rem;
+        font-weight: bold;
+        border-radius: 4px;
+    }
+
+    #sudokuGrid .sudoku-cell.fixed {
+        color: rgba(255, 255, 255, 0.5);
+    }
+
+    #sudokuGrid .sudoku-cell.empty {
+        color: #8B5CF6;
+        background: rgba(139, 92, 246, 0.04);
+    }
+
+    /* ===== 华容道 ===== */
+    .puzzle-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 4px;
+        max-width: 240px;
+        margin: 0 auto;
+        background: rgba(255, 255, 255, 0.02);
+        padding: 6px;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.04);
+    }
+
+    .puzzle-grid .puzzle-cell {
+        aspect-ratio: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.6rem;
+        font-weight: 700;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        background: rgba(255, 255, 255, 0.04);
+        color: #fff;
+        user-select: none;
+    }
+
+    .puzzle-grid .puzzle-cell:hover:not(.empty) {
+        background: rgba(139, 92, 246, 0.12);
+        transform: scale(1.04);
+    }
+
+    .puzzle-grid .puzzle-cell.empty {
+        background: transparent;
+        cursor: default;
+    }
+
+    .puzzle-grid .puzzle-cell.solved {
+        color: #28a745;
+        background: rgba(40, 167, 69, 0.06);
     }
 
     @@keyframes fadeIn {
@@ -557,6 +799,8 @@
         .game-header h1 { font-size: 1.6rem; }
         .challenge-card { padding: 1rem 1rem; min-height: 260px; }
         .options-grid { grid-template-columns: 1fr 1fr; gap: 0.4rem; }
+        .color-options-grid { grid-template-columns: repeat(3, 1fr); gap: 0.4rem; }
+        .color-options-grid .color-option-btn .color-block { width: 36px; height: 36px; }
         .status-bar { padding: 0.5rem 0.8rem; justify-content: center; gap: 0.2rem 0.8rem; }
         .status-item { font-size: 0.7rem; }
         .status-item .value { font-size: 1rem; }
@@ -567,6 +811,13 @@
         .challenge-card .question-text { font-size: 0.95rem; }
         .challenge-card .type-badge { font-size: 0.55rem; top: 0.5rem; right: 0.6rem; }
         .timer-text { font-size: 0.7rem; }
+        .memory-keyboard { gap: 0.3rem; max-width: 220px; }
+        .memory-keyboard .key-btn { padding: 0.6rem 0.3rem; font-size: 1.1rem; }
+        .memory-keyboard .key-btn.backspace { font-size: 0.9rem; }
+        .memory-input-display { font-size: 1.4rem; max-width: 220px; min-height: 40px; }
+        .puzzle-grid { max-width: 180px; }
+        .puzzle-grid .puzzle-cell { font-size: 1.2rem; }
+        #sudokuGrid .sudoku-cell { font-size: 1.1rem; padding: 4px; }
     }
 
     @@media (max-width: 400px) {
@@ -576,6 +827,12 @@
         .status-item .value.lives { font-size: 0.9rem; }
         .options-grid .option-btn { font-size: 0.8rem; padding: 0.5rem 0.6rem; }
         .char-btn { font-size: 1.4rem; padding: 0.1rem 0.4rem; }
+        .color-options-grid .color-option-btn .color-block { width: 30px; height: 30px; }
+        .puzzle-grid { max-width: 150px; }
+        .puzzle-grid .puzzle-cell { font-size: 1rem; }
+        .memory-keyboard { gap: 0.2rem; max-width: 180px; }
+        .memory-keyboard .key-btn { padding: 0.4rem 0.2rem; font-size: 0.9rem; }
+        .memory-keyboard .key-btn.backspace { font-size: 0.7rem; }
     }
 </style>
 
@@ -584,6 +841,7 @@
     <div class="game-header">
         <h1>🧩 验证大闯关</h1>
         <p class="subtitle">100关 · 难度递增 · 证明你是人类</p>
+        <div class="type-badge-header" id="typeNameDisplay">📝 准备开始</div>
     </div>
 
     <div class="status-bar" id="statusBar">
@@ -591,7 +849,7 @@
         <div class="status-item">📊 关卡 <span class="value level" id="levelDisplay">1</span></div>
         <div class="status-item">🏆 积分 <span class="value score" id="scoreDisplay">0</span></div>
         <div class="status-item">🔥 连击 <span class="value combo" id="comboDisplay">0</span></div>
-        <div class="status-item">✅ 通关 <span class="value" id="passedDisplay" style="color:#8B5CF6;">0</span></div>
+        <div class="status-item">✅ 通关 <span class="value passed" id="passedDisplay">0</span></div>
     </div>
 
     <div class="progress-bar">
@@ -601,14 +859,46 @@
     <div class="challenge-card" id="challengeCard">
         <div class="type-badge" id="typeBadge">第 1 关</div>
         <div class="question-text" id="questionText">加载中...</div>
+
+        <!-- 文字识别 SVG -->
         <div id="imageContainer" style="display:none;"><div class="captcha-image" id="captchaImage"></div></div>
+
+        <!-- 颜色显示 -->
         <div id="colorContainer" style="display:none;"><div class="color-display" id="colorDisplay">██████</div></div>
+
+        <!-- 通用文字显示 -->
         <div class="display-text-container" id="displayTextContainer"><div class="display-text" id="displayText"></div></div>
+
+        <!-- 数字记忆输入 -->
+        <div id="memoryContainer" style="display:none;width:100%;">
+            <div class="memory-input-display" id="memoryInputDisplay">_ _ _ _</div>
+            <div class="memory-keyboard" id="memoryKeyboard"></div>
+            <div class="memory-controls">
+                <button class="btn-memory submit" onclick="submitMemoryAnswer()">✅ 确认</button>
+            </div>
+        </div>
+
+        <!-- 常规选项按钮 -->
         <div class="options-grid" id="optionsGrid"></div>
+
+        <!-- 颜色选项（方形色块） -->
+        <div class="color-options-grid" id="colorOptionsGrid" style="display:none;"></div>
+
+        <!-- 华容道 -->
+        <div id="puzzleContainer" style="display:none;width:100%;">
+            <div class="puzzle-grid" id="puzzleGrid"></div>
+        </div>
+
+        <!-- 数独 -->
+        <div id="sudokuContainer" style="display:none;width:100%;">
+            <div id="sudokuGrid"></div>
+        </div>
+
         <div class="timer-section">
             <div class="timer-bar"><div class="timer-fill" id="timerFill"></div></div>
             <div class="timer-text" id="timerText">⏱ 15s</div>
         </div>
+
         <div class="feedback" id="feedback"></div>
     </div>
 
@@ -624,6 +914,9 @@
 <script>
     var token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
 
+    // ============================================================
+    // 游戏状态
+    // ============================================================
     var gameState = {
         level: 1,
         score: 0,
@@ -636,7 +929,15 @@
         timer: null,
         timeLeft: 15,
         totalLevels: 100,
-        currentChallenge: null
+        currentChallenge: null,
+        memoryInput: '',
+        memoryCorrectAnswer: '',
+        puzzleState: null,
+        puzzleEmptyRow: 0,
+        puzzleEmptyCol: 0,
+        sudokuEmptyRow: 0,
+        sudokuEmptyCol: 0,
+        sudokuCorrectAnswer: '',
     };
 
     var dom = {
@@ -647,51 +948,34 @@
         passedDisplay: document.getElementById('passedDisplay'),
         progressFill: document.getElementById('progressFill'),
         typeBadge: document.getElementById('typeBadge'),
+        typeNameDisplay: document.getElementById('typeNameDisplay'),
         questionText: document.getElementById('questionText'),
         optionsGrid: document.getElementById('optionsGrid'),
+        colorOptionsGrid: document.getElementById('colorOptionsGrid'),
         imageContainer: document.getElementById('imageContainer'),
         captchaImage: document.getElementById('captchaImage'),
         colorContainer: document.getElementById('colorContainer'),
         colorDisplay: document.getElementById('colorDisplay'),
         displayTextContainer: document.getElementById('displayTextContainer'),
         displayText: document.getElementById('displayText'),
+        memoryContainer: document.getElementById('memoryContainer'),
+        memoryKeyboard: document.getElementById('memoryKeyboard'),
+        memoryInputDisplay: document.getElementById('memoryInputDisplay'),
+        puzzleContainer: document.getElementById('puzzleContainer'),
+        puzzleGrid: document.getElementById('puzzleGrid'),
+        sudokuContainer: document.getElementById('sudokuContainer'),
+        sudokuGrid: document.getElementById('sudokuGrid'),
         feedback: document.getElementById('feedback'),
         timerFill: document.getElementById('timerFill'),
         timerText: document.getElementById('timerText'),
-        challengeCard: document.getElementById('challengeCard')
+        challengeCard: document.getElementById('challengeCard'),
+        rankSection: document.getElementById('rankSection'),
+        rankList: document.getElementById('rankList')
     };
 
-    var typeNames = {
-        'text': '文字识别',
-        'arithmetic': '算术计算',
-        'stroke': '汉字笔画',
-        'color': '颜色识别',
-        'findDifferent': '找不同',
-        'reverse': '倒序识别',
-        'missingLetter': '空缺字母',
-        'quickTap': '快速点击',
-        'idiom': '成语填空',
-        'chineseNumber': '中文数字',
-        'caseConversion': '大小写转换',
-        'pinyin': '读音识别',
-        'inverseColor': '反色识别',
-        'mirror': '镜像字母',
-        'keyboard': '键盘相邻',
-        'countChar': '字符计数',
-        'memory': '数字记忆',
-        'direction': '方向判断',
-        'logic': '逻辑推理',
-        'tripleColor': '颜色三重干扰',
-        'ultimate': '💀 终极挑战'
-    };
-
-    function getDifficultyLabel(level) {
-        if (level >= 76) return '💀 地狱';
-        if (level >= 51) return '🔥 噩梦';
-        if (level >= 26) return '⚡ 困难';
-        return '📝 入门';
-    }
-
+    // ============================================================
+    // 启动游戏
+    // ============================================================
     function startGame() {
         gameState.level = 1;
         gameState.score = 0;
@@ -703,9 +987,12 @@
         gameState.isAnswered = false;
         updateUI();
         loadChallenge();
-        document.getElementById('rankSection').style.display = 'none';
+        dom.rankSection.style.display = 'none';
     }
 
+    // ============================================================
+    // 加载挑战
+    // ============================================================
     function loadChallenge() {
         if (!gameState.isPlaying) return;
         if (gameState.level > gameState.totalLevels) {
@@ -717,18 +1004,27 @@
         dom.feedback.className = 'feedback';
         dom.feedback.style.display = 'none';
         dom.optionsGrid.innerHTML = '';
+        dom.optionsGrid.style.display = 'none';
+        dom.colorOptionsGrid.innerHTML = '';
+        dom.colorOptionsGrid.style.display = 'none';
         dom.displayTextContainer.style.display = 'none';
         dom.imageContainer.style.display = 'none';
         dom.colorContainer.style.display = 'none';
+        dom.memoryContainer.style.display = 'none';
+        dom.puzzleContainer.style.display = 'none';
+        dom.sudokuContainer.style.display = 'none';
 
         var diffLabel = getDifficultyLabel(gameState.level);
-        dom.typeBadge.textContent = '第 ' + gameState.level + ' 关 · ' + diffLabel;
+        dom.typeBadge.textContent = '第 ' + gameState.level + ' 关';
 
         fetch('/VerifyGame/GetChallenge?level=' + gameState.level)
             .then(function(r) { return r.json(); })
             .then(function(data) {
                 if (data.success) {
                     gameState.currentChallenge = data.data;
+                    if (data.data.typeName) {
+                        dom.typeNameDisplay.textContent = '🧩 ' + data.data.typeName;
+                    }
                     renderChallenge(data.data);
                 } else {
                     showToast('加载挑战失败，请重试', 'error');
@@ -739,165 +1035,370 @@
             });
     }
 
+    // ============================================================
+    // 渲染挑战
+    // ============================================================
     function renderChallenge(challenge) {
-        // ⭐ 保存当前挑战到全局
         gameState.currentChallenge = challenge;
 
-        var typeName = typeNames[challenge.type] || challenge.type;
-        var diffLabel = getDifficultyLabel(gameState.level);
-        dom.typeBadge.textContent = '第 ' + challenge.level + ' 关 · ' + typeName + ' · ' + diffLabel;
+        var typeName = challenge.typeName || challenge.type || '未知';
+        dom.typeBadge.textContent = '第 ' + challenge.level + ' 关 · ' + typeName;
 
         dom.questionText.innerHTML = challenge.question;
 
         dom.imageContainer.style.display = 'none';
         dom.colorContainer.style.display = 'none';
         dom.displayTextContainer.style.display = 'none';
+        dom.memoryContainer.style.display = 'none';
+        dom.optionsGrid.style.display = 'none';
+        dom.colorOptionsGrid.style.display = 'none';
+        dom.puzzleContainer.style.display = 'none';
+        dom.sudokuContainer.style.display = 'none';
 
-        // ⭐ 找不同
-        if (challenge.type === 'findDifferent' && challenge.originalDisplay) {
-            dom.displayTextContainer.style.display = 'block';
-            dom.displayText.innerHTML = challenge.originalDisplay;
-            dom.displayText.style.cssText = 'font-size:2.8rem;font-weight:bold;color:#8B5CF6;padding:1.5rem;margin:0.5rem 0;background:rgba(255,255,255,0.02);border-radius:16px;border:1px solid rgba(255,255,255,0.04);text-align:center;letter-spacing:8px;font-family:monospace;';
-
-            var displayTime = challenge.displayTime || 3;
-            var timeLeft = displayTime;
-            
-            dom.timerText.textContent = '⏱ 记忆 ' + timeLeft + 's';
-            dom.timerFill.style.width = '100%';
-            dom.timerFill.className = 'timer-fill';
-
-            var countdownInterval = setInterval(function() {
-                timeLeft--;
-                dom.timerText.textContent = '⏱ 记忆 ' + timeLeft + 's';
-                var pct = (timeLeft / displayTime) * 100;
-                dom.timerFill.style.width = pct + '%';
-                dom.timerFill.className = 'timer-fill';
-                if (pct < 30) {
-                    dom.timerFill.classList.add('danger');
-                } else if (pct < 50) {
-                    dom.timerFill.classList.add('warning');
-                }
-                if (timeLeft <= 0) {
-                    clearInterval(countdownInterval);
-                }
-            }, 1000);
-
-            setTimeout(function() {
-                dom.displayText.textContent = '⏰ 时间到！';
-                dom.displayText.style.color = '#F59E0B';
-                dom.displayText.style.fontSize = '1.8rem';
-                dom.displayText.style.letterSpacing = 'normal';
-                dom.timerText.textContent = '⏱ 选择';
-
-                setTimeout(function() {
-                    var shuffled = challenge.shuffledDisplay || '';
-                    var shuffledPos = challenge.shuffledPos || 0;
-                    var html = '';
-                    for (var i = 0; i < shuffled.length; i++) {
-                        var ch = shuffled[i];
-                        html += '<span class="char-btn" data-index="' + i + '" data-char="' + ch + '" onclick="selectChar(' + i + ', \'' + ch + '\', this)">' + ch + '</span>';
-                    }
-                    dom.displayText.innerHTML = html;
-                    dom.displayText.style.cssText = 'padding:1.5rem;margin:0.5rem 0;background:rgba(255,255,255,0.02);border-radius:16px;border:1px solid rgba(255,255,255,0.04);text-align:center;letter-spacing:4px;';
-                    dom.displayText.style.color = '#fff';
-                    dom.displayText.style.fontSize = '1rem';
-
-                    dom.displayText.dataset.correctAnswer = challenge.correctAnswer;
-                    dom.displayText.dataset.shuffledPos = shuffledPos;
-
-                    startTimer(challenge.timeLimit || 10);
-                }, 1000);
-            }, displayTime * 1000);
-            return;
+        // ===== 文字识别 =====
+        if (challenge.imageSvg) {
+            dom.imageContainer.style.display = 'block';
+            dom.captchaImage.innerHTML = challenge.imageSvg;
         }
 
-        // ⭐ 颜色三重干扰
+        // ===== 颜色显示 =====
         if (challenge.displayHtml) {
             dom.colorContainer.style.display = 'block';
             dom.colorDisplay.innerHTML = challenge.displayHtml;
         }
-        // ⭐ 数字记忆
-        else if (challenge.displayNumber) {
-            dom.displayTextContainer.style.display = 'block';
-            dom.displayText.textContent = challenge.displayNumber;
-            dom.displayText.style.cssText = 'font-size:3.5rem;font-weight:bold;color:#8B5CF6;padding:1rem;margin:0.5rem 0;background:rgba(255,255,255,0.02);border-radius:16px;border:1px solid rgba(255,255,255,0.04);text-align:center;';
-            
-            dom.timerText.textContent = '⏱ 记忆 4s';
-            dom.timerFill.style.width = '100%';
-            dom.timerFill.className = 'timer-fill';
-            var memTime = 4;
-            var memInterval = setInterval(function() {
-                memTime--;
-                dom.timerText.textContent = '⏱ 记忆 ' + memTime + 's';
-                var pct = (memTime / 4) * 100;
-                dom.timerFill.style.width = pct + '%';
-                if (pct < 30) dom.timerFill.classList.add('danger');
-                else if (pct < 50) dom.timerFill.classList.add('warning');
-                if (memTime <= 0) {
-                    clearInterval(memInterval);
-                    dom.timerText.textContent = '⏱ 选择';
-                    dom.timerFill.style.width = '100%';
-                    dom.timerFill.className = 'timer-fill';
-                }
-            }, 1000);
-            
-            setTimeout(function() {
-                dom.displayText.textContent = '请选择你记住的数字';
-                dom.displayText.style.color = 'rgba(255,255,255,0.3)';
-                dom.displayText.style.fontSize = '1rem';
-                
-                var options = challenge.options || [];
-                var letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
-                var html = '';
-                for (var i = 0; i < options.length; i++) {
-                    html += '<button class="option-btn" data-index="' + i + '" data-answer="' + options[i] + '">' +
-                        letters[i] + '. ' + options[i] + '</button>';
-                }
-                dom.optionsGrid.innerHTML = html;
-                dom.optionsGrid.querySelectorAll('.option-btn').forEach(function(btn) {
-                    btn.addEventListener('click', function() {
-                        if (gameState.isAnswered) return;
-                        var answer = this.dataset.answer;
-                        if (answer) submitAnswer(challenge, answer, this);
-                    });
-                });
-                startTimer(challenge.timeLimit || 10);
-            }, 4500);
-            return;
-        }
-        else if (challenge.imageSvg) {
-            dom.imageContainer.style.display = 'block';
-            dom.captchaImage.innerHTML = challenge.imageSvg;
-        }
-        else if (challenge.displayText) {
+
+        // ===== 找不同 / 数字记忆显示 =====
+        if (challenge.displayText) {
             dom.displayTextContainer.style.display = 'block';
             dom.displayText.innerHTML = challenge.displayText;
         }
 
-        // 渲染选项
-        var options = challenge.options || ['A', 'B', 'C', 'D'];
-        var letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
-        var html = '';
-        for (var i = 0; i < options.length; i++) {
-            html += '<button class="option-btn" data-index="' + i + '" data-answer="' + options[i] + '">' +
-                letters[i] + '. ' + options[i] + '</button>';
-        }
-        dom.optionsGrid.innerHTML = html;
+        // ===== 数字记忆（九宫格键盘） =====
+        if (challenge.type === 'memory' && challenge.keyboardRows) {
+            dom.memoryContainer.style.display = 'block';
+            gameState.memoryInput = '';
+            gameState.memoryCorrectAnswer = challenge.correctAnswer || '';
+            dom.memoryInputDisplay.textContent = '_ '.repeat(gameState.memoryCorrectAnswer.length).trim();
+            renderMemoryKeyboard(challenge.keyboardRows);
 
-        dom.optionsGrid.querySelectorAll('.option-btn').forEach(function(btn) {
-            btn.addEventListener('click', function() {
-                if (gameState.isAnswered) return;
-                var answer = this.dataset.answer;
-                if (answer) submitAnswer(challenge, answer, this);
+            // 记忆显示阶段
+            if (challenge.displayNumber) {
+                dom.displayTextContainer.style.display = 'block';
+                dom.displayText.textContent = '🧠 记住: ' + challenge.displayNumber;
+                dom.displayText.style.cssText = 'font-size:2.5rem;font-weight:bold;color:#8B5CF6;padding:1rem;margin:0.5rem 0;background:rgba(139,92,246,0.04);border-radius:16px;border:1px solid rgba(139,92,246,0.06);text-align:center;letter-spacing:8px;';
+
+                var memoryTime = challenge.memoryTime || 5;
+                dom.timerText.textContent = '⏱ 记忆 ' + memoryTime + 's';
+                dom.timerFill.style.width = '100%';
+                dom.timerFill.className = 'timer-fill';
+
+                var memInterval = setInterval(function() {
+                    memoryTime--;
+                    dom.timerText.textContent = '⏱ 记忆 ' + memoryTime + 's';
+                    var pct = (memoryTime / (challenge.memoryTime || 5)) * 100;
+                    dom.timerFill.style.width = pct + '%';
+                    if (pct < 30) dom.timerFill.classList.add('danger');
+                    else if (pct < 50) dom.timerFill.classList.add('warning');
+                    if (memoryTime <= 0) {
+                        clearInterval(memInterval);
+                        dom.displayText.textContent = '✏️ 输入你记住的数字';
+                        dom.displayText.style.cssText = 'font-size:1.2rem;color:rgba(255,255,255,0.3);padding:0.5rem;margin:0.5rem 0;text-align:center;';
+                        dom.timerText.textContent = '⏱ ' + (challenge.timeLimit || 15) + 's';
+                        dom.timerFill.style.width = '100%';
+                        dom.timerFill.className = 'timer-fill';
+                        startTimer(challenge.timeLimit || 15);
+                    }
+                }, 1000);
+                return;
+            }
+        }
+
+        // ===== 颜色混合（方形色块选项） =====
+        if (challenge.type === 'colorMix' && challenge.optionsHtml) {
+            dom.colorOptionsGrid.style.display = 'grid';
+            dom.colorOptionsGrid.innerHTML = challenge.optionsHtml;
+            var colorOptions = dom.colorOptionsGrid.querySelectorAll('.color-option');
+            colorOptions.forEach(function(el) {
+                el.addEventListener('click', function() {
+                    if (gameState.isAnswered) return;
+                    var answer = this.dataset.color;
+                    if (answer) submitColorMixAnswer(challenge, answer, this);
+                });
             });
-        });
+        }
+
+        // ===== 华容道 =====
+        if (challenge.type === 'puzzle' && challenge.puzzle) {
+            dom.puzzleContainer.style.display = 'block';
+            renderPuzzle(challenge.puzzle);
+            startTimer(challenge.timeLimit || 60);
+            return;
+        }
+
+        // ===== 数独 =====
+        if (challenge.type === 'sudoku' && challenge.gridHtml) {
+            dom.sudokuContainer.style.display = 'block';
+            dom.sudokuGrid.innerHTML = challenge.gridHtml;
+            gameState.sudokuEmptyRow = challenge.emptyRow || 0;
+            gameState.sudokuEmptyCol = challenge.emptyCol || 0;
+            gameState.sudokuCorrectAnswer = challenge.correctAnswer || '';
+
+            dom.optionsGrid.style.display = 'grid';
+            dom.optionsGrid.innerHTML = '';
+            var optionLetters = ['A', 'B', 'C', 'D', 'E', 'F'];
+            (challenge.options || []).forEach(function(opt, idx) {
+                var btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.textContent = optionLetters[idx] + '. ' + opt;
+                btn.dataset.answer = opt;
+                btn.addEventListener('click', function() {
+                    if (gameState.isAnswered) return;
+                    submitSudokuAnswer(challenge, this.dataset.answer, this);
+                });
+                dom.optionsGrid.appendChild(btn);
+            });
+
+            startTimer(challenge.timeLimit || 30);
+            return;
+        }
+
+        // ===== 找不同特殊处理 =====
+        if (challenge.type === 'findDifferent' && challenge.originalDisplay) {
+            dom.displayTextContainer.style.display = 'block';
+            dom.displayText.textContent = challenge.originalDisplay;
+            dom.displayText.style.cssText = 'font-size:2.8rem;font-weight:bold;color:#8B5CF6;padding:1.5rem;margin:0.5rem 0;background:rgba(255,255,255,0.02);border-radius:16px;border:1px solid rgba(255,255,255,0.04);text-align:center;letter-spacing:8px;font-family:monospace;';
+
+            var displayTime = challenge.displayTime || 3;
+            dom.timerText.textContent = '⏱ 记忆 ' + displayTime + 's';
+            dom.timerFill.style.width = '100%';
+            dom.timerFill.className = 'timer-fill';
+
+            var countdownInterval = setInterval(function() {
+                displayTime--;
+                dom.timerText.textContent = '⏱ 记忆 ' + displayTime + 's';
+                var pct = (displayTime / (challenge.displayTime || 3)) * 100;
+                dom.timerFill.style.width = pct + '%';
+                if (pct < 30) dom.timerFill.classList.add('danger');
+                else if (pct < 50) dom.timerFill.classList.add('warning');
+                if (displayTime <= 0) {
+                    clearInterval(countdownInterval);
+                    dom.displayText.textContent = '⏰ 时间到！找出被更改的字符！';
+                    dom.displayText.style.color = '#F59E0B';
+                    dom.displayText.style.fontSize = '1.8rem';
+                    dom.displayText.style.letterSpacing = 'normal';
+                    dom.timerText.textContent = '⏱ 选择';
+
+                    setTimeout(function() {
+                        var shuffled = challenge.shuffledDisplay || '';
+                        var shuffledPos = challenge.shuffledPos || 0;
+                        var html = '';
+                        for (var i = 0; i < shuffled.length; i++) {
+                            var ch = shuffled[i];
+                            html += '<span class="char-btn" data-index="' + i + '" data-char="' + ch + '" onclick="selectChar(' + i + ', \'' + ch + '\', this)">' + ch + '</span>';
+                        }
+                        dom.displayText.innerHTML = html;
+                        dom.displayText.style.cssText = 'padding:1.5rem;margin:0.5rem 0;background:rgba(255,255,255,0.02);border-radius:16px;border:1px solid rgba(255,255,255,0.04);text-align:center;letter-spacing:4px;';
+                        dom.displayText.style.color = '#fff';
+                        dom.displayText.style.fontSize = '1rem';
+                        dom.displayText.dataset.correctAnswer = challenge.correctAnswer;
+                        dom.displayText.dataset.shuffledPos = shuffledPos;
+
+                        startTimer(challenge.timeLimit || 10);
+                    }, 1000);
+                }
+            }, 1000);
+            return;
+        }
+
+        // ===== 真假判断特殊处理 =====
+        if (challenge.type === 'trueFalse') {
+            dom.optionsGrid.style.display = 'grid';
+            dom.optionsGrid.innerHTML = '';
+            (challenge.options || ['✅ 真的', '❌ 假的']).forEach(function(opt) {
+                var btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.textContent = opt;
+                btn.dataset.answer = opt;
+                btn.addEventListener('click', function() {
+                    if (gameState.isAnswered) return;
+                    submitAnswer(challenge, this.dataset.answer, this);
+                });
+                dom.optionsGrid.appendChild(btn);
+            });
+            startTimer(challenge.timeLimit || 60);
+            return;
+        }
+
+        // ===== 常规选项 =====
+        if (challenge.options && challenge.options.length > 0) {
+            dom.optionsGrid.style.display = 'grid';
+            dom.optionsGrid.innerHTML = '';
+            var letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+            challenge.options.forEach(function(opt, idx) {
+                var btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.textContent = letters[idx] + '. ' + opt;
+                btn.dataset.answer = opt;
+                btn.addEventListener('click', function() {
+                    if (gameState.isAnswered) return;
+                    submitAnswer(challenge, this.dataset.answer, this);
+                });
+                dom.optionsGrid.appendChild(btn);
+            });
+        }
 
         var timeLimit = challenge.timeLimit || 15;
         startTimer(timeLimit);
         updateUI();
     }
 
-    // ⭐ 找不同点击
+    // ============================================================
+    // 渲染数字记忆键盘（⭐ 回退键在右下角）
+    // ============================================================
+    function renderMemoryKeyboard(rows) {
+        var keyboard = dom.memoryKeyboard;
+        keyboard.innerHTML = '';
+        keyboard.style.gridTemplateColumns = 'repeat(4, 1fr)';
+
+        // 收集所有数字
+        var allKeys = [];
+        rows.forEach(function(row) {
+            row.forEach(function(num) {
+                allKeys.push({ type: 'number', value: num });
+            });
+        });
+
+        // 补齐到 11 个数字（第12个位置给回退键）
+        while (allKeys.length < 11) {
+            allKeys.push({ type: 'number', value: allKeys.length % 10 });
+        }
+
+        // 只取前11个数字
+        allKeys = allKeys.slice(0, 11);
+
+        // 添加回退键到第12个位置（右下角）
+        allKeys.push({ type: 'backspace', value: '⌫' });
+
+        allKeys.forEach(function(item) {
+            var btn = document.createElement('button');
+            btn.className = 'key-btn';
+
+            if (item.type === 'backspace') {
+                btn.textContent = '⌫';
+                btn.classList.add('backspace');
+                btn.dataset.type = 'backspace';
+                btn.addEventListener('click', function() {
+                    if (gameState.isAnswered) return;
+                    memoryBackspace();
+                });
+            } else {
+                btn.textContent = item.value;
+                btn.dataset.value = item.value;
+                btn.addEventListener('click', function() {
+                    if (gameState.isAnswered) return;
+                    memoryKeyPress(this.dataset.value);
+                });
+            }
+            keyboard.appendChild(btn);
+        });
+    }
+
+    // ============================================================
+    // 数字记忆键盘输入
+    // ============================================================
+    function memoryKeyPress(value) {
+        if (gameState.isAnswered) return;
+        var len = gameState.memoryCorrectAnswer.length;
+        if (gameState.memoryInput.length >= len) return;
+        gameState.memoryInput += value;
+        updateMemoryDisplay();
+    }
+
+    function memoryBackspace() {
+        if (gameState.isAnswered) return;
+        if (gameState.memoryInput.length > 0) {
+            gameState.memoryInput = gameState.memoryInput.slice(0, -1);
+            updateMemoryDisplay();
+        }
+    }
+
+    function updateMemoryDisplay() {
+        var len = gameState.memoryCorrectAnswer.length;
+        var display = '';
+        for (var i = 0; i < len; i++) {
+            if (i < gameState.memoryInput.length) {
+                display += gameState.memoryInput[i] + ' ';
+            } else {
+                display += '_ ';
+            }
+        }
+        dom.memoryInputDisplay.textContent = display.trim();
+    }
+
+    function submitMemoryAnswer() {
+        if (gameState.isAnswered) return;
+        if (gameState.memoryInput.length !== gameState.memoryCorrectAnswer.length) {
+            showToast('请完整输入所有数字', 'error');
+            return;
+        }
+        var isCorrect = gameState.memoryInput === gameState.memoryCorrectAnswer;
+        var challenge = gameState.currentChallenge;
+        dom.memoryKeyboard.querySelectorAll('.key-btn').forEach(function(b) { b.disabled = true; });
+        dom.memoryContainer.querySelectorAll('.btn-memory').forEach(function(b) { b.disabled = true; });
+        handleAnswerResult(challenge, isCorrect);
+    }
+
+    // ============================================================
+    // 颜色混合提交
+    // ============================================================
+    function submitColorMixAnswer(challenge, answer, element) {
+        if (gameState.isAnswered) return;
+        var isCorrect = answer === challenge.correctAnswer;
+        dom.colorOptionsGrid.querySelectorAll('.color-option').forEach(function(el) {
+            el.style.pointerEvents = 'none';
+            el.style.opacity = '0.5';
+            if (el.dataset.color === challenge.correctAnswer) {
+                el.style.borderColor = '#28a745';
+                el.style.background = 'rgba(40,167,69,0.08)';
+            }
+        });
+        if (!isCorrect) {
+            element.style.borderColor = '#dc3545';
+            element.style.background = 'rgba(220,53,69,0.08)';
+            dom.challengeCard.classList.add('shake');
+            setTimeout(function() { dom.challengeCard.classList.remove('shake'); }, 500);
+        }
+        handleAnswerResult(challenge, isCorrect);
+    }
+
+    // ============================================================
+    // 数独提交
+    // ============================================================
+    function submitSudokuAnswer(challenge, answer, btn) {
+        if (gameState.isAnswered) return;
+        var isCorrect = answer === challenge.correctAnswer;
+        dom.optionsGrid.querySelectorAll('.option-btn').forEach(function(b) {
+            b.disabled = true;
+            if (b.dataset.answer === challenge.correctAnswer) {
+                b.classList.add('correct');
+            }
+        });
+        if (!isCorrect) {
+            btn.classList.add('wrong');
+            dom.challengeCard.classList.add('shake');
+            setTimeout(function() { dom.challengeCard.classList.remove('shake'); }, 500);
+        }
+        var emptyCell = document.getElementById('sudokuEmpty');
+        if (emptyCell) {
+            emptyCell.textContent = isCorrect ? challenge.correctAnswer : '✗';
+            emptyCell.style.color = isCorrect ? '#28a745' : '#dc3545';
+        }
+        handleAnswerResult(challenge, isCorrect);
+    }
+
+    // ============================================================
+    // 找不同选择字符
+    // ============================================================
     function selectChar(index, char, element) {
         if (gameState.isAnswered) return;
 
@@ -918,52 +1419,135 @@
             }
         });
 
-        if (isCorrect) {
-            element.classList.add('correct-answer');
-            showFeedback(true, 10 + Math.floor(gameState.level / 5), challenge ? challenge.funMessage : '');
-            gameState.score += 10 + Math.floor(gameState.level / 5);
-            gameState.combo++;
-            gameState.passed++;
-            if (gameState.combo > gameState.maxCombo) {
-                gameState.maxCombo = gameState.combo;
-            }
-            gameState.level++;
-        } else {
+        if (!isCorrect) {
             element.classList.add('wrong-answer');
-            gameState.combo = 0;
-            gameState.lives--;
-            showFeedback(false, 0, '');
+            dom.challengeCard.classList.add('shake');
+            setTimeout(function() { dom.challengeCard.classList.remove('shake'); }, 500);
         }
 
-        updateUI();
-
-        if (gameState.lives <= 0) {
-            setTimeout(gameOver, 1500);
-            return;
-        }
-
-        setTimeout(loadChallenge, 1500);
+        handleAnswerResult(challenge, isCorrect);
     }
 
+    // ============================================================
+    // 华容道渲染
+    // ============================================================
+    function renderPuzzle(puzzle) {
+        var grid = dom.puzzleGrid;
+        grid.innerHTML = '';
+        gameState.puzzleState = puzzle.map(function(row) { return row.slice(); });
+
+        for (var r = 0; r < 3; r++) {
+            for (var c = 0; c < 3; c++) {
+                var cell = document.createElement('div');
+                cell.className = 'puzzle-cell';
+                var val = puzzle[r][c];
+                if (val === 0) {
+                    cell.classList.add('empty');
+                    cell.textContent = '';
+                    gameState.puzzleEmptyRow = r;
+                    gameState.puzzleEmptyCol = c;
+                } else {
+                    cell.textContent = val;
+                    cell.dataset.row = r;
+                    cell.dataset.col = c;
+                    cell.addEventListener('click', function() {
+                        if (gameState.isAnswered) return;
+                        var row = parseInt(this.dataset.row);
+                        var col = parseInt(this.dataset.col);
+                        movePuzzleTile(row, col);
+                    });
+                }
+                grid.appendChild(cell);
+            }
+        }
+    }
+
+    function movePuzzleTile(row, col) {
+        var emptyRow = gameState.puzzleEmptyRow;
+        var emptyCol = gameState.puzzleEmptyCol;
+
+        var dr = Math.abs(row - emptyRow);
+        var dc = Math.abs(col - emptyCol);
+        if ((dr === 1 && dc === 0) || (dr === 0 && dc === 1)) {
+            var puzzle = gameState.puzzleState;
+            puzzle[emptyRow][emptyCol] = puzzle[row][col];
+            puzzle[row][col] = 0;
+            gameState.puzzleEmptyRow = row;
+            gameState.puzzleEmptyCol = col;
+            renderPuzzleState(puzzle);
+
+            if (checkPuzzleSolved(puzzle)) {
+                gameState.isAnswered = true;
+                clearInterval(gameState.timer);
+                var challenge = gameState.currentChallenge;
+                handleAnswerResult(challenge, true);
+            }
+        }
+    }
+
+    function renderPuzzleState(puzzle) {
+        var cells = dom.puzzleGrid.querySelectorAll('.puzzle-cell');
+        var idx = 0;
+        for (var r = 0; r < 3; r++) {
+            for (var c = 0; c < 3; c++) {
+                var val = puzzle[r][c];
+                var cell = cells[idx];
+                if (val === 0) {
+                    cell.classList.add('empty');
+                    cell.textContent = '';
+                    cell.dataset.row = r;
+                    cell.dataset.col = c;
+                    cell.onclick = null;
+                } else {
+                    cell.classList.remove('empty');
+                    cell.textContent = val;
+                    cell.dataset.row = r;
+                    cell.dataset.col = c;
+                    cell.onclick = function() {
+                        if (gameState.isAnswered) return;
+                        var row = parseInt(this.dataset.row);
+                        var col = parseInt(this.dataset.col);
+                        movePuzzleTile(row, col);
+                    };
+                }
+                idx++;
+            }
+        }
+    }
+
+    function checkPuzzleSolved(puzzle) {
+        var expected = [[1,2,3],[4,5,6],[7,8,0]];
+        for (var r = 0; r < 3; r++) {
+            for (var c = 0; c < 3; c++) {
+                if (puzzle[r][c] !== expected[r][c]) return false;
+            }
+        }
+        return true;
+    }
+
+    // ============================================================
+    // 通用答案处理
+    // ============================================================
     function submitAnswer(challenge, answer, btn) {
         if (gameState.isAnswered) return;
-        gameState.isAnswered = true;
-        clearInterval(gameState.timer);
-
         var isCorrect = answer === challenge.correctAnswer;
-
         dom.optionsGrid.querySelectorAll('.option-btn').forEach(function(b) {
             b.disabled = true;
             if (b.dataset.answer === challenge.correctAnswer) {
                 b.classList.add('correct');
             }
         });
-
         if (!isCorrect) {
             btn.classList.add('wrong');
             dom.challengeCard.classList.add('shake');
             setTimeout(function() { dom.challengeCard.classList.remove('shake'); }, 500);
         }
+        handleAnswerResult(challenge, isCorrect);
+    }
+
+    function handleAnswerResult(challenge, isCorrect) {
+        gameState.isAnswered = true;
+        clearInterval(gameState.timer);
 
         var points = 0;
         if (isCorrect) {
@@ -993,6 +1577,9 @@
         setTimeout(loadChallenge, 1500);
     }
 
+    // ============================================================
+    // 显示反馈
+    // ============================================================
     function showFeedback(isCorrect, points, funMessage) {
         var el = dom.feedback;
         el.style.display = 'block';
@@ -1006,27 +1593,23 @@
         }
     }
 
+    // ============================================================
+    // 计时器（⭐ 动态最大值）
+    // ============================================================
     function startTimer(limit) {
         clearInterval(gameState.timer);
         gameState.timeLeft = limit;
-        updateTimerDisplay();
+        updateTimerDisplay(limit);
 
         gameState.timer = setInterval(function() {
             gameState.timeLeft--;
-            updateTimerDisplay();
+            updateTimerDisplay(limit);
 
             if (gameState.timeLeft <= 0) {
                 clearInterval(gameState.timer);
                 if (!gameState.isAnswered) {
                     gameState.isAnswered = true;
-                    dom.optionsGrid.querySelectorAll('.option-btn').forEach(function(b) {
-                        b.disabled = true;
-                    });
-                    var charBtns = dom.displayText.querySelectorAll('.char-btn');
-                    charBtns.forEach(function(el) {
-                        el.classList.add('disabled');
-                        el.onclick = null;
-                    });
+                    disableAllInteractions();
                     gameState.combo = 0;
                     gameState.lives--;
                     updateUI();
@@ -1041,9 +1624,9 @@
         }, 1000);
     }
 
-    function updateTimerDisplay() {
-        var pct = (gameState.timeLeft / Math.max(3, 20)) * 100;
-        dom.timerFill.style.width = pct + '%';
+    function updateTimerDisplay(limit) {
+        var pct = (gameState.timeLeft / Math.max(1, limit)) * 100;
+        dom.timerFill.style.width = Math.max(0, Math.min(100, pct)) + '%';
         dom.timerText.textContent = '⏱ ' + gameState.timeLeft + 's';
 
         dom.timerFill.className = 'timer-fill';
@@ -1051,6 +1634,22 @@
         else if (pct < 50) dom.timerFill.classList.add('warning');
     }
 
+    function disableAllInteractions() {
+        dom.optionsGrid.querySelectorAll('.option-btn').forEach(function(b) { b.disabled = true; });
+        dom.colorOptionsGrid.querySelectorAll('.color-option').forEach(function(el) {
+            el.style.pointerEvents = 'none';
+        });
+        dom.memoryKeyboard.querySelectorAll('.key-btn').forEach(function(b) { b.disabled = true; });
+        dom.memoryContainer.querySelectorAll('.btn-memory').forEach(function(b) { b.disabled = true; });
+        dom.puzzleGrid.querySelectorAll('.puzzle-cell').forEach(function(cell) {
+            cell.onclick = null;
+        });
+        dom.sudokuGrid.querySelectorAll('.option-btn').forEach(function(b) { b.disabled = true; });
+    }
+
+    // ============================================================
+    // 更新 UI
+    // ============================================================
     function updateUI() {
         dom.levelDisplay.textContent = gameState.level;
         dom.scoreDisplay.textContent = gameState.score;
@@ -1064,6 +1663,20 @@
         dom.progressFill.style.width = Math.min(progress, 100) + '%';
     }
 
+    // ============================================================
+    // 难度标签
+    // ============================================================
+    function getDifficultyLabel(level) {
+        if (level >= 81) return '👑 传说';
+        if (level >= 61) return '💀 地狱';
+        if (level >= 41) return '🔥 噩梦';
+        if (level >= 21) return '⚡ 困难';
+        return '📝 入门';
+    }
+
+    // ============================================================
+    // 保存分数 & 排行榜
+    // ============================================================
     function saveAndShowRanking() {
         var finalScore = gameState.score;
         fetch('/VerifyGame/SaveScore', {
@@ -1081,8 +1694,8 @@
         fetch('/VerifyGame/GetRanking')
             .then(function(r) { return r.json(); })
             .then(function(data) {
-                var container = document.getElementById('rankList');
-                var section = document.getElementById('rankSection');
+                var container = dom.rankList;
+                var section = dom.rankSection;
                 if (data.success && data.data.length > 0) {
                     var html = '';
                     var medals = ['🥇', '🥈', '🥉'];
@@ -1107,12 +1720,14 @@
                 }
             })
             .catch(function() {
-                document.getElementById('rankList').innerHTML =
-                '<div class="rank-empty">加载排行榜失败</div>';
-                document.getElementById('rankSection').style.display = 'block';
+                dom.rankList.innerHTML = '<div class="rank-empty">加载排行榜失败</div>';
+                dom.rankSection.style.display = 'block';
             });
     }
 
+    // ============================================================
+    // 游戏结束
+    // ============================================================
     function gameOver() {
         gameState.isPlaying = false;
         clearInterval(gameState.timer);
@@ -1177,6 +1792,9 @@
         saveAndShowRanking();
     }
 
+    // ============================================================
+    // Toast
+    // ============================================================
     function showToast(message, type) {
         var container = document.getElementById('toastContainer');
         var toast = document.createElement('div');
@@ -1190,5 +1808,8 @@
         }, 3000);
     }
 
+    // ============================================================
+    // 启动
+    // ============================================================
     document.addEventListener('DOMContentLoaded', startGame);
 </script>
