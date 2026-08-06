@@ -605,54 +605,43 @@ namespace MyPersonalWebsite.Controllers
         // ============================================================
         // 4. ⭐ 颜色识别（修复：使用 displayText）
         // ============================================================
-        private object GenerateColorRecognition(int level, int difficulty)
-        {
-            var pool = _colorHex.ToArray();
+       // 4. ⭐ 颜色识别（修复：用单字颜色词）
+private object GenerateColorRecognition(int level, int difficulty)
+{
+    var pool = _colorHex.ToArray();
+    var selected = pool[_random.Next(pool.Length)];
 
-            var selected = pool[_random.Next(pool.Length)];
+    // 找相似颜色
+    var similarColors = pool.Where(c => IsSimilarColor(c.Value, selected.Value)).ToList();
+    if (similarColors.Count < 3) similarColors = pool.ToList();
 
-            // 找与选中颜色相似的颜色
-            var similarColors = pool.Where(c => IsSimilarColor(c.Value, selected.Value)).ToList();
-            if (similarColors.Count < 3) similarColors = pool.ToList();
+    var options = new List<string> { selected.Key };
+    int count = 4 + Math.Min(difficulty / 10, 4);
 
-            var options = new List<string> { selected.Key };
-            int count = 4 + Math.Min(difficulty / 10, 4);
+    var poolList = similarColors.Where(c => c.Key != selected.Key).ToList();
+    for (int i = 0; i < count - 1 && i < poolList.Count; i++)
+    {
+        options.Add(poolList[i].Key);
+    }
 
-            var poolList = similarColors.Where(c => c.Key != selected.Key).ToList();
-            for (int i = 0; i < count - 1 && i < poolList.Count; i++)
-            {
-                options.Add(poolList[i].Key);
-            }
+    int timeLimit = Math.Max(2, 7 - difficulty / 15);
+    
+    // ⭐ 只用单字颜色词
+    string[] singleColorWords = { "红", "蓝", "绿", "黄", "紫", "橙", "粉", "青", "棕", "灰", "黑", "白", "金", "银" };
+    string displayWord = singleColorWords[_random.Next(singleColorWords.Length)];
 
-            int timeLimit = Math.Max(2, 7 - difficulty / 15);
-            string[] texts = { "颜色", "色彩", "鲜艳", "绚丽", "斑斓", "彩色", "炫彩" };
-            string displayText = texts[_random.Next(texts.Length)];
-
-            return new
-            {
-                type = "color",
-                level = level,
-                question = $"🎨 下面文字是什么颜色？",
-                displayText = $"<span style='color:{selected.Value};font-size:3rem;font-weight:bold;'>{displayText}</span>",
-                correctAnswer = selected.Key,
-                options = options.OrderBy(_ => _random.Next()).ToList(),
-                timeLimit = timeLimit,
-                funMessage = GetFunMessage("color")
-            };
-        }
-
-        private bool IsSimilarColor(string hex1, string hex2)
-        {
-            if (hex1 == hex2) return false;
-            try
-            {
-                var c1 = System.Drawing.ColorTranslator.FromHtml(hex1);
-                var c2 = System.Drawing.ColorTranslator.FromHtml(hex2);
-                var diff = Math.Abs(c1.R - c2.R) + Math.Abs(c1.G - c2.G) + Math.Abs(c1.B - c2.B);
-                return diff < 150;
-            }
-            catch { return false; }
-        }
+    return new
+    {
+        type = "color",
+        level = level,
+        question = $"🎨 下面文字是什么颜色？",
+        displayText = $"<span style='color:{selected.Value};font-size:3rem;font-weight:bold;'>{displayWord}</span>",
+        correctAnswer = selected.Key,
+        options = options.OrderBy(_ => _random.Next()).ToList(),
+        timeLimit = timeLimit,
+        funMessage = GetFunMessage("color")
+    };
+}
 
        // 5. ⭐ 找不同（真正地狱难度：无标记 + 乱序 + 相似字符）
 private object GenerateFindDifferent(int level, int difficulty)
@@ -1443,7 +1432,7 @@ private object GenerateFindDifferent(int level, int difficulty)
             };
         }
 
-        // 20. ⭐ 颜色三重干扰（地狱难度）
+       // 20. ⭐ 颜色三重干扰（修复：只用单字颜色词）
 private object GenerateTripleColorInterference(int level, int difficulty)
 {
     var colorPool = _colorHex.ToArray();
@@ -1458,18 +1447,18 @@ private object GenerateTripleColorInterference(int level, int difficulty)
         }
     }
 
-    // ⭐ 只用一个字的颜色名称
-    string[] colorWords = new string[] { "红", "蓝", "绿", "黄", "紫", "橙", "粉", "青" };
-    string displayWord = colorWords[_random.Next(colorWords.Length)];
+    // ⭐ 只用单字颜色词
+    string[] singleColorWords = { "红", "蓝", "绿", "黄", "紫", "橙", "粉", "青" };
+    string displayWord = singleColorWords[_random.Next(singleColorWords.Length)];
 
-    // 随机分配三种颜色（必须不同）
+    // 分配颜色
     var shuffledColors = selectedColors.OrderBy(_ => _random.Next()).ToList();
     var wordColor = shuffledColors[0];
     var bgColor = shuffledColors[1];
     var meaningColor = shuffledColors[2];
 
     // 确保三者不同
-    while (bgColor.Key == wordColor.Key) 
+    while (bgColor.Key == wordColor.Key)
     {
         shuffledColors = selectedColors.OrderBy(_ => _random.Next()).ToList();
         wordColor = shuffledColors[0];
@@ -1484,23 +1473,19 @@ private object GenerateTripleColorInterference(int level, int difficulty)
         meaningColor = shuffledColors[2];
     }
 
-    // ⭐ 三种提问方式
+    // 三种提问
     string[] questions = new[]
     {
         $"字的颜色是什么？",
         $"背景是什么颜色？",
-        $"「{displayWord}」这个字本身是什么颜色的？"
+        $"「{displayWord}」这个字本身是什么颜色？"
     };
 
     int qIndex = _random.Next(3);
     string questionText = questions[qIndex];
-    
-    // 正确答案
-    string correctAnswer = qIndex == 0 ? wordColor.Key : 
-                           qIndex == 1 ? bgColor.Key : 
-                           meaningColor.Key;
+    string correctAnswer = qIndex == 0 ? wordColor.Key : qIndex == 1 ? bgColor.Key : meaningColor.Key;
 
-    // 生成干扰选项
+    // 选项
     var options = new List<string> { correctAnswer };
     int optionCount = 4 + Math.Min(difficulty / 10, 3);
     var pool = _colorNames.Where(c => c != correctAnswer).ToList();
@@ -1511,7 +1496,7 @@ private object GenerateTripleColorInterference(int level, int difficulty)
         options.Add(shuffled[i]);
     }
 
-    // ⭐ 显示
+    // ⭐ 生成显示HTML
     string displayText = $"<div style='background:{bgColor.Value};padding:2rem 3.5rem;border-radius:20px;border:3px solid rgba(255,255,255,0.05);display:inline-block;box-shadow:0 0 60px {bgColor.Value}30;'>";
     displayText += $"<span style='color:{wordColor.Value};font-size:4rem;font-weight:900;text-shadow:0 0 50px {wordColor.Value}50;letter-spacing:10px;'>{displayWord}</span>";
     displayText += "</div>";
@@ -1531,6 +1516,7 @@ private object GenerateTripleColorInterference(int level, int difficulty)
         funMessage = GetFunMessage("tripleColor")
     };
 }
+
 
         private string GetFunMessage(string type)
         {
