@@ -740,6 +740,9 @@
     }
 
     function renderChallenge(challenge) {
+        // ⭐ 保存当前挑战到全局
+        gameState.currentChallenge = challenge;
+
         var typeName = typeNames[challenge.type] || challenge.type;
         var diffLabel = getDifficultyLabel(gameState.level);
         dom.typeBadge.textContent = '第 ' + challenge.level + ' 关 · ' + typeName + ' · ' + diffLabel;
@@ -750,7 +753,7 @@
         dom.colorContainer.style.display = 'none';
         dom.displayTextContainer.style.display = 'none';
 
-        // ⭐ 找不同：显示记忆倒计时
+        // ⭐ 找不同
         if (challenge.type === 'findDifferent' && challenge.originalDisplay) {
             dom.displayTextContainer.style.display = 'block';
             dom.displayText.innerHTML = challenge.originalDisplay;
@@ -759,7 +762,6 @@
             var displayTime = challenge.displayTime || 3;
             var timeLeft = displayTime;
             
-            // ⭐ 记忆倒计时
             dom.timerText.textContent = '⏱ 记忆 ' + timeLeft + 's';
             dom.timerFill.style.width = '100%';
             dom.timerFill.className = 'timer-fill';
@@ -803,7 +805,6 @@
                     dom.displayText.dataset.correctAnswer = challenge.correctAnswer;
                     dom.displayText.dataset.shuffledPos = shuffledPos;
 
-                    // ⭐ 开始答题计时
                     startTimer(challenge.timeLimit || 10);
                 }, 1000);
             }, displayTime * 1000);
@@ -820,7 +821,7 @@
             dom.displayTextContainer.style.display = 'block';
             dom.displayText.textContent = challenge.displayNumber;
             dom.displayText.style.cssText = 'font-size:3.5rem;font-weight:bold;color:#8B5CF6;padding:1rem;margin:0.5rem 0;background:rgba(255,255,255,0.02);border-radius:16px;border:1px solid rgba(255,255,255,0.04);text-align:center;';
-            // 数字记忆倒计时
+            
             dom.timerText.textContent = '⏱ 记忆 4s';
             dom.timerFill.style.width = '100%';
             dom.timerFill.className = 'timer-fill';
@@ -839,11 +840,12 @@
                     dom.timerFill.className = 'timer-fill';
                 }
             }, 1000);
+            
             setTimeout(function() {
                 dom.displayText.textContent = '请选择你记住的数字';
                 dom.displayText.style.color = 'rgba(255,255,255,0.3)';
                 dom.displayText.style.fontSize = '1rem';
-                // 显示选项
+                
                 var options = challenge.options || [];
                 var letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
                 var html = '';
@@ -895,13 +897,14 @@
         updateUI();
     }
 
+    // ⭐ 找不同点击
     function selectChar(index, char, element) {
         if (gameState.isAnswered) return;
 
         var container = dom.displayText;
         var shuffledPos = parseInt(container.dataset.shuffledPos);
-
         var isCorrect = (index === shuffledPos);
+        var challenge = gameState.currentChallenge;
 
         gameState.isAnswered = true;
         clearInterval(gameState.timer);
@@ -917,7 +920,7 @@
 
         if (isCorrect) {
             element.classList.add('correct-answer');
-            showFeedback(true, 10 + Math.floor(gameState.level / 5), challenge.funMessage);
+            showFeedback(true, 10 + Math.floor(gameState.level / 5), challenge ? challenge.funMessage : '');
             gameState.score += 10 + Math.floor(gameState.level / 5);
             gameState.combo++;
             gameState.passed++;
