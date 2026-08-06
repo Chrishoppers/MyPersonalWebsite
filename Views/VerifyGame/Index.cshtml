@@ -505,22 +505,20 @@
         font-family: monospace;
         transition: all 0.3s ease;
         user-select: none;
+        color: #ffffff;
+        border: 2px solid transparent;
+        background: transparent;
     }
 
     .char-btn:hover {
         transform: scale(1.1);
-        background: rgba(139, 92, 246, 0.08) !important;
+        background: rgba(139, 92, 246, 0.08);
     }
 
-    .char-btn.target {
-        color: #EC4899;
-        background: rgba(236, 72, 153, 0.1);
-        border: 2px solid rgba(236, 72, 153, 0.2);
-    }
-
-    .char-btn.normal {
-        color: #fff;
-        border: 2px solid transparent;
+    .char-btn.disabled {
+        cursor: default;
+        opacity: 0.5;
+        background: transparent !important;
     }
 
     .char-btn.correct-answer {
@@ -533,11 +531,6 @@
         border-color: #dc3545 !important;
         background: rgba(220, 53, 69, 0.15) !important;
         color: #dc3545 !important;
-    }
-
-    .char-btn.disabled {
-        cursor: default;
-        opacity: 0.5;
     }
 
     @@keyframes fadeIn {
@@ -757,17 +750,42 @@
         dom.colorContainer.style.display = 'none';
         dom.displayTextContainer.style.display = 'none';
 
+        // ⭐ 找不同：显示记忆倒计时
         if (challenge.type === 'findDifferent' && challenge.originalDisplay) {
             dom.displayTextContainer.style.display = 'block';
             dom.displayText.innerHTML = challenge.originalDisplay;
             dom.displayText.style.cssText = 'font-size:2.8rem;font-weight:bold;color:#8B5CF6;padding:1.5rem;margin:0.5rem 0;background:rgba(255,255,255,0.02);border-radius:16px;border:1px solid rgba(255,255,255,0.04);text-align:center;letter-spacing:8px;font-family:monospace;';
 
             var displayTime = challenge.displayTime || 3;
+            var timeLeft = displayTime;
+            
+            // ⭐ 记忆倒计时
+            dom.timerText.textContent = '⏱ 记忆 ' + timeLeft + 's';
+            dom.timerFill.style.width = '100%';
+            dom.timerFill.className = 'timer-fill';
+
+            var countdownInterval = setInterval(function() {
+                timeLeft--;
+                dom.timerText.textContent = '⏱ 记忆 ' + timeLeft + 's';
+                var pct = (timeLeft / displayTime) * 100;
+                dom.timerFill.style.width = pct + '%';
+                dom.timerFill.className = 'timer-fill';
+                if (pct < 30) {
+                    dom.timerFill.classList.add('danger');
+                } else if (pct < 50) {
+                    dom.timerFill.classList.add('warning');
+                }
+                if (timeLeft <= 0) {
+                    clearInterval(countdownInterval);
+                }
+            }, 1000);
+
             setTimeout(function() {
-                dom.displayText.textContent = '⏰ 记住它！';
+                dom.displayText.textContent = '⏰ 时间到！';
                 dom.displayText.style.color = '#F59E0B';
                 dom.displayText.style.fontSize = '1.8rem';
                 dom.displayText.style.letterSpacing = 'normal';
+                dom.timerText.textContent = '⏱ 选择';
 
                 setTimeout(function() {
                     var shuffled = challenge.shuffledDisplay || '';
@@ -775,8 +793,7 @@
                     var html = '';
                     for (var i = 0; i < shuffled.length; i++) {
                         var ch = shuffled[i];
-                        var isTarget = (i === shuffledPos);
-                        html += '<span class="char-btn ' + (isTarget ? 'target' : 'normal') + '" data-index="' + i + '" data-char="' + ch + '" onclick="selectChar(' + i + ', \'' + ch + '\', this)">' + ch + '</span>';
+                        html += '<span class="char-btn" data-index="' + i + '" data-char="' + ch + '" onclick="selectChar(' + i + ', \'' + ch + '\', this)">' + ch + '</span>';
                     }
                     dom.displayText.innerHTML = html;
                     dom.displayText.style.cssText = 'padding:1.5rem;margin:0.5rem 0;background:rgba(255,255,255,0.02);border-radius:16px;border:1px solid rgba(255,255,255,0.04);text-align:center;letter-spacing:4px;';
@@ -786,29 +803,65 @@
                     dom.displayText.dataset.correctAnswer = challenge.correctAnswer;
                     dom.displayText.dataset.shuffledPos = shuffledPos;
 
+                    // ⭐ 开始答题计时
                     startTimer(challenge.timeLimit || 10);
                 }, 1000);
             }, displayTime * 1000);
             return;
         }
 
+        // ⭐ 颜色三重干扰
         if (challenge.displayHtml) {
             dom.colorContainer.style.display = 'block';
             dom.colorDisplay.innerHTML = challenge.displayHtml;
         }
+        // ⭐ 数字记忆
         else if (challenge.displayNumber) {
             dom.displayTextContainer.style.display = 'block';
             dom.displayText.textContent = challenge.displayNumber;
             dom.displayText.style.cssText = 'font-size:3.5rem;font-weight:bold;color:#8B5CF6;padding:1rem;margin:0.5rem 0;background:rgba(255,255,255,0.02);border-radius:16px;border:1px solid rgba(255,255,255,0.04);text-align:center;';
+            // 数字记忆倒计时
+            dom.timerText.textContent = '⏱ 记忆 4s';
+            dom.timerFill.style.width = '100%';
+            dom.timerFill.className = 'timer-fill';
+            var memTime = 4;
+            var memInterval = setInterval(function() {
+                memTime--;
+                dom.timerText.textContent = '⏱ 记忆 ' + memTime + 's';
+                var pct = (memTime / 4) * 100;
+                dom.timerFill.style.width = pct + '%';
+                if (pct < 30) dom.timerFill.classList.add('danger');
+                else if (pct < 50) dom.timerFill.classList.add('warning');
+                if (memTime <= 0) {
+                    clearInterval(memInterval);
+                    dom.timerText.textContent = '⏱ 选择';
+                    dom.timerFill.style.width = '100%';
+                    dom.timerFill.className = 'timer-fill';
+                }
+            }, 1000);
             setTimeout(function() {
-                dom.displayText.textContent = '⏰ 记住它！';
-                dom.displayText.style.color = '#F59E0B';
-                setTimeout(function() {
-                    dom.displayText.textContent = '请选择你记住的数字';
-                    dom.displayText.style.color = 'rgba(255,255,255,0.3)';
-                    dom.displayText.style.fontSize = '1rem';
-                }, 1000);
-            }, 4000);
+                dom.displayText.textContent = '请选择你记住的数字';
+                dom.displayText.style.color = 'rgba(255,255,255,0.3)';
+                dom.displayText.style.fontSize = '1rem';
+                // 显示选项
+                var options = challenge.options || [];
+                var letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+                var html = '';
+                for (var i = 0; i < options.length; i++) {
+                    html += '<button class="option-btn" data-index="' + i + '" data-answer="' + options[i] + '">' +
+                        letters[i] + '. ' + options[i] + '</button>';
+                }
+                dom.optionsGrid.innerHTML = html;
+                dom.optionsGrid.querySelectorAll('.option-btn').forEach(function(btn) {
+                    btn.addEventListener('click', function() {
+                        if (gameState.isAnswered) return;
+                        var answer = this.dataset.answer;
+                        if (answer) submitAnswer(challenge, answer, this);
+                    });
+                });
+                startTimer(challenge.timeLimit || 10);
+            }, 4500);
+            return;
         }
         else if (challenge.imageSvg) {
             dom.imageContainer.style.display = 'block';
@@ -819,6 +872,7 @@
             dom.displayText.innerHTML = challenge.displayText;
         }
 
+        // 渲染选项
         var options = challenge.options || ['A', 'B', 'C', 'D'];
         var letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
         var html = '';
@@ -845,7 +899,6 @@
         if (gameState.isAnswered) return;
 
         var container = dom.displayText;
-        var correctAnswer = container.dataset.correctAnswer;
         var shuffledPos = parseInt(container.dataset.shuffledPos);
 
         var isCorrect = (index === shuffledPos);
@@ -858,16 +911,11 @@
             el.classList.add('disabled');
             el.onclick = null;
             if (parseInt(el.dataset.index) === shuffledPos) {
-                el.classList.remove('target', 'normal');
                 el.classList.add('correct-answer');
-            } else {
-                el.classList.remove('target', 'normal');
-                el.classList.add('disabled');
             }
         });
 
         if (isCorrect) {
-            element.classList.remove('target', 'normal');
             element.classList.add('correct-answer');
             showFeedback(true, 10 + Math.floor(gameState.level / 5), challenge.funMessage);
             gameState.score += 10 + Math.floor(gameState.level / 5);
@@ -876,8 +924,8 @@
             if (gameState.combo > gameState.maxCombo) {
                 gameState.maxCombo = gameState.combo;
             }
+            gameState.level++;
         } else {
-            element.classList.remove('target', 'normal');
             element.classList.add('wrong-answer');
             gameState.combo = 0;
             gameState.lives--;
@@ -891,10 +939,7 @@
             return;
         }
 
-        if (isCorrect) {
-            gameState.level++;
-        }
-        setTimeout(loadChallenge, 2000);
+        setTimeout(loadChallenge, 1500);
     }
 
     function submitAnswer(challenge, answer, btn) {
@@ -928,6 +973,7 @@
                 gameState.maxCombo = gameState.combo;
             }
             showFeedback(true, points, challenge.funMessage);
+            gameState.level++;
         } else {
             gameState.combo = 0;
             gameState.lives--;
@@ -941,10 +987,7 @@
             return;
         }
 
-        if (isCorrect) {
-            gameState.level++;
-        }
-        setTimeout(loadChallenge, 2000);
+        setTimeout(loadChallenge, 1500);
     }
 
     function showFeedback(isCorrect, points, funMessage) {
