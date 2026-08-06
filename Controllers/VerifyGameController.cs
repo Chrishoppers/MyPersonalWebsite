@@ -19,7 +19,7 @@ namespace MyPersonalWebsite.Controllers
         private static HashSet<int> _usedTypes = new HashSet<int>();
 
         // ============================================================
-        // 颜色库（用于颜色识别、反色、三重干扰等）
+        // 颜色库 - 80+ 种颜色
         // ============================================================
         private readonly Dictionary<string, string> _colorHex = new()
         {
@@ -37,99 +37,44 @@ namespace MyPersonalWebsite.Controllers
             {"青绿", "#008B8B"}, {"靛青", "#4B0082"}, {"藏青", "#000080"}, {"酒红", "#800020"},
             {"橄榄绿", "#556B2F"}, {"石板灰", "#708090"}, {"杏色", "#FFDAB9"}, {"薰衣草", "#E6E6FA"},
             {"紫藤", "#C9A0DC"}, {"樱粉", "#FFB7C5"}, {"薄荷", "#98FF98"}, {"奶油", "#FFFDD0"},
+            {"浅绿", "#90EE90"}, {"浅蓝", "#ADD8E6"}, {"浅紫", "#D8BFD8"}, {"浅黄", "#FFFFE0"},
+            {"浅橙", "#FFDAB9"}, {"浅灰", "#D3D3D3"}, {"深灰", "#A9A9A9"}, {"墨绿", "#006400"},
+            {"海军蓝", "#000080"}, {"克莱因蓝", "#002FA7"}, {"蒂芙尼蓝", "#81D8D0"},
+            {"马卡龙粉", "#FFB5C5"}, {"马卡龙蓝", "#A7D8DE"}, {"马卡龙黄", "#FDE8B6"},
+            {"马卡龙紫", "#C9B1E0"}, {"马卡龙绿", "#B5D4C5"}, {"莫兰迪粉", "#DDB5B5"},
+            {"莫兰迪蓝", "#A8BCCD"}, {"莫兰迪绿", "#B5C4B5"}, {"莫兰迪紫", "#C4B5D4"},
+            {"荧光粉", "#FF1493"}, {"荧光绿", "#00FF00"}, {"荧光黄", "#CCFF00"}, {"荧光橙", "#FF6B00"},
+            {"暗红", "#8B1A1A"}, {"暗蓝", "#1A2A6B"}, {"暗绿", "#1A4A2A"}, {"暗紫", "#4A1A6B"},
         };
 
         private readonly string[] _colorNames;
-        private readonly string[] _singleColorWords = { "红", "蓝", "绿", "黄", "紫", "橙", "粉", "青" };
+        private readonly string[] _singleColorWords = { "红", "蓝", "绿", "黄", "紫", "橙", "粉", "青", "灰", "棕" };
 
-        // ⭐ 颜色显示名称（用于选项显示）
         private readonly Dictionary<string, string> _colorDisplayName = new()
         {
-            {"红色", "红色"}, {"蓝色", "蓝色"}, {"黄色", "黄色"}, {"绿色", "绿色"},
-            {"紫色", "紫色"}, {"橙色", "橙色"}, {"粉色", "粉色"}, {"青色", "青色"},
-            {"深红", "深红"}, {"深蓝", "深蓝"}, {"深绿", "深绿"}, {"深紫", "深紫"},
-            {"淡蓝", "淡蓝"}, {"淡黄", "淡黄"}, {"淡粉", "淡粉"}, {"淡紫", "淡紫"},
-            {"棕色", "棕色"}, {"灰色", "灰色"}, {"黑色", "黑色"}, {"白色", "白色"},
-            {"橙红", "橙红"}, {"黄绿", "黄绿"}, {"蓝紫", "蓝紫"}, {"紫红", "紫红"},
-            {"琥珀", "琥珀"}, {"青蓝", "青蓝"}, {"粉红", "粉红"}, {"蓝灰", "蓝灰"},
-            {"红灰", "红灰"}, {"金色", "金色"}, {"银灰", "银灰"}, {"珊瑚", "珊瑚"},
-            {"薄荷绿", "薄荷绿"}, {"宝石蓝", "宝石蓝"}, {"翡翠绿", "翡翠绿"},
-            {"玛瑙红", "玛瑙红"}, {"珍珠白", "珍珠白"}, {"象牙白", "象牙白"},
-            {"巧克力棕", "巧克力棕"}, {"玫瑰红", "玫瑰红"}, {"柠檬黄", "柠檬黄"},
+            {"红色", "红色"}, {"深红", "深红"}, {"粉色", "粉色"}, {"浅粉", "浅粉"},
+            {"蓝色", "蓝色"}, {"深蓝", "深蓝"}, {"天蓝", "天蓝"}, {"青色", "青色"},
+            {"绿色", "绿色"}, {"深绿", "深绿"}, {"草绿", "草绿"}, {"黄色", "黄色"},
+            {"金色", "金色"}, {"橙色", "橙色"}, {"深橙", "深橙"}, {"紫色", "紫色"},
+            {"深紫", "深紫"}, {"棕色", "棕色"}, {"灰色", "灰色"}, {"黑色", "黑色"},
+            {"白色", "白色"}, {"银灰", "银灰"}, {"紫罗兰", "紫罗兰"}, {"靛蓝", "靛蓝"},
+            {"玫瑰红", "玫瑰红"}, {"柠檬黄", "柠檬黄"}, {"薄荷绿", "薄荷绿"}, {"珊瑚橙", "珊瑚橙"},
+            {"象牙白", "象牙白"}, {"巧克力棕", "巧克力棕"}, {"琥珀金", "琥珀金"}, {"翡翠绿", "翡翠绿"},
+            {"宝石蓝", "宝石蓝"}, {"玛瑙红", "玛瑙红"}, {"珍珠白", "珍珠白"}, {"青蓝", "青蓝"},
+            {"紫红", "紫红"}, {"橙红", "橙红"}, {"黄绿", "黄绿"}, {"蓝紫", "蓝紫"},
+            {"粉红", "粉红"}, {"米色", "米色"}, {"卡其", "卡其"}, {"珊瑚", "珊瑚"},
             {"青绿", "青绿"}, {"靛青", "靛青"}, {"藏青", "藏青"}, {"酒红", "酒红"},
             {"橄榄绿", "橄榄绿"}, {"石板灰", "石板灰"}, {"杏色", "杏色"},
             {"薰衣草", "薰衣草"}, {"紫藤", "紫藤"}, {"樱粉", "樱粉"},
-            {"薄荷", "薄荷"}, {"奶油", "奶油"},
-        };
-
-        // ⭐ 颜色混合映射（用于颜色混合题型 - 使用真实的 RGB 混合算法）
-        // 注意：映射表作为快速查找，同时支持 RGB 混合算法
-        private readonly Dictionary<(string, string), string> _colorMixMap = new()
-        {
-            {("红色", "蓝色"), "紫色"},
-            {("蓝色", "红色"), "紫色"},
-            {("红色", "黄色"), "橙色"},
-            {("黄色", "红色"), "橙色"},
-            {("蓝色", "黄色"), "绿色"},
-            {("黄色", "蓝色"), "绿色"},
-            {("红色", "白色"), "粉色"},
-            {("白色", "红色"), "粉色"},
-            {("蓝色", "白色"), "天蓝"},
-            {("白色", "蓝色"), "天蓝"},
-            {("黄色", "白色"), "淡黄"},
-            {("白色", "黄色"), "淡黄"},
-            {("红色", "黑色"), "深红"},
-            {("黑色", "红色"), "深红"},
-            {("蓝色", "黑色"), "深蓝"},
-            {("黑色", "蓝色"), "深蓝"},
-            {("绿色", "蓝色"), "青色"},
-            {("蓝色", "绿色"), "青色"},
-            {("红色", "绿色"), "棕色"},
-            {("绿色", "红色"), "棕色"},
-            {("黄色", "绿色"), "黄绿"},
-            {("绿色", "黄色"), "黄绿"},
-            {("紫色", "红色"), "紫红"},
-            {("红色", "紫色"), "紫红"},
-            {("蓝色", "紫色"), "蓝紫"},
-            {("紫色", "蓝色"), "蓝紫"},
-            {("橙色", "红色"), "橙红"},
-            {("红色", "橙色"), "橙红"},
-            {("黄色", "橙色"), "琥珀"},
-            {("橙色", "黄色"), "琥珀"},
-            {("蓝色", "绿色"), "青蓝"},
-            {("绿色", "蓝色"), "青蓝"},
-            {("粉色", "红色"), "粉红"},
-            {("红色", "粉色"), "粉红"},
-            {("白色", "粉色"), "淡粉"},
-            {("粉色", "白色"), "淡粉"},
-            {("黑色", "白色"), "灰色"},
-            {("白色", "黑色"), "灰色"},
-            {("灰色", "蓝色"), "蓝灰"},
-            {("蓝色", "灰色"), "蓝灰"},
-            {("灰色", "红色"), "红灰"},
-            {("红色", "灰色"), "红灰"},
-            {("紫色", "白色"), "淡紫"},
-            {("白色", "紫色"), "淡紫"},
-            {("绿色", "白色"), "淡绿"},
-            {("白色", "绿色"), "淡绿"},
-            {("橙色", "白色"), "淡橙"},
-            {("白色", "橙色"), "淡橙"},
-            {("黄色", "红色"), "橙色"},
-            {("红色", "黄色"), "橙色"},
-            {("红色", "蓝色"), "紫色"},
-            {("蓝色", "红色"), "紫色"},
-            {("黄色", "蓝色"), "绿色"},
-            {("蓝色", "黄色"), "绿色"},
-            {("红色", "绿色"), "棕色"},
-            {("绿色", "红色"), "棕色"},
-            {("蓝色", "紫色"), "蓝紫"},
-            {("紫色", "蓝色"), "蓝紫"},
-            {("红色", "紫色"), "紫红"},
-            {("紫色", "红色"), "紫红"},
-            {("橙色", "黄色"), "琥珀"},
-            {("黄色", "橙色"), "琥珀"},
-            {("绿色", "蓝色"), "青蓝"},
-            {("蓝色", "绿色"), "青蓝"},
+            {"薄荷", "薄荷"}, {"奶油", "奶油"}, {"浅绿", "浅绿"}, {"浅蓝", "浅蓝"},
+            {"浅紫", "浅紫"}, {"浅黄", "浅黄"}, {"浅橙", "浅橙"}, {"浅灰", "浅灰"},
+            {"深灰", "深灰"}, {"墨绿", "墨绿"}, {"海军蓝", "海军蓝"}, {"克莱因蓝", "克莱因蓝"},
+            {"蒂芙尼蓝", "蒂芙尼蓝"}, {"马卡龙粉", "马卡龙粉"}, {"马卡龙蓝", "马卡龙蓝"},
+            {"马卡龙黄", "马卡龙黄"}, {"马卡龙紫", "马卡龙紫"}, {"马卡龙绿", "马卡龙绿"},
+            {"莫兰迪粉", "莫兰迪粉"}, {"莫兰迪蓝", "莫兰迪蓝"}, {"莫兰迪绿", "莫兰迪绿"},
+            {"莫兰迪紫", "莫兰迪紫"}, {"荧光粉", "荧光粉"}, {"荧光绿", "荧光绿"},
+            {"荧光黄", "荧光黄"}, {"荧光橙", "荧光橙"}, {"暗红", "暗红"},
+            {"暗蓝", "暗蓝"}, {"暗绿", "暗绿"}, {"暗紫", "暗紫"},
         };
 
         // ============================================================
@@ -241,39 +186,6 @@ namespace MyPersonalWebsite.Controllers
         private readonly char[] _lowerAlphabet = "abcdefghijklmnopqrstuvwxyz".ToCharArray();
 
         // ============================================================
-        // 趣味消息
-        // ============================================================
-        private readonly Dictionary<string, string[]> _funMessages = new()
-        {
-            {"text", new[]{"👁️ 神级视力！", "🔍 显微镜级！", "🎯 精准狙击！"}},
-            {"arithmetic", new[]{"🧮 人形计算器！", "💡 爱因斯坦！", "🤓 数学之神！"}},
-            {"stroke", new[]{"📝 文字学家！", "✍️ 汉字活字典！", "🏯 甲骨文专家！"}},
-            {"color", new[]{"🎨 色彩之神！", "🌈 火眼金睛！", "✨ 审美大师！"}},
-            {"findDifferent", new[]{"🔍 人形扫描仪！", "🎯 鹰眼！", "👀 像素级观察！"}},
-            {"reverse", new[]{"🔄 人形反转器！", "🧠 超脑！", "💪 空间掌控者！"}},
-            {"missingLetter", new[]{"🔤 人形词典！", "📚 词汇之王！", "✍️ 拼写之神！"}},
-            {"quickTap", new[]{"⚡ 闪电侠！", "💨 光速反应！", "🔥 人形电竞！"}},
-            {"idiom", new[]{"📖 成语活字典！", "🏯 国学大师！", "✍️ 文学宗师！"}},
-            {"chineseNumber", new[]{"🔢 人形计算器！", "🧮 数学之神！", "💡 数字天才！"}},
-            {"caseConversion", new[]{"🔤 字母之神！", "📚 语言学家！", "✍️ 拼写大师！"}},
-            {"pinyin", new[]{"🔊 语音之神！", "🎙️ 播音级！", "📢 朗读大师！"}},
-            {"inverseColor", new[]{"🎨 视觉之神！", "🌈 火眼金睛！", "✨ 色彩大师！"}},
-            {"mirror", new[]{"🪞 空间之神！", "🧠 超脑！", "💪 逻辑之王！"}},
-            {"keyboard", new[]{"⌨️ 键盘之神！", "💨 光速打字！", "🔥 电竞级！"}},
-            {"countChar", new[]{"🔢 人形计数器！", "🧮 数学之神！", "💡 逻辑天才！"}},
-            {"memory", new[]{"🧠 照相机记忆！", "💪 超脑！", "✨ 过目不忘！"}},
-            {"direction", new[]{"🧭 人形指南针！", "🗺️ 活地图！", "✨ 方向感之神！"}},
-            {"logic", new[]{"💡 逻辑之神！", "🧠 超脑！", "✨ 推理之王！"}},
-            {"tripleColor", new[]{"🎯 三重干扰通关！", "🌈 视觉之神！", "✨ 不是人类！"}},
-            {"ultimate", new[]{"💀 超越人类！", "🔥 终极王者！", "👑 神级存在！"}},
-            {"pattern", new[]{"📐 规律大师！", "🧠 模式识别！", "🎯 数学之眼！"}},
-            {"colorMix", new[]{"🎨 色彩炼金术！", "🌈 颜色魔法师！", "✨ 视觉艺术！"}},
-            {"trueFalse", new[]{"⚖️ 真相之神！", "🧐 明察秋毫！", "🎯 一语中的！"}},
-            {"puzzle", new[]{"🧩 拼图大师！", "🎯 空间掌控者！", "✨ 华容道之王！"}},
-            {"sudoku", new[]{"🧮 数独之神！", "📐 逻辑大师！", "🎯 填数天才！"}},
-        };
-
-        // ============================================================
         // 英文单词库
         // ============================================================
         private readonly string[] _englishWords = new string[]
@@ -288,14 +200,169 @@ namespace MyPersonalWebsite.Controllers
         };
 
         // ============================================================
-        // 找规律题库（分难度）
+        // 找规律题库 - 5个难度等级
         // ============================================================
-        private readonly (string pattern, int answer, int minLevel, int maxLevel)[] _patternQuestions;
+        private readonly (string pattern, int answer, int minLevel, int maxLevel)[] _patternQuestions = new (string, int, int, int)[]
+        {
+            // 📝 入门 (1-20)
+            ("2, 4, 6, ?, 10", 8, 1, 20),
+            ("1, 3, 5, ?, 9", 7, 1, 20),
+            ("10, 20, 30, ?, 50", 40, 1, 20),
+            ("5, 10, 15, ?, 25", 20, 1, 20),
+            ("1, 2, 4, ?, 11", 7, 1, 20),
+            ("3, 6, 9, ?, 15", 12, 1, 20),
+            ("2, 4, 8, ?, 32", 16, 1, 20),
+            ("1, 4, 9, ?, 25", 16, 1, 20),
+            ("2, 6, 12, ?, 30", 20, 1, 20),
+            ("3, 7, 11, ?, 19", 15, 1, 20),
+            ("1, 2, 3, 5, ?, 13", 8, 1, 20),
+            ("2, 3, 5, 8, ?, 21", 13, 1, 20),
+            ("1, 3, 7, 15, ?, 63", 31, 1, 20),
+            ("1, 2, 6, 24, ?, 720", 120, 1, 20),
+
+            // ⚡ 困难 (21-40)
+            ("2, 5, 10, 17, ?, 37", 26, 21, 40),
+            ("1, 3, 6, 10, ?, 21", 15, 21, 40),
+            ("2, 6, 12, 20, ?, 42", 30, 21, 40),
+            ("1, 2, 5, 10, ?, 26", 17, 21, 40),
+            ("3, 8, 15, 24, ?, 48", 35, 21, 40),
+            ("2, 3, 5, 9, ?, 33", 17, 21, 40),
+            ("1, 4, 13, 40, ?, 364", 121, 21, 40),
+            ("2, 5, 11, 23, ?, 95", 47, 21, 40),
+            ("1, 3, 8, 19, ?, 81", 42, 21, 40),
+            ("4, 9, 16, 25, ?, 49", 36, 21, 40),
+            ("1, 8, 27, 64, ?, 216", 125, 21, 40),
+            ("2, 8, 18, 32, ?, 72", 50, 21, 40),
+
+            // 🔥 噩梦 (41-60)
+            ("1, 2, 6, 15, 31, ?, 92", 56, 41, 60),
+            ("2, 3, 7, 18, 47, ?, 322", 123, 41, 60),
+            ("1, 4, 10, 22, 46, ?, 190", 94, 41, 60),
+            ("3, 7, 15, 31, 63, ?, 255", 127, 41, 60),
+            ("1, 3, 9, 31, 113, ?, 1913", 481, 41, 60),
+            ("2, 5, 14, 41, 122, ?, 1094", 365, 41, 60),
+            ("1, 2, 5, 14, 41, ?, 365", 122, 41, 60),
+            ("3, 8, 23, 68, 203, ?, 1823", 608, 41, 60),
+            ("1, 4, 15, 56, 209, ?, 3125", 780, 41, 60),
+
+            // 💀 地狱 (61-80)
+            ("1, 3, 7, 13, 21, ?, 43", 31, 61, 80),
+            ("2, 6, 14, 30, 62, ?, 254", 126, 61, 80),
+            ("1, 5, 13, 29, 61, ?, 253", 125, 61, 80),
+            ("3, 10, 29, 66, 127, ?, 365", 218, 61, 80),
+            ("1, 4, 18, 96, 600, ?, 45360", 4320, 61, 80),
+            ("2, 6, 24, 120, 720, ?, 40320", 5040, 61, 80),
+            ("1, 2, 8, 48, 384, ?, 46080", 3840, 61, 80),
+
+            // 👑 传说 (81-100)
+            ("1, 4, 27, 256, ?, 46656", 3125, 81, 100),
+            ("2, 12, 36, 80, 150, ?, 392", 252, 81, 100),
+            ("1, 3, 11, 51, 251, ?, 8255", 1251, 81, 100),
+            ("3, 16, 45, 96, 175, ?, 441", 288, 81, 100),
+            ("1, 2, 12, 72, 480, ?, 34560", 3600, 81, 100),
+        };
 
         // ============================================================
         // 数独题库（4×4）
         // ============================================================
-        private readonly int[][][] _sudokuPuzzles;
+        private readonly int[][][] _sudokuPuzzles = new int[][][]
+        {
+            new int[][] { new int[] {0, 0, 3, 0}, new int[] {0, 4, 0, 0}, new int[] {0, 0, 2, 0}, new int[] {0, 3, 0, 0} },
+            new int[][] { new int[] {1, 0, 0, 0}, new int[] {0, 0, 4, 0}, new int[] {0, 3, 0, 0}, new int[] {0, 0, 0, 2} },
+            new int[][] { new int[] {0, 0, 1, 0}, new int[] {0, 2, 0, 0}, new int[] {0, 0, 3, 0}, new int[] {0, 4, 0, 0} },
+            new int[][] { new int[] {0, 1, 0, 0}, new int[] {0, 0, 2, 0}, new int[] {0, 3, 0, 0}, new int[] {0, 0, 4, 0} },
+        };
+
+        // ============================================================
+        // 真假判断题库 - 5个难度等级
+        // ============================================================
+        private readonly (string statement, bool isTrue, int minLevel, int maxLevel)[] _trueFalseQuestions = new (string, bool, int, int)[]
+        {
+            // 📝 入门 (1-20)
+            ("地球是圆的", true, 1, 20),
+            ("太阳从东边升起", true, 1, 20),
+            ("水在0度时结冰", true, 1, 20),
+            ("人类有206块骨头", true, 1, 20),
+            ("企鹅生活在南极", true, 1, 20),
+            ("熊猫是中国的国宝", true, 1, 20),
+            ("北京是中国的首都", true, 1, 20),
+            ("东京是日本的首都", true, 1, 20),
+            ("金字塔在埃及", true, 1, 20),
+            ("长城在中国", true, 1, 20),
+            ("太阳从西边升起", false, 1, 20),
+            ("月亮是恒星", false, 1, 20),
+            ("鱼能在空中飞", false, 1, 20),
+            ("蜘蛛是昆虫", false, 1, 20),
+            ("巴黎是英国的首都", false, 1, 20),
+
+            // ⚡ 困难 (21-40)
+            ("鲸鱼是哺乳动物", true, 21, 40),
+            ("成年人有32颗牙齿", true, 21, 40),
+            ("蜜蜂会产蜜", true, 21, 40),
+            ("地球绕太阳转", true, 21, 40),
+            ("光速是宇宙中最快的", true, 21, 40),
+            ("所有质数都是奇数", false, 21, 40),
+            ("光年是时间单位", false, 21, 40),
+            ("人类有8种血型", false, 21, 40),
+            ("地球有5大洲", false, 21, 40),
+            ("万里长城在太空可见", false, 21, 40),
+
+            // 🔥 噩梦 (41-60)
+            ("如果今天是周三，那么后天是周五", true, 41, 60),
+            ("如果a>b且b>c，则a>c", true, 41, 60),
+            ("所有正方形都是矩形", true, 41, 60),
+            ("所有矩形都是正方形", false, 41, 60),
+            ("如果a能被b整除，则b一定能被a整除", false, 41, 60),
+            ("三角形内角和为180度", true, 41, 60),
+            ("四边形内角和为360度", true, 41, 60),
+            ("圆的周长是直径的π倍", true, 41, 60),
+
+            // 💀 地狱 (61-80)
+            ("如果A能被B整除，B能被C整除，则A一定能被C整除", true, 61, 80),
+            ("如果a+b是偶数，则a和b都是偶数", false, 61, 80),
+            ("如果a×b是偶数，则a和b至少有一个是偶数", true, 61, 80),
+            ("如果a×b是奇数，则a和b都是奇数", true, 61, 80),
+            ("两个质数的和一定是偶数", false, 61, 80),
+            ("两个奇数的和是偶数", true, 61, 80),
+
+            // 👑 传说 (81-100)
+            ("如果a和b都是正整数，且a+b是奇数，则a和b一奇一偶", true, 81, 100),
+            ("如果a和b都是正整数，且a×b是奇数，则a和b都是奇数", true, 81, 100),
+            ("如果a是质数，则a+1一定是偶数", false, 81, 100),
+            ("所有能被9整除的数都能被3整除", true, 81, 100),
+            ("所有能被3整除的数都能被9整除", false, 81, 100),
+            ("1既不是质数也不是合数", true, 81, 100),
+            ("0是偶数", true, 81, 100),
+            ("负数的平方是正数", true, 81, 100),
+        };
+
+        // ============================================================
+        // 趣味消息
+        // ============================================================
+        private readonly Dictionary<string, string[]> _funMessages = new()
+        {
+            {"text", new[]{"👁️ 神级视力！", "🔍 显微镜级！", "🎯 精准狙击！"}},
+            {"arithmetic", new[]{"🧮 人形计算器！", "💡 爱因斯坦！", "🤓 数学之神！"}},
+            {"stroke", new[]{"📝 文字学家！", "✍️ 汉字活字典！", "🏯 甲骨文专家！"}},
+            {"color", new[]{"🎨 色彩之神！", "🌈 火眼金睛！", "✨ 审美大师！"}},
+            {"findDifferent", new[]{"🔍 人形扫描仪！", "🎯 鹰眼！", "👀 像素级观察！"}},
+            {"reverse", new[]{"🔄 人形反转器！", "🧠 超脑！", "💪 空间掌控者！"}},
+            {"missingLetter", new[]{"🔤 人形词典！", "📚 词汇之王！", "✍️ 拼写之神！"}},
+            {"quickTap", new[]{"⚡ 闪电侠！", "💨 光速反应！", "🔥 人形电竞！"}},
+            {"idiom", new[]{"📖 成语活字典！", "🏯 国学大师！", "✍️ 文学宗师！"}},
+            {"memory", new[]{"🧠 照相机记忆！", "💪 超脑！", "✨ 过目不忘！"}},
+            {"pattern", new[]{"📐 规律大师！", "🧠 模式识别！", "🎯 数学之眼！"}},
+            {"colorMix", new[]{"🎨 色彩炼金术！", "🌈 颜色魔法师！", "✨ 视觉艺术！"}},
+            {"trueFalse", new[]{"⚖️ 真相之神！", "🧐 明察秋毫！", "🎯 一语中的！"}},
+            {"puzzle", new[]{"🧩 拼图大师！", "🎯 空间掌控者！", "✨ 华容道之王！"}},
+            {"sudoku", new[]{"🧮 数独之神！", "📐 逻辑大师！", "🎯 填数天才！"}},
+            {"countChar", new[]{"🔢 人形计数器！", "🧮 数学之神！", "💡 逻辑天才！"}},
+            {"inverseColor", new[]{"🎨 视觉之神！", "🌈 火眼金睛！", "✨ 色彩大师！"}},
+            {"mirror", new[]{"🪞 空间之神！", "🧠 超脑！", "💪 逻辑之王！"}},
+            {"direction", new[]{"🧭 人形指南针！", "🗺️ 活地图！", "✨ 方向感之神！"}},
+            {"tripleColor", new[]{"🎯 三重干扰通关！", "🌈 视觉之神！", "✨ 不是人类！"}},
+            {"ultimate", new[]{"💀 超越人类！", "🔥 终极王者！", "👑 神级存在！"}},
+        };
 
         // ============================================================
         // 构造函数
@@ -305,111 +372,6 @@ namespace MyPersonalWebsite.Controllers
             _dataSync = dataSync;
             _fontFamilies = new[] { "Arial", "Times New Roman", "Georgia", "Verdana", "Impact", "Comic Sans MS", "Courier New", "Trebuchet MS" };
             _colorNames = _colorHex.Keys.ToArray();
-
-            // 初始化找规律题库
-            _patternQuestions = new (string, int, int, int)[]
-            {
-                // 📝 入门 (1-20) - 等差/简单
-                ("2, 4, 6, ?, 10", 8, 1, 20),
-                ("1, 3, 5, ?, 9", 7, 1, 20),
-                ("10, 20, 30, ?, 50", 40, 1, 20),
-                ("5, 10, 15, ?, 25", 20, 1, 20),
-                ("1, 2, 4, ?, 11", 7, 1, 20),
-                ("3, 6, 9, ?, 15", 12, 1, 20),
-                ("2, 4, 8, ?, 32", 16, 1, 20),
-                ("1, 4, 9, ?, 25", 16, 1, 20),
-                ("2, 6, 12, ?, 30", 20, 1, 20),
-                ("3, 7, 11, ?, 19", 15, 1, 20),
-                ("1, 2, 3, 5, ?, 13", 8, 1, 20),
-                ("2, 3, 5, 8, ?, 21", 13, 1, 20),
-                ("1, 3, 7, 15, ?, 63", 31, 1, 20),
-                ("1, 2, 6, 24, ?, 720", 120, 1, 20),
-
-                // ⚡ 困难 (21-40) - 等差数列变式
-                ("2, 5, 10, 17, ?, 37", 26, 21, 40),
-                ("1, 3, 6, 10, ?, 21", 15, 21, 40),
-                ("2, 6, 12, 20, ?, 42", 30, 21, 40),
-                ("1, 2, 5, 10, ?, 26", 17, 21, 40),
-                ("3, 8, 15, 24, ?, 48", 35, 21, 40),
-                ("2, 3, 5, 9, ?, 33", 17, 21, 40),
-                ("1, 4, 13, 40, ?, 364", 121, 21, 40),
-                ("2, 5, 11, 23, ?, 95", 47, 21, 40),
-                ("1, 3, 8, 19, ?, 81", 42, 21, 40),
-                ("4, 9, 16, 25, ?, 49", 36, 21, 40),
-                ("1, 8, 27, 64, ?, 216", 125, 21, 40),
-                ("2, 8, 18, 32, ?, 72", 50, 21, 40),
-
-                // 🔥 噩梦 (41-60) - 混合规律
-                ("1, 2, 6, 15, 31, ?, 92", 56, 41, 60),
-                ("2, 3, 7, 18, 47, ?, 322", 123, 41, 60),
-                ("1, 4, 10, 22, 46, ?, 190", 94, 41, 60),
-                ("3, 7, 15, 31, 63, ?, 255", 127, 41, 60),
-                ("1, 3, 9, 31, 113, ?, 1913", 481, 41, 60),
-                ("2, 5, 14, 41, 122, ?, 1094", 365, 41, 60),
-                ("1, 2, 5, 14, 41, ?, 365", 122, 41, 60),
-                ("3, 8, 23, 68, 203, ?, 1823", 608, 41, 60),
-                ("1, 4, 15, 56, 209, ?, 3125", 780, 41, 60),
-
-                // 💀 地狱 (61-80) - 复杂规律
-                ("1, 3, 7, 13, 21, ?, 43", 31, 61, 80),
-                ("2, 6, 14, 30, 62, ?, 254", 126, 61, 80),
-                ("1, 5, 13, 29, 61, ?, 253", 125, 61, 80),
-                ("3, 10, 29, 66, 127, ?, 365", 218, 61, 80),
-                ("1, 4, 18, 96, 600, ?, 45360", 4320, 61, 80),
-                ("2, 6, 24, 120, 720, ?, 40320", 5040, 61, 80),
-                ("1, 2, 8, 48, 384, ?, 46080", 3840, 61, 80),
-
-                // 👑 传说 (81-100) - 终极规律
-                ("1, 4, 27, 256, ?, 46656", 3125, 81, 100),
-                ("2, 12, 36, 80, 150, ?, 392", 252, 81, 100),
-                ("1, 3, 11, 51, 251, ?, 8255", 1251, 81, 100),
-                ("3, 16, 45, 96, 175, ?, 441", 288, 81, 100),
-                ("1, 2, 12, 72, 480, ?, 34560", 3600, 81, 100),
-            };
-
-            // 初始化数独题库（4×4）
-            _sudokuPuzzles = new int[][][]
-            {
-                // 简单
-                new int[][] {
-                    new int[] {0, 0, 3, 0},
-                    new int[] {0, 4, 0, 0},
-                    new int[] {0, 0, 2, 0},
-                    new int[] {0, 3, 0, 0}
-                },
-                new int[][] {
-                    new int[] {1, 0, 0, 0},
-                    new int[] {0, 0, 4, 0},
-                    new int[] {0, 3, 0, 0},
-                    new int[] {0, 0, 0, 2}
-                },
-                // 中等
-                new int[][] {
-                    new int[] {0, 0, 1, 0},
-                    new int[] {0, 2, 0, 0},
-                    new int[] {0, 0, 3, 0},
-                    new int[] {0, 4, 0, 0}
-                },
-                new int[][] {
-                    new int[] {0, 1, 0, 0},
-                    new int[] {0, 0, 2, 0},
-                    new int[] {0, 3, 0, 0},
-                    new int[] {0, 0, 4, 0}
-                },
-                // 较难
-                new int[][] {
-                    new int[] {0, 0, 0, 0},
-                    new int[] {0, 0, 0, 0},
-                    new int[] {0, 0, 0, 0},
-                    new int[] {0, 0, 0, 0}
-                },
-                new int[][] {
-                    new int[] {0, 0, 0, 0},
-                    new int[] {0, 0, 0, 0},
-                    new int[] {0, 0, 0, 0},
-                    new int[] {0, 0, 0, 0}
-                },
-            };
         }
 
         // ============================================================
@@ -527,7 +489,7 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // ⭐ 随机类型生成器（20种类型随机，全部出现后重置）
+        // ⭐ 随机类型生成器（20种类型随机）
         // ============================================================
         private object GenerateChallenge(int level)
         {
@@ -864,34 +826,37 @@ namespace MyPersonalWebsite.Controllers
             return chars[_random.Next(chars.Length)];
         }
 
-        // ⭐ RGB 颜色混合算法
-        private string MixColors(string color1Name, string color2Name)
+        // ⭐⭐ 核心：RGB 颜色混合算法（真实混合）
+        private string MixColorsRGB(string color1Name, string color2Name)
         {
-            // 首先尝试查找映射表
-            var key = (color1Name, color2Name);
-            if (_colorMixMap.ContainsKey(key))
-            {
-                return _colorMixMap[key];
-            }
-
-            // 如果映射表没有，使用 RGB 混合算法
             if (!_colorHex.ContainsKey(color1Name) || !_colorHex.ContainsKey(color2Name))
+                return "灰色";
+
+            try
+            {
+                var c1 = System.Drawing.ColorTranslator.FromHtml(_colorHex[color1Name]);
+                var c2 = System.Drawing.ColorTranslator.FromHtml(_colorHex[color2Name]);
+
+                int r = (c1.R + c2.R) / 2;
+                int g = (c1.G + c2.G) / 2;
+                int b = (c1.B + c2.B) / 2;
+
+                if (r == c1.R && g == c1.G && b == c1.B)
+                    return color1Name;
+                if (r == c2.R && g == c2.G && b == c2.B)
+                    return color2Name;
+
+                return FindClosestColorName(r, g, b);
+            }
+            catch
             {
                 return "灰色";
             }
+        }
 
-            var hex1 = _colorHex[color1Name];
-            var hex2 = _colorHex[color2Name];
-
-            var c1 = System.Drawing.ColorTranslator.FromHtml(hex1);
-            var c2 = System.Drawing.ColorTranslator.FromHtml(hex2);
-
-            // 加权平均混合
-            int r = (c1.R + c2.R) / 2;
-            int g = (c1.G + c2.G) / 2;
-            int b = (c1.B + c2.B) / 2;
-
-            // 查找最接近的颜色名称
+        // ⭐⭐ 查找最接近的颜色（RGB 欧几里得距离）
+        private string FindClosestColorName(int r, int g, int b)
+        {
             string closestName = "灰色";
             double closestDistance = double.MaxValue;
 
@@ -920,40 +885,18 @@ namespace MyPersonalWebsite.Controllers
         // ⭐ 生成颜色方形色块 HTML
         private string GenerateColorBlock(string colorName, int size = 60)
         {
-            if (!_colorHex.ContainsKey(colorName)) return $"<div style='width:{size}px;height:{size}px;border-radius:8px;background:#808080;border:1px solid rgba(255,255,255,0.04);'></div>";
+            if (!_colorHex.ContainsKey(colorName))
+                return $"<div style='width:{size}px;height:{size}px;border-radius:8px;background:#808080;border:1px solid rgba(255,255,255,0.04);'></div>";
 
             var hex = _colorHex[colorName];
             return $"<div style='width:{size}px;height:{size}px;border-radius:8px;background:{hex};border:1px solid rgba(255,255,255,0.06);box-shadow:0 4px 12px rgba(0,0,0,0.1);'></div>";
         }
 
-        // ⭐ 生成颜色方形色块 HTML（带文字标签）
-        private string GenerateColorBlockWithLabel(string colorName, int size = 60)
-        {
-            if (!_colorHex.ContainsKey(colorName)) return $"<div style='width:{size}px;height:{size}px;border-radius:8px;background:#808080;border:1px solid rgba(255,255,255,0.04);'></div>";
-
-            var hex = _colorHex[colorName];
-            var displayName = _colorDisplayName.ContainsKey(colorName) ? _colorDisplayName[colorName] : colorName;
-            return $"<div style='display:flex;flex-direction:column;align-items:center;gap:4px;'><div style='width:{size}px;height:{size}px;border-radius:8px;background:{hex};border:1px solid rgba(255,255,255,0.06);box-shadow:0 4px 12px rgba(0,0,0,0.1);'></div><span style='color:rgba(255,255,255,0.2);font-size:0.6rem;'>{displayName}</span></div>";
-        }
-
-        // ⭐ 生成颜色选项（方形色块 + 文字标签）
-        private string GenerateColorOptionHtml(string colorName, int size = 48)
-        {
-            if (!_colorHex.ContainsKey(colorName))
-            {
-                return $"<div style='display:flex;flex-direction:column;align-items:center;gap:3px;'><div style='width:{size}px;height:{size}px;border-radius:8px;background:#808080;border:1px solid rgba(255,255,255,0.04);'></div><span style='color:rgba(255,255,255,0.15);font-size:0.5rem;'>未知</span></div>";
-            }
-
-            var hex = _colorHex[colorName];
-            var displayName = _colorDisplayName.ContainsKey(colorName) ? _colorDisplayName[colorName] : colorName;
-            return $"<div style='display:flex;flex-direction:column;align-items:center;gap:3px;'><div style='width:{size}px;height:{size}px;border-radius:8px;background:{hex};border:1px solid rgba(255,255,255,0.06);box-shadow:0 2px 8px rgba(0,0,0,0.08);'></div><span style='color:rgba(255,255,255,0.15);font-size:0.5rem;'>{displayName}</span></div>";
-        }
-
-        // ⭐ 生成颜色混合显示（多个色块 + 混合结果）
+        // ⭐ 生成颜色混合显示
         private string GenerateColorMixDisplay(string[] colorNames, string resultName, int size = 50)
         {
             var sb = new StringBuilder();
-            sb.Append("<div style='display:flex;align-items:center;gap:12px;justify-content:center;padding:12px 0;'>");
+            sb.Append("<div style='display:flex;align-items:center;gap:12px;justify-content:center;padding:12px 0;flex-wrap:wrap;'>");
 
             foreach (var color in colorNames)
             {
@@ -982,9 +925,10 @@ namespace MyPersonalWebsite.Controllers
 
             foreach (var color in colorNames)
             {
+                var displayName = _colorDisplayName.ContainsKey(color) ? _colorDisplayName[color] : color;
                 sb.Append($"<div style='display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px;border-radius:10px;border:1px solid rgba(255,255,255,0.03);transition:all 0.3s ease;' class='color-option' data-color='{color}'>");
                 sb.Append(GenerateColorBlock(color, size));
-                sb.Append($"<span style='color:rgba(255,255,255,0.12);font-size:0.5rem;'>{(_colorDisplayName.ContainsKey(color) ? _colorDisplayName[color] : color)}</span>");
+                sb.Append($"<span style='color:rgba(255,255,255,0.12);font-size:0.5rem;'>{displayName}</span>");
                 sb.Append("</div>");
             }
 
@@ -1052,7 +996,7 @@ namespace MyPersonalWebsite.Controllers
             if (result == 0) result = a + b;
             if (result > 99999) result = a + b;
 
-            var options = GenerateNumberOptions(result, 4 + difficulty / 10, Math.Max(5, 15 + result / 10));
+            var options = GenerateNumberOptions(result, 4 + Math.Min(difficulty / 10, 3), Math.Max(5, 15 + result / 10));
             int timeLimit = Math.Max(3, 14 - difficulty / 6);
 
             return new
@@ -1098,7 +1042,7 @@ namespace MyPersonalWebsite.Controllers
             char ch = allChars[_random.Next(allChars.Length)];
             int correct = strokePool[ch];
 
-            var options = GenerateNumberOptions(correct, 4 + Math.Min(difficulty / 15, 4), 4);
+            var options = GenerateNumberOptions(correct, 4 + Math.Min(difficulty / 15, 3), 4);
             int timeLimit = Math.Max(3, 14 - difficulty / 8);
 
             return new
@@ -1126,7 +1070,7 @@ namespace MyPersonalWebsite.Controllers
             if (similarColors.Count < 3) similarColors = pool.ToList();
 
             var options = new List<string> { selected.Key };
-            int count = 4 + Math.Min(difficulty / 10, 4);
+            int count = 4 + Math.Min(difficulty / 10, 3);
 
             var poolList = similarColors.Where(c => c.Key != selected.Key).ToList();
             for (int i = 0; i < count - 1 && i < poolList.Count; i++)
@@ -1163,7 +1107,8 @@ namespace MyPersonalWebsite.Controllers
             }
             catch { return false; }
         }
-                // ============================================================
+
+        // ============================================================
         // ⭐ 题型 4：找不同
         // ============================================================
         private object GenerateFindDifferent(int level, int difficulty, int typesCompleted)
@@ -1184,7 +1129,6 @@ namespace MyPersonalWebsite.Controllers
             replacedArr[pos] = replacementChar;
             string replaced = new string(replacedArr);
 
-            // 彻底打乱
             char[] shuffledArr = replaced.ToCharArray();
             bool allSamePosition = true;
             int maxAttempts = 50;
@@ -1214,7 +1158,6 @@ namespace MyPersonalWebsite.Controllers
 
             string shuffled = new string(shuffledArr);
 
-            // 找到被替换字符在打乱后的位置
             int shuffledPos = -1;
             for (int i = 0; i < shuffledArr.Length; i++)
             {
@@ -1249,8 +1192,7 @@ namespace MyPersonalWebsite.Controllers
                 funMessage = GetFunMessage("findDifferent")
             };
         }
-
-        // ============================================================
+                // ============================================================
         // ⭐ 题型 5：倒序识别
         // ============================================================
         private object GenerateReverseText(int level, int difficulty, int typesCompleted)
@@ -1481,11 +1423,10 @@ namespace MyPersonalWebsite.Controllers
             int memoryTime = Math.Max(3, 8 - difficulty / 20);
             int timeLimit = Math.Max(10, 20 + difficulty / 5);
 
-            // ⭐ 生成打乱的数字键盘（0-9）
+            // 生成打乱的数字键盘（0-9）
             var digits = new List<int> { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
             var shuffledDigits = digits.OrderBy(_ => _random.Next()).ToList();
 
-            // 生成键盘数据（3行 × 4列）
             var keyboardRows = new List<List<int>>();
             for (int i = 0; i < 3; i++)
             {
@@ -1499,8 +1440,6 @@ namespace MyPersonalWebsite.Controllers
                 keyboardRows.Add(row);
             }
 
-            var options = GenerateOptions(text, 4 + Math.Min(difficulty / 10, 4));
-
             return new
             {
                 type = "memory",
@@ -1509,7 +1448,6 @@ namespace MyPersonalWebsite.Controllers
                 displayNumber = text,
                 memoryTime = memoryTime,
                 correctAnswer = text,
-                options = options,
                 keyboardRows = keyboardRows,
                 timeLimit = timeLimit,
                 typesCompleted = typesCompleted,
@@ -1518,7 +1456,7 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // ⭐ 题型 10：找规律（新增）
+        // ⭐ 题型 10：找规律
         // ============================================================
         private object GeneratePatternRecognition(int level, int difficulty, int typesCompleted)
         {
@@ -1546,47 +1484,18 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // ⭐ 题型 11：颜色混合（新增 - 带方形色块）
+        // ⭐ 题型 11：颜色混合（RGB 真实混合 + 方形色块）
         // ============================================================
         private object GenerateColorMix(int level, int difficulty, int typesCompleted)
         {
-            // 根据难度决定颜色数量
-            int colorCount;
-            int optionCount;
-            int similarity;
+            int colorCount, optionCount;
 
-            if (difficulty <= 20)
-            {
-                colorCount = 2;
-                optionCount = 4;
-                similarity = 80;
-            }
-            else if (difficulty <= 40)
-            {
-                colorCount = 3;
-                optionCount = 5;
-                similarity = 60;
-            }
-            else if (difficulty <= 60)
-            {
-                colorCount = 4;
-                optionCount = 6;
-                similarity = 40;
-            }
-            else if (difficulty <= 80)
-            {
-                colorCount = 5;
-                optionCount = 6;
-                similarity = 25;
-            }
-            else
-            {
-                colorCount = 6;
-                optionCount = 6;
-                similarity = 15;
-            }
+            if (difficulty <= 20) { colorCount = 2; optionCount = 4; }
+            else if (difficulty <= 40) { colorCount = 3; optionCount = 5; }
+            else if (difficulty <= 60) { colorCount = 4; optionCount = 6; }
+            else if (difficulty <= 80) { colorCount = 5; optionCount = 6; }
+            else { colorCount = 6; optionCount = 6; }
 
-            // 选择颜色
             var availableColors = _colorNames.ToList();
             var selectedColors = new List<string>();
             var usedIndices = new HashSet<int>();
@@ -1605,23 +1514,21 @@ namespace MyPersonalWebsite.Controllers
                 selectedColors.Add(availableColors[idx]);
             }
 
-            // 混合所有颜色
+            // 使用 RGB 真实混合
             string resultColor = selectedColors[0];
             for (int i = 1; i < selectedColors.Count; i++)
             {
-                resultColor = MixColors(resultColor, selectedColors[i]);
+                resultColor = MixColorsRGB(resultColor, selectedColors[i]);
             }
 
-            // 生成干扰选项（相似颜色）
+            // 生成干扰选项（颜色相似度）
             var allColors = _colorNames.ToList();
             var options = new List<string> { resultColor };
 
-            // 根据相似度生成干扰项
             var similarPool = allColors
                 .Where(c => c != resultColor && !selectedColors.Contains(c))
                 .ToList();
 
-            // 按颜色相似度排序（使用 RGB 距离）
             if (_colorHex.ContainsKey(resultColor))
             {
                 var targetHex = _colorHex[resultColor];
@@ -1635,32 +1542,27 @@ namespace MyPersonalWebsite.Controllers
                         {
                             var cHex = _colorHex[c];
                             var cColor = System.Drawing.ColorTranslator.FromHtml(cHex);
-                            double distance = Math.Sqrt(
+                            return Math.Sqrt(
                                 Math.Pow(cColor.R - targetColor.R, 2) +
                                 Math.Pow(cColor.G - targetColor.G, 2) +
                                 Math.Pow(cColor.B - targetColor.B, 2)
                             );
-                            return distance;
                         }
                         catch { return 9999; }
                     })
                     .ToList();
 
-                // 根据相似度取前 N 个
                 int takeCount = Math.Min(similarPool.Count, optionCount - 1);
                 var selectedOptions = similarPool.Take(takeCount).ToList();
 
-                // 如果不够，从后面补充
                 if (selectedOptions.Count < optionCount - 1)
                 {
                     var extra = similarPool.Skip(takeCount).Take(optionCount - 1 - selectedOptions.Count).ToList();
                     selectedOptions.AddRange(extra);
                 }
 
-                // 随机打乱后取需要的数量
                 selectedOptions = selectedOptions.OrderBy(_ => _random.Next()).Take(optionCount - 1).ToList();
 
-                // 确保有足够的选项
                 while (selectedOptions.Count < optionCount - 1 && allColors.Count > 0)
                 {
                     var extra = allColors.Where(c => c != resultColor && !selectedOptions.Contains(c) && !selectedColors.Contains(c))
@@ -1675,14 +1577,8 @@ namespace MyPersonalWebsite.Controllers
 
             options = options.OrderBy(_ => _random.Next()).ToList();
 
-            // ⭐ 生成显示 HTML（方形色块）
             var displayHtml = GenerateColorMixDisplay(selectedColors.ToArray(), resultColor);
-
-            // ⭐ 生成选项 HTML（方形色块）
             var optionsHtml = GenerateColorOptionsHtml(options);
-
-            // 生成选项数据（用于前端判断）
-            var optionData = options.Select(c => new { label = c, value = c }).ToList();
 
             int timeLimit = Math.Max(8, 20 - difficulty / 10);
 
@@ -1700,27 +1596,23 @@ namespace MyPersonalWebsite.Controllers
                 funMessage = GetFunMessage("colorMix")
             };
         }
-                // ============================================================
-        // ⭐ 题型 12：真假判断（新增 - 5个难度分级）
+
+        // ============================================================
+        // ⭐ 题型 12：真假判断（5个难度等级）
         // ============================================================
         private object GenerateTrueFalse(int level, int difficulty, int typesCompleted)
         {
-            // 根据难度筛选题目
             var pool = _trueFalseQuestions.Where(q =>
                 difficulty >= q.minLevel && difficulty <= q.maxLevel).ToArray();
 
-            if (pool.Length == 0)
-            {
-                // 降级：使用所有题目
-                pool = _trueFalseQuestions;
-            }
+            if (pool.Length == 0) pool = _trueFalseQuestions;
 
             var selected = pool[_random.Next(pool.Length)];
 
             var options = new List<string> { "✅ 真的", "❌ 假的" };
             string correctAnswer = selected.isTrue ? "✅ 真的" : "❌ 假的";
 
-            int timeLimit = 60; // 固定60秒
+            int timeLimit = 60;
 
             return new
             {
@@ -1736,14 +1628,11 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // ⭐ 题型 13：数字华容道（3×3，新增）
+        // ⭐ 题型 13：数字华容道（3×3）
         // ============================================================
         private object GeneratePuzzle(int level, int difficulty, int typesCompleted)
         {
-            // 生成 3x3 华容道（8个数字 + 1个空格）
             var puzzle = Generate3x3Puzzle(difficulty);
-
-            // 计算限时：30-120秒，根据难度递增
             int timeLimit = Math.Min(120, 30 + difficulty / 2);
 
             return new
@@ -1761,7 +1650,6 @@ namespace MyPersonalWebsite.Controllers
 
         private int[][] Generate3x3Puzzle(int difficulty)
         {
-            // 目标状态
             int[][] target = new int[][]
             {
                 new int[] { 1, 2, 3 },
@@ -1769,14 +1657,11 @@ namespace MyPersonalWebsite.Controllers
                 new int[] { 7, 8, 0 }
             };
 
-            // 根据难度决定打乱步数
             int steps = 20 + difficulty * 2;
             steps = Math.Min(steps, 200);
 
-            // 从目标状态开始打乱
             var puzzle = target.Select(row => row.ToArray()).ToArray();
 
-            // 找到空格位置
             int emptyRow = 2;
             int emptyCol = 2;
 
@@ -1789,7 +1674,6 @@ namespace MyPersonalWebsite.Controllers
                 var move = moves[_random.Next(moves.Count)];
                 lastMove = move.direction;
 
-                // 交换空格和目标位置
                 int newRow = emptyRow + move.dRow;
                 int newCol = emptyCol + move.dCol;
 
@@ -1808,13 +1692,12 @@ namespace MyPersonalWebsite.Controllers
             var moves = new List<(int, int, int)>();
             int[][] directions = new int[][]
             {
-                new int[] { -1, 0, 0 }, // 上
-                new int[] { 1, 0, 1 },  // 下
-                new int[] { 0, -1, 2 }, // 左
-                new int[] { 0, 1, 3 }   // 右
+                new int[] { -1, 0, 0 },
+                new int[] { 1, 0, 1 },
+                new int[] { 0, -1, 2 },
+                new int[] { 0, 1, 3 }
             };
 
-            // 防止连续来回移动
             int opposite = lastMove == 0 ? 1 : lastMove == 1 ? 0 : lastMove == 2 ? 3 : lastMove == 3 ? 2 : -1;
 
             foreach (var d in directions)
@@ -1834,27 +1717,21 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // ⭐ 题型 14：数独逻辑（4×4，新增）
+        // ⭐ 题型 14：数独逻辑（4×4）
         // ============================================================
         private object GenerateSudokuLogic(int level, int difficulty, int typesCompleted)
         {
-            // 选择数独题目（根据难度）
             int puzzleIndex;
-            if (difficulty <= 30)
-                puzzleIndex = 0;
-            else if (difficulty <= 60)
-                puzzleIndex = 1;
-            else if (difficulty <= 80)
-                puzzleIndex = 2;
-            else
-                puzzleIndex = 3;
+            if (difficulty <= 30) puzzleIndex = 0;
+            else if (difficulty <= 60) puzzleIndex = 1;
+            else if (difficulty <= 80) puzzleIndex = 2;
+            else puzzleIndex = 3;
 
             puzzleIndex = Math.Min(puzzleIndex, _sudokuPuzzles.Length - 1);
 
             var puzzle = _sudokuPuzzles[puzzleIndex];
             var solution = GetSudokuSolution(puzzleIndex);
 
-            // 找到第一个空格的位置
             int emptyRow = -1, emptyCol = -1;
             for (int r = 0; r < 4; r++)
             {
@@ -1872,7 +1749,6 @@ namespace MyPersonalWebsite.Controllers
 
             int correctAnswer = solution[emptyRow][emptyCol];
 
-            // 生成选项（1-4）
             var options = new List<string> { correctAnswer.ToString() };
             var numbers = new List<int> { 1, 2, 3, 4 };
             var remaining = numbers.Where(n => n != correctAnswer).ToList();
@@ -1882,7 +1758,6 @@ namespace MyPersonalWebsite.Controllers
             }
             options = options.OrderBy(_ => _random.Next()).ToList();
 
-            // 生成显示 HTML
             string gridHtml = GenerateSudokuHtml(puzzle, emptyRow, emptyCol);
 
             int timeLimit = Math.Max(20, 45 - difficulty / 5);
@@ -1905,33 +1780,12 @@ namespace MyPersonalWebsite.Controllers
 
         private int[][] GetSudokuSolution(int index)
         {
-            // 4x4 数独的解决方案
             int[][][] solutions = new int[][][]
             {
-                new int[][] {
-                    new int[] { 2, 1, 3, 4 },
-                    new int[] { 4, 3, 1, 2 },
-                    new int[] { 1, 2, 4, 3 },
-                    new int[] { 3, 4, 2, 1 }
-                },
-                new int[][] {
-                    new int[] { 1, 4, 2, 3 },
-                    new int[] { 2, 3, 4, 1 },
-                    new int[] { 3, 2, 1, 4 },
-                    new int[] { 4, 1, 3, 2 }
-                },
-                new int[][] {
-                    new int[] { 3, 1, 4, 2 },
-                    new int[] { 4, 2, 3, 1 },
-                    new int[] { 1, 4, 2, 3 },
-                    new int[] { 2, 3, 1, 4 }
-                },
-                new int[][] {
-                    new int[] { 4, 2, 1, 3 },
-                    new int[] { 1, 3, 4, 2 },
-                    new int[] { 2, 4, 3, 1 },
-                    new int[] { 3, 1, 2, 4 }
-                }
+                new int[][] { new int[] { 2, 1, 3, 4 }, new int[] { 4, 3, 1, 2 }, new int[] { 1, 2, 4, 3 }, new int[] { 3, 4, 2, 1 } },
+                new int[][] { new int[] { 1, 4, 2, 3 }, new int[] { 2, 3, 4, 1 }, new int[] { 3, 2, 1, 4 }, new int[] { 4, 1, 3, 2 } },
+                new int[][] { new int[] { 3, 1, 4, 2 }, new int[] { 4, 2, 3, 1 }, new int[] { 1, 4, 2, 3 }, new int[] { 2, 3, 1, 4 } },
+                new int[][] { new int[] { 4, 2, 1, 3 }, new int[] { 1, 3, 4, 2 }, new int[] { 2, 4, 3, 1 }, new int[] { 3, 1, 2, 4 } }
             };
 
             index = Math.Min(index, solutions.Length - 1);
@@ -1967,7 +1821,7 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // ⭐ 题型 15：字符计数（保留）
+        // ⭐ 题型 15：字符计数
         // ============================================================
         private object GenerateCharacterCount(int level, int difficulty, int typesCompleted)
         {
@@ -1996,7 +1850,7 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // ⭐ 题型 16：反色识别（保留）
+        // ⭐ 题型 16：反色识别
         // ============================================================
         private object GenerateInverseColor(int level, int difficulty, int typesCompleted)
         {
@@ -2026,7 +1880,7 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // ⭐ 题型 17：镜像字母（保留）
+        // ⭐ 题型 17：镜像字母
         // ============================================================
         private object GenerateMirrorLetter(int level, int difficulty, int typesCompleted)
         {
@@ -2052,7 +1906,7 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // ⭐ 题型 18：方向判断（保留）
+        // ⭐ 题型 18：方向判断
         // ============================================================
         private object GenerateDirection(int level, int difficulty, int typesCompleted)
         {
@@ -2102,7 +1956,7 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // ⭐ 题型 19：颜色三重干扰（保留）
+        // ⭐ 题型 19：颜色三重干扰
         // ============================================================
         private object GenerateTripleColorInterference(int level, int difficulty, int typesCompleted)
         {
@@ -2125,7 +1979,6 @@ namespace MyPersonalWebsite.Controllers
             var bgColor = shuffledColors[1];
             var meaningColor = shuffledColors[2];
 
-            // 强制三者完全不同
             int maxAttempts = 50;
             int attempts = 0;
             while ((bgColor.Key == wordColor.Key || meaningColor.Key == wordColor.Key || meaningColor.Key == bgColor.Key) && attempts < maxAttempts)
@@ -2137,7 +1990,6 @@ namespace MyPersonalWebsite.Controllers
                 attempts++;
             }
 
-            // 如果还是相同，强制手动修正
             if (bgColor.Key == wordColor.Key || meaningColor.Key == wordColor.Key || meaningColor.Key == bgColor.Key)
             {
                 var allColors = _colorHex.ToArray();
