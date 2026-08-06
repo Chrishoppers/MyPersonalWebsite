@@ -303,35 +303,36 @@ namespace MyPersonalWebsite.Controllers
         // ============================================================
         // ⭐ 20种类型生成器
         // ============================================================
-        private object GenerateChallenge(int level)
-        {
-            int typeIndex = (level - 1) % 20;
-            int difficulty = level;
+       private object GenerateChallenge(int level)
+{
+    int typeIndex = (level - 1) % 20;
+    int difficulty = level;
 
-            switch (typeIndex)
-            {
-                case 0: return GenerateTextRecognition(level, difficulty);
-                case 1: return GenerateArithmetic(level, difficulty);
-                case 2: return GenerateStrokeCount(level, difficulty);
-                case 3: return GenerateColorRecognition(level, difficulty);
-                case 4: return GenerateFindDifferent(level, difficulty);
-                case 5: return GenerateReverseText(level, difficulty);
-                case 6: return GenerateMissingLetter(level, difficulty);
-                case 7: return GenerateQuickTap(level, difficulty);
-                case 8: return GenerateIdiomFill(level, difficulty);
-                case 9: return GenerateChineseNumber(level, difficulty);
-                case 10: return GenerateCaseConversion(level, difficulty);
-                case 11: return GeneratePinyinMatch(level, difficulty);
-                case 12: return GenerateInverseColor(level, difficulty);
-                case 13: return GenerateMirrorLetter(level, difficulty);
-                case 14: return GenerateKeyboardNeighbor(level, difficulty);
-                case 15: return GenerateCharacterCount(level, difficulty);
-                case 16: return GenerateMemoryChallenge(level, difficulty);
-                case 17: return GenerateDirection(level, difficulty);
-                case 18: return GenerateMathLogic(level, difficulty);
-                default: return GenerateTripleColorInterference(level, difficulty);
-            }
-        }
+    switch (typeIndex)
+    {
+        case 0: return GenerateTextRecognition(level, difficulty);
+        case 1: return GenerateArithmetic(level, difficulty);
+        case 2: return GenerateStrokeCount(level, difficulty);
+        case 3: return GenerateColorRecognition(level, difficulty);
+        // case 4: return GenerateFindDifferent(level, difficulty);  // ⭐ 临时注释掉
+        case 4: return GenerateTextRecognition(level, difficulty);  // ⭐ 用文字识别替代
+        case 5: return GenerateReverseText(level, difficulty);
+        case 6: return GenerateMissingLetter(level, difficulty);
+        case 7: return GenerateQuickTap(level, difficulty);
+        case 8: return GenerateIdiomFill(level, difficulty);
+        case 9: return GenerateChineseNumber(level, difficulty);
+        case 10: return GenerateCaseConversion(level, difficulty);
+        case 11: return GeneratePinyinMatch(level, difficulty);
+        case 12: return GenerateInverseColor(level, difficulty);
+        case 13: return GenerateMirrorLetter(level, difficulty);
+        case 14: return GenerateKeyboardNeighbor(level, difficulty);
+        case 15: return GenerateCharacterCount(level, difficulty);
+        case 16: return GenerateMemoryChallenge(level, difficulty);
+        case 17: return GenerateDirection(level, difficulty);
+        case 18: return GenerateMathLogic(level, difficulty);
+        default: return GenerateTripleColorInterference(level, difficulty);
+    }
+}
 
         // ============================================================
         // 1. 文字识别（地狱难度）
