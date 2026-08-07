@@ -505,6 +505,7 @@ namespace MyPersonalWebsite.Controllers
             {"inverseColor", new[]{"🎨 视觉之神！", "🌈 火眼金睛！", "✨ 色彩大师！"}},
             {"rotate", new[]{"🔄 空间之神！", "🧠 超脑！", "✨ 旋转之王！"}},
             {"spaceFolding", new[]{"🧊 空间大师！", "🧠 立体思维！", "🎯 透视眼！"}},
+             {"abgame", new[]{"🧠 推理大师！", "🔢 数字天才！", "🎯 精准打击！", "💡 逻辑王者！"}},
             {"tripleColor", new[]{"🎯 三重干扰通关！", "🌈 视觉之神！", "✨ 不是人类！"}},
         };
 
@@ -679,7 +680,7 @@ namespace MyPersonalWebsite.Controllers
                 "图形计数",      // 15
                 "反色识别",      // 16
                 "图形旋转",      // 17
-                "空间折叠",      // 18
+                "1A2B",      // 18
                 "颜色三重干扰"   // 19
             };
 
@@ -704,7 +705,9 @@ namespace MyPersonalWebsite.Controllers
                 case 15: result = GenerateShapeCount(level, difficulty, typesCompleted); break;
                 case 16: result = GenerateInverseColor(level, difficulty, typesCompleted); break;
                 case 17: result = GenerateRotateShape(level, difficulty, typesCompleted); break;
-                case 18: result = GenerateSpaceFolding(level, difficulty, typesCompleted); break;
+               case 18:
+    result = Generate1A2B(level, difficulty, typesCompleted);
+    break;
                 default: result = GenerateTripleColorInterference(level, difficulty, typesCompleted); break;
             }
 
@@ -2343,150 +2346,347 @@ namespace MyPersonalWebsite.Controllers
             return svg;
         }
 
-        // ============================================================
-        // ⭐ 题型 18：空间折叠
-        // ============================================================
-        private object GenerateSpaceFolding(int level, int difficulty, int typesCompleted)
-        {
-            var foldingPatterns = new List<(int[] layout, string question, string answer)>
-            {
-                (
-                    new int[] { -1, 4, -1, -1, 3, 0, 1, -1, -1, 5, -1, -1, -1, 2, -1, -1 },
-                    "❓ 下面哪个图形折叠后，【3】和【5】是相对的面？",
-                    "3和5相对"
-                ),
-                (
-                    new int[] { -1, -1, 4, -1, -1, -1, 3, 0, 1, -1, -1, -1, 5, -1, -1, -1 },
-                    "❓ 下面哪个图形折叠后，【4】和【2】是相对的面？",
-                    "4和2相对"
-                ),
-                (
-                    new int[] { -1, -1, -1, -1, -1, 2, -1, -1, -1, 3, 0, 1, -1, -1, 4, -1 },
-                    "❓ 下面哪个图形折叠后，【1】和【4】是相对的面？",
-                    "1和4相对"
-                ),
-                (
-                    new int[] { -1, -1, -1, -1, -1, -1, 4, 5, -1, -1, 3, 0, 1, -1, -1, -1 },
-                    "❓ 下面哪个图形折叠后，【3】和【5】是相邻的面？",
-                    "3和5相邻"
-                ),
-                (
-                    new int[] { -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 2, 3, -1, -1, 4, 0, -1, -1, 5, 1, -1, -1, -1, -1 },
-                    "❓ 下面哪个图形折叠后，【0】和【5】是相对的面？",
-                    "0和5相对"
-                ),
-            };
+       // ============================================================
+// 1A2B 猜数字游戏渲染
+// ============================================================
+if (challenge.type === 'abgame') {
+    const digitCount = challenge.digitCount || 4;
+    const maxAttempts = challenge.maxAttempts || 15;
+    const password = challenge.password || '';
+    let currentGuess = '';
+    let attemptCount = 0;
+    let history = [];
+    let gameSolved = false;
 
-            var allPairs = new string[]
-            {
-                "0和1相对", "0和2相对", "0和3相对", "0和4相对", "0和5相对",
-                "1和2相对", "1和3相对", "1和4相对", "1和5相对",
-                "2和3相对", "2和4相对", "2和5相对",
-                "3和4相对", "3和5相对", "4和5相对",
-                "0和1相邻", "0和2相邻", "0和3相邻", "0和4相邻", "0和5相邻",
-                "1和2相邻", "1和3相邻", "1和4相邻", "1和5相邻",
-                "2和3相邻", "2和4相邻", "2和5相邻",
-                "3和4相邻", "3和5相邻", "4和5相邻",
-            };
+    dom.questionText.innerHTML = challenge.question;
 
-            int patternIndex;
-            int optionCount;
-            int timeLimit;
+    // 隐藏其他容器
+    dom.optionsGrid.style.display = 'none';
+    dom.colorOptionsGrid.style.display = 'none';
+    dom.imageContainer.style.display = 'none';
+    dom.colorContainer.style.display = 'none';
+    dom.displayTextContainer.style.display = 'none';
+    dom.puzzleContainer.style.display = 'none';
+    dom.sudokuContainer.style.display = 'none';
+    dom.asciiContainer.style.display = 'none';
 
-            if (difficulty <= 20)
-            {
-                patternIndex = _random.Next(0, 2);
-                optionCount = 4;
-                timeLimit = 15;
+    // ===== 创建游戏容器 =====
+    const container = document.createElement('div');
+    container.id = 'abgameContainer';
+    container.style.cssText = 'width:100%;max-width:400px;margin:0 auto;';
+
+    // ===== 密码显示位 =====
+    const displayDiv = document.createElement('div');
+    displayDiv.id = 'abDisplay';
+    displayDiv.style.cssText = `
+        font-size:2.8rem;font-weight:700;letter-spacing:12px;
+        color:#8B5CF6;padding:0.5rem 0;font-family:monospace;
+        background:rgba(255,255,255,0.02);border-radius:12px;
+        border:1px solid rgba(255,255,255,0.04);margin:0 auto 0.5rem;
+        min-height:70px;display:flex;align-items:center;justify-content:center;
+    `;
+    displayDiv.textContent = ' '.repeat(digitCount).split('').join(' ');
+    container.appendChild(displayDiv);
+
+    // ===== 状态信息 =====
+    const statusDiv = document.createElement('div');
+    statusDiv.id = 'abStatus';
+    statusDiv.style.cssText = `
+        color:rgba(255,255,255,0.2);font-size:0.8rem;text-align:center;
+        margin-bottom:0.5rem;
+    `;
+    statusDiv.innerHTML = `💡 剩余 <strong id="abAttempts" style="color:#F59E0B;">${maxAttempts}</strong> 次机会`;
+    container.appendChild(statusDiv);
+
+    // ===== 历史记录 =====
+    const historyDiv = document.createElement('div');
+    historyDiv.id = 'abHistory';
+    historyDiv.style.cssText = `
+        color:rgba(255,255,255,0.12);font-size:0.85rem;
+        min-height:30px;padding:0.3rem 0.5rem;font-family:monospace;
+        background:rgba(255,255,255,0.02);border-radius:8px;
+        border:1px solid rgba(255,255,255,0.02);margin-bottom:0.8rem;
+        max-height:100px;overflow-y:auto;text-align:center;line-height:1.8;
+    `;
+    historyDiv.textContent = '📝 输入你的猜测...';
+    container.appendChild(historyDiv);
+
+    // ===== 九宫格键盘 =====
+    const keypadDiv = document.createElement('div');
+    keypadDiv.id = 'abKeypad';
+    keypadDiv.style.cssText = `
+        display:grid;grid-template-columns:repeat(3,1fr);gap:8px;
+        max-width:260px;margin:0 auto;
+    `;
+
+    const keypadRows = challenge.keypadRows || [
+        ['1','2','3'], ['4','5','6'], ['7','8','9'], ['⌫','0','✅']
+    ];
+
+    keypadRows.forEach(row => {
+        row.forEach(key => {
+            const btn = document.createElement('button');
+            btn.className = 'ab-key-btn';
+            btn.textContent = key;
+
+            let bgColor = 'rgba(255,255,255,0.03)';
+            let textColor = 'rgba(255,255,255,0.6)';
+            let hoverColor = 'rgba(139,92,246,0.08)';
+            let borderColor = 'rgba(255,255,255,0.04)';
+
+            if (key === '⌫') {
+                bgColor = 'rgba(236,72,153,0.08)';
+                textColor = '#EC4899';
+                hoverColor = 'rgba(236,72,153,0.15)';
+                borderColor = 'rgba(236,72,153,0.08)';
+            } else if (key === '✅') {
+                bgColor = 'rgba(40,167,69,0.08)';
+                textColor = '#28a745';
+                hoverColor = 'rgba(40,167,69,0.15)';
+                borderColor = 'rgba(40,167,69,0.08)';
             }
-            else if (difficulty <= 40)
-            {
-                patternIndex = _random.Next(0, 3);
-                optionCount = 4;
-                timeLimit = 18;
+
+            btn.style.cssText = `
+                padding:0.8rem 0.5rem;border:2px solid ${borderColor};
+                border-radius:12px;background:${bgColor};color:${textColor};
+                font-size:1.4rem;font-weight:600;cursor:pointer;
+                transition:all 0.2s ease;font-family:inherit;text-align:center;
+                min-height:52px;
+            `;
+
+            btn.addEventListener('mouseenter', function() {
+                if (!this.disabled) {
+                    this.style.background = hoverColor;
+                    this.style.transform = 'scale(1.04)';
+                }
+            });
+            btn.addEventListener('mouseleave', function() {
+                if (!this.disabled) {
+                    this.style.background = bgColor;
+                    this.style.transform = 'scale(1)';
+                }
+            });
+
+            btn.dataset.key = key;
+
+            btn.addEventListener('click', function() {
+                if (gameState.isAnswered || gameSolved) return;
+                handleABKeyPress(key, digitCount, maxAttempts);
+            });
+
+            keypadDiv.appendChild(btn);
+        });
+    });
+
+    container.appendChild(keypadDiv);
+    dom.challengeCard.appendChild(container);
+
+    // ============================================================
+    // 游戏逻辑
+    // ============================================================
+    function handleABKeyPress(key, digitCount, maxAttempts) {
+        if (gameSolved || gameState.isAnswered) return;
+
+        const displayEl = document.getElementById('abDisplay');
+        const historyEl = document.getElementById('abHistory');
+        const attemptsEl = document.getElementById('abAttempts');
+
+        if (key === '⌫') {
+            // 退位
+            if (currentGuess.length > 0) {
+                currentGuess = currentGuess.slice(0, -1);
+                updateDisplay();
             }
-            else if (difficulty <= 60)
-            {
-                patternIndex = _random.Next(1, 4);
-                optionCount = 5;
-                timeLimit = 20;
-            }
-            else if (difficulty <= 80)
-            {
-                patternIndex = _random.Next(2, 5);
-                optionCount = 5;
-                timeLimit = 22;
-            }
-            else
-            {
-                patternIndex = _random.Next(3, 5);
-                optionCount = 6;
-                timeLimit = 25;
-            }
-
-            var selected = foldingPatterns[patternIndex];
-            int[] layout = selected.layout;
-
-            string foldingSvg = GenerateFoldingSvg(layout);
-
-            var options = new List<string> { selected.answer };
-            var shuffledPairs = allPairs.Where(p => p != selected.answer).OrderBy(_ => _random.Next()).ToList();
-
-            for (int i = 0; i < optionCount - 1 && i < shuffledPairs.Count; i++)
-            {
-                options.Add(shuffledPairs[i]);
-            }
-
-            options = options.OrderBy(_ => _random.Next()).ToList();
-
-            return new Dictionary<string, object>
-            {
-                ["type"] = "spaceFolding",
-                ["level"] = level,
-                ["question"] = $"🧊 下面是一个正方体的展开图，折叠后哪个描述正确？<br><span style='color:rgba(255,255,255,0.12);font-size:0.7rem;'>数字代表不同面</span>",
-                ["foldingSvg"] = foldingSvg,
-                ["correctAnswer"] = selected.answer,
-                ["options"] = options,
-                ["timeLimit"] = timeLimit,
-                ["typesCompleted"] = typesCompleted,
-                ["funMessage"] = GetFunMessage("spaceFolding")
-            };
+            return;
         }
 
-        private string GenerateFoldingSvg(int[] layout)
-        {
-            int cols = 4;
-            int rows = 4;
-            int cellSize = 50;
-            int gap = 2;
-
-            var sb = new StringBuilder();
-            sb.AppendLine($"<svg xmlns='http://www.w3.org/2000/svg' width='{cols * cellSize + 20}' height='{rows * cellSize + 20}' viewBox='0 0 {cols * cellSize + 20} {rows * cellSize + 20}'>");
-            sb.AppendLine($"<rect width='{cols * cellSize + 20}' height='{rows * cellSize + 20}' rx='8' fill='rgba(255,255,255,0.02)' stroke='rgba(255,255,255,0.04)' stroke-width='1'/>");
-
-            string[] colors = { "#8B5CF6", "#EC4899", "#F59E0B", "#06B6D4", "#34D399", "#F472B6" };
-
-            for (int i = 0; i < layout.Length; i++)
-            {
-                if (layout[i] == -1) continue;
-
-                int r = i / cols;
-                int c = i % cols;
-                int x = 10 + c * cellSize + gap / 2;
-                int y = 10 + r * cellSize + gap / 2;
-                int size = cellSize - gap;
-                int idx = layout[i] % colors.Length;
-
-                string label = layout[i].ToString();
-
-                sb.AppendLine($"<rect x='{x}' y='{y}' width='{size}' height='{size}' rx='4' fill='{colors[idx]}' opacity='0.7' stroke='rgba(255,255,255,0.06)' stroke-width='1'/>");
-                sb.AppendLine($"<text x='{x + size / 2}' y='{y + size / 2 + 6}' text-anchor='middle' font-size='16' font-weight='bold' fill='#fff' opacity='0.9'>{label}</text>");
+        if (key === '✅') {
+            // 提交猜测
+            if (currentGuess.length !== digitCount) {
+                showToast(`请完整输入 ${digitCount} 位数字`, 'error');
+                return;
             }
 
-            sb.AppendLine("</svg>");
-            return sb.ToString();
+            // 检查是否有重复数字
+            if (new Set(currentGuess).size !== currentGuess.length) {
+                showToast('数字不能重复！', 'error');
+                return;
+            }
+
+            // 检查第一位是否为0
+            if (currentGuess[0] === '0') {
+                showToast('第一位不能是0！', 'error');
+                return;
+            }
+
+            attemptCount++;
+            const remaining = maxAttempts - attemptCount;
+            attemptsEl.textContent = remaining;
+
+            // 计算 A 和 B
+            let a = 0, b = 0;
+            const passwordArr = password.split('');
+            const guessArr = currentGuess.split('');
+
+            // 先算A
+            const matchedIndexes = [];
+            for (let i = 0; i < digitCount; i++) {
+                if (guessArr[i] === passwordArr[i]) {
+                    a++;
+                    matchedIndexes.push(i);
+                }
+            }
+
+            // 再算B
+            const unmatchedPassword = [];
+            const unmatchedGuess = [];
+            for (let i = 0; i < digitCount; i++) {
+                if (!matchedIndexes.includes(i)) {
+                    unmatchedPassword.push(passwordArr[i]);
+                    unmatchedGuess.push(guessArr[i]);
+                }
+            }
+
+            for (const g of unmatchedGuess) {
+                const idx = unmatchedPassword.indexOf(g);
+                if (idx !== -1) {
+                    b++;
+                    unmatchedPassword.splice(idx, 1);
+                }
+            }
+
+            const resultText = `${a}A${b}B`;
+            const guessDisplay = currentGuess.split('').join(' ');
+
+            // 记录历史
+            history.push(`${guessDisplay} → ${resultText}`);
+            updateHistory();
+
+            // 判断是否猜中
+            if (a === digitCount) {
+                gameSolved = true;
+                gameState.isAnswered = true;
+                clearInterval(gameState.timer);
+                showFeedback(true, 10 + Math.floor(level / 5), `🎉 用了 ${attemptCount} 次猜中！`);
+                // 禁用键盘
+                document.querySelectorAll('.ab-key-btn').forEach(b => b.disabled = true);
+                setTimeout(() => {
+                    gameState.level++;
+                    updateUI();
+                    loadChallenge();
+                }, 2000);
+                return;
+            }
+
+            // 检查是否用完次数
+            if (remaining <= 0) {
+                gameState.isAnswered = true;
+                clearInterval(gameState.timer);
+                document.querySelectorAll('.ab-key-btn').forEach(b => b.disabled = true);
+                showFeedback(false, 0, `💀 机会用尽！密码是 ${password}`);
+                gameState.combo = 0;
+                gameState.lives--;
+                updateUI();
+                if (gameState.lives <= 0) {
+                    setTimeout(gameOver, 1500);
+                } else {
+                    setTimeout(loadChallenge, 2000);
+                }
+                return;
+            }
+
+            // 清空当前输入
+            currentGuess = '';
+            updateDisplay();
+            showToast(`第 ${attemptCount} 次：${resultText}`, 'info');
+
+            return;
         }
 
+        // 数字输入
+        if (currentGuess.length < digitCount) {
+            // 不能重复输入已经输入过的数字
+            if (currentGuess.includes(key)) {
+                showToast('数字不能重复！', 'error');
+                return;
+            }
+            // 第一位不能是0
+            if (currentGuess.length === 0 && key === '0') {
+                showToast('第一位不能是0！', 'error');
+                return;
+            }
+            currentGuess += key;
+            updateDisplay();
+        } else {
+            showToast(`已输入 ${digitCount} 位，请点 ✅ 提交`, 'info');
+        }
+    }
+
+    function updateDisplay() {
+        const displayEl = document.getElementById('abDisplay');
+        const displayText = currentGuess.padEnd(dom.digitCount || digitCount, ' ');
+        displayEl.textContent = displayText.split('').join(' ');
+    }
+
+    function updateHistory() {
+        const historyEl = document.getElementById('abHistory');
+        if (history.length === 0) {
+            historyEl.textContent = '📝 输入你的猜测...';
+            return;
+        }
+        historyEl.innerHTML = history.slice(-6).map(h => `🔹 ${h}`).join('<br>');
+        historyEl.scrollTop = historyEl.scrollHeight;
+    }
+
+    // 保存当前游戏的digitCount供updateDisplay使用
+    dom.digitCount = digitCount;
+
+    // 启动计时器
+    startTimer(challenge.timeLimit || 200);
+
+    // ===== 键盘输入支持（物理键盘） =====
+    function handlePhysicalKey(e) {
+        if (gameState.isAnswered || gameSolved) return;
+        const key = e.key;
+        if (key >= '0' && key <= '9') {
+            e.preventDefault();
+            handleABKeyPress(key, digitCount, maxAttempts);
+        } else if (key === 'Backspace' || key === 'Delete') {
+            e.preventDefault();
+            handleABKeyPress('⌫', digitCount, maxAttempts);
+        } else if (key === 'Enter') {
+            e.preventDefault();
+            handleABKeyPress('✅', digitCount, maxAttempts);
+        }
+    }
+
+    document.addEventListener('keydown', handlePhysicalKey);
+
+    // 清理事件监听（在下次加载时移除）
+    window._abCleanup = function() {
+        document.removeEventListener('keydown', handlePhysicalKey);
+    };
+
+    // ===== 超时处理覆盖 =====
+    const originalTimeoutHandler = window._abTimeoutHandler;
+    window._abTimeoutHandler = function() {
+        if (!gameState.isAnswered && !gameSolved) {
+            gameState.isAnswered = true;
+            document.querySelectorAll('.ab-key-btn').forEach(b => b.disabled = true);
+            showFeedback(false, 0, `⏱ 时间到！密码是 ${password}`);
+            gameState.combo = 0;
+            gameState.lives--;
+            updateUI();
+            if (gameState.lives <= 0) {
+                setTimeout(gameOver, 1500);
+            } else {
+                setTimeout(loadChallenge, 2000);
+            }
+        }
+    };
+
+    return;
+}
                // ============================================================
         // ⭐ 题型 19：颜色三重干扰（纯色版）
         // ============================================================
