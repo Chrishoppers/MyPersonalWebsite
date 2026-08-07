@@ -2484,8 +2484,8 @@ namespace MyPersonalWebsite.Controllers
             };
         }
 
-        // ============================================================
-        // ⭐ 题型 17：图形旋转
+                // ============================================================
+        // ⭐ 题型 17：图形旋转（同时显示原图和旋转图）
         // ============================================================
         private object GenerateRotateShape(int level, int difficulty, int typesCompleted)
         {
@@ -2505,10 +2505,22 @@ namespace MyPersonalWebsite.Controllers
             string shapeName = shapeKeys[_random.Next(shapeKeys.Count)];
             var shape = shapeTypes[shapeName];
 
-            double actualAngle = _random.Next(0, 360);
+            // 生成实际旋转角度
+            double actualAngle;
+            if (difficulty > 80)
+            {
+                actualAngle = _random.Next(0, 360) + (_random.NextDouble() - 0.5) * 3;
+            }
+            else
+            {
+                actualAngle = _random.Next(0, 360);
+            }
 
+            // ⭐ 生成原图（不旋转）和旋转后的图
             string originalSvg = GenerateShapeSvg(shape.x, shape.y, shapeName, 0);
+            string rotatedSvg = GenerateShapeSvg(shape.x, shape.y, shapeName, actualAngle);
 
+            // 生成选项
             var options = new List<double> { actualAngle };
             int optionCount = 4 + Math.Min(difficulty / 10, 3);
 
@@ -2516,8 +2528,8 @@ namespace MyPersonalWebsite.Controllers
             if (difficulty <= 20) { minError = 30; maxError = 60; }
             else if (difficulty <= 40) { minError = 20; maxError = 45; }
             else if (difficulty <= 60) { minError = 15; maxError = 35; }
-            else if (difficulty <= 80) { minError = 10; maxError = 25; }
-            else { minError = 7; maxError = 15; }
+            else if (difficulty <= 80) { minError = 8; maxError = 20; }
+            else { minError = 4; maxError = 12; }
 
             while (options.Count < optionCount)
             {
@@ -2535,14 +2547,15 @@ namespace MyPersonalWebsite.Controllers
             var optionStrings = options.Select(o => $"{Math.Round(o)}°").OrderBy(_ => _random.Next()).ToList();
             string correctAnswer = $"{Math.Round(actualAngle)}°";
 
-            int timeLimit = Math.Max(8, 15 - difficulty / 10);
+            int timeLimit = Math.Max(8, 20 - difficulty / 8);
 
             return new Dictionary<string, object>
             {
                 ["type"] = "rotate",
                 ["level"] = level,
-                ["question"] = $"🔄 以下图形旋转后的角度是多少？<br><span style='color:rgba(255,255,255,0.12);font-size:0.7rem;'>请观察图形的旋转角度</span>",
+                ["question"] = $"🔄 观察下图，旋转后的角度是多少？<br><span style='color:rgba(255,255,255,0.12);font-size:0.7rem;'>左：原图 &nbsp;→&nbsp; 右：旋转后</span>",
                 ["originalSvg"] = originalSvg,
+                ["rotatedSvg"] = rotatedSvg,
                 ["correctAnswer"] = correctAnswer,
                 ["options"] = optionStrings,
                 ["timeLimit"] = timeLimit,
@@ -2550,13 +2563,12 @@ namespace MyPersonalWebsite.Controllers
                 ["funMessage"] = GetFunMessage("rotate")
             };
         }
-
-        private string GenerateShapeSvg(int[] x, int[] y, string shapeName, double rotationAngle)
+                private string GenerateShapeSvg(int[] x, int[] y, string shapeName, double rotationAngle)
         {
-            int width = 130;
-            int height = 130;
-            int cx = 65;
-            int cy = 65;
+            int width = 120;
+            int height = 120;
+            int cx = 60;
+            int cy = 60;
 
             var points = new List<string>();
             for (int i = 0; i < x.Length; i++)
@@ -2571,13 +2583,14 @@ namespace MyPersonalWebsite.Controllers
 
             string svg = $@"
 <svg xmlns='http://www.w3.org/2000/svg' width='{width}' height='{height}' viewBox='0 0 {width} {height}'>
-    <rect width='{width}' height='{height}' rx='12' fill='rgba(255,255,255,0.02)' stroke='rgba(255,255,255,0.04)' stroke-width='1'/>
-    <polygon points='{pointsStr}' fill='{fillColor}' opacity='0.85' stroke='{strokeColor}' stroke-width='2' transform='rotate({rotationAngle}, {cx}, {cy})'/>
-    <circle cx='{cx}' cy='{cy}' r='3' fill='rgba(255,255,255,0.15)'/>
+    <rect width='{width}' height='{height}' rx='8' fill='rgba(255,255,255,0.02)' stroke='rgba(255,255,255,0.04)' stroke-width='1'/>
+    <polygon points='{pointsStr}' fill='{fillColor}' opacity='0.85' stroke='{strokeColor}' stroke-width='1.5' transform='rotate({rotationAngle}, {cx}, {cy})'/>
+    <circle cx='{cx}' cy='{cy}' r='2' fill='rgba(255,255,255,0.1)'/>
 </svg>";
 
             return svg;
         }
+        
 
         // ============================================================
         // ⭐ 题型 18：找不同图形
