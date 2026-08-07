@@ -10,7 +10,7 @@ using System.Text.Json;
 
 namespace MyPersonalWebsite.Controllers
 {
-    public partial class VerifyGameController : Controller
+    public class VerifyGameController : Controller
     {
         private readonly DataSyncService _dataSync;
         private readonly Random _random = new();
@@ -82,11 +82,11 @@ namespace MyPersonalWebsite.Controllers
         };
 
         // ============================================================
-        // 真假判断题库（300+题）
+        // 真假判断题库
         // ============================================================
         private readonly (string statement, bool isTrue, int minLevel, int maxLevel)[] _trueFalseQuestions = new (string, bool, int, int)[]
         {
-            // 📝 入门 (1-20)
+            // 入门 (1-20)
             ("地球是球体", true, 1, 20), ("太阳从东方升起", true, 1, 20),
             ("水在标准大气压下0度结冰", true, 1, 20), ("成年人体内有206块骨头", true, 1, 20),
             ("熊猫是中国的特有物种", true, 1, 20), ("北京是中国的首都", true, 1, 20),
@@ -110,12 +110,12 @@ namespace MyPersonalWebsite.Controllers
             ("青蛙是哺乳动物", false, 1, 20), ("蝙蝠是鸟类", false, 1, 20),
             ("海豚是鱼类", false, 1, 20), ("鲸鱼是鱼类", false, 1, 20),
             ("地球是平的", false, 1, 20), ("太阳绕着地球转", false, 1, 20),
-            ("人类有3只眼睛", false, 1, 20), ("鱼能在空中飞", false, 1, 20),
-            ("人有尾巴", false, 1, 20), ("植物会走路", false, 1, 20),
-            ("石头会说话", false, 1, 20), ("水是黑色的", false, 1, 20),
-            ("所有花都是红色的", false, 1, 20),
+            ("人类有3只眼睛", false, 1, 20), ("人有尾巴", false, 1, 20),
+            ("植物会走路", false, 1, 20), ("石头会说话", false, 1, 20),
+            ("水是黑色的", false, 1, 20), ("所有花都是红色的", false, 1, 20),
+            ("飞鱼能在空中滑翔", true, 1, 20),
 
-            // ⚡ 困难 (21-40)
+            // 困难 (21-40)
             ("鲸鱼是哺乳动物", true, 21, 40), ("光速是宇宙中已知的最快速度", true, 21, 40),
             ("2是最小的质数", true, 21, 40), ("1不是质数", true, 21, 40),
             ("0不是正整数", true, 21, 40), ("光年是距离单位", true, 21, 40),
@@ -148,7 +148,7 @@ namespace MyPersonalWebsite.Controllers
             ("三个连续整数的和能被3整除", true, 21, 40), ("三个连续整数的积能被6整除", true, 21, 40),
             ("所有偶数都是合数", false, 21, 40),
 
-            // 🔥 噩梦 (41-60)
+            // 噩梦 (41-60)
             ("如果今天是周三，那么后天是周五", true, 41, 60), ("如果今天是周一，那么昨天是周日", true, 41, 60),
             ("如果今天是周五，那么明天是周六", true, 41, 60), ("如果今天是周二，那么前天是周日", true, 41, 60),
             ("如果a>b且b>c，则a>c", true, 41, 60), ("如果a=b且b=c，则a=c", true, 41, 60),
@@ -187,7 +187,7 @@ namespace MyPersonalWebsite.Controllers
             ("负数的相反数是正数", true, 41, 60), ("0的相反数是0", true, 41, 60),
             ("所有自然数都是整数", true, 41, 60),
 
-            // 💀 地狱 (61-80)
+            // 地狱 (61-80)
             ("如果a和b都是正整数，且a+b是奇数，则a和b一奇一偶", true, 61, 80),
             ("如果a和b都是正整数，且a+b是偶数，则a和b同奇同偶", true, 61, 80),
             ("如果a和b都是正整数，且a×b是奇数，则a和b都是奇数", true, 61, 80),
@@ -234,7 +234,7 @@ namespace MyPersonalWebsite.Controllers
             ("有理数集在数轴上是稠密的", true, 61, 80),
             ("无理数集在数轴上是稠密的", true, 61, 80),
 
-            // 👑 传说 (81-100)
+            // 传说 (81-100)
             ("如果a和b都是实数，且a²=b²，则a=b", false, 81, 100),
             ("如果a和b都是实数，且a³=b³，则a=b", true, 81, 100),
             ("如果a和b都是正实数，且a/b=b/a，则a=b", true, 81, 100),
@@ -303,7 +303,7 @@ namespace MyPersonalWebsite.Controllers
             {11, new List<char>{'球','理','捧','堵','描','域','掩','捷','排','掉','堆','推','掀','授','教','掏','掠','培','接','控','探','据','掘','职','基','著','勒','黄','萌','萝','菌','菜','萄','菊','萍','营','械','梦','梢','梅','检','梳','梯','桶','救','副','票','戚','爽','聋','袭','盛','雪','辅','辆','虚','雀','堂','常','匙','晨','睁','眯','眼','悬','野','啦','晚','啄','距','跃','略','蛇','累','唱','患','唯','崖','崭','崇','圈','铜','铲','银','甜','梨','犁','移','笨','笼','笛','符','第','敏','做','袋','悠','偿','偶','偷','您','售','停','偏','假','得','衔','盘','船','斜','盒','鸽','悉','欲','彩','领','脚','脖','脸','脱','象','够','猜','猪','猎','猫','猛','馅','馆','凑','减','毫','麻','痒','痕','廊','康','庸','鹿','盗','章','竟','商','族','旋','望','率','着','盖','粘','粗','粒','断','剪','兽','清','添','淋','淹','渠','渐','混','渔','淘','液','淡','深','婆','梁','渗','情','惜','惭','悼','惧','惕','惊','惨','惯','寇','寄','宿','窑','密','谋','谎','祸','谜','逮','敢','屠','弹','随','蛋','隆','隐','婚','婶','颈','绩','绪','续','骑','绳','维','绵','绸','绿'}},
             {12, new List<char>{'琴','斑','替','款','堪','搭','塔','越','趁','趋','超','提','堤','博','揭','喜','插','揪','搜','煮','援','裁','搁','搂','搅','握','揉','斯','期','欺','联','散','惹','葬','募','葛','董','葡','敬','葱','落','朝','辜','葵','棒','棋','植','森','椅','椒','棵','棍','棉','棚','棕','惠','惑','逼','厦','硬','确','雁','殖','裂','雄','暂','雅','辈','悲','紫','辉','敞','赏','掌','晴','暑','最','量','喷','晶','喇','遇','喊','景','践','跌','跑','遗','蛙','蛛','蜓','喝','喂','喘','喉','幅','帽','赌','赔','黑','铸','铺','链','销','锁','锄','锅','锈','锋','锐','短','智','毯','鹅','剩','稍','程','稀','税','筐','等','筑','策','筛','筒','答','筋','筝','傲','傅','牌','堡','集','焦','傍','储','奥','街','惩','御','循','艇','舒','番','释','禽','腊','脾','腋','鲁','猾','猴','然','馋','装','蛮','就','痛','童','阔','善','羡','普','粪','尊','道','曾','焰','港','湖','渣','湿','温','渴','滑','湾','渡','游','滋','溉','愤','慌','惰','愧','愉','慨','割','寒','富','窜','窝','窗','遍','裕','裤','裙','谢','谣','谦','属','屡','强','粥','疏','隔','隙','絮','嫂','登','缎','缓','编','骗','缘'}},
             {13, new List<char>{'瑞','魂','肆','摄','摸','填','搏','塌','鼓','摆','携','搬','摇','搞','塘','摊','蒜','勤','鹊','蓝','墓','幕','蓬','蓄','蒙','蒸','献','禁','楚','想','槐','楼','概','赖','酬','感','碍','碑','碎','碰','碗','碌','雷','零','雾','雹','输','督','频','鉴','睛','睡','睬','鄙','愚','暖','暗','跟','跨','跪','跳','路','踩','蜈','蜗','蛾','蜂','嗓','置','罪','罩','错','锡','锣','锤','锦','键','锯','矮','辞','稚','愁','签','简','毁','舅','鼠','催','傻','像','躲','微','愈','遥','腰','腥','腮','腿','腹','腺','鹏','腾','颖','触','解','煞','廉','新','韵','意','粮','数','煎','塑','慈','煤','煌','满','漠','源','滤','滥','滔','溪','溜','漓','滚','溢','溯','滨','溶','溺','粱','滩','慎','誉','塞','谨','福','群','殿','辟','障','嫌','嫁','叠','缝','缠'}},
-            {14, new List<char>{'静','碧','璃','墙','撇','嘉','摧','截','誓','境','摘','摔','聚','蔽','慕','暮','蔑','模','榴','榜','榨','歌','遭','酷','酿','酸','磁','愿','需','弊','裳','颗','嗽','蜻','蜡','蝇','蜘','赚','锹','锻','舞','稳','算','箩','管','箫','舆','魄','鲜','辣','端','竭','旗','精','粹','歉','弊','豪','膏','遮','腐','瘦','辣','竭','端','旗','精','粹','歉','弊','豪','膏','遮','腐','瘦','辣','竭','端','旗','精','粹','歉','弊','豪','膏','遮','腐','瘦'}},
+            {14, new List<char>{'静','碧','璃','墙','撇','嘉','摧','截','誓','境','摘','摔','聚','蔽','慕','暮','蔑','模','榴','榜','榨','歌','遭','酷','酿','酸','磁','愿','需','弊','裳','颗','嗽','蜻','蜡','蝇','蜘','赚','锹','锻','舞','稳','算','箩','管','箫','舆','魄','鲜','辣','端','竭','旗','精','粹','歉','弊','豪','膏','遮','腐','瘦'}},
         };
 
         // ============================================================
@@ -367,133 +367,70 @@ namespace MyPersonalWebsite.Controllers
         // ============================================================
         private readonly (string pattern, int answer, int minLevel, int maxLevel)[] _patternQuestions = new (string, int, int, int)[]
         {
-            ("2, 4, 6, ?, 10", 8, 1, 20),
-            ("1, 3, 5, ?, 9", 7, 1, 20),
-            ("10, 20, 30, ?, 50", 40, 1, 20),
-            ("5, 10, 15, ?, 25", 20, 1, 20),
-            ("1, 2, 4, ?, 11", 7, 1, 20),
-            ("3, 6, 9, ?, 15", 12, 1, 20),
-            ("2, 4, 8, ?, 32", 16, 1, 20),
-            ("1, 4, 9, ?, 25", 16, 1, 20),
-            ("2, 6, 12, ?, 30", 20, 1, 20),
-            ("3, 7, 11, ?, 19", 15, 1, 20),
-            ("1, 2, 3, 5, ?, 13", 8, 1, 20),
-            ("2, 3, 5, 8, ?, 21", 13, 1, 20),
-            ("1, 3, 7, 15, ?, 63", 31, 1, 20),
-            ("1, 2, 6, 24, ?, 720", 120, 1, 20),
-            ("2, 6, 18, 54, ?", 162, 1, 20),
-            ("3, 9, 27, 81, ?", 243, 1, 20),
-            ("1, 3, 5, 7, ?, 11", 9, 1, 20),
-            ("2, 4, 6, 8, ?, 12", 10, 1, 20),
-            ("5, 10, 20, 40, ?", 80, 1, 20),
-            ("1, 2, 3, 4, ?, 6", 5, 1, 20),
-            ("2, 5, 8, 11, ?, 17", 14, 1, 20),
-            ("3, 6, 12, 24, ?", 48, 1, 20),
-            ("4, 8, 12, 16, ?", 20, 1, 20),
-            ("5, 15, 45, 135, ?", 405, 1, 20),
-            ("1, 2, 4, 8, 16, ?", 32, 1, 20),
-            ("2, 4, 6, 10, 16, ?", 26, 1, 20),
-            ("1, 3, 6, 10, 15, ?", 21, 1, 20),
-            ("1, 4, 10, 20, 35, ?", 56, 1, 20),
-            ("2, 5, 10, 17, 26, ?", 37, 1, 20),
-            ("1, 2, 6, 15, 31, ?", 56, 1, 20),
-
+            ("2, 4, 6, ?, 10", 8, 1, 20), ("1, 3, 5, ?, 9", 7, 1, 20),
+            ("10, 20, 30, ?, 50", 40, 1, 20), ("5, 10, 15, ?, 25", 20, 1, 20),
+            ("1, 2, 4, ?, 11", 7, 1, 20), ("3, 6, 9, ?, 15", 12, 1, 20),
+            ("2, 4, 8, ?, 32", 16, 1, 20), ("1, 4, 9, ?, 25", 16, 1, 20),
+            ("2, 6, 12, ?, 30", 20, 1, 20), ("3, 7, 11, ?, 19", 15, 1, 20),
+            ("1, 2, 3, 5, ?, 13", 8, 1, 20), ("2, 3, 5, 8, ?, 21", 13, 1, 20),
+            ("1, 3, 7, 15, ?, 63", 31, 1, 20), ("1, 2, 6, 24, ?, 720", 120, 1, 20),
+            ("2, 6, 18, 54, ?", 162, 1, 20), ("3, 9, 27, 81, ?", 243, 1, 20),
+            ("1, 3, 5, 7, ?, 11", 9, 1, 20), ("2, 4, 6, 8, ?, 12", 10, 1, 20),
+            ("5, 10, 20, 40, ?", 80, 1, 20), ("1, 2, 3, 4, ?, 6", 5, 1, 20),
+            ("2, 5, 8, 11, ?, 17", 14, 1, 20), ("3, 6, 12, 24, ?", 48, 1, 20),
+            ("4, 8, 12, 16, ?", 20, 1, 20), ("5, 15, 45, 135, ?", 405, 1, 20),
+            ("1, 2, 4, 8, 16, ?", 32, 1, 20), ("2, 4, 6, 10, 16, ?", 26, 1, 20),
+            ("1, 3, 6, 10, 15, ?", 21, 1, 20), ("1, 4, 10, 20, 35, ?", 56, 1, 20),
+            ("2, 5, 10, 17, 26, ?", 37, 1, 20), ("1, 2, 6, 15, 31, ?", 56, 1, 20),
             // 困难 (21-40)
-            ("2, 5, 10, 17, ?, 37", 26, 21, 40),
-            ("1, 3, 6, 10, ?, 21", 15, 21, 40),
-            ("2, 6, 12, 20, ?, 42", 30, 21, 40),
-            ("1, 2, 5, 10, ?, 26", 17, 21, 40),
-            ("3, 8, 15, 24, ?, 48", 35, 21, 40),
-            ("2, 3, 5, 9, ?, 33", 17, 21, 40),
-            ("1, 4, 13, 40, ?, 364", 121, 21, 40),
-            ("2, 5, 11, 23, ?, 95", 47, 21, 40),
-            ("1, 3, 8, 19, ?, 81", 42, 21, 40),
-            ("4, 9, 16, 25, ?, 49", 36, 21, 40),
-            ("1, 8, 27, 64, ?, 216", 125, 21, 40),
-            ("2, 8, 18, 32, ?, 72", 50, 21, 40),
-            ("1, 5, 9, 13, ?, 21", 17, 21, 40),
-            ("3, 7, 11, 15, ?, 23", 19, 21, 40),
-            ("2, 7, 12, 17, ?, 27", 22, 21, 40),
-            ("4, 11, 18, 25, ?, 39", 32, 21, 40),
-            ("1, 4, 9, 16, 25, ?", 36, 21, 40),
-            ("1, 2, 4, 7, 11, ?", 16, 21, 40),
-            ("2, 5, 9, 14, 20, ?", 27, 21, 40),
-            ("3, 6, 10, 15, 21, ?", 28, 21, 40),
-            ("1, 3, 9, 27, 81, ?", 243, 21, 40),
-            ("2, 6, 18, 54, 162, ?", 486, 21, 40),
-            ("1, 4, 16, 64, 256, ?", 1024, 21, 40),
-            ("3, 9, 27, 81, 243, ?", 729, 21, 40),
-            ("2, 5, 11, 23, 47, ?", 95, 21, 40),
-            ("3, 7, 15, 31, 63, ?", 127, 21, 40),
-            ("1, 2, 5, 14, 41, ?", 122, 21, 40),
-            ("2, 3, 7, 18, 47, ?", 123, 21, 40),
-            ("1, 3, 11, 47, 239, ?", 1439, 21, 40),
-            ("2, 5, 13, 35, 97, ?", 275, 21, 40),
-
+            ("2, 5, 10, 17, ?, 37", 26, 21, 40), ("1, 3, 6, 10, ?, 21", 15, 21, 40),
+            ("2, 6, 12, 20, ?, 42", 30, 21, 40), ("1, 2, 5, 10, ?, 26", 17, 21, 40),
+            ("3, 8, 15, 24, ?, 48", 35, 21, 40), ("2, 3, 5, 9, ?, 33", 17, 21, 40),
+            ("1, 4, 13, 40, ?, 364", 121, 21, 40), ("2, 5, 11, 23, ?, 95", 47, 21, 40),
+            ("1, 3, 8, 19, ?, 81", 42, 21, 40), ("4, 9, 16, 25, ?, 49", 36, 21, 40),
+            ("1, 8, 27, 64, ?, 216", 125, 21, 40), ("2, 8, 18, 32, ?, 72", 50, 21, 40),
+            ("1, 5, 9, 13, ?, 21", 17, 21, 40), ("3, 7, 11, 15, ?, 23", 19, 21, 40),
+            ("2, 7, 12, 17, ?, 27", 22, 21, 40), ("4, 11, 18, 25, ?, 39", 32, 21, 40),
+            ("1, 4, 9, 16, 25, ?", 36, 21, 40), ("1, 2, 4, 7, 11, ?", 16, 21, 40),
+            ("2, 5, 9, 14, 20, ?", 27, 21, 40), ("3, 6, 10, 15, 21, ?", 28, 21, 40),
+            ("1, 3, 9, 27, 81, ?", 243, 21, 40), ("2, 6, 18, 54, 162, ?", 486, 21, 40),
+            ("1, 4, 16, 64, 256, ?", 1024, 21, 40), ("3, 9, 27, 81, 243, ?", 729, 21, 40),
+            ("2, 5, 11, 23, 47, ?", 95, 21, 40), ("3, 7, 15, 31, 63, ?", 127, 21, 40),
+            ("1, 2, 5, 14, 41, ?", 122, 21, 40), ("2, 3, 7, 18, 47, ?", 123, 21, 40),
+            ("1, 3, 11, 47, 239, ?", 1439, 21, 40), ("2, 5, 13, 35, 97, ?", 275, 21, 40),
             // 噩梦 (41-60)
-            ("1, 2, 6, 15, 31, ?, 92", 56, 41, 60),
-            ("2, 3, 7, 18, 47, ?, 322", 123, 41, 60),
-            ("1, 4, 10, 22, 46, ?, 190", 94, 41, 60),
-            ("3, 7, 15, 31, 63, ?, 255", 127, 41, 60),
-            ("1, 3, 9, 31, 113, ?, 1913", 481, 41, 60),
-            ("2, 5, 14, 41, 122, ?, 1094", 365, 41, 60),
-            ("1, 2, 5, 14, 41, ?, 365", 122, 41, 60),
-            ("3, 8, 23, 68, 203, ?, 1823", 608, 41, 60),
-            ("1, 4, 15, 56, 209, ?, 3125", 780, 41, 60),
-            ("2, 7, 22, 67, 202, ?", 607, 41, 60),
-            ("1, 6, 15, 28, 45, ?", 66, 41, 60),
-            ("3, 9, 21, 45, 93, ?", 189, 41, 60),
-            ("2, 4, 10, 28, 82, ?", 244, 41, 60),
-            ("1, 5, 13, 29, 61, ?", 125, 41, 60),
-            ("2, 8, 26, 80, 242, ?", 728, 41, 60),
-            ("3, 10, 31, 94, 283, ?", 850, 41, 60),
-            ("1, 6, 27, 124, 645, ?", 3886, 41, 60),
-            ("2, 9, 28, 65, 126, ?", 217, 41, 60),
-            ("3, 7, 19, 55, 163, ?", 487, 41, 60),
-            ("1, 5, 17, 53, 161, ?", 485, 41, 60),
-            ("2, 6, 20, 70, 252, ?", 924, 41, 60),
-            ("3, 8, 24, 80, 280, ?", 1008, 41, 60),
-            ("1, 4, 18, 96, 600, ?", 4320, 41, 60),
-            ("2, 6, 24, 120, 720, ?", 5040, 41, 60),
+            ("1, 2, 6, 15, 31, ?, 92", 56, 41, 60), ("2, 3, 7, 18, 47, ?, 322", 123, 41, 60),
+            ("1, 4, 10, 22, 46, ?, 190", 94, 41, 60), ("3, 7, 15, 31, 63, ?, 255", 127, 41, 60),
+            ("1, 3, 9, 31, 113, ?, 1913", 481, 41, 60), ("2, 5, 14, 41, 122, ?, 1094", 365, 41, 60),
+            ("1, 2, 5, 14, 41, ?, 365", 122, 41, 60), ("3, 8, 23, 68, 203, ?, 1823", 608, 41, 60),
+            ("1, 4, 15, 56, 209, ?, 3125", 780, 41, 60), ("2, 7, 22, 67, 202, ?", 607, 41, 60),
+            ("1, 6, 15, 28, 45, ?", 66, 41, 60), ("3, 9, 21, 45, 93, ?", 189, 41, 60),
+            ("2, 4, 10, 28, 82, ?", 244, 41, 60), ("1, 5, 13, 29, 61, ?", 125, 41, 60),
+            ("2, 8, 26, 80, 242, ?", 728, 41, 60), ("3, 10, 31, 94, 283, ?", 850, 41, 60),
+            ("1, 6, 27, 124, 645, ?", 3886, 41, 60), ("2, 9, 28, 65, 126, ?", 217, 41, 60),
+            ("3, 7, 19, 55, 163, ?", 487, 41, 60), ("1, 5, 17, 53, 161, ?", 485, 41, 60),
+            ("2, 6, 20, 70, 252, ?", 924, 41, 60), ("3, 8, 24, 80, 280, ?", 1008, 41, 60),
+            ("1, 4, 18, 96, 600, ?", 4320, 41, 60), ("2, 6, 24, 120, 720, ?", 5040, 41, 60),
             ("1, 2, 8, 48, 384, ?", 3840, 41, 60),
-
             // 地狱 (61-80)
-            ("1, 3, 7, 13, 21, ?, 43", 31, 61, 80),
-            ("2, 6, 14, 30, 62, ?, 254", 126, 61, 80),
-            ("1, 5, 13, 29, 61, ?, 253", 125, 61, 80),
-            ("3, 10, 29, 66, 127, ?, 365", 218, 61, 80),
-            ("1, 4, 18, 96, 600, ?, 45360", 4320, 61, 80),
-            ("2, 6, 24, 120, 720, ?, 40320", 5040, 61, 80),
-            ("1, 2, 8, 48, 384, ?, 46080", 3840, 61, 80),
-            ("2, 5, 13, 35, 97, ?", 275, 61, 80),
-            ("1, 3, 11, 47, 239, ?", 1439, 61, 80),
-            ("3, 7, 19, 55, 163, ?", 487, 61, 80),
-            ("2, 9, 28, 65, 126, ?", 217, 61, 80),
-            ("1, 6, 27, 124, 645, ?", 3886, 61, 80),
-            ("3, 11, 35, 107, 323, ?", 971, 61, 80),
-            ("2, 7, 22, 67, 202, ?", 607, 61, 80),
-            ("1, 5, 19, 77, 309, ?", 1237, 61, 80),
-            ("3, 8, 26, 82, 258, ?", 818, 61, 80),
-            ("2, 10, 38, 154, 618, ?", 2474, 61, 80),
-            ("1, 4, 21, 106, 531, ?", 2656, 61, 80),
-            ("3, 9, 29, 99, 349, ?", 1229, 61, 80),
-            ("2, 8, 34, 140, 568, ?", 2296, 61, 80),
-
+            ("1, 3, 7, 13, 21, ?, 43", 31, 61, 80), ("2, 6, 14, 30, 62, ?, 254", 126, 61, 80),
+            ("1, 5, 13, 29, 61, ?, 253", 125, 61, 80), ("3, 10, 29, 66, 127, ?, 365", 218, 61, 80),
+            ("1, 4, 18, 96, 600, ?, 45360", 4320, 61, 80), ("2, 6, 24, 120, 720, ?, 40320", 5040, 61, 80),
+            ("1, 2, 8, 48, 384, ?, 46080", 3840, 61, 80), ("2, 5, 13, 35, 97, ?", 275, 61, 80),
+            ("1, 3, 11, 47, 239, ?", 1439, 61, 80), ("3, 7, 19, 55, 163, ?", 487, 61, 80),
+            ("2, 9, 28, 65, 126, ?", 217, 61, 80), ("1, 6, 27, 124, 645, ?", 3886, 61, 80),
+            ("3, 11, 35, 107, 323, ?", 971, 61, 80), ("2, 7, 22, 67, 202, ?", 607, 61, 80),
+            ("1, 5, 19, 77, 309, ?", 1237, 61, 80), ("3, 8, 26, 82, 258, ?", 818, 61, 80),
+            ("2, 10, 38, 154, 618, ?", 2474, 61, 80), ("1, 4, 21, 106, 531, ?", 2656, 61, 80),
+            ("3, 9, 29, 99, 349, ?", 1229, 61, 80), ("2, 8, 34, 140, 568, ?", 2296, 61, 80),
             // 传说 (81-100)
-            ("1, 4, 27, 256, ?, 46656", 3125, 81, 100),
-            ("2, 12, 36, 80, 150, ?, 392", 252, 81, 100),
-            ("1, 3, 11, 51, 251, ?, 8255", 1251, 81, 100),
-            ("3, 16, 45, 96, 175, ?, 441", 288, 81, 100),
-            ("1, 2, 12, 72, 480, ?, 34560", 3600, 81, 100),
-            ("2, 5, 14, 41, 122, ?", 365, 81, 100),
-            ("1, 4, 19, 94, 469, ?", 2344, 81, 100),
-            ("3, 11, 35, 107, 323, ?", 971, 81, 100),
-            ("2, 7, 22, 67, 202, ?", 607, 81, 100),
-            ("1, 8, 49, 344, 2401, ?", 16808, 81, 100),
-            ("4, 13, 40, 121, 364, ?", 1093, 81, 100),
-            ("2, 9, 40, 189, 934, ?", 4633, 81, 100),
-            ("1, 6, 35, 204, 1189, ?", 6930, 81, 100),
-            ("3, 10, 41, 172, 733, ?", 3102, 81, 100),
+            ("1, 4, 27, 256, ?, 46656", 3125, 81, 100), ("2, 12, 36, 80, 150, ?, 392", 252, 81, 100),
+            ("1, 3, 11, 51, 251, ?, 8255", 1251, 81, 100), ("3, 16, 45, 96, 175, ?, 441", 288, 81, 100),
+            ("1, 2, 12, 72, 480, ?, 34560", 3600, 81, 100), ("2, 5, 14, 41, 122, ?", 365, 81, 100),
+            ("1, 4, 19, 94, 469, ?", 2344, 81, 100), ("3, 11, 35, 107, 323, ?", 971, 81, 100),
+            ("2, 7, 22, 67, 202, ?", 607, 81, 100), ("1, 8, 49, 344, 2401, ?", 16808, 81, 100),
+            ("4, 13, 40, 121, 364, ?", 1093, 81, 100), ("2, 9, 40, 189, 934, ?", 4633, 81, 100),
+            ("1, 6, 35, 204, 1189, ?", 6930, 81, 100), ("3, 10, 41, 172, 733, ?", 3102, 81, 100),
             ("2, 15, 82, 435, 2318, ?", 12315, 81, 100),
         };
 
@@ -697,8 +634,7 @@ namespace MyPersonalWebsite.Controllers
                 return Json(new { success = false, message = ex.Message });
             }
         }
-
-        // ============================================================
+                // ============================================================
         // ⭐ 随机类型生成器
         // ============================================================
         private object GenerateChallenge(int level)
@@ -724,26 +660,10 @@ namespace MyPersonalWebsite.Controllers
 
             string[] typeNames = new string[]
             {
-                "文字识别",      // 0
-                "算术计算",      // 1
-                "汉字笔画",      // 2 ⬅️ 已增强
-                "颜色识别",      // 3
-                "找不同",        // 4
-                "倒序识别",      // 5
-                "空缺字母",      // 6
-                "时间计算",      // 7
-                "成语填空",      // 8
-                "数字记忆",      // 9
-                "找规律",        // 10
-                "颜色混合",      // 11
-                "真假判断",      // 12
-                "数字华容道",    // 13
-                "字符频率",      // 14
-                "立体计数",      // 15
-                "反色识别",      // 16
-                "图形旋转",      // 17
-                "找不同图形",    // 18
-                "颜色三重干扰"   // 19
+                "文字识别", "算术计算", "汉字笔画", "颜色识别", "找不同",
+                "倒序识别", "空缺字母", "时间计算", "成语填空", "数字记忆",
+                "找规律", "颜色混合", "真假判断", "数字华容道", "字符频率",
+                "图形计数", "反色识别", "图形旋转", "找不同图形", "颜色三重干扰"
             };
 
             object result;
@@ -785,7 +705,8 @@ namespace MyPersonalWebsite.Controllers
 
             return dict;
         }
-                // ============================================================
+
+        // ============================================================
         // 工具方法
         // ============================================================
 
@@ -1099,7 +1020,7 @@ namespace MyPersonalWebsite.Controllers
             }
 
             sb.Append("<span style='color:rgba(255,255,255,0.08);font-size:1.2rem;'>→</span>");
-            
+
             // ⭐ 只显示问号
             sb.Append("<div style='display:flex;flex-direction:column;align-items:center;gap:4px;'>");
             sb.Append($"<div style='width:{size + 10}px;height:{size + 10}px;border-radius:8px;background:rgba(255,255,255,0.02);border:2px dashed rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;font-size:1.5rem;color:rgba(255,255,255,0.1);'>?</div>");
@@ -1127,12 +1048,6 @@ namespace MyPersonalWebsite.Controllers
 
             sb.Append("</div>");
             return sb.ToString();
-        }
-
-        // ⭐ 生成汉字笔画显示
-        private string GenerateStrokeDisplay(char ch, int strokeCount)
-        {
-            return $"<span style='font-size:4rem;font-weight:bold;color:#8B5CF6;padding:0.5rem 1rem;background:rgba(139,92,246,0.04);border-radius:16px;border:1px solid rgba(139,92,246,0.06);'>{ch}</span>";
         }
 
         // ============================================================
@@ -1212,7 +1127,7 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // ⭐ 题型 2：汉字笔画（增强版：单字 → 相加 → 相减 → 混合）
+        // ⭐ 题型 2：汉字笔画
         // ============================================================
         private object GenerateStrokeCount(int level, int difficulty, int typesCompleted)
         {
@@ -1222,7 +1137,6 @@ namespace MyPersonalWebsite.Controllers
 
             if (difficulty <= 20)
             {
-                // 📝 入门：单个汉字（1-5画）
                 var pool = _strokeGroups.Where(kv => kv.Key <= 5).SelectMany(kv => kv.Value).ToList();
                 if (pool.Count == 0) pool = _strokeGroups[1];
                 char ch = pool[_random.Next(pool.Count)];
@@ -1233,7 +1147,6 @@ namespace MyPersonalWebsite.Controllers
             }
             else if (difficulty <= 40)
             {
-                // ⚡ 困难：单个汉字（6-10画）
                 var pool = _strokeGroups.Where(kv => kv.Key >= 6 && kv.Key <= 10).SelectMany(kv => kv.Value).ToList();
                 if (pool.Count == 0) pool = _strokeGroups[6];
                 char ch = pool[_random.Next(pool.Count)];
@@ -1244,7 +1157,6 @@ namespace MyPersonalWebsite.Controllers
             }
             else if (difficulty <= 60)
             {
-                // 🔥 噩梦：两个汉字笔画相加
                 var pool = _strokeGroups.SelectMany(kv => kv.Value).ToList();
                 char ch1 = pool[_random.Next(pool.Count)];
                 char ch2 = pool[_random.Next(pool.Count)];
@@ -1256,7 +1168,6 @@ namespace MyPersonalWebsite.Controllers
             }
             else if (difficulty <= 80)
             {
-                // 💀 地狱：两个汉字笔画相减（大减小）
                 var pool = _strokeGroups.SelectMany(kv => kv.Value).ToList();
                 char ch1 = pool[_random.Next(pool.Count)];
                 char ch2 = pool[_random.Next(pool.Count)];
@@ -1269,7 +1180,6 @@ namespace MyPersonalWebsite.Controllers
             }
             else
             {
-                // 👑 传说：三个汉字混合运算（A+B-C）
                 var pool = _strokeGroups.SelectMany(kv => kv.Value).ToList();
                 char ch1 = pool[_random.Next(pool.Count)];
                 char ch2 = pool[_random.Next(pool.Count)];
@@ -1277,7 +1187,6 @@ namespace MyPersonalWebsite.Controllers
                 int s1 = _strokeGroups.First(kv => kv.Value.Contains(ch1)).Key;
                 int s2 = _strokeGroups.First(kv => kv.Value.Contains(ch2)).Key;
                 int s3 = _strokeGroups.First(kv => kv.Value.Contains(ch3)).Key;
-                // 确保结果为正
                 int result = s1 + s2 - s3;
                 if (result <= 0) result = s1 + s3 - s2;
                 if (result <= 0) result = s2 + s3 - s1;
@@ -1356,7 +1265,7 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // ⭐ 题型 4：找不同
+        // ⭐ 题型 4：找不同（打乱 + 替换，替换字符不能与原字符重复）
         // ============================================================
         private object GenerateFindDifferent(int level, int difficulty, int typesCompleted)
         {
@@ -1369,56 +1278,38 @@ namespace MyPersonalWebsite.Controllers
 
             int pos = _random.Next(length);
             char originalChar = original[pos];
-            char replacementChar = GetSimilarChar(originalChar);
-            while (replacementChar == originalChar) replacementChar = GetSimilarChar(originalChar);
+
+            // ⭐ 替换字符不能是原字符串中已有的字符
+            char replacementChar;
+            int maxAttempts = 100;
+            int attempts = 0;
+            do
+            {
+                replacementChar = chars[_random.Next(chars.Length)];
+                attempts++;
+            } while ((replacementChar == originalChar || original.Contains(replacementChar)) && attempts < maxAttempts);
+
+            if (attempts >= maxAttempts)
+            {
+                return GenerateFindDifferent(level, difficulty, typesCompleted);
+            }
 
             char[] replacedArr = original.ToCharArray();
             replacedArr[pos] = replacementChar;
             string replaced = new string(replacedArr);
 
+            // ⭐ 打乱顺序
             char[] shuffledArr = replaced.ToCharArray();
-            bool allSamePosition = true;
-            int maxAttempts = 50;
-            int attempts = 0;
-
-            while (allSamePosition && attempts < maxAttempts)
+            for (int i = shuffledArr.Length - 1; i > 0; i--)
             {
-                for (int i = shuffledArr.Length - 1; i > 0; i--)
-                {
-                    int j = _random.Next(i + 1);
-                    char temp = shuffledArr[i];
-                    shuffledArr[i] = shuffledArr[j];
-                    shuffledArr[j] = temp;
-                }
-
-                allSamePosition = true;
-                for (int i = 0; i < shuffledArr.Length; i++)
-                {
-                    if (shuffledArr[i] != replacedArr[i])
-                    {
-                        allSamePosition = false;
-                        break;
-                    }
-                }
-                attempts++;
+                int j = _random.Next(i + 1);
+                char temp = shuffledArr[i];
+                shuffledArr[i] = shuffledArr[j];
+                shuffledArr[j] = temp;
             }
-
             string shuffled = new string(shuffledArr);
 
-            int shuffledPos = -1;
-            for (int i = 0; i < shuffledArr.Length; i++)
-            {
-                if (shuffledArr[i] == replacementChar)
-                {
-                    shuffledPos = i;
-                    break;
-                }
-            }
-
-            if (shuffledPos == -1)
-            {
-                return GenerateFindDifferent(level, difficulty, typesCompleted);
-            }
+            int shuffledPos = shuffled.IndexOf(replacementChar);
 
             int displayTime = Math.Max(2, 8 - difficulty / 8);
             int timeLimit = Math.Max(4, 14 - difficulty / 6);
@@ -1432,8 +1323,8 @@ namespace MyPersonalWebsite.Controllers
                 ["displayTime"] = displayTime,
                 ["shuffledDisplay"] = shuffled,
                 ["shuffledPos"] = shuffledPos,
-                ["displayText"] = original,
                 ["correctAnswer"] = originalChar.ToString(),
+                ["options"] = GenerateOptions(originalChar.ToString(), 4 + Math.Min(difficulty / 10, 3)),
                 ["timeLimit"] = timeLimit,
                 ["typesCompleted"] = typesCompleted,
                 ["funMessage"] = GetFunMessage("findDifferent")
@@ -1510,11 +1401,25 @@ namespace MyPersonalWebsite.Controllers
 
             string word = candidates[_random.Next(candidates.Count)];
 
-            int missingCount = _random.Next(minMissing, maxMissing + 1);
-            var positions = new List<int>();
-            for (int i = 0; i < word.Length; i++) positions.Add(i);
-            positions = positions.OrderBy(_ => _random.Next()).ToList();
-            var missingPos = positions.Take(missingCount).OrderBy(p => p).ToList();
+            // ⭐ 只选唯一的字符进行挖空
+            var duplicateChars = word.GroupBy(c => c).Where(g => g.Count() >= 2).Select(g => g.Key).ToHashSet();
+            var availablePositions = new List<int>();
+            for (int i = 0; i < word.Length; i++)
+            {
+                if (!duplicateChars.Contains(word[i]))
+                {
+                    availablePositions.Add(i);
+                }
+            }
+
+            if (availablePositions.Count == 0)
+            {
+                for (int i = 0; i < word.Length; i++) availablePositions.Add(i);
+            }
+
+            int missingCount = Math.Min(_random.Next(minMissing, maxMissing + 1), availablePositions.Count);
+            var shuffledPositions = availablePositions.OrderBy(_ => _random.Next()).ToList();
+            var missingPos = shuffledPositions.Take(missingCount).OrderBy(p => p).ToList();
 
             char[] display = word.ToCharArray();
             char[] correctChars = new char[missingCount];
@@ -1783,7 +1688,7 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // ⭐ 题型 11：颜色混合（不显示混合结果）
+        // ⭐ 题型 11：颜色混合
         // ============================================================
         private object GenerateColorMix(int level, int difficulty, int typesCompleted)
         {
@@ -2095,7 +2000,7 @@ namespace MyPersonalWebsite.Controllers
             }
 
             string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-            
+
             var selectedChars = new List<char>();
             var usedIndices = new HashSet<int>();
             while (selectedChars.Count < uniqueCount)
@@ -2139,7 +2044,7 @@ namespace MyPersonalWebsite.Controllers
             var sorted = frequencies.OrderBy(kv => kv.Value).ToList();
             var values = frequencies.Values.ToList();
             int avg = (int)Math.Round(values.Average());
-            
+
             string questionText;
             string correctAnswer;
 
@@ -2242,87 +2147,46 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // ⭐ 题型 15：立体计数
+        // ⭐ 题型 15：图形计数
         // ============================================================
         private object GenerateShapeCount(int level, int difficulty, int typesCompleted)
         {
-            int cubeCount, timeLimit;
+            int count;
+            int timeLimit;
 
-            if (difficulty <= 20) { cubeCount = 3 + _random.Next(2); timeLimit = 8; }
-            else if (difficulty <= 40) { cubeCount = 5 + _random.Next(3); timeLimit = 10; }
-            else if (difficulty <= 60) { cubeCount = 8 + _random.Next(4); timeLimit = 12; }
-            else if (difficulty <= 80) { cubeCount = 12 + _random.Next(5); timeLimit = 15; }
-            else { cubeCount = 16 + _random.Next(8); timeLimit = 18; }
+            if (difficulty <= 20) { count = 3 + _random.Next(2); timeLimit = 8; }
+            else if (difficulty <= 40) { count = 5 + _random.Next(3); timeLimit = 10; }
+            else if (difficulty <= 60) { count = 8 + _random.Next(4); timeLimit = 12; }
+            else if (difficulty <= 80) { count = 12 + _random.Next(5); timeLimit = 15; }
+            else { count = 16 + _random.Next(8); timeLimit = 18; }
 
-            string asciiArt = Generate3DAsciiArt(cubeCount);
+            // 生成随机图形序列
+            string[] shapes = { "●", "■", "▲", "★", "◆", "♥", "♦", "♣", "♠" };
+            var selected = new List<string>();
+            for (int i = 0; i < count; i++)
+            {
+                selected.Add(shapes[_random.Next(shapes.Length)]);
+            }
 
-            var options = GenerateNumberOptions(cubeCount, 4 + Math.Min(difficulty / 10, 3), 5 + difficulty / 5);
+            // 选择一个目标图形
+            string target = selected[_random.Next(selected.Count)];
+            int targetCount = selected.Count(s => s == target);
+
+            string display = string.Join(" ", selected);
+
+            var options = GenerateNumberOptions(targetCount, 4 + Math.Min(difficulty / 10, 3), 3 + difficulty / 10);
 
             return new Dictionary<string, object>
             {
                 ["type"] = "shapeCount",
                 ["level"] = level,
-                ["question"] = $"📐 下图中共有多少个正方体？<br><pre style='font-family:monospace;font-size:0.8rem;color:#8B5CF6;text-align:center;background:rgba(255,255,255,0.02);padding:0.5rem;border-radius:8px;'>{asciiArt}</pre>",
-                ["correctAnswer"] = cubeCount.ToString(),
+                ["question"] = $"🔢 以下图形中，「{target}」出现了几次？<br><span style='font-size:2rem;letter-spacing:8px;'>{display}</span>",
+                ["correctAnswer"] = targetCount.ToString(),
                 ["options"] = options,
                 ["timeLimit"] = timeLimit,
                 ["typesCompleted"] = typesCompleted,
                 ["funMessage"] = GetFunMessage("shapeCount")
             };
-        }
-
-        private string Generate3DAsciiArt(int cubeCount)
-        {
-            var sb = new StringBuilder();
-            int cols = _random.Next(2, 5);
-            int rows = (int)Math.Ceiling((double)cubeCount / cols);
-            
-            var grid = new int[rows, cols];
-            int remaining = cubeCount;
-            for (int r = rows - 1; r >= 0 && remaining > 0; r--)
-            {
-                for (int c = 0; c < cols && remaining > 0; c++)
-                {
-                    int height = _random.Next(1, Math.Min(4, remaining + 1));
-                    grid[r, c] = height;
-                    remaining -= height;
-                    if (remaining <= 0) break;
-                }
-            }
-
-            sb.AppendLine("  俯视图");
-            for (int r = 0; r < rows; r++)
-            {
-                sb.Append("   ");
-                for (int c = 0; c < cols; c++)
-                {
-                    if (grid[r, c] > 0) sb.Append(grid[r, c]);
-                    else sb.Append("·");
-                }
-                sb.AppendLine();
-            }
-
-            sb.AppendLine();
-            sb.AppendLine("  侧视图");
-            int maxHeight = 0;
-            for (int r = 0; r < rows; r++)
-                for (int c = 0; c < cols; c++)
-                    if (grid[r, c] > maxHeight) maxHeight = grid[r, c];
-            
-            for (int h = maxHeight; h >= 1; h--)
-            {
-                sb.Append("   ");
-                for (int c = 0; c < cols; c++)
-                {
-                    bool hasCube = false;
-                    for (int r = 0; r < rows; r++)
-                        if (grid[r, c] >= h) { hasCube = true; break; }
-                    sb.Append(hasCube ? "█" : " ");
-                }
-                sb.AppendLine();
-            }
-
-            return sb.ToString();
         }
 
         // ============================================================
@@ -2515,88 +2379,203 @@ namespace MyPersonalWebsite.Controllers
             };
         }
 
+                // ============================================================
+        // ⭐ 题型 14：立体三视图计数
         // ============================================================
-        // ⭐ 题型 19：颜色三重干扰
-        // ============================================================
-        private object GenerateTripleColorInterference(int level, int difficulty, int typesCompleted)
+        private object GenerateThreeViewCounting(int level, int difficulty, int typesCompleted)
         {
-            var colorPool = _colorHex.ToArray();
-            var selectedColors = new List<KeyValuePair<string, string>>();
+            // 根据难度决定方块数量和时间
+            int cubeCount;
+            int timeLimit;
 
-            while (selectedColors.Count < 3)
+            if (difficulty <= 20)
             {
-                var c = colorPool[_random.Next(colorPool.Length)];
-                if (!selectedColors.Any(x => x.Key == c.Key))
-                {
-                    selectedColors.Add(c);
-                }
+                cubeCount = _random.Next(5, 9);
+                timeLimit = 30;
+            }
+            else if (difficulty <= 40)
+            {
+                cubeCount = _random.Next(9, 14);
+                timeLimit = 25;
+            }
+            else if (difficulty <= 60)
+            {
+                cubeCount = _random.Next(14, 19);
+                timeLimit = 20;
+            }
+            else if (difficulty <= 80)
+            {
+                cubeCount = _random.Next(19, 24);
+                timeLimit = 15;
+            }
+            else
+            {
+                cubeCount = _random.Next(24, 31);
+                timeLimit = 10;
             }
 
-            string displayWord = _singleColorWords[_random.Next(_singleColorWords.Length)];
+            // 生成三视图
+            var views = GenerateViews(cubeCount);
 
-            var shuffledColors = selectedColors.OrderBy(_ => _random.Next()).ToList();
-            var wordColor = shuffledColors[0];
-            var bgColor = shuffledColors[1];
-            var meaningColor = shuffledColors[2];
+            string topView = ViewsToHtml(views.top, "俯视图");
+            string frontView = ViewsToHtml(views.front, "正视图");
+            string sideView = ViewsToHtml(views.side, "侧视图(左)");
 
-            int maxAttempts = 50;
-            int attempts = 0;
-            while ((bgColor.Key == wordColor.Key || meaningColor.Key == wordColor.Key || meaningColor.Key == bgColor.Key) && attempts < maxAttempts)
-            {
-                shuffledColors = selectedColors.OrderBy(_ => _random.Next()).ToList();
-                wordColor = shuffledColors[0];
-                bgColor = shuffledColors[1];
-                meaningColor = shuffledColors[2];
-                attempts++;
-            }
-
-            if (bgColor.Key == wordColor.Key || meaningColor.Key == wordColor.Key || meaningColor.Key == bgColor.Key)
-            {
-                var allColors = _colorHex.ToArray();
-                wordColor = allColors[_random.Next(allColors.Length)];
-                do { bgColor = allColors[_random.Next(allColors.Length)]; } while (bgColor.Key == wordColor.Key);
-                do { meaningColor = allColors[_random.Next(allColors.Length)]; } while (meaningColor.Key == wordColor.Key || meaningColor.Key == bgColor.Key);
-            }
-
-            string[] questions = new[]
-            {
-                $"字的颜色是什么？",
-                $"背景是什么颜色？",
-                $"「{displayWord}」这个字本身是什么颜色的？"
-            };
-
-            int qIndex = _random.Next(3);
-            string questionText = questions[qIndex];
-            string correctAnswer = qIndex == 0 ? wordColor.Key : qIndex == 1 ? bgColor.Key : meaningColor.Key;
-
-            var options = new List<string> { correctAnswer };
-            int optionCount = 4 + Math.Min(difficulty / 10, 3);
-            var pool = _colorNames.Where(c => c != correctAnswer).ToList();
-            var shuffled = pool.OrderBy(_ => _random.Next()).ToList();
-
-            for (int i = 0; i < Math.Min(optionCount - 1, shuffled.Count); i++)
-            {
-                options.Add(shuffled[i]);
-            }
-
-            string displayHtml = $"<div style='background:{bgColor.Value};padding:2rem 3.5rem;border-radius:20px;border:3px solid rgba(255,255,255,0.05);display:inline-block;box-shadow:0 0 60px {bgColor.Value}30;'>";
-            displayHtml += $"<span style='color:{wordColor.Value};font-size:4rem;font-weight:900;text-shadow:0 0 50px {wordColor.Value}50;letter-spacing:10px;'>{displayWord}</span>";
-            displayHtml += "</div>";
-
-            int timeLimit = Math.Max(3, 9 - difficulty / 12);
+            // 生成选项
+            var options = GenerateNumberOptions(cubeCount, 4 + Math.Min(difficulty / 10, 3), 5 + difficulty / 5);
 
             return new Dictionary<string, object>
             {
-                ["type"] = "tripleColor",
+                ["type"] = "threeView",
                 ["level"] = level,
-                ["question"] = $"🎯 颜色三重干扰！<br><span style='font-size:0.9rem;color:rgba(255,255,255,0.3);'>{questionText}</span>",
-                ["displayHtml"] = displayHtml,
-                ["correctAnswer"] = correctAnswer,
-                ["options"] = options.OrderBy(_ => _random.Next()).ToList(),
+                ["question"] = $"📐 根据三视图，计算共有多少个正方体？<br><span style='color:rgba(255,255,255,0.12);font-size:0.7rem;'>■ 代表一个正方体</span>",
+                ["topView"] = topView,
+                ["frontView"] = frontView,
+                ["sideView"] = sideView,
+                ["correctAnswer"] = cubeCount.ToString(),
+                ["options"] = options,
                 ["timeLimit"] = timeLimit,
                 ["typesCompleted"] = typesCompleted,
-                ["funMessage"] = GetFunMessage("tripleColor")
+                ["funMessage"] = GetFunMessage("threeView")
             };
+        }
+
+        // ⭐ 生成三视图数据（侧视图 = 左侧视图）
+        private (int[][] top, int[][] front, int[][] side) GenerateViews(int cubeCount)
+        {
+            int rows = 4 + _random.Next(3);
+            int cols = 4 + _random.Next(3);
+            int maxHeight = 3 + _random.Next(2);
+
+            var grid = new bool[maxHeight, rows, cols];
+            int placed = 0;
+
+            for (int h = 0; h < maxHeight && placed < cubeCount; h++)
+            {
+                int maxPerLayer = Math.Min(cubeCount - placed, rows * cols);
+                int targetThisLayer = (int)(maxPerLayer * (1.0 - h * 0.2));
+
+                int attempts = 0;
+                while (placed < cubeCount && attempts < 1000)
+                {
+                    int r = _random.Next(rows);
+                    int c = _random.Next(cols);
+
+                    if (h > 0 && !grid[h - 1, r, c])
+                    {
+                        attempts++;
+                        continue;
+                    }
+
+                    if (!grid[h, r, c])
+                    {
+                        grid[h, r, c] = true;
+                        placed++;
+                    }
+                    attempts++;
+                }
+            }
+
+            while (placed < cubeCount)
+            {
+                int r = _random.Next(rows);
+                int c = _random.Next(cols);
+                int h = _random.Next(maxHeight);
+
+                if (!grid[h, r, c])
+                {
+                    bool hasSupport = h == 0 || grid[h - 1, r, c];
+                    if (hasSupport)
+                    {
+                        grid[h, r, c] = true;
+                        placed++;
+                    }
+                }
+            }
+
+            // 俯视图：从上往下看
+            var top = new int[rows][];
+            for (int r = 0; r < rows; r++)
+            {
+                top[r] = new int[cols];
+                for (int c = 0; c < cols; c++)
+                {
+                    bool has = false;
+                    for (int h = 0; h < maxHeight; h++)
+                    {
+                        if (grid[h, r, c]) { has = true; break; }
+                    }
+                    top[r][c] = has ? 1 : 0;
+                }
+            }
+
+            // 正视图：从前面看
+            var front = new int[maxHeight][];
+            for (int h = 0; h < maxHeight; h++)
+            {
+                front[h] = new int[cols];
+                for (int c = 0; c < cols; c++)
+                {
+                    bool has = false;
+                    for (int r = 0; r < rows; r++)
+                    {
+                        if (grid[h, r, c]) { has = true; break; }
+                    }
+                    front[h][c] = has ? 1 : 0;
+                }
+            }
+
+            // 侧视图：从左侧看
+            var side = new int[maxHeight][];
+            for (int h = 0; h < maxHeight; h++)
+            {
+                side[h] = new int[rows];
+                for (int r = 0; r < rows; r++)
+                {
+                    bool has = false;
+                    for (int c = 0; c < cols; c++)
+                    {
+                        if (grid[h, r, c]) { has = true; break; }
+                    }
+                    side[h][r] = has ? 1 : 0;
+                }
+            }
+
+            return (top, front, side);
+        }
+
+        // ⭐ 视图转HTML（用 ■ 显示）
+        private string ViewsToHtml(int[][] view, string title)
+        {
+            var sb = new StringBuilder();
+            sb.Append($"<div style='display:inline-block;margin:0 6px;'>");
+            sb.Append($"<div style='color:rgba(255,255,255,0.08);font-size:0.55rem;text-align:center;margin-bottom:2px;'>{title}</div>");
+            sb.Append("<div style='display:grid;grid-template-columns:");
+
+            int cols = view[0].Length;
+            for (int i = 0; i < cols; i++)
+            {
+                sb.Append(" 20px");
+            }
+            sb.Append(";gap:2px;'>");
+
+            for (int r = 0; r < view.Length; r++)
+            {
+                for (int c = 0; c < view[r].Length; c++)
+                {
+                    if (view[r][c] == 1)
+                    {
+                        sb.Append($"<div style='width:20px;height:20px;background:#8B5CF6;border-radius:2px;'></div>");
+                    }
+                    else
+                    {
+                        sb.Append($"<div style='width:20px;height:20px;background:rgba(255,255,255,0.02);border-radius:2px;'></div>");
+                    }
+                }
+            }
+
+            sb.Append("</div></div>");
+            return sb.ToString();
         }
     }
 }
