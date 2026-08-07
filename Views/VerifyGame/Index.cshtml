@@ -583,6 +583,27 @@
             startTimer(challenge.timeLimit || 60);
             return;
         }
+        // ===== 字符频率统计（新增） =====
+        if (challenge.type === 'charFrequency' && challenge.options) {
+            dom.optionsGrid.style.display = 'grid';
+            dom.optionsGrid.innerHTML = '';
+            
+            var letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
+            challenge.options.forEach(function(opt, idx) {
+                var btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.textContent = (idx < letters.length ? letters[idx] + '. ' : '') + opt;
+                btn.dataset.answer = opt;
+                btn.addEventListener('click', function() {
+                    if (gameState.isAnswered) return;
+                    submitAnswer(challenge, this.dataset.answer, this);
+                });
+                dom.optionsGrid.appendChild(btn);
+            });
+            
+            startTimer(challenge.timeLimit || 15);
+            return;
+        }
 
         // ===== 常规选项 =====
         if (challenge.options && challenge.options.length > 0) {
