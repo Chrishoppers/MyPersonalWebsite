@@ -679,7 +679,7 @@ namespace MyPersonalWebsite.Controllers
             {"colorMix", new[]{"🎨 色彩炼金术！", "🌈 颜色魔法师！", "✨ 视觉艺术！"}},
             {"trueFalse", new[]{"⚖️ 真相之神！", "🧐 明察秋毫！", "🎯 一语中的！"}},
             {"puzzle", new[]{"🧩 拼图大师！", "🎯 空间掌控者！", "✨ 华容道之王！"}},
-            {"twentyFour", new[]{"🧮 24点大师！", "💡 数学之神！", "🤓 计算天才！"}},
+             {"charFrequency", new[]{"📊 统计大师！", "🧮 人形计算器！", "🎯 精准分析！"}},
             {"shapeCount", new[]{"📐 立体视觉！", "🧊 空间感知！", "✨ 三维大师！"}},
             {"inverseColor", new[]{"🎨 视觉之神！", "🌈 火眼金睛！", "✨ 色彩大师！"}},
             {"rotate", new[]{"🔄 空间之神！", "🧠 超脑！", "✨ 旋转之王！"}},
@@ -842,7 +842,7 @@ namespace MyPersonalWebsite.Controllers
             {
                 "文字识别", "算术计算", "汉字笔画", "颜色识别", "找不同",
                 "倒序识别", "空缺字母", "时间计算", "成语填空", "数字记忆",
-                "找规律", "颜色混合", "真假判断", "数字华容道", "24点计算",
+                "找规律", "颜色混合", "真假判断", "数字华容道", "字符频率",
                 "立体计数", "反色识别", "图形旋转", "找不同图形", "颜色三重干扰"
             };
 
@@ -863,7 +863,7 @@ namespace MyPersonalWebsite.Controllers
                 case 11: result = GenerateColorMix(level, difficulty, typesCompleted); break;
                 case 12: result = GenerateTrueFalse(level, difficulty, typesCompleted); break;
                 case 13: result = GeneratePuzzle(level, difficulty, typesCompleted); break;
-                case 14: result = GenerateTwentyFour(level, difficulty, typesCompleted); break;
+                case 14: result = GenerateCharFrequency(level, difficulty, typesCompleted); break;
                 case 15: result = GenerateShapeCount(level, difficulty, typesCompleted); break;
                 case 16: result = GenerateInverseColor(level, difficulty, typesCompleted); break;
                 case 17: result = GenerateRotateShape(level, difficulty, typesCompleted); break;
@@ -2153,203 +2153,216 @@ namespace MyPersonalWebsite.Controllers
             return sb.ToString();
         }
 
+                // ============================================================
+        // ⭐ 题型 14：字符频率统计
         // ============================================================
-        // ⭐ 题型 14：24点计算
-        // ============================================================
-        private object GenerateTwentyFour(int level, int difficulty, int typesCompleted)
+        private object GenerateCharFrequency(int level, int difficulty, int typesCompleted)
         {
-            int[] numbers = Generate24Numbers(difficulty);
-            string display = string.Join(" ", numbers);
+            // 根据难度决定参数
+            int charCount;      // 总字符数
+            int uniqueCount;    // 不同字符数
+            int questionType;   // 问题类型
+            int timeLimit;
 
-            var solutions = Find24Solutions(numbers);
-            string correctExpression = solutions.Count > 0 ? solutions[0] : "无解";
-
-            var parts = correctExpression.Split(' ');
-            if (parts.Length >= 3 && solutions.Count > 0)
+            if (difficulty <= 20)
             {
-                string firstNum = "";
-                string secondNum = "";
-                int found = 0;
-                for (int i = 0; i < parts.Length && found < 2; i++)
-                {
-                    if (int.TryParse(parts[i], out _))
-                    {
-                        if (found == 0) firstNum = parts[i];
-                        else secondNum = parts[i];
-                        found++;
-                    }
-                }
+                charCount = 8 + _random.Next(4);
+                uniqueCount = 3 + _random.Next(1);
+                questionType = 0; // 最多
+                timeLimit = 10;
+            }
+            else if (difficulty <= 40)
+            {
+                charCount = 12 + _random.Next(5);
+                uniqueCount = 4 + _random.Next(1);
+                questionType = _random.Next(0, 2); // 最多/最少
+                timeLimit = 12;
+            }
+            else if (difficulty <= 60)
+            {
+                charCount = 16 + _random.Next(6);
+                uniqueCount = 5 + _random.Next(2);
+                questionType = _random.Next(0, 3); // 最多/最少/平均值
+                timeLimit = 14;
+            }
+            else if (difficulty <= 80)
+            {
+                charCount = 20 + _random.Next(8);
+                uniqueCount = 6 + _random.Next(2);
+                questionType = _random.Next(0, 4); // 最多/最少/平均值/和
+                timeLimit = 16;
+            }
+            else
+            {
+                charCount = 25 + _random.Next(10);
+                uniqueCount = 7 + _random.Next(3);
+                questionType = _random.Next(0, 5); // 全部类型
+                timeLimit = 20;
+            }
 
-                if (!string.IsNullOrEmpty(firstNum) && !string.IsNullOrEmpty(secondNum))
+            // 生成字符池（字母+数字）
+            string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+            
+            // 选择 uniqueCount 个不同字符
+            var selectedChars = new List<char>();
+            var usedIndices = new HashSet<int>();
+            while (selectedChars.Count < uniqueCount)
+            {
+                int idx = _random.Next(chars.Length);
+                if (!usedIndices.Contains(idx))
                 {
-                    string displayExpr = correctExpression.Replace(firstNum, "[ ? ]");
-                    int replaceIndex = displayExpr.IndexOf(secondNum);
-                    if (replaceIndex >= 0)
-                    {
-                        displayExpr = displayExpr.Remove(replaceIndex, secondNum.Length).Insert(replaceIndex, "[ ? ]");
-                    }
-                    else
-                    {
-                        displayExpr = correctExpression.Replace(secondNum, "[ ? ]");
-                    }
-
-                    return new Dictionary<string, object>
-                    {
-                        ["type"] = "twentyFour",
-                        ["level"] = level,
-                        ["question"] = $"🧮 使用以下4个数字：<span style='font-size:2rem;font-weight:bold;color:#8B5CF6;letter-spacing:12px;'>{display}</span><br>将表达式中 [ ? ] 的位置替换为正确的数字，使等式成立：<br><span style='font-size:1.3rem;color:#fff;font-weight:600;'>{displayExpr} = 24</span>",
-                        ["numbers"] = numbers,
-                        ["expression"] = correctExpression,
-                        ["displayExpr"] = displayExpr,
-                        ["firstNum"] = firstNum,
-                        ["secondNum"] = secondNum,
-                        ["correctAnswer"] = $"{firstNum},{secondNum}",
-                        ["timeLimit"] = Math.Min(120, 30 + difficulty / 2),
-                        ["typesCompleted"] = typesCompleted,
-                        ["funMessage"] = GetFunMessage("twentyFour")
-                    };
+                    usedIndices.Add(idx);
+                    selectedChars.Add(chars[idx]);
                 }
             }
 
-            return new Dictionary<string, object>
+            // 为每个字符分配出现次数（至少1次，总和 = charCount）
+            var frequencies = new Dictionary<char, int>();
+            int remaining = charCount;
+            for (int i = 0; i < selectedChars.Count; i++)
             {
-                ["type"] = "twentyFour",
-                ["level"] = level,
-                ["question"] = $"🧮 使用以下4个数字：<span style='font-size:2rem;font-weight:bold;color:#8B5CF6;letter-spacing:12px;'>{display}</span><br>通过加减乘除得到24",
-                ["numbers"] = numbers,
-                ["correctAnswer"] = correctExpression,
-                ["timeLimit"] = Math.Min(120, 30 + difficulty / 2),
-                ["typesCompleted"] = typesCompleted,
-                ["funMessage"] = GetFunMessage("twentyFour")
-            };
-        }
-
-        private int[] Generate24Numbers(int difficulty)
-        {
-            int[] result = new int[4];
-            int attempts = 0;
-
-            do
-            {
-                if (difficulty <= 20)
+                if (i == selectedChars.Count - 1)
                 {
-                    for (int i = 0; i < 4; i++) result[i] = _random.Next(1, 10);
-                }
-                else if (difficulty <= 40)
-                {
-                    for (int i = 0; i < 4; i++) result[i] = _random.Next(1, 14);
-                }
-                else if (difficulty <= 60)
-                {
-                    for (int i = 0; i < 4; i++) result[i] = _random.Next(1, 20);
-                }
-                else if (difficulty <= 80)
-                {
-                    for (int i = 0; i < 4; i++) result[i] = _random.Next(1, 30);
+                    frequencies[selectedChars[i]] = remaining;
                 }
                 else
                 {
-                    for (int i = 0; i < 4; i++) result[i] = _random.Next(1, 50);
+                    int max = remaining - (selectedChars.Count - i - 1);
+                    int count = _random.Next(1, Math.Max(2, max));
+                    frequencies[selectedChars[i]] = count;
+                    remaining -= count;
                 }
-
-                attempts++;
-            } while (Find24Solutions(result).Count == 0 && attempts < 100);
-
-            if (attempts >= 100)
-            {
-                return new int[] { 1, 2, 3, 4 };
             }
 
-            return result;
-        }
-
-        private List<string> Find24Solutions(int[] numbers)
-        {
-            var solutions = new List<string>();
-            string[] ops = { "+", "-", "*", "/" };
-
-            var perms = GetPermutations(numbers);
-            foreach (var perm in perms)
+            // 打乱生成显示字符串
+            var displayChars = new List<char>();
+            foreach (var kv in frequencies)
             {
-                foreach (var op1 in ops)
+                for (int i = 0; i < kv.Value; i++)
                 {
-                    foreach (var op2 in ops)
-                    {
-                        foreach (var op3 in ops)
-                        {
-                            string[] expressions = {
-                                $"({perm[0]} {op1} {perm[1]}) {op2} ({perm[2]} {op3} {perm[3]})",
-                                $"(({perm[0]} {op1} {perm[1]}) {op2} {perm[2]}) {op3} {perm[3]}",
-                                $"{perm[0]} {op1} (({perm[1]} {op2} {perm[2]}) {op3} {perm[3]})",
-                                $"{perm[0]} {op1} ({perm[1]} {op2} ({perm[2]} {op3} {perm[3]}))",
-                                $"({perm[0]} {op1} ({perm[1]} {op2} {perm[2]})) {op3} {perm[3]}"
-                            };
+                    displayChars.Add(kv.Key);
+                }
+            }
+            var shuffled = displayChars.OrderBy(_ => _random.Next()).ToList();
+            string display = string.Join(" ", shuffled);
 
-                            foreach (var expr in expressions)
+            // 根据问题类型生成题目
+            var sorted = frequencies.OrderBy(kv => kv.Value).ToList();
+            var values = frequencies.Values.ToList();
+            int avg = (int)Math.Round(values.Average());
+            
+            string questionText;
+            string correctAnswer;
+            int targetCount;
+
+            switch (questionType)
+            {
+                case 0: // 最多
+                    var maxItem = sorted.Last();
+                    questionText = $"📊 以下字符中，哪个字符出现次数**最多**？";
+                    correctAnswer = maxItem.Key.ToString();
+                    targetCount = maxItem.Value;
+                    break;
+                case 1: // 最少
+                    var minItem = sorted.First();
+                    questionText = $"📊 以下字符中，哪个字符出现次数**最少**？";
+                    correctAnswer = minItem.Key.ToString();
+                    targetCount = minItem.Value;
+                    break;
+                case 2: // 等于平均值
+                    var avgItems = frequencies.Where(kv => kv.Value == avg).ToList();
+                    if (avgItems.Count == 0)
+                    {
+                        // 如果没有等于平均值的，选最接近的
+                        var closest = frequencies.OrderBy(kv => Math.Abs(kv.Value - avg)).First();
+                        questionText = $"📊 以下字符中，哪个字符出现次数**最接近平均值**（{avg}）？";
+                        correctAnswer = closest.Key.ToString();
+                        targetCount = closest.Value;
+                    }
+                    else
+                    {
+                        var selected = avgItems[_random.Next(avgItems.Count)];
+                        questionText = $"📊 以下字符中，哪个字符出现次数**等于平均值**（{avg}）？";
+                        correctAnswer = selected.Key.ToString();
+                        targetCount = selected.Value;
+                    }
+                    break;
+                case 3: // 出现次数等于其他某两个之和
+                    var candidates = new List<KeyValuePair<char, int>>();
+                    for (int i = 0; i < sorted.Count; i++)
+                    {
+                        for (int j = i + 1; j < sorted.Count; j++)
+                        {
+                            int sum = sorted[i].Value + sorted[j].Value;
+                            var match = frequencies.FirstOrDefault(kv => kv.Value == sum && kv.Key != sorted[i].Key && kv.Key != sorted[j].Key);
+                            if (match.Key != default)
                             {
-                                try
-                                {
-                                    var result = EvaluateExpression(expr);
-                                    if (Math.Abs(result - 24) < 0.0001)
-                                    {
-                                        if (!solutions.Contains(expr))
-                                        {
-                                            solutions.Add(expr);
-                                        }
-                                    }
-                                }
-                                catch { }
+                                candidates.Add(match);
                             }
                         }
                     }
-                }
-                if (solutions.Count > 0) break;
+                    if (candidates.Count > 0)
+                    {
+                        var selected = candidates[_random.Next(candidates.Count)];
+                        questionText = $"📊 以下字符中，哪个字符的出现次数**等于另外两个字符出现次数之和**？";
+                        correctAnswer = selected.Key.ToString();
+                        targetCount = selected.Value;
+                    }
+                    else
+                    {
+                        // 降级：选最多的
+                        var maxItem = sorted.Last();
+                        questionText = $"📊 以下字符中，哪个字符出现次数**最多**？";
+                        correctAnswer = maxItem.Key.ToString();
+                        targetCount = maxItem.Value;
+                    }
+                    break;
+                case 4: // 出现次数等于第二多的+1
+                default:
+                    if (sorted.Count >= 2)
+                    {
+                        int secondMax = sorted[sorted.Count - 2].Value;
+                        var match = frequencies.FirstOrDefault(kv => kv.Value == secondMax + 1);
+                        if (match.Key != default)
+                        {
+                            questionText = $"📊 以下字符中，哪个字符的出现次数**等于第二多的字符出现次数+1**？";
+                            correctAnswer = match.Key.ToString();
+                            targetCount = match.Value;
+                        }
+                        else
+                        {
+                            var maxItem = sorted.Last();
+                            questionText = $"📊 以下字符中，哪个字符出现次数**最多**？";
+                            correctAnswer = maxItem.Key.ToString();
+                            targetCount = maxItem.Value;
+                        }
+                    }
+                    else
+                    {
+                        var maxItem = sorted.Last();
+                        questionText = $"📊 以下字符中，哪个字符出现次数**最多**？";
+                        correctAnswer = maxItem.Key.ToString();
+                        targetCount = maxItem.Value;
+                    }
+                    break;
             }
 
-            return solutions;
-        }
+            // 生成选项（所有不同字符）
+            var options = frequencies.Keys.Select(c => c.ToString()).ToList();
+            options = options.OrderBy(_ => _random.Next()).ToList();
 
-        private List<int[]> GetPermutations(int[] arr)
-        {
-            var result = new List<int[]>();
-            Permute(arr, 0, arr.Length - 1, result);
-            return result;
-        }
-
-        private void Permute(int[] arr, int start, int end, List<int[]> result)
-        {
-            if (start == end)
+            return new Dictionary<string, object>
             {
-                result.Add((int[])arr.Clone());
-                return;
-            }
-            for (int i = start; i <= end; i++)
-            {
-                Swap(arr, start, i);
-                Permute(arr, start + 1, end, result);
-                Swap(arr, start, i);
-            }
-        }
-
-        private void Swap(int[] arr, int i, int j)
-        {
-            int temp = arr[i];
-            arr[i] = arr[j];
-            arr[j] = temp;
-        }
-
-        private double EvaluateExpression(string expr)
-        {
-            try
-            {
-                var dt = new System.Data.DataTable();
-                var result = dt.Compute(expr, "");
-                return Convert.ToDouble(result);
-            }
-            catch
-            {
-                return double.NaN;
-            }
+                ["type"] = "charFrequency",
+                ["level"] = level,
+                ["question"] = questionText + $"<br><span style='font-size:1.2rem;font-weight:bold;color:#fff;letter-spacing:4px;'>{display}</span>",
+                ["display"] = display,
+                ["correctAnswer"] = correctAnswer,
+                ["options"] = options,
+                ["timeLimit"] = timeLimit,
+                ["typesCompleted"] = typesCompleted,
+                ["funMessage"] = GetFunMessage("charFrequency")
+            };
         }
 
         // ============================================================
