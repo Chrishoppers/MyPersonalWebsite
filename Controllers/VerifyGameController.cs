@@ -505,8 +505,8 @@ namespace MyPersonalWebsite.Controllers
             {"inverseColor", new[]{"🎨 视觉之神！", "🌈 火眼金睛！", "✨ 色彩大师！"}},
             {"rotate", new[]{"🔄 空间之神！", "🧠 超脑！", "✨ 旋转之王！"}},
             {"spaceFolding", new[]{"🧊 空间大师！", "🧠 立体思维！", "🎯 透视眼！"}},
-             {"abgame", new[]{"🧠 推理大师！", "🔢 数字天才！", "🎯 精准打击！", "💡 逻辑王者！"}},
             {"tripleColor", new[]{"🎯 三重干扰通关！", "🌈 视觉之神！", "✨ 不是人类！"}},
+            {"abgame", new[]{"🧠 推理大师！", "🔢 数字天才！", "🎯 精准打击！", "💡 逻辑王者！", "🏆 解密高手！", "⚡ 人形计算机！", "✨ 洞察秋毫！", "🎯 一击即中！", "🧩 逻辑之眼！", "🔥 推理之火！", "💪 头脑风暴！", "🌟 数字掌控者！", "🚀 推理加速！"}}
         };
 
         // ============================================================
@@ -680,7 +680,7 @@ namespace MyPersonalWebsite.Controllers
                 "图形计数",      // 15
                 "反色识别",      // 16
                 "图形旋转",      // 17
-                "1A2B",      // 18
+                "1A2B猜数字",    // 18 ← 替换成这个
                 "颜色三重干扰"   // 19
             };
 
@@ -705,9 +705,7 @@ namespace MyPersonalWebsite.Controllers
                 case 15: result = GenerateShapeCount(level, difficulty, typesCompleted); break;
                 case 16: result = GenerateInverseColor(level, difficulty, typesCompleted); break;
                 case 17: result = GenerateRotateShape(level, difficulty, typesCompleted); break;
-               case 18:
-    result = Generate1A2B(level, difficulty, typesCompleted);
-    break;
+                case 18: result = Generate1A2B(level, difficulty, typesCompleted); break;
                 default: result = GenerateTripleColorInterference(level, difficulty, typesCompleted); break;
             }
 
@@ -2346,348 +2344,98 @@ namespace MyPersonalWebsite.Controllers
             return svg;
         }
 
-       // ============================================================
-// 1A2B 猜数字游戏渲染
-// ============================================================
-if (challenge.type === 'abgame') {
-    const digitCount = challenge.digitCount || 4;
-    const maxAttempts = challenge.maxAttempts || 15;
-    const password = challenge.password || '';
-    let currentGuess = '';
-    let attemptCount = 0;
-    let history = [];
-    let gameSolved = false;
+        // ============================================================
+        // ⭐ 题型 18：1A2B 猜数字（5个难度等级）
+        // ============================================================
+        private object Generate1A2B(int level, int difficulty, int typesCompleted)
+        {
+            int digitCount;
+            int maxAttempts;
+            int timeLimit;
 
-    dom.questionText.innerHTML = challenge.question;
-
-    // 隐藏其他容器
-    dom.optionsGrid.style.display = 'none';
-    dom.colorOptionsGrid.style.display = 'none';
-    dom.imageContainer.style.display = 'none';
-    dom.colorContainer.style.display = 'none';
-    dom.displayTextContainer.style.display = 'none';
-    dom.puzzleContainer.style.display = 'none';
-    dom.sudokuContainer.style.display = 'none';
-    dom.asciiContainer.style.display = 'none';
-
-    // ===== 创建游戏容器 =====
-    const container = document.createElement('div');
-    container.id = 'abgameContainer';
-    container.style.cssText = 'width:100%;max-width:400px;margin:0 auto;';
-
-    // ===== 密码显示位 =====
-    const displayDiv = document.createElement('div');
-    displayDiv.id = 'abDisplay';
-    displayDiv.style.cssText = `
-        font-size:2.8rem;font-weight:700;letter-spacing:12px;
-        color:#8B5CF6;padding:0.5rem 0;font-family:monospace;
-        background:rgba(255,255,255,0.02);border-radius:12px;
-        border:1px solid rgba(255,255,255,0.04);margin:0 auto 0.5rem;
-        min-height:70px;display:flex;align-items:center;justify-content:center;
-    `;
-    displayDiv.textContent = ' '.repeat(digitCount).split('').join(' ');
-    container.appendChild(displayDiv);
-
-    // ===== 状态信息 =====
-    const statusDiv = document.createElement('div');
-    statusDiv.id = 'abStatus';
-    statusDiv.style.cssText = `
-        color:rgba(255,255,255,0.2);font-size:0.8rem;text-align:center;
-        margin-bottom:0.5rem;
-    `;
-    statusDiv.innerHTML = `💡 剩余 <strong id="abAttempts" style="color:#F59E0B;">${maxAttempts}</strong> 次机会`;
-    container.appendChild(statusDiv);
-
-    // ===== 历史记录 =====
-    const historyDiv = document.createElement('div');
-    historyDiv.id = 'abHistory';
-    historyDiv.style.cssText = `
-        color:rgba(255,255,255,0.12);font-size:0.85rem;
-        min-height:30px;padding:0.3rem 0.5rem;font-family:monospace;
-        background:rgba(255,255,255,0.02);border-radius:8px;
-        border:1px solid rgba(255,255,255,0.02);margin-bottom:0.8rem;
-        max-height:100px;overflow-y:auto;text-align:center;line-height:1.8;
-    `;
-    historyDiv.textContent = '📝 输入你的猜测...';
-    container.appendChild(historyDiv);
-
-    // ===== 九宫格键盘 =====
-    const keypadDiv = document.createElement('div');
-    keypadDiv.id = 'abKeypad';
-    keypadDiv.style.cssText = `
-        display:grid;grid-template-columns:repeat(3,1fr);gap:8px;
-        max-width:260px;margin:0 auto;
-    `;
-
-    const keypadRows = challenge.keypadRows || [
-        ['1','2','3'], ['4','5','6'], ['7','8','9'], ['⌫','0','✅']
-    ];
-
-    keypadRows.forEach(row => {
-        row.forEach(key => {
-            const btn = document.createElement('button');
-            btn.className = 'ab-key-btn';
-            btn.textContent = key;
-
-            let bgColor = 'rgba(255,255,255,0.03)';
-            let textColor = 'rgba(255,255,255,0.6)';
-            let hoverColor = 'rgba(139,92,246,0.08)';
-            let borderColor = 'rgba(255,255,255,0.04)';
-
-            if (key === '⌫') {
-                bgColor = 'rgba(236,72,153,0.08)';
-                textColor = '#EC4899';
-                hoverColor = 'rgba(236,72,153,0.15)';
-                borderColor = 'rgba(236,72,153,0.08)';
-            } else if (key === '✅') {
-                bgColor = 'rgba(40,167,69,0.08)';
-                textColor = '#28a745';
-                hoverColor = 'rgba(40,167,69,0.15)';
-                borderColor = 'rgba(40,167,69,0.08)';
+            if (difficulty <= 20)
+            {
+                digitCount = 3;
+                maxAttempts = 15;
+                timeLimit = 200;
+            }
+            else if (difficulty <= 40)
+            {
+                digitCount = 4;
+                maxAttempts = 15;
+                timeLimit = 220;
+            }
+            else if (difficulty <= 60)
+            {
+                digitCount = 5;
+                maxAttempts = 15;
+                timeLimit = 250;
+            }
+            else if (difficulty <= 80)
+            {
+                digitCount = 6;
+                maxAttempts = 15;
+                timeLimit = 280;
+            }
+            else
+            {
+                digitCount = 6;
+                maxAttempts = 10;
+                timeLimit = 300;
             }
 
-            btn.style.cssText = `
-                padding:0.8rem 0.5rem;border:2px solid ${borderColor};
-                border-radius:12px;background:${bgColor};color:${textColor};
-                font-size:1.4rem;font-weight:600;cursor:pointer;
-                transition:all 0.2s ease;font-family:inherit;text-align:center;
-                min-height:52px;
-            `;
+            string password = GenerateUniqueDigitsWithFirstNonZero(digitCount);
 
-            btn.addEventListener('mouseenter', function() {
-                if (!this.disabled) {
-                    this.style.background = hoverColor;
-                    this.style.transform = 'scale(1.04)';
-                }
-            });
-            btn.addEventListener('mouseleave', function() {
-                if (!this.disabled) {
-                    this.style.background = bgColor;
-                    this.style.transform = 'scale(1)';
-                }
-            });
+            var keypadRows = new List<List<string>>
+            {
+                new List<string> { "1", "2", "3" },
+                new List<string> { "4", "5", "6" },
+                new List<string> { "7", "8", "9" },
+                new List<string> { "⌫", "0", "✅" }
+            };
 
-            btn.dataset.key = key;
-
-            btn.addEventListener('click', function() {
-                if (gameState.isAnswered || gameSolved) return;
-                handleABKeyPress(key, digitCount, maxAttempts);
-            });
-
-            keypadDiv.appendChild(btn);
-        });
-    });
-
-    container.appendChild(keypadDiv);
-    dom.challengeCard.appendChild(container);
-
-    // ============================================================
-    // 游戏逻辑
-    // ============================================================
-    function handleABKeyPress(key, digitCount, maxAttempts) {
-        if (gameSolved || gameState.isAnswered) return;
-
-        const displayEl = document.getElementById('abDisplay');
-        const historyEl = document.getElementById('abHistory');
-        const attemptsEl = document.getElementById('abAttempts');
-
-        if (key === '⌫') {
-            // 退位
-            if (currentGuess.length > 0) {
-                currentGuess = currentGuess.slice(0, -1);
-                updateDisplay();
-            }
-            return;
+            return new Dictionary<string, object>
+            {
+                ["type"] = "abgame",
+                ["level"] = level,
+                ["typeName"] = "1A2B猜数字",
+                ["digitCount"] = digitCount,
+                ["maxAttempts"] = maxAttempts,
+                ["password"] = password,
+                ["keypadRows"] = keypadRows,
+                ["timeLimit"] = timeLimit,
+                ["typesCompleted"] = typesCompleted,
+                ["question"] = $"🎯 猜一个 {digitCount} 位不重复数字（第一位不能是0）",
+                ["funMessage"] = GetFunMessage("abgame")
+            };
         }
 
-        if (key === '✅') {
-            // 提交猜测
-            if (currentGuess.length !== digitCount) {
-                showToast(`请完整输入 ${digitCount} 位数字`, 'error');
-                return;
+        // ============================================================
+        // 辅助方法：生成不重复数字（第一位不能是0）
+        // ============================================================
+        private string GenerateUniqueDigitsWithFirstNonZero(int count)
+        {
+            var digits = "0123456789".ToCharArray().ToList();
+            var result = new List<char>();
+            var used = new HashSet<char>();
+
+            var firstCandidates = digits.Where(d => d != '0').ToList();
+            char first = firstCandidates[_random.Next(firstCandidates.Count)];
+            result.Add(first);
+            used.Add(first);
+
+            var remaining = digits.Where(d => !used.Contains(d)).ToList();
+            for (int i = 1; i < count; i++)
+            {
+                int idx = _random.Next(remaining.Count);
+                result.Add(remaining[idx]);
+                remaining.RemoveAt(idx);
             }
 
-            // 检查是否有重复数字
-            if (new Set(currentGuess).size !== currentGuess.length) {
-                showToast('数字不能重复！', 'error');
-                return;
-            }
-
-            // 检查第一位是否为0
-            if (currentGuess[0] === '0') {
-                showToast('第一位不能是0！', 'error');
-                return;
-            }
-
-            attemptCount++;
-            const remaining = maxAttempts - attemptCount;
-            attemptsEl.textContent = remaining;
-
-            // 计算 A 和 B
-            let a = 0, b = 0;
-            const passwordArr = password.split('');
-            const guessArr = currentGuess.split('');
-
-            // 先算A
-            const matchedIndexes = [];
-            for (let i = 0; i < digitCount; i++) {
-                if (guessArr[i] === passwordArr[i]) {
-                    a++;
-                    matchedIndexes.push(i);
-                }
-            }
-
-            // 再算B
-            const unmatchedPassword = [];
-            const unmatchedGuess = [];
-            for (let i = 0; i < digitCount; i++) {
-                if (!matchedIndexes.includes(i)) {
-                    unmatchedPassword.push(passwordArr[i]);
-                    unmatchedGuess.push(guessArr[i]);
-                }
-            }
-
-            for (const g of unmatchedGuess) {
-                const idx = unmatchedPassword.indexOf(g);
-                if (idx !== -1) {
-                    b++;
-                    unmatchedPassword.splice(idx, 1);
-                }
-            }
-
-            const resultText = `${a}A${b}B`;
-            const guessDisplay = currentGuess.split('').join(' ');
-
-            // 记录历史
-            history.push(`${guessDisplay} → ${resultText}`);
-            updateHistory();
-
-            // 判断是否猜中
-            if (a === digitCount) {
-                gameSolved = true;
-                gameState.isAnswered = true;
-                clearInterval(gameState.timer);
-                showFeedback(true, 10 + Math.floor(level / 5), `🎉 用了 ${attemptCount} 次猜中！`);
-                // 禁用键盘
-                document.querySelectorAll('.ab-key-btn').forEach(b => b.disabled = true);
-                setTimeout(() => {
-                    gameState.level++;
-                    updateUI();
-                    loadChallenge();
-                }, 2000);
-                return;
-            }
-
-            // 检查是否用完次数
-            if (remaining <= 0) {
-                gameState.isAnswered = true;
-                clearInterval(gameState.timer);
-                document.querySelectorAll('.ab-key-btn').forEach(b => b.disabled = true);
-                showFeedback(false, 0, `💀 机会用尽！密码是 ${password}`);
-                gameState.combo = 0;
-                gameState.lives--;
-                updateUI();
-                if (gameState.lives <= 0) {
-                    setTimeout(gameOver, 1500);
-                } else {
-                    setTimeout(loadChallenge, 2000);
-                }
-                return;
-            }
-
-            // 清空当前输入
-            currentGuess = '';
-            updateDisplay();
-            showToast(`第 ${attemptCount} 次：${resultText}`, 'info');
-
-            return;
+            return new string(result.ToArray());
         }
 
-        // 数字输入
-        if (currentGuess.length < digitCount) {
-            // 不能重复输入已经输入过的数字
-            if (currentGuess.includes(key)) {
-                showToast('数字不能重复！', 'error');
-                return;
-            }
-            // 第一位不能是0
-            if (currentGuess.length === 0 && key === '0') {
-                showToast('第一位不能是0！', 'error');
-                return;
-            }
-            currentGuess += key;
-            updateDisplay();
-        } else {
-            showToast(`已输入 ${digitCount} 位，请点 ✅ 提交`, 'info');
-        }
-    }
-
-    function updateDisplay() {
-        const displayEl = document.getElementById('abDisplay');
-        const displayText = currentGuess.padEnd(dom.digitCount || digitCount, ' ');
-        displayEl.textContent = displayText.split('').join(' ');
-    }
-
-    function updateHistory() {
-        const historyEl = document.getElementById('abHistory');
-        if (history.length === 0) {
-            historyEl.textContent = '📝 输入你的猜测...';
-            return;
-        }
-        historyEl.innerHTML = history.slice(-6).map(h => `🔹 ${h}`).join('<br>');
-        historyEl.scrollTop = historyEl.scrollHeight;
-    }
-
-    // 保存当前游戏的digitCount供updateDisplay使用
-    dom.digitCount = digitCount;
-
-    // 启动计时器
-    startTimer(challenge.timeLimit || 200);
-
-    // ===== 键盘输入支持（物理键盘） =====
-    function handlePhysicalKey(e) {
-        if (gameState.isAnswered || gameSolved) return;
-        const key = e.key;
-        if (key >= '0' && key <= '9') {
-            e.preventDefault();
-            handleABKeyPress(key, digitCount, maxAttempts);
-        } else if (key === 'Backspace' || key === 'Delete') {
-            e.preventDefault();
-            handleABKeyPress('⌫', digitCount, maxAttempts);
-        } else if (key === 'Enter') {
-            e.preventDefault();
-            handleABKeyPress('✅', digitCount, maxAttempts);
-        }
-    }
-
-    document.addEventListener('keydown', handlePhysicalKey);
-
-    // 清理事件监听（在下次加载时移除）
-    window._abCleanup = function() {
-        document.removeEventListener('keydown', handlePhysicalKey);
-    };
-
-    // ===== 超时处理覆盖 =====
-    const originalTimeoutHandler = window._abTimeoutHandler;
-    window._abTimeoutHandler = function() {
-        if (!gameState.isAnswered && !gameSolved) {
-            gameState.isAnswered = true;
-            document.querySelectorAll('.ab-key-btn').forEach(b => b.disabled = true);
-            showFeedback(false, 0, `⏱ 时间到！密码是 ${password}`);
-            gameState.combo = 0;
-            gameState.lives--;
-            updateUI();
-            if (gameState.lives <= 0) {
-                setTimeout(gameOver, 1500);
-            } else {
-                setTimeout(loadChallenge, 2000);
-            }
-        }
-    };
-
-    return;
-}
-               // ============================================================
+        // ============================================================
         // ⭐ 题型 19：颜色三重干扰（纯色版）
         // ============================================================
         private object GenerateTripleColorInterference(int level, int difficulty, int typesCompleted)
