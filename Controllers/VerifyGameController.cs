@@ -2153,57 +2153,55 @@ namespace MyPersonalWebsite.Controllers
             return sb.ToString();
         }
 
-                // ============================================================
+                     // ============================================================
         // ⭐ 题型 14：字符频率统计
         // ============================================================
         private object GenerateCharFrequency(int level, int difficulty, int typesCompleted)
         {
             // 根据难度决定参数
-            int charCount;      // 总字符数
-            int uniqueCount;    // 不同字符数
-            int questionType;   // 问题类型
+            int charCount;
+            int uniqueCount;
+            int questionType;
             int timeLimit;
 
             if (difficulty <= 20)
             {
                 charCount = 8 + _random.Next(4);
                 uniqueCount = 3 + _random.Next(1);
-                questionType = 0; // 最多
+                questionType = 0;
                 timeLimit = 10;
             }
             else if (difficulty <= 40)
             {
                 charCount = 12 + _random.Next(5);
                 uniqueCount = 4 + _random.Next(1);
-                questionType = _random.Next(0, 2); // 最多/最少
+                questionType = _random.Next(0, 2);
                 timeLimit = 12;
             }
             else if (difficulty <= 60)
             {
                 charCount = 16 + _random.Next(6);
                 uniqueCount = 5 + _random.Next(2);
-                questionType = _random.Next(0, 3); // 最多/最少/平均值
+                questionType = _random.Next(0, 3);
                 timeLimit = 14;
             }
             else if (difficulty <= 80)
             {
                 charCount = 20 + _random.Next(8);
                 uniqueCount = 6 + _random.Next(2);
-                questionType = _random.Next(0, 4); // 最多/最少/平均值/和
+                questionType = _random.Next(0, 4);
                 timeLimit = 16;
             }
             else
             {
                 charCount = 25 + _random.Next(10);
                 uniqueCount = 7 + _random.Next(3);
-                questionType = _random.Next(0, 5); // 全部类型
+                questionType = _random.Next(0, 5);
                 timeLimit = 20;
             }
 
-            // 生成字符池（字母+数字）
             string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
             
-            // 选择 uniqueCount 个不同字符
             var selectedChars = new List<char>();
             var usedIndices = new HashSet<int>();
             while (selectedChars.Count < uniqueCount)
@@ -2216,7 +2214,6 @@ namespace MyPersonalWebsite.Controllers
                 }
             }
 
-            // 为每个字符分配出现次数（至少1次，总和 = charCount）
             var frequencies = new Dictionary<char, int>();
             int remaining = charCount;
             for (int i = 0; i < selectedChars.Count; i++)
@@ -2234,7 +2231,6 @@ namespace MyPersonalWebsite.Controllers
                 }
             }
 
-            // 打乱生成显示字符串
             var displayChars = new List<char>();
             foreach (var kv in frequencies)
             {
@@ -2246,7 +2242,6 @@ namespace MyPersonalWebsite.Controllers
             var shuffled = displayChars.OrderBy(_ => _random.Next()).ToList();
             string display = string.Join(" ", shuffled);
 
-            // 根据问题类型生成题目
             var sorted = frequencies.OrderBy(kv => kv.Value).ToList();
             var values = frequencies.Values.ToList();
             int avg = (int)Math.Round(values.Average());
@@ -2258,10 +2253,10 @@ namespace MyPersonalWebsite.Controllers
             switch (questionType)
             {
                 case 0: // 最多
-                    var maxItem = sorted.Last();
+                    var maxItem0 = sorted.Last();
                     questionText = $"📊 以下字符中，哪个字符出现次数**最多**？";
-                    correctAnswer = maxItem.Key.ToString();
-                    targetCount = maxItem.Value;
+                    correctAnswer = maxItem0.Key.ToString();
+                    targetCount = maxItem0.Value;
                     break;
                 case 1: // 最少
                     var minItem = sorted.First();
@@ -2273,7 +2268,6 @@ namespace MyPersonalWebsite.Controllers
                     var avgItems = frequencies.Where(kv => kv.Value == avg).ToList();
                     if (avgItems.Count == 0)
                     {
-                        // 如果没有等于平均值的，选最接近的
                         var closest = frequencies.OrderBy(kv => Math.Abs(kv.Value - avg)).First();
                         questionText = $"📊 以下字符中，哪个字符出现次数**最接近平均值**（{avg}）？";
                         correctAnswer = closest.Key.ToString();
@@ -2310,11 +2304,10 @@ namespace MyPersonalWebsite.Controllers
                     }
                     else
                     {
-                        // 降级：选最多的
-                        var maxItem = sorted.Last();
+                        var maxItem3 = sorted.Last();
                         questionText = $"📊 以下字符中，哪个字符出现次数**最多**？";
-                        correctAnswer = maxItem.Key.ToString();
-                        targetCount = maxItem.Value;
+                        correctAnswer = maxItem3.Key.ToString();
+                        targetCount = maxItem3.Value;
                     }
                     break;
                 case 4: // 出现次数等于第二多的+1
@@ -2331,23 +2324,22 @@ namespace MyPersonalWebsite.Controllers
                         }
                         else
                         {
-                            var maxItem = sorted.Last();
+                            var maxItem4 = sorted.Last();
                             questionText = $"📊 以下字符中，哪个字符出现次数**最多**？";
-                            correctAnswer = maxItem.Key.ToString();
-                            targetCount = maxItem.Value;
+                            correctAnswer = maxItem4.Key.ToString();
+                            targetCount = maxItem4.Value;
                         }
                     }
                     else
                     {
-                        var maxItem = sorted.Last();
+                        var maxItem4 = sorted.Last();
                         questionText = $"📊 以下字符中，哪个字符出现次数**最多**？";
-                        correctAnswer = maxItem.Key.ToString();
-                        targetCount = maxItem.Value;
+                        correctAnswer = maxItem4.Key.ToString();
+                        targetCount = maxItem4.Value;
                     }
                     break;
             }
 
-            // 生成选项（所有不同字符）
             var options = frequencies.Keys.Select(c => c.ToString()).ToList();
             options = options.OrderBy(_ => _random.Next()).ToList();
 
