@@ -19,7 +19,7 @@ namespace MyPersonalWebsite.Controllers
         private static HashSet<int> _usedTypes = new HashSet<int>();
 
         // ============================================================
-        // 颜色库 - 120+ 种颜色
+        // 颜色库
         // ============================================================
         private readonly Dictionary<string, string> _colorHex = new()
         {
@@ -82,11 +82,11 @@ namespace MyPersonalWebsite.Controllers
         };
 
         // ============================================================
-        // ⭐ 真假判断题库 - 300+ 题，5个难度平均分配
+        // 真假判断题库
         // ============================================================
         private readonly (string statement, bool isTrue, int minLevel, int maxLevel)[] _trueFalseQuestions = new (string, bool, int, int)[]
         {
-            // 📝 入门 (1-20) - 62题
+            // 入门 (1-20)
             ("地球是球体", true, 1, 20),
             ("太阳从东方升起", true, 1, 20),
             ("水在标准大气压下0度结冰", true, 1, 20),
@@ -117,16 +117,6 @@ namespace MyPersonalWebsite.Controllers
             ("声音在真空中无法传播", true, 1, 20),
             ("光速是已知最快的速度", true, 1, 20),
             ("植物需要阳光才能生长", true, 1, 20),
-            ("人类需要食物才能生存", true, 1, 20),
-            ("鱼离开水会死亡", true, 1, 20),
-            ("鸟类有羽毛", true, 1, 20),
-            ("哺乳动物用肺呼吸", true, 1, 20),
-            ("鱼类用鳃呼吸", true, 1, 20),
-            ("昆虫有六条腿", true, 1, 20),
-            ("蜘蛛有八条腿", true, 1, 20),
-            ("地球有磁场", true, 1, 20),
-            ("月球上有环形山", true, 1, 20),
-            ("太阳系有8大行星", true, 1, 20),
             ("太阳从西方升起", false, 1, 20),
             ("月亮是恒星", false, 1, 20),
             ("蜘蛛是昆虫", false, 1, 20),
@@ -151,7 +141,7 @@ namespace MyPersonalWebsite.Controllers
             ("水是黑色的", false, 1, 20),
             ("所有花都是红色的", false, 1, 20),
 
-            // ⚡ 困难 (21-40) - 62题
+            // 困难 (21-40)
             ("鲸鱼是哺乳动物", true, 21, 40),
             ("光速是宇宙中已知的最快速度", true, 21, 40),
             ("2是最小的质数", true, 21, 40),
@@ -177,7 +167,6 @@ namespace MyPersonalWebsite.Controllers
             ("人体有24节脊椎", true, 21, 40),
             ("人体有32颗牙齿", true, 21, 40),
             ("人体有640块肌肉", true, 21, 40),
-            ("人体有100亿个神经元", true, 21, 40),
             ("地球自转周期约为24小时", true, 21, 40),
             ("地球公转周期约为365天", true, 21, 40),
             ("月球公转周期约为27.3天", true, 21, 40),
@@ -193,7 +182,6 @@ namespace MyPersonalWebsite.Controllers
             ("如果一个数是偶数，则它能被2整除", true, 21, 40),
             ("如果一个数是奇数，则它不能被2整除", true, 21, 40),
             ("如果一个数能被6整除，则它能被3整除", true, 21, 40),
-            ("如果一个数能被6整除，则它能被2整除", true, 21, 40),
             ("所有能被9整除的数都能被3整除", true, 21, 40),
             ("所有能被3整除的数都能被9整除", false, 21, 40),
             ("两个奇数之和是偶数", true, 21, 40),
@@ -216,7 +204,7 @@ namespace MyPersonalWebsite.Controllers
             ("三个连续整数的积能被6整除", true, 21, 40),
             ("所有偶数都是合数", false, 21, 40),
 
-            // 🔥 噩梦 (41-60) - 62题
+            // 噩梦 (41-60)
             ("如果今天是周三，那么后天是周五", true, 41, 60),
             ("如果今天是周一，那么昨天是周日", true, 41, 60),
             ("如果今天是周五，那么明天是周六", true, 41, 60),
@@ -280,7 +268,7 @@ namespace MyPersonalWebsite.Controllers
             ("0的相反数是0", true, 41, 60),
             ("所有自然数都是整数", true, 41, 60),
 
-            // 💀 地狱 (61-80) - 62题
+            // 地狱 (61-80)
             ("如果a和b都是正整数，且a+b是奇数，则a和b一奇一偶", true, 61, 80),
             ("如果a和b都是正整数，且a+b是偶数，则a和b同奇同偶", true, 61, 80),
             ("如果a和b都是正整数，且a×b是奇数，则a和b都是奇数", true, 61, 80),
@@ -314,8 +302,6 @@ namespace MyPersonalWebsite.Controllers
             ("如果a>b>0，则a²>b²", true, 61, 80),
             ("如果a>b>0，则a³>b³", true, 61, 80),
             ("如果a>b>0，则1/a<1/b", true, 61, 80),
-            ("两个正数的算术平均数大于等于几何平均数", true, 61, 80),
-            ("两个正数的算术平均数等于几何平均数当且仅当两数相等", true, 61, 80),
             ("质数都是奇数", false, 61, 80),
             ("除了2以外，所有质数都是奇数", true, 61, 80),
             ("1既不是质数也不是合数", true, 61, 80),
@@ -345,14 +331,13 @@ namespace MyPersonalWebsite.Controllers
             ("有理数集在数轴上是稠密的", true, 61, 80),
             ("无理数集在数轴上是稠密的", true, 61, 80),
 
-            // 👑 传说 (81-100) - 62题
+            // 传说 (81-100)
             ("如果a和b都是实数，且a²=b²，则a=b", false, 81, 100),
             ("如果a和b都是实数，且a³=b³，则a=b", true, 81, 100),
             ("如果a和b都是正实数，且a/b=b/a，则a=b", true, 81, 100),
             ("如果a和b都是正整数，且a+b=ab，则a=b=2", true, 81, 100),
             ("如果a和b都是正整数，且a+b=2ab，则a=b=1", false, 81, 100),
             ("如果a和b都是正整数，且a²+b²=ab，则a=b=0", true, 81, 100),
-            ("如果a和b都是正整数，且a²-b²=ab，则a/b=(1+√5)/2", true, 81, 100),
             ("质数都是奇数", false, 81, 100),
             ("除了2以外，所有质数都是奇数", true, 81, 100),
             ("1既不是质数也不是合数", true, 81, 100),
@@ -438,7 +423,7 @@ namespace MyPersonalWebsite.Controllers
         };
 
         // ============================================================
-        // 成语库（500+）
+        // 成语库
         // ============================================================
         private readonly string[] _idioms = new string[]
         {
@@ -494,11 +479,11 @@ namespace MyPersonalWebsite.Controllers
         };
 
         // ============================================================
-        // 找规律题库 - 100+ 题，5个难度
+        // 找规律题库
         // ============================================================
         private readonly (string pattern, int answer, int minLevel, int maxLevel)[] _patternQuestions = new (string, int, int, int)[]
         {
-            // 📝 入门 (1-20) - 30题
+            // 入门 (1-20)
             ("2, 4, 6, ?, 10", 8, 1, 20),
             ("1, 3, 5, ?, 9", 7, 1, 20),
             ("10, 20, 30, ?, 50", 40, 1, 20),
@@ -530,7 +515,7 @@ namespace MyPersonalWebsite.Controllers
             ("2, 5, 10, 17, 26, ?", 37, 1, 20),
             ("1, 2, 6, 15, 31, ?", 56, 1, 20),
 
-            // ⚡ 困难 (21-40) - 30题
+            // 困难 (21-40)
             ("2, 5, 10, 17, ?, 37", 26, 21, 40),
             ("1, 3, 6, 10, ?, 21", 15, 21, 40),
             ("2, 6, 12, 20, ?, 42", 30, 21, 40),
@@ -562,7 +547,7 @@ namespace MyPersonalWebsite.Controllers
             ("1, 3, 11, 47, 239, ?", 1439, 21, 40),
             ("2, 5, 13, 35, 97, ?", 275, 21, 40),
 
-            // 🔥 噩梦 (41-60) - 25题
+            // 噩梦 (41-60)
             ("1, 2, 6, 15, 31, ?, 92", 56, 41, 60),
             ("2, 3, 7, 18, 47, ?, 322", 123, 41, 60),
             ("1, 4, 10, 22, 46, ?, 190", 94, 41, 60),
@@ -589,7 +574,7 @@ namespace MyPersonalWebsite.Controllers
             ("2, 6, 24, 120, 720, ?", 5040, 41, 60),
             ("1, 2, 8, 48, 384, ?", 3840, 41, 60),
 
-            // 💀 地狱 (61-80) - 20题
+            // 地狱 (61-80)
             ("1, 3, 7, 13, 21, ?, 43", 31, 61, 80),
             ("2, 6, 14, 30, 62, ?, 254", 126, 61, 80),
             ("1, 5, 13, 29, 61, ?, 253", 125, 61, 80),
@@ -611,7 +596,7 @@ namespace MyPersonalWebsite.Controllers
             ("3, 9, 29, 99, 349, ?", 1229, 61, 80),
             ("2, 8, 34, 140, 568, ?", 2296, 61, 80),
 
-            // 👑 传说 (81-100) - 15题
+            // 传说 (81-100)
             ("1, 4, 27, 256, ?, 46656", 3125, 81, 100),
             ("2, 12, 36, 80, 150, ?, 392", 252, 81, 100),
             ("1, 3, 11, 51, 251, ?, 8255", 1251, 81, 100),
@@ -630,34 +615,7 @@ namespace MyPersonalWebsite.Controllers
         };
 
         // ============================================================
-        // 趣味消息
-        // ============================================================
-        private readonly Dictionary<string, string[]> _funMessages = new()
-        {
-            {"text", new[]{"👁️ 神级视力！", "🔍 显微镜级！", "🎯 精准狙击！"}},
-            {"arithmetic", new[]{"🧮 人形计算器！", "💡 爱因斯坦！", "🤓 数学之神！"}},
-            {"stroke", new[]{"📝 文字学家！", "✍️ 汉字活字典！", "🏯 甲骨文专家！"}},
-            {"color", new[]{"🎨 色彩之神！", "🌈 火眼金睛！", "✨ 审美大师！"}},
-            {"findDifferent", new[]{"🔍 人形扫描仪！", "🎯 鹰眼！", "👀 像素级观察！"}},
-            {"reverse", new[]{"🔄 人形反转器！", "🧠 超脑！", "💪 空间掌控者！"}},
-            {"missingLetter", new[]{"🔤 人形词典！", "📚 词汇之王！", "✍️ 拼写之神！"}},
-            {"timeCalc", new[]{"⏰ 时间大师！", "🕐 精准计算！", "⌚ 人形时钟！"}},
-            {"idiom", new[]{"📖 成语活字典！", "🏯 国学大师！", "✍️ 文学宗师！"}},
-            {"memory", new[]{"🧠 照相机记忆！", "💪 超脑！", "✨ 过目不忘！"}},
-            {"pattern", new[]{"📐 规律大师！", "🧠 模式识别！", "🎯 数学之眼！"}},
-            {"colorMix", new[]{"🎨 色彩炼金术！", "🌈 颜色魔法师！", "✨ 视觉艺术！"}},
-            {"trueFalse", new[]{"⚖️ 真相之神！", "🧐 明察秋毫！", "🎯 一语中的！"}},
-            {"puzzle", new[]{"🧩 拼图大师！", "🎯 空间掌控者！", "✨ 华容道之王！"}},
-            {"twentyFour", new[]{"🧮 24点大师！", "💡 数学之神！", "🤓 计算天才！"}},
-            {"shapeCount", new[]{"📐 立体视觉！", "🧊 空间感知！", "✨ 三维大师！"}},
-            {"inverseColor", new[]{"🎨 视觉之神！", "🌈 火眼金睛！", "✨ 色彩大师！"}},
-            {"rotate", new[]{"🔄 空间之神！", "🧠 超脑！", "✨ 旋转之王！"}},
-            {"findDifference", new[]{"🔍 人形扫描仪！", "🎯 鹰眼！", "👀 像素级观察！"}},
-            {"tripleColor", new[]{"🎯 三重干扰通关！", "🌈 视觉之神！", "✨ 不是人类！"}},
-        };
-
-        // ============================================================
-        // ⭐ 英文单词库 - 用于空缺字母题型
+        // 英文单词库（用于空缺字母）
         // ============================================================
         private readonly string[] _englishWords = new string[]
         {
@@ -697,10 +655,38 @@ namespace MyPersonalWebsite.Controllers
             "QUALIFICATION", "RECOGNITION", "SIGNIFICANT", "THOUGHTFUL", "UNBELIEVABLE",
             "VENTURE", "WONDERFUL"
         };
-                // ============================================================
-        // 字母表（用于空缺字母题型）
+
+        // ============================================================
+        // 字母表
         // ============================================================
         private readonly char[] _alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".ToCharArray();
+
+        // ============================================================
+        // 趣味消息
+        // ============================================================
+        private readonly Dictionary<string, string[]> _funMessages = new()
+        {
+            {"text", new[]{"👁️ 神级视力！", "🔍 显微镜级！", "🎯 精准狙击！"}},
+            {"arithmetic", new[]{"🧮 人形计算器！", "💡 爱因斯坦！", "🤓 数学之神！"}},
+            {"stroke", new[]{"📝 文字学家！", "✍️ 汉字活字典！", "🏯 甲骨文专家！"}},
+            {"color", new[]{"🎨 色彩之神！", "🌈 火眼金睛！", "✨ 审美大师！"}},
+            {"findDifferent", new[]{"🔍 人形扫描仪！", "🎯 鹰眼！", "👀 像素级观察！"}},
+            {"reverse", new[]{"🔄 人形反转器！", "🧠 超脑！", "💪 空间掌控者！"}},
+            {"missingLetter", new[]{"🔤 人形词典！", "📚 词汇之王！", "✍️ 拼写之神！"}},
+            {"timeCalc", new[]{"⏰ 时间大师！", "🕐 精准计算！", "⌚ 人形时钟！"}},
+            {"idiom", new[]{"📖 成语活字典！", "🏯 国学大师！", "✍️ 文学宗师！"}},
+            {"memory", new[]{"🧠 照相机记忆！", "💪 超脑！", "✨ 过目不忘！"}},
+            {"pattern", new[]{"📐 规律大师！", "🧠 模式识别！", "🎯 数学之眼！"}},
+            {"colorMix", new[]{"🎨 色彩炼金术！", "🌈 颜色魔法师！", "✨ 视觉艺术！"}},
+            {"trueFalse", new[]{"⚖️ 真相之神！", "🧐 明察秋毫！", "🎯 一语中的！"}},
+            {"puzzle", new[]{"🧩 拼图大师！", "🎯 空间掌控者！", "✨ 华容道之王！"}},
+            {"twentyFour", new[]{"🧮 24点大师！", "💡 数学之神！", "🤓 计算天才！"}},
+            {"shapeCount", new[]{"📐 立体视觉！", "🧊 空间感知！", "✨ 三维大师！"}},
+            {"inverseColor", new[]{"🎨 视觉之神！", "🌈 火眼金睛！", "✨ 色彩大师！"}},
+            {"rotate", new[]{"🔄 空间之神！", "🧠 超脑！", "✨ 旋转之王！"}},
+            {"findDifference", new[]{"🔍 人形扫描仪！", "🎯 鹰眼！", "👀 像素级观察！"}},
+            {"tripleColor", new[]{"🎯 三重干扰通关！", "🌈 视觉之神！", "✨ 不是人类！"}},
+        };
 
         // ============================================================
         // 构造函数
@@ -725,7 +711,7 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // ⭐ 保存分数 - 覆盖最高分
+        // 保存分数
         // ============================================================
         [HttpPost]
         public async Task<IActionResult> SaveScore(int score, int level, int maxCombo, int passed)
@@ -768,7 +754,7 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // ⭐ 获取排行榜 - 包含用户自己的排名
+        // 获取排行榜
         // ============================================================
         [HttpGet]
         public async Task<IActionResult> GetRanking()
@@ -828,8 +814,9 @@ namespace MyPersonalWebsite.Controllers
                 return Json(new { success = false, message = ex.Message });
             }
         }
-                // ============================================================
-        // ⭐ 随机类型生成器（20种类型随机）
+
+        // ============================================================
+        // ⭐ 随机类型生成器
         // ============================================================
         private object GenerateChallenge(int level)
         {
@@ -852,29 +839,12 @@ namespace MyPersonalWebsite.Controllers
 
             int typesCompleted = _usedTypes.Count;
 
-            // ⭐ 20种题型中文名称（已更新）
             string[] typeNames = new string[]
             {
-                "文字识别",      // 0
-                "算术计算",      // 1
-                "汉字笔画",      // 2
-                "颜色识别",      // 3
-                "找不同",        // 4
-                "倒序识别",      // 5
-                "空缺字母",      // 6
-                "时间计算",      // 7 ⬅️ 替换数字排序
-                "成语填空",      // 8
-                "数字记忆",      // 9
-                "找规律",        // 10
-                "颜色混合",      // 11
-                "真假判断",      // 12
-                "数字华容道",    // 13
-                "24点计算",      // 14
-                "立体计数",      // 15 ⬅️ 替换字符计数
-                "反色识别",      // 16
-                "图形旋转",      // 17 ⬅️ 替换镜像字母
-                "找不同图形",    // 18 ⬅️ 替换方向/逻辑推理
-                "颜色三重干扰"   // 19
+                "文字识别", "算术计算", "汉字笔画", "颜色识别", "找不同",
+                "倒序识别", "空缺字母", "时间计算", "成语填空", "数字记忆",
+                "找规律", "颜色混合", "真假判断", "数字华容道", "24点计算",
+                "立体计数", "反色识别", "图形旋转", "找不同图形", "颜色三重干扰"
             };
 
             object result;
@@ -887,7 +857,7 @@ namespace MyPersonalWebsite.Controllers
                 case 4: result = GenerateFindDifferent(level, difficulty, typesCompleted); break;
                 case 5: result = GenerateReverseText(level, difficulty, typesCompleted); break;
                 case 6: result = GenerateMissingLetter(level, difficulty, typesCompleted); break;
-                case 7: result = GenerateTimeCalculation(level, difficulty, typesCompleted); break;      // 新
+                case 7: result = GenerateTimeCalculation(level, difficulty, typesCompleted); break;
                 case 8: result = GenerateIdiomFill(level, difficulty, typesCompleted); break;
                 case 9: result = GenerateMemoryChallenge(level, difficulty, typesCompleted); break;
                 case 10: result = GeneratePatternRecognition(level, difficulty, typesCompleted); break;
@@ -895,14 +865,13 @@ namespace MyPersonalWebsite.Controllers
                 case 12: result = GenerateTrueFalse(level, difficulty, typesCompleted); break;
                 case 13: result = GeneratePuzzle(level, difficulty, typesCompleted); break;
                 case 14: result = GenerateTwentyFour(level, difficulty, typesCompleted); break;
-                case 15: result = GenerateShapeCount(level, difficulty, typesCompleted); break;          // 新
+                case 15: result = GenerateShapeCount(level, difficulty, typesCompleted); break;
                 case 16: result = GenerateInverseColor(level, difficulty, typesCompleted); break;
-                case 17: result = GenerateRotateShape(level, difficulty, typesCompleted); break;         // 新
-                case 18: result = GenerateFindDifferentShape(level, difficulty, typesCompleted); break;  // 新
+                case 17: result = GenerateRotateShape(level, difficulty, typesCompleted); break;
+                case 18: result = GenerateFindDifferentShape(level, difficulty, typesCompleted); break;
                 default: result = GenerateTripleColorInterference(level, difficulty, typesCompleted); break;
             }
 
-            // 添加 typeName
             var dict = result as Dictionary<string, object>;
             if (dict == null)
             {
@@ -1445,7 +1414,6 @@ namespace MyPersonalWebsite.Controllers
             var pool = _colorHex.ToArray();
             var selected = pool[_random.Next(pool.Length)];
 
-            // 根据难度决定相似度阈值（入门差异大，传说差异极小）
             double similarityThreshold = difficulty <= 20 ? 200 : difficulty <= 40 ? 150 : difficulty <= 60 ? 100 : difficulty <= 80 ? 60 : 30;
 
             var similarColors = pool.Where(c => IsSimilarColor(c.Value, selected.Value, similarityThreshold)).ToList();
@@ -1609,7 +1577,7 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // ⭐ 题型 6：空缺字母（按难度分级：挖空1-3个，字母数量5-15个）
+        // ⭐ 题型 6：空缺字母
         // ============================================================
         private object GenerateMissingLetter(int level, int difficulty, int typesCompleted)
         {
@@ -1698,7 +1666,7 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // ⭐ 题型 7：时间计算（替换数字排序）
+        // ⭐ 题型 7：时间计算
         // ============================================================
         private object GenerateTimeCalculation(int level, int difficulty, int typesCompleted)
         {
@@ -1846,7 +1814,7 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // ⭐ 题型 9：数字记忆（3×3 + 第四行中间0 + 右边退格）
+        // ⭐ 题型 9：数字记忆
         // ============================================================
         private object GenerateMemoryChallenge(int level, int difficulty, int typesCompleted)
         {
@@ -1857,14 +1825,12 @@ namespace MyPersonalWebsite.Controllers
             int memoryTime = Math.Max(3, 8 - difficulty / 20);
             int timeLimit = Math.Max(10, 20 + difficulty / 5);
 
-            // ⭐ 生成 3×3 + 第四行中间0 + 右边退格 的键盘布局
             var keyboardRows = new List<List<string>>();
             keyboardRows.Add(new List<string> { "1", "2", "3" });
             keyboardRows.Add(new List<string> { "4", "5", "6" });
             keyboardRows.Add(new List<string> { "7", "8", "9" });
             keyboardRows.Add(new List<string> { "", "0", "⌫" });
 
-            // 打乱数字位置（保持3×3结构，只打乱数字）
             var digits = new List<string> { "1", "2", "3", "4", "5", "6", "7", "8", "9" };
             var shuffledDigits = digits.OrderBy(_ => _random.Next()).ToList();
             int idx = 0;
@@ -1890,7 +1856,8 @@ namespace MyPersonalWebsite.Controllers
                 ["funMessage"] = GetFunMessage("memory")
             };
         }
-                // ============================================================
+
+        // ============================================================
         // ⭐ 题型 10：找规律
         // ============================================================
         private object GeneratePatternRecognition(int level, int difficulty, int typesCompleted)
@@ -1919,7 +1886,7 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // ⭐ 题型 11：颜色混合（只显示色块，不显示答案）
+        // ⭐ 题型 11：颜色混合
         // ============================================================
         private object GenerateColorMix(int level, int difficulty, int typesCompleted)
         {
@@ -1949,14 +1916,12 @@ namespace MyPersonalWebsite.Controllers
                 selectedColors.Add(availableColors[idx]);
             }
 
-            // 使用 RGB 真实混合
             string resultColor = selectedColors[0];
             for (int i = 1; i < selectedColors.Count; i++)
             {
                 resultColor = MixColorsRGB(resultColor, selectedColors[i]);
             }
 
-            // 生成干扰选项（颜色相似度）
             var allColors = _colorNames.ToList();
             var options = new List<string> { resultColor };
 
@@ -2063,11 +2028,10 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // ⭐ 题型 13：数字华容道（3×3 到 4×4 渐进）
+        // ⭐ 题型 13：数字华容道
         // ============================================================
         private object GeneratePuzzle(int level, int difficulty, int typesCompleted)
         {
-            // 第51关开始使用4×4
             bool use4x4 = level >= 51;
             int size = use4x4 ? 4 : 3;
 
@@ -2191,7 +2155,7 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // ⭐ 题型 14：24点计算（手动输入，替换两个数字）
+        // ⭐ 题型 14：24点计算
         // ============================================================
         private object GenerateTwentyFour(int level, int difficulty, int typesCompleted)
         {
@@ -2220,7 +2184,6 @@ namespace MyPersonalWebsite.Controllers
                 if (!string.IsNullOrEmpty(firstNum) && !string.IsNullOrEmpty(secondNum))
                 {
                     string displayExpr = correctExpression.Replace(firstNum, "[ ? ]");
-                    // 替换第二个数字（避免两个相同数字的问题）
                     int replaceIndex = displayExpr.IndexOf(secondNum);
                     if (replaceIndex >= 0)
                     {
@@ -2249,7 +2212,6 @@ namespace MyPersonalWebsite.Controllers
                 }
             }
 
-            // 降级
             return new Dictionary<string, object>
             {
                 ["type"] = "twentyFour",
@@ -2392,12 +2354,10 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // ⭐ 题型 15：立体计数（正方体计数）
+        // ⭐ 题型 15：立体计数
         // ============================================================
         private object GenerateShapeCount(int level, int difficulty, int typesCompleted)
         {
-            // 生成一个简单的3D正方体堆叠图形，用字符表示
-            // 不同难度：正方体数量不同，堆叠层数不同
             int cubeCount, layers;
 
             if (difficulty <= 20) { cubeCount = 3 + _random.Next(3); layers = 1; }
@@ -2406,10 +2366,7 @@ namespace MyPersonalWebsite.Controllers
             else if (difficulty <= 80) { cubeCount = 15 + _random.Next(6); layers = 3 + _random.Next(2); }
             else { cubeCount = 20 + _random.Next(10); layers = 4 + _random.Next(3); }
 
-            // 生成显示图形（俯视图 + 侧视图的ASCII艺术）
             string display = Generate3DCubeDisplay(cubeCount, layers);
-
-            // 正确答案是正方体总数
             int correctAnswer = cubeCount;
 
             var options = GenerateNumberOptions(correctAnswer, 4 + Math.Min(difficulty / 10, 3), 5 + difficulty / 5);
@@ -2430,22 +2387,17 @@ namespace MyPersonalWebsite.Controllers
 
         private string Generate3DCubeDisplay(int cubeCount, int layers)
         {
-            // 使用字符构建3D正方体堆叠的俯视图
-            // 每一层用不同的字符表示
             var sb = new StringBuilder();
             sb.AppendLine("  俯视图（数字=层数）");
 
             int cols = Math.Min(6 + cubeCount / 4, 10);
             int rows = Math.Min(5 + cubeCount / 4, 8);
 
-            // 生成一个随机堆叠矩阵
             var grid = new int[rows, cols];
             int remaining = cubeCount;
 
-            // 从底层开始填充
             for (int layer = 1; layer <= layers && remaining > 0; layer++)
             {
-                // 每层随机放置一些正方体
                 int placed = _random.Next(Math.Min(remaining, 3 + layer * 2), Math.Min(remaining + 1, 6 + layer * 3));
                 for (int i = 0; i < placed && remaining > 0; i++)
                 {
@@ -2458,7 +2410,6 @@ namespace MyPersonalWebsite.Controllers
                     }
                     else
                     {
-                        // 尝试相邻位置
                         for (int dr = -1; dr <= 1 && remaining > 0; dr++)
                         {
                             for (int dc = -1; dc <= 1 && remaining > 0; dc++)
@@ -2476,7 +2427,6 @@ namespace MyPersonalWebsite.Controllers
                 }
             }
 
-            // 绘制俯视图
             for (int r = 0; r < rows; r++)
             {
                 for (int c = 0; c < cols; c++)
@@ -2527,42 +2477,43 @@ namespace MyPersonalWebsite.Controllers
             };
         }
 
-        // ============================================================
-        // ⭐ 题型 17：图形旋转（纯图形，选项误差至少7度）
+                // ============================================================
+        // ⭐ 题型 17：图形旋转（不规则图形，难度递增）
         // ============================================================
         private object GenerateRotateShape(int level, int difficulty, int typesCompleted)
         {
-            // 纯图形字符
-            var shapePatterns = new Dictionary<string, string[]>
+            // 根据难度选择图形复杂度
+            var (shapePoints, shapeName) = GetShapeByDifficulty(difficulty);
+
+            // 生成实际旋转角度
+            double actualAngle;
+            if (difficulty > 80)
             {
-                {"◆", new string[] { " ◆ ", "◆◆◆", " ◆ " }},
-                {"▲", new string[] { " ▲ ", "▲▲▲", "   " }},
-                {"★", new string[] { " ★ ", "★★★", " ★ " }},
-                {"♥", new string[] { " ♥ ", "♥♥♥", " ♥ " }},
-                {"♦", new string[] { " ♦ ", "♦♦♦", " ♦ " }},
-                {"●", new string[] { " ● ", "●●●", " ● " }},
-                {"■", new string[] { "■■■", "■ ■", "■■■" }},
-                {"⬛", new string[] { "⬛⬛", "⬛⬛", "   " }},
-                {"⬜", new string[] { "⬜⬜", "⬜⬜", "   " }},
-            };
+                // 传说级别：角度更精细（非整数角度）
+                actualAngle = _random.Next(0, 360) + (_random.NextDouble() - 0.5) * 3;
+            }
+            else
+            {
+                actualAngle = _random.Next(0, 360);
+            }
 
-            var shapeKeys = shapePatterns.Keys.ToList();
-            string key = shapeKeys[_random.Next(shapeKeys.Count)];
-            string[] pattern = shapePatterns[key];
+            // 生成带干扰线的SVG（地狱以上难度）
+            bool hasDistractions = difficulty > 60;
+            bool hasOverlay = difficulty > 80;
 
-            // 生成实际旋转角度 (0-359)
-            double actualAngle = _random.Next(0, 360);
+            string originalSvg = GenerateShapeSvg(shapePoints, shapeName, 0, hasDistractions, hasOverlay, difficulty);
 
-            // 生成干扰选项：误差至少7度
+            // 生成选项
             var options = new List<double> { actualAngle };
             int optionCount = 4 + Math.Min(difficulty / 10, 3);
 
+            // 根据难度决定误差范围
             int minError, maxError;
             if (difficulty <= 20) { minError = 30; maxError = 60; }
             else if (difficulty <= 40) { minError = 20; maxError = 45; }
             else if (difficulty <= 60) { minError = 15; maxError = 35; }
-            else if (difficulty <= 80) { minError = 10; maxError = 25; }
-            else { minError = 7; maxError = 15; }
+            else if (difficulty <= 80) { minError = 8; maxError = 20; }
+            else { minError = 4; maxError = 12; }
 
             while (options.Count < optionCount)
             {
@@ -2577,24 +2528,17 @@ namespace MyPersonalWebsite.Controllers
                 }
             }
 
-            // 显示图形（先显示原图，再显示旋转后的图）
-            string originalDisplay = string.Join("<br>", pattern);
-
-            // 计算旋转后的图形显示（简化：用一个旋转后的字符表示）
-            string rotatedDisplay = key;
-
             var optionStrings = options.Select(o => $"{Math.Round(o)}°").OrderBy(_ => _random.Next()).ToList();
             string correctAnswer = $"{Math.Round(actualAngle)}°";
 
-            int timeLimit = Math.Max(8, 15 - difficulty / 10);
+            int timeLimit = Math.Max(8, 20 - difficulty / 8);
 
             return new Dictionary<string, object>
             {
                 ["type"] = "rotate",
                 ["level"] = level,
-                ["question"] = $"🔄 以下图形旋转后的角度是多少？<br><span style='font-family:monospace;font-size:1.8rem;color:#8B5CF6;'>{originalDisplay}</span>",
-                ["originalDisplay"] = originalDisplay,
-                ["rotatedDisplay"] = rotatedDisplay,
+                ["question"] = $"🔄 以下图形旋转后的角度是多少？<br><span style='color:rgba(255,255,255,0.12);font-size:0.7rem;'>{(hasDistractions ? "⚠️ 注意干扰线条" : "观察图形旋转角度")}</span>",
+                ["originalSvg"] = originalSvg,
                 ["correctAnswer"] = correctAnswer,
                 ["options"] = optionStrings,
                 ["timeLimit"] = timeLimit,
@@ -2603,48 +2547,250 @@ namespace MyPersonalWebsite.Controllers
             };
         }
 
+        // ⭐ 根据难度获取图形
+        private (int[][] points, string name) GetShapeByDifficulty(int difficulty)
+        {
+            if (difficulty <= 20)
+            {
+                // 📝 入门：简单规则图形
+                var shapes = new (int[][], string)[]
+                {
+                    (new int[][] { new int[] { 50, 15 }, new int[] { 15, 85 }, new int[] { 85, 85 } }, "三角形"),
+                    (new int[][] { new int[] { 20, 20 }, new int[] { 80, 20 }, new int[] { 80, 80 }, new int[] { 20, 80 } }, "正方形"),
+                    (new int[][] { new int[] { 50, 15 }, new int[] { 85, 50 }, new int[] { 50, 85 }, new int[] { 15, 50 } }, "菱形"),
+                };
+                return shapes[_random.Next(shapes.Length)];
+            }
+            else if (difficulty <= 40)
+            {
+                // ⚡ 困难：五角星、六边形
+                var shapes = new (int[][], string)[]
+                {
+                    (new int[][] {
+                        new int[] { 50, 10 }, new int[] { 62, 35 }, new int[] { 90, 35 },
+                        new int[] { 68, 55 }, new int[] { 78, 85 }, new int[] { 50, 68 },
+                        new int[] { 22, 85 }, new int[] { 32, 55 }, new int[] { 10, 35 },
+                        new int[] { 38, 35 }
+                    }, "五角星"),
+                    (new int[][] {
+                        new int[] { 50, 10 }, new int[] { 85, 30 }, new int[] { 85, 70 },
+                        new int[] { 50, 90 }, new int[] { 15, 70 }, new int[] { 15, 30 }
+                    }, "六边形"),
+                    (new int[][] {
+                        new int[] { 20, 20 }, new int[] { 50, 20 }, new int[] { 50, 50 },
+                        new int[] { 80, 50 }, new int[] { 80, 80 }, new int[] { 20, 80 }
+                    }, "L形"),
+                };
+                return shapes[_random.Next(shapes.Length)];
+            }
+            else if (difficulty <= 60)
+            {
+                // 🔥 噩梦：不规则多边形
+                var shapes = new (int[][], string)[]
+                {
+                    (new int[][] {
+                        new int[] { 50, 8 }, new int[] { 75, 20 }, new int[] { 92, 45 },
+                        new int[] { 88, 75 }, new int[] { 65, 92 }, new int[] { 35, 88 },
+                        new int[] { 12, 70 }, new int[] { 8, 40 }, new int[] { 25, 18 }
+                    }, "不规则九边形"),
+                    (new int[][] {
+                        new int[] { 30, 10 }, new int[] { 70, 8 }, new int[] { 92, 25 },
+                        new int[] { 85, 55 }, new int[] { 95, 80 }, new int[] { 70, 92 },
+                        new int[] { 40, 85 }, new int[] { 15, 75 }, new int[] { 8, 45 },
+                        new int[] { 20, 20 }
+                    }, "不规则十边形"),
+                    (new int[][] {
+                        new int[] { 50, 5 }, new int[] { 80, 15 }, new int[] { 95, 40 },
+                        new int[] { 85, 70 }, new int[] { 60, 92 }, new int[] { 30, 85 },
+                        new int[] { 10, 65 }, new int[] { 5, 35 }, new int[] { 25, 12 }
+                    }, "不规则九边形"),
+                };
+                return shapes[_random.Next(shapes.Length)];
+            }
+            else if (difficulty <= 80)
+            {
+                // 💀 地狱：复杂不规则 + 凹陷图形
+                var shapes = new (int[][], string)[]
+                {
+                    (new int[][] {
+                        new int[] { 50, 5 }, new int[] { 75, 12 }, new int[] { 92, 28 },
+                        new int[] { 88, 50 }, new int[] { 96, 72 }, new int[] { 78, 90 },
+                        new int[] { 52, 85 }, new int[] { 30, 92 }, new int[] { 12, 78 },
+                        new int[] { 6, 55 }, new int[] { 15, 32 }, new int[] { 28, 15 }
+                    }, "复杂十二边形"),
+                    (new int[][] {
+                        new int[] { 40, 8 }, new int[] { 60, 5 }, new int[] { 82, 18 },
+                        new int[] { 90, 38 }, new int[] { 85, 60 }, new int[] { 92, 82 },
+                        new int[] { 70, 90 }, new int[] { 45, 85 }, new int[] { 25, 92 },
+                        new int[] { 8, 75 }, new int[] { 5, 50 }, new int[] { 15, 28 },
+                        new int[] { 28, 15 }
+                    }, "复杂十三边形"),
+                    (new int[][] {
+                        new int[] { 50, 2 }, new int[] { 78, 10 }, new int[] { 94, 25 },
+                        new int[] { 98, 48 }, new int[] { 90, 70 }, new int[] { 80, 88 },
+                        new int[] { 55, 95 }, new int[] { 30, 88 }, new int[] { 10, 78 },
+                        new int[] { 4, 55 }, new int[] { 8, 32 }, new int[] { 22, 12 },
+                        new int[] { 38, 5 }
+                    }, "复杂十三边形"),
+                };
+                return shapes[_random.Next(shapes.Length)];
+            }
+            else
+            {
+                // 👑 传说：超复杂图形 + 不对称
+                var shapes = new (int[][], string)[]
+                {
+                    (new int[][] {
+                        new int[] { 50, 2 }, new int[] { 72, 8 }, new int[] { 88, 18 },
+                        new int[] { 96, 32 }, new int[] { 92, 48 }, new int[] { 98, 65 },
+                        new int[] { 88, 82 }, new int[] { 75, 92 }, new int[] { 55, 97 },
+                        new int[] { 35, 90 }, new int[] { 18, 82 }, new int[] { 6, 68 },
+                        new int[] { 2, 50 }, new int[] { 8, 32 }, new int[] { 18, 18 },
+                        new int[] { 35, 8 }
+                    }, "超复杂十六边形"),
+                    (new int[][] {
+                        new int[] { 45, 3 }, new int[] { 68, 6 }, new int[] { 85, 15 },
+                        new int[] { 95, 30 }, new int[] { 97, 48 }, new int[] { 92, 65 },
+                        new int[] { 85, 82 }, new int[] { 70, 93 }, new int[] { 50, 98 },
+                        new int[] { 30, 92 }, new int[] { 15, 82 }, new int[] { 5, 68 },
+                        new int[] { 1, 50 }, new int[] { 5, 32 }, new int[] { 15, 18 },
+                        new int[] { 30, 6 }, new int[] { 40, 3 }
+                    }, "超复杂十七边形"),
+                    (new int[][] {
+                        new int[] { 50, 1 }, new int[] { 75, 6 }, new int[] { 92, 15 },
+                        new int[] { 98, 30 }, new int[] { 94, 48 }, new int[] { 99, 65 },
+                        new int[] { 90, 82 }, new int[] { 78, 93 }, new int[] { 58, 98 },
+                        new int[] { 38, 94 }, new int[] { 20, 85 }, new int[] { 6, 72 },
+                        new int[] { 2, 55 }, new int[] { 4, 38 }, new int[] { 12, 22 },
+                        new int[] { 25, 10 }, new int[] { 38, 4 }
+                    }, "超复杂十七边形"),
+                };
+                return shapes[_random.Next(shapes.Length)];
+            }
+        }
+
+        // ⭐ 生成图形 SVG
+        private string GenerateShapeSvg(int[][] points, string shapeName, double rotationAngle, bool hasDistractions, bool hasOverlay, int difficulty)
+        {
+            int width = 130;
+            int height = 130;
+            int cx = 65;
+            int cy = 65;
+
+            // 构建多边形点字符串
+            var pointStr = new List<string>();
+            foreach (var p in points)
+            {
+                pointStr.Add($"{p[0]},{p[1]}");
+            }
+            string pointsStr = string.Join(" ", pointStr);
+
+            // 颜色（随机明亮色）
+            string[] colors = { "#8B5CF6", "#EC4899", "#F59E0B", "#06B6D4", "#34D399", "#F472B6", "#60A5FA", "#A78BFA" };
+            string fillColor = colors[_random.Next(colors.Length)];
+            string strokeColor = "#FFFFFF";
+
+            var sb = new StringBuilder();
+            sb.AppendLine($"<svg xmlns='http://www.w3.org/2000/svg' width='{width}' height='{height}' viewBox='0 0 {width} {height}'>");
+
+            // 背景
+            sb.AppendLine($"    <rect width='{width}' height='{height}' rx='12' fill='rgba(255,255,255,0.02)' stroke='rgba(255,255,255,0.04)' stroke-width='1'/>");
+
+            // ⭐ 地狱以上难度：添加干扰线条
+            if (hasDistractions)
+            {
+                int lineCount = 10 + difficulty / 5;
+                for (int i = 0; i < lineCount; i++)
+                {
+                    int x1 = _random.Next(0, width);
+                    int y1 = _random.Next(0, height);
+                    int x2 = _random.Next(0, width);
+                    int y2 = _random.Next(0, height);
+                    int alpha = _random.Next(20, 60);
+                    int lineWidth = _random.Next(1, 3);
+                    sb.AppendLine($"    <line x1='{x1}' y1='{y1}' x2='{x2}' y2='{y2}' stroke='rgba(255,255,255,{alpha/255f:F2})' stroke-width='{lineWidth}' opacity='0.3'/>");
+                }
+
+                // 添加小点干扰
+                int dotCount = 30 + difficulty * 2;
+                for (int i = 0; i < dotCount; i++)
+                {
+                    int x = _random.Next(0, width);
+                    int y = _random.Next(0, height);
+                    int r = _random.Next(1, 3);
+                    int alpha = _random.Next(30, 80);
+                    sb.AppendLine($"    <circle cx='{x}' cy='{y}' r='{r}' fill='rgba(255,255,255,{alpha/255f:F2})' opacity='0.2'/>");
+                }
+            }
+
+            // ⭐ 传说难度：叠加第二个图形
+            if (hasOverlay)
+            {
+                // 半透明叠加图形
+                string overlayColor = colors[_random.Next(colors.Length)];
+                // 随机偏移
+                int offsetX = _random.Next(-8, 8);
+                int offsetY = _random.Next(-8, 8);
+                var offsetPoints = points.Select(p => new int[] { p[0] + offsetX, p[1] + offsetY }).ToArray();
+                var offsetStr = new List<string>();
+                foreach (var p in offsetPoints)
+                {
+                    offsetStr.Add($"{p[0]},{p[1]}");
+                }
+                sb.AppendLine($"    <polygon points='{string.Join(" ", offsetStr)}' fill='{overlayColor}' opacity='0.15' stroke='{strokeColor}' stroke-width='1' transform='rotate({rotationAngle + 15}, {cx}, {cy})'/>");
+            }
+
+            // 主图形（带旋转）
+            double opacity = hasOverlay ? 0.8 : 0.85;
+            sb.AppendLine($"    <polygon points='{pointsStr}' fill='{fillColor}' opacity='{opacity}' stroke='{strokeColor}' stroke-width='2' transform='rotate({rotationAngle}, {cx}, {cy})'/>");
+
+            // 中心点标记
+            sb.AppendLine($"    <circle cx='{cx}' cy='{cy}' r='3' fill='rgba(255,255,255,0.15)'/>");
+
+            // 边框发光效果（高阶难度）
+            if (difficulty > 60)
+            {
+                sb.AppendLine($"    <polygon points='{pointsStr}' fill='none' stroke='{fillColor}' stroke-width='6' opacity='0.08' transform='rotate({rotationAngle}, {cx}, {cy})'/>");
+            }
+
+            sb.AppendLine("</svg>");
+            return sb.ToString();
+        }
+
         // ============================================================
-        // ⭐ 题型 18：找不同图形（替换逻辑推理）
+        // ⭐ 题型 18：找不同图形
         // ============================================================
         private object GenerateFindDifferentShape(int level, int difficulty, int typesCompleted)
         {
-            // 生成一组图形，其中一个与其他的不同
             var shapePool = new string[] { "●", "■", "▲", "★", "◆", "♥", "♦", "♣", "♠", "⬛", "⬜" };
 
             int shapeCount = 4 + Math.Min(difficulty / 10, 5);
 
-            // 选择一个不同的图形
             string differentShape = shapePool[_random.Next(shapePool.Length)];
 
-            // 选择其他相同的图形
             string commonShape = shapePool[_random.Next(shapePool.Length)];
             while (commonShape == differentShape)
             {
                 commonShape = shapePool[_random.Next(shapePool.Length)];
             }
 
-            // 生成图形列表：大部分是commonShape，一个是differentShape
             var shapes = new List<string>();
             for (int i = 0; i < shapeCount - 1; i++)
             {
                 shapes.Add(commonShape);
             }
-            // 随机插入不同的图形
             int insertPos = _random.Next(shapeCount);
             shapes.Insert(insertPos, differentShape);
 
             string display = string.Join(" ", shapes);
 
-            // 正确答案：不同图形的索引（从0开始）
             int correctAnswer = insertPos;
 
-            // 生成选项
             var options = new List<string>();
             for (int i = 0; i < shapeCount; i++)
             {
                 options.Add($"第{i + 1}个");
             }
-            // 添加干扰选项
             if (shapeCount >= 4)
             {
                 options.Add("没有不同");
