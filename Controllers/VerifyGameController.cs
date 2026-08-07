@@ -286,7 +286,7 @@ namespace MyPersonalWebsite.Controllers
         };
 
         // ============================================================
-        // 汉字笔画数据（按笔画数分组）
+        // 汉字笔画数据
         // ============================================================
         private readonly Dictionary<int, List<char>> _strokeGroups = new()
         {
@@ -500,11 +500,11 @@ namespace MyPersonalWebsite.Controllers
             {"colorMix", new[]{"🎨 色彩炼金术！", "🌈 颜色魔法师！", "✨ 视觉艺术！"}},
             {"trueFalse", new[]{"⚖️ 真相之神！", "🧐 明察秋毫！", "🎯 一语中的！"}},
             {"puzzle", new[]{"🧩 拼图大师！", "🎯 空间掌控者！", "✨ 华容道之王！"}},
-            {"charFrequency", new[]{"📊 统计大师！", "🧮 人形计算器！", "🎯 精准分析！"}},
+            {"threeView", new[]{"📐 三视图大师！", "🧊 立体思维！", "🎯 空间感知！"}},
             {"shapeCount", new[]{"📐 立体视觉！", "🧊 空间感知！", "✨ 三维大师！"}},
             {"inverseColor", new[]{"🎨 视觉之神！", "🌈 火眼金睛！", "✨ 色彩大师！"}},
             {"rotate", new[]{"🔄 空间之神！", "🧠 超脑！", "✨ 旋转之王！"}},
-            {"findDifference", new[]{"🔍 人形扫描仪！", "🎯 鹰眼！", "👀 像素级观察！"}},
+            {"spaceFolding", new[]{"🧊 空间大师！", "🧠 立体思维！", "🎯 透视眼！"}},
             {"tripleColor", new[]{"🎯 三重干扰通关！", "🌈 视觉之神！", "✨ 不是人类！"}},
         };
 
@@ -634,7 +634,8 @@ namespace MyPersonalWebsite.Controllers
                 return Json(new { success = false, message = ex.Message });
             }
         }
-                // ============================================================
+
+        // ============================================================
         // ⭐ 随机类型生成器
         // ============================================================
         private object GenerateChallenge(int level)
@@ -660,10 +661,26 @@ namespace MyPersonalWebsite.Controllers
 
             string[] typeNames = new string[]
             {
-                "文字识别", "算术计算", "汉字笔画", "颜色识别", "找不同",
-                "倒序识别", "空缺字母", "时间计算", "成语填空", "数字记忆",
-                "找规律", "颜色混合", "真假判断", "数字华容道", "字符频率",
-                "图形计数", "反色识别", "图形旋转", "找不同图形", "颜色三重干扰"
+                "文字识别",      // 0
+                "算术计算",      // 1
+                "汉字笔画",      // 2
+                "颜色识别",      // 3
+                "找不同",        // 4
+                "倒序识别",      // 5
+                "空缺字母",      // 6
+                "时间计算",      // 7
+                "成语填空",      // 8
+                "数字记忆",      // 9
+                "找规律",        // 10
+                "颜色混合",      // 11
+                "真假判断",      // 12
+                "数字华容道",    // 13
+                "立体三视图",    // 14
+                "图形计数",      // 15
+                "反色识别",      // 16
+                "图形旋转",      // 17
+                "空间折叠",      // 18
+                "颜色三重干扰"   // 19
             };
 
             object result;
@@ -683,11 +700,11 @@ namespace MyPersonalWebsite.Controllers
                 case 11: result = GenerateColorMix(level, difficulty, typesCompleted); break;
                 case 12: result = GenerateTrueFalse(level, difficulty, typesCompleted); break;
                 case 13: result = GeneratePuzzle(level, difficulty, typesCompleted); break;
-                case 14: result = GenerateCharFrequency(level, difficulty, typesCompleted); break;
+                case 14: result = GenerateThreeViewCounting(level, difficulty, typesCompleted); break;
                 case 15: result = GenerateShapeCount(level, difficulty, typesCompleted); break;
                 case 16: result = GenerateInverseColor(level, difficulty, typesCompleted); break;
                 case 17: result = GenerateRotateShape(level, difficulty, typesCompleted); break;
-                case 18: result = GenerateFindDifferentShape(level, difficulty, typesCompleted); break;
+                case 18: result = GenerateSpaceFolding(level, difficulty, typesCompleted); break;
                 default: result = GenerateTripleColorInterference(level, difficulty, typesCompleted); break;
             }
 
@@ -1265,7 +1282,7 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // ⭐ 题型 4：找不同（打乱 + 替换，替换字符不能与原字符重复）
+        // ⭐ 题型 4：找不同
         // ============================================================
         private object GenerateFindDifferent(int level, int difficulty, int typesCompleted)
         {
@@ -1279,7 +1296,7 @@ namespace MyPersonalWebsite.Controllers
             int pos = _random.Next(length);
             char originalChar = original[pos];
 
-            // ⭐ 替换字符不能是原字符串中已有的字符
+            // 替换字符不能是原字符串中已有的字符
             char replacementChar;
             int maxAttempts = 100;
             int attempts = 0;
@@ -1298,7 +1315,7 @@ namespace MyPersonalWebsite.Controllers
             replacedArr[pos] = replacementChar;
             string replaced = new string(replacedArr);
 
-            // ⭐ 打乱顺序
+            // 打乱顺序
             char[] shuffledArr = replaced.ToCharArray();
             for (int i = shuffledArr.Length - 1; i > 0; i--)
             {
@@ -1401,7 +1418,7 @@ namespace MyPersonalWebsite.Controllers
 
             string word = candidates[_random.Next(candidates.Count)];
 
-            // ⭐ 只选唯一的字符进行挖空
+            // 只选唯一的字符进行挖空
             var duplicateChars = word.GroupBy(c => c).Where(g => g.Count() >= 2).Select(g => g.Key).ToHashSet();
             var availablePositions = new List<int>();
             for (int i = 0; i < word.Length; i++)
@@ -1957,193 +1974,197 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // ⭐ 题型 14：字符频率统计
+        // ⭐ 题型 14：立体三视图计数
         // ============================================================
-        private object GenerateCharFrequency(int level, int difficulty, int typesCompleted)
+        private object GenerateThreeViewCounting(int level, int difficulty, int typesCompleted)
         {
-            int charCount, uniqueCount, questionType, timeLimit;
+            int cubeCount;
+            int timeLimit;
 
             if (difficulty <= 20)
             {
-                charCount = 8 + _random.Next(4);
-                uniqueCount = 3 + _random.Next(1);
-                questionType = 0;
-                timeLimit = 10;
+                cubeCount = _random.Next(5, 9);
+                timeLimit = 30;
             }
             else if (difficulty <= 40)
             {
-                charCount = 12 + _random.Next(5);
-                uniqueCount = 4 + _random.Next(1);
-                questionType = _random.Next(0, 2);
-                timeLimit = 12;
+                cubeCount = _random.Next(9, 14);
+                timeLimit = 25;
             }
             else if (difficulty <= 60)
             {
-                charCount = 16 + _random.Next(6);
-                uniqueCount = 5 + _random.Next(2);
-                questionType = _random.Next(0, 3);
-                timeLimit = 14;
+                cubeCount = _random.Next(14, 19);
+                timeLimit = 20;
             }
             else if (difficulty <= 80)
             {
-                charCount = 20 + _random.Next(8);
-                uniqueCount = 6 + _random.Next(2);
-                questionType = _random.Next(0, 4);
-                timeLimit = 16;
+                cubeCount = _random.Next(19, 24);
+                timeLimit = 15;
             }
             else
             {
-                charCount = 25 + _random.Next(10);
-                uniqueCount = 7 + _random.Next(3);
-                questionType = _random.Next(0, 5);
-                timeLimit = 20;
+                cubeCount = _random.Next(24, 31);
+                timeLimit = 10;
             }
 
-            string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+            var views = GenerateViews(cubeCount);
 
-            var selectedChars = new List<char>();
-            var usedIndices = new HashSet<int>();
-            while (selectedChars.Count < uniqueCount)
-            {
-                int idx = _random.Next(chars.Length);
-                if (!usedIndices.Contains(idx))
-                {
-                    usedIndices.Add(idx);
-                    selectedChars.Add(chars[idx]);
-                }
-            }
+            string topView = ViewsToHtml(views.top, "俯视图");
+            string frontView = ViewsToHtml(views.front, "正视图");
+            string sideView = ViewsToHtml(views.side, "侧视图(左)");
 
-            var frequencies = new Dictionary<char, int>();
-            int remaining = charCount;
-            for (int i = 0; i < selectedChars.Count; i++)
-            {
-                if (i == selectedChars.Count - 1)
-                {
-                    frequencies[selectedChars[i]] = remaining;
-                }
-                else
-                {
-                    int max = remaining - (selectedChars.Count - i - 1);
-                    int count = _random.Next(1, Math.Max(2, max));
-                    frequencies[selectedChars[i]] = count;
-                    remaining -= count;
-                }
-            }
-
-            var displayChars = new List<char>();
-            foreach (var kv in frequencies)
-            {
-                for (int i = 0; i < kv.Value; i++)
-                {
-                    displayChars.Add(kv.Key);
-                }
-            }
-            var shuffled = displayChars.OrderBy(_ => _random.Next()).ToList();
-            string display = string.Join(" ", shuffled);
-
-            var sorted = frequencies.OrderBy(kv => kv.Value).ToList();
-            var values = frequencies.Values.ToList();
-            int avg = (int)Math.Round(values.Average());
-
-            string questionText;
-            string correctAnswer;
-
-            switch (questionType)
-            {
-                case 0:
-                    var maxItem0 = sorted.Last();
-                    questionText = $"📊 以下字符中，哪个字符出现次数**最多**？";
-                    correctAnswer = maxItem0.Key.ToString();
-                    break;
-                case 1:
-                    var minItem = sorted.First();
-                    questionText = $"📊 以下字符中，哪个字符出现次数**最少**？";
-                    correctAnswer = minItem.Key.ToString();
-                    break;
-                case 2:
-                    var avgItems = frequencies.Where(kv => kv.Value == avg).ToList();
-                    if (avgItems.Count == 0)
-                    {
-                        var closest = frequencies.OrderBy(kv => Math.Abs(kv.Value - avg)).First();
-                        questionText = $"📊 以下字符中，哪个字符出现次数**最接近平均值**（{avg}）？";
-                        correctAnswer = closest.Key.ToString();
-                    }
-                    else
-                    {
-                        var selected = avgItems[_random.Next(avgItems.Count)];
-                        questionText = $"📊 以下字符中，哪个字符出现次数**等于平均值**（{avg}）？";
-                        correctAnswer = selected.Key.ToString();
-                    }
-                    break;
-                case 3:
-                    var candidates = new List<KeyValuePair<char, int>>();
-                    for (int i = 0; i < sorted.Count; i++)
-                    {
-                        for (int j = i + 1; j < sorted.Count; j++)
-                        {
-                            int sum = sorted[i].Value + sorted[j].Value;
-                            var match = frequencies.FirstOrDefault(kv => kv.Value == sum && kv.Key != sorted[i].Key && kv.Key != sorted[j].Key);
-                            if (match.Key != default)
-                            {
-                                candidates.Add(match);
-                            }
-                        }
-                    }
-                    if (candidates.Count > 0)
-                    {
-                        var selected = candidates[_random.Next(candidates.Count)];
-                        questionText = $"📊 以下字符中，哪个字符的出现次数**等于另外两个字符出现次数之和**？";
-                        correctAnswer = selected.Key.ToString();
-                    }
-                    else
-                    {
-                        var maxItem3 = sorted.Last();
-                        questionText = $"📊 以下字符中，哪个字符出现次数**最多**？";
-                        correctAnswer = maxItem3.Key.ToString();
-                    }
-                    break;
-                case 4:
-                default:
-                    if (sorted.Count >= 2)
-                    {
-                        int secondMax = sorted[sorted.Count - 2].Value;
-                        var match = frequencies.FirstOrDefault(kv => kv.Value == secondMax + 1);
-                        if (match.Key != default)
-                        {
-                            questionText = $"📊 以下字符中，哪个字符的出现次数**等于第二多的字符出现次数+1**？";
-                            correctAnswer = match.Key.ToString();
-                        }
-                        else
-                        {
-                            var maxItem4 = sorted.Last();
-                            questionText = $"📊 以下字符中，哪个字符出现次数**最多**？";
-                            correctAnswer = maxItem4.Key.ToString();
-                        }
-                    }
-                    else
-                    {
-                        var maxItem4 = sorted.Last();
-                        questionText = $"📊 以下字符中，哪个字符出现次数**最多**？";
-                        correctAnswer = maxItem4.Key.ToString();
-                    }
-                    break;
-            }
-
-            var options = frequencies.Keys.Select(c => c.ToString()).ToList();
-            options = options.OrderBy(_ => _random.Next()).ToList();
+            var options = GenerateNumberOptions(cubeCount, 4 + Math.Min(difficulty / 10, 3), 5 + difficulty / 5);
 
             return new Dictionary<string, object>
             {
-                ["type"] = "charFrequency",
+                ["type"] = "threeView",
                 ["level"] = level,
-                ["question"] = questionText + $"<br><span style='font-size:1.2rem;font-weight:bold;color:#fff;letter-spacing:4px;'>{display}</span>",
-                ["display"] = display,
-                ["correctAnswer"] = correctAnswer,
+                ["question"] = $"📐 根据三视图，计算共有多少个正方体？<br><span style='color:rgba(255,255,255,0.12);font-size:0.7rem;'>■ 代表一个正方体</span>",
+                ["topView"] = topView,
+                ["frontView"] = frontView,
+                ["sideView"] = sideView,
+                ["correctAnswer"] = cubeCount.ToString(),
                 ["options"] = options,
                 ["timeLimit"] = timeLimit,
                 ["typesCompleted"] = typesCompleted,
-                ["funMessage"] = GetFunMessage("charFrequency")
+                ["funMessage"] = GetFunMessage("threeView")
             };
+        }
+
+        private (int[][] top, int[][] front, int[][] side) GenerateViews(int cubeCount)
+        {
+            int rows = 4 + _random.Next(3);
+            int cols = 4 + _random.Next(3);
+            int maxHeight = 3 + _random.Next(2);
+
+            var grid = new bool[maxHeight, rows, cols];
+            int placed = 0;
+
+            for (int h = 0; h < maxHeight && placed < cubeCount; h++)
+            {
+                int maxPerLayer = Math.Min(cubeCount - placed, rows * cols);
+                int targetThisLayer = (int)(maxPerLayer * (1.0 - h * 0.2));
+
+                int attempts = 0;
+                while (placed < cubeCount && attempts < 1000)
+                {
+                    int r = _random.Next(rows);
+                    int c = _random.Next(cols);
+
+                    if (h > 0 && !grid[h - 1, r, c])
+                    {
+                        attempts++;
+                        continue;
+                    }
+
+                    if (!grid[h, r, c])
+                    {
+                        grid[h, r, c] = true;
+                        placed++;
+                    }
+                    attempts++;
+                }
+            }
+
+            while (placed < cubeCount)
+            {
+                int r = _random.Next(rows);
+                int c = _random.Next(cols);
+                int h = _random.Next(maxHeight);
+
+                if (!grid[h, r, c])
+                {
+                    bool hasSupport = h == 0 || grid[h - 1, r, c];
+                    if (hasSupport)
+                    {
+                        grid[h, r, c] = true;
+                        placed++;
+                    }
+                }
+            }
+
+            // 俯视图
+            var top = new int[rows][];
+            for (int r = 0; r < rows; r++)
+            {
+                top[r] = new int[cols];
+                for (int c = 0; c < cols; c++)
+                {
+                    bool has = false;
+                    for (int h = 0; h < maxHeight; h++)
+                    {
+                        if (grid[h, r, c]) { has = true; break; }
+                    }
+                    top[r][c] = has ? 1 : 0;
+                }
+            }
+
+            // 正视图
+            var front = new int[maxHeight][];
+            for (int h = 0; h < maxHeight; h++)
+            {
+                front[h] = new int[cols];
+                for (int c = 0; c < cols; c++)
+                {
+                    bool has = false;
+                    for (int r = 0; r < rows; r++)
+                    {
+                        if (grid[h, r, c]) { has = true; break; }
+                    }
+                    front[h][c] = has ? 1 : 0;
+                }
+            }
+
+            // 侧视图（左侧）
+            var side = new int[maxHeight][];
+            for (int h = 0; h < maxHeight; h++)
+            {
+                side[h] = new int[rows];
+                for (int r = 0; r < rows; r++)
+                {
+                    bool has = false;
+                    for (int c = 0; c < cols; c++)
+                    {
+                        if (grid[h, r, c]) { has = true; break; }
+                    }
+                    side[h][r] = has ? 1 : 0;
+                }
+            }
+
+            return (top, front, side);
+        }
+
+        private string ViewsToHtml(int[][] view, string title)
+        {
+            var sb = new StringBuilder();
+            sb.Append($"<div style='display:inline-block;margin:0 6px;'>");
+            sb.Append($"<div style='color:rgba(255,255,255,0.08);font-size:0.55rem;text-align:center;margin-bottom:2px;'>{title}</div>");
+            sb.Append("<div style='display:grid;grid-template-columns:");
+
+            int cols = view[0].Length;
+            for (int i = 0; i < cols; i++)
+            {
+                sb.Append(" 20px");
+            }
+            sb.Append(";gap:2px;'>");
+
+            for (int r = 0; r < view.Length; r++)
+            {
+                for (int c = 0; c < view[r].Length; c++)
+                {
+                    if (view[r][c] == 1)
+                    {
+                        sb.Append($"<div style='width:20px;height:20px;background:#8B5CF6;border-radius:2px;'></div>");
+                    }
+                    else
+                    {
+                        sb.Append($"<div style='width:20px;height:20px;background:rgba(255,255,255,0.02);border-radius:2px;'></div>");
+                    }
+                }
+            }
+
+            sb.Append("</div></div>");
+            return sb.ToString();
         }
 
         // ============================================================
@@ -2160,7 +2181,6 @@ namespace MyPersonalWebsite.Controllers
             else if (difficulty <= 80) { count = 12 + _random.Next(5); timeLimit = 15; }
             else { count = 16 + _random.Next(8); timeLimit = 18; }
 
-            // 生成随机图形序列
             string[] shapes = { "●", "■", "▲", "★", "◆", "♥", "♦", "♣", "♠" };
             var selected = new List<string>();
             for (int i = 0; i < count; i++)
@@ -2168,7 +2188,6 @@ namespace MyPersonalWebsite.Controllers
                 selected.Add(shapes[_random.Next(shapes.Length)]);
             }
 
-            // 选择一个目标图形
             string target = selected[_random.Next(selected.Count)];
             int targetCount = selected.Count(s => s == target);
 
@@ -2325,257 +2344,250 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // ⭐ 题型 18：找不同图形
+        // ⭐ 题型 18：空间折叠
         // ============================================================
-        private object GenerateFindDifferentShape(int level, int difficulty, int typesCompleted)
+        private object GenerateSpaceFolding(int level, int difficulty, int typesCompleted)
         {
-            var shapePool = new string[] { "●", "■", "▲", "★", "◆", "♥", "♦", "♣", "♠", "⬛", "⬜" };
-
-            int shapeCount = 4 + Math.Min(difficulty / 10, 5);
-
-            string differentShape = shapePool[_random.Next(shapePool.Length)];
-
-            string commonShape = shapePool[_random.Next(shapePool.Length)];
-            while (commonShape == differentShape)
+            var foldingPatterns = new List<(int[] layout, string question, string answer)>
             {
-                commonShape = shapePool[_random.Next(shapePool.Length)];
-            }
-
-            var shapes = new List<string>();
-            for (int i = 0; i < shapeCount - 1; i++)
-            {
-                shapes.Add(commonShape);
-            }
-            int insertPos = _random.Next(shapeCount);
-            shapes.Insert(insertPos, differentShape);
-
-            string display = string.Join(" ", shapes);
-
-            int correctAnswer = insertPos;
-
-            var options = new List<string>();
-            for (int i = 0; i < shapeCount; i++)
-            {
-                options.Add($"第{i + 1}个");
-            }
-            if (shapeCount >= 4)
-            {
-                options.Add("没有不同");
-            }
-            options = options.OrderBy(_ => _random.Next()).ToList();
-
-            int timeLimit = Math.Max(5, 12 - difficulty / 10);
-
-            return new Dictionary<string, object>
-            {
-                ["type"] = "findDifference",
-                ["level"] = level,
-                ["question"] = $"🔍 以下图形中，哪一个与其他的不同？<br><span style='font-size:2rem;letter-spacing:12px;'>{display}</span>",
-                ["correctAnswer"] = $"第{correctAnswer + 1}个",
-                ["options"] = options,
-                ["timeLimit"] = timeLimit,
-                ["typesCompleted"] = typesCompleted,
-                ["funMessage"] = GetFunMessage("findDifference")
+                (
+                    new int[] { -1, 4, -1, -1, 3, 0, 1, -1, -1, 5, -1, -1, -1, 2, -1, -1 },
+                    "❓ 下面哪个图形折叠后，【3】和【5】是相对的面？",
+                    "3和5相对"
+                ),
+                (
+                    new int[] { -1, -1, 4, -1, -1, -1, 3, 0, 1, -1, -1, -1, 5, -1, -1, -1 },
+                    "❓ 下面哪个图形折叠后，【4】和【2】是相对的面？",
+                    "4和2相对"
+                ),
+                (
+                    new int[] { -1, -1, -1, -1, -1, 2, -1, -1, -1, 3, 0, 1, -1, -1, 4, -1 },
+                    "❓ 下面哪个图形折叠后，【1】和【4】是相对的面？",
+                    "1和4相对"
+                ),
+                (
+                    new int[] { -1, -1, -1, -1, -1, -1, 4, 5, -1, -1, 3, 0, 1, -1, -1, -1 },
+                    "❓ 下面哪个图形折叠后，【3】和【5】是相邻的面？",
+                    "3和5相邻"
+                ),
+                (
+                    new int[] { -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 2, 3, -1, -1, 4, 0, -1, -1, 5, 1, -1, -1, -1, -1 },
+                    "❓ 下面哪个图形折叠后，【0】和【5】是相对的面？",
+                    "0和5相对"
+                ),
             };
-        }
 
-                // ============================================================
-        // ⭐ 题型 14：立体三视图计数
-        // ============================================================
-        private object GenerateThreeViewCounting(int level, int difficulty, int typesCompleted)
-        {
-            // 根据难度决定方块数量和时间
-            int cubeCount;
+            var allPairs = new string[]
+            {
+                "0和1相对", "0和2相对", "0和3相对", "0和4相对", "0和5相对",
+                "1和2相对", "1和3相对", "1和4相对", "1和5相对",
+                "2和3相对", "2和4相对", "2和5相对",
+                "3和4相对", "3和5相对", "4和5相对",
+                "0和1相邻", "0和2相邻", "0和3相邻", "0和4相邻", "0和5相邻",
+                "1和2相邻", "1和3相邻", "1和4相邻", "1和5相邻",
+                "2和3相邻", "2和4相邻", "2和5相邻",
+                "3和4相邻", "3和5相邻", "4和5相邻",
+            };
+
+            int patternIndex;
+            int optionCount;
             int timeLimit;
 
             if (difficulty <= 20)
             {
-                cubeCount = _random.Next(5, 9);
-                timeLimit = 30;
+                patternIndex = _random.Next(0, 2);
+                optionCount = 4;
+                timeLimit = 15;
             }
             else if (difficulty <= 40)
             {
-                cubeCount = _random.Next(9, 14);
-                timeLimit = 25;
+                patternIndex = _random.Next(0, 3);
+                optionCount = 4;
+                timeLimit = 18;
             }
             else if (difficulty <= 60)
             {
-                cubeCount = _random.Next(14, 19);
+                patternIndex = _random.Next(1, 4);
+                optionCount = 5;
                 timeLimit = 20;
             }
             else if (difficulty <= 80)
             {
-                cubeCount = _random.Next(19, 24);
-                timeLimit = 15;
+                patternIndex = _random.Next(2, 5);
+                optionCount = 5;
+                timeLimit = 22;
             }
             else
             {
-                cubeCount = _random.Next(24, 31);
-                timeLimit = 10;
+                patternIndex = _random.Next(3, 5);
+                optionCount = 6;
+                timeLimit = 25;
             }
 
-            // 生成三视图
-            var views = GenerateViews(cubeCount);
+            var selected = foldingPatterns[patternIndex];
+            int[] layout = selected.layout;
 
-            string topView = ViewsToHtml(views.top, "俯视图");
-            string frontView = ViewsToHtml(views.front, "正视图");
-            string sideView = ViewsToHtml(views.side, "侧视图(左)");
+            string foldingSvg = GenerateFoldingSvg(layout);
 
-            // 生成选项
-            var options = GenerateNumberOptions(cubeCount, 4 + Math.Min(difficulty / 10, 3), 5 + difficulty / 5);
+            var options = new List<string> { selected.answer };
+            var shuffledPairs = allPairs.Where(p => p != selected.answer).OrderBy(_ => _random.Next()).ToList();
+
+            for (int i = 0; i < optionCount - 1 && i < shuffledPairs.Count; i++)
+            {
+                options.Add(shuffledPairs[i]);
+            }
+
+            options = options.OrderBy(_ => _random.Next()).ToList();
 
             return new Dictionary<string, object>
             {
-                ["type"] = "threeView",
+                ["type"] = "spaceFolding",
                 ["level"] = level,
-                ["question"] = $"📐 根据三视图，计算共有多少个正方体？<br><span style='color:rgba(255,255,255,0.12);font-size:0.7rem;'>■ 代表一个正方体</span>",
-                ["topView"] = topView,
-                ["frontView"] = frontView,
-                ["sideView"] = sideView,
-                ["correctAnswer"] = cubeCount.ToString(),
+                ["question"] = $"🧊 下面是一个正方体的展开图，折叠后哪个描述正确？<br><span style='color:rgba(255,255,255,0.12);font-size:0.7rem;'>数字代表不同面</span>",
+                ["foldingSvg"] = foldingSvg,
+                ["correctAnswer"] = selected.answer,
                 ["options"] = options,
                 ["timeLimit"] = timeLimit,
                 ["typesCompleted"] = typesCompleted,
-                ["funMessage"] = GetFunMessage("threeView")
+                ["funMessage"] = GetFunMessage("spaceFolding")
             };
         }
 
-        // ⭐ 生成三视图数据（侧视图 = 左侧视图）
-        private (int[][] top, int[][] front, int[][] side) GenerateViews(int cubeCount)
+        private string GenerateFoldingSvg(int[] layout)
         {
-            int rows = 4 + _random.Next(3);
-            int cols = 4 + _random.Next(3);
-            int maxHeight = 3 + _random.Next(2);
+            int cols = 4;
+            int rows = 4;
+            int cellSize = 50;
+            int gap = 2;
 
-            var grid = new bool[maxHeight, rows, cols];
-            int placed = 0;
+            var sb = new StringBuilder();
+            sb.AppendLine($"<svg xmlns='http://www.w3.org/2000/svg' width='{cols * cellSize + 20}' height='{rows * cellSize + 20}' viewBox='0 0 {cols * cellSize + 20} {rows * cellSize + 20}'>");
+            sb.AppendLine($"<rect width='{cols * cellSize + 20}' height='{rows * cellSize + 20}' rx='8' fill='rgba(255,255,255,0.02)' stroke='rgba(255,255,255,0.04)' stroke-width='1'/>");
 
-            for (int h = 0; h < maxHeight && placed < cubeCount; h++)
+            string[] colors = { "#8B5CF6", "#EC4899", "#F59E0B", "#06B6D4", "#34D399", "#F472B6" };
+
+            for (int i = 0; i < layout.Length; i++)
             {
-                int maxPerLayer = Math.Min(cubeCount - placed, rows * cols);
-                int targetThisLayer = (int)(maxPerLayer * (1.0 - h * 0.2));
+                if (layout[i] == -1) continue;
 
-                int attempts = 0;
-                while (placed < cubeCount && attempts < 1000)
-                {
-                    int r = _random.Next(rows);
-                    int c = _random.Next(cols);
+                int r = i / cols;
+                int c = i % cols;
+                int x = 10 + c * cellSize + gap / 2;
+                int y = 10 + r * cellSize + gap / 2;
+                int size = cellSize - gap;
+                int idx = layout[i] % colors.Length;
 
-                    if (h > 0 && !grid[h - 1, r, c])
-                    {
-                        attempts++;
-                        continue;
-                    }
+                string label = layout[i].ToString();
 
-                    if (!grid[h, r, c])
-                    {
-                        grid[h, r, c] = true;
-                        placed++;
-                    }
-                    attempts++;
-                }
+                sb.AppendLine($"<rect x='{x}' y='{y}' width='{size}' height='{size}' rx='4' fill='{colors[idx]}' opacity='0.7' stroke='rgba(255,255,255,0.06)' stroke-width='1'/>");
+                sb.AppendLine($"<text x='{x + size / 2}' y='{y + size / 2 + 6}' text-anchor='middle' font-size='16' font-weight='bold' fill='#fff' opacity='0.9'>{label}</text>");
             }
 
-            while (placed < cubeCount)
-            {
-                int r = _random.Next(rows);
-                int c = _random.Next(cols);
-                int h = _random.Next(maxHeight);
-
-                if (!grid[h, r, c])
-                {
-                    bool hasSupport = h == 0 || grid[h - 1, r, c];
-                    if (hasSupport)
-                    {
-                        grid[h, r, c] = true;
-                        placed++;
-                    }
-                }
-            }
-
-            // 俯视图：从上往下看
-            var top = new int[rows][];
-            for (int r = 0; r < rows; r++)
-            {
-                top[r] = new int[cols];
-                for (int c = 0; c < cols; c++)
-                {
-                    bool has = false;
-                    for (int h = 0; h < maxHeight; h++)
-                    {
-                        if (grid[h, r, c]) { has = true; break; }
-                    }
-                    top[r][c] = has ? 1 : 0;
-                }
-            }
-
-            // 正视图：从前面看
-            var front = new int[maxHeight][];
-            for (int h = 0; h < maxHeight; h++)
-            {
-                front[h] = new int[cols];
-                for (int c = 0; c < cols; c++)
-                {
-                    bool has = false;
-                    for (int r = 0; r < rows; r++)
-                    {
-                        if (grid[h, r, c]) { has = true; break; }
-                    }
-                    front[h][c] = has ? 1 : 0;
-                }
-            }
-
-            // 侧视图：从左侧看
-            var side = new int[maxHeight][];
-            for (int h = 0; h < maxHeight; h++)
-            {
-                side[h] = new int[rows];
-                for (int r = 0; r < rows; r++)
-                {
-                    bool has = false;
-                    for (int c = 0; c < cols; c++)
-                    {
-                        if (grid[h, r, c]) { has = true; break; }
-                    }
-                    side[h][r] = has ? 1 : 0;
-                }
-            }
-
-            return (top, front, side);
+            sb.AppendLine("</svg>");
+            return sb.ToString();
         }
 
-        // ⭐ 视图转HTML（用 ■ 显示）
-        private string ViewsToHtml(int[][] view, string title)
+               // ============================================================
+        // ⭐ 题型 19：颜色三重干扰（纯色版）
+        // ============================================================
+        private object GenerateTripleColorInterference(int level, int difficulty, int typesCompleted)
         {
-            var sb = new StringBuilder();
-            sb.Append($"<div style='display:inline-block;margin:0 6px;'>");
-            sb.Append($"<div style='color:rgba(255,255,255,0.08);font-size:0.55rem;text-align:center;margin-bottom:2px;'>{title}</div>");
-            sb.Append("<div style='display:grid;grid-template-columns:");
-
-            int cols = view[0].Length;
-            for (int i = 0; i < cols; i++)
+            // ⭐ 只用纯色
+            var pureColors = new Dictionary<string, string>
             {
-                sb.Append(" 20px");
-            }
-            sb.Append(";gap:2px;'>");
+                {"红色", "#FF0000"},
+                {"蓝色", "#0000FF"},
+                {"绿色", "#00AA00"},
+                {"黄色", "#FFD700"},
+                {"紫色", "#8800CC"},
+                {"橙色", "#FF6600"},
+                {"粉色", "#FF69B4"},
+                {"青色", "#00CED1"},
+            };
 
-            for (int r = 0; r < view.Length; r++)
+            var colorPool = pureColors.ToArray();
+            var selectedColors = new List<KeyValuePair<string, string>>();
+
+            while (selectedColors.Count < 3)
             {
-                for (int c = 0; c < view[r].Length; c++)
+                var c = colorPool[_random.Next(colorPool.Length)];
+                if (!selectedColors.Any(x => x.Key == c.Key))
                 {
-                    if (view[r][c] == 1)
-                    {
-                        sb.Append($"<div style='width:20px;height:20px;background:#8B5CF6;border-radius:2px;'></div>");
-                    }
-                    else
-                    {
-                        sb.Append($"<div style='width:20px;height:20px;background:rgba(255,255,255,0.02);border-radius:2px;'></div>");
-                    }
+                    selectedColors.Add(c);
                 }
             }
 
-            sb.Append("</div></div>");
-            return sb.ToString();
+            string displayWord = _singleColorWords[_random.Next(_singleColorWords.Length)];
+
+            var shuffledColors = selectedColors.OrderBy(_ => _random.Next()).ToList();
+            var wordColor = shuffledColors[0];
+            var bgColor = shuffledColors[1];
+            var meaningColor = shuffledColors[2];
+
+            // 确保三者不同
+            int maxAttempts = 50;
+            int attempts = 0;
+            while ((bgColor.Key == wordColor.Key || meaningColor.Key == wordColor.Key || meaningColor.Key == bgColor.Key) && attempts < maxAttempts)
+            {
+                shuffledColors = selectedColors.OrderBy(_ => _random.Next()).ToList();
+                wordColor = shuffledColors[0];
+                bgColor = shuffledColors[1];
+                meaningColor = shuffledColors[2];
+                attempts++;
+            }
+
+            if (bgColor.Key == wordColor.Key || meaningColor.Key == wordColor.Key || meaningColor.Key == bgColor.Key)
+            {
+                var allColors = pureColors.ToArray();
+                wordColor = allColors[_random.Next(allColors.Length)];
+                do { bgColor = allColors[_random.Next(allColors.Length)]; } while (bgColor.Key == wordColor.Key);
+                do { meaningColor = allColors[_random.Next(allColors.Length)]; } while (meaningColor.Key == wordColor.Key || meaningColor.Key == bgColor.Key);
+            }
+
+            string[] questions = new[]
+            {
+                $"字的颜色是什么？",
+                $"背景是什么颜色？",
+                $"「{displayWord}」这个字本身是什么颜色的？"
+            };
+
+            int qIndex = _random.Next(3);
+            string questionText = questions[qIndex];
+            string correctAnswer = qIndex == 0 ? wordColor.Key : qIndex == 1 ? bgColor.Key : meaningColor.Key;
+
+            // ⭐ 选项：只用纯色
+            var options = new List<string> { correctAnswer };
+            int optionCount = 4 + Math.Min(difficulty / 10, 3);
+
+            var pureColorNames = pureColors.Keys.ToList();
+            var shuffled = pureColorNames.Where(c => c != correctAnswer).OrderBy(_ => _random.Next()).ToList();
+
+            for (int i = 0; i < Math.Min(optionCount - 1, shuffled.Count); i++)
+            {
+                options.Add(shuffled[i]);
+            }
+
+            options = options.OrderBy(_ => _random.Next()).ToList();
+
+            string displayHtml = $"<div style='background:{bgColor.Value};padding:2rem 3.5rem;border-radius:20px;border:3px solid rgba(255,255,255,0.05);display:inline-block;box-shadow:0 0 60px {bgColor.Value}30;'>";
+            displayHtml += $"<span style='color:{wordColor.Value};font-size:4rem;font-weight:900;text-shadow:0 0 50px {wordColor.Value}50;letter-spacing:10px;'>{displayWord}</span>";
+            displayHtml += "</div>";
+
+            // ⭐ 时间：20秒 → 5秒
+            int timeLimit = Math.Max(5, 20 - difficulty / 7);
+
+            return new Dictionary<string, object>
+            {
+                ["type"] = "tripleColor",
+                ["level"] = level,
+                ["question"] = $"🎯 颜色三重干扰！<br><span style='font-size:0.9rem;color:rgba(255,255,255,0.3);'>{questionText}</span>",
+                ["displayHtml"] = displayHtml,
+                ["correctAnswer"] = correctAnswer,
+                ["options"] = options.OrderBy(_ => _random.Next()).ToList(),
+                ["timeLimit"] = timeLimit,
+                ["typesCompleted"] = typesCompleted,
+                ["funMessage"] = GetFunMessage("tripleColor")
+            };
         }
     }
 }
