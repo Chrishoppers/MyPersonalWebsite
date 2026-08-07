@@ -697,6 +697,10 @@ namespace MyPersonalWebsite.Controllers
             "QUALIFICATION", "RECOGNITION", "SIGNIFICANT", "THOUGHTFUL", "UNBELIEVABLE",
             "VENTURE", "WONDERFUL"
         };
+                // ============================================================
+        // 字母表（用于空缺字母题型）
+        // ============================================================
+        private readonly char[] _alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".ToCharArray();
 
         // ============================================================
         // 构造函数
