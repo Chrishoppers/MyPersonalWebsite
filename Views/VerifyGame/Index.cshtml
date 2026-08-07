@@ -49,14 +49,15 @@
     .options-grid .option-btn.correct { border-color: #28a745; background: rgba(40,167,69,0.08); color: #28a745; }
     .options-grid .option-btn.wrong { border-color: #dc3545; background: rgba(220,53,69,0.08); color: #dc3545; }
 
-    .color-options-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.6rem; width: 100%; max-width: 360px; margin: 0 auto; }
-    .color-options-grid .color-option-btn { padding: 0.5rem 0.3rem; border: 2px solid rgba(255,255,255,0.04); border-radius: 14px; background: rgba(255,255,255,0.02); cursor: pointer; transition: all 0.3s ease; display: flex; flex-direction: column; align-items: center; gap: 4px; }
-    .color-options-grid .color-option-btn:hover:not(:disabled) { border-color: rgba(139,92,246,0.2); background: rgba(139,92,246,0.04); transform: translateY(-2px); }
-    .color-options-grid .color-option-btn:disabled { cursor: not-allowed; opacity: 0.3; }
-    .color-options-grid .color-option-btn .color-block { width: 48px; height: 48px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.06); box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
-    .color-options-grid .color-option-btn .color-label { color: rgba(255,255,255,0.12); font-size: 0.5rem; }
-    .color-options-grid .color-option-btn.correct { border-color: #28a745; background: rgba(40,167,69,0.08); }
-    .color-options-grid .color-option-btn.wrong { border-color: #dc3545; background: rgba(220,53,69,0.08); }
+    /* ⭐ 颜色选项 - 大号色块 */
+    .color-options-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.8rem; width: 100%; max-width: 400px; margin: 0 auto; }
+    .color-options-grid .color-option { padding: 0.8rem 0.3rem; border: 2px solid rgba(255,255,255,0.04); border-radius: 14px; background: rgba(255,255,255,0.02); cursor: pointer; transition: all 0.3s ease; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+    .color-options-grid .color-option:hover:not(.disabled) { border-color: rgba(139,92,246,0.2); background: rgba(139,92,246,0.04); transform: translateY(-2px); }
+    .color-options-grid .color-option.disabled { cursor: not-allowed; opacity: 0.4; }
+    .color-options-grid .color-option .color-block { width: 56px; height: 56px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.06); box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+    .color-options-grid .color-option .color-label { color: rgba(255,255,255,0.2); font-size: 0.7rem; font-weight: 500; }
+    .color-options-grid .color-option.correct { border-color: #28a745; background: rgba(40,167,69,0.08); }
+    .color-options-grid .color-option.wrong { border-color: #dc3545; background: rgba(220,53,69,0.08); }
 
     .timer-section { width: 100%; margin-top: 1rem; }
     .timer-bar { width: 100%; height: 4px; background: rgba(255,255,255,0.04); border-radius: 10px; overflow: hidden; }
@@ -115,6 +116,9 @@
     #sudokuGrid .sudoku-cell.fixed { color: rgba(255,255,255,0.5); }
     #sudokuGrid .sudoku-cell.empty { color: #8B5CF6; background: rgba(139,92,246,0.04); }
 
+    /* ⭐ ASCII 字符画样式 */
+    .ascii-art { font-family: 'Courier New', monospace; font-size: 0.85rem; color: #8B5CF6; white-space: pre; text-align: center; line-height: 1.4; padding: 0.5rem; background: rgba(255,255,255,0.02); border-radius: 12px; border: 1px solid rgba(255,255,255,0.04); }
+
     @@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     @@keyframes slideUp { from { opacity: 0; transform: translateY(20px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
     @@keyframes shake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
@@ -125,7 +129,8 @@
         .challenge-card { padding: 1rem 1rem; min-height: 260px; }
         .options-grid { grid-template-columns: 1fr 1fr; gap: 0.4rem; }
         .color-options-grid { grid-template-columns: repeat(3, 1fr); gap: 0.4rem; }
-        .color-options-grid .color-option-btn .color-block { width: 36px; height: 36px; }
+        .color-options-grid .color-option .color-block { width: 42px; height: 42px; }
+        .color-options-grid .color-option .color-label { font-size: 0.6rem; }
         .status-bar { padding: 0.5rem 0.8rem; justify-content: center; gap: 0.2rem 0.8rem; }
         .status-item { font-size: 0.7rem; }
         .status-item .value { font-size: 1rem; }
@@ -139,6 +144,7 @@
         .puzzle-grid { max-width: 180px; }
         .puzzle-grid .puzzle-cell { font-size: 1.2rem; }
         #sudokuGrid .sudoku-cell { font-size: 1.1rem; padding: 4px; }
+        .ascii-art { font-size: 0.7rem; }
     }
     @@media (max-width: 400px) {
         .game-header h1 { font-size: 1.3rem; }
@@ -147,12 +153,14 @@
         .status-item .value.lives { font-size: 0.9rem; }
         .options-grid .option-btn { font-size: 0.8rem; padding: 0.5rem 0.6rem; }
         .char-btn { font-size: 1.4rem; padding: 0.1rem 0.4rem; }
-        .color-options-grid .color-option-btn .color-block { width: 30px; height: 30px; }
+        .color-options-grid .color-option .color-block { width: 34px; height: 34px; }
+        .color-options-grid .color-option .color-label { font-size: 0.5rem; }
         .puzzle-grid { max-width: 150px; }
         .puzzle-grid .puzzle-cell { font-size: 1rem; }
         .memory-keyboard { gap: 0.2rem; max-width: 180px; }
         .memory-keyboard .key-btn { padding: 0.4rem 0.2rem; font-size: 0.9rem; }
         .memory-keyboard .key-btn.backspace { font-size: 0.7rem; }
+        .ascii-art { font-size: 0.6rem; }
     }
 </style>
 
@@ -192,6 +200,7 @@
         <div class="color-options-grid" id="colorOptionsGrid" style="display:none;"></div>
         <div id="puzzleContainer" style="display:none;width:100%;"><div class="puzzle-grid" id="puzzleGrid"></div></div>
         <div id="sudokuContainer" style="display:none;width:100%;"><div id="sudokuGrid"></div></div>
+        <div id="asciiContainer" style="display:none;width:100%;"><div class="ascii-art" id="asciiArt"></div></div>
 
         <div class="timer-section">
             <div class="timer-bar"><div class="timer-fill" id="timerFill"></div></div>
@@ -245,6 +254,8 @@
         puzzleGrid: document.getElementById('puzzleGrid'),
         sudokuContainer: document.getElementById('sudokuContainer'),
         sudokuGrid: document.getElementById('sudokuGrid'),
+        asciiContainer: document.getElementById('asciiContainer'),
+        asciiArt: document.getElementById('asciiArt'),
         feedback: document.getElementById('feedback'),
         timerFill: document.getElementById('timerFill'),
         timerText: document.getElementById('timerText'),
@@ -253,37 +264,16 @@
         rankList: document.getElementById('rankList')
     };
 
-    // ============================================================
-    // ⭐ 重新开始游戏（修复：完全重置）
-    // ============================================================
     function startGame() {
-        // 清除旧计时器
-        if (gameState.timer) {
-            clearInterval(gameState.timer);
-            gameState.timer = null;
-        }
-
-        // 重置所有状态
-        gameState.level = 1;
-        gameState.score = 0;
-        gameState.lives = 3;
-        gameState.combo = 0;
-        gameState.maxCombo = 0;
-        gameState.passed = 0;
-        gameState.isPlaying = true;
-        gameState.isAnswered = false;
-        gameState.timeLeft = 15;
-        gameState.memoryInput = '';
-        gameState.memoryCorrectAnswer = '';
+        if (gameState.timer) { clearInterval(gameState.timer); gameState.timer = null; }
+        gameState.level = 1; gameState.score = 0; gameState.lives = 3;
+        gameState.combo = 0; gameState.maxCombo = 0; gameState.passed = 0;
+        gameState.isPlaying = true; gameState.isAnswered = false;
+        gameState.timeLeft = 15; gameState.memoryInput = ''; gameState.memoryCorrectAnswer = '';
         gameState.currentChallenge = null;
-
-        // 重置 UI
         dom.rankSection.style.display = 'none';
-        dom.feedback.className = 'feedback';
-        dom.feedback.style.display = 'none';
+        dom.feedback.className = 'feedback'; dom.feedback.style.display = 'none';
         dom.feedback.innerHTML = '';
-
-        // 恢复挑战卡片内容（清除游戏结束界面）
         dom.challengeCard.innerHTML = `
             <div class="type-badge" id="typeBadge">第 1 关</div>
             <div class="question-text" id="questionText">加载中...</div>
@@ -301,14 +291,13 @@
             <div class="color-options-grid" id="colorOptionsGrid" style="display:none;"></div>
             <div id="puzzleContainer" style="display:none;width:100%;"><div class="puzzle-grid" id="puzzleGrid"></div></div>
             <div id="sudokuContainer" style="display:none;width:100%;"><div id="sudokuGrid"></div></div>
+            <div id="asciiContainer" style="display:none;width:100%;"><div class="ascii-art" id="asciiArt"></div></div>
             <div class="timer-section">
                 <div class="timer-bar"><div class="timer-fill" id="timerFill"></div></div>
                 <div class="timer-text" id="timerText">⏱ 15s</div>
             </div>
             <div class="feedback" id="feedback"></div>
         `;
-
-        // 重新获取 DOM 引用（因为 innerHTML 重建了元素）
         dom.typeBadge = document.getElementById('typeBadge');
         dom.questionText = document.getElementById('questionText');
         dom.imageContainer = document.getElementById('imageContainer');
@@ -326,42 +315,31 @@
         dom.puzzleGrid = document.getElementById('puzzleGrid');
         dom.sudokuContainer = document.getElementById('sudokuContainer');
         dom.sudokuGrid = document.getElementById('sudokuGrid');
+        dom.asciiContainer = document.getElementById('asciiContainer');
+        dom.asciiArt = document.getElementById('asciiArt');
         dom.feedback = document.getElementById('feedback');
         dom.timerFill = document.getElementById('timerFill');
         dom.timerText = document.getElementById('timerText');
         dom.challengeCard = document.getElementById('challengeCard');
-
-        // 更新 UI
         updateUI();
         dom.typeNameDisplay.textContent = '📝 第 1 关 · 入门';
-
-        // 加载第一关
         loadChallenge();
     }
 
-    // ============================================================
-    // 加载挑战
-    // ============================================================
     function loadChallenge() {
         if (!gameState.isPlaying) return;
-        if (gameState.level > gameState.totalLevels) {
-            gameWin();
-            return;
-        }
+        if (gameState.level > gameState.totalLevels) { gameWin(); return; }
 
         gameState.isAnswered = false;
         dom.feedback.className = 'feedback';
         dom.feedback.style.display = 'none';
-        dom.optionsGrid.innerHTML = '';
-        dom.optionsGrid.style.display = 'none';
-        dom.colorOptionsGrid.innerHTML = '';
-        dom.colorOptionsGrid.style.display = 'none';
+        dom.optionsGrid.innerHTML = ''; dom.optionsGrid.style.display = 'none';
+        dom.colorOptionsGrid.innerHTML = ''; dom.colorOptionsGrid.style.display = 'none';
         dom.displayTextContainer.style.display = 'none';
-        dom.imageContainer.style.display = 'none';
-        dom.colorContainer.style.display = 'none';
+        dom.imageContainer.style.display = 'none'; dom.colorContainer.style.display = 'none';
         dom.memoryContainer.style.display = 'none';
-        dom.puzzleContainer.style.display = 'none';
-        dom.sudokuContainer.style.display = 'none';
+        dom.puzzleContainer.style.display = 'none'; dom.sudokuContainer.style.display = 'none';
+        dom.asciiContainer.style.display = 'none';
 
         var diffLabel = getDifficultyLabel(gameState.level);
         dom.typeBadge.textContent = '第 ' + gameState.level + ' 关';
@@ -375,42 +353,79 @@
                         dom.typeNameDisplay.textContent = '🧩 ' + data.data.typeName + ' · ' + diffLabel;
                     }
                     renderChallenge(data.data);
-                } else {
-                    showToast('加载挑战失败，请重试', 'error');
-                }
+                } else { showToast('加载挑战失败，请重试', 'error'); }
             })
-            .catch(function() {
-                showToast('网络错误，请刷新重试', 'error');
-            });
+            .catch(function() { showToast('网络错误，请刷新重试', 'error'); });
     }
 
-    // ============================================================
-    // 渲染挑战
-    // ============================================================
     function renderChallenge(challenge) {
         gameState.currentChallenge = challenge;
-
         var typeName = challenge.typeName || challenge.type || '未知';
         var diffLabel = getDifficultyLabel(challenge.level);
         dom.typeBadge.textContent = '第 ' + challenge.level + ' 关 · ' + typeName + ' · ' + diffLabel;
         dom.typeNameDisplay.textContent = '🧩 ' + typeName + ' · ' + diffLabel;
 
-        // ⭐ 关键修复：题目只显示提示，不显示数字
         dom.questionText.innerHTML = challenge.question || '请完成以下挑战';
 
-        dom.imageContainer.style.display = 'none';
-        dom.colorContainer.style.display = 'none';
-        dom.displayTextContainer.style.display = 'none';
-        dom.memoryContainer.style.display = 'none';
-        dom.optionsGrid.style.display = 'none';
-        dom.colorOptionsGrid.style.display = 'none';
-        dom.puzzleContainer.style.display = 'none';
-        dom.sudokuContainer.style.display = 'none';
+        dom.imageContainer.style.display = 'none'; dom.colorContainer.style.display = 'none';
+        dom.displayTextContainer.style.display = 'none'; dom.memoryContainer.style.display = 'none';
+        dom.optionsGrid.style.display = 'none'; dom.colorOptionsGrid.style.display = 'none';
+        dom.puzzleContainer.style.display = 'none'; dom.sudokuContainer.style.display = 'none';
+        dom.asciiContainer.style.display = 'none';
 
         if (challenge.imageSvg) {
             dom.imageContainer.style.display = 'block';
             dom.captchaImage.innerHTML = challenge.imageSvg;
         }
+
+        // ⭐ 图形旋转 - 显示 SVG
+        if (challenge.type === 'rotate' && challenge.originalSvg) {
+            dom.imageContainer.style.display = 'block';
+            dom.captchaImage.innerHTML = challenge.originalSvg;
+            
+            dom.optionsGrid.style.display = 'grid';
+            dom.optionsGrid.innerHTML = '';
+            var letters = ['A', 'B', 'C', 'D', 'E', 'F'];
+            challenge.options.forEach(function(opt, idx) {
+                var btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.textContent = (idx < letters.length ? letters[idx] + '. ' : '') + opt;
+                btn.dataset.answer = opt;
+                btn.addEventListener('click', function() {
+                    if (gameState.isAnswered) return;
+                    submitAnswer(challenge, this.dataset.answer, this);
+                });
+                dom.optionsGrid.appendChild(btn);
+            });
+            startTimer(challenge.timeLimit || 15);
+            return;
+        }
+
+        // ⭐ 立体计数 - ASCII 字符画
+        if (challenge.type === 'shapeCount' && challenge.correctAnswer) {
+            dom.asciiContainer.style.display = 'block';
+            dom.asciiArt.textContent = challenge.question.replace(/<br>.*$/, '').replace('📐 下图中共有多少个正方体？', '');
+            // 实际上后端已经包含了完整的显示，直接用 question
+            dom.questionText.innerHTML = challenge.question;
+            
+            dom.optionsGrid.style.display = 'grid';
+            dom.optionsGrid.innerHTML = '';
+            var letters = ['A', 'B', 'C', 'D', 'E', 'F'];
+            challenge.options.forEach(function(opt, idx) {
+                var btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.textContent = (idx < letters.length ? letters[idx] + '. ' : '') + opt;
+                btn.dataset.answer = opt;
+                btn.addEventListener('click', function() {
+                    if (gameState.isAnswered) return;
+                    submitAnswer(challenge, this.dataset.answer, this);
+                });
+                dom.optionsGrid.appendChild(btn);
+            });
+            startTimer(challenge.timeLimit || 15);
+            return;
+        }
+
         if (challenge.displayHtml) {
             dom.colorContainer.style.display = 'block';
             dom.colorDisplay.innerHTML = challenge.displayHtml;
@@ -420,7 +435,7 @@
             dom.displayText.innerHTML = challenge.displayText;
         }
 
-        // ===== 数字记忆（⭐ 修复：题目不显示数字，数字只在 displayText 中显示） =====
+        // ===== 数字记忆 =====
         if (challenge.type === 'memory' && challenge.keyboardRows) {
             dom.memoryContainer.style.display = 'block';
             dom.memoryInputDisplay.style.display = 'none';
@@ -433,17 +448,14 @@
             renderMemoryKeyboard(challenge.keyboardRows);
 
             if (challenge.displayNumber) {
-                // ⭐ 题目只显示提示文字
                 dom.questionText.innerHTML = '🧠 记住下面显示的数字';
-
                 dom.displayTextContainer.style.display = 'block';
                 dom.displayText.textContent = challenge.displayNumber;
                 dom.displayText.style.cssText = 'font-size:3rem;font-weight:bold;color:#8B5CF6;padding:1.5rem;margin:0.5rem 0;background:rgba(139,92,246,0.04);border-radius:16px;border:1px solid rgba(139,92,246,0.06);text-align:center;letter-spacing:12px;';
 
                 var memoryTime = challenge.memoryTime || 5;
                 dom.timerText.textContent = '⏱ 记忆 ' + memoryTime + 's';
-                dom.timerFill.style.width = '100%';
-                dom.timerFill.className = 'timer-fill';
+                dom.timerFill.style.width = '100%'; dom.timerFill.className = 'timer-fill';
 
                 var memInterval = setInterval(function() {
                     memoryTime--;
@@ -454,7 +466,6 @@
                     else if (pct < 50) dom.timerFill.classList.add('warning');
                     if (memoryTime <= 0) {
                         clearInterval(memInterval);
-                        // ⭐ 记忆结束：数字消失，显示输入框
                         dom.displayText.textContent = '✏️ 输入你记住的数字';
                         dom.displayText.style.cssText = 'font-size:1.2rem;color:rgba(255,255,255,0.3);padding:0.5rem;margin:0.5rem 0;text-align:center;';
                         dom.memoryInputDisplay.style.display = 'block';
@@ -462,8 +473,7 @@
                         dom.memoryKeyboard.style.display = 'grid';
                         dom.memoryContainer.querySelectorAll('.btn-memory').forEach(function(b) { b.style.display = 'inline-block'; });
                         dom.timerText.textContent = '⏱ ' + (challenge.timeLimit || 15) + 's';
-                        dom.timerFill.style.width = '100%';
-                        dom.timerFill.className = 'timer-fill';
+                        dom.timerFill.style.width = '100%'; dom.timerFill.className = 'timer-fill';
                         startTimer(challenge.timeLimit || 15);
                     }
                 }, 1000);
@@ -471,17 +481,21 @@
             }
         }
 
-        // ===== 颜色混合 =====
+        // ===== 颜色混合（⭐ 只显示色块，不显示 A/B/C/D） =====
         if (challenge.type === 'colorMix' && challenge.optionsHtml) {
             dom.colorOptionsGrid.style.display = 'grid';
             dom.colorOptionsGrid.innerHTML = challenge.optionsHtml;
-            dom.colorOptionsGrid.querySelectorAll('.color-option').forEach(function(el) {
+            dom.optionsGrid.style.display = 'none';
+            var colorOptions = dom.colorOptionsGrid.querySelectorAll('.color-option');
+            colorOptions.forEach(function(el) {
                 el.addEventListener('click', function() {
                     if (gameState.isAnswered) return;
                     var answer = this.dataset.color;
                     if (answer) submitColorMixAnswer(challenge, answer, this);
                 });
             });
+            startTimer(challenge.timeLimit || 15);
+            return;
         }
 
         // ===== 华容道 =====
@@ -526,8 +540,7 @@
 
             var displayTime = challenge.displayTime || 3;
             dom.timerText.textContent = '⏱ 记忆 ' + displayTime + 's';
-            dom.timerFill.style.width = '100%';
-            dom.timerFill.className = 'timer-fill';
+            dom.timerFill.style.width = '100%'; dom.timerFill.className = 'timer-fill';
 
             var countdownInterval = setInterval(function() {
                 displayTime--;
@@ -583,11 +596,11 @@
             startTimer(challenge.timeLimit || 60);
             return;
         }
-        // ===== 字符频率统计（新增） =====
+
+        // ===== 字符频率统计 =====
         if (challenge.type === 'charFrequency' && challenge.options) {
             dom.optionsGrid.style.display = 'grid';
             dom.optionsGrid.innerHTML = '';
-            
             var letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
             challenge.options.forEach(function(opt, idx) {
                 var btn = document.createElement('button');
@@ -600,7 +613,6 @@
                 });
                 dom.optionsGrid.appendChild(btn);
             });
-            
             startTimer(challenge.timeLimit || 15);
             return;
         }
@@ -725,20 +737,18 @@
         handleAnswerResult(challenge, isCorrect);
     }
 
+    // ⭐ 颜色混合提交（点击色块）
     function submitColorMixAnswer(challenge, answer, element) {
         if (gameState.isAnswered) return;
         var isCorrect = answer === challenge.correctAnswer;
         dom.colorOptionsGrid.querySelectorAll('.color-option').forEach(function(el) {
-            el.style.pointerEvents = 'none';
-            el.style.opacity = '0.5';
+            el.classList.add('disabled');
             if (el.dataset.color === challenge.correctAnswer) {
-                el.style.borderColor = '#28a745';
-                el.style.background = 'rgba(40,167,69,0.08)';
+                el.classList.add('correct');
             }
         });
         if (!isCorrect) {
-            element.style.borderColor = '#dc3545';
-            element.style.background = 'rgba(220,53,69,0.08)';
+            element.classList.add('wrong');
             dom.challengeCard.classList.add('shake');
             setTimeout(function() { dom.challengeCard.classList.remove('shake'); }, 500);
         }
@@ -953,11 +963,12 @@
     function disableAllInteractions() {
         dom.optionsGrid.querySelectorAll('.option-btn').forEach(function(b) { b.disabled = true; });
         dom.colorOptionsGrid.querySelectorAll('.color-option').forEach(function(el) {
-            el.style.pointerEvents = 'none';
+            el.classList.add('disabled');
         });
         dom.memoryKeyboard.querySelectorAll('.key-btn').forEach(function(b) { b.disabled = true; });
         dom.memoryContainer.querySelectorAll('.btn-memory').forEach(function(b) { b.disabled = true; });
         dom.puzzleGrid.querySelectorAll('.puzzle-cell').forEach(function(cell) { cell.onclick = null; });
+        dom.sudokuGrid.querySelectorAll('.option-btn').forEach(function(b) { b.disabled = true; });
     }
 
     function showFeedback(isCorrect, points, funMessage) {
@@ -1034,9 +1045,6 @@
             });
     }
 
-    // ============================================================
-    // ⭐ 游戏结束（修复：使用 restartGame 替代 startGame）
-    // ============================================================
     function gameOver() {
         gameState.isPlaying = false;
         clearInterval(gameState.timer);
@@ -1078,9 +1086,6 @@
         saveAndShowRanking();
     }
 
-    // ============================================================
-    // ⭐ 重新开始（刷新页面方式，最简单可靠）
-    // ============================================================
     function restartGame() {
         window.location.reload();
     }
@@ -1098,11 +1103,7 @@
         }, 3000);
     }
 
-    // ============================================================
-    // 启动
-    // ============================================================
     document.addEventListener('DOMContentLoaded', function() {
-        // 重置状态并开始
         gameState.isPlaying = true;
         startGame();
     });
