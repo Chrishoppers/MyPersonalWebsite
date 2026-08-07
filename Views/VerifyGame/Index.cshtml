@@ -10,14 +10,13 @@
     .game-header h1 { font-size: 2.2rem; font-weight: 800; background: linear-gradient(135deg, #8B5CF6 0%, #EC4899 50%, #F59E0B 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin: 0; }
     .game-header .subtitle { color: rgba(255,255,255,0.15); font-size: 0.85rem; }
     .game-header .type-badge-header { display: inline-block; margin-top: 0.2rem; padding: 0.15rem 1.2rem; border-radius: 20px; background: rgba(139,92,246,0.08); color: #8B5CF6; font-size: 0.75rem; border: 1px solid rgba(139,92,246,0.04); }
-    /* 装饰粒子 */
     .header-particle { position: absolute; font-size: 0.6rem; opacity: 0.1; animation: floatParticle 10s infinite linear; pointer-events: none; }
     .header-particle:nth-child(1) { left: 5%; top: 10%; animation-delay: 0s; }
     .header-particle:nth-child(2) { left: 15%; top: 30%; animation-delay: 2s; }
     .header-particle:nth-child(3) { left: 85%; top: 20%; animation-delay: 4s; }
     .header-particle:nth-child(4) { left: 75%; top: 60%; animation-delay: 1s; }
     .header-particle:nth-child(5) { left: 90%; top: 80%; animation-delay: 3s; }
-    @keyframes floatParticle { 0% { transform: translateY(0) rotate(0deg); opacity: 0.05; } 50% { opacity: 0.15; } 100% { transform: translateY(-30px) rotate(180deg); opacity: 0.05; } }
+    @@keyframes floatParticle { 0% { transform: translateY(0) rotate(0deg); opacity: 0.05; } 50% { opacity: 0.15; } 100% { transform: translateY(-30px) rotate(180deg); opacity: 0.05; } }
 
     .status-bar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.3rem 1.2rem; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.04); border-radius: 16px; padding: 0.8rem 1.5rem; margin-bottom: 1rem; }
     .status-item { color: rgba(255,255,255,0.25); font-size: 0.85rem; display: flex; align-items: center; gap: 0.3rem; }
@@ -40,7 +39,6 @@
     .challenge-card .display-text-container { width: 100%; display: none; margin: 0.2rem 0 0.8rem; position: relative; z-index: 1; }
     .challenge-card .display-text-container .display-text { font-size: 1.4rem; padding: 0.5rem 1.5rem; margin: 0.2rem 0 0.8rem; line-height: 2.2; text-align: center; font-family: 'Courier New', monospace; letter-spacing: 3px; width: 100%; }
 
-    /* 旋转对比容器 */
     .rotate-compare { display: flex; gap: 1.5rem; justify-content: center; align-items: center; flex-wrap: wrap; padding: 0.5rem 0; }
     .rotate-compare .rotate-item { text-align: center; }
     .rotate-compare .rotate-item .label { color: rgba(255,255,255,0.12); font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.2rem; display: block; }
@@ -91,7 +89,7 @@
 
     .game-over { text-align: center; padding: 1.5rem 0.5rem; width: 100%; position: relative; z-index: 1; }
     .game-over .big-icon { font-size: 4rem; margin-bottom: 0.3rem; animation: bounce 1s ease infinite; }
-    @keyframes bounce { 0%,100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+    @@keyframes bounce { 0%,100% { transform: scale(1); } 50% { transform: scale(1.1); } }
     .game-over .title { color: #fff; font-size: 1.8rem; font-weight: 700; margin-bottom: 0.2rem; }
     .game-over .sub { color: rgba(255,255,255,0.2); font-size: 0.95rem; margin-bottom: 0.5rem; }
     .game-over .final-score { font-size: 3rem; font-weight: 800; color: #F59E0B; margin: 0.3rem 0; }
@@ -137,12 +135,12 @@
 
     .ascii-art { font-family: 'Courier New', monospace; font-size: 0.85rem; color: #8B5CF6; white-space: pre; text-align: center; line-height: 1.4; padding: 0.5rem; background: rgba(255,255,255,0.02); border-radius: 12px; border: 1px solid rgba(255,255,255,0.04); }
 
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-    @keyframes slideUp { from { opacity: 0; transform: translateY(20px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
-    @keyframes shake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
+    @@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    @@keyframes slideUp { from { opacity: 0; transform: translateY(20px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+    @@keyframes shake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
     .shake { animation: shake 0.4s ease; }
 
-    @media (max-width: 640px) {
+    @@media (max-width: 640px) {
         .game-header h1 { font-size: 1.6rem; }
         .challenge-card { padding: 1rem 1rem; min-height: 260px; }
         .options-grid { grid-template-columns: 1fr 1fr; gap: 0.4rem; }
@@ -166,7 +164,7 @@
         .rotate-compare { gap: 0.8rem; }
         .rotate-compare .rotate-item svg { width: 80px; height: 80px; }
     }
-    @media (max-width: 400px) {
+    @@media (max-width: 400px) {
         .game-header h1 { font-size: 1.3rem; }
         .status-item { font-size: 0.6rem; }
         .status-item .value { font-size: 0.85rem; }
