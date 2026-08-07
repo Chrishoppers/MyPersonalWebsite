@@ -36,7 +36,7 @@ namespace MyPersonalWebsite.Controllers
             {"粉红", "#FFB6C1"}, {"米色", "#F5F5DC"}, {"卡其", "#F0E68C"}, {"珊瑚", "#FF7F50"},
             {"青绿", "#008B8B"}, {"靛青", "#4B0082"}, {"藏青", "#000080"}, {"酒红", "#800020"},
             {"橄榄绿", "#556B2F"}, {"石板灰", "#708090"}, {"杏色", "#FFDAB9"}, {"薰衣草", "#E6E6FA"},
-            {"紫藤", "#C9A0DC"}, {"樱粉", "#FFB7C5"},  {"奶油", "#FFFDD0"},
+            {"紫藤", "#C9A0DC"}, {"樱粉", "#FFB7C5"}, {"奶油", "#FFFDD0"},
             {"浅绿", "#90EE90"}, {"浅蓝", "#ADD8E6"}, {"浅紫", "#D8BFD8"}, {"浅黄", "#FFFFE0"},
             {"浅橙", "#FFDAB9"}, {"浅灰", "#D3D3D3"}, {"深灰", "#A9A9A9"}, {"墨绿", "#006400"},
             {"海军蓝", "#000080"}, {"克莱因蓝", "#002FA7"}, {"蒂芙尼蓝", "#81D8D0"},
@@ -46,13 +46,13 @@ namespace MyPersonalWebsite.Controllers
             {"荧光粉", "#FF1493"}, {"荧光绿", "#00FF00"}, {"荧光黄", "#CCFF00"}, {"荧光橙", "#FF6B00"},
             {"暗红", "#8B1A1A"}, {"暗蓝", "#1A2A6B"}, {"暗绿", "#1A4A2A"}, {"暗紫", "#4A1A6B"},
             {"桃色", "#FFDAB9"}, {"珊瑚粉", "#F08080"}, {"橙黄", "#FFA500"}, {"柠檬", "#FFF44F"},
-            {"薄荷", "#98FF98"}, {"海蓝", "#2E8B57"}, {"天空", "#87CEEB"}, {"薰衣草紫", "#E6E6FA"},
+            {"海蓝", "#2E8B57"}, {"天空", "#87CEEB"}, {"薰衣草紫", "#E6E6FA"},
         };
 
         private readonly string[] _colorNames;
         private readonly string[] _singleColorWords = { "红", "蓝", "绿", "黄", "紫", "橙", "粉", "青", "灰", "棕" };
 
-                private readonly Dictionary<string, string> _colorDisplayName = new()
+        private readonly Dictionary<string, string> _colorDisplayName = new()
         {
             {"红色", "红色"}, {"深红", "深红"}, {"粉色", "粉色"}, {"浅粉", "浅粉"},
             {"蓝色", "蓝色"}, {"深蓝", "深蓝"}, {"天蓝", "天蓝"}, {"青色", "青色"},
@@ -80,12 +80,13 @@ namespace MyPersonalWebsite.Controllers
             {"桃色", "桃色"}, {"珊瑚粉", "珊瑚粉"}, {"橙黄", "橙黄"}, {"柠檬", "柠檬"},
             {"海蓝", "海蓝"}, {"天空", "天空"}, {"薰衣草紫", "薰衣草紫"},
         };
+
         // ============================================================
         // 真假判断题库
         // ============================================================
         private readonly (string statement, bool isTrue, int minLevel, int maxLevel)[] _trueFalseQuestions = new (string, bool, int, int)[]
         {
-            // 入门 (1-20)
+            // 入门 (1-20) - 60题
             ("地球是球体", true, 1, 20),
             ("太阳从东方升起", true, 1, 20),
             ("水在标准大气压下0度结冰", true, 1, 20),
@@ -116,6 +117,16 @@ namespace MyPersonalWebsite.Controllers
             ("声音在真空中无法传播", true, 1, 20),
             ("光速是已知最快的速度", true, 1, 20),
             ("植物需要阳光才能生长", true, 1, 20),
+            ("人类需要食物才能生存", true, 1, 20),
+            ("鱼离开水会死亡", true, 1, 20),
+            ("鸟类有羽毛", true, 1, 20),
+            ("哺乳动物用肺呼吸", true, 1, 20),
+            ("鱼类用鳃呼吸", true, 1, 20),
+            ("昆虫有六条腿", true, 1, 20),
+            ("蜘蛛有八条腿", true, 1, 20),
+            ("地球有磁场", true, 1, 20),
+            ("月球上有环形山", true, 1, 20),
+            ("太阳系有8大行星", true, 1, 20),
             ("太阳从西方升起", false, 1, 20),
             ("月亮是恒星", false, 1, 20),
             ("蜘蛛是昆虫", false, 1, 20),
@@ -140,7 +151,7 @@ namespace MyPersonalWebsite.Controllers
             ("水是黑色的", false, 1, 20),
             ("所有花都是红色的", false, 1, 20),
 
-            // 困难 (21-40)
+            // 困难 (21-40) - 60题
             ("鲸鱼是哺乳动物", true, 21, 40),
             ("光速是宇宙中已知的最快速度", true, 21, 40),
             ("2是最小的质数", true, 21, 40),
@@ -203,7 +214,7 @@ namespace MyPersonalWebsite.Controllers
             ("三个连续整数的积能被6整除", true, 21, 40),
             ("所有偶数都是合数", false, 21, 40),
 
-            // 噩梦 (41-60)
+            // 噩梦 (41-60) - 60题
             ("如果今天是周三，那么后天是周五", true, 41, 60),
             ("如果今天是周一，那么昨天是周日", true, 41, 60),
             ("如果今天是周五，那么明天是周六", true, 41, 60),
@@ -267,7 +278,7 @@ namespace MyPersonalWebsite.Controllers
             ("0的相反数是0", true, 41, 60),
             ("所有自然数都是整数", true, 41, 60),
 
-            // 地狱 (61-80)
+            // 地狱 (61-80) - 60题
             ("如果a和b都是正整数，且a+b是奇数，则a和b一奇一偶", true, 61, 80),
             ("如果a和b都是正整数，且a+b是偶数，则a和b同奇同偶", true, 61, 80),
             ("如果a和b都是正整数，且a×b是奇数，则a和b都是奇数", true, 61, 80),
@@ -330,7 +341,7 @@ namespace MyPersonalWebsite.Controllers
             ("有理数集在数轴上是稠密的", true, 61, 80),
             ("无理数集在数轴上是稠密的", true, 61, 80),
 
-            // 传说 (81-100)
+            // 传说 (81-100) - 60题
             ("如果a和b都是实数，且a²=b²，则a=b", false, 81, 100),
             ("如果a和b都是实数，且a³=b³，则a=b", true, 81, 100),
             ("如果a和b都是正实数，且a/b=b/a，则a=b", true, 81, 100),
@@ -614,7 +625,7 @@ namespace MyPersonalWebsite.Controllers
         };
 
         // ============================================================
-        // 英文单词库（用于空缺字母）
+        // 英文单词库
         // ============================================================
         private readonly string[] _englishWords = new string[]
         {
@@ -679,7 +690,7 @@ namespace MyPersonalWebsite.Controllers
             {"colorMix", new[]{"🎨 色彩炼金术！", "🌈 颜色魔法师！", "✨ 视觉艺术！"}},
             {"trueFalse", new[]{"⚖️ 真相之神！", "🧐 明察秋毫！", "🎯 一语中的！"}},
             {"puzzle", new[]{"🧩 拼图大师！", "🎯 空间掌控者！", "✨ 华容道之王！"}},
-             {"charFrequency", new[]{"📊 统计大师！", "🧮 人形计算器！", "🎯 精准分析！"}},
+            {"charFrequency", new[]{"📊 统计大师！", "🧮 人形计算器！", "🎯 精准分析！"}},
             {"shapeCount", new[]{"📐 立体视觉！", "🧊 空间感知！", "✨ 三维大师！"}},
             {"inverseColor", new[]{"🎨 视觉之神！", "🌈 火眼金睛！", "✨ 色彩大师！"}},
             {"rotate", new[]{"🔄 空间之神！", "🧠 超脑！", "✨ 旋转之王！"}},
@@ -840,10 +851,26 @@ namespace MyPersonalWebsite.Controllers
 
             string[] typeNames = new string[]
             {
-                "文字识别", "算术计算", "汉字笔画", "颜色识别", "找不同",
-                "倒序识别", "空缺字母", "时间计算", "成语填空", "数字记忆",
-                "找规律", "颜色混合", "真假判断", "数字华容道", "字符频率",
-                "立体计数", "反色识别", "图形旋转", "找不同图形", "颜色三重干扰"
+                "文字识别",      // 0
+                "算术计算",      // 1
+                "汉字笔画",      // 2
+                "颜色识别",      // 3
+                "找不同",        // 4
+                "倒序识别",      // 5
+                "空缺字母",      // 6
+                "时间计算",      // 7
+                "成语填空",      // 8
+                "数字记忆",      // 9
+                "找规律",        // 10
+                "颜色混合",      // 11
+                "真假判断",      // 12
+                "数字华容道",    // 13
+                "字符频率",      // 14
+                "立体计数",      // 15
+                "反色识别",      // 16
+                "图形旋转",      // 17
+                "找不同图形",    // 18
+                "颜色三重干扰"   // 19
             };
 
             object result;
@@ -1265,17 +1292,17 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ⭐ 生成颜色选项列表（方形色块）
-        private string GenerateColorOptionsHtml(List<string> colorNames, int size = 48)
+        private string GenerateColorOptionsHtml(List<string> colorNames, int size = 56)
         {
             var sb = new StringBuilder();
-            sb.Append("<div style='display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-width:320px;margin:0 auto;'>");
+            sb.Append("<div style='display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-width:360px;margin:0 auto;'>");
 
             foreach (var color in colorNames)
             {
                 var displayName = _colorDisplayName.ContainsKey(color) ? _colorDisplayName[color] : color;
-                sb.Append($"<div style='display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px;border-radius:10px;border:1px solid rgba(255,255,255,0.03);transition:all 0.3s ease;cursor:pointer;' class='color-option' data-color='{color}'>");
+                sb.Append($"<div class='color-option' data-color='{color}' style='display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px;border:2px solid rgba(255,255,255,0.04);border-radius:14px;background:rgba(255,255,255,0.02);cursor:pointer;transition:all 0.3s ease;'>");
                 sb.Append(GenerateColorBlock(color, size));
-                sb.Append($"<span style='color:rgba(255,255,255,0.12);font-size:0.5rem;'>{displayName}</span>");
+                sb.Append($"<span class='color-label' style='color:rgba(255,255,255,0.2);font-size:0.7rem;font-weight:500;'>{displayName}</span>");
                 sb.Append("</div>");
             }
 
@@ -1985,7 +2012,7 @@ namespace MyPersonalWebsite.Controllers
             {
                 ["type"] = "colorMix",
                 ["level"] = level,
-                ["question"] = $"🎨 以下颜色混合后是什么颜色？<br><span style='color:rgba(255,255,255,0.15);font-size:0.8rem;'>点击色块选择答案</span>",
+                ["question"] = $"🎨 以下颜色混合后是什么颜色？<br><span style='color:rgba(255,255,255,0.12);font-size:0.7rem;'>点击下方色块选择答案</span>",
                 ["displayHtml"] = displayHtml,
                 ["optionsHtml"] = optionsHtml,
                 ["options"] = options,
@@ -2153,16 +2180,12 @@ namespace MyPersonalWebsite.Controllers
             return sb.ToString();
         }
 
-                     // ============================================================
+        // ============================================================
         // ⭐ 题型 14：字符频率统计
         // ============================================================
         private object GenerateCharFrequency(int level, int difficulty, int typesCompleted)
         {
-            // 根据难度决定参数
-            int charCount;
-            int uniqueCount;
-            int questionType;
-            int timeLimit;
+            int charCount, uniqueCount, questionType, timeLimit;
 
             if (difficulty <= 20)
             {
@@ -2248,40 +2271,35 @@ namespace MyPersonalWebsite.Controllers
             
             string questionText;
             string correctAnswer;
-            int targetCount;
 
             switch (questionType)
             {
-                case 0: // 最多
+                case 0:
                     var maxItem0 = sorted.Last();
                     questionText = $"📊 以下字符中，哪个字符出现次数**最多**？";
                     correctAnswer = maxItem0.Key.ToString();
-                    targetCount = maxItem0.Value;
                     break;
-                case 1: // 最少
+                case 1:
                     var minItem = sorted.First();
                     questionText = $"📊 以下字符中，哪个字符出现次数**最少**？";
                     correctAnswer = minItem.Key.ToString();
-                    targetCount = minItem.Value;
                     break;
-                case 2: // 等于平均值
+                case 2:
                     var avgItems = frequencies.Where(kv => kv.Value == avg).ToList();
                     if (avgItems.Count == 0)
                     {
                         var closest = frequencies.OrderBy(kv => Math.Abs(kv.Value - avg)).First();
                         questionText = $"📊 以下字符中，哪个字符出现次数**最接近平均值**（{avg}）？";
                         correctAnswer = closest.Key.ToString();
-                        targetCount = closest.Value;
                     }
                     else
                     {
                         var selected = avgItems[_random.Next(avgItems.Count)];
                         questionText = $"📊 以下字符中，哪个字符出现次数**等于平均值**（{avg}）？";
                         correctAnswer = selected.Key.ToString();
-                        targetCount = selected.Value;
                     }
                     break;
-                case 3: // 出现次数等于其他某两个之和
+                case 3:
                     var candidates = new List<KeyValuePair<char, int>>();
                     for (int i = 0; i < sorted.Count; i++)
                     {
@@ -2300,17 +2318,15 @@ namespace MyPersonalWebsite.Controllers
                         var selected = candidates[_random.Next(candidates.Count)];
                         questionText = $"📊 以下字符中，哪个字符的出现次数**等于另外两个字符出现次数之和**？";
                         correctAnswer = selected.Key.ToString();
-                        targetCount = selected.Value;
                     }
                     else
                     {
                         var maxItem3 = sorted.Last();
                         questionText = $"📊 以下字符中，哪个字符出现次数**最多**？";
                         correctAnswer = maxItem3.Key.ToString();
-                        targetCount = maxItem3.Value;
                     }
                     break;
-                case 4: // 出现次数等于第二多的+1
+                case 4:
                 default:
                     if (sorted.Count >= 2)
                     {
@@ -2320,14 +2336,12 @@ namespace MyPersonalWebsite.Controllers
                         {
                             questionText = $"📊 以下字符中，哪个字符的出现次数**等于第二多的字符出现次数+1**？";
                             correctAnswer = match.Key.ToString();
-                            targetCount = match.Value;
                         }
                         else
                         {
                             var maxItem4 = sorted.Last();
                             questionText = $"📊 以下字符中，哪个字符出现次数**最多**？";
                             correctAnswer = maxItem4.Key.ToString();
-                            targetCount = maxItem4.Value;
                         }
                     }
                     else
@@ -2335,7 +2349,6 @@ namespace MyPersonalWebsite.Controllers
                         var maxItem4 = sorted.Last();
                         questionText = $"📊 以下字符中，哪个字符出现次数**最多**？";
                         correctAnswer = maxItem4.Key.ToString();
-                        targetCount = maxItem4.Value;
                     }
                     break;
             }
@@ -2362,26 +2375,24 @@ namespace MyPersonalWebsite.Controllers
         // ============================================================
         private object GenerateShapeCount(int level, int difficulty, int typesCompleted)
         {
-            int cubeCount, layers;
+            int cubeCount, timeLimit;
 
-            if (difficulty <= 20) { cubeCount = 3 + _random.Next(3); layers = 1; }
-            else if (difficulty <= 40) { cubeCount = 6 + _random.Next(4); layers = 1 + _random.Next(2); }
-            else if (difficulty <= 60) { cubeCount = 10 + _random.Next(5); layers = 2 + _random.Next(2); }
-            else if (difficulty <= 80) { cubeCount = 15 + _random.Next(6); layers = 3 + _random.Next(2); }
-            else { cubeCount = 20 + _random.Next(10); layers = 4 + _random.Next(3); }
+            if (difficulty <= 20) { cubeCount = 3 + _random.Next(2); timeLimit = 8; }
+            else if (difficulty <= 40) { cubeCount = 5 + _random.Next(3); timeLimit = 10; }
+            else if (difficulty <= 60) { cubeCount = 8 + _random.Next(4); timeLimit = 12; }
+            else if (difficulty <= 80) { cubeCount = 12 + _random.Next(5); timeLimit = 15; }
+            else { cubeCount = 16 + _random.Next(8); timeLimit = 18; }
 
-            string display = Generate3DCubeDisplay(cubeCount, layers);
-            int correctAnswer = cubeCount;
+            string asciiArt = Generate3DAsciiArt(cubeCount);
 
-            var options = GenerateNumberOptions(correctAnswer, 4 + Math.Min(difficulty / 10, 3), 5 + difficulty / 5);
-            int timeLimit = Math.Max(6, 14 - difficulty / 8);
+            var options = GenerateNumberOptions(cubeCount, 4 + Math.Min(difficulty / 10, 3), 5 + difficulty / 5);
 
             return new Dictionary<string, object>
             {
                 ["type"] = "shapeCount",
                 ["level"] = level,
-                ["question"] = $"📐 下图中共有多少个正方体？<br><span style='font-family:monospace;font-size:0.9rem;color:#8B5CF6;'>{display}</span>",
-                ["correctAnswer"] = correctAnswer.ToString(),
+                ["question"] = $"📐 下图中共有多少个正方体？<br><pre style='font-family:monospace;font-size:0.8rem;color:#8B5CF6;text-align:center;background:rgba(255,255,255,0.02);padding:0.5rem;border-radius:8px;'>{asciiArt}</pre>",
+                ["correctAnswer"] = cubeCount.ToString(),
                 ["options"] = options,
                 ["timeLimit"] = timeLimit,
                 ["typesCompleted"] = typesCompleted,
@@ -2389,65 +2400,57 @@ namespace MyPersonalWebsite.Controllers
             };
         }
 
-        private string Generate3DCubeDisplay(int cubeCount, int layers)
+        private string Generate3DAsciiArt(int cubeCount)
         {
             var sb = new StringBuilder();
-            sb.AppendLine("  俯视图（数字=层数）");
-
-            int cols = Math.Min(6 + cubeCount / 4, 10);
-            int rows = Math.Min(5 + cubeCount / 4, 8);
-
+            int cols = _random.Next(2, 5);
+            int rows = (int)Math.Ceiling((double)cubeCount / cols);
+            
             var grid = new int[rows, cols];
             int remaining = cubeCount;
-
-            for (int layer = 1; layer <= layers && remaining > 0; layer++)
+            for (int r = rows - 1; r >= 0 && remaining > 0; r--)
             {
-                int placed = _random.Next(Math.Min(remaining, 3 + layer * 2), Math.Min(remaining + 1, 6 + layer * 3));
-                for (int i = 0; i < placed && remaining > 0; i++)
+                for (int c = 0; c < cols && remaining > 0; c++)
                 {
-                    int r = _random.Next(rows);
-                    int c = _random.Next(cols);
-                    if (grid[r, c] == 0)
-                    {
-                        grid[r, c] = layer;
-                        remaining--;
-                    }
-                    else
-                    {
-                        for (int dr = -1; dr <= 1 && remaining > 0; dr++)
-                        {
-                            for (int dc = -1; dc <= 1 && remaining > 0; dc++)
-                            {
-                                int nr = r + dr;
-                                int nc = c + dc;
-                                if (nr >= 0 && nr < rows && nc >= 0 && nc < cols && grid[nr, nc] == 0)
-                                {
-                                    grid[nr, nc] = layer;
-                                    remaining--;
-                                }
-                            }
-                        }
-                    }
+                    int height = _random.Next(1, Math.Min(4, remaining + 1));
+                    grid[r, c] = height;
+                    remaining -= height;
+                    if (remaining <= 0) break;
                 }
             }
 
+            sb.AppendLine("  俯视图");
             for (int r = 0; r < rows; r++)
             {
+                sb.Append("   ");
                 for (int c = 0; c < cols; c++)
                 {
-                    if (grid[r, c] > 0)
-                    {
-                        sb.Append(grid[r, c]);
-                    }
-                    else
-                    {
-                        sb.Append("·");
-                    }
+                    if (grid[r, c] > 0) sb.Append(grid[r, c]);
+                    else sb.Append("·");
                 }
                 sb.AppendLine();
             }
 
-            sb.AppendLine($"📊 层数: {layers}, 总方块数: {cubeCount}");
+            sb.AppendLine();
+            sb.AppendLine("  侧视图");
+            int maxHeight = 0;
+            for (int r = 0; r < rows; r++)
+                for (int c = 0; c < cols; c++)
+                    if (grid[r, c] > maxHeight) maxHeight = grid[r, c];
+            
+            for (int h = maxHeight; h >= 1; h--)
+            {
+                sb.Append("   ");
+                for (int c = 0; c < cols; c++)
+                {
+                    bool hasCube = false;
+                    for (int r = 0; r < rows; r++)
+                        if (grid[r, c] >= h) { hasCube = true; break; }
+                    sb.Append(hasCube ? "█" : " ");
+                }
+                sb.AppendLine();
+            }
+
             return sb.ToString();
         }
 
@@ -2481,43 +2484,40 @@ namespace MyPersonalWebsite.Controllers
             };
         }
 
-                // ============================================================
-        // ⭐ 题型 17：图形旋转（不规则图形，难度递增）
+        // ============================================================
+        // ⭐ 题型 17：图形旋转
         // ============================================================
         private object GenerateRotateShape(int level, int difficulty, int typesCompleted)
         {
-            // 根据难度选择图形复杂度
-            var (shapePoints, shapeName) = GetShapeByDifficulty(difficulty);
-
-            // 生成实际旋转角度
-            double actualAngle;
-            if (difficulty > 80)
+            var shapeTypes = new Dictionary<string, (int[] x, int[] y)>
             {
-                // 传说级别：角度更精细（非整数角度）
-                actualAngle = _random.Next(0, 360) + (_random.NextDouble() - 0.5) * 3;
-            }
-            else
-            {
-                actualAngle = _random.Next(0, 360);
-            }
+                {"三角形", (new int[] { 50, 15, 85 }, new int[] { 15, 85, 85 })},
+                {"正方形", (new int[] { 20, 80, 80, 20 }, new int[] { 20, 20, 80, 80 })},
+                {"五角星", (new int[] { 50, 62, 85, 68, 77, 50, 23, 32, 15, 38 }, new int[] { 15, 35, 35, 55, 75, 62, 75, 55, 35, 35 })},
+                {"六边形", (new int[] { 50, 75, 90, 75, 50, 25 }, new int[] { 15, 35, 65, 85, 85, 65 })},
+                {"菱形", (new int[] { 50, 85, 50, 15 }, new int[] { 15, 50, 85, 50 })},
+                {"十字形", (new int[] { 35, 35, 15, 15, 35, 35, 65, 65, 85, 85, 65, 65 }, new int[] { 15, 35, 35, 65, 65, 85, 85, 65, 65, 35, 35, 15 })},
+                {"L形", (new int[] { 20, 20, 50, 50, 35, 35, 65, 65, 80, 80, 20 }, new int[] { 20, 50, 50, 35, 35, 65, 65, 80, 80, 20, 20 })},
+                {"箭头", (new int[] { 50, 35, 35, 20, 50, 65, 80, 65 }, new int[] { 15, 35, 50, 65, 85, 65, 50, 35 })},
+            };
 
-            // 生成带干扰线的SVG（地狱以上难度）
-            bool hasDistractions = difficulty > 60;
-            bool hasOverlay = difficulty > 80;
+            var shapeKeys = shapeTypes.Keys.ToList();
+            string shapeName = shapeKeys[_random.Next(shapeKeys.Count)];
+            var shape = shapeTypes[shapeName];
 
-            string originalSvg = GenerateShapeSvg(shapePoints, shapeName, 0, hasDistractions, hasOverlay, difficulty);
+            double actualAngle = _random.Next(0, 360);
 
-            // 生成选项
+            string originalSvg = GenerateShapeSvg(shape.x, shape.y, shapeName, 0);
+
             var options = new List<double> { actualAngle };
             int optionCount = 4 + Math.Min(difficulty / 10, 3);
 
-            // 根据难度决定误差范围
             int minError, maxError;
             if (difficulty <= 20) { minError = 30; maxError = 60; }
             else if (difficulty <= 40) { minError = 20; maxError = 45; }
             else if (difficulty <= 60) { minError = 15; maxError = 35; }
-            else if (difficulty <= 80) { minError = 8; maxError = 20; }
-            else { minError = 4; maxError = 12; }
+            else if (difficulty <= 80) { minError = 10; maxError = 25; }
+            else { minError = 7; maxError = 15; }
 
             while (options.Count < optionCount)
             {
@@ -2535,13 +2535,13 @@ namespace MyPersonalWebsite.Controllers
             var optionStrings = options.Select(o => $"{Math.Round(o)}°").OrderBy(_ => _random.Next()).ToList();
             string correctAnswer = $"{Math.Round(actualAngle)}°";
 
-            int timeLimit = Math.Max(8, 20 - difficulty / 8);
+            int timeLimit = Math.Max(8, 15 - difficulty / 10);
 
             return new Dictionary<string, object>
             {
                 ["type"] = "rotate",
                 ["level"] = level,
-                ["question"] = $"🔄 以下图形旋转后的角度是多少？<br><span style='color:rgba(255,255,255,0.12);font-size:0.7rem;'>{(hasDistractions ? "⚠️ 注意干扰线条" : "观察图形旋转角度")}</span>",
+                ["question"] = $"🔄 以下图形旋转后的角度是多少？<br><span style='color:rgba(255,255,255,0.12);font-size:0.7rem;'>请观察图形的旋转角度</span>",
                 ["originalSvg"] = originalSvg,
                 ["correctAnswer"] = correctAnswer,
                 ["options"] = optionStrings,
@@ -2551,214 +2551,32 @@ namespace MyPersonalWebsite.Controllers
             };
         }
 
-        // ⭐ 根据难度获取图形
-        private (int[][] points, string name) GetShapeByDifficulty(int difficulty)
-        {
-            if (difficulty <= 20)
-            {
-                // 📝 入门：简单规则图形
-                var shapes = new (int[][], string)[]
-                {
-                    (new int[][] { new int[] { 50, 15 }, new int[] { 15, 85 }, new int[] { 85, 85 } }, "三角形"),
-                    (new int[][] { new int[] { 20, 20 }, new int[] { 80, 20 }, new int[] { 80, 80 }, new int[] { 20, 80 } }, "正方形"),
-                    (new int[][] { new int[] { 50, 15 }, new int[] { 85, 50 }, new int[] { 50, 85 }, new int[] { 15, 50 } }, "菱形"),
-                };
-                return shapes[_random.Next(shapes.Length)];
-            }
-            else if (difficulty <= 40)
-            {
-                // ⚡ 困难：五角星、六边形
-                var shapes = new (int[][], string)[]
-                {
-                    (new int[][] {
-                        new int[] { 50, 10 }, new int[] { 62, 35 }, new int[] { 90, 35 },
-                        new int[] { 68, 55 }, new int[] { 78, 85 }, new int[] { 50, 68 },
-                        new int[] { 22, 85 }, new int[] { 32, 55 }, new int[] { 10, 35 },
-                        new int[] { 38, 35 }
-                    }, "五角星"),
-                    (new int[][] {
-                        new int[] { 50, 10 }, new int[] { 85, 30 }, new int[] { 85, 70 },
-                        new int[] { 50, 90 }, new int[] { 15, 70 }, new int[] { 15, 30 }
-                    }, "六边形"),
-                    (new int[][] {
-                        new int[] { 20, 20 }, new int[] { 50, 20 }, new int[] { 50, 50 },
-                        new int[] { 80, 50 }, new int[] { 80, 80 }, new int[] { 20, 80 }
-                    }, "L形"),
-                };
-                return shapes[_random.Next(shapes.Length)];
-            }
-            else if (difficulty <= 60)
-            {
-                // 🔥 噩梦：不规则多边形
-                var shapes = new (int[][], string)[]
-                {
-                    (new int[][] {
-                        new int[] { 50, 8 }, new int[] { 75, 20 }, new int[] { 92, 45 },
-                        new int[] { 88, 75 }, new int[] { 65, 92 }, new int[] { 35, 88 },
-                        new int[] { 12, 70 }, new int[] { 8, 40 }, new int[] { 25, 18 }
-                    }, "不规则九边形"),
-                    (new int[][] {
-                        new int[] { 30, 10 }, new int[] { 70, 8 }, new int[] { 92, 25 },
-                        new int[] { 85, 55 }, new int[] { 95, 80 }, new int[] { 70, 92 },
-                        new int[] { 40, 85 }, new int[] { 15, 75 }, new int[] { 8, 45 },
-                        new int[] { 20, 20 }
-                    }, "不规则十边形"),
-                    (new int[][] {
-                        new int[] { 50, 5 }, new int[] { 80, 15 }, new int[] { 95, 40 },
-                        new int[] { 85, 70 }, new int[] { 60, 92 }, new int[] { 30, 85 },
-                        new int[] { 10, 65 }, new int[] { 5, 35 }, new int[] { 25, 12 }
-                    }, "不规则九边形"),
-                };
-                return shapes[_random.Next(shapes.Length)];
-            }
-            else if (difficulty <= 80)
-            {
-                // 💀 地狱：复杂不规则 + 凹陷图形
-                var shapes = new (int[][], string)[]
-                {
-                    (new int[][] {
-                        new int[] { 50, 5 }, new int[] { 75, 12 }, new int[] { 92, 28 },
-                        new int[] { 88, 50 }, new int[] { 96, 72 }, new int[] { 78, 90 },
-                        new int[] { 52, 85 }, new int[] { 30, 92 }, new int[] { 12, 78 },
-                        new int[] { 6, 55 }, new int[] { 15, 32 }, new int[] { 28, 15 }
-                    }, "复杂十二边形"),
-                    (new int[][] {
-                        new int[] { 40, 8 }, new int[] { 60, 5 }, new int[] { 82, 18 },
-                        new int[] { 90, 38 }, new int[] { 85, 60 }, new int[] { 92, 82 },
-                        new int[] { 70, 90 }, new int[] { 45, 85 }, new int[] { 25, 92 },
-                        new int[] { 8, 75 }, new int[] { 5, 50 }, new int[] { 15, 28 },
-                        new int[] { 28, 15 }
-                    }, "复杂十三边形"),
-                    (new int[][] {
-                        new int[] { 50, 2 }, new int[] { 78, 10 }, new int[] { 94, 25 },
-                        new int[] { 98, 48 }, new int[] { 90, 70 }, new int[] { 80, 88 },
-                        new int[] { 55, 95 }, new int[] { 30, 88 }, new int[] { 10, 78 },
-                        new int[] { 4, 55 }, new int[] { 8, 32 }, new int[] { 22, 12 },
-                        new int[] { 38, 5 }
-                    }, "复杂十三边形"),
-                };
-                return shapes[_random.Next(shapes.Length)];
-            }
-            else
-            {
-                // 👑 传说：超复杂图形 + 不对称
-                var shapes = new (int[][], string)[]
-                {
-                    (new int[][] {
-                        new int[] { 50, 2 }, new int[] { 72, 8 }, new int[] { 88, 18 },
-                        new int[] { 96, 32 }, new int[] { 92, 48 }, new int[] { 98, 65 },
-                        new int[] { 88, 82 }, new int[] { 75, 92 }, new int[] { 55, 97 },
-                        new int[] { 35, 90 }, new int[] { 18, 82 }, new int[] { 6, 68 },
-                        new int[] { 2, 50 }, new int[] { 8, 32 }, new int[] { 18, 18 },
-                        new int[] { 35, 8 }
-                    }, "超复杂十六边形"),
-                    (new int[][] {
-                        new int[] { 45, 3 }, new int[] { 68, 6 }, new int[] { 85, 15 },
-                        new int[] { 95, 30 }, new int[] { 97, 48 }, new int[] { 92, 65 },
-                        new int[] { 85, 82 }, new int[] { 70, 93 }, new int[] { 50, 98 },
-                        new int[] { 30, 92 }, new int[] { 15, 82 }, new int[] { 5, 68 },
-                        new int[] { 1, 50 }, new int[] { 5, 32 }, new int[] { 15, 18 },
-                        new int[] { 30, 6 }, new int[] { 40, 3 }
-                    }, "超复杂十七边形"),
-                    (new int[][] {
-                        new int[] { 50, 1 }, new int[] { 75, 6 }, new int[] { 92, 15 },
-                        new int[] { 98, 30 }, new int[] { 94, 48 }, new int[] { 99, 65 },
-                        new int[] { 90, 82 }, new int[] { 78, 93 }, new int[] { 58, 98 },
-                        new int[] { 38, 94 }, new int[] { 20, 85 }, new int[] { 6, 72 },
-                        new int[] { 2, 55 }, new int[] { 4, 38 }, new int[] { 12, 22 },
-                        new int[] { 25, 10 }, new int[] { 38, 4 }
-                    }, "超复杂十七边形"),
-                };
-                return shapes[_random.Next(shapes.Length)];
-            }
-        }
-
-        // ⭐ 生成图形 SVG
-        private string GenerateShapeSvg(int[][] points, string shapeName, double rotationAngle, bool hasDistractions, bool hasOverlay, int difficulty)
+        private string GenerateShapeSvg(int[] x, int[] y, string shapeName, double rotationAngle)
         {
             int width = 130;
             int height = 130;
             int cx = 65;
             int cy = 65;
 
-            // 构建多边形点字符串
-            var pointStr = new List<string>();
-            foreach (var p in points)
+            var points = new List<string>();
+            for (int i = 0; i < x.Length; i++)
             {
-                pointStr.Add($"{p[0]},{p[1]}");
+                points.Add($"{x[i]},{y[i]}");
             }
-            string pointsStr = string.Join(" ", pointStr);
+            string pointsStr = string.Join(" ", points);
 
-            // 颜色（随机明亮色）
             string[] colors = { "#8B5CF6", "#EC4899", "#F59E0B", "#06B6D4", "#34D399", "#F472B6", "#60A5FA", "#A78BFA" };
             string fillColor = colors[_random.Next(colors.Length)];
             string strokeColor = "#FFFFFF";
 
-            var sb = new StringBuilder();
-            sb.AppendLine($"<svg xmlns='http://www.w3.org/2000/svg' width='{width}' height='{height}' viewBox='0 0 {width} {height}'>");
+            string svg = $@"
+<svg xmlns='http://www.w3.org/2000/svg' width='{width}' height='{height}' viewBox='0 0 {width} {height}'>
+    <rect width='{width}' height='{height}' rx='12' fill='rgba(255,255,255,0.02)' stroke='rgba(255,255,255,0.04)' stroke-width='1'/>
+    <polygon points='{pointsStr}' fill='{fillColor}' opacity='0.85' stroke='{strokeColor}' stroke-width='2' transform='rotate({rotationAngle}, {cx}, {cy})'/>
+    <circle cx='{cx}' cy='{cy}' r='3' fill='rgba(255,255,255,0.15)'/>
+</svg>";
 
-            // 背景
-            sb.AppendLine($"    <rect width='{width}' height='{height}' rx='12' fill='rgba(255,255,255,0.02)' stroke='rgba(255,255,255,0.04)' stroke-width='1'/>");
-
-            // ⭐ 地狱以上难度：添加干扰线条
-            if (hasDistractions)
-            {
-                int lineCount = 10 + difficulty / 5;
-                for (int i = 0; i < lineCount; i++)
-                {
-                    int x1 = _random.Next(0, width);
-                    int y1 = _random.Next(0, height);
-                    int x2 = _random.Next(0, width);
-                    int y2 = _random.Next(0, height);
-                    int alpha = _random.Next(20, 60);
-                    int lineWidth = _random.Next(1, 3);
-                    sb.AppendLine($"    <line x1='{x1}' y1='{y1}' x2='{x2}' y2='{y2}' stroke='rgba(255,255,255,{alpha/255f:F2})' stroke-width='{lineWidth}' opacity='0.3'/>");
-                }
-
-                // 添加小点干扰
-                int dotCount = 30 + difficulty * 2;
-                for (int i = 0; i < dotCount; i++)
-                {
-                    int x = _random.Next(0, width);
-                    int y = _random.Next(0, height);
-                    int r = _random.Next(1, 3);
-                    int alpha = _random.Next(30, 80);
-                    sb.AppendLine($"    <circle cx='{x}' cy='{y}' r='{r}' fill='rgba(255,255,255,{alpha/255f:F2})' opacity='0.2'/>");
-                }
-            }
-
-            // ⭐ 传说难度：叠加第二个图形
-            if (hasOverlay)
-            {
-                // 半透明叠加图形
-                string overlayColor = colors[_random.Next(colors.Length)];
-                // 随机偏移
-                int offsetX = _random.Next(-8, 8);
-                int offsetY = _random.Next(-8, 8);
-                var offsetPoints = points.Select(p => new int[] { p[0] + offsetX, p[1] + offsetY }).ToArray();
-                var offsetStr = new List<string>();
-                foreach (var p in offsetPoints)
-                {
-                    offsetStr.Add($"{p[0]},{p[1]}");
-                }
-                sb.AppendLine($"    <polygon points='{string.Join(" ", offsetStr)}' fill='{overlayColor}' opacity='0.15' stroke='{strokeColor}' stroke-width='1' transform='rotate({rotationAngle + 15}, {cx}, {cy})'/>");
-            }
-
-            // 主图形（带旋转）
-            double opacity = hasOverlay ? 0.8 : 0.85;
-            sb.AppendLine($"    <polygon points='{pointsStr}' fill='{fillColor}' opacity='{opacity}' stroke='{strokeColor}' stroke-width='2' transform='rotate({rotationAngle}, {cx}, {cy})'/>");
-
-            // 中心点标记
-            sb.AppendLine($"    <circle cx='{cx}' cy='{cy}' r='3' fill='rgba(255,255,255,0.15)'/>");
-
-            // 边框发光效果（高阶难度）
-            if (difficulty > 60)
-            {
-                sb.AppendLine($"    <polygon points='{pointsStr}' fill='none' stroke='{fillColor}' stroke-width='6' opacity='0.08' transform='rotate({rotationAngle}, {cx}, {cy})'/>");
-            }
-
-            sb.AppendLine("</svg>");
-            return sb.ToString();
+            return svg;
         }
 
         // ============================================================
