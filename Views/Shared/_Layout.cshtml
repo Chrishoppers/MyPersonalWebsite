@@ -466,8 +466,7 @@
 
             var originalTexts = textNodes.map(function(n) { return n.textContent; });
             var glitchLevel = 0;
-            var glitchChars = '!@#$%^&*()_+-=<>?/[]{}|;:,.\'"\~';
-            var bloodChars = '🩸💀☠️👁️🔪⚰️🕷️🦇👹🔥';
+            var glitchChars = '错乱混淆颠倒无序';
 
             var glitchInterval = setInterval(function() {
                 glitchLevel += 0.08;
@@ -478,12 +477,7 @@
                     var glitched = '';
                     for (var i = 0; i < original.length; i++) {
                         if (Math.random() < glitchLevel && original[i] !== ' ' && original[i] !== '\n') {
-                            var rand = Math.random();
-                            if (rand < 0.25) {
-                                glitched += bloodChars[Math.floor(Math.random() * bloodChars.length)];
-                            } else {
-                                glitched += glitchChars[Math.floor(Math.random() * glitchChars.length)];
-                            }
+                            glitched += glitchChars[Math.floor(Math.random() * glitchChars.length)];
                         } else {
                             glitched += original[i];
                         }
