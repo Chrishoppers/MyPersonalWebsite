@@ -577,7 +577,7 @@ namespace MyPersonalWebsite.Controllers
         // ============================================================
         // 获取排行榜
         // ============================================================
-       [HttpGet]
+     [HttpGet]
 public async Task<IActionResult> GetRanking()
 {
     try
@@ -587,9 +587,9 @@ public async Task<IActionResult> GetRanking()
         var users = await _dataSync.GetAllUsersAsync();
 
         var ranking = allStats
-            .Where(s => s.TotalPoints > 0 && s.MaxLevel > 0)  // ← 关键过滤
-            .OrderByDescending(s => s.TotalPoints)
-            .ThenByDescending(s => s.MaxLevel)
+            .Where(s => s.MaxLevel > 0)  // 只显示玩过验证大闯关的
+            .OrderByDescending(s => s.MaxLevel)  // 按关卡排序
+            .ThenByDescending(s => s.MaxCombo)
             .Take(100)
             .Select((s, index) =>
             {
@@ -600,7 +600,7 @@ public async Task<IActionResult> GetRanking()
                     username = user?.Username ?? "已删除用户",
                     avatarUrl = user?.AvatarUrl,
                     isAvatarApproved = user?.IsAvatarApproved ?? false,
-                    totalPoints = s.TotalPoints,
+                    totalPoints = s.MaxLevel * 10,  // ← 按关卡计算积分
                     maxCombo = s.MaxCombo,
                     maxLevel = s.MaxLevel,
                     gamesPlayed = s.GamesPlayed,
