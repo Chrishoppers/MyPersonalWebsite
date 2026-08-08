@@ -11,6 +11,9 @@ namespace MyPersonalWebsite.Models
         public string? LoginToken { get; set; }
 public DateTime? LoginTokenExpiry { get; set; }
         public string Email { get; set; } = string.Empty;
+        public int VerifyGameScore { get; set; } = 0;      // 验证大闯关积分
+public int VerifyGameMaxLevel { get; set; } = 0;   // 最高关卡
+public int VerifyGameMaxCombo { get; set; } = 0;   // 最高连击
         public string PasswordHash { get; set; } = string.Empty;
         public string? VerificationCode { get; set; }
         public DateTime? VerificationCodeExpiry { get; set; }
