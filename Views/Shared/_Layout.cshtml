@@ -332,7 +332,7 @@
         }
 
         // ============================================================
-        // ⭐ 恐怖入侵：乱码从中心扩散 + 扭曲变形
+        // ⭐ 恐怖入侵：极度扭曲 + 禁用交互
         // ============================================================
         function triggerHorrorInvasion(message) {
             if (document.documentElement.requestFullscreen) {
@@ -340,7 +340,23 @@
             }
             playHorrorSound();
 
-            // 获取所有文本节点，记录位置信息用于扩散效果
+            // ===== 禁用所有交互元素 =====
+            var allInteractive = document.querySelectorAll('button, a, input, textarea, select, [onclick], .nav-link, .btn, .btn-glass');
+            var originalPointers = [];
+            allInteractive.forEach(function(el, index) {
+                originalPointers[index] = el.style.pointerEvents;
+                el.style.pointerEvents = 'none';
+                el.style.cursor = 'default';
+                if (el.tagName === 'A' || el.classList.contains('nav-link') || el.classList.contains('btn') || el.classList.contains('btn-glass')) {
+                    el.style.color = 'rgba(255,255,255,0.1)';
+                }
+                if (el.tagName === 'BUTTON' || el.classList.contains('btn') || el.classList.contains('btn-glass')) {
+                    el.style.opacity = '0.2';
+                    el.style.transform = 'scale(0.95)';
+                }
+            });
+
+            // ===== 获取文本节点 =====
             var textNodes = [];
             var walker = document.createTreeWalker(
                 document.body,
@@ -358,7 +374,6 @@
 
             var node;
             while (node = walker.nextNode()) {
-                // 记录每个文本节点的位置（用于扩散效果）
                 var rect = node.parentElement ? node.parentElement.getBoundingClientRect() : null;
                 var centerX = window.innerWidth / 2;
                 var centerY = window.innerHeight / 2;
@@ -379,47 +394,57 @@
             var glitchChars = String.fromCharCode(33,35,36,37,94,38,42,40,41,95,43,45,61,60,62,63,47,91,93,123,125,124,59,58,44,46,34,39,92,126);
             var bloodChars = '🩸💀☠️👁️🔪⚰️🕷️🦇👹🔥';
             var startTime = Date.now();
-            var duration = 12000; // 12秒乱码
+            var duration = 12000;
 
-            // 页面扭曲变形效果
+            // ===== 极度扭曲变形 =====
             var distortionInterval = setInterval(function() {
                 var elapsed = Date.now() - startTime;
                 var progress = Math.min(elapsed / duration, 1);
+                var intensity = progress * 15;
 
-                // 扭曲强度随进度增加
-                var intensity = progress * 8;
+                // 多重扭曲叠加
+                var skewX = Math.sin(elapsed / 200) * intensity * 0.6;
+                var skewY = Math.cos(elapsed / 250 + 1) * intensity * 0.4;
+                var scaleX = 1 + Math.sin(elapsed / 300) * intensity * 0.015;
+                var scaleY = 1 + Math.cos(elapsed / 350 + 2) * intensity * 0.015;
+                var rotate = Math.sin(elapsed / 180) * intensity * 0.12;
+                var translateX = Math.sin(elapsed / 220) * intensity * 1.5;
+                var translateY = Math.cos(elapsed / 280 + 1.5) * intensity * 1.5;
 
-                // 应用扭曲到 body
-                var skewX = Math.sin(elapsed / 300) * intensity * 0.3;
-                var skewY = Math.cos(elapsed / 400) * intensity * 0.2;
-                var scaleX = 1 + Math.sin(elapsed / 500) * intensity * 0.008;
-                var scaleY = 1 + Math.cos(elapsed / 600) * intensity * 0.008;
-                var rotate = Math.sin(elapsed / 700) * intensity * 0.05;
-
-                document.body.style.transform = 'skewX(' + skewX + 'deg) skewY(' + skewY + 'deg) scale(' + scaleX + ',' + scaleY + ') rotate(' + rotate + 'deg)';
+                // 应用极度扭曲
+                document.body.style.transform =
+                    'skewX(' + skewX + 'deg) skewY(' + skewY + 'deg) ' +
+                    'scale(' + scaleX + ',' + scaleY + ') ' +
+                    'rotate(' + rotate + 'deg) ' +
+                    'translate(' + translateX + 'px, ' + translateY + 'px)';
                 document.body.style.transformOrigin = 'center center';
                 document.body.style.transition = 'none';
 
-                // 红色边框闪烁
-                if (progress > 0.3 && Math.random() > 0.85) {
-                    document.body.style.boxShadow = 'inset 0 0 ' + (50 + Math.random() * 100) + 'px rgba(255,0,0,' + (0.05 + Math.random() * 0.1) + ')';
+                // 红色边框脉冲
+                if (progress > 0.2 && Math.random() > 0.7) {
+                    var borderIntensity = 0.05 + Math.random() * 0.15;
+                    document.body.style.boxShadow = 'inset 0 0 ' + (80 + Math.random() * 150) + 'px rgba(255,0,0,' + borderIntensity + ')';
                 } else {
-                    document.body.style.boxShadow = 'none';
+                    document.body.style.boxShadow = 'inset 0 0 20px rgba(255,0,0,0.02)';
                 }
 
-            }, 50);
+                // 屏幕闪烁
+                if (Math.random() > 0.92) {
+                    document.body.style.backgroundColor = 'rgba(255,0,0,0.02)';
+                    setTimeout(function() { document.body.style.backgroundColor = ''; }, 50);
+                }
 
-            // 乱码扩散
+            }, 30);
+
+            // ===== 乱码从中心扩散 =====
             var glitchInterval = setInterval(function() {
                 var elapsed = Date.now() - startTime;
                 var progress = Math.min(elapsed / duration, 1);
 
-                // 从中心向外扩散：越靠近中心乱码越严重
                 textNodes.forEach(function(item) {
                     var distRatio = item.dist / item.maxDist;
-                    // 扩散阈值随进度增加，从中心向外扩散
-                    var threshold = progress * 1.2;
-                    var glitchAmount = Math.max(0, Math.min(1, (threshold - distRatio * 0.5) * 2));
+                    var threshold = progress * 1.3;
+                    var glitchAmount = Math.max(0, Math.min(1, (threshold - distRatio * 0.4) * 2.5));
 
                     if (glitchAmount > 0) {
                         var original = item.original || '';
@@ -440,13 +465,12 @@
                     }
                 });
 
-                // 当乱码完全扩散后，进入黑屏
                 if (progress >= 1) {
                     clearInterval(glitchInterval);
                     clearInterval(distortionInterval);
-                    // 恢复 body 变形
                     document.body.style.transform = '';
                     document.body.style.boxShadow = '';
+                    document.body.style.backgroundColor = '';
 
                     // ===== 黑屏恐怖显示 =====
                     var overlay = document.createElement('div');
@@ -459,7 +483,7 @@
                     var selectedImage = images[Math.floor(Math.random() * images.length)];
                     var img = document.createElement('img');
                     img.src = '/images/horror/' + selectedImage;
-                    img.style.cssText = 'max-width:80vw;max-height:60vh;border-radius:12px;box-shadow:0 0 120px rgba(255,0,0,0.15);';
+                    img.style.cssText = 'max-width:85vw;max-height:65vh;border-radius:12px;box-shadow:0 0 150px rgba(255,0,0,0.2);';
                     img.onerror = function() {
                         this.style.display = 'none';
                         var fallback = document.createElement('div');
@@ -470,24 +494,31 @@
                     overlay.appendChild(img);
 
                     // 缩放动画
-                    var scale = 0.1;
+                    var scale = 0.05;
                     var scaleInterval = setInterval(function() {
-                        scale += 0.06;
+                        scale += 0.07;
                         if (scale >= 1) {
                             scale = 1;
                             clearInterval(scaleInterval);
                         }
-                        img.style.transform = 'scale(' + scale + ') rotate(' + (scale * 10 - 10) + 'deg)';
-                    }, 25);
+                        img.style.transform = 'scale(' + scale + ') rotate(' + (scale * 15 - 15) + 'deg)';
+                    }, 20);
 
                     // 抖动
                     var shakeInterval = setInterval(function() {
-                        if (Math.random() > 0.5) {
-                            img.style.transform += ' translate(' + (Math.random() - 0.5) * 20 + 'px, ' + (Math.random() - 0.5) * 20 + 'px)';
+                        if (Math.random() > 0.4) {
+                            var dx = (Math.random() - 0.5) * 30;
+                            var dy = (Math.random() - 0.5) * 30;
+                            var dr = (Math.random() - 0.5) * 8;
+                            img.style.transform += ' translate(' + dx + 'px, ' + dy + 'px) rotate(' + dr + 'deg)';
+                            // 立即复位
+                            setTimeout(function() {
+                                img.style.transform = img.style.transform.replace(/translate\([^)]*\)/g, '').replace(/rotate\([^)]*\)/g, '');
+                            }, 50);
                         }
-                    }, 150);
+                    }, 100);
 
-                    // 恐怖文字 - 扭曲变形
+                    // 恐怖文字
                     var messages = [
                         '你 刚 才 关 门 了 吗 ？',
                         '镜 子 里 的 人 刚 才 笑 了',
@@ -508,20 +539,24 @@
                     var finalMsg = message || messages[Math.floor(Math.random() * messages.length)];
 
                     var textDiv = document.createElement('div');
-                    textDiv.style.cssText = 'color:#ff0000;font-size:2.8rem;font-family:Courier New,monospace;font-weight:900;text-shadow:0 0 60px rgba(255,0,0,0.5);letter-spacing:6px;margin-top:1rem;text-align:center;padding:0 1rem;';
+                    textDiv.style.cssText = 'color:#ff0000;font-size:3rem;font-family:Courier New,monospace;font-weight:900;text-shadow:0 0 80px rgba(255,0,0,0.5);letter-spacing:8px;margin-top:1rem;text-align:center;padding:0 1rem;';
                     textDiv.textContent = finalMsg;
                     overlay.appendChild(textDiv);
 
                     // 文字扭曲动画
                     var textDistortion = setInterval(function() {
                         var time = Date.now() / 1000;
-                        var skew = Math.sin(time * 2) * 3;
-                        var scaleX = 1 + Math.sin(time * 1.5) * 0.05;
-                        var opacity = 0.7 + Math.sin(time * 3) * 0.3;
-                        textDiv.style.transform = 'skewX(' + skew + 'deg) scaleX(' + scaleX + ')';
+                        var skew = Math.sin(time * 2.5) * 5;
+                        var scaleX = 1 + Math.sin(time * 2) * 0.08;
+                        var scaleY = 1 + Math.cos(time * 2.3) * 0.08;
+                        var opacity = 0.6 + Math.sin(time * 3.5) * 0.4;
+                        var translateX = Math.sin(time * 1.7) * 10;
+                        textDiv.style.transform = 'skewX(' + skew + 'deg) scale(' + scaleX + ',' + scaleY + ') translateX(' + translateX + 'px)';
                         textDiv.style.opacity = opacity;
-                        textDiv.style.color = Math.sin(time * 2) > 0 ? '#ff0000' : '#cc0000';
-                    }, 100);
+                        var colors = ['#ff0000', '#cc0000', '#ff2200', '#ff0044'];
+                        textDiv.style.color = colors[Math.floor(Math.abs(Math.sin(time * 1.3)) * colors.length)];
+                        textDiv.style.letterSpacing = (6 + Math.sin(time * 1.8) * 4) + 'px';
+                    }, 60);
 
                     var subDiv = document.createElement('div');
                     subDiv.style.cssText = 'color:rgba(255,0,0,0.06);font-size:0.8rem;margin-top:0.5rem;font-family:Courier New,monospace;letter-spacing:4px;';
@@ -531,10 +566,10 @@
                     // 闪烁
                     var flashInterval = setInterval(function() {
                         var flash = document.createElement('div');
-                        flash.style.cssText = 'position:fixed;inset:0;background:rgba(255,0,0,' + (0.05 + Math.random() * 0.1) + ');z-index:99998;pointer-events:none;';
+                        flash.style.cssText = 'position:fixed;inset:0;background:rgba(255,0,0,' + (0.05 + Math.random() * 0.12) + ');z-index:99998;pointer-events:none;';
                         document.body.appendChild(flash);
-                        setTimeout(function() { flash.remove(); }, 100);
-                    }, 200);
+                        setTimeout(function() { flash.remove(); }, 80);
+                    }, 150);
 
                     // 4秒后恢复
                     setTimeout(function() {
@@ -544,6 +579,20 @@
                         textNodes.forEach(function(item) {
                             item.node.textContent = item.original || '';
                         });
+
+                        // 恢复交互
+                        allInteractive.forEach(function(el, index) {
+                            el.style.pointerEvents = originalPointers[index] || '';
+                            el.style.cursor = '';
+                            if (el.tagName === 'A' || el.classList.contains('nav-link') || el.classList.contains('btn') || el.classList.contains('btn-glass')) {
+                                el.style.color = '';
+                            }
+                            if (el.tagName === 'BUTTON' || el.classList.contains('btn') || el.classList.contains('btn-glass')) {
+                                el.style.opacity = '';
+                                el.style.transform = '';
+                            }
+                        });
+
                         if (document.fullscreenElement) {
                             document.exitFullscreen().catch(function() {});
                         }
@@ -553,9 +602,10 @@
                         }
                         document.body.style.transform = '';
                         document.body.style.boxShadow = '';
+                        document.body.style.backgroundColor = '';
                     }, 4000);
                 }
-            }, 60);
+            }, 50);
         }
 
         // ============================================================
