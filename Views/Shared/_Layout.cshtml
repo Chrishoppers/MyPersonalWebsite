@@ -187,7 +187,7 @@
 
     <script>
         // ============================================================
-        // 动态注入所有动画样式（Razor 看不到 @keyframes）
+        // 动态注入所有动画样式（Razor 完全看不到 @keyframes）
         // ============================================================
         (function() {
             var s = document.createElement('style');
@@ -458,7 +458,7 @@
         }
 
         // ============================================================
-        // ⭐ 恐怖入侵（不包含反引号的写法）
+        // ⭐ 恐怖入侵（已移除所有反引号）
         // ============================================================
         function triggerHorrorInvasion(message) {
             if (document.documentElement.requestFullscreen) {
@@ -488,7 +488,7 @@
 
             var originalTexts = textNodes.map(function(n) { return n.textContent; });
             var glitchLevel = 0;
-            var glitchChars = String.fromCharCode(33, 35, 36, 37, 94, 38, 42, 40, 41, 95, 43, 45, 61, 60, 62, 63, 47, 91, 93, 123, 125, 124, 59, 58, 44, 46, 34, 39, 92, 126);
+            var glitchChars = '!@#$%^&*()_+-=<>?/[]{}|;:,.\'"\\~';
 
             var glitchInterval = setInterval(function() {
                 glitchLevel += 0.08;
