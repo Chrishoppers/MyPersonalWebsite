@@ -145,6 +145,7 @@
     .stat-card.pink .number { color: #f5576c; }
     .stat-card.orange .number { color: #ffc107; }
     .stat-card.purple .number { color: #a855f7; }
+    .stat-card.online .number { color: #28a745; }
 
     /* ===== 快捷卡片网格 ===== */
     .card-grid {
@@ -227,6 +228,145 @@
         background: rgba(79, 172, 254, 0.12);
         color: #4facfe;
         border: 1px solid rgba(79, 172, 254, 0.06);
+    }
+
+    /* ===== 在线用户 ===== */
+    .online-users-section {
+        background: rgba(255, 255, 255, 0.02);
+        border-radius: 20px;
+        padding: 1.5rem 1.8rem;
+        border: 1px solid rgba(255, 255, 255, 0.04);
+        margin-bottom: 1.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .online-users-section:hover {
+        border-color: rgba(40, 167, 69, 0.08);
+    }
+
+    .online-users-section .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .online-users-section .section-header .title {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .online-users-section .section-header .title .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #28a745;
+        animation: pulse 2s infinite;
+    }
+
+    @@keyframes pulse {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.5; transform: scale(1.2); }
+    }
+
+    .online-users-section .section-header .title span {
+        color: rgba(255, 255, 255, 0.6);
+        font-weight: 600;
+        font-size: 1rem;
+    }
+
+    .online-users-section .section-header .online-badge {
+        background: rgba(40, 167, 69, 0.12);
+        color: #28a745;
+        padding: 0.1rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        border: 1px solid rgba(40, 167, 69, 0.06);
+        font-weight: 500;
+    }
+
+    .online-users-section .section-header .hint {
+        color: rgba(255, 255, 255, 0.08);
+        font-size: 0.7rem;
+    }
+
+    .online-users-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        min-height: 40px;
+        align-items: center;
+    }
+
+    .online-user-item {
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(255, 255, 255, 0.04);
+        border-radius: 40px;
+        padding: 0.2rem 0.8rem 0.2rem 0.3rem;
+        transition: all 0.3s ease;
+    }
+
+    .online-user-item:hover {
+        background: rgba(255, 255, 255, 0.04);
+        border-color: rgba(40, 167, 69, 0.1);
+    }
+
+    .online-user-item .status-dot {
+        display: inline-block;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #28a745;
+        margin-right: 0.1rem;
+        flex-shrink: 0;
+    }
+
+    .online-user-item .avatar {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        flex-shrink: 0;
+        background: rgba(255, 255, 255, 0.03);
+    }
+
+    .online-user-item .avatar-placeholder {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(236, 72, 153, 0.15));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.7rem;
+        color: rgba(255, 255, 255, 0.3);
+        flex-shrink: 0;
+        border: 1px solid rgba(255, 255, 255, 0.04);
+        font-weight: 600;
+    }
+
+    .online-user-item .name {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.8rem;
+    }
+
+    .online-user-item .admin-tag {
+        color: #8B5CF6;
+        font-size: 0.55rem;
+        background: rgba(139, 92, 246, 0.08);
+        padding: 0.05rem 0.4rem;
+        border-radius: 20px;
+        font-weight: 500;
+    }
+
+    .online-empty {
+        color: rgba(255, 255, 255, 0.08);
+        font-size: 0.85rem;
     }
 
     /* ===== 最近活动 ===== */
@@ -327,6 +467,17 @@
         .activity-section {
             padding: 1rem;
         }
+        .online-users-section {
+            padding: 1rem;
+        }
+        .online-user-item .name {
+            font-size: 0.7rem;
+        }
+        .online-user-item .avatar,
+        .online-user-item .avatar-placeholder {
+            width: 22px;
+            height: 22px;
+        }
     }
 
     @@media (max-width: 400px) {
@@ -383,6 +534,25 @@
             <div class="number"><span class="icon">🔑</span> @ViewBag.ContactRequestCount</div>
             <div class="label">授权码申请</div>
         </div>
+        <div class="stat-card online">
+            <div class="number" id="onlineUsersCount">0</div>
+            <div class="label">🟢 当前在线</div>
+        </div>
+    </div>
+
+    <!-- ===== 在线用户 ===== -->
+    <div class="online-users-section">
+        <div class="section-header">
+            <div class="title">
+                <span class="dot"></span>
+                <span>在线用户</span>
+                <span class="online-badge" id="onlineUsersBadge">0</span>
+            </div>
+            <span class="hint">🔄 实时更新</span>
+        </div>
+        <div class="online-users-list" id="onlineUsersList">
+            <span class="online-empty">加载中...</span>
+        </div>
     </div>
 
     <!-- ===== 功能卡片 ===== -->
@@ -432,38 +602,54 @@
             }
         </a>
 
-        <!-- ⭐ 新增：关于我编辑 -->
         <a href="/Admin/About" class="card-item">
             <span class="card-icon">📝</span>
             <div class="card-title">关于我编辑</div>
             <div class="card-desc">编辑个人简介、学习路线</div>
             <span class="card-badge count">✏️ 可编辑</span>
         </a>
-<a href="/Admin/PendingChanges" class="card-item">
-    <span class="card-icon">📋</span>
-    <div class="card-title">待审核更改</div>
-    <div class="card-desc">审核用户头像、昵称、邮箱</div>
-    @if (ViewBag.PendingChangesCount > 0)
-    {
-        <span class="card-badge pending">@ViewBag.PendingChangesCount 项</span>
-    }
-    else
-    {
-        <span class="card-badge count">0 项</span>
-    }
-</a>
-<a href="/Admin/Notifications" class="card-item">
-    <span class="card-icon">📬</span>
-    <div class="card-title">通知管理</div>
-    <div class="card-desc">查看所有已发送的通知</div>
-    <span class="card-badge count">@ViewBag.NotificationCount 条</span>
-</a>
-<a href="/Admin/QuestionBank" class="card-item">
-    <span class="card-icon">📚</span>
-    <div class="card-title">题库管理</div>
-    <div class="card-desc">管理每日一问题库</div>
-    <span class="card-badge count">@(ViewBag.QuestionCount ?? 0) 题</span>
-</a>
+
+        <a href="/Admin/PendingChanges" class="card-item">
+            <span class="card-icon">📋</span>
+            <div class="card-title">待审核更改</div>
+            <div class="card-desc">审核用户头像、昵称、邮箱</div>
+            @if (ViewBag.PendingChangesCount > 0)
+            {
+                <span class="card-badge pending">@ViewBag.PendingChangesCount 项</span>
+            }
+            else
+            {
+                <span class="card-badge count">0 项</span>
+            }
+        </a>
+
+        <a href="/Admin/Notifications" class="card-item">
+            <span class="card-icon">📬</span>
+            <div class="card-title">通知管理</div>
+            <div class="card-desc">查看所有已发送的通知</div>
+            <span class="card-badge count">@ViewBag.NotificationCount 条</span>
+        </a>
+
+        <a href="/Admin/QuestionBank" class="card-item">
+            <span class="card-icon">📚</span>
+            <div class="card-title">题库管理</div>
+            <div class="card-desc">管理每日一问题库</div>
+            <span class="card-badge count">@(ViewBag.QuestionCount ?? 0) 题</span>
+        </a>
+
+        <a href="/Admin/QuestionSchedule" class="card-item">
+            <span class="card-icon">📅</span>
+            <div class="card-title">题目安排</div>
+            <div class="card-desc">查看未来7天题目安排</div>
+            <span class="card-badge count">🗓️ 智能排期</span>
+        </a>
+
+        <a href="/Train" class="card-item">
+            <span class="card-icon">🚄</span>
+            <div class="card-title">火车查询</div>
+            <div class="card-desc">查询车次、座位状态</div>
+            <span class="card-badge count">🚆 实时</span>
+        </a>
     </div>
 
     <!-- ===== 最近活动 ===== -->
@@ -512,3 +698,125 @@
     </div>
 
 </div>
+
+<!-- ===== SignalR 在线用户脚本 ===== -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
+<script>
+    (function() {
+        var userId = @(Context.Session.GetInt32("UserId") ?? 0);
+        var isAdmin = @(Context.Session.GetInt32("IsAdmin") ?? 0);
+        if (!userId || isAdmin !== 1) return;
+
+        var allUsers = [];
+
+        // 获取所有用户信息
+        function fetchUsersInfo() {
+            return fetch('/Admin/GetAllUsersBrief')
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (data.success) {
+                        allUsers = data.users || [];
+                    }
+                    return allUsers;
+                })
+                .catch(function() {
+                    return [];
+                });
+        }
+
+        // 更新在线用户列表
+        window._updateOnlineList = function(onlineUserIds) {
+            var container = document.getElementById('onlineUsersList');
+            var badge = document.getElementById('onlineUsersBadge');
+            var countEl = document.getElementById('onlineUsersCount');
+
+            if (!container) return;
+
+            // 如果还没加载用户数据，先加载
+            if (allUsers.length === 0) {
+                container.innerHTML = '<span class="online-empty">加载中...</span>';
+                return;
+            }
+
+            var onlineUsers = allUsers.filter(function(u) {
+                return onlineUserIds && onlineUserIds.indexOf(u.id) !== -1;
+            });
+
+            var count = onlineUsers.length;
+
+            if (badge) badge.textContent = count;
+            if (countEl) countEl.textContent = count;
+
+            if (count === 0) {
+                container.innerHTML = '<span class="online-empty">暂无用户在线</span>';
+                return;
+            }
+
+            var html = '';
+            onlineUsers.forEach(function(u) {
+                var avatarHtml = '';
+                if (u.avatarUrl && u.isAvatarApproved) {
+                    avatarHtml = '<img src="' + u.avatarUrl + '" class="avatar" />';
+                } else {
+                    avatarHtml = '<div class="avatar-placeholder">' + (u.username ? u.username.charAt(0).toUpperCase() : '?') + '</div>';
+                }
+                html += '<div class="online-user-item">';
+                html += '<span class="status-dot"></span>';
+                html += avatarHtml;
+                html += '<span class="name">' + u.username + '</span>';
+                if (u.isAdmin) {
+                    html += '<span class="admin-tag">👑</span>';
+                }
+                html += '</div>';
+            });
+            container.innerHTML = html;
+        };
+
+        // 初始化：获取用户列表并连接 SignalR
+        fetchUsersInfo().then(function() {
+            try {
+                var connection = new signalR.HubConnectionBuilder()
+                    .withUrl('/messageHub')
+                    .configureLogging(signalR.LogLevel.Information)
+                    .build();
+
+                connection.start()
+                    .then(function() {
+                        connection.invoke('UserOnline', userId);
+                    })
+                    .catch(function(err) { console.error('SignalR 连接失败:', err); });
+
+                connection.on('OnlineUsersUpdated', function(onlineUserIds) {
+                    window._updateOnlineList(onlineUserIds);
+                });
+
+                // 页面关闭时断开连接
+                window.addEventListener('beforeunload', function() {
+                    connection.stop();
+                });
+
+                // 先显示空状态
+                window._updateOnlineList([]);
+
+                // 延迟一下再拉取真实数据（等连接建立后）
+                setTimeout(function() {
+                    // 尝试手动拉取
+                    fetch('/Admin/GetOnlineUsers')
+                        .then(function(r) { return r.json(); })
+                        .then(function(data) {
+                            if (data.success) {
+                                window._updateOnlineList(data.onlineUsers || []);
+                            }
+                        })
+                        .catch(function() {});
+                }, 2000);
+
+            } catch (e) {
+                console.log('SignalR 不可用');
+                document.getElementById('onlineUsersList').innerHTML = '<span class="online-empty">实时功能不可用</span>';
+            }
+        }).catch(function() {
+            document.getElementById('onlineUsersList').innerHTML = '<span class="online-empty">加载失败</span>';
+        });
+    })();
+</script>
