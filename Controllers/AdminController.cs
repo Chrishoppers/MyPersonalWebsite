@@ -22,236 +22,197 @@ namespace MyPersonalWebsite.Controllers
             _dataSync = dataSync;
             _emailService = emailService;
         }
+
         // ============================================================
-// 📧 开启/关闭连对邮件提醒
-// ============================================================
-
-[HttpPost]
-public async Task<IActionResult> ToggleStreakEmail(bool enable)
-{
-    var userId = HttpContext.Session.GetInt32("UserId");
-    if (!userId.HasValue)
-        return Json(new { success = false, message = "请先登录" });
-
-    var user = await _dataSync.GetUserByIdAsync(userId.Value);
-    if (user == null)
-        return Json(new { success = false, message = "用户不存在" });
-
-    user.IsStreakEmailEnabled = enable;
-    if (enable)
-    {
-        user.StreakEmailOptInAt = DateTime.Now;
-    }
-    else
-    {
-        user.StreakEmailOptInAt = null;
-    }
-
-    await _dataSync.UpdateUserAsync(user);
-    return Json(new
-    {
-        success = true,
-        message = enable ? "✅ 连对邮件提醒已开启！每天10:00准时送达" : "❌ 已关闭连对邮件提醒"
-    });
-}
-
-[HttpGet]
-public async Task<IActionResult> GetStreakEmailStatus()
-{
-    var userId = HttpContext.Session.GetInt32("UserId");
-    if (!userId.HasValue)
-        return Json(new { success = false, isEnabled = false });
-
-    var user = await _dataSync.GetUserByIdAsync(userId.Value);
-    if (user == null)
-        return Json(new { success = false, isEnabled = false });
-
-    return Json(new { success = true, isEnabled = user.IsStreakEmailEnabled });
-}
+        // 📧 开启/关闭连对邮件提醒
         // ============================================================
-// 🗑️ 批量删除题目
-// ============================================================
 
-[HttpPost]
-public async Task<IActionResult> BatchDeleteQuestions([FromBody] List<int> ids)
-{
-    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-    if (isAdmin != 1)
-        return Json(new { success = false, message = "权限不足" });
-
-    if (ids == null || !ids.Any())
-        return Json(new { success = false, message = "请选择要删除的题目" });
-
-    int successCount = 0;
-    int failCount = 0;
-
-    foreach (var id in ids)
-    {
-        try
+        [HttpPost]
+        public async Task<IActionResult> ToggleStreakEmail(bool enable)
         {
-            await _dataSync.DeleteBankQuestionAsync(id);
-            successCount++;
-        }
-        catch
-        {
-            failCount++;
-        }
-    }
+            var userId = HttpContext.Session.GetInt32("UserId");
+            if (!userId.HasValue)
+                return Json(new { success = false, message = "请先登录" });
 
-    return Json(new
-    {
-        success = true,
-        message = $"✅ 已删除 {successCount} 道题" + (failCount > 0 ? $"，{failCount} 道失败" : "")
-    });
-}
-//在线人数
-[HttpGet]
-public async Task<IActionResult> GetAllUsersBrief()
-{
-    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-    if (isAdmin != 1)
-        return Json(new { success = false, message = "权限不足" });
+            var user = await _dataSync.GetUserByIdAsync(userId.Value);
+            if (user == null)
+                return Json(new { success = false, message = "用户不存在" });
 
-    var users = await _dataSync.GetAllUsersAsync();
-    var brief = users
-        .Where(u => !u.IsDeleted)
-        .Select(u => new
-        {
-            id = u.Id,
-            username = u.Username,
-            avatarUrl = u.AvatarUrl,
-            isAvatarApproved = u.IsAvatarApproved,
-            isAdmin = u.IsAdmin
-        })
-        .ToList();
-
-    return Json(new { success = true, users = brief });
-}
-
-<!-- ===== 恐怖控制面板 ===== -->
-<div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:0.8rem;padding-top:0.8rem;border-top:1px solid rgba(255,255,255,0.04);">
-    <button onclick="triggerHorror()" style="padding:0.5rem 1.5rem;border:none;border-radius:40px;background:linear-gradient(135deg,#dc3545,#8B0000);color:#fff;font-weight:600;font-size:0.85rem;cursor:pointer;transition:all 0.3s ease;display:flex;align-items:center;gap:0.5rem;">
-        👻 释放恐怖入侵
-    </button>
-    <button onclick="triggerHorrorWithMessage()" style="padding:0.5rem 1.5rem;border:none;border-radius:40px;background:linear-gradient(135deg,#8B008B,#4B0082);color:#fff;font-weight:600;font-size:0.85rem;cursor:pointer;transition:all 0.3s ease;display:flex;align-items:center;gap:0.5rem;">
-        📝 自定义恐怖
-    </button>
-    <button onclick="triggerGhost()" style="padding:0.5rem 1.5rem;border:none;border-radius:40px;background:linear-gradient(135deg,#2d2d2d,#1a1a1a);color:rgba(255,255,255,0.6);font-weight:600;font-size:0.85rem;cursor:pointer;transition:all 0.3s ease;display:flex;align-items:center;gap:0.5rem;border:1px solid rgba(255,255,255,0.04);">
-        👻 幽灵飘过
-    </button>
-    <button onclick="triggerShake()" style="padding:0.5rem 1.5rem;border:none;border-radius:40px;background:linear-gradient(135deg,#8B4513,#3d1f00);color:#fff;font-weight:600;font-size:0.85rem;cursor:pointer;transition:all 0.3s ease;display:flex;align-items:center;gap:0.5rem;">
-        💀 屏幕震动
-    </button>
-</div>
-        
-        // ============================================================
-// 📅 未来题目安排（自动AI安排 + 手动变更）
-// ============================================================
-
-[HttpGet]
-public async Task<IActionResult> QuestionSchedule()
-{
-    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-    if (isAdmin != 1)
-        return RedirectToAction("Login", "Auth");
-
-    var today = DateTime.Today;
-
-    // ⭐ 自动检查并安排未来7天的题目（智能AI安排）
-    await AutoScheduleMissingDaysAsync();
-
-    var schedule = new List<DailyScheduleItem>();
-
-    for (int i = 0; i < 7; i++)
-    {
-        var date = today.AddDays(i);
-        var dateStr = date.ToString("yyyy-MM-dd");
-
-        var result = await _dataSync.QueryAsync($@"
-            SELECT dq.Id, dq.QuestionId, dq.Date,
-                   b.Question, b.Answer, b.Category, b.Difficulty
-            FROM DailyQuestions dq
-            JOIN DailyQuestionBank b ON dq.QuestionId = b.Id
-            WHERE dq.Date = '{dateStr}'
-            LIMIT 1
-        ");
-
-        var item = new DailyScheduleItem
-        {
-            Date = date,
-            DateStr = dateStr,
-            IsToday = date == today,
-            IsPast = date < today
-        };
-
-        var question = ParseDailyQuestionFromJson(result);
-        if (question != null)
-        {
-            item.QuestionId = question.QuestionId ?? 0;
-            item.Question = question.Question;
-            item.Answer = question.Answer;
-            item.Category = question.Category;
-            item.Difficulty = question.Difficulty;
-            item.IsScheduled = true;
-        }
-        else
-        {
-            item.IsScheduled = false;
-        }
-
-        schedule.Add(item);
-    }
-
-    var bankQuestions = await _dataSync.GetAllBankQuestionsAsync();
-
-    ViewBag.Schedule = schedule;
-    ViewBag.BankQuestions = bankQuestions;
-    ViewBag.Today = today;
-
-    return View();
-}
-
-
-
-// ============================================================
-// 辅助：从JSON解析QuestionId
-// ============================================================
-
-private int ParseQuestionIdFromJson(string json)
-{
-    try
-    {
-        using var doc = JsonDocument.Parse(json);
-        var root = doc.RootElement;
-
-        if (root.TryGetProperty("results", out var results) && results.GetArrayLength() > 0)
-        {
-            var firstResult = results[0];
-            if (firstResult.TryGetProperty("response", out var response) &&
-                response.TryGetProperty("result", out var result))
+            user.IsStreakEmailEnabled = enable;
+            if (enable)
             {
-                if (result.TryGetProperty("rows", out var rows) && rows.GetArrayLength() > 0)
-                {
-                    var row = rows[0];
-                    var cols = result.GetProperty("cols");
+                user.StreakEmailOptInAt = DateTime.Now;
+            }
+            else
+            {
+                user.StreakEmailOptInAt = null;
+            }
 
-                    for (int i = 0; i < cols.GetArrayLength(); i++)
+            await _dataSync.UpdateUserAsync(user);
+            return Json(new
+            {
+                success = true,
+                message = enable ? "✅ 连对邮件提醒已开启！每天10:00准时送达" : "❌ 已关闭连对邮件提醒"
+            });
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetStreakEmailStatus()
+        {
+            var userId = HttpContext.Session.GetInt32("UserId");
+            if (!userId.HasValue)
+                return Json(new { success = false, isEnabled = false });
+
+            var user = await _dataSync.GetUserByIdAsync(userId.Value);
+            if (user == null)
+                return Json(new { success = false, isEnabled = false });
+
+            return Json(new { success = true, isEnabled = user.IsStreakEmailEnabled });
+        }
+
+        // ============================================================
+        // 🗑️ 批量删除题目
+        // ============================================================
+
+        [HttpPost]
+        public async Task<IActionResult> BatchDeleteQuestions([FromBody] List<int> ids)
+        {
+            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+            if (isAdmin != 1)
+                return Json(new { success = false, message = "权限不足" });
+
+            if (ids == null || !ids.Any())
+                return Json(new { success = false, message = "请选择要删除的题目" });
+
+            int successCount = 0;
+            int failCount = 0;
+
+            foreach (var id in ids)
+            {
+                try
+                {
+                    await _dataSync.DeleteBankQuestionAsync(id);
+                    successCount++;
+                }
+                catch
+                {
+                    failCount++;
+                }
+            }
+
+            return Json(new
+            {
+                success = true,
+                message = $"✅ 已删除 {successCount} 道题" + (failCount > 0 ? $"，{failCount} 道失败" : "")
+            });
+        }
+
+        // ============================================================
+        // 📅 未来题目安排（自动AI安排 + 手动变更）
+        // ============================================================
+
+        [HttpGet]
+        public async Task<IActionResult> QuestionSchedule()
+        {
+            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+            if (isAdmin != 1)
+                return RedirectToAction("Login", "Auth");
+
+            var today = DateTime.Today;
+
+            // ⭐ 自动检查并安排未来7天的题目（智能AI安排）
+            await AutoScheduleMissingDaysAsync();
+
+            var schedule = new List<DailyScheduleItem>();
+
+            for (int i = 0; i < 7; i++)
+            {
+                var date = today.AddDays(i);
+                var dateStr = date.ToString("yyyy-MM-dd");
+
+                var result = await _dataSync.QueryAsync($@"
+                    SELECT dq.Id, dq.QuestionId, dq.Date,
+                           b.Question, b.Answer, b.Category, b.Difficulty
+                    FROM DailyQuestions dq
+                    JOIN DailyQuestionBank b ON dq.QuestionId = b.Id
+                    WHERE dq.Date = '{dateStr}'
+                    LIMIT 1
+                ");
+
+                var item = new DailyScheduleItem
+                {
+                    Date = date,
+                    DateStr = dateStr,
+                    IsToday = date == today,
+                    IsPast = date < today
+                };
+
+                var question = ParseDailyQuestionFromJson(result);
+                if (question != null)
+                {
+                    item.QuestionId = question.QuestionId ?? 0;
+                    item.Question = question.Question;
+                    item.Answer = question.Answer;
+                    item.Category = question.Category;
+                    item.Difficulty = question.Difficulty;
+                    item.IsScheduled = true;
+                }
+                else
+                {
+                    item.IsScheduled = false;
+                }
+
+                schedule.Add(item);
+            }
+
+            var bankQuestions = await _dataSync.GetAllBankQuestionsAsync();
+
+            ViewBag.Schedule = schedule;
+            ViewBag.BankQuestions = bankQuestions;
+            ViewBag.Today = today;
+
+            return View();
+        }
+
+        // ============================================================
+        // 辅助：从JSON解析QuestionId
+        // ============================================================
+
+        private int ParseQuestionIdFromJson(string json)
+        {
+            try
+            {
+                using var doc = JsonDocument.Parse(json);
+                var root = doc.RootElement;
+
+                if (root.TryGetProperty("results", out var results) && results.GetArrayLength() > 0)
+                {
+                    var firstResult = results[0];
+                    if (firstResult.TryGetProperty("response", out var response) &&
+                        response.TryGetProperty("result", out var result))
                     {
-                        var colName = cols[i].GetProperty("name").GetString();
-                        if (colName == "QuestionId")
+                        if (result.TryGetProperty("rows", out var rows) && rows.GetArrayLength() > 0)
                         {
-                            var element = row[i];
-                            var value = element.ValueKind == JsonValueKind.Object && element.TryGetProperty("value", out var v) ? v : element;
-                            return value.ValueKind == JsonValueKind.Number ? value.GetInt32() : 0;
+                            var row = rows[0];
+                            var cols = result.GetProperty("cols");
+
+                            for (int i = 0; i < cols.GetArrayLength(); i++)
+                            {
+                                var colName = cols[i].GetProperty("name").GetString();
+                                if (colName == "QuestionId")
+                                {
+                                    var element = row[i];
+                                    var value = element.ValueKind == JsonValueKind.Object && element.TryGetProperty("value", out var v) ? v : element;
+                                    return value.ValueKind == JsonValueKind.Number ? value.GetInt32() : 0;
+                                }
+                            }
                         }
                     }
                 }
+                return 0;
             }
+            catch { return 0; }
         }
-        return 0;
-    }
-    catch { return 0; }
-}
 
         // ============================================================
         // ⭐ 批量发送通知
@@ -345,7 +306,8 @@ private int ParseQuestionIdFromJson(string json)
             public string Message { get; set; } = string.Empty;
             public string Type { get; set; } = "info";
         }
-                // ============================================================
+
+        // ============================================================
         // 1. 仪表盘
         // ============================================================
         public async Task<IActionResult> Dashboard()
@@ -502,7 +464,8 @@ private int ParseQuestionIdFromJson(string json)
                 return Json(new { success = false, message = ex.Message });
             }
         }
-                // ============================================================
+
+        // ============================================================
         // 3. 留言管理
         // ============================================================
         public async Task<IActionResult> Messages()
@@ -607,7 +570,8 @@ private int ParseQuestionIdFromJson(string json)
                 }
             });
         }
-                // ============================================================
+
+        // ============================================================
         // 6. 待审核更改
         // ============================================================
         public async Task<IActionResult> PendingChanges()
@@ -677,7 +641,8 @@ private int ParseQuestionIdFromJson(string json)
             await _dataSync.UpdateUserAsync(user);
             return Json(new { success = true, message = "更改已拒绝" });
         }
-                // ============================================================
+
+        // ============================================================
         // 7. 新用户审核（通过）- 无需登录
         // ============================================================
         [HttpGet]
@@ -1232,7 +1197,8 @@ private int ParseQuestionIdFromJson(string json)
                 IconType = "fail"
             });
         }
-                // ============================================================
+
+        // ============================================================
         // 17. 关于我编辑
         // ============================================================
         public async Task<IActionResult> About()
@@ -1298,7 +1264,8 @@ private int ParseQuestionIdFromJson(string json)
                 return Json(new { success = false, message = ex.Message });
             }
         }
-                // ============================================================
+
+        // ============================================================
         // 18. ⭐ 发送通知给用户（弹窗 + 邮件 + 自动登录）
         // ============================================================
         [HttpPost]
@@ -1506,22 +1473,22 @@ private int ParseQuestionIdFromJson(string json)
 
             return Json(new { success = true, message = "用户已激活" });
         }
-                // ============================================================
+
+        // ============================================================
         // 📚 题库管理
         // ============================================================
 
-       [HttpGet]
-public async Task<IActionResult> QuestionBank()
-{
-    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-    if (isAdmin != 1)
-        return RedirectToAction("Login", "Auth");
+        [HttpGet]
+        public async Task<IActionResult> QuestionBank()
+        {
+            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+            if (isAdmin != 1)
+                return RedirectToAction("Login", "Auth");
 
-    var questions = await _dataSync.GetAllBankQuestionsAsync();
-    // ⭐ 加上排序
-    questions = questions.OrderBy(q => q.Id).ToList();
-    return View(questions);
-}
+            var questions = await _dataSync.GetAllBankQuestionsAsync();
+            questions = questions.OrderBy(q => q.Id).ToList();
+            return View(questions);
+        }
 
         [HttpGet]
         public async Task<IActionResult> GetQuestionDetail(int id)
@@ -1682,7 +1649,7 @@ public async Task<IActionResult> QuestionBank()
             public int Difficulty { get; set; } = 1;
             public string Category { get; set; } = "综合";
         }
-                
+
         // ============================================================
         // 🗓️ 更换某天的题目
         // ============================================================
@@ -1720,152 +1687,151 @@ public async Task<IActionResult> QuestionBank()
                 return Json(new { success = false, message = $"更换失败: {ex.Message}" });
             }
         }
+
         private async Task AutoScheduleMissingDaysAsync()
-{
-    var today = DateTime.Today;
-    var random = new Random();
-
-    // 获取所有可用题目
-    var allQuestions = await _dataSync.GetAllBankQuestionsAsync();
-    var availableQuestions = allQuestions
-        .Where(q => q.IsActive)
-        .ToList();
-
-    if (!availableQuestions.Any()) return;
-
-    var usedQuestions = new HashSet<int>();
-
-    for (int i = 0; i < 7; i++)
-    {
-        var date = today.AddDays(i);
-        var dateStr = date.ToString("yyyy-MM-dd");
-
-        // 检查当天是否已有安排
-        var checkResult = await _dataSync.QueryAsync(
-            $"SELECT QuestionId FROM DailyQuestions WHERE Date = '{dateStr}' LIMIT 1"
-        );
-
-        if (!checkResult.Contains("\"rows\":[]"))
         {
-            var existingId = ParseQuestionIdFromJson(checkResult);
-            if (existingId > 0)
+            var today = DateTime.Today;
+            var random = new Random();
+
+            // 获取所有可用题目
+            var allQuestions = await _dataSync.GetAllBankQuestionsAsync();
+            var availableQuestions = allQuestions
+                .Where(q => q.IsActive)
+                .ToList();
+
+            if (!availableQuestions.Any()) return;
+
+            var usedQuestions = new HashSet<int>();
+
+            for (int i = 0; i < 7; i++)
             {
-                usedQuestions.Add(existingId);
-                continue;
-            }
-        }
+                var date = today.AddDays(i);
+                var dateStr = date.ToString("yyyy-MM-dd");
 
-        // ⭐ 随机选一道题（优先使用次数少的）
-        var candidate = availableQuestions
-            .Where(q => !usedQuestions.Contains(q.Id))
-            .OrderBy(q => q.UseCount)
-            .ThenBy(q => random.Next())  // 随机排序
-            .FirstOrDefault();
+                // 检查当天是否已有安排
+                var checkResult = await _dataSync.QueryAsync(
+                    $"SELECT QuestionId FROM DailyQuestions WHERE Date = '{dateStr}' LIMIT 1"
+                );
 
-        // 如果所有题目都用完了，重置
-        if (candidate == null)
-        {
-            usedQuestions.Clear();
-            candidate = availableQuestions
-                .Where(q => !usedQuestions.Contains(q.Id))
-                .OrderBy(q => q.UseCount)
-                .ThenBy(q => random.Next())
-                .FirstOrDefault();
-        }
-
-        if (candidate != null)
-        {
-            usedQuestions.Add(candidate.Id);
-
-            var sql = $@"INSERT INTO DailyQuestions (
-                QuestionId, Date, CreatedAt
-            ) VALUES (
-                {candidate.Id}, '{dateStr}', '{DateTime.Now:yyyy-MM-dd HH:mm:ss}'
-            )";
-
-            await _dataSync.ExecuteSqlAsync(sql);
-            Console.WriteLine($"🤖 AI自动安排 {dateStr}: {candidate.Question} (难度: {candidate.Difficulty}⭐)");
-        }
-    }
-}
-
-
-        // ============================================================
-        private DailyQuestion? ParseDailyQuestionFromJson(string json)
-{
-    try
-    {
-        using var doc = JsonDocument.Parse(json);
-        var root = doc.RootElement;
-
-        if (root.TryGetProperty("results", out var results) && results.GetArrayLength() > 0)
-        {
-            var firstResult = results[0];
-            if (firstResult.TryGetProperty("response", out var response) &&
-                response.TryGetProperty("result", out var result))
-            {
-                if (result.TryGetProperty("rows", out var rows) && rows.GetArrayLength() > 0)
+                if (!checkResult.Contains("\"rows\":[]"))
                 {
-                    var row = rows[0];
-                    var cols = result.GetProperty("cols");
-
-                    var q = new DailyQuestion();
-
-                    for (int i = 0; i < cols.GetArrayLength(); i++)
+                    var existingId = ParseQuestionIdFromJson(checkResult);
+                    if (existingId > 0)
                     {
-                        var colName = cols[i].GetProperty("name").GetString();
-                        var element = row[i];
-
-                        // ⭐ 关键修复：处理 Turso 的 { value: xxx } 格式
-                        var value = element;
-                        if (element.ValueKind == JsonValueKind.Object && element.TryGetProperty("value", out var v))
-                        {
-                            value = v;
-                        }
-
-                        if (value.ValueKind == JsonValueKind.Null)
-                        {
-                            continue;
-                        }
-
-                        switch (colName)
-                        {
-                            case "Id":
-                                q.Id = value.ValueKind == JsonValueKind.Number ? value.GetInt32() : 0;
-                                break;
-                            case "QuestionId":
-                                q.QuestionId = value.ValueKind == JsonValueKind.Number ? value.GetInt32() : 0;
-                                break;
-                            case "Date":
-                                q.Date = value.ValueKind == JsonValueKind.String ? DateTime.Parse(value.GetString() ?? "") : DateTime.Now;
-                                break;
-                            case "Question":
-                                q.Question = value.ValueKind == JsonValueKind.String ? value.GetString() ?? "" : "";
-                                break;
-                            case "Answer":
-                                q.Answer = value.ValueKind == JsonValueKind.String ? value.GetString() ?? "" : "";
-                                break;
-                            case "Category":
-                                q.Category = value.ValueKind == JsonValueKind.String ? value.GetString() ?? "综合" : "综合";
-                                break;
-                            case "Difficulty":
-                                q.Difficulty = value.ValueKind == JsonValueKind.Number ? value.GetInt32() : 1;
-                                break;
-                        }
+                        usedQuestions.Add(existingId);
+                        continue;
                     }
-                    return q;
+                }
+
+                // ⭐ 随机选一道题（优先使用次数少的）
+                var candidate = availableQuestions
+                    .Where(q => !usedQuestions.Contains(q.Id))
+                    .OrderBy(q => q.UseCount)
+                    .ThenBy(q => random.Next())  // 随机排序
+                    .FirstOrDefault();
+
+                // 如果所有题目都用完了，重置
+                if (candidate == null)
+                {
+                    usedQuestions.Clear();
+                    candidate = availableQuestions
+                        .Where(q => !usedQuestions.Contains(q.Id))
+                        .OrderBy(q => q.UseCount)
+                        .ThenBy(q => random.Next())
+                        .FirstOrDefault();
+                }
+
+                if (candidate != null)
+                {
+                    usedQuestions.Add(candidate.Id);
+
+                    var sql = $@"INSERT INTO DailyQuestions (
+                        QuestionId, Date, CreatedAt
+                    ) VALUES (
+                        {candidate.Id}, '{dateStr}', '{DateTime.Now:yyyy-MM-dd HH:mm:ss}'
+                    )";
+
+                    await _dataSync.ExecuteSqlAsync(sql);
+                    Console.WriteLine($"🤖 AI自动安排 {dateStr}: {candidate.Question} (难度: {candidate.Difficulty}⭐)");
                 }
             }
         }
-        return null;
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"解析每日题目失败: {ex.Message}");
-        return null;
-    }
-}
 
+        // ============================================================
+        private DailyQuestion? ParseDailyQuestionFromJson(string json)
+        {
+            try
+            {
+                using var doc = JsonDocument.Parse(json);
+                var root = doc.RootElement;
+
+                if (root.TryGetProperty("results", out var results) && results.GetArrayLength() > 0)
+                {
+                    var firstResult = results[0];
+                    if (firstResult.TryGetProperty("response", out var response) &&
+                        response.TryGetProperty("result", out var result))
+                    {
+                        if (result.TryGetProperty("rows", out var rows) && rows.GetArrayLength() > 0)
+                        {
+                            var row = rows[0];
+                            var cols = result.GetProperty("cols");
+
+                            var q = new DailyQuestion();
+
+                            for (int i = 0; i < cols.GetArrayLength(); i++)
+                            {
+                                var colName = cols[i].GetProperty("name").GetString();
+                                var element = row[i];
+
+                                // ⭐ 关键修复：处理 Turso 的 { value: xxx } 格式
+                                var value = element;
+                                if (element.ValueKind == JsonValueKind.Object && element.TryGetProperty("value", out var v))
+                                {
+                                    value = v;
+                                }
+
+                                if (value.ValueKind == JsonValueKind.Null)
+                                {
+                                    continue;
+                                }
+
+                                switch (colName)
+                                {
+                                    case "Id":
+                                        q.Id = value.ValueKind == JsonValueKind.Number ? value.GetInt32() : 0;
+                                        break;
+                                    case "QuestionId":
+                                        q.QuestionId = value.ValueKind == JsonValueKind.Number ? value.GetInt32() : 0;
+                                        break;
+                                    case "Date":
+                                        q.Date = value.ValueKind == JsonValueKind.String ? DateTime.Parse(value.GetString() ?? "") : DateTime.Now;
+                                        break;
+                                    case "Question":
+                                        q.Question = value.ValueKind == JsonValueKind.String ? value.GetString() ?? "" : "";
+                                        break;
+                                    case "Answer":
+                                        q.Answer = value.ValueKind == JsonValueKind.String ? value.GetString() ?? "" : "";
+                                        break;
+                                    case "Category":
+                                        q.Category = value.ValueKind == JsonValueKind.String ? value.GetString() ?? "综合" : "综合";
+                                        break;
+                                    case "Difficulty":
+                                        q.Difficulty = value.ValueKind == JsonValueKind.Number ? value.GetInt32() : 1;
+                                        break;
+                                }
+                            }
+                            return q;
+                        }
+                    }
+                }
+                return null;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"解析每日题目失败: {ex.Message}");
+                return null;
+            }
+        }
 
         // ============================================================
         // 辅助类
@@ -1884,226 +1850,83 @@ public async Task<IActionResult> QuestionBank()
             public string Category { get; set; } = "综合";
             public int Difficulty { get; set; } = 1;
         }
+
         // ============================================================
-// 🗑️ 题库去重（删除重复题目）
-// ============================================================
+        // 🗑️ 题库去重（删除重复题目）
+        // ============================================================
 
-[HttpPost]
-public async Task<IActionResult> DeduplicateQuestions()
-{
-    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-    if (isAdmin != 1)
-        return Json(new { success = false, message = "权限不足" });
-
-    try
-    {
-        var allQuestions = await _dataSync.GetAllBankQuestionsAsync();
-        var seen = new HashSet<string>();
-        var duplicateIds = new List<int>();
-
-        foreach (var q in allQuestions)
+        [HttpPost]
+        public async Task<IActionResult> DeduplicateQuestions()
         {
-            var key = $"{q.Question}_{q.Answer}";
-            if (seen.Contains(key))
+            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+            if (isAdmin != 1)
+                return Json(new { success = false, message = "权限不足" });
+
+            try
             {
-                duplicateIds.Add(q.Id);
+                var allQuestions = await _dataSync.GetAllBankQuestionsAsync();
+                var seen = new HashSet<string>();
+                var duplicateIds = new List<int>();
+
+                foreach (var q in allQuestions)
+                {
+                    var key = $"{q.Question}_{q.Answer}";
+                    if (seen.Contains(key))
+                    {
+                        duplicateIds.Add(q.Id);
+                    }
+                    else
+                    {
+                        seen.Add(key);
+                    }
+                }
+
+                if (duplicateIds.Any())
+                {
+                    foreach (var id in duplicateIds)
+                    {
+                        await _dataSync.DeleteBankQuestionAsync(id);
+                    }
+                }
+
+                return Json(new
+                {
+                    success = true,
+                    message = $"✅ 已删除 {duplicateIds.Count} 道重复题目",
+                    deletedCount = duplicateIds.Count
+                });
             }
-            else
+            catch (Exception ex)
             {
-                seen.Add(key);
+                return Json(new { success = false, message = $"去重失败: {ex.Message}" });
             }
         }
 
-        if (duplicateIds.Any())
+        // ============================================================
+        // ⭐ 获取所有用户简要信息（用于在线用户列表）
+        // ============================================================
+        [HttpGet]
+        public async Task<IActionResult> GetAllUsersBrief()
         {
-            foreach (var id in duplicateIds)
-            {
-                await _dataSync.DeleteBankQuestionAsync(id);
-            }
+            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+            if (isAdmin != 1)
+                return Json(new { success = false, message = "权限不足" });
+
+            var users = await _dataSync.GetAllUsersAsync();
+            var brief = users
+                .Where(u => !u.IsDeleted)
+                .Select(u => new
+                {
+                    id = u.Id,
+                    username = u.Username,
+                    avatarUrl = u.AvatarUrl,
+                    isAvatarApproved = u.IsAvatarApproved,
+                    isAdmin = u.IsAdmin
+                })
+                .ToList();
+
+            return Json(new { success = true, users = brief });
         }
 
-        return Json(new
-        {
-            success = true,
-            message = $"✅ 已删除 {duplicateIds.Count} 道重复题目",
-            deletedCount = duplicateIds.Count
-        });
-    }
-    catch (Exception ex)
-    {
-        return Json(new { success = false, message = $"去重失败: {ex.Message}" });
     }
 }
-<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
-<script>
-    var _horrorConnection = null;
-
-    function getHorrorConnection() {
-        return new Promise(function(resolve, reject) {
-            try {
-                if (_horrorConnection && _horrorConnection.state === signalR.HubConnectionState.Connected) {
-                    resolve(_horrorConnection);
-                    return;
-                }
-                var conn = new signalR.HubConnectionBuilder()
-                    .withUrl('/messageHub')
-                    .configureLogging(signalR.LogLevel.Information)
-                    .build();
-
-                conn.start()
-                    .then(function() {
-                        _horrorConnection = conn;
-                        resolve(conn);
-                    })
-                    .catch(function(err) {
-                        reject(err);
-                    });
-            } catch(e) {
-                reject(e);
-            }
-        });
-    }
-
-    function triggerHorror() {
-        if (!confirm('⚠️ 确定要对所有在线玩家释放恐怖入侵吗？')) return;
-        var btn = event.target;
-        btn.disabled = true;
-        btn.textContent = '⏳ 释放中...';
-
-        var messages = [
-            '👁️ 它 正 在 盯 着 你 的 眼 睛',
-            '🔴 你 的 脖 子 后 面 有 东 西',
-            '💀 它 在 你 的 床 底 下 等 你',
-            '🩸 你 的 手 机 屏 幕 在 滴 血',
-            '👻 镜 子 里 的 人 不 是 你',
-            '🔪 你 家 门 口 有 脚 步 声',
-            '💀 你 的 名 字 被 刻 在 墙 上',
-            '👁️ 它 在 你 闭 眼 时 靠 近',
-            '🩸 你 枕 头 下 面 有 东 西',
-            '🔴 它 正 在 舔 你 的 窗 户',
-            '💀 你 完 了 ！ ！ ！ ！ ！',
-            '🔪 我 就 在 你 身 后 ！ ！ ！',
-            '👹 你 跑 不 掉 的 ！ ！ ！',
-            '🔥 地 狱 已 经 打 开 了 ！',
-            '💀 下 一 个 就 是 你 ！ ！ ！',
-            '👁️ 别 回 头 ！ ！ ！ ！ ！',
-            '🩸 你 在 大 量 出 血 。 。 。',
-            '🔴 它 从 天 花 板 掉 下 来 了 ！',
-            '💀 你 的 时 间 到 了 ！ ！ ！',
-            '👻 它 对 你 露 出 了 微 笑',
-            '⚠️ 系 统 已 被 恶 魔 入 侵 ⚠️',
-            '🔴 你 的 摄 像 头 已 经 打 开 了',
-            '💀 你 的 数 据 正 在 被 删 除',
-            '👁️ 你 被 锁 定 了 。 。 。',
-            '🔴 你 已 经 无 法 逃 离 了',
-            '⚠️ 快 跑 ！ ！ ！ 它 来 了 ！',
-            '🔴 它 已 经 进 入 你 的 设 备',
-            '💀 你 的 屏 幕 在 慢 慢 裂 开',
-            '👻 信 号 已 被 恶 灵 劫 持',
-            '🔴 你 已 被 标 记 为 目 标',
-            '🩸 你 的 门 已 经 被 打 开 了 。 。 。',
-            '👁️ 你 刚 才 看 到 我 了 对 吧',
-            '💀 名 单 上 有 你 的 名 字',
-            '🔪 有 人 在 你 的 背 后 呼 吸',
-            '👻 它 就 站 在 你 后 面 不 动',
-            '🩸 你 的 脸 已 经 没 有 血 色 了',
-            '🔴 你 的 屏 幕 渗 出 了 血 液',
-            '💀 你 的 眼 睛 变 成 红 色 了',
-            '👁️ 镜 子 里 的 东 西 在 动',
-            '🔥 你 闻 到 烧 焦 的 味 道 了 吧',
-            '💀 它 正 在 吃 你 的 影 子',
-            '🩸 血 正 在 从 天 花 板 滴 落',
-            '👹 它 的 脸 贴 在 你 的 脸 上',
-            '🔪 你 听 到 骨 头 折 断 的 声 音',
-            '💀 它 已 经 进 入 你 的 大 脑',
-            '👁️ 你 的 眼 球 正 在 变 黑',
-            '🩸 你 周 围 的 墙 壁 在 渗 血',
-            '🔴 它 正 在 啃 你 的 骨 头',
-            '💀 你 的 灵 魂 正 在 被 撕 裂',
-            '👻 它 吃 掉 了 你 的 名 字'
-        ];
-        var msg = messages[Math.floor(Math.random() * messages.length)];
-
-        getHorrorConnection()
-            .then(function(conn) {
-                conn.invoke('TriggerHorror', msg);
-                btn.textContent = '✅ 已释放';
-                setTimeout(function() {
-                    btn.disabled = false;
-                    btn.textContent = '👻 释放恐怖入侵';
-                }, 3000);
-            })
-            .catch(function(err) {
-                alert('释放失败: ' + err);
-                btn.disabled = false;
-                btn.textContent = '👻 释放恐怖入侵';
-            });
-    }
-
-    function triggerHorrorWithMessage() {
-        var msg = prompt('输入恐怖消息：', '💀 你逃不掉的...');
-        if (msg === null) return;
-        var btn = event.target;
-        btn.disabled = true;
-        btn.textContent = '⏳ 发送中...';
-        getHorrorConnection()
-            .then(function(conn) {
-                conn.invoke('TriggerHorror', msg.trim() || '💀 你逃不掉的...');
-                btn.textContent = '✅ 已发送';
-                setTimeout(function() {
-                    btn.disabled = false;
-                    btn.textContent = '📝 自定义恐怖';
-                }, 3000);
-            })
-            .catch(function(err) {
-                alert('发送失败: ' + err);
-                btn.disabled = false;
-                btn.textContent = '📝 自定义恐怖';
-            });
-    }
-
-    function triggerGhost() {
-        var btn = event.target;
-        btn.disabled = true;
-        btn.textContent = '⏳ 释放中...';
-        getHorrorConnection()
-            .then(function(conn) {
-                conn.invoke('TriggerGhost', '👻 幽灵出没！');
-                btn.textContent = '✅ 已释放';
-                setTimeout(function() {
-                    btn.disabled = false;
-                    btn.textContent = '👻 幽灵飘过';
-                }, 2000);
-            })
-            .catch(function(err) {
-                alert('释放失败: ' + err);
-                btn.disabled = false;
-                btn.textContent = '👻 幽灵飘过';
-            });
-    }
-
-    function triggerShake() {
-        var btn = event.target;
-        btn.disabled = true;
-        btn.textContent = '⏳ 释放中...';
-        getHorrorConnection()
-            .then(function(conn) {
-                var intensities = ['light', 'medium', 'hard'];
-                var intensity = intensities[Math.floor(Math.random() * intensities.length)];
-                conn.invoke('TriggerShake', intensity);
-                btn.textContent = '✅ 已释放';
-                setTimeout(function() {
-                    btn.disabled = false;
-                    btn.textContent = '💀 屏幕震动';
-                }, 2000);
-            })
-            .catch(function(err) {
-                alert('释放失败: ' + err);
-                btn.disabled = false;
-                btn.textContent = '💀 屏幕震动';
-            });
-    }
-</script>
-                    
-    }  // ⬅️ AdminController 类结束（只有一个）
-}  // ⬅️ namespace 结束（只有一个）
