@@ -504,9 +504,8 @@ namespace MyPersonalWebsite.Controllers
             {"shapeCount", new[]{"📐 立体视觉！", "🧊 空间感知！", "✨ 三维大师！"}},
             {"inverseColor", new[]{"🎨 视觉之神！", "🌈 火眼金睛！", "✨ 色彩大师！"}},
             {"rotate", new[]{"🔄 空间之神！", "🧠 超脑！", "✨ 旋转之王！"}},
-            {"spaceFolding", new[]{"🧊 空间大师！", "🧠 立体思维！", "🎯 透视眼！"}},
-            {"tripleColor", new[]{"🎯 三重干扰通关！", "🌈 视觉之神！", "✨ 不是人类！"}},
-            {"abgame", new[]{"🧠 推理大师！", "🔢 数字天才！", "🎯 精准打击！", "💡 逻辑王者！", "🏆 解密高手！", "⚡ 人形计算机！", "✨ 洞察秋毫！", "🎯 一击即中！", "🧩 逻辑之眼！", "🔥 推理之火！", "💪 头脑风暴！", "🌟 数字掌控者！", "🚀 推理加速！"}}
+            {"abgame", new[]{"🧠 推理大师！", "🔢 数字天才！", "🎯 精准打击！", "💡 逻辑王者！", "🏆 解密高手！", "⚡ 人形计算机！", "✨ 洞察秋毫！", "🎯 一击即中！", "🧩 逻辑之眼！", "🔥 推理之火！", "💪 头脑风暴！", "🌟 数字掌控者！", "🚀 推理加速！"}},
+            {"tripleColor", new[]{"🎯 三重干扰通关！", "🌈 视觉之神！", "✨ 不是人类！"}}
         };
 
         // ============================================================
@@ -535,51 +534,89 @@ namespace MyPersonalWebsite.Controllers
         // 保存分数
         // ============================================================
         [HttpPost]
-public async Task<IActionResult> SaveScore(int score, int level, int maxCombo, int passed)
-{
-    var userId = HttpContext.Session.GetInt32("UserId");
-    if (!userId.HasValue) return Json(new { success = false });
+        public async Task<IActionResult> SaveScore(int score, int level, int maxCombo, int passed)
+        {
+            var userId = HttpContext.Session.GetInt32("UserId");
+            if (!userId.HasValue) return Json(new { success = false, message = "请先登录" });
 
-    var user = await _dataSync.GetUserByIdAsync(userId.Value);
-    if (user == null) return Json(new { success = false });
+            try
+            {
+                var stats = await _dataSync.GetUserGameStatsAsync(userId.Value);
+                if (stats == null)
+                {
+                    stats = new UserGameStats
+                    {
+                        UserId = userId.Value,
+                        TotalPoints = score,
+                        MaxCombo = maxCombo,
+                        MaxLevel = level,
+                        GamesPlayed = 1,
+                        UpdatedAt = DateTime.Now
+                    };
+                    await _dataSync.AddUserGameStatsAsync(stats);
+                }
+                else
+                {
+                    if (score > stats.TotalPoints) stats.TotalPoints = score;
+                    if (maxCombo > stats.MaxCombo) stats.MaxCombo = maxCombo;
+                    if (level > stats.MaxLevel) stats.MaxLevel = level;
+                    stats.GamesPlayed += 1;
+                    stats.UpdatedAt = DateTime.Now;
+                    await _dataSync.UpdateUserGameStatsAsync(stats);
+                }
+                return Json(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"保存分数失败: {ex.Message}");
+                return Json(new { success = false, message = "保存失败" });
+            }
+        }
 
-    if (score > user.VerifyGameScore) user.VerifyGameScore = score;
-    if (level > user.VerifyGameMaxLevel) user.VerifyGameMaxLevel = level;
-    if (maxCombo > user.VerifyGameMaxCombo) user.VerifyGameMaxCombo = maxCombo;
-
-    await _dataSync.UpdateUserAsync(user);
-    return Json(new { success = true });
-}
         // ============================================================
         // 获取排行榜
         // ============================================================
-    [HttpGet]
-public async Task<IActionResult> GetRanking()
-{
-    var userId = HttpContext.Session.GetInt32("UserId");
-    var users = await _dataSync.GetAllUsersAsync();
-
-    var ranking = users
-        .Where(u => u.VerifyGameScore > 0 && !u.IsDeleted)
-        .OrderByDescending(u => u.VerifyGameScore)
-        .ThenByDescending(u => u.VerifyGameMaxLevel)
-        .Take(100)
-        .Select((u, index) => new
+        [HttpGet]
+        public async Task<IActionResult> GetRanking()
         {
-            userId = u.Id,
-            username = u.Username,
-            avatarUrl = u.AvatarUrl,
-            isAvatarApproved = u.IsAvatarApproved,
-            totalPoints = u.VerifyGameScore,
-            maxCombo = u.VerifyGameMaxCombo,
-            maxLevel = u.VerifyGameMaxLevel,
-            rank = index + 1,
-            isMe = u.Id == userId
-        })
-        .ToList();
+            try
+            {
+                var userId = HttpContext.Session.GetInt32("UserId");
+                var allStats = await _dataSync.GetAllUserGameStatsAsync();
+                var users = await _dataSync.GetAllUsersAsync();
 
-    return Json(new { success = true, data = ranking });
-}
+                var ranking = allStats
+                    .Where(s => s.MaxLevel > 0)
+                    .OrderByDescending(s => s.TotalPoints)
+                    .ThenByDescending(s => s.MaxLevel)
+                    .Take(100)
+                    .Select((s, index) =>
+                    {
+                        var user = users.FirstOrDefault(u => u.Id == s.UserId);
+                        return new
+                        {
+                            userId = s.UserId,
+                            username = user?.Username ?? "已删除用户",
+                            avatarUrl = user?.AvatarUrl,
+                            isAvatarApproved = user?.IsAvatarApproved ?? false,
+                            totalPoints = s.TotalPoints,
+                            maxCombo = s.MaxCombo,
+                            maxLevel = s.MaxLevel,
+                            gamesPlayed = s.GamesPlayed,
+                            rank = index + 1,
+                            isMe = s.UserId == userId
+                        };
+                    })
+                    .ToList();
+
+                return Json(new { success = true, data = ranking });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"获取排行榜失败: {ex.Message}");
+                return Json(new { success = false, data = new List<object>() });
+            }
+        }
 
         // ============================================================
         // 获取挑战
@@ -642,7 +679,7 @@ public async Task<IActionResult> GetRanking()
                 "图形计数",      // 15
                 "反色识别",      // 16
                 "图形旋转",      // 17
-                "1A2B猜数字",    // 18 ← 替换成这个
+                "1A2B猜数字",    // 18
                 "颜色三重干扰"   // 19
             };
 
@@ -1022,7 +1059,7 @@ public async Task<IActionResult> GetRanking()
                 var displayName = _colorDisplayName.ContainsKey(color) ? _colorDisplayName[color] : color;
                 sb.Append($"<div class='color-option' data-color='{color}' style='display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px;border:2px solid rgba(255,255,255,0.04);border-radius:14px;background:rgba(255,255,255,0.02);cursor:pointer;transition:all 0.3s ease;'>");
                 sb.Append(GenerateColorBlock(color, size));
-                sb.Append($"<span class='color-label' style='color:rgba(255,255,255,0.2);font-size:0.7rem;font-weight:500;'>{displayName}</span>");
+                sb.Append($"<span class='color-label' style='color:rgba(255,255,255,0.5);font-size:0.9rem;font-weight:600;'>{displayName}</span>");
                 sb.Append("</div>");
             }
 
@@ -1628,7 +1665,7 @@ public async Task<IActionResult> GetRanking()
             {
                 ["type"] = "memory",
                 ["level"] = level,
-                ["question"] = $"🧠 记住这个数字：<span style='font-size:2.5rem;font-weight:bold;color:#8B5CF6;letter-spacing:8px;'>{text}</span>",
+                ["question"] = $"🧠 记住下面的数字",
                 ["displayNumber"] = text,
                 ["memoryTime"] = memoryTime,
                 ["correctAnswer"] = text,
@@ -1973,8 +2010,8 @@ public async Task<IActionResult> GetRanking()
             var views = GenerateViews(cubeCount);
 
             string topView = ViewsToHtml(views.top, "俯视图");
-            string frontView = ViewsToHtml(views.front, "正视图");
-            string sideView = ViewsToHtml(views.side, "侧视图(左)");
+            string frontView = ViewsToHtml(views.front, "主视图");
+            string sideView = ViewsToHtml(views.side, "左视图");
 
             var options = GenerateNumberOptions(cubeCount, 4 + Math.Min(difficulty / 10, 3), 5 + difficulty / 5);
 
@@ -2100,16 +2137,16 @@ public async Task<IActionResult> GetRanking()
         private string ViewsToHtml(int[][] view, string title)
         {
             var sb = new StringBuilder();
-            sb.Append($"<div style='display:inline-block;margin:0 6px;'>");
-            sb.Append($"<div style='color:rgba(255,255,255,0.08);font-size:0.55rem;text-align:center;margin-bottom:2px;'>{title}</div>");
+            sb.Append($"<div style='display:inline-block;margin:0 12px;text-align:center;'>");
+            sb.Append($"<div style='color:rgba(255,255,255,0.2);font-size:0.9rem;font-weight:600;text-align:center;margin-bottom:4px;'>{title}</div>");
             sb.Append("<div style='display:grid;grid-template-columns:");
 
             int cols = view[0].Length;
             for (int i = 0; i < cols; i++)
             {
-                sb.Append(" 20px");
+                sb.Append(" 35px");
             }
-            sb.Append(";gap:2px;'>");
+            sb.Append(";gap:3px;'>");
 
             for (int r = 0; r < view.Length; r++)
             {
@@ -2117,11 +2154,11 @@ public async Task<IActionResult> GetRanking()
                 {
                     if (view[r][c] == 1)
                     {
-                        sb.Append($"<div style='width:20px;height:20px;background:#8B5CF6;border-radius:2px;'></div>");
+                        sb.Append($"<div style='width:35px;height:35px;background:#8B5CF6;border-radius:4px;'></div>");
                     }
                     else
                     {
-                        sb.Append($"<div style='width:20px;height:20px;background:rgba(255,255,255,0.02);border-radius:2px;'></div>");
+                        sb.Append($"<div style='width:35px;height:35px;background:rgba(255,255,255,0.02);border-radius:4px;'></div>");
                     }
                 }
             }
