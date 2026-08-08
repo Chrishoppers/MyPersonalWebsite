@@ -5,259 +5,66 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - Chris hopper</title>
 
-    <!-- 字体 -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-
-    <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
-
-    <!-- 高级样式 -->
     <link rel="stylesheet" href="~/css/site.css" />
-
-    <!-- Bootstrap 5 -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
 
     <style>
-        body {
-            background: #0A0A0F;
-            color: #FFFFFF;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        }
-        main {
-            padding-top: 1.5rem;
-            padding-bottom: 3rem;
-        }
-        .container {
-            max-width: 1200px;
-        }
-        .navbar-nav .nav-link {
-            display: flex;
-            align-items: center;
-            gap: 0.3rem;
-        }
-        .nav-avatar {
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 1px solid rgba(255,255,255,0.06);
-            flex-shrink: 0;
-        }
-        .nav-avatar-placeholder {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            background: rgba(255,255,255,0.04);
-            color: rgba(255,255,255,0.3);
-            font-size: 0.7rem;
-            font-weight: 600;
-            flex-shrink: 0;
-        }
+        body { background: #0A0A0F; color: #FFFFFF; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+        main { padding-top: 1.5rem; padding-bottom: 3rem; }
+        .container { max-width: 1200px; }
+        .navbar-nav .nav-link { display: flex; align-items: center; gap: 0.3rem; }
+        .nav-avatar { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; border: 1px solid rgba(255,255,255,0.06); flex-shrink: 0; }
+        .nav-avatar-placeholder { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%; background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.3); font-size: 0.7rem; font-weight: 600; flex-shrink: 0; }
 
-        /* ===== 通知样式 ===== */
-        .notif-badge {
-            position: absolute;
-            top: -4px;
-            right: -6px;
-            background: #EC4899;
-            color: #fff;
-            font-size: 0.6rem;
-            font-weight: 700;
-            padding: 0.1rem 0.4rem;
-            border-radius: 20px;
-            min-width: 18px;
-            text-align: center;
-            line-height: 1.4;
-            border: 2px solid #0A0A0F;
-        }
-
-        .notif-dropdown {
-            position: absolute;
-            top: 100%;
-            right: 0;
-            width: 400px;
-            max-height: 480px;
-            background: #1a1a2e;
-            border-radius: 16px;
-            border: 1px solid rgba(255,255,255,0.04);
-            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-            display: none;
-            z-index: 1000;
-            overflow: hidden;
-            margin-top: 0.5rem;
-        }
-
-        .notif-dropdown.show {
-            display: block;
-            animation: notifSlideDown 0.25s ease;
-        }
-
-        @@keyframes notifSlideDown {
-            from { opacity: 0; transform: translateY(-10px) scale(0.95); }
-            to { opacity: 1; transform: translateY(0) scale(1); }
-        }
-
-        .notif-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0.8rem 1.2rem;
-            border-bottom: 1px solid rgba(255,255,255,0.04);
-            color: #fff;
-            font-weight: 600;
-            font-size: 0.95rem;
-        }
-
-        .notif-mark-all {
-            background: none;
-            border: none;
-            color: rgba(255,255,255,0.2);
-            font-size: 0.75rem;
-            cursor: pointer;
-            transition: color 0.3s ease;
-        }
-
-        .notif-mark-all:hover {
-            color: #8B5CF6;
-        }
-
-        .notif-list {
-            max-height: 340px;
-            overflow-y: auto;
-            padding: 0.2rem 0;
-        }
-
-        .notif-list::-webkit-scrollbar {
-            width: 3px;
-        }
-        .notif-list::-webkit-scrollbar-thumb {
-            background: rgba(255,255,255,0.1);
-            border-radius: 10px;
-        }
-
-        .notif-item {
-            display: flex;
-            align-items: flex-start;
-            gap: 0.8rem;
-            padding: 0.8rem 1.2rem;
-            border-bottom: 1px solid rgba(255,255,255,0.02);
-            cursor: pointer;
-            transition: background 0.2s ease;
-        }
-
-        .notif-item:hover {
-            background: rgba(255,255,255,0.02);
-        }
-
-        .notif-item.read {
-            opacity: 0.4;
-        }
-
-        .notif-item .notif-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            flex-shrink: 0;
-            margin-top: 0.2rem;
-        }
-
+        .notif-badge { position: absolute; top: -4px; right: -6px; background: #EC4899; color: #fff; font-size: 0.6rem; font-weight: 700; padding: 0.1rem 0.4rem; border-radius: 20px; min-width: 18px; text-align: center; line-height: 1.4; border: 2px solid #0A0A0F; }
+        .notif-dropdown { position: absolute; top: 100%; right: 0; width: 400px; max-height: 480px; background: #1a1a2e; border-radius: 16px; border: 1px solid rgba(255,255,255,0.04); box-shadow: 0 20px 60px rgba(0,0,0,0.5); display: none; z-index: 1000; overflow: hidden; margin-top: 0.5rem; }
+        .notif-dropdown.show { display: block; animation: notifSlideDown 0.25s ease; }
+        @@keyframes notifSlideDown { from { opacity: 0; transform: translateY(-10px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        .notif-header { display: flex; justify-content: space-between; align-items: center; padding: 0.8rem 1.2rem; border-bottom: 1px solid rgba(255,255,255,0.04); color: #fff; font-weight: 600; font-size: 0.95rem; }
+        .notif-mark-all { background: none; border: none; color: rgba(255,255,255,0.2); font-size: 0.75rem; cursor: pointer; transition: color 0.3s ease; }
+        .notif-mark-all:hover { color: #8B5CF6; }
+        .notif-list { max-height: 340px; overflow-y: auto; padding: 0.2rem 0; }
+        .notif-list::-webkit-scrollbar { width: 3px; }
+        .notif-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+        .notif-item { display: flex; align-items: flex-start; gap: 0.8rem; padding: 0.8rem 1.2rem; border-bottom: 1px solid rgba(255,255,255,0.02); cursor: pointer; transition: background 0.2s ease; }
+        .notif-item:hover { background: rgba(255,255,255,0.02); }
+        .notif-item.read { opacity: 0.4; }
+        .notif-item .notif-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 0.2rem; }
         .notif-item .notif-dot.info { background: #4facfe; }
         .notif-item .notif-dot.success { background: #28a745; }
         .notif-item .notif-dot.warning { background: #ffc107; }
         .notif-item .notif-dot.danger { background: #dc3545; }
-
-        .notif-item .notif-content {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .notif-item .notif-title {
-            color: #fff;
-            font-weight: 500;
-            font-size: 0.85rem;
-        }
-
-        .notif-item .notif-msg {
-            color: rgba(255,255,255,0.4);
-            font-size: 0.8rem;
-            margin-top: 0.1rem;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
-        .notif-item .notif-time {
-            color: rgba(255,255,255,0.15);
-            font-size: 0.65rem;
-            margin-top: 0.2rem;
-        }
-
-        .notif-empty {
-            text-align: center;
-            padding: 2rem;
-            color: rgba(255,255,255,0.15);
-            font-size: 0.9rem;
-        }
-
-        .notif-footer {
-            padding: 0.6rem 1.2rem;
-            border-top: 1px solid rgba(255,255,255,0.04);
-            text-align: center;
-        }
-
-        .notif-footer a {
-            color: rgba(255,255,255,0.2);
-            text-decoration: none;
-            font-size: 0.8rem;
-            transition: color 0.3s ease;
-        }
-
-        .notif-footer a:hover {
-            color: #8B5CF6;
-        }
-
-        .nav-item.dropdown {
-            position: relative;
-        }
-
-        .nav-link-bell {
-            position: relative;
-            cursor: pointer;
-            padding: 0.5rem 0.8rem;
-            border-radius: 40px;
-            transition: all 0.3s ease;
-        }
-
-        .nav-link-bell:hover {
-            background: rgba(255,255,255,0.04);
-        }
+        .notif-item .notif-content { flex: 1; min-width: 0; }
+        .notif-item .notif-title { color: #fff; font-weight: 500; font-size: 0.85rem; }
+        .notif-item .notif-msg { color: rgba(255,255,255,0.4); font-size: 0.8rem; margin-top: 0.1rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .notif-item .notif-time { color: rgba(255,255,255,0.15); font-size: 0.65rem; margin-top: 0.2rem; }
+        .notif-empty { text-align: center; padding: 2rem; color: rgba(255,255,255,0.15); font-size: 0.9rem; }
+        .notif-footer { padding: 0.6rem 1.2rem; border-top: 1px solid rgba(255,255,255,0.04); text-align: center; }
+        .notif-footer a { color: rgba(255,255,255,0.2); text-decoration: none; font-size: 0.8rem; transition: color 0.3s ease; }
+        .notif-footer a:hover { color: #8B5CF6; }
+        .nav-item.dropdown { position: relative; }
+        .nav-link-bell { position: relative; cursor: pointer; padding: 0.5rem 0.8rem; border-radius: 40px; transition: all 0.3s ease; }
+        .nav-link-bell:hover { background: rgba(255,255,255,0.04); }
     </style>
 </head>
 <body>
 
-    <!-- ===== 导航栏 ===== -->
     <nav class="navbar navbar-expand-lg nav-advanced">
         <div class="container">
-            <a class="navbar-brand nav-brand" href="/">
-                <i class="bi bi-command"></i> Chris hopper
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
-                    style="border:1px solid rgba(255,255,255,0.06);">
+            <a class="navbar-brand nav-brand" href="/"><i class="bi bi-command"></i> Chris hopper</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" style="border:1px solid rgba(255,255,255,0.06);">
                 <span class="navbar-toggler-icon" style="filter:invert(1);"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-
                 @{
                     var userId = Context.Session.GetInt32("UserId");
                     var isAdmin = Context.Session.GetInt32("IsAdmin") ?? 0;
                     var username = Context.Session.GetString("Username");
                 }
-
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item"><a class="nav-link" href="/"><i class="bi bi-house"></i> 首页</a></li>
                     <li class="nav-item"><a class="nav-link" href="/Blog"><i class="bi bi-journal"></i> 博客</a></li>
@@ -292,14 +99,9 @@
 
                         @if (isAdmin == 1)
                         {
-                            <li class="nav-item">
-                                <a class="nav-link" href="/Admin/Dashboard" style="color:#8B5CF6;">
-                                    <i class="bi bi-speedometer2"></i> 管理
-                                </a>
-                            </li>
+                            <li class="nav-item"><a class="nav-link" href="/Admin/Dashboard" style="color:#8B5CF6;"><i class="bi bi-speedometer2"></i> 管理</a></li>
                         }
 
-                        <!-- ⭐ 通知铃铛 -->
                         <li class="nav-item dropdown">
                             <a class="nav-link nav-link-bell" onclick="toggleNotifications(event)">
                                 <i class="bi bi-bell" style="font-size:1.2rem;"></i>
@@ -336,13 +138,10 @@
                                         <div class="notif-empty">🎉 暂无通知</div>
                                     }
                                 </div>
-                                <div class="notif-footer">
-                                    <a href="/Home/Notifications">查看全部</a>
-                                </div>
+                                <div class="notif-footer"><a href="/Home/Notifications">查看全部</a></div>
                             </div>
                         </li>
 
-                        <!-- 个人资料 -->
                         <li class="nav-item">
                             <a class="nav-link" href="/Home/Profile">
                                 @if (!string.IsNullOrEmpty(avatarUrl) && isAvatarApproved)
@@ -357,78 +156,55 @@
                             </a>
                         </li>
 
-                        <li class="nav-item">
-                            <a class="nav-link" href="/Auth/Logout" style="color:#EC4899;">
-                                <i class="bi bi-box-arrow-right"></i>
-                            </a>
-                        </li>
+                        <li class="nav-item"><a class="nav-link" href="/Auth/Logout" style="color:#EC4899;"><i class="bi bi-box-arrow-right"></i></a></li>
                     }
                     else
                     {
                         <li class="nav-item"><a class="nav-link" href="/Auth/Login"><i class="bi bi-box-arrow-in-right"></i> 登录</a></li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/Auth/Register" style="background:linear-gradient(135deg,#8B5CF6,#EC4899);color:#fff;border-radius:50px;padding:0.4rem 1.2rem;">
-                                注册
-                            </a>
-                        </li>
+                        <li class="nav-item"><a class="nav-link" href="/Auth/Register" style="background:linear-gradient(135deg,#8B5CF6,#EC4899);color:#fff;border-radius:50px;padding:0.4rem 1.2rem;">注册</a></li>
                     }
                 </ul>
             </div>
         </div>
     </nav>
 
-    <!-- ===== 主体 ===== -->
     <main>
         @RenderBody()
     </main>
 
-    <!-- ===== 页脚 ===== -->
     <footer style="border-top:1px solid rgba(255,255,255,0.03);padding:2rem 0;margin-top:2rem;">
         <div class="container text-center">
             <p style="color:rgba(255,255,255,0.3);font-size:0.85rem;">
                 © 2026 <span style="background:linear-gradient(135deg,#8B5CF6,#EC4899,#F59E0B);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Chris hopper</span>
                 <br>
-                <span style="font-size:0.75rem;color:rgba(255,255,255,0.15);">
-                    用 <i class="bi bi-heart-fill" style="color:#EC4899;"></i> 和 ASP.NET Core 10.0 构建
-                </span>
+                <span style="font-size:0.75rem;color:rgba(255,255,255,0.15);">用 <i class="bi bi-heart-fill" style="color:#EC4899;"></i> 和 ASP.NET Core 10.0 构建</span>
             </p>
         </div>
     </footer>
 
-    <!-- ===== 脚本 ===== -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
 
     <script>
-        // ============================================================
         // 通知下拉菜单
-        // ============================================================
         function toggleNotifications(e) {
             e.preventDefault();
             e.stopPropagation();
-            const dropdown = document.getElementById('notifDropdown');
-            dropdown.classList.toggle('show');
+            document.getElementById('notifDropdown').classList.toggle('show');
         }
-
         document.addEventListener('click', function(e) {
-            const dropdown = document.getElementById('notifDropdown');
+            var dropdown = document.getElementById('notifDropdown');
             if (dropdown && !dropdown.contains(e.target) && !e.target.closest('.nav-link-bell')) {
                 dropdown.classList.remove('show');
             }
         });
 
-        // ============================================================
-        // 标记单条通知为已读
-        // ============================================================
         function markNotifRead(id, element) {
             if (element.classList.contains('read')) return;
-            const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+            var token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
             fetch('/Home/MarkNotificationRead', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    'RequestVerificationToken': token
-                },
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'RequestVerificationToken': token },
                 body: 'id=' + id
             })
             .then(function(r) { return r.json(); })
@@ -438,27 +214,17 @@
                     var badge = document.querySelector('.notif-badge');
                     if (badge) {
                         var count = parseInt(badge.textContent) - 1;
-                        if (count > 0) {
-                            badge.textContent = count;
-                        } else {
-                            badge.remove();
-                        }
+                        count > 0 ? badge.textContent = count : badge.remove();
                     }
                 }
             });
         }
 
-        // ============================================================
-        // 全部标记已读
-        // ============================================================
         function markAllRead() {
-            const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+            var token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
             fetch('/Home/MarkAllNotificationsRead', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    'RequestVerificationToken': token
-                },
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'RequestVerificationToken': token },
                 body: ''
             })
             .then(function(r) { return r.json(); })
@@ -473,9 +239,7 @@
             });
         }
 
-        // ============================================================
-        // ⭐ SignalR 连接
-        // ============================================================
+        // SignalR 连接
         (function() {
             var userId = @(Context.Session.GetInt32("UserId") ?? 0);
             var isAdmin = @(Context.Session.GetInt32("IsAdmin") ?? 0);
@@ -521,21 +285,15 @@
             }
         })();
 
-        // ============================================================
-        // ⭐ 恐怖音效合成
-        // ============================================================
-
+        // 音效合成
         function playHorrorSound() {
             try {
-                var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-
+                var audioCtx = new(window.AudioContext || window.webkitAudioContext)();
                 var convolver = audioCtx.createConvolver();
                 var reverbBuffer = createReverbBuffer(audioCtx);
                 convolver.buffer = reverbBuffer;
-
                 var masterGain = audioCtx.createGain();
                 masterGain.gain.value = 0.35;
-
                 convolver.connect(masterGain);
                 masterGain.connect(audioCtx.destination);
 
@@ -546,18 +304,15 @@
                     var freqs = [700, 500, 900];
                     var gains = [0.35, 0.25, 0.2];
                     var durations = [0.5, 0.4, 0.6];
-
                     freqs.forEach(function(freq, idx) {
                         var osc = audioCtx.createOscillator();
                         var gain = audioCtx.createGain();
                         osc.type = idx === 0 ? 'sawtooth' : 'square';
                         osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
                         osc.frequency.exponentialRampToValueAtTime(freq * 2.5, audioCtx.currentTime + durations[idx]);
-
                         gain.gain.setValueAtTime(0, audioCtx.currentTime + idx * 0.02);
                         gain.gain.linearRampToValueAtTime(gains[idx], audioCtx.currentTime + 0.05 + idx * 0.02);
                         gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + durations[idx] + 0.1);
-
                         osc.connect(gain);
                         gain.connect(convolver);
                         osc.start(audioCtx.currentTime + idx * 0.02);
@@ -574,12 +329,10 @@
                     }
                     var source = audioCtx.createBufferSource();
                     source.buffer = buffer;
-
                     var gain = audioCtx.createGain();
                     gain.gain.setValueAtTime(0, audioCtx.currentTime);
                     gain.gain.linearRampToValueAtTime(0.06, audioCtx.currentTime + 0.5);
                     gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 2.8);
-
                     source.connect(gain);
                     gain.connect(convolver);
                     source.start();
@@ -589,15 +342,12 @@
                         var delay = i * 0.4;
                         var osc = audioCtx.createOscillator();
                         var gain = audioCtx.createGain();
-
                         osc.type = 'square';
                         osc.frequency.setValueAtTime(250 - i * 15, audioCtx.currentTime + delay);
                         osc.frequency.setValueAtTime(80 - i * 10, audioCtx.currentTime + delay + 0.05);
-
                         gain.gain.setValueAtTime(0, audioCtx.currentTime + delay);
                         gain.gain.linearRampToValueAtTime(0.4 - i * 0.04, audioCtx.currentTime + delay + 0.01);
                         gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + delay + 0.08);
-
                         osc.connect(gain);
                         gain.connect(convolver);
                         osc.start(audioCtx.currentTime + delay);
@@ -614,13 +364,11 @@
                     }
                     var src = audioCtx.createBufferSource();
                     src.buffer = buf;
-
                     var g = audioCtx.createGain();
                     g.gain.setValueAtTime(0, audioCtx.currentTime);
                     g.gain.linearRampToValueAtTime(0.04, audioCtx.currentTime + 0.5);
                     g.gain.setValueAtTime(0.04, audioCtx.currentTime + 1.5);
                     g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 3.2);
-
                     src.connect(g);
                     g.connect(convolver);
                     src.start();
@@ -634,11 +382,9 @@
                         osc.type = idx % 2 === 0 ? 'sawtooth' : 'square';
                         osc.frequency.setValueAtTime(p, audioCtx.currentTime + times[idx]);
                         osc.frequency.exponentialRampToValueAtTime(p * 1.2, audioCtx.currentTime + times[idx] + 0.12);
-
                         gain.gain.setValueAtTime(0, audioCtx.currentTime + times[idx]);
                         gain.gain.linearRampToValueAtTime(0.06, audioCtx.currentTime + times[idx] + 0.05);
                         gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + times[idx] + 0.15);
-
                         osc.connect(gain);
                         gain.connect(convolver);
                         osc.start(audioCtx.currentTime + times[idx]);
@@ -656,20 +402,15 @@
                     }
                     var envSrc = audioCtx.createBufferSource();
                     envSrc.buffer = envBuf;
-
                     var envGain = audioCtx.createGain();
                     envGain.gain.setValueAtTime(0.2, audioCtx.currentTime);
                     envGain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 6);
-
                     envSrc.connect(envGain);
                     envGain.connect(convolver);
                     envSrc.start();
                     envSrc.stop(audioCtx.currentTime + 6);
                 }
-
-            } catch (e) {
-                console.log('音效跳过');
-            }
+            } catch (e) { console.log('音效跳过'); }
         }
 
         function createReverbBuffer(audioCtx) {
@@ -678,7 +419,6 @@
             var buffer = audioCtx.createBuffer(2, length, sampleRate);
             var left = buffer.getChannelData(0);
             var right = buffer.getChannelData(1);
-
             for (var i = 0; i < length; i++) {
                 var decay = Math.exp(-i / (sampleRate * 0.8));
                 left[i] = (Math.random() * 2 - 1) * decay * 0.5;
@@ -688,14 +428,12 @@
         }
 
         // ============================================================
-        // ⭐ 恐怖入侵效果（完整版）
+        // ⭐ 恐怖入侵效果
         // ============================================================
-
         function triggerHorrorInvasion(message) {
             if (document.documentElement.requestFullscreen) {
                 document.documentElement.requestFullscreen().catch(function() {});
             }
-
             playHorrorSound();
 
             var textNodes = [];
@@ -880,9 +618,6 @@
             }, duration);
         }
 
-        // ============================================================
-        // 点击通知项标记已读
-        // ============================================================
         document.addEventListener('click', function(e) {
             var item = e.target.closest('.notif-item');
             if (item && !item.classList.contains('read')) {
