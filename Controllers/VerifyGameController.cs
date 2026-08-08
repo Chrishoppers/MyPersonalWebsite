@@ -577,47 +577,47 @@ namespace MyPersonalWebsite.Controllers
         // ============================================================
         // 获取排行榜
         // ============================================================
-        [HttpGet]
-        public async Task<IActionResult> GetRanking()
-        {
-            try
-            {
-                var userId = HttpContext.Session.GetInt32("UserId");
-                var allStats = await _dataSync.GetAllUserGameStatsAsync();
-                var users = await _dataSync.GetAllUsersAsync();
+       [HttpGet]
+public async Task<IActionResult> GetRanking()
+{
+    try
+    {
+        var userId = HttpContext.Session.GetInt32("UserId");
+        var allStats = await _dataSync.GetAllUserGameStatsAsync();
+        var users = await _dataSync.GetAllUsersAsync();
 
-                var ranking = allStats
-                    .Where(s => s.TotalPoints > 0)
-                    .OrderByDescending(s => s.TotalPoints)
-                    .ThenByDescending(s => s.MaxLevel)
-                    .Take(100)
-                    .Select((s, index) =>
-                    {
-                        var user = users.FirstOrDefault(u => u.Id == s.UserId);
-                        return new
-                        {
-                            userId = s.UserId,
-                            username = user?.Username ?? "已删除用户",
-                            avatarUrl = user?.AvatarUrl,
-                            isAvatarApproved = user?.IsAvatarApproved ?? false,
-                            totalPoints = s.TotalPoints,
-                            maxCombo = s.MaxCombo,
-                            maxLevel = s.MaxLevel,
-                            gamesPlayed = s.GamesPlayed,
-                            rank = index + 1,
-                            isMe = s.UserId == userId
-                        };
-                    })
-                    .ToList();
-
-                return Json(new { success = true, data = ranking });
-            }
-            catch (Exception ex)
+        var ranking = allStats
+            .Where(s => s.TotalPoints > 0 && s.MaxLevel > 0)  // ← 关键过滤
+            .OrderByDescending(s => s.TotalPoints)
+            .ThenByDescending(s => s.MaxLevel)
+            .Take(100)
+            .Select((s, index) =>
             {
-                Console.WriteLine($"获取排行榜失败: {ex.Message}");
-                return Json(new { success = false, data = new List<object>() });
-            }
-        }
+                var user = users.FirstOrDefault(u => u.Id == s.UserId);
+                return new
+                {
+                    userId = s.UserId,
+                    username = user?.Username ?? "已删除用户",
+                    avatarUrl = user?.AvatarUrl,
+                    isAvatarApproved = user?.IsAvatarApproved ?? false,
+                    totalPoints = s.TotalPoints,
+                    maxCombo = s.MaxCombo,
+                    maxLevel = s.MaxLevel,
+                    gamesPlayed = s.GamesPlayed,
+                    rank = index + 1,
+                    isMe = s.UserId == userId
+                };
+            })
+            .ToList();
+
+        return Json(new { success = true, data = ranking });
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"获取排行榜失败: {ex.Message}");
+        return Json(new { success = false, data = new List<object>() });
+    }
+}
 
         // ============================================================
         // 获取挑战
