@@ -5,259 +5,66 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - Chris hopper</title>
 
-    <!-- 字体 -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-
-    <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
-
-    <!-- 高级样式 -->
     <link rel="stylesheet" href="~/css/site.css" />
-
-    <!-- Bootstrap 5 -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
 
     <style>
-        body {
-            background: #0A0A0F;
-            color: #FFFFFF;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        }
-        main {
-            padding-top: 1.5rem;
-            padding-bottom: 3rem;
-        }
-        .container {
-            max-width: 1200px;
-        }
-        .navbar-nav .nav-link {
-            display: flex;
-            align-items: center;
-            gap: 0.3rem;
-        }
-        .nav-avatar {
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 1px solid rgba(255,255,255,0.06);
-            flex-shrink: 0;
-        }
-        .nav-avatar-placeholder {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            background: rgba(255,255,255,0.04);
-            color: rgba(255,255,255,0.3);
-            font-size: 0.7rem;
-            font-weight: 600;
-            flex-shrink: 0;
-        }
+        body { background: #0A0A0F; color: #FFFFFF; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+        main { padding-top: 1.5rem; padding-bottom: 3rem; }
+        .container { max-width: 1200px; }
+        .navbar-nav .nav-link { display: flex; align-items: center; gap: 0.3rem; }
+        .nav-avatar { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; border: 1px solid rgba(255,255,255,0.06); flex-shrink: 0; }
+        .nav-avatar-placeholder { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%; background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.3); font-size: 0.7rem; font-weight: 600; flex-shrink: 0; }
 
-        /* ===== 通知样式 ===== */
-        .notif-badge {
-            position: absolute;
-            top: -4px;
-            right: -6px;
-            background: #EC4899;
-            color: #fff;
-            font-size: 0.6rem;
-            font-weight: 700;
-            padding: 0.1rem 0.4rem;
-            border-radius: 20px;
-            min-width: 18px;
-            text-align: center;
-            line-height: 1.4;
-            border: 2px solid #0A0A0F;
-        }
-
-        .notif-dropdown {
-            position: absolute;
-            top: 100%;
-            right: 0;
-            width: 400px;
-            max-height: 480px;
-            background: #1a1a2e;
-            border-radius: 16px;
-            border: 1px solid rgba(255,255,255,0.04);
-            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-            display: none;
-            z-index: 1000;
-            overflow: hidden;
-            margin-top: 0.5rem;
-        }
-
-        .notif-dropdown.show {
-            display: block;
-            animation: notifSlideDown 0.25s ease;
-        }
-
-        @@keyframes notifSlideDown {
-            from { opacity: 0; transform: translateY(-10px) scale(0.95); }
-            to { opacity: 1; transform: translateY(0) scale(1); }
-        }
-
-        .notif-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0.8rem 1.2rem;
-            border-bottom: 1px solid rgba(255,255,255,0.04);
-            color: #fff;
-            font-weight: 600;
-            font-size: 0.95rem;
-        }
-
-        .notif-mark-all {
-            background: none;
-            border: none;
-            color: rgba(255,255,255,0.2);
-            font-size: 0.75rem;
-            cursor: pointer;
-            transition: color 0.3s ease;
-        }
-
-        .notif-mark-all:hover {
-            color: #8B5CF6;
-        }
-
-        .notif-list {
-            max-height: 340px;
-            overflow-y: auto;
-            padding: 0.2rem 0;
-        }
-
-        .notif-list::-webkit-scrollbar {
-            width: 3px;
-        }
-        .notif-list::-webkit-scrollbar-thumb {
-            background: rgba(255,255,255,0.1);
-            border-radius: 10px;
-        }
-
-        .notif-item {
-            display: flex;
-            align-items: flex-start;
-            gap: 0.8rem;
-            padding: 0.8rem 1.2rem;
-            border-bottom: 1px solid rgba(255,255,255,0.02);
-            cursor: pointer;
-            transition: background 0.2s ease;
-        }
-
-        .notif-item:hover {
-            background: rgba(255,255,255,0.02);
-        }
-
-        .notif-item.read {
-            opacity: 0.4;
-        }
-
-        .notif-item .notif-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            flex-shrink: 0;
-            margin-top: 0.2rem;
-        }
-
+        .notif-badge { position: absolute; top: -4px; right: -6px; background: #EC4899; color: #fff; font-size: 0.6rem; font-weight: 700; padding: 0.1rem 0.4rem; border-radius: 20px; min-width: 18px; text-align: center; line-height: 1.4; border: 2px solid #0A0A0F; }
+        .notif-dropdown { position: absolute; top: 100%; right: 0; width: 400px; max-height: 480px; background: #1a1a2e; border-radius: 16px; border: 1px solid rgba(255,255,255,0.04); box-shadow: 0 20px 60px rgba(0,0,0,0.5); display: none; z-index: 1000; overflow: hidden; margin-top: 0.5rem; }
+        .notif-dropdown.show { display: block; animation: notifSlideDown 0.25s ease; }
+        @@keyframes notifSlideDown { from { opacity: 0; transform: translateY(-10px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        .notif-header { display: flex; justify-content: space-between; align-items: center; padding: 0.8rem 1.2rem; border-bottom: 1px solid rgba(255,255,255,0.04); color: #fff; font-weight: 600; font-size: 0.95rem; }
+        .notif-mark-all { background: none; border: none; color: rgba(255,255,255,0.2); font-size: 0.75rem; cursor: pointer; transition: color 0.3s ease; }
+        .notif-mark-all:hover { color: #8B5CF6; }
+        .notif-list { max-height: 340px; overflow-y: auto; padding: 0.2rem 0; }
+        .notif-list::-webkit-scrollbar { width: 3px; }
+        .notif-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+        .notif-item { display: flex; align-items: flex-start; gap: 0.8rem; padding: 0.8rem 1.2rem; border-bottom: 1px solid rgba(255,255,255,0.02); cursor: pointer; transition: background 0.2s ease; }
+        .notif-item:hover { background: rgba(255,255,255,0.02); }
+        .notif-item.read { opacity: 0.4; }
+        .notif-item .notif-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 0.2rem; }
         .notif-item .notif-dot.info { background: #4facfe; }
         .notif-item .notif-dot.success { background: #28a745; }
         .notif-item .notif-dot.warning { background: #ffc107; }
         .notif-item .notif-dot.danger { background: #dc3545; }
-
-        .notif-item .notif-content {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .notif-item .notif-title {
-            color: #fff;
-            font-weight: 500;
-            font-size: 0.85rem;
-        }
-
-        .notif-item .notif-msg {
-            color: rgba(255,255,255,0.4);
-            font-size: 0.8rem;
-            margin-top: 0.1rem;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
-        .notif-item .notif-time {
-            color: rgba(255,255,255,0.15);
-            font-size: 0.65rem;
-            margin-top: 0.2rem;
-        }
-
-        .notif-empty {
-            text-align: center;
-            padding: 2rem;
-            color: rgba(255,255,255,0.15);
-            font-size: 0.9rem;
-        }
-
-        .notif-footer {
-            padding: 0.6rem 1.2rem;
-            border-top: 1px solid rgba(255,255,255,0.04);
-            text-align: center;
-        }
-
-        .notif-footer a {
-            color: rgba(255,255,255,0.2);
-            text-decoration: none;
-            font-size: 0.8rem;
-            transition: color 0.3s ease;
-        }
-
-        .notif-footer a:hover {
-            color: #8B5CF6;
-        }
-
-        .nav-item.dropdown {
-            position: relative;
-        }
-
-        .nav-link-bell {
-            position: relative;
-            cursor: pointer;
-            padding: 0.5rem 0.8rem;
-            border-radius: 40px;
-            transition: all 0.3s ease;
-        }
-
-        .nav-link-bell:hover {
-            background: rgba(255,255,255,0.04);
-        }
+        .notif-item .notif-content { flex: 1; min-width: 0; }
+        .notif-item .notif-title { color: #fff; font-weight: 500; font-size: 0.85rem; }
+        .notif-item .notif-msg { color: rgba(255,255,255,0.4); font-size: 0.8rem; margin-top: 0.1rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .notif-item .notif-time { color: rgba(255,255,255,0.15); font-size: 0.65rem; margin-top: 0.2rem; }
+        .notif-empty { text-align: center; padding: 2rem; color: rgba(255,255,255,0.15); font-size: 0.9rem; }
+        .notif-footer { padding: 0.6rem 1.2rem; border-top: 1px solid rgba(255,255,255,0.04); text-align: center; }
+        .notif-footer a { color: rgba(255,255,255,0.2); text-decoration: none; font-size: 0.8rem; transition: color 0.3s ease; }
+        .notif-footer a:hover { color: #8B5CF6; }
+        .nav-item.dropdown { position: relative; }
+        .nav-link-bell { position: relative; cursor: pointer; padding: 0.5rem 0.8rem; border-radius: 40px; transition: all 0.3s ease; }
+        .nav-link-bell:hover { background: rgba(255,255,255,0.04); }
     </style>
 </head>
 <body>
 
-    <!-- ===== 导航栏 ===== -->
     <nav class="navbar navbar-expand-lg nav-advanced">
         <div class="container">
-            <a class="navbar-brand nav-brand" href="/">
-                <i class="bi bi-command"></i> Chris hopper
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
-                    style="border:1px solid rgba(255,255,255,0.06);">
+            <a class="navbar-brand nav-brand" href="/"><i class="bi bi-command"></i> Chris hopper</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" style="border:1px solid rgba(255,255,255,0.06);">
                 <span class="navbar-toggler-icon" style="filter:invert(1);"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-
                 @{
                     var userId = Context.Session.GetInt32("UserId");
                     var isAdmin = Context.Session.GetInt32("IsAdmin") ?? 0;
                     var username = Context.Session.GetString("Username");
                 }
-
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item"><a class="nav-link" href="/"><i class="bi bi-house"></i> 首页</a></li>
                     <li class="nav-item"><a class="nav-link" href="/Blog"><i class="bi bi-journal"></i> 博客</a></li>
@@ -266,11 +73,8 @@
                     <li class="nav-item"><a class="nav-link" href="/Message/Index"><i class="bi bi-chat"></i> 留言</a></li>
                     <li class="nav-item"><a class="nav-link" href="/Game"><i class="bi bi-controller"></i> 游戏</a></li>
 
-                    
-
                     @if (userId.HasValue)
                     {
-                        // 获取用户头像和通知
                         MyPersonalWebsite.Models.User? user = null;
                         string? avatarUrl = null;
                         bool isAvatarApproved = false;
@@ -295,14 +99,9 @@
 
                         @if (isAdmin == 1)
                         {
-                            <li class="nav-item">
-                                <a class="nav-link" href="/Admin/Dashboard" style="color:#8B5CF6;">
-                                    <i class="bi bi-speedometer2"></i> 管理
-                                </a>
-                            </li>
+                            <li class="nav-item"><a class="nav-link" href="/Admin/Dashboard" style="color:#8B5CF6;"><i class="bi bi-speedometer2"></i> 管理</a></li>
                         }
 
-                        <!-- ⭐ 通知铃铛 -->
                         <li class="nav-item dropdown">
                             <a class="nav-link nav-link-bell" onclick="toggleNotifications(event)">
                                 <i class="bi bi-bell" style="font-size:1.2rem;"></i>
@@ -339,13 +138,10 @@
                                         <div class="notif-empty">🎉 暂无通知</div>
                                     }
                                 </div>
-                                <div class="notif-footer">
-                                    <a href="/Home/Notifications">查看全部</a>
-                                </div>
+                                <div class="notif-footer"><a href="/Home/Notifications">查看全部</a></div>
                             </div>
                         </li>
 
-                        <!-- 个人资料 -->
                         <li class="nav-item">
                             <a class="nav-link" href="/Home/Profile">
                                 @if (!string.IsNullOrEmpty(avatarUrl) && isAvatarApproved)
@@ -360,166 +156,155 @@
                             </a>
                         </li>
 
-                        <li class="nav-item">
-                            <a class="nav-link" href="/Auth/Logout" style="color:#EC4899;">
-                                <i class="bi bi-box-arrow-right"></i>
-                            </a>
-                        </li>
+                        <li class="nav-item"><a class="nav-link" href="/Auth/Logout" style="color:#EC4899;"><i class="bi bi-box-arrow-right"></i></a></li>
                     }
                     else
                     {
                         <li class="nav-item"><a class="nav-link" href="/Auth/Login"><i class="bi bi-box-arrow-in-right"></i> 登录</a></li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/Auth/Register" style="background:linear-gradient(135deg,#8B5CF6,#EC4899);color:#fff;border-radius:50px;padding:0.4rem 1.2rem;">
-                                注册
-                            </a>
-                        </li>
+                        <li class="nav-item"><a class="nav-link" href="/Auth/Register" style="background:linear-gradient(135deg,#8B5CF6,#EC4899);color:#fff;border-radius:50px;padding:0.4rem 1.2rem;">注册</a></li>
                     }
                 </ul>
             </div>
         </div>
     </nav>
 
-    <!-- ===== 主体 ===== -->
     <main>
         @RenderBody()
     </main>
 
-    <!-- ===== 页脚 ===== -->
     <footer style="border-top:1px solid rgba(255,255,255,0.03);padding:2rem 0;margin-top:2rem;">
         <div class="container text-center">
             <p style="color:rgba(255,255,255,0.3);font-size:0.85rem;">
                 © 2026 <span style="background:linear-gradient(135deg,#8B5CF6,#EC4899,#F59E0B);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Chris hopper</span>
                 <br>
-                <span style="font-size:0.75rem;color:rgba(255,255,255,0.15);">
-                    用 <i class="bi bi-heart-fill" style="color:#EC4899;"></i> 和 ASP.NET Core 10.0 构建
-                </span>
+                <span style="font-size:0.75rem;color:rgba(255,255,255,0.15);">用 <i class="bi bi-heart-fill" style="color:#EC4899;"></i> 和 ASP.NET Core 10.0 构建</span>
             </p>
         </div>
     </footer>
 
-    <!-- ===== 脚本 ===== -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
 
     <script>
         // ============================================================
-        // 通知下拉菜单
+        // 动态注入所有动画样式（Razor 看不到 @keyframes）
+        // ============================================================
+        (function() {
+            var s = document.createElement('style');
+            s.textContent =
+                '.horror-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.98);z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;animation:horrorFadeIn 0.3s ease;}' +
+                '.horror-big-icon{font-size:10rem;animation:faceZoom 0.5s ease-out forwards;filter:drop-shadow(0 0 80px rgba(255,0,0,0.3));}' +
+                '.horror-text{color:#ff0000;font-size:3.5rem;font-family:"Courier New",monospace;font-weight:900;text-shadow:0 0 60px rgba(255,0,0,0.5);letter-spacing:8px;margin-top:0.5rem;text-align:center;padding:0 1rem;animation:textGlitch 0.15s infinite,textPulse 0.3s infinite alternate;}' +
+                '.horror-sub{color:rgba(255,0,0,0.08);font-size:0.8rem;margin-top:0.5rem;font-family:"Courier New",monospace;letter-spacing:4px;animation:staticFlicker 0.15s infinite;}' +
+                '.horror-flash{position:fixed;inset:0;z-index:99998;pointer-events:none;}' +
+                '.horror-ghost{position:fixed;top:50%;left:-200px;transform:translateY(-50%);font-size:10rem;z-index:99999;pointer-events:none;animation:ghostFly 4s ease-in-out forwards;filter:drop-shadow(0 0 80px rgba(139,92,246,0.3));}' +
+                '.horror-ghost-text{position:fixed;top:55%;left:50%;transform:translateX(-50%);font-size:2.5rem;color:rgba(255,255,255,0.15);z-index:99999;pointer-events:none;animation:fadeText 3s ease-out forwards;font-family:Inter,sans-serif;text-shadow:0 0 60px rgba(139,92,246,0.1);letter-spacing:4px;}' +
+                '@keyframes horrorFadeIn{0%{opacity:0;transform:scale(0.9)}100%{opacity:1;transform:scale(1)}}' +
+                '@keyframes faceZoom{0%{transform:scale(0.1) rotate(-20deg);opacity:0}50%{transform:scale(1.4) rotate(5deg);opacity:1}70%{transform:scale(0.9) rotate(-3deg)}100%{transform:scale(1) rotate(0deg)}}' +
+                '@keyframes textGlitch{0%,100%{opacity:1;transform:translateX(0) skewX(0deg)}10%{opacity:0.6;transform:translateX(-12px) skewX(8deg)}20%{opacity:0.4;transform:translateX(12px) skewX(-8deg)}30%{opacity:0.7;transform:translateX(-8px) skewX(5deg)}40%{opacity:0.5;transform:translateX(8px) skewX(-5deg)}50%{opacity:0.8;transform:translateX(-5px) skewX(3deg)}60%{opacity:0.6;transform:translateX(5px) skewX(-3deg)}70%{opacity:0.7;transform:translateX(-6px) skewX(6deg)}80%{opacity:0.4;transform:translateX(6px) skewX(-6deg)}90%{opacity:0.9;transform:translateX(-3px) skewX(2deg)}}' +
+                '@keyframes textPulse{0%,100%{transform:scale(1);opacity:1}25%{transform:scale(1.08);opacity:0.7}50%{transform:scale(0.92);opacity:1}75%{transform:scale(1.05);opacity:0.8}}' +
+                '@keyframes staticFlicker{0%,100%{opacity:1}25%{opacity:0.2}50%{opacity:0.7}75%{opacity:0.1}}' +
+                '@keyframes ghostFly{0%{transform:translateY(-50%) translateX(0) scale(0.8);opacity:0}10%{opacity:1}50%{transform:translateY(-40%) translateX(50vw) scale(1.3)}90%{opacity:1}100%{transform:translateY(-60%) translateX(100vw) scale(0.8);opacity:0}}' +
+                '@keyframes fadeText{0%{opacity:0;transform:translateX(-50%) scale(0.8)}20%{opacity:1;transform:translateX(-50%) scale(1)}80%{opacity:1}100%{opacity:0;transform:translateX(-50%) scale(1.2)}}' +
+                '@keyframes shakeScreen{0%{transform:translate(0,0) rotate(0deg)}5%{transform:translate(-30px,15px) rotate(-7deg)}10%{transform:translate(30px,-15px) rotate(7deg)}15%{transform:translate(-45px,30px) rotate(-10deg)}20%{transform:translate(15px,-45px) rotate(7deg)}25%{transform:translate(-15px,15px) rotate(-4deg)}30%{transform:translate(36px,-10px) rotate(5deg)}35%{transform:translate(-24px,24px) rotate(-6deg)}40%{transform:translate(18px,-18px) rotate(4deg)}50%{transform:translate(-12px,12px) rotate(-5deg)}60%{transform:translate(24px,-15px) rotate(6deg)}70%{transform:translate(-15px,18px) rotate(-5deg)}80%{transform:translate(9px,-9px) rotate(3deg)}90%{transform:translate(-6px,6px) rotate(-2deg)}100%{transform:translate(0,0) rotate(0deg)}';
+            document.head.appendChild(s);
+        })();
+
+        // ============================================================
+        // 通知系统
         // ============================================================
         function toggleNotifications(e) {
             e.preventDefault();
             e.stopPropagation();
-            const dropdown = document.getElementById('notifDropdown');
-            dropdown.classList.toggle('show');
+            document.getElementById('notifDropdown').classList.toggle('show');
         }
 
         document.addEventListener('click', function(e) {
-            const dropdown = document.getElementById('notifDropdown');
+            var dropdown = document.getElementById('notifDropdown');
             if (dropdown && !dropdown.contains(e.target) && !e.target.closest('.nav-link-bell')) {
                 dropdown.classList.remove('show');
             }
         });
 
-        // ============================================================
-        // 标记单条通知为已读
-        // ============================================================
         function markNotifRead(id, element) {
             if (element.classList.contains('read')) return;
-            const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+            var token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
             fetch('/Home/MarkNotificationRead', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    'RequestVerificationToken': token
-                },
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'RequestVerificationToken': token },
                 body: 'id=' + id
             })
-            .then(r => r.json())
-            .then(data => {
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
                 if (data.success) {
                     element.classList.add('read');
-                    const badge = document.querySelector('.notif-badge');
+                    var badge = document.querySelector('.notif-badge');
                     if (badge) {
-                        const count = parseInt(badge.textContent) - 1;
-                        if (count > 0) {
-                            badge.textContent = count;
-                        } else {
-                            badge.remove();
-                        }
+                        var count = parseInt(badge.textContent) - 1;
+                        count > 0 ? badge.textContent = count : badge.remove();
                     }
                 }
             });
         }
 
-        // ============================================================
-        // 全部标记已读
-        // ============================================================
         function markAllRead() {
-            const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+            var token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
             fetch('/Home/MarkAllNotificationsRead', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    'RequestVerificationToken': token
-                },
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'RequestVerificationToken': token },
                 body: ''
             })
-            .then(r => r.json())
-            .then(data => {
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
                 if (data.success) {
-                    document.querySelectorAll('.notif-item').forEach(el => el.classList.add('read'));
-                    const badge = document.querySelector('.notif-badge');
+                    document.querySelectorAll('.notif-item').forEach(function(el) { el.classList.add('read'); });
+                    var badge = document.querySelector('.notif-badge');
                     if (badge) badge.remove();
-                    const btn = document.querySelector('.notif-mark-all');
+                    var btn = document.querySelector('.notif-mark-all');
                     if (btn) btn.remove();
                 }
             });
         }
 
         // ============================================================
-        // ⭐ SignalR 连接
+        // SignalR
         // ============================================================
         (function() {
-            const userId = @(Context.Session.GetInt32("UserId") ?? 0);
-            const isAdmin = @(Context.Session.GetInt32("IsAdmin") ?? 0);
+            var userId = @(Context.Session.GetInt32("UserId") ?? 0);
+            var isAdmin = @(Context.Session.GetInt32("IsAdmin") ?? 0);
             if (!userId) return;
 
             try {
-                const connection = new signalR.HubConnectionBuilder()
+                var connection = new signalR.HubConnectionBuilder()
                     .withUrl('/messageHub')
                     .configureLogging(signalR.LogLevel.Information)
                     .build();
 
                 connection.start()
-                    .then(() => {
+                    .then(function() {
                         connection.invoke('UserOnline', userId);
                         console.log('✅ SignalR 已连接');
                     })
-                    .catch(err => console.error('❌ SignalR 连接失败:', err));
+                    .catch(function(err) { console.error('❌ SignalR 连接失败:', err); });
 
-                // 监听在线用户更新
                 connection.on('OnlineUsersUpdated', function(onlineUserIds) {
                     if (isAdmin === 1) {
                         window._updateOnlineList && window._updateOnlineList(onlineUserIds);
                     }
                 });
 
-                // ⭐ 恐怖入侵监听
                 connection.on('HorrorInvasion', function(message) {
                     triggerHorrorInvasion(message || '💀 你逃不掉的...');
                 });
 
-                // ⭐ 幽灵飘过监听
                 connection.on('GhostEvent', function(message) {
                     showGhost(message || '👻 幽灵出没！');
                 });
 
-                // ⭐ 屏幕震动监听
                 connection.on('ShakeEvent', function(intensity) {
                     triggerScreenShake(intensity || 'medium');
                 });
 
-                // 页面关闭时断开连接
                 window.addEventListener('beforeunload', function() {
                     connection.stop();
                 });
@@ -530,53 +315,41 @@
         })();
 
         // ============================================================
-        // ⭐ 恐怖音效合成（优化版 - 听感更真实）
+        // 音效
         // ============================================================
-
         function playHorrorSound() {
             try {
-                var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-
-                // ===== 创建混响效果（让声音有空间感） =====
+                var audioCtx = new(window.AudioContext || window.webkitAudioContext)();
                 var convolver = audioCtx.createConvolver();
                 var reverbBuffer = createReverbBuffer(audioCtx);
                 convolver.buffer = reverbBuffer;
-
                 var masterGain = audioCtx.createGain();
                 masterGain.gain.value = 0.35;
-
                 convolver.connect(masterGain);
                 masterGain.connect(audioCtx.destination);
 
                 var types = ['scream', 'whisper', 'knock', 'breath', 'laugh', 'ambient'];
                 var selected = types[Math.floor(Math.random() * types.length)];
 
-                // ===== 1. 尖叫声 =====
                 if (selected === 'scream') {
                     var freqs = [700, 500, 900];
                     var gains = [0.35, 0.25, 0.2];
                     var durations = [0.5, 0.4, 0.6];
-
                     freqs.forEach(function(freq, idx) {
                         var osc = audioCtx.createOscillator();
                         var gain = audioCtx.createGain();
                         osc.type = idx === 0 ? 'sawtooth' : 'square';
                         osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
                         osc.frequency.exponentialRampToValueAtTime(freq * 2.5, audioCtx.currentTime + durations[idx]);
-
                         gain.gain.setValueAtTime(0, audioCtx.currentTime + idx * 0.02);
                         gain.gain.linearRampToValueAtTime(gains[idx], audioCtx.currentTime + 0.05 + idx * 0.02);
                         gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + durations[idx] + 0.1);
-
                         osc.connect(gain);
                         gain.connect(convolver);
                         osc.start(audioCtx.currentTime + idx * 0.02);
                         osc.stop(audioCtx.currentTime + durations[idx] + 0.1);
                     });
-                }
-
-                // ===== 2. 低语声 =====
-                else if (selected === 'whisper') {
+                } else if (selected === 'whisper') {
                     var bufferSize = audioCtx.sampleRate * 2.5;
                     var buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
                     var data = buffer.getChannelData(0);
@@ -587,43 +360,31 @@
                     }
                     var source = audioCtx.createBufferSource();
                     source.buffer = buffer;
-
                     var gain = audioCtx.createGain();
                     gain.gain.setValueAtTime(0, audioCtx.currentTime);
                     gain.gain.linearRampToValueAtTime(0.06, audioCtx.currentTime + 0.5);
                     gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 2.8);
-
                     source.connect(gain);
                     gain.connect(convolver);
                     source.start();
                     source.stop(audioCtx.currentTime + 2.8);
-                }
-
-                // ===== 3. 敲门声 =====
-                else if (selected === 'knock') {
+                } else if (selected === 'knock') {
                     for (var i = 0; i < 4; i++) {
                         var delay = i * 0.4;
                         var osc = audioCtx.createOscillator();
                         var gain = audioCtx.createGain();
-                        var noise = createWhiteNoise(audioCtx, 0.06);
-
                         osc.type = 'square';
                         osc.frequency.setValueAtTime(250 - i * 15, audioCtx.currentTime + delay);
                         osc.frequency.setValueAtTime(80 - i * 10, audioCtx.currentTime + delay + 0.05);
-
                         gain.gain.setValueAtTime(0, audioCtx.currentTime + delay);
                         gain.gain.linearRampToValueAtTime(0.4 - i * 0.04, audioCtx.currentTime + delay + 0.01);
                         gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + delay + 0.08);
-
                         osc.connect(gain);
                         gain.connect(convolver);
                         osc.start(audioCtx.currentTime + delay);
                         osc.stop(audioCtx.currentTime + delay + 0.08);
                     }
-                }
-
-                // ===== 4. 呼吸声 =====
-                else if (selected === 'breath') {
+                } else if (selected === 'breath') {
                     var bufSize = audioCtx.sampleRate * 3;
                     var buf = audioCtx.createBuffer(1, bufSize, audioCtx.sampleRate);
                     var d = buf.getChannelData(0);
@@ -634,21 +395,16 @@
                     }
                     var src = audioCtx.createBufferSource();
                     src.buffer = buf;
-
                     var g = audioCtx.createGain();
                     g.gain.setValueAtTime(0, audioCtx.currentTime);
                     g.gain.linearRampToValueAtTime(0.04, audioCtx.currentTime + 0.5);
                     g.gain.setValueAtTime(0.04, audioCtx.currentTime + 1.5);
                     g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 3.2);
-
                     src.connect(g);
                     g.connect(convolver);
                     src.start();
                     src.stop(audioCtx.currentTime + 3.2);
-                }
-
-                // ===== 5. 诡异笑声 =====
-                else if (selected === 'laugh') {
+                } else if (selected === 'laugh') {
                     var pitches = [300, 400, 350, 500, 450, 600];
                     var times = [0, 0.25, 0.5, 0.8, 1.05, 1.35];
                     pitches.forEach(function(p, idx) {
@@ -657,20 +413,15 @@
                         osc.type = idx % 2 === 0 ? 'sawtooth' : 'square';
                         osc.frequency.setValueAtTime(p, audioCtx.currentTime + times[idx]);
                         osc.frequency.exponentialRampToValueAtTime(p * 1.2, audioCtx.currentTime + times[idx] + 0.12);
-
                         gain.gain.setValueAtTime(0, audioCtx.currentTime + times[idx]);
                         gain.gain.linearRampToValueAtTime(0.06, audioCtx.currentTime + times[idx] + 0.05);
                         gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + times[idx] + 0.15);
-
                         osc.connect(gain);
                         gain.connect(convolver);
                         osc.start(audioCtx.currentTime + times[idx]);
                         osc.stop(audioCtx.currentTime + times[idx] + 0.15);
                     });
-                }
-
-                // ===== 6. 环境阴森音 =====
-                else {
+                } else {
                     var envBufSize = audioCtx.sampleRate * 6;
                     var envBuf = audioCtx.createBuffer(1, envBufSize, audioCtx.sampleRate);
                     var envData = envBuf.getChannelData(0);
@@ -682,33 +433,23 @@
                     }
                     var envSrc = audioCtx.createBufferSource();
                     envSrc.buffer = envBuf;
-
                     var envGain = audioCtx.createGain();
                     envGain.gain.setValueAtTime(0.2, audioCtx.currentTime);
                     envGain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 6);
-
                     envSrc.connect(envGain);
                     envGain.connect(convolver);
                     envSrc.start();
                     envSrc.stop(audioCtx.currentTime + 6);
                 }
-
-            } catch (e) {
-                // 静默失败，不影响恐怖效果
-                console.log('音效跳过');
-            }
+            } catch (e) { console.log('音效跳过'); }
         }
 
-        // ============================================================
-        // ⭐ 辅助函数：创建混响效果
-        // ============================================================
         function createReverbBuffer(audioCtx) {
             var sampleRate = audioCtx.sampleRate;
             var length = sampleRate * 1.5;
             var buffer = audioCtx.createBuffer(2, length, sampleRate);
             var left = buffer.getChannelData(0);
             var right = buffer.getChannelData(1);
-
             for (var i = 0; i < length; i++) {
                 var decay = Math.exp(-i / (sampleRate * 0.8));
                 left[i] = (Math.random() * 2 - 1) * decay * 0.5;
@@ -718,24 +459,8 @@
         }
 
         // ============================================================
-        // ⭐ 辅助函数：创建白噪声
+        // ⭐ 恐怖入侵
         // ============================================================
-        function createWhiteNoise(audioCtx, amplitude) {
-            var bufferSize = audioCtx.sampleRate * 0.5;
-            var buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-            var data = buffer.getChannelData(0);
-            for (var i = 0; i < bufferSize; i++) {
-                data[i] = (Math.random() * 2 - 1) * amplitude;
-            }
-            var source = audioCtx.createBufferSource();
-            source.buffer = buffer;
-            return source;
-        }
-
-        // ============================================================
-        // ⭐ 恐怖入侵效果（图片版 - 使用您扣好的图片）
-        // ============================================================
-
         function triggerHorrorInvasion(message) {
             if (document.documentElement.requestFullscreen) {
                 document.documentElement.requestFullscreen().catch(function() {});
@@ -764,8 +489,8 @@
 
             var originalTexts = textNodes.map(function(n) { return n.textContent; });
             var glitchLevel = 0;
-            var glitchChars = '!@#$%^&*()_+-=<>?/[]{}|;:,.\'"\\~';
-            var bloodChars = '🩸💀☠️👁️🔪⚰️🕷️🦇👹🔥';
+            // ⭐ 用 Unicode 编码生成所有符号，完全避免反引号
+            var glitchChars = String.fromCharCode(33,35,36,37,94,38,42,40,41,95,43,45,61,60,62,63,47,91,93,123,125,124,59,58,44,46,34,39,92,126);
 
             var glitchInterval = setInterval(function() {
                 glitchLevel += 0.12;
@@ -797,94 +522,37 @@
                 if (glitchLevel >= 1) {
                     clearInterval(glitchInterval);
 
-                    // ===== 创建遮罩 =====
                     var overlay = document.createElement('div');
-                    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.98);z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;animation:horrorFadeIn 0.3s ease;cursor:default;user-select:none;overflow:hidden;';
+                    overlay.className = 'horror-overlay';
                     overlay.id = 'horrorOverlay';
                     document.body.appendChild(overlay);
 
-                    // ===== 恐怖图片（使用您扣好的图） =====
-                    var images = [
-                        'ghost.png',
-                        'face1.png',
-                        'face2.png',
-                        'face3.png',
-                        'skull.png',
-                        'demon.png',
-                        'scream.png',
-                        'blood_eyes.png'
-                    ];
-                    var selectedImage = images[Math.floor(Math.random() * images.length)];
-                    var imagePath = '/images/horror/' + selectedImage;
+                    var symbols = ['😱', '👹', '💀', '👾', '🤡', '👻', '☠️', '🔪'];
+                    var char = symbols[Math.floor(Math.random() * symbols.length)];
 
-                    var img = document.createElement('img');
-                    img.src = imagePath;
-                    img.style.cssText = 'max-width:75vw;max-height:60vh;border-radius:12px;animation:faceZoom 0.5s ease-out forwards, glitchImage 0.15s infinite;box-shadow:0 0 120px rgba(255,0,0,0.15);';
-                    img.onerror = function() {
-                        // 如果图片加载失败，显示符号
-                        var symbols = ['😱', '👹', '💀', '👾', '🤡', '👻', '☠️', '🔪'];
-                        this.style.display = 'none';
-                        var fallback = document.createElement('div');
-                        fallback.style.cssText = 'font-size:10rem;animation:faceZoom 0.5s ease-out forwards;filter:drop-shadow(0 0 80px rgba(255,0,0,0.3));';
-                        fallback.textContent = symbols[Math.floor(Math.random() * symbols.length)];
-                        overlay.insertBefore(fallback, overlay.firstChild);
-                    };
-                    overlay.appendChild(img);
-
-                    // ===== 恐怖文字 =====
-                    var messages = [
-                        '你 刚 才 关 门 了 吗 ？',
-                        '镜 子 里 的 人 刚 才 笑 了',
-                        '你 的 背 后 有 呼 吸 声',
-                        '床 底 下 有 人 在 看 你',
-                        '你 家 窗 户 外 面 站 着 人',
-                        '你 的 名 字 被 人 喊 了 三 遍',
-                        '你 手 机 里 多 了 一 张 照 片',
-                        '你 客 厅 的 灯 自 己 亮 了',
-                        '刚 才 有 人 敲 了 你 的 门',
-                        '你 的 猫 在 盯 着 空 气 看',
-                        '它 就 在 你 身 后 ！ ！ ！',
-                        '快 跑 ！ ！ ！ 它 来 了 ！',
-                        '你 已 经 被 锁 定 了 ！',
-                        '别 回 头 ！ ！ ！ 别 回 头 ！',
-                        '它 正 在 爬 你 的 床 ！',
-                        '你 的 天 花 板 上 有 东 西',
-                        '它 在 门 缝 里 看 你',
-                        '你 的 脚 踝 被 抓 住 了',
-                        '你 感 觉 脖 子 有 点 凉 吗',
-                        '你 闻 到 烧 焦 的 味 道 了 吗',
-                        '你 的 耳 朵 有 人 在 吹 气',
-                        '你 的 枕 头 下 有 东 西 吗',
-                        '你 的 被 子 里 有 什 么 在 动',
-                        '你 的 手 机 屏 幕 裂 了 一 条 缝',
-                        '⚠️ 你 被 标 记 了 ！ ！ ！',
-                        '🔴 无 法 逃 离 。 。 。',
-                        '💀 你 的 数 据 已 泄 露',
-                        '👁️ 摄 像 头 已 连 接 。 。 。',
-                        '🔴 它 已 经 进 入 你 的 大 脑',
-                        '⚠️ 系 统 已 被 恶 灵 劫 持'
-                    ];
-                    var finalMsg = message || messages[Math.floor(Math.random() * messages.length)];
+                    var bigDiv = document.createElement('div');
+                    bigDiv.className = 'horror-big-icon';
+                    bigDiv.textContent = char;
+                    overlay.appendChild(bigDiv);
 
                     var textDiv = document.createElement('div');
-                    textDiv.style.cssText = 'color:#ff0000;font-size:2.8rem;font-family:Courier New,monospace;font-weight:900;text-shadow:0 0 60px rgba(255,0,0,0.5);letter-spacing:6px;margin-top:1rem;animation:textGlitch 0.15s infinite,textPulse 0.3s infinite alternate;text-align:center;padding:0 1rem;';
-                    textDiv.textContent = finalMsg;
+                    textDiv.className = 'horror-text';
+                    textDiv.textContent = message || '💀 你逃不掉的...';
                     overlay.appendChild(textDiv);
 
                     var subDiv = document.createElement('div');
-                    subDiv.style.cssText = 'color:rgba(255,0,0,0.06);font-size:0.8rem;margin-top:0.5rem;font-family:Courier New,monospace;letter-spacing:4px;animation:staticFlicker 0.15s infinite;';
-                    subDiv.textContent = '⚠️ 你 已 经 无 法 逃 离 ⚠️';
+                    subDiv.className = 'horror-sub';
+                    subDiv.textContent = '⚠️ 你 已 经 被 锁 定 ⚠️';
                     overlay.appendChild(subDiv);
 
-                    // ===== 红色闪烁 =====
                     var flashInterval = setInterval(function() {
                         var flash = document.createElement('div');
-                        flash.style.cssText = 'position:fixed;inset:0;background:rgba(255,0,0,' + (0.05 + Math.random() * 0.1) + ');z-index:99998;pointer-events:none;';
+                        flash.className = 'horror-flash';
+                        flash.style.background = 'rgba(255,0,0,' + (Math.random() * 0.08) + ')';
                         document.body.appendChild(flash);
                         setTimeout(function() { flash.remove(); }, 100);
-                    }, 150);
+                    }, 200);
 
-                    // ===== 8秒后恢复 =====
                     setTimeout(function() {
                         clearInterval(flashInterval);
                         textNodes.forEach(function(node, idx) {
@@ -911,25 +579,18 @@
         // ============================================================
         function showGhost(message) {
             var ghost = document.createElement('div');
-            ghost.style.cssText = 'position:fixed;top:50%;left:-200px;transform:translateY(-50%);font-size:10rem;z-index:99999;pointer-events:none;animation:ghostFly 4s ease-in-out forwards;filter:drop-shadow(0 0 80px rgba(139,92,246,0.3));';
+            ghost.className = 'horror-ghost';
             ghost.textContent = '👻';
             document.body.appendChild(ghost);
 
             var text = document.createElement('div');
-            text.style.cssText = 'position:fixed;top:55%;left:50%;transform:translateX(-50%);font-size:2.5rem;color:rgba(255,255,255,0.15);z-index:99999;pointer-events:none;animation:fadeText 3s ease-out forwards;font-family:Inter,sans-serif;text-shadow:0 0 60px rgba(139,92,246,0.1);letter-spacing:4px;';
+            text.className = 'horror-ghost-text';
             text.textContent = message;
             document.body.appendChild(text);
-
-            var style = document.createElement('style');
-            style.textContent =
-                '@keyframes ghostFly{0%{transform:translateY(-50%) translateX(0) scale(0.8);opacity:0}10%{opacity:1}50%{transform:translateY(-40%) translateX(50vw) scale(1.3)}90%{opacity:1}100%{transform:translateY(-60%) translateX(100vw) scale(0.8);opacity:0}}' +
-                '@keyframes fadeText{0%{opacity:0;transform:translateX(-50%) scale(0.8)}20%{opacity:1;transform:translateX(-50%) scale(1)}80%{opacity:1}100%{opacity:0;transform:translateX(-50%) scale(1.2)}}';
-            document.head.appendChild(style);
 
             setTimeout(function() {
                 ghost.remove();
                 text.remove();
-                style.remove();
             }, 5000);
         }
 
@@ -945,15 +606,15 @@
             container.offsetHeight;
 
             var shakeStyle = document.createElement('style');
-            shakeStyle.textContent =
-                '@keyframes shakeScreen{0%{transform:translate(0,0) rotate(0deg)}5%{transform:translate(-' + strength + 'px,' + (strength/2) + 'px) rotate(-' + (strength/4) + 'deg)}10%{transform:translate(' + strength + 'px,-' + (strength/2) + 'px) rotate(' + (strength/4) + 'deg)}15%{transform:translate(-' + (strength*1.5) + 'px,' + strength + 'px) rotate(-' + (strength/3) + 'deg)}20%{transform:translate(' + (strength/2) + 'px,-' + (strength*1.5) + 'px) rotate(' + (strength/4) + 'deg)}25%{transform:translate(-' + (strength/2) + 'px,' + (strength/2) + 'px) rotate(-' + (strength/8) + 'deg)}30%{transform:translate(' + (strength*1.2) + 'px,-' + (strength/3) + 'px) rotate(' + (strength/6) + 'deg)}35%{transform:translate(-' + (strength*0.8) + 'px,' + (strength*0.8) + 'px) rotate(-' + (strength/5) + 'deg)}40%{transform:translate(' + (strength*0.6) + 'px,-' + (strength*0.6) + 'px) rotate(' + (strength/8) + 'deg)}50%{transform:translate(-' + (strength*0.4) + 'px,' + (strength*0.4) + 'px) rotate(-' + (strength/6) + 'deg)}60%{transform:translate(' + (strength*0.8) + 'px,-' + (strength*0.5) + 'px) rotate(' + (strength/5) + 'deg)}70%{transform:translate(-' + (strength*0.5) + 'px,' + (strength*0.6) + 'px) rotate(-' + (strength/4) + 'deg)}80%{transform:translate(' + (strength*0.3) + 'px,-' + (strength*0.3) + 'px) rotate(' + (strength/8) + 'deg)}90%{transform:translate(-' + (strength*0.2) + 'px,' + (strength*0.2) + 'px) rotate(-' + (strength/10) + 'deg)}100%{transform:translate(0,0) rotate(0deg)}';
+            shakeStyle.textContent = '@keyframes shakeScreen { 0% { transform: translate(0, 0) rotate(0deg); } 5% { transform: translate(-' + strength + 'px, ' + (strength/2) + 'px) rotate(-' + (strength/4) + 'deg); } 10% { transform: translate(' + strength + 'px, -' + (strength/2) + 'px) rotate(' + (strength/4) + 'deg); } 15% { transform: translate(-' + (strength*1.5) + 'px, ' + strength + 'px) rotate(-' + (strength/3) + 'deg); } 20% { transform: translate(' + (strength/2) + 'px, -' + (strength*1.5) + 'px) rotate(' + (strength/4) + 'deg); } 25% { transform: translate(-' + (strength/2) + 'px, ' + (strength/2) + 'px) rotate(-' + (strength/8) + 'deg); } 30% { transform: translate(' + (strength*1.2) + 'px, -' + (strength/3) + 'px) rotate(' + (strength/6) + 'deg); } 35% { transform: translate(-' + (strength*0.8) + 'px, ' + (strength*0.8) + 'px) rotate(-' + (strength/5) + 'deg); } 40% { transform: translate(' + (strength*0.6) + 'px, -' + (strength*0.6) + 'px) rotate(' + (strength/8) + 'deg); } 50% { transform: translate(-' + (strength*0.4) + 'px, ' + (strength*0.4) + 'px) rotate(-' + (strength/6) + 'deg); } 60% { transform: translate(' + (strength*0.8) + 'px, -' + (strength*0.5) + 'px) rotate(' + (strength/5) + 'deg); } 70% { transform: translate(-' + (strength*0.5) + 'px, ' + (strength*0.6) + 'px) rotate(-' + (strength/4) + 'deg); } 80% { transform: translate(' + (strength*0.3) + 'px, -' + (strength*0.3) + 'px) rotate(' + (strength/8) + 'deg); } 90% { transform: translate(-' + (strength*0.2) + 'px, ' + (strength*0.2) + 'px) rotate(-' + (strength/10) + 'deg); } 100% { transform: translate(0, 0) rotate(0deg); } }';
             document.head.appendChild(shakeStyle);
 
             container.style.animation = 'shakeScreen ' + duration + 'ms ease-in-out';
 
             var flashInterval = setInterval(function() {
                 var flash = document.createElement('div');
-                flash.style.cssText = 'position:fixed;inset:0;background:rgba(255,0,0,' + (0.03 + Math.random() * 0.05) + ');z-index:99998;pointer-events:none;';
+                flash.className = 'horror-flash';
+                flash.style.background = 'rgba(255,0,0,' + (0.03 + Math.random() * 0.05) + ')';
                 document.body.appendChild(flash);
                 setTimeout(function() { flash.remove(); }, 50);
             }, 50);
@@ -961,7 +622,8 @@
             var blackInterval = setInterval(function() {
                 if (Math.random() > 0.7) {
                     var black = document.createElement('div');
-                    black.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,' + (0.1 + Math.random() * 0.3) + ');z-index:99997;pointer-events:none;';
+                    black.className = 'horror-flash';
+                    black.style.background = 'rgba(0,0,0,' + (0.1 + Math.random() * 0.3) + ')';
                     document.body.appendChild(black);
                     setTimeout(function() { black.remove(); }, 50);
                 }
@@ -975,13 +637,10 @@
             }, duration);
         }
 
-        // ============================================================
-        // 点击通知项标记已读
-        // ============================================================
         document.addEventListener('click', function(e) {
-            const item = e.target.closest('.notif-item');
+            var item = e.target.closest('.notif-item');
             if (item && !item.classList.contains('read')) {
-                const id = item.dataset.id;
+                var id = item.dataset.id;
                 if (id) {
                     markNotifRead(id, item);
                 }
