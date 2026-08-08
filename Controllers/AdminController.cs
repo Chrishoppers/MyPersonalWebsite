@@ -1934,6 +1934,176 @@ public async Task<IActionResult> DeduplicateQuestions()
         return Json(new { success = false, message = $"去重失败: {ex.Message}" });
     }
 }
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
+<script>
+    var _horrorConnection = null;
+
+    function getHorrorConnection() {
+        return new Promise(function(resolve, reject) {
+            try {
+                if (_horrorConnection && _horrorConnection.state === signalR.HubConnectionState.Connected) {
+                    resolve(_horrorConnection);
+                    return;
+                }
+                var conn = new signalR.HubConnectionBuilder()
+                    .withUrl('/messageHub')
+                    .configureLogging(signalR.LogLevel.Information)
+                    .build();
+
+                conn.start()
+                    .then(function() {
+                        _horrorConnection = conn;
+                        resolve(conn);
+                    })
+                    .catch(function(err) {
+                        reject(err);
+                    });
+            } catch(e) {
+                reject(e);
+            }
+        });
+    }
+
+    function triggerHorror() {
+        if (!confirm('⚠️ 确定要对所有在线玩家释放恐怖入侵吗？')) return;
+        var btn = event.target;
+        btn.disabled = true;
+        btn.textContent = '⏳ 释放中...';
+
+        var messages = [
+            '👁️ 它 正 在 盯 着 你 的 眼 睛',
+            '🔴 你 的 脖 子 后 面 有 东 西',
+            '💀 它 在 你 的 床 底 下 等 你',
+            '🩸 你 的 手 机 屏 幕 在 滴 血',
+            '👻 镜 子 里 的 人 不 是 你',
+            '🔪 你 家 门 口 有 脚 步 声',
+            '💀 你 的 名 字 被 刻 在 墙 上',
+            '👁️ 它 在 你 闭 眼 时 靠 近',
+            '🩸 你 枕 头 下 面 有 东 西',
+            '🔴 它 正 在 舔 你 的 窗 户',
+            '💀 你 完 了 ！ ！ ！ ！ ！',
+            '🔪 我 就 在 你 身 后 ！ ！ ！',
+            '👹 你 跑 不 掉 的 ！ ！ ！',
+            '🔥 地 狱 已 经 打 开 了 ！',
+            '💀 下 一 个 就 是 你 ！ ！ ！',
+            '👁️ 别 回 头 ！ ！ ！ ！ ！',
+            '🩸 你 在 大 量 出 血 。 。 。',
+            '🔴 它 从 天 花 板 掉 下 来 了 ！',
+            '💀 你 的 时 间 到 了 ！ ！ ！',
+            '👻 它 对 你 露 出 了 微 笑',
+            '⚠️ 系 统 已 被 恶 魔 入 侵 ⚠️',
+            '🔴 你 的 摄 像 头 已 经 打 开 了',
+            '💀 你 的 数 据 正 在 被 删 除',
+            '👁️ 你 被 锁 定 了 。 。 。',
+            '🔴 你 已 经 无 法 逃 离 了',
+            '⚠️ 快 跑 ！ ！ ！ 它 来 了 ！',
+            '🔴 它 已 经 进 入 你 的 设 备',
+            '💀 你 的 屏 幕 在 慢 慢 裂 开',
+            '👻 信 号 已 被 恶 灵 劫 持',
+            '🔴 你 已 被 标 记 为 目 标',
+            '🩸 你 的 门 已 经 被 打 开 了 。 。 。',
+            '👁️ 你 刚 才 看 到 我 了 对 吧',
+            '💀 名 单 上 有 你 的 名 字',
+            '🔪 有 人 在 你 的 背 后 呼 吸',
+            '👻 它 就 站 在 你 后 面 不 动',
+            '🩸 你 的 脸 已 经 没 有 血 色 了',
+            '🔴 你 的 屏 幕 渗 出 了 血 液',
+            '💀 你 的 眼 睛 变 成 红 色 了',
+            '👁️ 镜 子 里 的 东 西 在 动',
+            '🔥 你 闻 到 烧 焦 的 味 道 了 吧',
+            '💀 它 正 在 吃 你 的 影 子',
+            '🩸 血 正 在 从 天 花 板 滴 落',
+            '👹 它 的 脸 贴 在 你 的 脸 上',
+            '🔪 你 听 到 骨 头 折 断 的 声 音',
+            '💀 它 已 经 进 入 你 的 大 脑',
+            '👁️ 你 的 眼 球 正 在 变 黑',
+            '🩸 你 周 围 的 墙 壁 在 渗 血',
+            '🔴 它 正 在 啃 你 的 骨 头',
+            '💀 你 的 灵 魂 正 在 被 撕 裂',
+            '👻 它 吃 掉 了 你 的 名 字'
+        ];
+        var msg = messages[Math.floor(Math.random() * messages.length)];
+
+        getHorrorConnection()
+            .then(function(conn) {
+                conn.invoke('TriggerHorror', msg);
+                btn.textContent = '✅ 已释放';
+                setTimeout(function() {
+                    btn.disabled = false;
+                    btn.textContent = '👻 释放恐怖入侵';
+                }, 3000);
+            })
+            .catch(function(err) {
+                alert('释放失败: ' + err);
+                btn.disabled = false;
+                btn.textContent = '👻 释放恐怖入侵';
+            });
+    }
+
+    function triggerHorrorWithMessage() {
+        var msg = prompt('输入恐怖消息：', '💀 你逃不掉的...');
+        if (msg === null) return;
+        var btn = event.target;
+        btn.disabled = true;
+        btn.textContent = '⏳ 发送中...';
+        getHorrorConnection()
+            .then(function(conn) {
+                conn.invoke('TriggerHorror', msg.trim() || '💀 你逃不掉的...');
+                btn.textContent = '✅ 已发送';
+                setTimeout(function() {
+                    btn.disabled = false;
+                    btn.textContent = '📝 自定义恐怖';
+                }, 3000);
+            })
+            .catch(function(err) {
+                alert('发送失败: ' + err);
+                btn.disabled = false;
+                btn.textContent = '📝 自定义恐怖';
+            });
+    }
+
+    function triggerGhost() {
+        var btn = event.target;
+        btn.disabled = true;
+        btn.textContent = '⏳ 释放中...';
+        getHorrorConnection()
+            .then(function(conn) {
+                conn.invoke('TriggerGhost', '👻 幽灵出没！');
+                btn.textContent = '✅ 已释放';
+                setTimeout(function() {
+                    btn.disabled = false;
+                    btn.textContent = '👻 幽灵飘过';
+                }, 2000);
+            })
+            .catch(function(err) {
+                alert('释放失败: ' + err);
+                btn.disabled = false;
+                btn.textContent = '👻 幽灵飘过';
+            });
+    }
+
+    function triggerShake() {
+        var btn = event.target;
+        btn.disabled = true;
+        btn.textContent = '⏳ 释放中...';
+        getHorrorConnection()
+            .then(function(conn) {
+                var intensities = ['light', 'medium', 'hard'];
+                var intensity = intensities[Math.floor(Math.random() * intensities.length)];
+                conn.invoke('TriggerShake', intensity);
+                btn.textContent = '✅ 已释放';
+                setTimeout(function() {
+                    btn.disabled = false;
+                    btn.textContent = '💀 屏幕震动';
+                }, 2000);
+            })
+            .catch(function(err) {
+                alert('释放失败: ' + err);
+                btn.disabled = false;
+                btn.textContent = '💀 屏幕震动';
+            });
+    }
+</script>
                     
     }  // ⬅️ AdminController 类结束（只有一个）
 }  // ⬅️ namespace 结束（只有一个）
