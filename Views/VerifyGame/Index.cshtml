@@ -34,7 +34,7 @@
     .challenge-card .type-badge { position: absolute; top: 0.8rem; right: 1rem; font-size: 0.65rem; padding: 0.15rem 0.8rem; border-radius: 20px; background: rgba(139,92,246,0.08); color: #8B5CF6; border: 1px solid rgba(139,92,246,0.04); font-weight: 500; z-index: 1; }
     .challenge-card .question-text { color: rgba(255,255,255,0.5); font-size: 1.1rem; text-align: center; line-height: 1.8; margin-bottom: 0.5rem; min-height: 40px; width: 100%; position: relative; z-index: 1; }
 
-    /* 1A2B 游戏样式 */
+    /* ===== 1A2B 游戏样式 ===== */
     #abgameContainer { width: 100%; max-width: 420px; margin: 0 auto; }
     .ab-display { font-size: 2.8rem; font-weight: 700; letter-spacing: 12px; color: #8B5CF6; padding: 0.5rem 0; font-family: monospace; background: rgba(255,255,255,0.02); border-radius: 12px; border: 1px solid rgba(255,255,255,0.04); margin: 0 auto 0.5rem; min-height: 70px; display: flex; align-items: center; justify-content: center; }
     .ab-status { color: rgba(255,255,255,0.2); font-size: 0.8rem; text-align: center; margin-bottom: 0.5rem; }
@@ -42,7 +42,6 @@
     .ab-history { color: rgba(255,255,255,0.12); font-size: 0.85rem; min-height: 30px; padding: 0.3rem 0.5rem; font-family: monospace; background: rgba(255,255,255,0.02); border-radius: 8px; border: 1px solid rgba(255,255,255,0.02); margin-bottom: 0.8rem; max-height: 100px; overflow-y: auto; text-align: center; line-height: 1.8; }
     .ab-history .history-item { color: rgba(255,255,255,0.3); }
     .ab-history .history-item.correct { color: #28a745; }
-    .ab-history .history-item.wrong { color: rgba(255,255,255,0.15); }
 
     .ab-keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; max-width: 260px; margin: 0 auto; }
     .ab-key-btn { padding: 0.8rem 0.5rem; border: 2px solid rgba(255,255,255,0.04); border-radius: 12px; background: rgba(255,255,255,0.03); color: rgba(255,255,255,0.6); font-size: 1.4rem; font-weight: 600; cursor: pointer; transition: all 0.2s ease; font-family: inherit; text-align: center; min-height: 52px; user-select: none; }
@@ -54,7 +53,62 @@
     .ab-key-btn.key-submit:hover:not(:disabled) { background: rgba(40,167,69,0.15); }
     .ab-key-btn.key-number:hover:not(:disabled) { background: rgba(139,92,246,0.08); border-color: rgba(139,92,246,0.15); }
 
-    /* 反馈 */
+    /* ===== 通用样式 ===== */
+    .options-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.6rem; width: 100%; max-width: 420px; position: relative; z-index: 1; }
+    .options-grid .option-btn { padding: 0.8rem 1rem; border: 2px solid rgba(255,255,255,0.04); border-radius: 14px; background: rgba(255,255,255,0.02); color: rgba(255,255,255,0.5); font-size: 1rem; font-weight: 500; cursor: pointer; transition: all 0.3s ease; font-family: inherit; text-align: center; }
+    .options-grid .option-btn:hover:not(:disabled) { border-color: rgba(139,92,246,0.2); background: rgba(139,92,246,0.04); color: #fff; transform: translateY(-2px); }
+    .options-grid .option-btn:disabled { cursor: not-allowed; opacity: 0.3; }
+    .options-grid .option-btn.correct { border-color: #28a745; background: rgba(40,167,69,0.08); color: #28a745; }
+    .options-grid .option-btn.wrong { border-color: #dc3545; background: rgba(220,53,69,0.08); color: #dc3545; }
+
+    .color-options-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.8rem; width: 100%; max-width: 400px; margin: 0 auto; position: relative; z-index: 1; }
+    .color-options-grid .color-option { padding: 0.8rem 0.3rem; border: 2px solid rgba(255,255,255,0.04); border-radius: 14px; background: rgba(255,255,255,0.02); cursor: pointer; transition: all 0.3s ease; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+    .color-options-grid .color-option:hover:not(.disabled) { border-color: rgba(139,92,246,0.2); background: rgba(139,92,246,0.04); transform: translateY(-2px); }
+    .color-options-grid .color-option.disabled { cursor: not-allowed; opacity: 0.4; }
+    .color-options-grid .color-option .color-block { width: 56px; height: 56px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.06); }
+    .color-options-grid .color-option .color-label { color: rgba(255,255,255,0.5); font-size: 0.9rem; font-weight: 600; }
+    .color-options-grid .color-option.correct { border-color: #28a745; background: rgba(40,167,69,0.08); }
+    .color-options-grid .color-option.wrong { border-color: #dc3545; background: rgba(220,53,69,0.08); }
+
+    .captcha-image { border-radius: 12px; border: 1px solid rgba(255,255,255,0.04); background: rgba(255,255,255,0.02); max-width: 100%; margin: 0.2rem 0 0.8rem; cursor: pointer; transition: transform 0.3s ease; }
+    .captcha-image:hover { transform: scale(1.02); }
+    .color-display { font-size: 2.5rem; padding: 0.3rem 1.5rem; border-radius: 12px; background: rgba(255,255,255,0.02); margin: 0.2rem 0 0.8rem; letter-spacing: 4px; }
+    .display-text-container { width: 100%; display: none; margin: 0.2rem 0 0.8rem; position: relative; z-index: 1; }
+    .display-text-container .display-text { font-size: 1.4rem; padding: 0.5rem 1.5rem; margin: 0.2rem 0 0.8rem; line-height: 2.2; text-align: center; font-family: 'Courier New', monospace; letter-spacing: 3px; width: 100%; }
+
+    .rotate-compare { display: flex; gap: 1.5rem; justify-content: center; align-items: center; flex-wrap: wrap; padding: 0.5rem 0; }
+    .rotate-compare .rotate-item { text-align: center; }
+    .rotate-compare .rotate-item .label { color: rgba(255,255,255,0.12); font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.2rem; display: block; }
+    .rotate-compare .rotate-item svg { border-radius: 8px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.04); }
+    .rotate-compare .rotate-arrow { color: rgba(255,255,255,0.06); font-size: 1.5rem; }
+    .rotate-angle-text { font-size: 1.2rem; font-weight: 700; color: #8B5CF6; margin-top: 0.3rem; }
+
+    .memory-keyboard { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5rem; max-width: 280px; margin: 0.5rem auto; width: 100%; }
+    .memory-keyboard .key-btn { padding: 0.8rem 0.5rem; border: 2px solid rgba(255,255,255,0.06); border-radius: 12px; background: rgba(255,255,255,0.03); color: #fff; font-size: 1.4rem; font-weight: 600; cursor: pointer; transition: all 0.2s ease; font-family: inherit; text-align: center; }
+    .memory-keyboard .key-btn:hover:not(:disabled) { background: rgba(139,92,246,0.08); border-color: rgba(139,92,246,0.15); transform: scale(1.05); }
+    .memory-keyboard .key-btn:disabled { opacity: 0.3; cursor: not-allowed; transform: none; }
+    .memory-keyboard .key-btn.backspace { color: #EC4899; border-color: rgba(236,72,153,0.15); font-size: 1.2rem; }
+    .memory-keyboard .key-btn.backspace:hover:not(:disabled) { background: rgba(236,72,153,0.08); border-color: rgba(236,72,153,0.2); }
+    .memory-input-display { text-align: center; padding: 0.5rem; min-height: 50px; font-size: 2rem; font-weight: bold; color: #8B5CF6; letter-spacing: 8px; font-family: 'Courier New', monospace; background: rgba(255,255,255,0.02); border-radius: 12px; border: 1px solid rgba(255,255,255,0.04); margin: 0.5rem auto; width: 100%; max-width: 280px; }
+    .memory-controls { display: flex; gap: 0.5rem; justify-content: center; margin-top: 0.3rem; }
+    .memory-controls .btn-memory { padding: 0.5rem 1.5rem; border: none; border-radius: 40px; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: all 0.3s ease; font-family: inherit; }
+    .memory-controls .btn-memory.submit { background: linear-gradient(135deg, #8B5CF6, #EC4899); color: #fff; }
+    .memory-controls .btn-memory.submit:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(108,60,225,0.2); }
+    .memory-controls .btn-memory:disabled { opacity: 0.3; cursor: not-allowed; transform: none; }
+
+    .char-btn { display: inline-block; padding: 0.3rem 0.8rem; margin: 0.1rem; border-radius: 10px; cursor: pointer; font-size: 2.4rem; font-weight: bold; font-family: monospace; transition: all 0.3s ease; user-select: none; color: #ffffff; border: 2px solid transparent; background: transparent; }
+    .char-btn:hover:not(.disabled) { transform: scale(1.1); background: rgba(139,92,246,0.08); }
+    .char-btn.disabled { cursor: default; opacity: 0.5; background: transparent !important; transform: none !important; }
+    .char-btn.correct-answer { border-color: #28a745 !important; background: rgba(40,167,69,0.15) !important; color: #28a745 !important; }
+    .char-btn.wrong-answer { border-color: #dc3545 !important; background: rgba(220,53,69,0.15) !important; color: #dc3545 !important; }
+
+    .puzzle-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; max-width: 240px; margin: 0 auto; background: rgba(255,255,255,0.02); padding: 6px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.04); }
+    .puzzle-grid .puzzle-cell { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; font-weight: 700; border-radius: 8px; cursor: pointer; transition: all 0.2s ease; background: rgba(255,255,255,0.04); color: #fff; user-select: none; }
+    .puzzle-grid .puzzle-cell:hover:not(.empty) { background: rgba(139,92,246,0.12); transform: scale(1.04); }
+    .puzzle-grid .puzzle-cell.empty { background: transparent; cursor: default; }
+
+    .ascii-art { font-family: 'Courier New', monospace; font-size: 0.85rem; color: #8B5CF6; white-space: pre; text-align: center; line-height: 1.4; padding: 0.5rem; background: rgba(255,255,255,0.02); border-radius: 12px; border: 1px solid rgba(255,255,255,0.04); }
+
     .feedback { text-align: center; margin-top: 0.8rem; padding: 0.6rem 1.2rem; border-radius: 12px; font-size: 1rem; font-weight: 600; animation: fadeIn 0.4s ease; width: 100%; display: none; position: relative; z-index: 1; }
     .feedback.show { display: block; }
     .feedback.correct { background: rgba(40,167,69,0.06); color: #28a745; border: 1px solid rgba(40,167,69,0.06); }
@@ -99,22 +153,6 @@
     .toast-msg.error { background: rgba(220,53,69,0.8); }
     .toast-msg.info { background: rgba(79,172,254,0.8); }
 
-    .options-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.6rem; width: 100%; max-width: 420px; position: relative; z-index: 1; }
-    .options-grid .option-btn { padding: 0.8rem 1rem; border: 2px solid rgba(255,255,255,0.04); border-radius: 14px; background: rgba(255,255,255,0.02); color: rgba(255,255,255,0.5); font-size: 1rem; font-weight: 500; cursor: pointer; transition: all 0.3s ease; font-family: inherit; text-align: center; }
-    .options-grid .option-btn:hover:not(:disabled) { border-color: rgba(139,92,246,0.2); background: rgba(139,92,246,0.04); color: #fff; transform: translateY(-2px); }
-    .options-grid .option-btn:disabled { cursor: not-allowed; opacity: 0.3; }
-    .options-grid .option-btn.correct { border-color: #28a745; background: rgba(40,167,69,0.08); color: #28a745; }
-    .options-grid .option-btn.wrong { border-color: #dc3545; background: rgba(220,53,69,0.08); color: #dc3545; }
-
-    .color-options-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.8rem; width: 100%; max-width: 400px; margin: 0 auto; position: relative; z-index: 1; }
-    .color-options-grid .color-option { padding: 0.8rem 0.3rem; border: 2px solid rgba(255,255,255,0.04); border-radius: 14px; background: rgba(255,255,255,0.02); cursor: pointer; transition: all 0.3s ease; display: flex; flex-direction: column; align-items: center; gap: 6px; }
-    .color-options-grid .color-option:hover:not(.disabled) { border-color: rgba(139,92,246,0.2); background: rgba(139,92,246,0.04); transform: translateY(-2px); }
-    .color-options-grid .color-option.disabled { cursor: not-allowed; opacity: 0.4; }
-    .color-options-grid .color-option .color-block { width: 56px; height: 56px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.06); box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
-    .color-options-grid .color-option .color-label { color: rgba(255,255,255,0.2); font-size: 0.7rem; font-weight: 500; }
-    .color-options-grid .color-option.correct { border-color: #28a745; background: rgba(40,167,69,0.08); }
-    .color-options-grid .color-option.wrong { border-color: #dc3545; background: rgba(220,53,69,0.08); }
-
     @@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     @@keyframes slideUp { from { opacity: 0; transform: translateY(20px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
     @@keyframes shake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
@@ -134,8 +172,13 @@
         .options-grid { grid-template-columns: 1fr 1fr; gap: 0.4rem; }
         .color-options-grid { grid-template-columns: repeat(3, 1fr); gap: 0.4rem; }
         .color-options-grid .color-option .color-block { width: 42px; height: 42px; }
-        .color-options-grid .color-option .color-label { font-size: 0.6rem; }
+        .color-options-grid .color-option .color-label { font-size: 0.8rem; }
         .ab-history { font-size: 0.75rem; max-height: 80px; }
+        .char-btn { font-size: 1.8rem; padding: 0.2rem 0.5rem; }
+        .puzzle-grid { max-width: 180px; }
+        .puzzle-grid .puzzle-cell { font-size: 1.2rem; }
+        .rotate-compare .rotate-item svg { width: 80px; height: 80px; }
+        .rotate-angle-text { font-size: 1rem; }
     }
     @@media (max-width: 400px) {
         .game-header h1 { font-size: 1.3rem; }
@@ -146,6 +189,12 @@
         .status-item .value { font-size: 0.85rem; }
         .status-item .value.lives { font-size: 0.9rem; }
         .ab-history { font-size: 0.65rem; max-height: 60px; }
+        .char-btn { font-size: 1.4rem; padding: 0.1rem 0.4rem; }
+        .puzzle-grid { max-width: 150px; }
+        .puzzle-grid .puzzle-cell { font-size: 1rem; }
+        .rotate-compare .rotate-item svg { width: 60px; height: 60px; }
+        .rotate-compare .rotate-arrow { font-size: 1rem; }
+        .rotate-angle-text { font-size: 0.9rem; }
     }
 </style>
 
@@ -263,7 +312,6 @@
         dom.feedback.style.display = 'none';
         dom.gameContent.innerHTML = '';
 
-        // 清理之前的键盘监听
         if (window._abCleanup) {
             window._abCleanup();
             window._abCleanup = null;
@@ -281,9 +329,13 @@
                         dom.typeNameDisplay.textContent = '🧩 ' + data.data.typeName + ' · ' + diffLabel;
                     }
                     renderChallenge(data.data);
-                } else { showToast('加载挑战失败，请重试', 'error'); }
+                } else {
+                    showToast('加载挑战失败，请重试', 'error');
+                }
             })
-            .catch(function() { showToast('网络错误，请刷新重试', 'error'); });
+            .catch(function() {
+                showToast('网络错误，请刷新重试', 'error');
+            });
     }
 
     // ============================================================
@@ -297,14 +349,171 @@
         dom.typeNameDisplay.textContent = '🧩 ' + typeName + ' · ' + diffLabel;
         dom.questionText.innerHTML = challenge.question || '请完成以下挑战';
 
-        // 检查是否是 1A2B 游戏
+        var container = dom.gameContent;
+
+        // ============================================================
+        // ⭐ 1A2B 游戏
+        // ============================================================
         if (challenge.type === 'abgame') {
             renderABGame(challenge);
             return;
         }
 
-        // 其他题型由后端生成
-        // ...（保留原有渲染逻辑）
+        // ============================================================
+        // ⭐ 颜色混合（特殊处理，使用自定义网格）
+        // ============================================================
+        if (challenge.type === 'colorMix' && challenge.optionsHtml) {
+            var colorGrid = document.createElement('div');
+            colorGrid.className = 'color-options-grid';
+            colorGrid.innerHTML = challenge.optionsHtml;
+            colorGrid.querySelectorAll('.color-option').forEach(function(el) {
+                el.addEventListener('click', function() {
+                    if (gameState.isAnswered) return;
+                    var answer = this.dataset.color;
+                    if (answer) submitColorMixAnswer(challenge, answer, this);
+                });
+            });
+            container.appendChild(colorGrid);
+            startTimer(challenge.timeLimit || 15);
+            updateUI();
+            return;
+        }
+
+        // ============================================================
+        // ⭐ 图形旋转（特殊处理，显示角度选项）
+        // ============================================================
+        if (challenge.type === 'rotate' && challenge.originalSvg) {
+            var rotateDiv = document.createElement('div');
+            rotateDiv.className = 'rotate-compare';
+            rotateDiv.innerHTML = `
+                <div class="rotate-item">
+                    <span class="label">📐 原图</span>
+                    ${challenge.originalSvg}
+                </div>
+                <div class="rotate-arrow">→</div>
+                <div class="rotate-item">
+                    <span class="label">🔄 旋转后</span>
+                    ${challenge.rotatedSvg || challenge.originalSvg}
+                </div>
+            `;
+            container.appendChild(rotateDiv);
+
+            // 角度选项
+            if (challenge.options && challenge.options.length > 0) {
+                var optGrid = document.createElement('div');
+                optGrid.className = 'options-grid';
+                var letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+                challenge.options.forEach(function(opt, idx) {
+                    var btn = document.createElement('button');
+                    btn.className = 'option-btn';
+                    // 显示角度，字体加大
+                    btn.innerHTML = (idx < letters.length ? letters[idx] + '. ' : '') + '<span style="font-size:1.2rem;font-weight:700;color:#8B5CF6;">' + opt + '</span>';
+                    btn.dataset.answer = opt;
+                    btn.addEventListener('click', function() {
+                        if (gameState.isAnswered) return;
+                        submitAnswer(challenge, this.dataset.answer, this);
+                    });
+                    optGrid.appendChild(btn);
+                });
+                container.appendChild(optGrid);
+            }
+            startTimer(challenge.timeLimit || 15);
+            updateUI();
+            return;
+        }
+
+        // ============================================================
+        // ⭐ 找不同（特殊处理）
+        // ============================================================
+        if (challenge.type === 'findDifferent' && challenge.originalDisplay) {
+            renderFindDifferent(challenge);
+            return;
+        }
+
+        // ============================================================
+        // ⭐ 数字记忆（特殊处理）
+        // ============================================================
+        if (challenge.type === 'memory' && challenge.keyboardRows) {
+            renderMemoryGame(challenge);
+            return;
+        }
+
+        // ============================================================
+        // ⭐ 华容道（特殊处理）
+        // ============================================================
+        if (challenge.type === 'puzzle' && challenge.puzzle) {
+            renderPuzzle(challenge.puzzle);
+            return;
+        }
+
+        // ============================================================
+        // ⭐ 其他题型（通用渲染）
+        // ============================================================
+
+        // 图片
+        if (challenge.imageSvg) {
+            var imgDiv = document.createElement('div');
+            imgDiv.style.cssText = 'width:100%;text-align:center;margin:0.2rem 0 0.8rem;';
+            imgDiv.innerHTML = '<div class="captcha-image">' + challenge.imageSvg + '</div>';
+            container.appendChild(imgDiv);
+        }
+
+        // 颜色显示
+        if (challenge.displayHtml) {
+            var colorDiv = document.createElement('div');
+            colorDiv.className = 'color-display';
+            colorDiv.innerHTML = challenge.displayHtml;
+            container.appendChild(colorDiv);
+        }
+
+        // 文本显示
+        if (challenge.displayText) {
+            var textDiv = document.createElement('div');
+            textDiv.className = 'display-text-container';
+            textDiv.style.display = 'block';
+            textDiv.innerHTML = '<div class="display-text">' + challenge.displayText + '</div>';
+            container.appendChild(textDiv);
+        }
+
+        // 三视图
+        if (challenge.type === 'threeView' && challenge.topView) {
+            var viewDiv = document.createElement('div');
+            viewDiv.className = 'display-text-container';
+            viewDiv.style.display = 'block';
+            viewDiv.innerHTML = '<div class="display-text" style="padding:0.5rem;text-align:center;">' +
+                challenge.topView + challenge.frontView + challenge.sideView + '</div>';
+            container.appendChild(viewDiv);
+        }
+
+        // ASCII 艺术
+        if (challenge.type === 'shapeCount' && challenge.asciiArt) {
+            var asciiDiv = document.createElement('div');
+            asciiDiv.className = 'ascii-art';
+            asciiDiv.textContent = challenge.asciiArt;
+            container.appendChild(asciiDiv);
+        }
+
+        // 选项按钮（通用）
+        if (challenge.options && challenge.options.length > 0) {
+            var optGrid = document.createElement('div');
+            optGrid.className = 'options-grid';
+            var letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+            challenge.options.forEach(function(opt, idx) {
+                var btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.textContent = (idx < letters.length ? letters[idx] + '. ' : '') + opt;
+                btn.dataset.answer = opt;
+                btn.addEventListener('click', function() {
+                    if (gameState.isAnswered) return;
+                    submitAnswer(challenge, this.dataset.answer, this);
+                });
+                optGrid.appendChild(btn);
+            });
+            container.appendChild(optGrid);
+        }
+
+        startTimer(challenge.timeLimit || 15);
+        updateUI();
     }
 
     // ============================================================
@@ -315,7 +524,6 @@
         var maxAttempts = challenge.maxAttempts || 15;
         var password = challenge.password || '';
 
-        // 初始化状态
         abState.password = password;
         abState.digitCount = digitCount;
         abState.maxAttempts = maxAttempts;
@@ -328,7 +536,7 @@
         var container = dom.gameContent;
         container.innerHTML = '';
 
-        // 创建密码显示
+        // 密码显示
         var displayDiv = document.createElement('div');
         displayDiv.className = 'ab-display';
         displayDiv.id = 'abDisplay';
@@ -367,7 +575,6 @@
                 btn.className = 'ab-key-btn';
                 btn.textContent = key;
                 btn.dataset.key = key;
-
                 if (key === '⌫') btn.classList.add('key-backspace');
                 else if (key === '✅') btn.classList.add('key-submit');
                 else btn.classList.add('key-number');
@@ -403,7 +610,6 @@
             document.removeEventListener('keydown', handlePhysicalKey);
         };
 
-        // 启动计时器
         startTimer(challenge.timeLimit || 200);
     }
 
@@ -412,7 +618,6 @@
     // ============================================================
     function handleABKeyPress(key) {
         if (!abState.isActive || abState.gameSolved || gameState.isAnswered) return;
-        if (gameState.isAnswered) return;
 
         var digitCount = abState.digitCount;
         var maxAttempts = abState.maxAttempts;
@@ -422,7 +627,6 @@
         var historyEl = document.getElementById('abHistory');
         var attemptsEl = document.getElementById('abAttempts');
 
-        // 退位
         if (key === '⌫') {
             if (abState.currentGuess.length > 0) {
                 abState.currentGuess = abState.currentGuess.slice(0, -1);
@@ -431,20 +635,15 @@
             return;
         }
 
-        // 提交
         if (key === '✅') {
             if (abState.currentGuess.length !== digitCount) {
                 showToast('请完整输入 ' + digitCount + ' 位数字', 'error');
                 return;
             }
-
-            // 检查重复
             if (new Set(abState.currentGuess).size !== abState.currentGuess.length) {
                 showToast('数字不能重复！', 'error');
                 return;
             }
-
-            // 检查第一位
             if (abState.currentGuess[0] === '0') {
                 showToast('第一位不能是0！', 'error');
                 return;
@@ -454,7 +653,6 @@
             var remaining = maxAttempts - abState.attemptCount;
             attemptsEl.textContent = remaining;
 
-            // 计算 A 和 B
             var passwordArr = password.split('');
             var guessArr = abState.currentGuess.split('');
             var a = 0, b = 0;
@@ -487,12 +685,10 @@
             var resultText = a + 'A' + b + 'B';
             var guessDisplay = abState.currentGuess.split('').join(' ');
 
-            // 记录历史
             var historyItem = guessDisplay + ' → ' + resultText;
             abState.history.push(historyItem);
             updateABHistory();
 
-            // 判断是否猜中
             if (a === digitCount) {
                 abState.gameSolved = true;
                 abState.isActive = false;
@@ -514,7 +710,6 @@
                 return;
             }
 
-            // 检查是否用完次数
             if (remaining <= 0) {
                 abState.isActive = false;
                 gameState.isAnswered = true;
@@ -532,7 +727,6 @@
                 return;
             }
 
-            // 清空输入
             abState.currentGuess = '';
             updateABDisplay();
             showToast('第 ' + abState.attemptCount + ' 次：' + resultText, 'info');
@@ -556,9 +750,6 @@
         }
     }
 
-    // ============================================================
-    // 1A2B UI 更新
-    // ============================================================
     function updateABDisplay() {
         var displayEl = document.getElementById('abDisplay');
         if (!displayEl) return;
@@ -590,28 +781,102 @@
     }
 
     // ============================================================
+    // 提交答案（通用）
+    // ============================================================
+    function submitAnswer(challenge, answer, btn) {
+        if (gameState.isAnswered) return;
+        var isCorrect = answer === challenge.correctAnswer;
+        var container = dom.gameContent;
+        container.querySelectorAll('.option-btn').forEach(function(b) {
+            b.disabled = true;
+            if (b.dataset.answer === challenge.correctAnswer) b.classList.add('correct');
+        });
+        if (!isCorrect) {
+            btn.classList.add('wrong');
+            dom.challengeCard.classList.add('shake');
+            setTimeout(function() { dom.challengeCard.classList.remove('shake'); }, 500);
+        }
+        handleAnswerResult(challenge, isCorrect);
+    }
+
+    // ============================================================
+    // 颜色混合提交（带反馈）
+    // ============================================================
+    function submitColorMixAnswer(challenge, answer, element) {
+        if (gameState.isAnswered) return;
+        var isCorrect = answer === challenge.correctAnswer;
+        var container = dom.gameContent;
+
+        // 禁用所有选项，高亮正确答案
+        container.querySelectorAll('.color-option').forEach(function(el) {
+            el.classList.add('disabled');
+            if (el.dataset.color === challenge.correctAnswer) {
+                el.classList.add('correct');
+            }
+        });
+
+        // 如果选错，标记选中的为错误
+        if (!isCorrect) {
+            element.classList.add('wrong');
+            dom.challengeCard.classList.add('shake');
+            setTimeout(function() { dom.challengeCard.classList.remove('shake'); }, 500);
+        }
+
+        handleAnswerResult(challenge, isCorrect);
+    }
+
+    // ============================================================
+    // 处理答案结果
+    // ============================================================
+    function handleAnswerResult(challenge, isCorrect) {
+        gameState.isAnswered = true;
+        clearInterval(gameState.timer);
+
+        var points = 0;
+        if (isCorrect) {
+            var bonus = Math.min(gameState.combo, 10);
+            points = 10 + Math.floor(gameState.level / 5) + bonus * 2;
+            gameState.score += points;
+            gameState.combo++;
+            gameState.passed++;
+            if (gameState.combo > gameState.maxCombo) gameState.maxCombo = gameState.combo;
+            showFeedback(true, points, challenge.funMessage);
+            gameState.level++;
+        } else {
+            gameState.combo = 0;
+            gameState.lives--;
+            showFeedback(false, 0, '');
+        }
+
+        updateUI();
+
+        if (gameState.lives <= 0) {
+            setTimeout(gameOver, 1500);
+            return;
+        }
+        setTimeout(loadChallenge, 1500);
+    }
+
+    // ============================================================
     // 计时器
     // ============================================================
     function startTimer(limit) {
         clearInterval(gameState.timer);
-        gameState.timeLeft = limit;
-        updateTimerDisplay(limit);
+        gameState.timeLeft = limit || 15;
+        updateTimerDisplay(limit || 15);
 
         gameState.timer = setInterval(function() {
             gameState.timeLeft--;
-            updateTimerDisplay(limit);
+            updateTimerDisplay(limit || 15);
             if (gameState.timeLeft <= 0) {
                 clearInterval(gameState.timer);
                 if (!gameState.isAnswered) {
                     gameState.isAnswered = true;
-                    disableABKeyboard();
-                    if (abState.isActive) {
-                        abState.isActive = false;
-                        showFeedback(false, 0, '⏱ 时间到！密码是 ' + abState.password);
-                    }
+                    disableAllInteractions();
                     gameState.combo = 0;
                     gameState.lives--;
                     updateUI();
+                    showFeedback(false, 0, '⏱ 时间到！');
                     if (gameState.lives <= 0) {
                         setTimeout(gameOver, 1200);
                     } else {
@@ -623,12 +888,21 @@
     }
 
     function updateTimerDisplay(limit) {
-        var pct = (gameState.timeLeft / Math.max(1, limit)) * 100;
+        var pct = (gameState.timeLeft / Math.max(1, limit || 15)) * 100;
         dom.timerFill.style.width = Math.max(0, Math.min(100, pct)) + '%';
         dom.timerText.textContent = '⏱ ' + gameState.timeLeft + 's';
         dom.timerFill.className = 'timer-fill';
         if (pct < 30) dom.timerFill.classList.add('danger');
         else if (pct < 50) dom.timerFill.classList.add('warning');
+    }
+
+    function disableAllInteractions() {
+        var container = dom.gameContent;
+        container.querySelectorAll('.option-btn').forEach(function(b) { b.disabled = true; });
+        container.querySelectorAll('.color-option').forEach(function(el) { el.classList.add('disabled'); });
+        container.querySelectorAll('.ab-key-btn').forEach(function(b) { b.disabled = true; });
+        container.querySelectorAll('.puzzle-cell').forEach(function(cell) { cell.onclick = null; });
+        container.querySelectorAll('.char-btn').forEach(function(el) { el.classList.add('disabled'); el.onclick = null; });
     }
 
     // ============================================================
@@ -668,6 +942,9 @@
         return '📝 入门';
     }
 
+    // ============================================================
+    // Toast
+    // ============================================================
     function showToast(message, type) {
         var container = document.getElementById('toastContainer');
         var toast = document.createElement('div');
@@ -729,6 +1006,9 @@
         window.location.reload();
     }
 
+    // ============================================================
+    // 排行榜
+    // ============================================================
     function saveAndShowRanking() {
         var finalScore = gameState.score;
         fetch('/VerifyGame/SaveScore', {
@@ -745,7 +1025,7 @@
             .then(function(data) {
                 var container = dom.rankList;
                 var section = dom.rankSection;
-                if (data.success && data.data.length > 0) {
+                if (data.success && data.data && data.data.length > 0) {
                     var html = '';
                     var medals = ['🥇', '🥈', '🥉'];
                     data.data.forEach(function(item, index) {
@@ -774,6 +1054,343 @@
             });
     }
 
+    // ============================================================
+    // 找不同渲染
+    // ============================================================
+    function renderFindDifferent(challenge) {
+        var container = dom.gameContent;
+        var displayTime = challenge.displayTime || 3;
+
+        var textDiv = document.createElement('div');
+        textDiv.className = 'display-text-container';
+        textDiv.style.display = 'block';
+        textDiv.id = 'findDifferentDisplay';
+        textDiv.innerHTML = '<div class="display-text" style="font-size:2.8rem;font-weight:bold;color:#8B5CF6;padding:1.5rem;margin:0.5rem 0;background:rgba(255,255,255,0.02);border-radius:16px;border:1px solid rgba(255,255,255,0.04);text-align:center;letter-spacing:8px;font-family:monospace;">' + challenge.originalDisplay + '</div>';
+        container.appendChild(textDiv);
+
+        dom.timerText.textContent = '⏱ 记忆 ' + displayTime + 's';
+        dom.timerFill.style.width = '100%';
+        dom.timerFill.className = 'timer-fill';
+
+        var countdownInterval = setInterval(function() {
+            displayTime--;
+            dom.timerText.textContent = '⏱ 记忆 ' + displayTime + 's';
+            var pct = (displayTime / (challenge.displayTime || 3)) * 100;
+            dom.timerFill.style.width = pct + '%';
+            if (pct < 30) dom.timerFill.classList.add('danger');
+            else if (pct < 50) dom.timerFill.classList.add('warning');
+            if (displayTime <= 0) {
+                clearInterval(countdownInterval);
+                var displayEl = document.getElementById('findDifferentDisplay');
+                if (displayEl) {
+                    var shuffled = challenge.shuffledDisplay || '';
+                    var html = '';
+                    for (var i = 0; i < shuffled.length; i++) {
+                        var ch = shuffled[i];
+                        html += '<span class="char-btn" data-index="' + i + '" data-char="' + ch + '" onclick="selectChar(' + i + ', \'' + ch + '\', this)">' + ch + '</span>';
+                    }
+                    displayEl.innerHTML = '<div class="display-text" style="padding:1.5rem;margin:0.5rem 0;background:rgba(255,255,255,0.02);border-radius:16px;border:1px solid rgba(255,255,255,0.04);text-align:center;letter-spacing:4px;">' + html + '</div>';
+                    displayEl.dataset.correctAnswer = challenge.correctAnswer;
+                    displayEl.dataset.shuffledPos = challenge.shuffledPos;
+                    dom.timerText.textContent = '⏱ 选择';
+                    startTimer(challenge.timeLimit || 10);
+                }
+            }
+        }, 1000);
+    }
+
+    // ============================================================
+    // 找不同选择字符
+    // ============================================================
+    function selectChar(index, char, element) {
+        if (gameState.isAnswered) return;
+        var container = document.getElementById('findDifferentDisplay');
+        if (!container) return;
+        var shuffledPos = parseInt(container.dataset.shuffledPos);
+        var isCorrect = (index === shuffledPos);
+        var challenge = gameState.currentChallenge;
+
+        gameState.isAnswered = true;
+        clearInterval(gameState.timer);
+
+        var allChars = container.querySelectorAll('.char-btn');
+        allChars.forEach(function(el) {
+            el.classList.add('disabled');
+            el.onclick = null;
+            if (parseInt(el.dataset.index) === shuffledPos) {
+                el.classList.add('correct-answer');
+            }
+        });
+        if (!isCorrect) {
+            element.classList.add('wrong-answer');
+            dom.challengeCard.classList.add('shake');
+            setTimeout(function() { dom.challengeCard.classList.remove('shake'); }, 500);
+        }
+        handleAnswerResult(challenge, isCorrect);
+    }
+
+    // ============================================================
+    // 数字记忆渲染
+    // ============================================================
+    function renderMemoryGame(challenge) {
+        var container = dom.gameContent;
+        var memoryTime = challenge.memoryTime || 5;
+        var timeLimit = challenge.timeLimit || 15;
+        var correctAnswer = challenge.correctAnswer || '';
+
+        var questionDiv = document.createElement('div');
+        questionDiv.style.cssText = 'width:100%;text-align:center;';
+        questionDiv.innerHTML = '<div style="font-size:3rem;font-weight:bold;color:#8B5CF6;padding:1.5rem;margin:0.5rem 0;background:rgba(139,92,246,0.04);border-radius:16px;border:1px solid rgba(139,92,246,0.06);text-align:center;letter-spacing:12px;" id="memoryNumberDisplay">' + challenge.displayNumber + '</div>';
+        container.appendChild(questionDiv);
+
+        var inputDiv = document.createElement('div');
+        inputDiv.className = 'memory-input-display';
+        inputDiv.id = 'memoryInputDisplay';
+        inputDiv.style.display = 'none';
+        inputDiv.textContent = '_ '.repeat(correctAnswer.length).trim();
+        container.appendChild(inputDiv);
+
+        var keyboardDiv = document.createElement('div');
+        keyboardDiv.className = 'memory-keyboard';
+        keyboardDiv.id = 'memoryKeyboard';
+        keyboardDiv.style.display = 'none';
+
+        var keyboardRows = challenge.keyboardRows || [
+            ['1', '2', '3'],
+            ['4', '5', '6'],
+            ['7', '8', '9'],
+            ['', '0', '⌫']
+        ];
+
+        keyboardRows.forEach(function(row) {
+            row.forEach(function(key) {
+                if (!key) {
+                    var empty = document.createElement('div');
+                    keyboardDiv.appendChild(empty);
+                    return;
+                }
+                var btn = document.createElement('button');
+                btn.className = 'key-btn';
+                if (key === '⌫') {
+                    btn.classList.add('backspace');
+                    btn.textContent = '⌫';
+                    btn.addEventListener('click', function() {
+                        if (gameState.isAnswered) return;
+                        memoryBackspace();
+                    });
+                } else {
+                    btn.textContent = key;
+                    btn.addEventListener('click', function() {
+                        if (gameState.isAnswered) return;
+                        memoryKeyPress(key);
+                    });
+                }
+                keyboardDiv.appendChild(btn);
+            });
+        });
+
+        container.appendChild(keyboardDiv);
+
+        var controlsDiv = document.createElement('div');
+        controlsDiv.className = 'memory-controls';
+        controlsDiv.innerHTML = '<button class="btn-memory submit" id="memorySubmitBtn" style="display:none;" onclick="submitMemoryAnswer()">✅ 确认</button>';
+        container.appendChild(controlsDiv);
+
+        // 记忆时间倒计时
+        var memoryState = {
+            input: '',
+            correctAnswer: correctAnswer,
+            isActive: true
+        };
+
+        window._memoryState = memoryState;
+
+        dom.timerText.textContent = '⏱ 记忆 ' + memoryTime + 's';
+        dom.timerFill.style.width = '100%';
+        dom.timerFill.className = 'timer-fill';
+
+        var memInterval = setInterval(function() {
+            memoryTime--;
+            dom.timerText.textContent = '⏱ 记忆 ' + memoryTime + 's';
+            var pct = (memoryTime / (challenge.memoryTime || 5)) * 100;
+            dom.timerFill.style.width = pct + '%';
+            if (pct < 30) dom.timerFill.classList.add('danger');
+            else if (pct < 50) dom.timerFill.classList.add('warning');
+            if (memoryTime <= 0) {
+                clearInterval(memInterval);
+                var display = document.getElementById('memoryNumberDisplay');
+                if (display) {
+                    display.textContent = '✏️ 输入你记住的数字';
+                    display.style.color = 'rgba(255,255,255,0.3)';
+                    display.style.fontSize = '1.2rem';
+                    display.style.letterSpacing = 'normal';
+                }
+                document.getElementById('memoryInputDisplay').style.display = 'block';
+                document.getElementById('memoryKeyboard').style.display = 'grid';
+                document.getElementById('memorySubmitBtn').style.display = 'inline-block';
+                dom.timerText.textContent = '⏱ ' + timeLimit + 's';
+                dom.timerFill.style.width = '100%';
+                dom.timerFill.className = 'timer-fill';
+                startTimer(timeLimit);
+            }
+        }, 1000);
+    }
+
+    function memoryKeyPress(value) {
+        if (gameState.isAnswered) return;
+        var state = window._memoryState;
+        if (!state || !state.isActive) return;
+        var len = state.correctAnswer.length;
+        if (state.input.length >= len) return;
+        state.input += value;
+        updateMemoryDisplay(state);
+    }
+
+    function memoryBackspace() {
+        if (gameState.isAnswered) return;
+        var state = window._memoryState;
+        if (!state || !state.isActive) return;
+        if (state.input.length > 0) {
+            state.input = state.input.slice(0, -1);
+            updateMemoryDisplay(state);
+        }
+    }
+
+    function updateMemoryDisplay(state) {
+        var display = document.getElementById('memoryInputDisplay');
+        if (!display) return;
+        var len = state.correctAnswer.length;
+        var text = '';
+        for (var i = 0; i < len; i++) {
+            if (i < state.input.length) {
+                text += state.input[i] + ' ';
+            } else {
+                text += '_ ';
+            }
+        }
+        display.textContent = text.trim();
+    }
+
+    function submitMemoryAnswer() {
+        if (gameState.isAnswered) return;
+        var state = window._memoryState;
+        if (!state) return;
+        if (state.input.length !== state.correctAnswer.length) {
+            showToast('请完整输入所有数字', 'error');
+            return;
+        }
+        var isCorrect = state.input === state.correctAnswer;
+        var challenge = gameState.currentChallenge;
+        document.querySelectorAll('.memory-keyboard .key-btn').forEach(function(b) { b.disabled = true; });
+        document.getElementById('memorySubmitBtn').disabled = true;
+        state.isActive = false;
+        handleAnswerResult(challenge, isCorrect);
+    }
+
+    // ============================================================
+    // 华容道渲染
+    // ============================================================
+    var puzzleState = null;
+    var puzzleEmptyRow = 0;
+    var puzzleEmptyCol = 0;
+
+    function renderPuzzle(puzzle) {
+        var container = dom.gameContent;
+        var grid = document.createElement('div');
+        grid.className = 'puzzle-grid';
+        grid.id = 'puzzleGrid';
+        container.appendChild(grid);
+
+        puzzleState = puzzle.map(function(row) { return row.slice(); });
+
+        for (var r = 0; r < 3; r++) {
+            for (var c = 0; c < 3; c++) {
+                var cell = document.createElement('div');
+                cell.className = 'puzzle-cell';
+                var val = puzzle[r][c];
+                if (val === 0) {
+                    cell.classList.add('empty');
+                    cell.textContent = '';
+                    puzzleEmptyRow = r;
+                    puzzleEmptyCol = c;
+                } else {
+                    cell.textContent = val;
+                    cell.dataset.row = r;
+                    cell.dataset.col = c;
+                    cell.addEventListener('click', function() {
+                        if (gameState.isAnswered) return;
+                        var row = parseInt(this.dataset.row);
+                        var col = parseInt(this.dataset.col);
+                        movePuzzleTile(row, col);
+                    });
+                }
+                grid.appendChild(cell);
+            }
+        }
+        startTimer(60);
+    }
+
+    function movePuzzleTile(row, col) {
+        var dr = Math.abs(row - puzzleEmptyRow);
+        var dc = Math.abs(col - puzzleEmptyCol);
+        if ((dr === 1 && dc === 0) || (dr === 0 && dc === 1)) {
+            puzzleState[puzzleEmptyRow][puzzleEmptyCol] = puzzleState[row][col];
+            puzzleState[row][col] = 0;
+            puzzleEmptyRow = row;
+            puzzleEmptyCol = col;
+            renderPuzzleState(puzzleState);
+            if (checkPuzzleSolved(puzzleState)) {
+                gameState.isAnswered = true;
+                clearInterval(gameState.timer);
+                var challenge = gameState.currentChallenge;
+                handleAnswerResult(challenge, true);
+            }
+        }
+    }
+
+    function renderPuzzleState(puzzle) {
+        var cells = document.querySelectorAll('.puzzle-grid .puzzle-cell');
+        var idx = 0;
+        for (var r = 0; r < 3; r++) {
+            for (var c = 0; c < 3; c++) {
+                var val = puzzle[r][c];
+                var cell = cells[idx];
+                if (val === 0) {
+                    cell.classList.add('empty');
+                    cell.textContent = '';
+                    cell.dataset.row = r;
+                    cell.dataset.col = c;
+                    cell.onclick = null;
+                } else {
+                    cell.classList.remove('empty');
+                    cell.textContent = val;
+                    cell.dataset.row = r;
+                    cell.dataset.col = c;
+                    cell.onclick = function() {
+                        if (gameState.isAnswered) return;
+                        var row = parseInt(this.dataset.row);
+                        var col = parseInt(this.dataset.col);
+                        movePuzzleTile(row, col);
+                    };
+                }
+                idx++;
+            }
+        }
+    }
+
+    function checkPuzzleSolved(puzzle) {
+        var expected = [[1,2,3],[4,5,6],[7,8,0]];
+        for (var r = 0; r < 3; r++) {
+            for (var c = 0; c < 3; c++) {
+                if (puzzle[r][c] !== expected[r][c]) return false;
+            }
+        }
+        return true;
+    }
+
+    // ============================================================
+    // 启动
+    // ============================================================
     document.addEventListener('DOMContentLoaded', function() {
         gameState.isPlaying = true;
         startGame();
