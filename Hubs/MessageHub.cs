@@ -9,6 +9,7 @@ namespace MyPersonalWebsite.Hubs
         private static readonly ConcurrentDictionary<string, int> _onlineUsers = new();
         private static readonly ConcurrentDictionary<int, string> _userConnections = new();
 
+        // ===== 在线用户跟踪 =====
         public async Task UserOnline(int userId)
         {
             var connectionId = Context.ConnectionId;
@@ -68,6 +69,9 @@ namespace MyPersonalWebsite.Hubs
             await Clients.All.SendAsync("ShakeEvent", intensity);
         }
 
+        // ============================================================
+        // 原有方法
+        // ============================================================
         public async Task SendNewMessage(string username, string content)
         {
             await Clients.All.SendAsync("ReceiveMessage", username, content);
