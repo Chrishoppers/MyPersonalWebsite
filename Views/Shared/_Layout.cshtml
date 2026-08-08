@@ -489,5 +489,60 @@
 
     @await RenderSectionAsync("Scripts", required: false)
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
+
+@if (Context.Session.GetInt32("UserId").HasValue)
+{
+    <script>
+        (function() {
+            const userId = @(Context.Session.GetInt32("UserId") ?? 0);
+            const isAdmin = @(Context.Session.GetInt32("IsAdmin") ?? 0);
+            if (!userId) return;
+
+            try {
+                const connection = new signalR.HubConnectionBuilder()
+                    .withUrl('/messageHub')
+                    .configureLogging(signalR.LogLevel.Information)
+                    .build();
+
+                connection.start()
+                    .then(() => {
+                        connection.invoke('UserOnline', userId);
+                    })
+                    .catch(err => console.error('SignalR 连接失败:', err));
+
+                // 监听在线用户更新
+                connection.on('OnlineUsersUpdated', function(onlineUserIds) {
+                    // 如果是管理员，更新管理后台的在线显示
+                    if (isAdmin === 1) {
+                        updateOnlineUsers(onlineUserIds);
+                    }
+                });
+
+                // 页面关闭时断开连接
+                window.addEventListener('beforeunload', function() {
+                    connection.stop();
+                });
+
+                // 暴露给全局，供管理员页面使用
+                window._onlineUsersUpdate = function(onlineUserIds) {
+                    const badge = document.getElementById('onlineUsersBadge');
+                    const list = document.getElementById('onlineUsersList');
+                    if (badge) {
+                        badge.textContent = onlineUserIds.length;
+                    }
+                    if (list) {
+                        // 由管理员页面自行渲染
+                        window._updateOnlineList(onlineUserIds);
+                    }
+                };
+
+            } catch (e) {
+                console.log('SignalR 不可用');
+            }
+        })();
+    </script>
+}
+
 </body>
 </html>
