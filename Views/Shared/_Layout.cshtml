@@ -527,6 +527,209 @@
         })();
 
         // ============================================================
+        // ⭐ 恐怖音效合成（优化版 - 听感更真实）
+        // ============================================================
+
+        function playHorrorSound() {
+            try {
+                var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+                // ===== 创建混响效果（让声音有空间感） =====
+                var convolver = audioCtx.createConvolver();
+                var reverbBuffer = createReverbBuffer(audioCtx);
+                convolver.buffer = reverbBuffer;
+
+                var masterGain = audioCtx.createGain();
+                masterGain.gain.value = 0.35;
+
+                convolver.connect(masterGain);
+                masterGain.connect(audioCtx.destination);
+
+                var types = ['scream', 'whisper', 'knock', 'breath', 'laugh', 'ambient'];
+                var selected = types[Math.floor(Math.random() * types.length)];
+
+                // ===== 1. 尖叫声 =====
+                if (selected === 'scream') {
+                    var freqs = [700, 500, 900];
+                    var gains = [0.35, 0.25, 0.2];
+                    var durations = [0.5, 0.4, 0.6];
+
+                    freqs.forEach(function(freq, idx) {
+                        var osc = audioCtx.createOscillator();
+                        var gain = audioCtx.createGain();
+                        osc.type = idx === 0 ? 'sawtooth' : 'square';
+                        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                        osc.frequency.exponentialRampToValueAtTime(freq * 2.5, audioCtx.currentTime + durations[idx]);
+
+                        gain.gain.setValueAtTime(0, audioCtx.currentTime + idx * 0.02);
+                        gain.gain.linearRampToValueAtTime(gains[idx], audioCtx.currentTime + 0.05 + idx * 0.02);
+                        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + durations[idx] + 0.1);
+
+                        osc.connect(gain);
+                        gain.connect(convolver);
+                        osc.start(audioCtx.currentTime + idx * 0.02);
+                        osc.stop(audioCtx.currentTime + durations[idx] + 0.1);
+                    });
+                }
+
+                // ===== 2. 低语声 =====
+                else if (selected === 'whisper') {
+                    var bufferSize = audioCtx.sampleRate * 2.5;
+                    var buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+                    var data = buffer.getChannelData(0);
+                    for (var i = 0; i < bufferSize; i++) {
+                        var env = Math.sin(i * 0.0003) * 0.5 + 0.5;
+                        var modulation = Math.sin(i * 0.002) * 0.3 + 0.7;
+                        data[i] = (Math.random() * 2 - 1) * (0.08 * env * modulation);
+                    }
+                    var source = audioCtx.createBufferSource();
+                    source.buffer = buffer;
+
+                    var gain = audioCtx.createGain();
+                    gain.gain.setValueAtTime(0, audioCtx.currentTime);
+                    gain.gain.linearRampToValueAtTime(0.06, audioCtx.currentTime + 0.5);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 2.8);
+
+                    source.connect(gain);
+                    gain.connect(convolver);
+                    source.start();
+                    source.stop(audioCtx.currentTime + 2.8);
+                }
+
+                // ===== 3. 敲门声 =====
+                else if (selected === 'knock') {
+                    for (var i = 0; i < 4; i++) {
+                        var delay = i * 0.4;
+                        var osc = audioCtx.createOscillator();
+                        var gain = audioCtx.createGain();
+                        var noise = createWhiteNoise(audioCtx, 0.06);
+
+                        osc.type = 'square';
+                        osc.frequency.setValueAtTime(250 - i * 15, audioCtx.currentTime + delay);
+                        osc.frequency.setValueAtTime(80 - i * 10, audioCtx.currentTime + delay + 0.05);
+
+                        gain.gain.setValueAtTime(0, audioCtx.currentTime + delay);
+                        gain.gain.linearRampToValueAtTime(0.4 - i * 0.04, audioCtx.currentTime + delay + 0.01);
+                        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + delay + 0.08);
+
+                        osc.connect(gain);
+                        gain.connect(convolver);
+                        osc.start(audioCtx.currentTime + delay);
+                        osc.stop(audioCtx.currentTime + delay + 0.08);
+                    }
+                }
+
+                // ===== 4. 呼吸声 =====
+                else if (selected === 'breath') {
+                    var bufSize = audioCtx.sampleRate * 3;
+                    var buf = audioCtx.createBuffer(1, bufSize, audioCtx.sampleRate);
+                    var d = buf.getChannelData(0);
+                    for (var i = 0; i < bufSize; i++) {
+                        var env = Math.sin(i * 0.0002) * 0.5 + 0.5;
+                        var pulse = Math.sin(i * 0.001) > 0 ? 1 : 0.3;
+                        d[i] = (Math.random() * 2 - 1) * (0.06 * env * pulse);
+                    }
+                    var src = audioCtx.createBufferSource();
+                    src.buffer = buf;
+
+                    var g = audioCtx.createGain();
+                    g.gain.setValueAtTime(0, audioCtx.currentTime);
+                    g.gain.linearRampToValueAtTime(0.04, audioCtx.currentTime + 0.5);
+                    g.gain.setValueAtTime(0.04, audioCtx.currentTime + 1.5);
+                    g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 3.2);
+
+                    src.connect(g);
+                    g.connect(convolver);
+                    src.start();
+                    src.stop(audioCtx.currentTime + 3.2);
+                }
+
+                // ===== 5. 诡异笑声 =====
+                else if (selected === 'laugh') {
+                    var pitches = [300, 400, 350, 500, 450, 600];
+                    var times = [0, 0.25, 0.5, 0.8, 1.05, 1.35];
+                    pitches.forEach(function(p, idx) {
+                        var osc = audioCtx.createOscillator();
+                        var gain = audioCtx.createGain();
+                        osc.type = idx % 2 === 0 ? 'sawtooth' : 'square';
+                        osc.frequency.setValueAtTime(p, audioCtx.currentTime + times[idx]);
+                        osc.frequency.exponentialRampToValueAtTime(p * 1.2, audioCtx.currentTime + times[idx] + 0.12);
+
+                        gain.gain.setValueAtTime(0, audioCtx.currentTime + times[idx]);
+                        gain.gain.linearRampToValueAtTime(0.06, audioCtx.currentTime + times[idx] + 0.05);
+                        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + times[idx] + 0.15);
+
+                        osc.connect(gain);
+                        gain.connect(convolver);
+                        osc.start(audioCtx.currentTime + times[idx]);
+                        osc.stop(audioCtx.currentTime + times[idx] + 0.15);
+                    });
+                }
+
+                // ===== 6. 环境阴森音 =====
+                else {
+                    var envBufSize = audioCtx.sampleRate * 6;
+                    var envBuf = audioCtx.createBuffer(1, envBufSize, audioCtx.sampleRate);
+                    var envData = envBuf.getChannelData(0);
+                    for (var i = 0; i < envBufSize; i++) {
+                        var env = Math.sin(i * 0.0001) * 0.5 + 0.5;
+                        var wind = Math.sin(i * 0.0005) * 0.3;
+                        var metal = Math.sin(i * 0.001) * 0.1;
+                        envData[i] = (Math.random() * 2 - 1) * 0.03 * env + wind * 0.02 + metal * 0.01;
+                    }
+                    var envSrc = audioCtx.createBufferSource();
+                    envSrc.buffer = envBuf;
+
+                    var envGain = audioCtx.createGain();
+                    envGain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                    envGain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 6);
+
+                    envSrc.connect(envGain);
+                    envGain.connect(convolver);
+                    envSrc.start();
+                    envSrc.stop(audioCtx.currentTime + 6);
+                }
+
+            } catch (e) {
+                // 静默失败，不影响恐怖效果
+                console.log('音效跳过');
+            }
+        }
+
+        // ============================================================
+        // ⭐ 辅助函数：创建混响效果
+        // ============================================================
+        function createReverbBuffer(audioCtx) {
+            var sampleRate = audioCtx.sampleRate;
+            var length = sampleRate * 1.5;
+            var buffer = audioCtx.createBuffer(2, length, sampleRate);
+            var left = buffer.getChannelData(0);
+            var right = buffer.getChannelData(1);
+
+            for (var i = 0; i < length; i++) {
+                var decay = Math.exp(-i / (sampleRate * 0.8));
+                left[i] = (Math.random() * 2 - 1) * decay * 0.5;
+                right[i] = (Math.random() * 2 - 1) * decay * 0.5;
+            }
+            return buffer;
+        }
+
+        // ============================================================
+        // ⭐ 辅助函数：创建白噪声
+        // ============================================================
+        function createWhiteNoise(audioCtx, amplitude) {
+            var bufferSize = audioCtx.sampleRate * 0.5;
+            var buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+            var data = buffer.getChannelData(0);
+            for (var i = 0; i < bufferSize; i++) {
+                data[i] = (Math.random() * 2 - 1) * amplitude;
+            }
+            var source = audioCtx.createBufferSource();
+            source.buffer = buffer;
+            return source;
+        }
+
+        // ============================================================
         // ⭐ 恐怖入侵效果（完整版 - 超级恐怖）
         // ============================================================
 
@@ -536,7 +739,7 @@
                 document.documentElement.requestFullscreen().catch(function() {});
             }
 
-            // ===== 2. 播放恐怖音效（随机） =====
+            // ===== 2. 播放恐怖音效 =====
             playHorrorSound();
 
             // ===== 3. 逐渐乱码 =====
@@ -641,7 +844,7 @@
                             var img = faces[Math.floor(Math.random() * faces.length)];
                             contentHtml = `
                                 <div style="position:relative;z-index:2;text-align:center;">
-                                    <img src="${imagePath}${img}" 
+                                    <img src="${imagePath}${img}"
                                          style="max-width:85vw;max-height:70vh;border-radius:8px;animation:faceZoom 0.5s ease-out forwards, glitchImage 0.15s infinite;box-shadow:0 0 150px rgba(255,0,0,0.3);"
                                          onerror="this.style.display='none'"
                                          id="horrorImg" />
@@ -679,7 +882,7 @@
                         case 'demon_face':
                             contentHtml = `
                                 <div style="position:relative;z-index:2;text-align:center;">
-                                    <img src="${imagePath}demon.png" 
+                                    <img src="${imagePath}demon.png"
                                          style="max-width:70vw;max-height:60vh;border-radius:8px;animation:faceZoom 0.6s ease-out forwards, glitchImage 0.2s infinite;box-shadow:0 0 150px rgba(255,0,0,0.4);"
                                          onerror="this.style.display='none'"
                                          id="horrorImg" />
@@ -696,7 +899,7 @@
                         case 'skull_zoom':
                             contentHtml = `
                                 <div style="position:relative;z-index:2;text-align:center;">
-                                    <img src="${imagePath}skull.png" 
+                                    <img src="${imagePath}skull.png"
                                          style="max-width:75vw;max-height:65vh;border-radius:8px;animation:faceZoom 0.5s ease-out forwards, glitchImage 0.15s infinite;box-shadow:0 0 150px rgba(255,0,0,0.3);filter:drop-shadow(0 0 60px rgba(255,0,0,0.2));"
                                          onerror="this.style.display='none'"
                                          id="horrorImg" />
@@ -713,7 +916,7 @@
                         case 'scream_face':
                             contentHtml = `
                                 <div style="position:relative;z-index:2;text-align:center;">
-                                    <img src="${imagePath}scream.png" 
+                                    <img src="${imagePath}scream.png"
                                          style="max-width:80vw;max-height:70vh;border-radius:8px;animation:faceZoom 0.4s ease-out forwards, glitchImage 0.1s infinite;box-shadow:0 0 150px rgba(255,0,0,0.3);"
                                          onerror="this.style.display='none'"
                                          id="horrorImg" />
@@ -766,7 +969,7 @@
                         case 'eye_zoom':
                             contentHtml = `
                                 <div style="position:relative;z-index:2;text-align:center;">
-                                    <img src="${imagePath}blood_eyes.png" 
+                                    <img src="${imagePath}blood_eyes.png"
                                          style="max-width:70vw;max-height:60vh;border-radius:8px;animation:faceZoom 0.6s ease-out forwards, glitchImage 0.2s infinite;box-shadow:0 0 150px rgba(255,0,0,0.3);"
                                          onerror="this.style.display='none'"
                                          id="horrorImg" />
@@ -895,25 +1098,6 @@
 
                 }
             }, 80);
-        }
-
-        // ============================================================
-        // ⭐ 播放恐怖音效
-        // ============================================================
-        function playHorrorSound() {
-            try {
-                var sounds = [
-                    '/sounds/horror_scream.mp3',
-                    '/sounds/horror_whisper.mp3',
-                    '/sounds/horror_knock.mp3',
-                    '/sounds/horror_breath.mp3',
-                    '/sounds/horror_laugh.mp3'
-                ];
-                var sound = sounds[Math.floor(Math.random() * sounds.length)];
-                var audio = new Audio(sound);
-                audio.volume = 0.5;
-                audio.play().catch(function() {});
-            } catch(e) {}
         }
 
         // ============================================================
