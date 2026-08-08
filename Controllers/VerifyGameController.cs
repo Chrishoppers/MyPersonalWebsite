@@ -535,88 +535,50 @@ namespace MyPersonalWebsite.Controllers
         // 保存分数
         // ============================================================
         [HttpPost]
-        public async Task<IActionResult> SaveScore(int score, int level, int maxCombo, int passed)
-        {
-            var userId = HttpContext.Session.GetInt32("UserId");
-            if (!userId.HasValue) return Json(new { success = false, message = "请先登录" });
+public async Task<IActionResult> SaveScore(int score, int level, int maxCombo, int passed)
+{
+    var userId = HttpContext.Session.GetInt32("UserId");
+    if (!userId.HasValue) return Json(new { success = false });
 
-            try
-            {
-                var stats = await _dataSync.GetUserGameStatsAsync(userId.Value);
-                if (stats == null)
-                {
-                    stats = new UserGameStats
-                    {
-                        UserId = userId.Value,
-                        TotalPoints = score,
-                        MaxCombo = maxCombo,
-                        MaxLevel = level,
-                        GamesPlayed = 1,
-                        UpdatedAt = DateTime.Now
-                    };
-                    await _dataSync.AddUserGameStatsAsync(stats);
-                }
-                else
-                {
-                    if (score > stats.TotalPoints) stats.TotalPoints = score;
-                    if (maxCombo > stats.MaxCombo) stats.MaxCombo = maxCombo;
-                    if (level > stats.MaxLevel) stats.MaxLevel = level;
-                    stats.GamesPlayed += 1;
-                    stats.UpdatedAt = DateTime.Now;
-                    await _dataSync.UpdateUserGameStatsAsync(stats);
-                }
-                return Json(new { success = true });
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"保存分数失败: {ex.Message}");
-                return Json(new { success = false, message = "保存失败" });
-            }
-        }
+    var user = await _dataSync.GetUserByIdAsync(userId.Value);
+    if (user == null) return Json(new { success = false });
 
+    if (score > user.VerifyGameScore) user.VerifyGameScore = score;
+    if (level > user.VerifyGameMaxLevel) user.VerifyGameMaxLevel = level;
+    if (maxCombo > user.VerifyGameMaxCombo) user.VerifyGameMaxCombo = maxCombo;
+
+    await _dataSync.UpdateUserAsync(user);
+    return Json(new { success = true });
+}
         // ============================================================
         // 获取排行榜
         // ============================================================
-     [HttpGet]
+    [HttpGet]
 public async Task<IActionResult> GetRanking()
 {
-    try
-    {
-        var userId = HttpContext.Session.GetInt32("UserId");
-        var allStats = await _dataSync.GetAllUserGameStatsAsync();
-        var users = await _dataSync.GetAllUsersAsync();
+    var userId = HttpContext.Session.GetInt32("UserId");
+    var users = await _dataSync.GetAllUsersAsync();
 
-        var ranking = allStats
-            .Where(s => s.MaxLevel > 0)  // 只显示玩过验证大闯关的
-            .OrderByDescending(s => s.MaxLevel)  // 按关卡排序
-            .ThenByDescending(s => s.MaxCombo)
-            .Take(100)
-            .Select((s, index) =>
-            {
-                var user = users.FirstOrDefault(u => u.Id == s.UserId);
-                return new
-                {
-                    userId = s.UserId,
-                    username = user?.Username ?? "已删除用户",
-                    avatarUrl = user?.AvatarUrl,
-                    isAvatarApproved = user?.IsAvatarApproved ?? false,
-                    totalPoints = s.MaxLevel * 10,  // ← 按关卡计算积分
-                    maxCombo = s.MaxCombo,
-                    maxLevel = s.MaxLevel,
-                    gamesPlayed = s.GamesPlayed,
-                    rank = index + 1,
-                    isMe = s.UserId == userId
-                };
-            })
-            .ToList();
+    var ranking = users
+        .Where(u => u.VerifyGameScore > 0 && !u.IsDeleted)
+        .OrderByDescending(u => u.VerifyGameScore)
+        .ThenByDescending(u => u.VerifyGameMaxLevel)
+        .Take(100)
+        .Select((u, index) => new
+        {
+            userId = u.Id,
+            username = u.Username,
+            avatarUrl = u.AvatarUrl,
+            isAvatarApproved = u.IsAvatarApproved,
+            totalPoints = u.VerifyGameScore,
+            maxCombo = u.VerifyGameMaxCombo,
+            maxLevel = u.VerifyGameMaxLevel,
+            rank = index + 1,
+            isMe = u.Id == userId
+        })
+        .ToList();
 
-        return Json(new { success = true, data = ranking });
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"获取排行榜失败: {ex.Message}");
-        return Json(new { success = false, data = new List<object>() });
-    }
+    return Json(new { success = true, data = ranking });
 }
 
         // ============================================================
