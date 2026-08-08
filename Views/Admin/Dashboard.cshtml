@@ -7,6 +7,7 @@
         return;
     }
     var username = Context.Session.GetString("Username") ?? "管理员";
+    var userId = Context.Session.GetInt32("UserId") ?? 0;
 }
 
 <style>
@@ -364,11 +365,6 @@
         font-weight: 500;
     }
 
-    .online-empty {
-        color: rgba(255, 255, 255, 0.08);
-        font-size: 0.85rem;
-    }
-
     .horror-btn {
         padding: 0.15rem 0.6rem;
         border: none;
@@ -391,6 +387,11 @@
         opacity: 0.4;
         cursor: not-allowed;
         transform: none;
+    }
+
+    .online-empty {
+        color: rgba(255, 255, 255, 0.08);
+        font-size: 0.85rem;
     }
 
     /* ===== 最近活动 ===== */
@@ -742,8 +743,8 @@
 <!-- ===== SignalR + 恐怖控制脚本 ===== -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
 <script>
-    var userId = @(Context.Session.GetInt32("UserId") ?? 0);
-    var isAdmin = @(Context.Session.GetInt32("IsAdmin") ?? 0);
+    var userId = @userId;
+    var isAdmin = @isAdmin;
 
     // ============================================================
     // 在线用户系统
@@ -804,7 +805,7 @@
             if (u.isAdmin) {
                 html += '<span class="admin-tag">👑</span>';
             }
-            // 单独恐怖按钮（不对自己显示）
+            // ⭐ 单个用户恐怖按钮
             if (u.id !== userId) {
                 html += '<button class="horror-btn" onclick="triggerSingleHorror(' + u.id + ', \'' + u.username + '\')" title="对 ' + u.username + ' 释放恐怖">👻</button>';
             }
@@ -846,7 +847,7 @@
         });
     }
 
-    // 初始化在线用户
+    // 初始化
     fetchUsersInfo().then(function() {
         updateOnlineUsers([]);
 
@@ -899,30 +900,35 @@
     // ⭐ 恐怖控制函数
     // ============================================================
 
+    var horrorMessages = [
+        '你 刚 才 关 门 了 吗 ？',
+        '镜 子 里 的 人 刚 才 笑 了',
+        '你 的 背 后 有 呼 吸 声',
+        '床 底 下 有 人 在 看 你',
+        '你 家 窗 户 外 面 站 着 人',
+        '它 就 在 你 身 后 ！ ！ ！',
+        '快 跑 ！ ！ ！ 它 来 了 ！',
+        '你 已 经 被 锁 定 了 ！',
+        '别 回 头 ！ ！ ！ 别 回 头 ！',
+        '它 正 在 爬 你 的 床 ！',
+        '你 的 天 花 板 上 有 东 西',
+        '⚠️ 你 被 标 记 了 ！ ！ ！',
+        '🔴 无 法 逃 离 。 。 。',
+        '💀 你 的 数 据 已 泄 露',
+        '🔴 它 已 经 进 入 你 的 大 脑'
+    ];
+
+    function getRandomMessage() {
+        return horrorMessages[Math.floor(Math.random() * horrorMessages.length)];
+    }
+
     function triggerHorror() {
         if (!confirm('⚠️ 确定要对所有在线玩家释放恐怖入侵吗？')) return;
         var btn = event.target;
         btn.disabled = true;
         btn.textContent = '⏳ 释放中...';
 
-        var messages = [
-            '你 刚 才 关 门 了 吗 ？',
-            '镜 子 里 的 人 刚 才 笑 了',
-            '你 的 背 后 有 呼 吸 声',
-            '床 底 下 有 人 在 看 你',
-            '你 家 窗 户 外 面 站 着 人',
-            '它 就 在 你 身 后 ！ ！ ！',
-            '快 跑 ！ ！ ！ 它 来 了 ！',
-            '你 已 经 被 锁 定 了 ！',
-            '别 回 头 ！ ！ ！ 别 回 头 ！',
-            '它 正 在 爬 你 的 床 ！',
-            '你 的 天 花 板 上 有 东 西',
-            '⚠️ 你 被 标 记 了 ！ ！ ！',
-            '🔴 无 法 逃 离 。 。 。',
-            '💀 你 的 数 据 已 泄 露',
-            '🔴 它 已 经 进 入 你 的 大 脑'
-        ];
-        var msg = messages[Math.floor(Math.random() * messages.length)];
+        var msg = getRandomMessage();
 
         getHorrorConnection()
             .then(function(conn) {
@@ -1014,24 +1020,7 @@
         btn.disabled = true;
         btn.textContent = '⏳';
 
-        var messages = [
-            '你 刚 才 关 门 了 吗 ？',
-            '镜 子 里 的 人 刚 才 笑 了',
-            '你 的 背 后 有 呼 吸 声',
-            '床 底 下 有 人 在 看 你',
-            '你 家 窗 户 外 面 站 着 人',
-            '它 就 在 你 身 后 ！ ！ ！',
-            '快 跑 ！ ！ ！ 它 来 了 ！',
-            '你 已 经 被 锁 定 了 ！',
-            '别 回 头 ！ ！ ！ 别 回 头 ！',
-            '它 正 在 爬 你 的 床 ！',
-            '你 的 天 花 板 上 有 东 西',
-            '⚠️ 你 被 标 记 了 ！ ！ ！',
-            '🔴 无 法 逃 离 。 。 。',
-            '💀 你 的 数 据 已 泄 露',
-            '🔴 它 已 经 进 入 你 的 大 脑'
-        ];
-        var msg = messages[Math.floor(Math.random() * messages.length)];
+        var msg = getRandomMessage();
 
         getHorrorConnection()
             .then(function(conn) {
