@@ -1115,143 +1115,150 @@
         handleAnswerResult(challenge, isCorrect);
     }
 
+  
     // ============================================================
-    // 数字记忆渲染（修复版：数字显示后消失，无多余文字干扰）
-    // ============================================================
-    function renderMemoryGame(challenge) {
-        var container = dom.gameContent;
-        var memoryTime = challenge.memoryTime || 5;
-        var timeLimit = challenge.timeLimit || 15;
-        var correctAnswer = challenge.correctAnswer || '';
+// 数字记忆渲染（修正版：文字用"记住下面的数字"，不显示具体数字在提示中）
+// ============================================================
+function renderMemoryGame(challenge) {
+    var container = dom.gameContent;
+    var memoryTime = challenge.memoryTime || 5;
+    var timeLimit = challenge.timeLimit || 15;
+    var correctAnswer = challenge.correctAnswer || '';
 
-        container.innerHTML = '';
+    container.innerHTML = '';
 
-        // ===== 记忆显示区域（只显示数字，没有额外文字） =====
-        var displayDiv = document.createElement('div');
-        displayDiv.id = 'memoryDisplay';
-        displayDiv.style.cssText = 'font-size:3.5rem;font-weight:bold;color:#8B5CF6;padding:2rem;margin:0.5rem 0;background:rgba(139,92,246,0.04);border-radius:16px;border:1px solid rgba(139,92,246,0.06);text-align:center;letter-spacing:16px;font-family:monospace;';
-        displayDiv.textContent = challenge.displayNumber || '';
-        container.appendChild(displayDiv);
+    // ===== 题目提示 =====
+    var questionDiv = document.createElement('div');
+    questionDiv.style.cssText = 'width:100%;text-align:center;color:rgba(255,255,255,0.4);font-size:0.95rem;margin-bottom:0.3rem;';
+    questionDiv.textContent = '🧠 记住下面的数字';
+    container.appendChild(questionDiv);
 
-        // ===== 状态提示（显示记忆倒计时） =====
-        var statusDiv = document.createElement('div');
-        statusDiv.id = 'memoryStatus';
-        statusDiv.style.cssText = 'color:rgba(255,255,255,0.15);font-size:0.8rem;text-align:center;margin:0.2rem 0 0.5rem;';
-        statusDiv.textContent = '⏱ 记忆 ' + memoryTime + 's';
-        container.appendChild(statusDiv);
+    // ===== 记忆显示区域（只显示数字） =====
+    var displayDiv = document.createElement('div');
+    displayDiv.id = 'memoryDisplay';
+    displayDiv.style.cssText = 'font-size:3.5rem;font-weight:bold;color:#8B5CF6;padding:2rem;margin:0.5rem 0;background:rgba(139,92,246,0.04);border-radius:16px;border:1px solid rgba(139,92,246,0.06);text-align:center;letter-spacing:16px;font-family:monospace;';
+    displayDiv.textContent = challenge.displayNumber || '';
+    container.appendChild(displayDiv);
 
-        // ===== 输入显示（初始隐藏） =====
-        var inputDiv = document.createElement('div');
-        inputDiv.className = 'memory-input-display';
-        inputDiv.id = 'memoryInputDisplay';
-        inputDiv.style.display = 'none';
-        inputDiv.textContent = '_ '.repeat(correctAnswer.length).trim();
-        container.appendChild(inputDiv);
+    // ===== 状态提示（记忆倒计时） =====
+    var statusDiv = document.createElement('div');
+    statusDiv.id = 'memoryStatus';
+    statusDiv.style.cssText = 'color:rgba(255,255,255,0.12);font-size:0.8rem;text-align:center;margin:0.2rem 0 0.5rem;';
+    statusDiv.textContent = '⏱ 记忆 ' + memoryTime + 's';
+    container.appendChild(statusDiv);
 
-        // ===== 键盘（初始隐藏） =====
-        var keyboardDiv = document.createElement('div');
-        keyboardDiv.className = 'memory-keyboard';
-        keyboardDiv.id = 'memoryKeyboard';
-        keyboardDiv.style.display = 'none';
+    // ===== 输入显示（初始隐藏） =====
+    var inputDiv = document.createElement('div');
+    inputDiv.className = 'memory-input-display';
+    inputDiv.id = 'memoryInputDisplay';
+    inputDiv.style.display = 'none';
+    inputDiv.textContent = '_ '.repeat(correctAnswer.length).trim();
+    container.appendChild(inputDiv);
 
-        var keyboardRows = challenge.keyboardRows || [
-            ['1', '2', '3'],
-            ['4', '5', '6'],
-            ['7', '8', '9'],
-            ['', '0', '⌫']
-        ];
+    // ===== 键盘（初始隐藏） =====
+    var keyboardDiv = document.createElement('div');
+    keyboardDiv.className = 'memory-keyboard';
+    keyboardDiv.id = 'memoryKeyboard';
+    keyboardDiv.style.display = 'none';
 
-        keyboardRows.forEach(function(row) {
-            row.forEach(function(key) {
-                if (!key) {
-                    var empty = document.createElement('div');
-                    keyboardDiv.appendChild(empty);
-                    return;
-                }
-                var btn = document.createElement('button');
-                btn.className = 'key-btn';
-                if (key === '⌫') {
-                    btn.classList.add('backspace');
-                    btn.textContent = '⌫';
-                    btn.addEventListener('click', function() {
-                        if (gameState.isAnswered) return;
-                        memoryBackspace();
-                    });
-                } else {
-                    btn.textContent = key;
-                    btn.addEventListener('click', function() {
-                        if (gameState.isAnswered) return;
-                        memoryKeyPress(key);
-                    });
-                }
-                keyboardDiv.appendChild(btn);
-            });
+    var keyboardRows = challenge.keyboardRows || [
+        ['1', '2', '3'],
+        ['4', '5', '6'],
+        ['7', '8', '9'],
+        ['', '0', '⌫']
+    ];
+
+    keyboardRows.forEach(function(row) {
+        row.forEach(function(key) {
+            if (!key) {
+                var empty = document.createElement('div');
+                keyboardDiv.appendChild(empty);
+                return;
+            }
+            var btn = document.createElement('button');
+            btn.className = 'key-btn';
+            if (key === '⌫') {
+                btn.classList.add('backspace');
+                btn.textContent = '⌫';
+                btn.addEventListener('click', function() {
+                    if (gameState.isAnswered) return;
+                    memoryBackspace();
+                });
+            } else {
+                btn.textContent = key;
+                btn.addEventListener('click', function() {
+                    if (gameState.isAnswered) return;
+                    memoryKeyPress(key);
+                });
+            }
+            keyboardDiv.appendChild(btn);
         });
+    });
 
-        container.appendChild(keyboardDiv);
+    container.appendChild(keyboardDiv);
 
-        // ===== 确认按钮（初始隐藏） =====
-        var controlsDiv = document.createElement('div');
-        controlsDiv.className = 'memory-controls';
-        controlsDiv.innerHTML = '<button class="btn-memory submit" id="memorySubmitBtn" style="display:none;" onclick="submitMemoryAnswer()">✅ 确认</button>';
-        container.appendChild(controlsDiv);
+    // ===== 确认按钮（初始隐藏） =====
+    var controlsDiv = document.createElement('div');
+    controlsDiv.className = 'memory-controls';
+    controlsDiv.innerHTML = '<button class="btn-memory submit" id="memorySubmitBtn" style="display:none;" onclick="submitMemoryAnswer()">✅ 确认</button>';
+    container.appendChild(controlsDiv);
 
-        // ===== 记忆状态 =====
-        var memoryState = {
-            input: '',
-            correctAnswer: correctAnswer,
-            isActive: true,
-            isMemorizing: true
-        };
-        window._memoryState = memoryState;
+    // ===== 记忆状态 =====
+    var memoryState = {
+        input: '',
+        correctAnswer: correctAnswer,
+        isActive: true,
+        isMemorizing: true
+    };
+    window._memoryState = memoryState;
 
-        // ===== 记忆倒计时 =====
-        var memInterval = setInterval(function() {
-            memoryTime--;
+    // ===== 记忆倒计时 =====
+    var memInterval = setInterval(function() {
+        memoryTime--;
+        var statusEl = document.getElementById('memoryStatus');
+        if (statusEl) {
+            statusEl.textContent = '⏱ 记忆 ' + memoryTime + 's';
+        }
+        var pct = (memoryTime / (challenge.memoryTime || 5)) * 100;
+        dom.timerFill.style.width = Math.max(0, Math.min(100, pct)) + '%';
+        if (pct < 30) dom.timerFill.classList.add('danger');
+        else if (pct < 50) dom.timerFill.classList.add('warning');
+        else dom.timerFill.classList.remove('danger', 'warning');
+
+        if (memoryTime <= 0) {
+            clearInterval(memInterval);
+
+            // ===== 数字消失！ =====
+            var displayEl = document.getElementById('memoryDisplay');
+            if (displayEl) {
+                displayEl.textContent = '✏️ 输入你记住的数字';
+                displayEl.style.color = 'rgba(255,255,255,0.3)';
+                displayEl.style.fontSize = '1.5rem';
+                displayEl.style.letterSpacing = 'normal';
+                displayEl.style.padding = '1.5rem';
+            }
+
             var statusEl = document.getElementById('memoryStatus');
             if (statusEl) {
-                statusEl.textContent = '⏱ 记忆 ' + memoryTime + 's';
+                statusEl.textContent = '⌨️ 输入你记住的数字';
+                statusEl.style.color = 'rgba(255,255,255,0.08)';
             }
-            var pct = (memoryTime / (challenge.memoryTime || 5)) * 100;
-            dom.timerFill.style.width = Math.max(0, Math.min(100, pct)) + '%';
-            if (pct < 30) dom.timerFill.classList.add('danger');
-            else if (pct < 50) dom.timerFill.classList.add('warning');
-            else dom.timerFill.classList.remove('danger', 'warning');
 
-            if (memoryTime <= 0) {
-                clearInterval(memInterval);
+            // 显示输入和键盘
+            document.getElementById('memoryInputDisplay').style.display = 'block';
+            document.getElementById('memoryKeyboard').style.display = 'grid';
+            document.getElementById('memorySubmitBtn').style.display = 'inline-block';
 
-                // ⭐ 关键修复：数字立即消失！
-                var displayEl = document.getElementById('memoryDisplay');
-                if (displayEl) {
-                    displayEl.textContent = '✏️ 输入你记住的数字';
-                    displayEl.style.color = 'rgba(255,255,255,0.3)';
-                    displayEl.style.fontSize = '1.5rem';
-                    displayEl.style.letterSpacing = 'normal';
-                    displayEl.style.padding = '1.5rem';
-                }
+            memoryState.isMemorizing = false;
 
-                var statusEl = document.getElementById('memoryStatus');
-                if (statusEl) {
-                    statusEl.textContent = '⌨️ 输入你记住的数字';
-                    statusEl.style.color = 'rgba(255,255,255,0.08)';
-                }
-
-                // 显示输入和键盘
-                document.getElementById('memoryInputDisplay').style.display = 'block';
-                document.getElementById('memoryKeyboard').style.display = 'grid';
-                document.getElementById('memorySubmitBtn').style.display = 'inline-block';
-
-                memoryState.isMemorizing = false;
-
-                // 启动答题计时器
-                dom.timerText.textContent = '⏱ ' + timeLimit + 's';
-                dom.timerFill.style.width = '100%';
-                dom.timerFill.className = 'timer-fill';
-                startTimer(timeLimit);
-            }
-        }, 1000);
-    }
+            // 启动答题计时器
+            dom.timerText.textContent = '⏱ ' + timeLimit + 's';
+            dom.timerFill.style.width = '100%';
+            dom.timerFill.className = 'timer-fill';
+            startTimer(timeLimit);
+        }
+    }, 1000);
+}
 
     function memoryKeyPress(value) {
         if (gameState.isAnswered) return;
