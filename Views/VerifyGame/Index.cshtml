@@ -72,8 +72,17 @@
     .captcha-image { border-radius: 12px; border: 1px solid rgba(255,255,255,0.04); background: rgba(255,255,255,0.02); max-width: 100%; margin: 0.2rem 0 0.8rem; cursor: pointer; transition: transform 0.3s ease; }
     .captcha-image:hover { transform: scale(1.02); }
     .color-display { font-size: 2.5rem; padding: 0.3rem 1.5rem; border-radius: 12px; background: rgba(255,255,255,0.02); margin: 0.2rem 0 0.8rem; letter-spacing: 4px; }
-    .display-text-container { width: 100%; display: none; margin: 0.2rem 0 0.8rem; position: relative; z-index: 1; }
+    .display-text-container { width: 100%; display: block; margin: 0.2rem 0 0.8rem; position: relative; z-index: 1; }
     .display-text-container .display-text { font-size: 1.4rem; padding: 0.5rem 1.5rem; margin: 0.2rem 0 0.8rem; line-height: 2.2; text-align: center; font-family: 'Courier New', monospace; letter-spacing: 3px; width: 100%; }
+
+    /* 三视图样式 */
+    .view-container { display: flex; justify-content: center; gap: 1.5rem; flex-wrap: wrap; padding: 0.5rem 0; }
+    .view-item { text-align: center; }
+    .view-item .view-label { color: rgba(255,255,255,0.12); font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.2rem; display: block; }
+    .view-item .view-grid { display: inline-grid; gap: 3px; background: rgba(255,255,255,0.02); padding: 6px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.04); }
+    .view-item .view-grid .cell { width: 35px; height: 35px; border-radius: 4px; }
+    .view-item .view-grid .cell.filled { background: #8B5CF6; }
+    .view-item .view-grid .cell.empty { background: rgba(255,255,255,0.02); }
 
     .rotate-compare { display: flex; gap: 1.5rem; justify-content: center; align-items: center; flex-wrap: wrap; padding: 0.5rem 0; }
     .rotate-compare .rotate-item { text-align: center; }
@@ -101,6 +110,7 @@
     .char-btn.correct-answer { border-color: #28a745 !important; background: rgba(40,167,69,0.15) !important; color: #28a745 !important; }
     .char-btn.wrong-answer { border-color: #dc3545 !important; background: rgba(220,53,69,0.15) !important; color: #dc3545 !important; }
 
+    /* 华容道 - 支持滑动 */
     .puzzle-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; max-width: 240px; margin: 0 auto; background: rgba(255,255,255,0.02); padding: 6px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.04); touch-action: none; user-select: none; }
     .puzzle-grid .puzzle-cell { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; font-weight: 700; border-radius: 8px; cursor: pointer; transition: all 0.2s ease; background: rgba(255,255,255,0.04); color: #fff; user-select: none; touch-action: none; }
     .puzzle-grid .puzzle-cell:hover:not(.empty) { background: rgba(139,92,246,0.12); transform: scale(1.04); }
@@ -177,6 +187,8 @@
         .puzzle-grid .puzzle-cell { font-size: 1.2rem; }
         .rotate-compare .rotate-item svg { width: 80px; height: 80px; }
         .rotate-angle-text { font-size: 1rem; }
+        .view-item .view-grid .cell { width: 28px; height: 28px; }
+        .view-container { gap: 0.8rem; }
     }
     @@media (max-width: 400px) {
         .game-header h1 { font-size: 1.3rem; }
@@ -193,6 +205,8 @@
         .rotate-compare .rotate-item svg { width: 60px; height: 60px; }
         .rotate-compare .rotate-arrow { font-size: 1rem; }
         .rotate-angle-text { font-size: 0.9rem; }
+        .view-item .view-grid .cell { width: 22px; height: 22px; }
+        .view-container { gap: 0.4rem; }
     }
 </style>
 
@@ -465,6 +479,14 @@
         }
 
         // ============================================================
+        // ⭐ 三视图（完整渲染）
+        // ============================================================
+        if (challenge.type === 'threeView') {
+            renderThreeView(challenge);
+            return;
+        }
+
+        // ============================================================
         // ⭐ 其他题型（通用渲染）
         // ============================================================
 
@@ -488,16 +510,6 @@
             textDiv.style.display = 'block';
             textDiv.innerHTML = '<div class="display-text">' + challenge.displayText + '</div>';
             container.appendChild(textDiv);
-        }
-
-        if (challenge.type === 'threeView' && challenge.topView) {
-            var viewDiv = document.createElement('div');
-            viewDiv.className = 'display-text-container';
-            viewDiv.style.display = 'block';
-            viewDiv.style.textAlign = 'center';
-            viewDiv.innerHTML = '<div class="display-text" style="padding:0.5rem;text-align:center;display:flex;justify-content:center;gap:8px;flex-wrap:wrap;">' +
-                challenge.topView + challenge.frontView + challenge.sideView + '</div>';
-            container.appendChild(viewDiv);
         }
 
         if (challenge.type === 'shapeCount' && challenge.asciiArt) {
@@ -530,7 +542,66 @@
     }
 
     // ============================================================
-    // ⭐ 颜色混合渲染（修复版）
+    // ⭐ 三视图渲染（完整版）
+    // ============================================================
+    function renderThreeView(challenge) {
+        var container = dom.gameContent;
+
+        // 显示三个视图
+        var viewContainer = document.createElement('div');
+        viewContainer.className = 'view-container';
+
+        // 俯视图
+        if (challenge.topView) {
+            var topItem = document.createElement('div');
+            topItem.className = 'view-item';
+            topItem.innerHTML = challenge.topView;
+            viewContainer.appendChild(topItem);
+        }
+
+        // 主视图
+        if (challenge.frontView) {
+            var frontItem = document.createElement('div');
+            frontItem.className = 'view-item';
+            frontItem.innerHTML = challenge.frontView;
+            viewContainer.appendChild(frontItem);
+        }
+
+        // 左视图
+        if (challenge.sideView) {
+            var sideItem = document.createElement('div');
+            sideItem.className = 'view-item';
+            sideItem.innerHTML = challenge.sideView;
+            viewContainer.appendChild(sideItem);
+        }
+
+        container.appendChild(viewContainer);
+
+        // 选项
+        if (challenge.options && challenge.options.length > 0) {
+            var optGrid = document.createElement('div');
+            optGrid.className = 'options-grid';
+            var letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+            challenge.options.forEach(function(opt, idx) {
+                var btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.textContent = (idx < letters.length ? letters[idx] + '. ' : '') + opt;
+                btn.dataset.answer = opt;
+                btn.addEventListener('click', function() {
+                    if (gameState.isAnswered) return;
+                    submitAnswer(challenge, this.dataset.answer, this);
+                });
+                optGrid.appendChild(btn);
+            });
+            container.appendChild(optGrid);
+        }
+
+        startTimer(challenge.timeLimit || 20);
+        updateUI();
+    }
+
+    // ============================================================
+    // ⭐ 颜色混合渲染
     // ============================================================
     function renderColorMix(challenge) {
         var container = dom.gameContent;
@@ -553,11 +624,9 @@
         var options = challenge.options || [];
         var correctAnswer = challenge.correctAnswer || '';
 
-        // 优先使用后端生成的 optionsHtml
         if (challenge.optionsHtml && challenge.optionsHtml.trim().length > 0) {
             colorGrid.innerHTML = challenge.optionsHtml;
         } else if (options.length > 0) {
-            // 降级方案：手动生成色块
             var html = '';
             options.forEach(function(colorName) {
                 var hex = getColorHex(colorName) || '#808080';
@@ -569,7 +638,6 @@
             });
             colorGrid.innerHTML = html;
         } else {
-            // 最后降级：使用文字按钮
             var fallbackOptions = ['红色', '蓝色', '绿色', '黄色', '紫色', '橙色'];
             var optGrid = document.createElement('div');
             optGrid.className = 'options-grid';
@@ -590,7 +658,6 @@
             return;
         }
 
-        // 绑定点击事件
         colorGrid.querySelectorAll('.color-option').forEach(function(el) {
             el.addEventListener('click', function() {
                 if (gameState.isAnswered) return;
@@ -644,7 +711,6 @@
         var container = dom.gameContent;
         container.innerHTML = '';
 
-        // 操作提示
         var hintDiv = document.createElement('div');
         hintDiv.style.cssText = 'color:rgba(255,255,255,0.08);font-size:0.7rem;text-align:center;margin-bottom:0.5rem;';
         hintDiv.textContent = '💡 点击数字 或 滑动方向 移动';
@@ -836,12 +902,11 @@
         var container = dom.gameContent;
         container.innerHTML = '';
 
-        // ⭐ 规则说明区域
         var ruleDiv = document.createElement('div');
         ruleDiv.style.cssText = 'background:rgba(139,92,246,0.04);border:1px solid rgba(139,92,246,0.06);border-radius:12px;padding:0.6rem 1rem;margin-bottom:0.6rem;width:100%;';
         ruleDiv.innerHTML = `
             <div style="color:rgba(255,255,255,0.2);font-size:0.75rem;display:flex;flex-wrap:wrap;gap:0.3rem 1rem;justify-content:center;">
-                <span>🎯 猜 <strong style="color:#8B5CF6;">${digitCount}</strong> 位不重复数字</span>
+                <span>🎯 猜 <strong style="color:#8B5CF6;">${digitCount}</strong> 位不重复数字（第一位不能是0）</span>
                 <span style="color:rgba(255,255,255,0.05);">|</span>
                 <span style="color:#28a745;">✅ <strong>A</strong> = 位置和数字都正确</span>
                 <span style="color:#F59E0B;">🟡 <strong>B</strong> = 数字正确但位置不对</span>
