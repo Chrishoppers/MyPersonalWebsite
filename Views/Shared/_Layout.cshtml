@@ -332,7 +332,7 @@
         }
 
         // ============================================================
-        // ⭐ 恐怖入侵（纯JS，没有@keyframes）
+        // ⭐ 恐怖入侵（乱码12秒，黑屏4秒，使用您的图片）
         // ============================================================
         function triggerHorrorInvasion(message) {
             if (document.documentElement.requestFullscreen) {
@@ -365,9 +365,13 @@
             var glitchChars = String.fromCharCode(33,35,36,37,94,38,42,40,41,95,43,45,61,60,62,63,47,91,93,123,125,124,59,58,44,46,34,39,92,126);
             var bloodChars = '🩸💀☠️👁️🔪⚰️🕷️🦇👹🔥';
 
+            // ⭐ 乱码持续 12 秒
+            var glitchDuration = 12000;
+            var glitchStart = Date.now();
+
             var glitchInterval = setInterval(function() {
-                glitchLevel += 0.12;
-                if (glitchLevel > 1) glitchLevel = 1;
+                var elapsed = Date.now() - glitchStart;
+                glitchLevel = Math.min(elapsed / glitchDuration, 1);
 
                 textNodes.forEach(function(node, idx) {
                     var original = originalTexts[idx] || '';
@@ -392,14 +396,17 @@
                     setTimeout(function() { document.body.style.backgroundColor = ''; }, 50);
                 }
 
+                // ⭐ 乱码结束后进入黑屏
                 if (glitchLevel >= 1) {
                     clearInterval(glitchInterval);
 
+                    // ===== 黑屏恐怖显示（4秒） =====
                     var overlay = document.createElement('div');
                     overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.97);z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:default;user-select:none;overflow:hidden;';
                     overlay.id = 'horrorOverlay';
                     document.body.appendChild(overlay);
 
+                    // ⭐ 图片
                     var images = ['ghost.png','face1.png','face2.png','face3.png','skull.png','demon.png','scream.png','blood_eyes.png'];
                     var selectedImage = images[Math.floor(Math.random() * images.length)];
                     var img = document.createElement('img');
@@ -414,6 +421,25 @@
                     };
                     overlay.appendChild(img);
 
+                    // ⭐ 缩放动画（用JS）
+                    var scale = 0.1;
+                    var scaleInterval = setInterval(function() {
+                        scale += 0.06;
+                        if (scale >= 1) {
+                            scale = 1;
+                            clearInterval(scaleInterval);
+                        }
+                        img.style.transform = 'scale(' + scale + ') rotate(' + (scale * 10 - 10) + 'deg)';
+                    }, 25);
+
+                    // ⭐ 抖动
+                    var shakeInterval = setInterval(function() {
+                        if (Math.random() > 0.5) {
+                            img.style.transform += ' translate(' + (Math.random() - 0.5) * 20 + 'px, ' + (Math.random() - 0.5) * 20 + 'px)';
+                        }
+                    }, 150);
+
+                    // ⭐ 恐怖文字
                     var messages = [
                         '你 刚 才 关 门 了 吗 ？',
                         '镜 子 里 的 人 刚 才 笑 了',
@@ -443,6 +469,7 @@
                     subDiv.textContent = '⚠️ 你 已 经 无 法 逃 离 ⚠️';
                     overlay.appendChild(subDiv);
 
+                    // ⭐ 闪烁
                     var flashInterval = setInterval(function() {
                         var flash = document.createElement('div');
                         flash.style.cssText = 'position:fixed;inset:0;background:rgba(255,0,0,' + (0.05 + Math.random() * 0.1) + ');z-index:99998;pointer-events:none;';
@@ -450,24 +477,7 @@
                         setTimeout(function() { flash.remove(); }, 100);
                     }, 200);
 
-                    // 缩放动画用JS实现
-                    var scale = 0.1;
-                    var scaleInterval = setInterval(function() {
-                        scale += 0.05;
-                        if (scale >= 1) {
-                            scale = 1;
-                            clearInterval(scaleInterval);
-                        }
-                        img.style.transform = 'scale(' + scale + ') rotate(' + (scale * 10 - 10) + 'deg)';
-                    }, 30);
-
-                    // 抖动
-                    var shakeInterval = setInterval(function() {
-                        if (Math.random() > 0.5) {
-                            img.style.transform += ' translate(' + (Math.random() - 0.5) * 20 + 'px, ' + (Math.random() - 0.5) * 20 + 'px)';
-                        }
-                    }, 200);
-
+                    // ⭐ 黑屏 4 秒后恢复
                     setTimeout(function() {
                         clearInterval(flashInterval);
                         clearInterval(shakeInterval);
@@ -482,7 +492,7 @@
                             overlayEl.remove();
                         }
                         document.body.style.backgroundColor = '';
-                    }, 8000);
+                    }, 4000);  // ← 黑屏 4 秒
                 }
             }, 60);
         }
