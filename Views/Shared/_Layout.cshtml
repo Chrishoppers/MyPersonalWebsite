@@ -187,30 +187,6 @@
 
     <script>
         // ============================================================
-        // 动态注入所有动画样式（Razor 看不到 @keyframes）
-        // ============================================================
-        (function() {
-            var s = document.createElement('style');
-            s.textContent =
-                '.horror-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.98);z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;animation:horrorFadeIn 0.3s ease;}' +
-                '.horror-big-icon{font-size:10rem;animation:faceZoom 0.5s ease-out forwards;filter:drop-shadow(0 0 80px rgba(255,0,0,0.3));}' +
-                '.horror-text{color:#ff0000;font-size:3.5rem;font-family:"Courier New",monospace;font-weight:900;text-shadow:0 0 60px rgba(255,0,0,0.5);letter-spacing:8px;margin-top:0.5rem;text-align:center;padding:0 1rem;animation:textGlitch 0.15s infinite,textPulse 0.3s infinite alternate;}' +
-                '.horror-sub{color:rgba(255,0,0,0.08);font-size:0.8rem;margin-top:0.5rem;font-family:"Courier New",monospace;letter-spacing:4px;animation:staticFlicker 0.15s infinite;}' +
-                '.horror-flash{position:fixed;inset:0;z-index:99998;pointer-events:none;}' +
-                '.horror-ghost{position:fixed;top:50%;left:-200px;transform:translateY(-50%);font-size:10rem;z-index:99999;pointer-events:none;animation:ghostFly 4s ease-in-out forwards;filter:drop-shadow(0 0 80px rgba(139,92,246,0.3));}' +
-                '.horror-ghost-text{position:fixed;top:55%;left:50%;transform:translateX(-50%);font-size:2.5rem;color:rgba(255,255,255,0.15);z-index:99999;pointer-events:none;animation:fadeText 3s ease-out forwards;font-family:Inter,sans-serif;text-shadow:0 0 60px rgba(139,92,246,0.1);letter-spacing:4px;}' +
-                '@keyframes horrorFadeIn{0%{opacity:0;transform:scale(0.9)}100%{opacity:1;transform:scale(1)}}' +
-                '@keyframes faceZoom{0%{transform:scale(0.1) rotate(-20deg);opacity:0}50%{transform:scale(1.4) rotate(5deg);opacity:1}70%{transform:scale(0.9) rotate(-3deg)}100%{transform:scale(1) rotate(0deg)}}' +
-                '@keyframes textGlitch{0%,100%{opacity:1;transform:translateX(0) skewX(0deg)}10%{opacity:0.6;transform:translateX(-12px) skewX(8deg)}20%{opacity:0.4;transform:translateX(12px) skewX(-8deg)}30%{opacity:0.7;transform:translateX(-8px) skewX(5deg)}40%{opacity:0.5;transform:translateX(8px) skewX(-5deg)}50%{opacity:0.8;transform:translateX(-5px) skewX(3deg)}60%{opacity:0.6;transform:translateX(5px) skewX(-3deg)}70%{opacity:0.7;transform:translateX(-6px) skewX(6deg)}80%{opacity:0.4;transform:translateX(6px) skewX(-6deg)}90%{opacity:0.9;transform:translateX(-3px) skewX(2deg)}}' +
-                '@keyframes textPulse{0%,100%{transform:scale(1);opacity:1}25%{transform:scale(1.08);opacity:0.7}50%{transform:scale(0.92);opacity:1}75%{transform:scale(1.05);opacity:0.8}}' +
-                '@keyframes staticFlicker{0%,100%{opacity:1}25%{opacity:0.2}50%{opacity:0.7}75%{opacity:0.1}}' +
-                '@keyframes ghostFly{0%{transform:translateY(-50%) translateX(0) scale(0.8);opacity:0}10%{opacity:1}50%{transform:translateY(-40%) translateX(50vw) scale(1.3)}90%{opacity:1}100%{transform:translateY(-60%) translateX(100vw) scale(0.8);opacity:0}}' +
-                '@keyframes fadeText{0%{opacity:0;transform:translateX(-50%) scale(0.8)}20%{opacity:1;transform:translateX(-50%) scale(1)}80%{opacity:1}100%{opacity:0;transform:translateX(-50%) scale(1.2)}}' +
-                '@keyframes shakeScreen{0%{transform:translate(0,0) rotate(0deg)}5%{transform:translate(-30px,15px) rotate(-7deg)}10%{transform:translate(30px,-15px) rotate(7deg)}15%{transform:translate(-45px,30px) rotate(-10deg)}20%{transform:translate(15px,-45px) rotate(7deg)}25%{transform:translate(-15px,15px) rotate(-4deg)}30%{transform:translate(36px,-10px) rotate(5deg)}35%{transform:translate(-24px,24px) rotate(-6deg)}40%{transform:translate(18px,-18px) rotate(4deg)}50%{transform:translate(-12px,12px) rotate(-5deg)}60%{transform:translate(24px,-15px) rotate(6deg)}70%{transform:translate(-15px,18px) rotate(-5deg)}80%{transform:translate(9px,-9px) rotate(3deg)}90%{transform:translate(-6px,6px) rotate(-2deg)}100%{transform:translate(0,0) rotate(0deg)}';
-            document.head.appendChild(s);
-        })();
-
-        // ============================================================
         // 通知系统
         // ============================================================
         function toggleNotifications(e) {
@@ -315,151 +291,48 @@
         })();
 
         // ============================================================
-        // 音效
+        // 音效（简版）
         // ============================================================
         function playHorrorSound() {
             try {
                 var audioCtx = new(window.AudioContext || window.webkitAudioContext)();
-                var convolver = audioCtx.createConvolver();
-                var reverbBuffer = createReverbBuffer(audioCtx);
-                convolver.buffer = reverbBuffer;
-                var masterGain = audioCtx.createGain();
-                masterGain.gain.value = 0.35;
-                convolver.connect(masterGain);
-                masterGain.connect(audioCtx.destination);
-
                 var types = ['scream', 'whisper', 'knock', 'breath', 'laugh', 'ambient'];
                 var selected = types[Math.floor(Math.random() * types.length)];
 
                 if (selected === 'scream') {
-                    var freqs = [700, 500, 900];
-                    var gains = [0.35, 0.25, 0.2];
-                    var durations = [0.5, 0.4, 0.6];
-                    freqs.forEach(function(freq, idx) {
-                        var osc = audioCtx.createOscillator();
-                        var gain = audioCtx.createGain();
-                        osc.type = idx === 0 ? 'sawtooth' : 'square';
-                        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-                        osc.frequency.exponentialRampToValueAtTime(freq * 2.5, audioCtx.currentTime + durations[idx]);
-                        gain.gain.setValueAtTime(0, audioCtx.currentTime + idx * 0.02);
-                        gain.gain.linearRampToValueAtTime(gains[idx], audioCtx.currentTime + 0.05 + idx * 0.02);
-                        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + durations[idx] + 0.1);
-                        osc.connect(gain);
-                        gain.connect(convolver);
-                        osc.start(audioCtx.currentTime + idx * 0.02);
-                        osc.stop(audioCtx.currentTime + durations[idx] + 0.1);
-                    });
+                    var osc = audioCtx.createOscillator();
+                    var gain = audioCtx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(2000, audioCtx.currentTime + 0.5);
+                    gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.8);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.8);
                 } else if (selected === 'whisper') {
-                    var bufferSize = audioCtx.sampleRate * 2.5;
+                    var bufferSize = audioCtx.sampleRate * 2;
                     var buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
                     var data = buffer.getChannelData(0);
                     for (var i = 0; i < bufferSize; i++) {
-                        var env = Math.sin(i * 0.0003) * 0.5 + 0.5;
-                        var modulation = Math.sin(i * 0.002) * 0.3 + 0.7;
-                        data[i] = (Math.random() * 2 - 1) * (0.08 * env * modulation);
+                        data[i] = (Math.random() * 2 - 1) * 0.08;
                     }
                     var source = audioCtx.createBufferSource();
                     source.buffer = buffer;
                     var gain = audioCtx.createGain();
-                    gain.gain.setValueAtTime(0, audioCtx.currentTime);
-                    gain.gain.linearRampToValueAtTime(0.06, audioCtx.currentTime + 0.5);
-                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 2.8);
+                    gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 2);
                     source.connect(gain);
-                    gain.connect(convolver);
+                    gain.connect(audioCtx.destination);
                     source.start();
-                    source.stop(audioCtx.currentTime + 2.8);
-                } else if (selected === 'knock') {
-                    for (var i = 0; i < 4; i++) {
-                        var delay = i * 0.4;
-                        var osc = audioCtx.createOscillator();
-                        var gain = audioCtx.createGain();
-                        osc.type = 'square';
-                        osc.frequency.setValueAtTime(250 - i * 15, audioCtx.currentTime + delay);
-                        osc.frequency.setValueAtTime(80 - i * 10, audioCtx.currentTime + delay + 0.05);
-                        gain.gain.setValueAtTime(0, audioCtx.currentTime + delay);
-                        gain.gain.linearRampToValueAtTime(0.4 - i * 0.04, audioCtx.currentTime + delay + 0.01);
-                        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + delay + 0.08);
-                        osc.connect(gain);
-                        gain.connect(convolver);
-                        osc.start(audioCtx.currentTime + delay);
-                        osc.stop(audioCtx.currentTime + delay + 0.08);
-                    }
-                } else if (selected === 'breath') {
-                    var bufSize = audioCtx.sampleRate * 3;
-                    var buf = audioCtx.createBuffer(1, bufSize, audioCtx.sampleRate);
-                    var d = buf.getChannelData(0);
-                    for (var i = 0; i < bufSize; i++) {
-                        var env = Math.sin(i * 0.0002) * 0.5 + 0.5;
-                        var pulse = Math.sin(i * 0.001) > 0 ? 1 : 0.3;
-                        d[i] = (Math.random() * 2 - 1) * (0.06 * env * pulse);
-                    }
-                    var src = audioCtx.createBufferSource();
-                    src.buffer = buf;
-                    var g = audioCtx.createGain();
-                    g.gain.setValueAtTime(0, audioCtx.currentTime);
-                    g.gain.linearRampToValueAtTime(0.04, audioCtx.currentTime + 0.5);
-                    g.gain.setValueAtTime(0.04, audioCtx.currentTime + 1.5);
-                    g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 3.2);
-                    src.connect(g);
-                    g.connect(convolver);
-                    src.start();
-                    src.stop(audioCtx.currentTime + 3.2);
-                } else if (selected === 'laugh') {
-                    var pitches = [300, 400, 350, 500, 450, 600];
-                    var times = [0, 0.25, 0.5, 0.8, 1.05, 1.35];
-                    pitches.forEach(function(p, idx) {
-                        var osc = audioCtx.createOscillator();
-                        var gain = audioCtx.createGain();
-                        osc.type = idx % 2 === 0 ? 'sawtooth' : 'square';
-                        osc.frequency.setValueAtTime(p, audioCtx.currentTime + times[idx]);
-                        osc.frequency.exponentialRampToValueAtTime(p * 1.2, audioCtx.currentTime + times[idx] + 0.12);
-                        gain.gain.setValueAtTime(0, audioCtx.currentTime + times[idx]);
-                        gain.gain.linearRampToValueAtTime(0.06, audioCtx.currentTime + times[idx] + 0.05);
-                        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + times[idx] + 0.15);
-                        osc.connect(gain);
-                        gain.connect(convolver);
-                        osc.start(audioCtx.currentTime + times[idx]);
-                        osc.stop(audioCtx.currentTime + times[idx] + 0.15);
-                    });
-                } else {
-                    var envBufSize = audioCtx.sampleRate * 6;
-                    var envBuf = audioCtx.createBuffer(1, envBufSize, audioCtx.sampleRate);
-                    var envData = envBuf.getChannelData(0);
-                    for (var i = 0; i < envBufSize; i++) {
-                        var env = Math.sin(i * 0.0001) * 0.5 + 0.5;
-                        var wind = Math.sin(i * 0.0005) * 0.3;
-                        var metal = Math.sin(i * 0.001) * 0.1;
-                        envData[i] = (Math.random() * 2 - 1) * 0.03 * env + wind * 0.02 + metal * 0.01;
-                    }
-                    var envSrc = audioCtx.createBufferSource();
-                    envSrc.buffer = envBuf;
-                    var envGain = audioCtx.createGain();
-                    envGain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-                    envGain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 6);
-                    envSrc.connect(envGain);
-                    envGain.connect(convolver);
-                    envSrc.start();
-                    envSrc.stop(audioCtx.currentTime + 6);
+                    source.stop(audioCtx.currentTime + 2);
                 }
-            } catch (e) { console.log('音效跳过'); }
-        }
-
-        function createReverbBuffer(audioCtx) {
-            var sampleRate = audioCtx.sampleRate;
-            var length = sampleRate * 1.5;
-            var buffer = audioCtx.createBuffer(2, length, sampleRate);
-            var left = buffer.getChannelData(0);
-            var right = buffer.getChannelData(1);
-            for (var i = 0; i < length; i++) {
-                var decay = Math.exp(-i / (sampleRate * 0.8));
-                left[i] = (Math.random() * 2 - 1) * decay * 0.5;
-                right[i] = (Math.random() * 2 - 1) * decay * 0.5;
-            }
-            return buffer;
+            } catch(e) {}
         }
 
         // ============================================================
-        // ⭐ 恐怖入侵
+        // ⭐ 恐怖入侵（纯JS，没有@keyframes）
         // ============================================================
         function triggerHorrorInvasion(message) {
             if (document.documentElement.requestFullscreen) {
@@ -489,8 +362,8 @@
 
             var originalTexts = textNodes.map(function(n) { return n.textContent; });
             var glitchLevel = 0;
-            // ⭐ 用 Unicode 编码生成所有符号，完全避免反引号
             var glitchChars = String.fromCharCode(33,35,36,37,94,38,42,40,41,95,43,45,61,60,62,63,47,91,93,123,125,124,59,58,44,46,34,39,92,126);
+            var bloodChars = '🩸💀☠️👁️🔪⚰️🕷️🦇👹🔥';
 
             var glitchInterval = setInterval(function() {
                 glitchLevel += 0.12;
@@ -523,38 +396,81 @@
                     clearInterval(glitchInterval);
 
                     var overlay = document.createElement('div');
-                    overlay.className = 'horror-overlay';
+                    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.97);z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:default;user-select:none;overflow:hidden;';
                     overlay.id = 'horrorOverlay';
                     document.body.appendChild(overlay);
 
-                    var symbols = ['😱', '👹', '💀', '👾', '🤡', '👻', '☠️', '🔪'];
-                    var char = symbols[Math.floor(Math.random() * symbols.length)];
+                    var images = ['ghost.png','face1.png','face2.png','face3.png','skull.png','demon.png','scream.png','blood_eyes.png'];
+                    var selectedImage = images[Math.floor(Math.random() * images.length)];
+                    var img = document.createElement('img');
+                    img.src = '/images/horror/' + selectedImage;
+                    img.style.cssText = 'max-width:80vw;max-height:60vh;border-radius:12px;box-shadow:0 0 120px rgba(255,0,0,0.15);';
+                    img.onerror = function() {
+                        this.style.display = 'none';
+                        var fallback = document.createElement('div');
+                        fallback.style.cssText = 'font-size:10rem;';
+                        fallback.textContent = '💀';
+                        overlay.insertBefore(fallback, overlay.firstChild);
+                    };
+                    overlay.appendChild(img);
 
-                    var bigDiv = document.createElement('div');
-                    bigDiv.className = 'horror-big-icon';
-                    bigDiv.textContent = char;
-                    overlay.appendChild(bigDiv);
+                    var messages = [
+                        '你 刚 才 关 门 了 吗 ？',
+                        '镜 子 里 的 人 刚 才 笑 了',
+                        '你 的 背 后 有 呼 吸 声',
+                        '床 底 下 有 人 在 看 你',
+                        '你 家 窗 户 外 面 站 着 人',
+                        '它 就 在 你 身 后 ！ ！ ！',
+                        '快 跑 ！ ！ ！ 它 来 了 ！',
+                        '你 已 经 被 锁 定 了 ！',
+                        '别 回 头 ！ ！ ！ 别 回 头 ！',
+                        '它 正 在 爬 你 的 床 ！',
+                        '你 的 天 花 板 上 有 东 西',
+                        '⚠️ 你 被 标 记 了 ！ ！ ！',
+                        '🔴 无 法 逃 离 。 。 。',
+                        '💀 你 的 数 据 已 泄 露',
+                        '🔴 它 已 经 进 入 你 的 大 脑'
+                    ];
+                    var finalMsg = message || messages[Math.floor(Math.random() * messages.length)];
 
                     var textDiv = document.createElement('div');
-                    textDiv.className = 'horror-text';
-                    textDiv.textContent = message || '💀 你逃不掉的...';
+                    textDiv.style.cssText = 'color:#ff0000;font-size:2.8rem;font-family:Courier New,monospace;font-weight:900;text-shadow:0 0 60px rgba(255,0,0,0.5);letter-spacing:6px;margin-top:1rem;text-align:center;padding:0 1rem;';
+                    textDiv.textContent = finalMsg;
                     overlay.appendChild(textDiv);
 
                     var subDiv = document.createElement('div');
-                    subDiv.className = 'horror-sub';
-                    subDiv.textContent = '⚠️ 你 已 经 被 锁 定 ⚠️';
+                    subDiv.style.cssText = 'color:rgba(255,0,0,0.06);font-size:0.8rem;margin-top:0.5rem;font-family:Courier New,monospace;letter-spacing:4px;';
+                    subDiv.textContent = '⚠️ 你 已 经 无 法 逃 离 ⚠️';
                     overlay.appendChild(subDiv);
 
                     var flashInterval = setInterval(function() {
                         var flash = document.createElement('div');
-                        flash.className = 'horror-flash';
-                        flash.style.background = 'rgba(255,0,0,' + (Math.random() * 0.08) + ')';
+                        flash.style.cssText = 'position:fixed;inset:0;background:rgba(255,0,0,' + (0.05 + Math.random() * 0.1) + ');z-index:99998;pointer-events:none;';
                         document.body.appendChild(flash);
                         setTimeout(function() { flash.remove(); }, 100);
                     }, 200);
 
+                    // 缩放动画用JS实现
+                    var scale = 0.1;
+                    var scaleInterval = setInterval(function() {
+                        scale += 0.05;
+                        if (scale >= 1) {
+                            scale = 1;
+                            clearInterval(scaleInterval);
+                        }
+                        img.style.transform = 'scale(' + scale + ') rotate(' + (scale * 10 - 10) + 'deg)';
+                    }, 30);
+
+                    // 抖动
+                    var shakeInterval = setInterval(function() {
+                        if (Math.random() > 0.5) {
+                            img.style.transform += ' translate(' + (Math.random() - 0.5) * 20 + 'px, ' + (Math.random() - 0.5) * 20 + 'px)';
+                        }
+                    }, 200);
+
                     setTimeout(function() {
                         clearInterval(flashInterval);
+                        clearInterval(shakeInterval);
                         textNodes.forEach(function(node, idx) {
                             node.textContent = originalTexts[idx] || '';
                         });
@@ -563,10 +479,7 @@
                         }
                         var overlayEl = document.getElementById('horrorOverlay');
                         if (overlayEl) {
-                            overlayEl.style.animation = 'horrorFadeIn 0.5s ease reverse';
-                            setTimeout(function() {
-                                overlayEl.remove();
-                            }, 500);
+                            overlayEl.remove();
                         }
                         document.body.style.backgroundColor = '';
                     }, 8000);
@@ -579,62 +492,56 @@
         // ============================================================
         function showGhost(message) {
             var ghost = document.createElement('div');
-            ghost.className = 'horror-ghost';
+            ghost.style.cssText = 'position:fixed;top:50%;left:-200px;transform:translateY(-50%);font-size:10rem;z-index:99999;pointer-events:none;';
             ghost.textContent = '👻';
             document.body.appendChild(ghost);
 
-            var text = document.createElement('div');
-            text.className = 'horror-ghost-text';
-            text.textContent = message;
-            document.body.appendChild(text);
-
-            setTimeout(function() {
-                ghost.remove();
-                text.remove();
-            }, 5000);
+            var startTime = Date.now();
+            var ghostInterval = setInterval(function() {
+                var elapsed = (Date.now() - startTime) / 1000;
+                var progress = elapsed / 4;
+                if (progress >= 1) {
+                    clearInterval(ghostInterval);
+                    ghost.remove();
+                    return;
+                }
+                ghost.style.left = (progress * 100 - 20) + '%';
+                ghost.style.opacity = progress < 0.1 ? progress * 10 : progress > 0.9 ? (1 - progress) * 10 : 1;
+                ghost.style.transform = 'translateY(-50%) scale(' + (0.8 + progress * 0.5) + ')';
+            }, 50);
         }
 
         // ============================================================
         // ⭐ 屏幕震动
         // ============================================================
         function triggerScreenShake(intensity) {
-            var duration = intensity === 'hard' ? 1000 : intensity === 'medium' ? 600 : 350;
-            var strength = intensity === 'hard' ? 30 : intensity === 'medium' ? 15 : 8;
+            var duration = intensity === 'hard' ? 800 : intensity === 'medium' ? 500 : 300;
+            var strength = intensity === 'hard' ? 25 : intensity === 'medium' ? 12 : 6;
 
             var container = document.body;
-            container.style.animation = 'none';
-            container.offsetHeight;
-
-            var shakeStyle = document.createElement('style');
-            shakeStyle.textContent = '@keyframes shakeScreen { 0% { transform: translate(0, 0) rotate(0deg); } 5% { transform: translate(-' + strength + 'px, ' + (strength/2) + 'px) rotate(-' + (strength/4) + 'deg); } 10% { transform: translate(' + strength + 'px, -' + (strength/2) + 'px) rotate(' + (strength/4) + 'deg); } 15% { transform: translate(-' + (strength*1.5) + 'px, ' + strength + 'px) rotate(-' + (strength/3) + 'deg); } 20% { transform: translate(' + (strength/2) + 'px, -' + (strength*1.5) + 'px) rotate(' + (strength/4) + 'deg); } 25% { transform: translate(-' + (strength/2) + 'px, ' + (strength/2) + 'px) rotate(-' + (strength/8) + 'deg); } 30% { transform: translate(' + (strength*1.2) + 'px, -' + (strength/3) + 'px) rotate(' + (strength/6) + 'deg); } 35% { transform: translate(-' + (strength*0.8) + 'px, ' + (strength*0.8) + 'px) rotate(-' + (strength/5) + 'deg); } 40% { transform: translate(' + (strength*0.6) + 'px, -' + (strength*0.6) + 'px) rotate(' + (strength/8) + 'deg); } 50% { transform: translate(-' + (strength*0.4) + 'px, ' + (strength*0.4) + 'px) rotate(-' + (strength/6) + 'deg); } 60% { transform: translate(' + (strength*0.8) + 'px, -' + (strength*0.5) + 'px) rotate(' + (strength/5) + 'deg); } 70% { transform: translate(-' + (strength*0.5) + 'px, ' + (strength*0.6) + 'px) rotate(-' + (strength/4) + 'deg); } 80% { transform: translate(' + (strength*0.3) + 'px, -' + (strength*0.3) + 'px) rotate(' + (strength/8) + 'deg); } 90% { transform: translate(-' + (strength*0.2) + 'px, ' + (strength*0.2) + 'px) rotate(-' + (strength/10) + 'deg); } 100% { transform: translate(0, 0) rotate(0deg); } }';
-            document.head.appendChild(shakeStyle);
-
-            container.style.animation = 'shakeScreen ' + duration + 'ms ease-in-out';
-
-            var flashInterval = setInterval(function() {
-                var flash = document.createElement('div');
-                flash.className = 'horror-flash';
-                flash.style.background = 'rgba(255,0,0,' + (0.03 + Math.random() * 0.05) + ')';
-                document.body.appendChild(flash);
-                setTimeout(function() { flash.remove(); }, 50);
-            }, 50);
-
-            var blackInterval = setInterval(function() {
-                if (Math.random() > 0.7) {
-                    var black = document.createElement('div');
-                    black.className = 'horror-flash';
-                    black.style.background = 'rgba(0,0,0,' + (0.1 + Math.random() * 0.3) + ')';
-                    document.body.appendChild(black);
-                    setTimeout(function() { black.remove(); }, 50);
+            var startTime = Date.now();
+            var shakeInterval = setInterval(function() {
+                var elapsed = (Date.now() - startTime) / duration;
+                if (elapsed >= 1) {
+                    clearInterval(shakeInterval);
+                    container.style.transform = '';
+                    container.style.backgroundColor = '';
+                    return;
                 }
-            }, 100);
+                var intensity2 = (1 - elapsed) * strength;
+                var x = (Math.random() - 0.5) * intensity2 * 2;
+                var y = (Math.random() - 0.5) * intensity2 * 2;
+                container.style.transform = 'translate(' + x + 'px, ' + y + 'px) rotate(' + (x / 5) + 'deg)';
+                if (Math.random() > 0.7) {
+                    container.style.backgroundColor = 'rgba(255,0,0,' + (0.02 + Math.random() * 0.05) + ')';
+                }
+            }, 30);
 
             setTimeout(function() {
-                clearInterval(flashInterval);
-                clearInterval(blackInterval);
-                container.style.animation = '';
-                shakeStyle.remove();
-            }, duration);
+                clearInterval(shakeInterval);
+                container.style.transform = '';
+                container.style.backgroundColor = '';
+            }, duration + 100);
         }
 
         document.addEventListener('click', function(e) {
