@@ -187,11 +187,12 @@
 
     <script>
         // ============================================================
-        // 动态注入所有动画样式（Razor 完全看不到 @keyframes）
+        // 动态注入样式（完全避免 @keyframes 出现在 .cshtml 中）
         // ============================================================
         (function() {
             var s = document.createElement('style');
-            s.textContent = '.horror-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.98);z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;animation:horrorFadeIn 0.3s ease;}' +
+            s.textContent =
+                '.horror-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.98);z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;animation:horrorFadeIn 0.3s ease;}' +
                 '.horror-big-icon{font-size:10rem;animation:faceZoom 0.5s ease-out forwards;filter:drop-shadow(0 0 80px rgba(255,0,0,0.3));}' +
                 '.horror-text{color:#ff0000;font-size:3.5rem;font-family:"Courier New",monospace;font-weight:900;text-shadow:0 0 60px rgba(255,0,0,0.5);letter-spacing:8px;margin-top:0.5rem;text-align:center;padding:0 1rem;animation:textGlitch 0.15s infinite,textPulse 0.3s infinite alternate;}' +
                 '.horror-sub{color:rgba(255,0,0,0.08);font-size:0.8rem;margin-top:0.5rem;font-family:"Courier New",monospace;letter-spacing:4px;animation:staticFlicker 0.15s infinite;}' +
@@ -458,7 +459,7 @@
         }
 
         // ============================================================
-        // ⭐ 恐怖入侵（已移除所有反引号）
+        // ⭐ 恐怖入侵（使用 String.fromCharCode 完全避免反引号）
         // ============================================================
         function triggerHorrorInvasion(message) {
             if (document.documentElement.requestFullscreen) {
@@ -488,7 +489,7 @@
 
             var originalTexts = textNodes.map(function(n) { return n.textContent; });
             var glitchLevel = 0;
-            var glitchChars = '!@#$%^&*()_+-=<>?/[]{}|;:,.\'"\\~';
+            var glitchChars = String.fromCharCode(33, 35, 36, 37, 94, 38, 42, 40, 41, 95, 43, 45, 61, 60, 62, 63, 47, 91, 93, 123, 125, 124, 59, 58, 44, 46, 34, 39, 92, 126);
 
             var glitchInterval = setInterval(function() {
                 glitchLevel += 0.08;
