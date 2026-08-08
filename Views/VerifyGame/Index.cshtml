@@ -5,14 +5,11 @@
 
 <style>
     /* ============================================================
-       全局重置 + 字体
+       全局重置
        ============================================================ */
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { background: #0a0a0f; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #e0e0e0; min-height: 100vh; overflow-x: hidden; }
 
-    /* ============================================================
-       游戏容器
-       ============================================================ */
     .game-container { max-width: 720px; margin: 0 auto; padding: 0.8rem 1.2rem 2rem; min-height: 100vh; position: relative; }
 
     /* ============================================================
@@ -20,8 +17,8 @@
        ============================================================ */
     .game-header { text-align: center; padding: 0.3rem 0 0.8rem; position: relative; }
     .game-header h1 { font-size: 2.4rem; font-weight: 900; background: linear-gradient(135deg, #8B5CF6 0%, #EC4899 40%, #F59E0B 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin: 0; letter-spacing: -0.02em; }
-    .game-header .subtitle { color: rgba(255,255,255,0.12); font-size: 0.8rem; margin-top: 0.05rem; letter-spacing: 0.06em; }
-    .game-header .type-badge-header { display: inline-block; margin-top: 0.2rem; padding: 0.15rem 1.4rem; border-radius: 30px; background: rgba(139,92,246,0.06); color: #8B5CF6; font-size: 0.7rem; border: 1px solid rgba(139,92,246,0.04); font-weight: 500; letter-spacing: 0.04em; }
+    .game-header .subtitle { color: rgba(255,255,255,0.18); font-size: 0.9rem; margin-top: 0.05rem; letter-spacing: 0.06em; }
+    .game-header .type-badge-header { display: inline-block; margin-top: 0.2rem; padding: 0.25rem 1.8rem; border-radius: 30px; background: rgba(139,92,246,0.08); color: #A78BFA; font-size: 0.85rem; border: 1px solid rgba(139,92,246,0.06); font-weight: 600; letter-spacing: 0.04em; }
     .header-particle { position: absolute; font-size: 0.5rem; opacity: 0.08; animation: floatParticle 12s infinite linear; pointer-events: none; }
     .header-particle:nth-child(1) { left: 3%; top: 15%; animation-delay: 0s; }
     .header-particle:nth-child(2) { left: 12%; top: 40%; animation-delay: 2.5s; }
@@ -36,25 +33,25 @@
     .start-screen .logo-icon { font-size: 4.5rem; margin-bottom: 0.3rem; display: block; animation: logoBounce 2.5s ease-in-out infinite; }
     @@keyframes logoBounce { 0%,100% { transform: scale(1) rotate(0deg); } 50% { transform: scale(1.06) rotate(2deg); } }
     .start-screen .title { font-size: 2.6rem; font-weight: 900; background: linear-gradient(135deg, #8B5CF6 0%, #EC4899 45%, #F59E0B 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 0.2rem; }
-    .start-screen .desc { color: rgba(255,255,255,0.2); font-size: 0.95rem; margin-bottom: 1.8rem; }
+    .start-screen .desc { color: rgba(255,255,255,0.25); font-size: 1rem; margin-bottom: 1.8rem; }
     .start-screen .start-buttons { display: flex; flex-direction: column; gap: 0.7rem; max-width: 300px; margin: 0 auto; }
     .start-screen .start-buttons .btn-start { padding: 0.85rem 1.8rem; border: none; border-radius: 60px; font-weight: 700; font-size: 1rem; cursor: pointer; transition: all 0.35s cubic-bezier(0.23, 1, 0.32, 1); font-family: inherit; position: relative; overflow: hidden; }
     .start-screen .start-buttons .btn-start.primary { background: linear-gradient(135deg, #8B5CF6, #EC4899); color: #fff; box-shadow: 0 4px 30px rgba(108,60,225,0.2); }
     .start-screen .start-buttons .btn-start.primary:hover { transform: translateY(-3px) scale(1.02); box-shadow: 0 12px 50px rgba(108,60,225,0.3); }
-    .start-screen .start-buttons .btn-start.secondary { background: rgba(255,255,255,0.03); color: rgba(255,255,255,0.4); border: 1px solid rgba(255,255,255,0.06); }
-    .start-screen .start-buttons .btn-start.secondary:hover { background: rgba(255,255,255,0.06); color: #fff; transform: translateY(-2px); }
-    .start-screen .start-buttons .btn-start.ranking { background: rgba(139,92,246,0.06); color: #8B5CF6; border: 1px solid rgba(139,92,246,0.06); }
-    .start-screen .start-buttons .btn-start.ranking:hover { background: rgba(139,92,246,0.12); transform: translateY(-2px); }
-    .start-screen .start-buttons .btn-start.tutorial-btn { background: rgba(245,158,11,0.06); color: #F59E0B; border: 1px solid rgba(245,158,11,0.06); }
-    .start-screen .start-buttons .btn-start.tutorial-btn:hover { background: rgba(245,158,11,0.12); transform: translateY(-2px); }
+    .start-screen .start-buttons .btn-start.secondary { background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.4); border: 1px solid rgba(255,255,255,0.06); }
+    .start-screen .start-buttons .btn-start.secondary:hover { background: rgba(255,255,255,0.08); color: #fff; transform: translateY(-2px); }
+    .start-screen .start-buttons .btn-start.ranking { background: rgba(139,92,246,0.08); color: #A78BFA; border: 1px solid rgba(139,92,246,0.06); }
+    .start-screen .start-buttons .btn-start.ranking:hover { background: rgba(139,92,246,0.15); transform: translateY(-2px); }
+    .start-screen .start-buttons .btn-start.tutorial-btn { background: rgba(245,158,11,0.08); color: #FBBF24; border: 1px solid rgba(245,158,11,0.06); }
+    .start-screen .start-buttons .btn-start.tutorial-btn:hover { background: rgba(245,158,11,0.15); transform: translateY(-2px); }
 
     /* ============================================================
        状态栏
        ============================================================ */
-    .status-bar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.2rem 0.8rem; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.04); border-radius: 16px; padding: 0.6rem 1.2rem; margin-bottom: 0.8rem; backdrop-filter: blur(10px); }
-    .status-item { color: rgba(255,255,255,0.2); font-size: 0.8rem; display: flex; align-items: center; gap: 0.25rem; }
-    .status-item .value { color: #fff; font-weight: 700; font-size: 1.2rem; min-width: 20px; }
-    .status-item .value.lives { color: #EC4899; font-size: 1.3rem; }
+    .status-bar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.2rem 0.8rem; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.04); border-radius: 16px; padding: 0.6rem 1.2rem; margin-bottom: 0.8rem; backdrop-filter: blur(10px); }
+    .status-item { color: rgba(255,255,255,0.3); font-size: 0.85rem; display: flex; align-items: center; gap: 0.3rem; font-weight: 500; }
+    .status-item .value { color: #fff; font-weight: 700; font-size: 1.3rem; min-width: 20px; }
+    .status-item .value.lives { color: #EC4899; font-size: 1.4rem; }
     .status-item .value.level { color: #8B5CF6; }
     .status-item .value.score { color: #F59E0B; }
     .status-item .value.combo { color: #34D399; }
@@ -66,24 +63,20 @@
     /* ============================================================
        挑战卡片
        ============================================================ */
-    .challenge-card { background: rgba(255,255,255,0.02); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.04); border-radius: 24px; padding: 1.5rem 1.8rem; min-height: 300px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; position: relative; overflow: hidden; transition: all 0.4s ease; box-shadow: 0 8px 40px rgba(0,0,0,0.2); }
+    .challenge-card { background: rgba(255,255,255,0.025); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.04); border-radius: 24px; padding: 1.5rem 1.8rem; min-height: 300px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; position: relative; overflow: hidden; transition: all 0.4s ease; box-shadow: 0 8px 40px rgba(0,0,0,0.2); }
     .challenge-card::before { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(ellipse at 30% 30%, rgba(139,92,246,0.015), transparent 70%); pointer-events: none; }
-    .challenge-card .type-badge { position: absolute; top: 0.6rem; right: 0.8rem; font-size: 0.6rem; padding: 0.1rem 0.7rem; border-radius: 20px; background: rgba(139,92,246,0.06); color: #8B5CF6; border: 1px solid rgba(139,92,246,0.04); font-weight: 500; z-index: 1; }
-    .challenge-card .question-text { color: rgba(255,255,255,0.4); font-size: 1.05rem; text-align: center; line-height: 1.8; margin-bottom: 0.3rem; min-height: 36px; width: 100%; position: relative; z-index: 1; }
+    .challenge-card .type-badge { position: absolute; top: 0.6rem; right: 0.8rem; font-size: 0.65rem; padding: 0.15rem 0.8rem; border-radius: 20px; background: rgba(139,92,246,0.08); color: #A78BFA; border: 1px solid rgba(139,92,246,0.04); font-weight: 600; z-index: 1; }
+    .challenge-card .question-text { color: rgba(255,255,255,0.5); font-size: 1.1rem; text-align: center; line-height: 1.8; margin-bottom: 0.3rem; min-height: 36px; width: 100%; position: relative; z-index: 1; font-weight: 500; }
 
     /* ============================================================
-       选项按钮 - 高级样式
+       选项按钮
        ============================================================ */
     .options-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.6rem; width: 100%; max-width: 420px; position: relative; z-index: 1; }
-    .options-grid .option-btn { padding: 0.75rem 1rem; border: 2px solid rgba(255,255,255,0.04); border-radius: 16px; background: rgba(255,255,255,0.02); color: rgba(255,255,255,0.5); font-size: 1rem; font-weight: 500; cursor: pointer; transition: all 0.3s ease; font-family: inherit; text-align: center; position: relative; overflow: hidden; }
-    .options-grid .option-btn::after { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(139,92,246,0.05), rgba(236,72,153,0.05)); opacity: 0; transition: opacity 0.3s ease; }
-    .options-grid .option-btn:hover:not(:disabled)::after { opacity: 1; }
-    .options-grid .option-btn:hover:not(:disabled) { border-color: rgba(139,92,246,0.15); color: #fff; transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,0,0,0.15); }
+    .options-grid .option-btn { padding: 0.8rem 1rem; border: 2px solid rgba(255,255,255,0.06); border-radius: 16px; background: rgba(255,255,255,0.03); color: rgba(255,255,255,0.6); font-size: 1.05rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease; font-family: inherit; text-align: center; position: relative; overflow: hidden; }
+    .options-grid .option-btn:hover:not(:disabled) { border-color: rgba(139,92,246,0.2); background: rgba(139,92,246,0.06); color: #fff; transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,0,0,0.15); }
     .options-grid .option-btn:disabled { cursor: not-allowed; opacity: 0.3; transform: none !important; }
-    .options-grid .option-btn.correct { border-color: #28a745; background: rgba(40,167,69,0.08); color: #28a745; box-shadow: 0 0 30px rgba(40,167,69,0.05); }
-    .options-grid .option-btn.correct::after { opacity: 0; }
-    .options-grid .option-btn.wrong { border-color: #dc3545; background: rgba(220,53,69,0.08); color: #dc3545; box-shadow: 0 0 30px rgba(220,53,69,0.05); }
-    .options-grid .option-btn.wrong::after { opacity: 0; }
+    .options-grid .option-btn.correct { border-color: #28a745; background: rgba(40,167,69,0.12); color: #28a745; box-shadow: 0 0 30px rgba(40,167,69,0.05); }
+    .options-grid .option-btn.wrong { border-color: #dc3545; background: rgba(220,53,69,0.12); color: #dc3545; box-shadow: 0 0 30px rgba(220,53,69,0.05); }
 
     /* ============================================================
        颜色选项
@@ -93,70 +86,92 @@
     .color-options-grid .color-option:hover:not(.disabled) { border-color: rgba(139,92,246,0.15); background: rgba(139,92,246,0.04); transform: translateY(-3px); box-shadow: 0 8px 30px rgba(0,0,0,0.12); }
     .color-options-grid .color-option.disabled { cursor: not-allowed; opacity: 0.5; transform: none !important; }
     .color-options-grid .color-option .color-block { width: 50px; height: 50px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.06); transition: all 0.3s ease; }
-    .color-options-grid .color-option .color-label { color: rgba(255,255,255,0.4); font-size: 0.85rem; font-weight: 600; transition: all 0.3s ease; }
-    .color-options-grid .color-option.correct { border-color: #28a745 !important; background: rgba(40,167,69,0.08) !important; box-shadow: 0 0 40px rgba(40,167,69,0.05); }
+    .color-options-grid .color-option .color-label { color: rgba(255,255,255,0.5); font-size: 0.9rem; font-weight: 600; transition: all 0.3s ease; }
+    .color-options-grid .color-option.correct { border-color: #28a745 !important; background: rgba(40,167,69,0.1) !important; }
     .color-options-grid .color-option.correct .color-label { color: #28a745 !important; }
-    .color-options-grid .color-option.wrong { border-color: #dc3545 !important; background: rgba(220,53,69,0.08) !important; box-shadow: 0 0 40px rgba(220,53,69,0.05); }
+    .color-options-grid .color-option.wrong { border-color: #dc3545 !important; background: rgba(220,53,69,0.1) !important; }
     .color-options-grid .color-option.wrong .color-label { color: #dc3545 !important; }
+
+    /* ============================================================
+       1A2B 键盘 - 3列网格
+       ============================================================ */
+    .ab-keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; max-width: 260px; margin: 0 auto; }
+    .ab-key-btn { padding: 0.8rem 0.5rem; border: 2px solid rgba(255,255,255,0.06); border-radius: 14px; background: rgba(255,255,255,0.03); color: rgba(255,255,255,0.6); font-size: 1.5rem; font-weight: 700; cursor: pointer; transition: all 0.25s ease; font-family: inherit; text-align: center; min-height: 52px; user-select: none; }
+    .ab-key-btn:hover:not(:disabled) { background: rgba(139,92,246,0.08); border-color: rgba(139,92,246,0.15); transform: scale(1.04); color: #fff; }
+    .ab-key-btn:disabled { opacity: 0.3; cursor: not-allowed; transform: none; }
+    .ab-key-btn.key-backspace { background: rgba(236,72,153,0.06); color: #EC4899; border-color: rgba(236,72,153,0.08); }
+    .ab-key-btn.key-backspace:hover:not(:disabled) { background: rgba(236,72,153,0.12); }
+    .ab-key-btn.key-submit { background: rgba(40,167,69,0.06); color: #28a745; border-color: rgba(40,167,69,0.08); }
+    .ab-key-btn.key-submit:hover:not(:disabled) { background: rgba(40,167,69,0.12); }
+
+    .ab-display { font-size: 2.8rem; font-weight: 700; letter-spacing: 12px; color: #8B5CF6; padding: 0.5rem 0; font-family: monospace; background: rgba(255,255,255,0.02); border-radius: 14px; border: 1px solid rgba(255,255,255,0.04); margin: 0 auto 0.5rem; min-height: 70px; display: flex; align-items: center; justify-content: center; }
+    .ab-status { color: rgba(255,255,255,0.25); font-size: 0.9rem; text-align: center; margin-bottom: 0.5rem; font-weight: 500; }
+    .ab-status strong { color: #F59E0B; }
+    .ab-history { color: rgba(255,255,255,0.15); font-size: 0.85rem; min-height: 30px; padding: 0.3rem 0.5rem; font-family: monospace; background: rgba(255,255,255,0.02); border-radius: 10px; border: 1px solid rgba(255,255,255,0.03); margin-bottom: 0.8rem; max-height: 100px; overflow-y: auto; text-align: center; line-height: 1.8; }
+    .ab-history .history-item { color: rgba(255,255,255,0.4); }
+    .ab-history .history-item.correct { color: #28a745; }
+
+    /* ============================================================
+       三视图 - 横向排列，正方形大框
+       ============================================================ */
+    .view-container { display: flex; justify-content: center; gap: 1.5rem; flex-wrap: wrap; padding: 0.5rem 0; }
+    .view-item { text-align: center; }
+    .view-item .view-label { color: rgba(255,255,255,0.2); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.3rem; display: block; font-weight: 600; }
+    .view-item .view-grid { display: inline-grid; gap: 3px; background: rgba(255,255,255,0.02); padding: 6px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.04); }
+    .view-item .view-grid .cell { width: 40px; height: 40px; border-radius: 6px; }
+    .view-item .view-grid .cell.filled { background: #8B5CF6; box-shadow: 0 0 20px rgba(139,92,246,0.1); }
+    .view-item .view-grid .cell.empty { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.02); }
 
     /* ============================================================
        其他组件
        ============================================================ */
     .captcha-image { border-radius: 14px; border: 1px solid rgba(255,255,255,0.04); background: rgba(255,255,255,0.02); max-width: 100%; margin: 0.1rem 0 0.6rem; cursor: pointer; transition: transform 0.3s ease; }
     .captcha-image:hover { transform: scale(1.02); }
-    .color-display { font-size: 2.2rem; padding: 0.3rem 1.5rem; border-radius: 14px; background: rgba(255,255,255,0.02); margin: 0.1rem 0 0.6rem; letter-spacing: 4px; }
+    .color-display { font-size: 2.5rem; padding: 0.3rem 1.5rem; border-radius: 14px; background: rgba(255,255,255,0.02); margin: 0.1rem 0 0.6rem; letter-spacing: 4px; font-weight: 600; }
     .display-text-container { width: 100%; display: block; margin: 0.1rem 0 0.6rem; position: relative; z-index: 1; }
-    .display-text-container .display-text { font-size: 1.3rem; padding: 0.4rem 1.2rem; margin: 0.1rem 0 0.6rem; line-height: 2; text-align: center; font-family: 'Courier New', monospace; letter-spacing: 3px; width: 100%; }
-
-    .view-container { display: flex; justify-content: center; gap: 1.2rem; flex-wrap: wrap; padding: 0.3rem 0; }
-    .view-item { text-align: center; }
-    .view-item .view-label { color: rgba(255,255,255,0.08); font-size: 0.55rem; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.15rem; display: block; }
-    .view-item .view-grid { display: inline-grid; gap: 2px; background: rgba(255,255,255,0.02); padding: 4px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.03); }
-    .view-item .view-grid .cell { width: 32px; height: 32px; border-radius: 4px; }
-    .view-item .view-grid .cell.filled { background: #8B5CF6; }
-    .view-item .view-grid .cell.empty { background: rgba(255,255,255,0.02); }
+    .display-text-container .display-text { font-size: 1.5rem; padding: 0.5rem 1.2rem; margin: 0.1rem 0 0.6rem; line-height: 2.2; text-align: center; font-family: 'Courier New', monospace; letter-spacing: 4px; width: 100%; color: rgba(255,255,255,0.7); font-weight: 500; }
 
     .rotate-compare { display: flex; gap: 1.2rem; justify-content: center; align-items: center; flex-wrap: wrap; padding: 0.3rem 0; }
     .rotate-compare .rotate-item { text-align: center; }
-    .rotate-compare .rotate-item .label { color: rgba(255,255,255,0.08); font-size: 0.55rem; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.15rem; display: block; }
+    .rotate-compare .rotate-item .label { color: rgba(255,255,255,0.15); font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.15rem; display: block; }
     .rotate-compare .rotate-item svg { border-radius: 10px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.03); }
-    .rotate-compare .rotate-arrow { color: rgba(255,255,255,0.04); font-size: 1.2rem; }
-    .rotate-angle-text { font-size: 1.1rem; font-weight: 700; color: #8B5CF6; margin-top: 0.2rem; }
+    .rotate-compare .rotate-arrow { color: rgba(255,255,255,0.06); font-size: 1.5rem; }
+    .rotate-angle-text { font-size: 1.2rem; font-weight: 700; color: #8B5CF6; margin-top: 0.2rem; }
 
-    .memory-keyboard { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.4rem; max-width: 260px; margin: 0.3rem auto; width: 100%; }
-    .memory-keyboard .key-btn { padding: 0.7rem 0.3rem; border: 2px solid rgba(255,255,255,0.04); border-radius: 12px; background: rgba(255,255,255,0.02); color: #fff; font-size: 1.3rem; font-weight: 600; cursor: pointer; transition: all 0.2s ease; font-family: inherit; text-align: center; }
-    .memory-keyboard .key-btn:hover:not(:disabled) { background: rgba(139,92,246,0.06); border-color: rgba(139,92,246,0.12); transform: scale(1.04); }
+    .memory-keyboard { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5rem; max-width: 280px; margin: 0.3rem auto; width: 100%; }
+    .memory-keyboard .key-btn { padding: 0.7rem 0.3rem; border: 2px solid rgba(255,255,255,0.04); border-radius: 14px; background: rgba(255,255,255,0.02); color: rgba(255,255,255,0.6); font-size: 1.4rem; font-weight: 700; cursor: pointer; transition: all 0.25s ease; font-family: inherit; text-align: center; }
+    .memory-keyboard .key-btn:hover:not(:disabled) { background: rgba(139,92,246,0.06); border-color: rgba(139,92,246,0.12); transform: scale(1.04); color: #fff; }
     .memory-keyboard .key-btn:disabled { opacity: 0.3; cursor: not-allowed; transform: none; }
-    .memory-keyboard .key-btn.backspace { color: #EC4899; border-color: rgba(236,72,153,0.1); }
-    .memory-keyboard .key-btn.backspace:hover:not(:disabled) { background: rgba(236,72,153,0.06); border-color: rgba(236,72,153,0.15); }
-    .memory-input-display { text-align: center; padding: 0.4rem; min-height: 44px; font-size: 1.8rem; font-weight: bold; color: #8B5CF6; letter-spacing: 8px; font-family: 'Courier New', monospace; background: rgba(255,255,255,0.02); border-radius: 12px; border: 1px solid rgba(255,255,255,0.04); margin: 0.3rem auto; width: 100%; max-width: 260px; }
-    .memory-controls { display: flex; gap: 0.4rem; justify-content: center; margin-top: 0.2rem; }
-    .memory-controls .btn-memory { padding: 0.4rem 1.4rem; border: none; border-radius: 40px; font-weight: 600; font-size: 0.8rem; cursor: pointer; transition: all 0.3s ease; font-family: inherit; }
+    .memory-keyboard .key-btn.backspace { color: #EC4899; border-color: rgba(236,72,153,0.08); }
+    .memory-keyboard .key-btn.backspace:hover:not(:disabled) { background: rgba(236,72,153,0.08); }
+    .memory-input-display { text-align: center; padding: 0.5rem; min-height: 50px; font-size: 2rem; font-weight: 700; color: #8B5CF6; letter-spacing: 10px; font-family: 'Courier New', monospace; background: rgba(255,255,255,0.02); border-radius: 14px; border: 1px solid rgba(255,255,255,0.04); margin: 0.3rem auto; width: 100%; max-width: 280px; }
+    .memory-controls { display: flex; gap: 0.5rem; justify-content: center; margin-top: 0.3rem; }
+    .memory-controls .btn-memory { padding: 0.5rem 1.8rem; border: none; border-radius: 40px; font-weight: 700; font-size: 0.9rem; cursor: pointer; transition: all 0.3s ease; font-family: inherit; }
     .memory-controls .btn-memory.submit { background: linear-gradient(135deg, #8B5CF6, #EC4899); color: #fff; }
     .memory-controls .btn-memory.submit:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(108,60,225,0.15); }
     .memory-controls .btn-memory:disabled { opacity: 0.3; cursor: not-allowed; transform: none; }
 
-    .char-btn { display: inline-block; padding: 0.2rem 0.6rem; margin: 0.05rem; border-radius: 10px; cursor: pointer; font-size: 2.2rem; font-weight: bold; font-family: monospace; transition: all 0.3s ease; user-select: none; color: #ffffff; border: 2px solid transparent; background: transparent; }
+    .char-btn { display: inline-block; padding: 0.3rem 0.8rem; margin: 0.1rem; border-radius: 12px; cursor: pointer; font-size: 2.4rem; font-weight: 700; font-family: monospace; transition: all 0.3s ease; user-select: none; color: #ffffff; border: 2px solid transparent; background: transparent; }
     .char-btn:hover:not(.disabled) { transform: scale(1.08); background: rgba(139,92,246,0.06); }
     .char-btn.disabled { cursor: default; opacity: 0.4; background: transparent !important; transform: none !important; }
     .char-btn.correct-answer { border-color: #28a745 !important; background: rgba(40,167,69,0.1) !important; color: #28a745 !important; }
     .char-btn.wrong-answer { border-color: #dc3545 !important; background: rgba(220,53,69,0.1) !important; color: #dc3545 !important; }
 
     .puzzle-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; max-width: 210px; margin: 0 auto; background: rgba(255,255,255,0.02); padding: 6px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.04); touch-action: none; user-select: none; }
-    .puzzle-grid .puzzle-cell { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; font-weight: 700; border-radius: 10px; cursor: pointer; transition: all 0.2s ease; background: rgba(255,255,255,0.04); color: #fff; user-select: none; touch-action: none; }
+    .puzzle-grid .puzzle-cell { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 700; border-radius: 10px; cursor: pointer; transition: all 0.2s ease; background: rgba(255,255,255,0.04); color: #fff; user-select: none; touch-action: none; }
     .puzzle-grid .puzzle-cell:hover:not(.empty) { background: rgba(139,92,246,0.08); transform: scale(1.04); }
     .puzzle-grid .puzzle-cell.empty { background: transparent; cursor: default; }
 
-    .ascii-art { font-family: 'Courier New', monospace; font-size: 0.8rem; color: #8B5CF6; white-space: pre; text-align: center; line-height: 1.3; padding: 0.4rem; background: rgba(255,255,255,0.02); border-radius: 12px; border: 1px solid rgba(255,255,255,0.04); }
+    .ascii-art { font-family: 'Courier New', monospace; font-size: 0.9rem; color: #8B5CF6; white-space: pre; text-align: center; line-height: 1.5; padding: 0.5rem; background: rgba(255,255,255,0.02); border-radius: 12px; border: 1px solid rgba(255,255,255,0.04); }
 
     /* ============================================================
        反馈
        ============================================================ */
-    .feedback { text-align: center; margin-top: 0.6rem; padding: 0.5rem 1.2rem; border-radius: 14px; font-size: 1rem; font-weight: 600; animation: feedbackIn 0.5s cubic-bezier(0.23, 1, 0.32, 1); width: 100%; display: none; position: relative; z-index: 1; }
+    .feedback { text-align: center; margin-top: 0.6rem; padding: 0.6rem 1.2rem; border-radius: 14px; font-size: 1.1rem; font-weight: 700; animation: feedbackIn 0.5s cubic-bezier(0.23, 1, 0.32, 1); width: 100%; display: none; position: relative; z-index: 1; }
     .feedback.show { display: block; }
-    .feedback.correct { background: rgba(40,167,69,0.06); color: #28a745; border: 1px solid rgba(40,167,69,0.06); box-shadow: 0 0 40px rgba(40,167,69,0.02); }
-    .feedback.wrong { background: rgba(220,53,69,0.06); color: #dc3545; border: 1px solid rgba(220,53,69,0.06); box-shadow: 0 0 40px rgba(220,53,69,0.02); }
-    .feedback .fun-message { font-weight: 400; color: rgba(255,255,255,0.25); font-size: 0.8rem; margin-top: 0.05rem; }
+    .feedback.correct { background: rgba(40,167,69,0.08); color: #28a745; border: 1px solid rgba(40,167,69,0.06); }
+    .feedback.wrong { background: rgba(220,53,69,0.08); color: #dc3545; border: 1px solid rgba(220,53,69,0.06); }
+    .feedback .fun-message { font-weight: 400; color: rgba(255,255,255,0.3); font-size: 0.9rem; margin-top: 0.1rem; }
     @@keyframes feedbackIn { from { opacity: 0; transform: translateY(12px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
 
     /* ============================================================
@@ -167,7 +182,7 @@
     .timer-bar .timer-fill { height: 100%; border-radius: 10px; background: linear-gradient(135deg, #34D399, #F59E0B); transition: width 0.3s linear; width: 100%; }
     .timer-bar .timer-fill.warning { background: linear-gradient(135deg, #F59E0B, #EC4899); }
     .timer-bar .timer-fill.danger { background: linear-gradient(135deg, #EC4899, #dc3545); }
-    .timer-text { text-align: right; color: rgba(255,255,255,0.06); font-size: 0.75rem; margin-top: 0.15rem; font-weight: 500; letter-spacing: 0.04em; }
+    .timer-text { text-align: right; color: rgba(255,255,255,0.1); font-size: 0.85rem; margin-top: 0.15rem; font-weight: 600; letter-spacing: 0.04em; }
 
     /* ============================================================
        游戏结束
@@ -176,12 +191,12 @@
     .game-over .big-icon { font-size: 3.8rem; margin-bottom: 0.2rem; animation: gameOverBounce 1.2s ease-in-out infinite; }
     @@keyframes gameOverBounce { 0%,100% { transform: scale(1); } 50% { transform: scale(1.08); } }
     .game-over .title { color: #fff; font-size: 1.8rem; font-weight: 800; margin-bottom: 0.1rem; }
-    .game-over .sub { color: rgba(255,255,255,0.15); font-size: 0.9rem; margin-bottom: 0.4rem; }
+    .game-over .sub { color: rgba(255,255,255,0.2); font-size: 0.95rem; margin-bottom: 0.4rem; }
     .game-over .final-score { font-size: 3rem; font-weight: 900; color: #F59E0B; margin: 0.2rem 0; text-shadow: 0 0 60px rgba(245,158,11,0.05); }
     .game-over .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.4rem; max-width: 280px; margin: 0.4rem auto 1rem; }
     .game-over .stats-grid .stat-item { background: rgba(255,255,255,0.02); border-radius: 14px; padding: 0.5rem; border: 1px solid rgba(255,255,255,0.03); }
     .game-over .stats-grid .stat-item .stat-value { color: #fff; font-size: 1.2rem; font-weight: 700; }
-    .game-over .stats-grid .stat-item .stat-label { color: rgba(255,255,255,0.1); font-size: 0.5rem; text-transform: uppercase; letter-spacing: 0.06em; margin-top: 0.05rem; }
+    .game-over .stats-grid .stat-item .stat-label { color: rgba(255,255,255,0.15); font-size: 0.55rem; text-transform: uppercase; letter-spacing: 0.06em; margin-top: 0.05rem; }
     .btn-restart { padding: 0.7rem 2.8rem; border: none; border-radius: 60px; background: linear-gradient(135deg, #8B5CF6, #EC4899); color: #fff; font-weight: 700; font-size: 0.95rem; cursor: pointer; transition: all 0.3s ease; font-family: inherit; box-shadow: 0 4px 30px rgba(108,60,225,0.15); }
     .btn-restart:hover { transform: translateY(-3px); box-shadow: 0 12px 50px rgba(108,60,225,0.25); }
 
@@ -189,29 +204,29 @@
        排行榜
        ============================================================ */
     .rank-section { margin-top: 1.2rem; padding: 1rem 1.2rem; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.04); border-radius: 16px; }
-    .rank-section .rank-title { color: rgba(255,255,255,0.15); font-size: 0.85rem; font-weight: 500; margin-bottom: 0.6rem; display: flex; align-items: center; gap: 0.4rem; }
-    .rank-item { display: flex; align-items: center; gap: 0.5rem; padding: 0.3rem 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.02); }
+    .rank-section .rank-title { color: rgba(255,255,255,0.2); font-size: 0.9rem; font-weight: 600; margin-bottom: 0.6rem; display: flex; align-items: center; gap: 0.4rem; }
+    .rank-item { display: flex; align-items: center; gap: 0.5rem; padding: 0.4rem 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.02); }
     .rank-item:last-child { border-bottom: none; }
-    .rank-item .rank-medal { font-size: 0.8rem; min-width: 28px; text-align: center; color: rgba(255,255,255,0.1); }
-    .rank-item .rank-avatar { width: 26px; height: 26px; border-radius: 50%; object-fit: cover; border: 1px solid rgba(255,255,255,0.04); flex-shrink: 0; background: rgba(255,255,255,0.03); }
-    .rank-item .rank-avatar-placeholder { width: 26px; height: 26px; border-radius: 50%; background: rgba(255,255,255,0.04); display: flex; align-items: center; justify-content: center; font-size: 0.55rem; color: rgba(255,255,255,0.15); flex-shrink: 0; }
-    .rank-item .rank-name { flex: 1; color: rgba(255,255,255,0.3); font-size: 0.8rem; }
-    .rank-item .rank-name .me { color: #8B5CF6; font-weight: 600; }
-    .rank-item .rank-score { color: #F59E0B; font-weight: 700; font-size: 0.85rem; }
-    .rank-empty { text-align: center; color: rgba(255,255,255,0.06); font-size: 0.8rem; padding: 0.8rem 0; }
+    .rank-item .rank-medal { font-size: 0.9rem; min-width: 28px; text-align: center; color: rgba(255,255,255,0.15); }
+    .rank-item .rank-avatar { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; border: 1px solid rgba(255,255,255,0.04); flex-shrink: 0; background: rgba(255,255,255,0.03); }
+    .rank-item .rank-avatar-placeholder { width: 28px; height: 28px; border-radius: 50%; background: rgba(255,255,255,0.04); display: flex; align-items: center; justify-content: center; font-size: 0.6rem; color: rgba(255,255,255,0.2); flex-shrink: 0; }
+    .rank-item .rank-name { flex: 1; color: rgba(255,255,255,0.4); font-size: 0.85rem; font-weight: 500; }
+    .rank-item .rank-name .me { color: #8B5CF6; font-weight: 700; }
+    .rank-item .rank-score { color: #F59E0B; font-weight: 700; font-size: 0.9rem; }
+    .rank-empty { text-align: center; color: rgba(255,255,255,0.08); font-size: 0.85rem; padding: 0.8rem 0; }
 
     /* ============================================================
        Toast
        ============================================================ */
     .toast-container { position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 2000; display: flex; flex-direction: column; gap: 0.4rem; align-items: flex-end; }
-    .toast-msg { padding: 0.5rem 1.5rem; border-radius: 40px; color: #fff; font-weight: 500; animation: toastIn 0.4s cubic-bezier(0.23, 1, 0.32, 1); font-size: 0.85rem; backdrop-filter: blur(12px); background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.04); }
+    .toast-msg { padding: 0.6rem 1.5rem; border-radius: 40px; color: #fff; font-weight: 600; animation: toastIn 0.4s cubic-bezier(0.23, 1, 0.32, 1); font-size: 0.9rem; backdrop-filter: blur(12px); background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.04); }
     .toast-msg.success { background: rgba(40,167,69,0.7); }
     .toast-msg.error { background: rgba(220,53,69,0.7); }
     .toast-msg.info { background: rgba(79,172,254,0.7); }
     @@keyframes toastIn { from { opacity: 0; transform: translateY(16px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
 
     /* ============================================================
-       教程弹窗 - 精美版
+       教程弹窗
        ============================================================ */
     .tutorial-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.88); backdrop-filter: blur(24px); z-index: 9999; display: none; align-items: center; justify-content: center; padding: 1rem; overflow-y: auto; }
     .tutorial-overlay.active { display: flex; }
@@ -225,22 +240,21 @@
     .tutorial-modal .modal-close { position: absolute; top: 0.8rem; right: 1.2rem; background: none; border: none; color: rgba(255,255,255,0.06); font-size: 1.5rem; cursor: pointer; transition: color 0.3s ease; }
     .tutorial-modal .modal-close:hover { color: rgba(255,255,255,0.2); }
     .tutorial-modal .tutorial-title { color: #fff; font-size: 1.5rem; font-weight: 700; margin-bottom: 0.1rem; display: flex; align-items: center; gap: 0.5rem; }
-    .tutorial-modal .tutorial-sub { color: rgba(255,255,255,0.15); font-size: 0.8rem; margin-bottom: 1rem; }
+    .tutorial-modal .tutorial-sub { color: rgba(255,255,255,0.18); font-size: 0.85rem; margin-bottom: 1rem; }
     .tutorial-modal .tutorial-section { background: rgba(255,255,255,0.02); border-radius: 16px; padding: 0.8rem 1rem; margin-bottom: 0.6rem; border: 1px solid rgba(255,255,255,0.03); }
-    .tutorial-modal .tutorial-section .sec-title { color: rgba(255,255,255,0.5); font-weight: 600; font-size: 0.8rem; margin-bottom: 0.2rem; }
-    .tutorial-modal .tutorial-section .sec-content { color: rgba(255,255,255,0.25); font-size: 0.85rem; line-height: 1.7; }
+    .tutorial-modal .tutorial-section .sec-title { color: rgba(255,255,255,0.5); font-weight: 600; font-size: 0.85rem; margin-bottom: 0.2rem; }
+    .tutorial-modal .tutorial-section .sec-content { color: rgba(255,255,255,0.3); font-size: 0.9rem; line-height: 1.7; }
     .tutorial-modal .tutorial-section .example-box { background: rgba(139,92,246,0.03); border-radius: 12px; padding: 0.6rem 0.8rem; margin-top: 0.3rem; border: 1px solid rgba(139,92,246,0.04); }
-    .tutorial-modal .tutorial-section .example-box .example-label { color: rgba(255,255,255,0.08); font-size: 0.55rem; text-transform: uppercase; letter-spacing: 0.06em; }
-    .tutorial-modal .tutorial-section .example-box .example-content { color: rgba(255,255,255,0.35); font-size: 0.85rem; margin-top: 0.05rem; }
+    .tutorial-modal .tutorial-section .example-box .example-label { color: rgba(255,255,255,0.1); font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.06em; }
+    .tutorial-modal .tutorial-section .example-box .example-content { color: rgba(255,255,255,0.4); font-size: 0.9rem; margin-top: 0.05rem; }
 
-    /* 教程演示区域 - 带动画 */
     .tutorial-demo-area { background: rgba(255,255,255,0.02); border-radius: 16px; padding: 0.8rem; margin-top: 0.6rem; border: 1px solid rgba(255,255,255,0.03); min-height: 70px; display: none; align-items: center; justify-content: center; flex-direction: column; }
     .tutorial-demo-area.active { display: flex; animation: demoFadeIn 0.5s ease; }
     @@keyframes demoFadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-    .tutorial-demo-area .demo-content { color: rgba(255,255,255,0.4); font-size: 0.9rem; text-align: center; line-height: 1.8; width: 100%; }
+    .tutorial-demo-area .demo-content { color: rgba(255,255,255,0.5); font-size: 0.95rem; text-align: center; line-height: 1.8; width: 100%; }
 
     .tutorial-nav { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: 1rem; justify-content: center; }
-    .tutorial-nav .nav-btn { padding: 0.4rem 1.2rem; border: 1px solid rgba(255,255,255,0.04); border-radius: 30px; background: rgba(255,255,255,0.02); color: rgba(255,255,255,0.2); font-size: 0.8rem; cursor: pointer; transition: all 0.3s ease; font-family: inherit; }
+    .tutorial-nav .nav-btn { padding: 0.4rem 1.2rem; border: 1px solid rgba(255,255,255,0.04); border-radius: 30px; background: rgba(255,255,255,0.02); color: rgba(255,255,255,0.25); font-size: 0.85rem; cursor: pointer; transition: all 0.3s ease; font-family: inherit; font-weight: 500; }
     .tutorial-nav .nav-btn:hover:not(:disabled) { background: rgba(255,255,255,0.04); color: #fff; }
     .tutorial-nav .nav-btn.active { background: rgba(139,92,246,0.08); color: #8B5CF6; border-color: rgba(139,92,246,0.06); }
     .tutorial-nav .nav-btn:disabled { opacity: 0.2; cursor: not-allowed; }
@@ -259,32 +273,32 @@
         .start-screen .logo-icon { font-size: 3.5rem; }
         .challenge-card { padding: 1rem 1.2rem; min-height: 260px; }
         .status-bar { padding: 0.4rem 0.8rem; gap: 0.1rem 0.5rem; }
-        .status-item { font-size: 0.7rem; }
-        .status-item .value { font-size: 1rem; }
-        .status-item .value.lives { font-size: 1.1rem; }
+        .status-item { font-size: 0.75rem; }
+        .status-item .value { font-size: 1.05rem; }
+        .status-item .value.lives { font-size: 1.15rem; }
         .options-grid { gap: 0.4rem; }
-        .options-grid .option-btn { padding: 0.6rem 0.6rem; font-size: 0.85rem; }
+        .options-grid .option-btn { padding: 0.6rem 0.6rem; font-size: 0.9rem; }
         .color-options-grid { gap: 0.4rem; max-width: 300px; }
         .color-options-grid .color-option .color-block { width: 40px; height: 40px; }
-        .color-options-grid .color-option .color-label { font-size: 0.7rem; }
-        .ab-display { font-size: 2rem; letter-spacing: 8px; min-height: 56px; }
+        .color-options-grid .color-option .color-label { font-size: 0.75rem; }
+        .ab-display { font-size: 2.2rem; letter-spacing: 8px; min-height: 56px; }
         .ab-keypad { max-width: 200px; gap: 5px; }
-        .ab-key-btn { font-size: 1.1rem; min-height: 40px; padding: 0.4rem 0.2rem; }
-        .ab-history { font-size: 0.7rem; max-height: 70px; }
-        .char-btn { font-size: 1.8rem; padding: 0.15rem 0.4rem; }
-        .view-item .view-grid .cell { width: 26px; height: 26px; }
-        .view-container { gap: 0.6rem; }
+        .ab-key-btn { font-size: 1.2rem; min-height: 40px; padding: 0.4rem 0.2rem; }
+        .ab-history { font-size: 0.75rem; max-height: 70px; }
+        .char-btn { font-size: 2rem; padding: 0.15rem 0.5rem; }
+        .view-item .view-grid .cell { width: 32px; height: 32px; }
+        .view-container { gap: 0.8rem; }
         .rotate-compare .rotate-item svg { width: 70px; height: 70px; }
-        .rotate-angle-text { font-size: 0.9rem; }
+        .rotate-angle-text { font-size: 0.95rem; }
         .puzzle-grid { max-width: 170px; }
-        .puzzle-grid .puzzle-cell { font-size: 1.1rem; }
+        .puzzle-grid .puzzle-cell { font-size: 1.2rem; }
         .game-over .final-score { font-size: 2.4rem; }
         .game-over .big-icon { font-size: 3rem; }
         .tutorial-modal { padding: 1.2rem 1rem; }
         .memory-keyboard { max-width: 220px; }
-        .memory-keyboard .key-btn { font-size: 1.1rem; padding: 0.5rem 0.2rem; }
-        .memory-input-display { font-size: 1.5rem; letter-spacing: 6px; max-width: 220px; }
-        .display-text-container .display-text { font-size: 1rem; }
+        .memory-keyboard .key-btn { font-size: 1.2rem; padding: 0.5rem 0.2rem; }
+        .memory-input-display { font-size: 1.6rem; letter-spacing: 6px; max-width: 220px; }
+        .display-text-container .display-text { font-size: 1.1rem; }
     }
 
     @@media (max-width: 400px) {
@@ -292,35 +306,35 @@
         .start-screen .title { font-size: 1.6rem; }
         .start-screen .logo-icon { font-size: 2.8rem; }
         .start-screen .start-buttons .btn-start { padding: 0.7rem 1.2rem; font-size: 0.85rem; }
-        .status-item { font-size: 0.6rem; }
-        .status-item .value { font-size: 0.8rem; }
-        .status-item .value.lives { font-size: 0.9rem; }
+        .status-item { font-size: 0.65rem; }
+        .status-item .value { font-size: 0.85rem; }
+        .status-item .value.lives { font-size: 0.95rem; }
         .options-grid { grid-template-columns: 1fr 1fr; gap: 0.3rem; }
-        .options-grid .option-btn { padding: 0.5rem 0.4rem; font-size: 0.75rem; border-radius: 12px; }
+        .options-grid .option-btn { padding: 0.5rem 0.4rem; font-size: 0.8rem; border-radius: 12px; }
         .color-options-grid { grid-template-columns: repeat(3, 1fr); gap: 0.3rem; max-width: 240px; }
         .color-options-grid .color-option .color-block { width: 32px; height: 32px; border-radius: 8px; }
-        .color-options-grid .color-option .color-label { font-size: 0.6rem; }
-        .ab-display { font-size: 1.6rem; letter-spacing: 6px; min-height: 44px; }
+        .color-options-grid .color-option .color-label { font-size: 0.65rem; }
+        .ab-display { font-size: 1.8rem; letter-spacing: 6px; min-height: 44px; }
         .ab-keypad { max-width: 160px; gap: 3px; }
-        .ab-key-btn { font-size: 0.9rem; min-height: 34px; padding: 0.3rem 0.1rem; }
-        .ab-history { font-size: 0.6rem; max-height: 56px; }
-        .char-btn { font-size: 1.4rem; padding: 0.1rem 0.3rem; }
-        .view-item .view-grid .cell { width: 20px; height: 20px; }
+        .ab-key-btn { font-size: 1rem; min-height: 34px; padding: 0.3rem 0.1rem; }
+        .ab-history { font-size: 0.65rem; max-height: 56px; }
+        .char-btn { font-size: 1.6rem; padding: 0.1rem 0.3rem; }
+        .view-item .view-grid .cell { width: 26px; height: 26px; }
         .rotate-compare .rotate-item svg { width: 50px; height: 50px; }
         .rotate-compare .rotate-arrow { font-size: 0.8rem; }
         .puzzle-grid { max-width: 140px; gap: 3px; padding: 4px; }
-        .puzzle-grid .puzzle-cell { font-size: 0.9rem; }
+        .puzzle-grid .puzzle-cell { font-size: 1rem; }
         .game-over .final-score { font-size: 2rem; }
         .game-over .big-icon { font-size: 2.4rem; }
         .game-over .title { font-size: 1.3rem; }
         .tutorial-modal { padding: 0.8rem 0.6rem; }
         .tutorial-modal .tutorial-title { font-size: 1.1rem; }
         .tutorial-modal .tutorial-section { padding: 0.5rem 0.6rem; }
-        .tutorial-modal .tutorial-section .sec-content { font-size: 0.75rem; }
+        .tutorial-modal .tutorial-section .sec-content { font-size: 0.8rem; }
         .memory-keyboard { max-width: 180px; gap: 3px; }
-        .memory-keyboard .key-btn { font-size: 0.9rem; padding: 0.4rem 0.1rem; }
-        .memory-input-display { font-size: 1.2rem; letter-spacing: 4px; max-width: 180px; }
-        .display-text-container .display-text { font-size: 0.85rem; }
+        .memory-keyboard .key-btn { font-size: 1rem; padding: 0.4rem 0.1rem; }
+        .memory-input-display { font-size: 1.3rem; letter-spacing: 4px; max-width: 180px; }
+        .display-text-container .display-text { font-size: 0.9rem; }
     }
 </style>
 
@@ -377,20 +391,17 @@
 
 <script>
     // ============================================================
-    // ⭐ 音效系统（Web Audio API）
+    // ⭐ 音效系统
     // ============================================================
     var SoundFX = {
         ctx: null, enabled: true,
-
         init: function() {
             try { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); }
             catch(e) { this.enabled = false; }
         },
-
         ensure: function() {
             if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
         },
-
         play: function(type) {
             if (!this.enabled || !this.ctx) return;
             this.ensure();
@@ -457,7 +468,6 @@
                 }
             } catch(e) {}
         },
-
         playNote: function(freq, time, duration) {
             var osc = this.ctx.createOscillator();
             var gain = this.ctx.createGain();
@@ -505,6 +515,7 @@
     };
 
     var abState = { password: '', digitCount: 4, maxAttempts: 15, currentGuess: '', attemptCount: 0, history: [], gameSolved: false, isActive: false };
+    var puzzleState = null, puzzleEmptyRow = 0, puzzleEmptyCol = 0;
 
     var colorHexMap = {
         '红色': '#FF0000', '深红': '#8B0000', '粉色': '#FF69B4', '浅粉': '#FFB6C1',
@@ -536,381 +547,8 @@
     function getColorHex(name) { return colorHexMap[name] || '#808080'; }
 
     // ============================================================
-    // 教程数据
+    // 教程数据（简化版，只保留关键演示）
     // ============================================================
-    var gameTutorials = {
-        'text': {
-            name: '文字识别', icon: '👁️',
-            desc: '识别图片中扭曲的文字，考验视力和抗干扰能力。',
-            howTo: '观察下方图片中扭曲、带有噪点和干扰线的文字，从选项中选择正确的文字内容。图片中的文字可能被旋转、拉伸、添加了噪点，需要仔细辨认。',
-            example: '图片中显示的是 "HELLO" 的扭曲版本，正确答案是 "HELLO"。',
-            demo: function() {
-                return '<div style="text-align:center;padding:0.3rem;">' +
-                    '<div style="background:rgba(255,255,255,0.02);border-radius:12px;padding:0.5rem;border:1px solid rgba(255,255,255,0.04);">' +
-                    '<div style="font-size:2.8rem;font-weight:bold;color:#8B5CF6;letter-spacing:8px;font-family:monospace;text-shadow:2px 2px 0 rgba(139,92,246,0.1), -1px -1px 0 rgba(236,72,153,0.05);transform:rotate(-2deg) scale(1.02);">H E L L O</div>' +
-                    '<div style="color:rgba(255,255,255,0.08);font-size:0.6rem;margin-top:0.1rem;">👆 识别图片中的文字</div>' +
-                    '</div>' +
-                    '<div style="display:flex;gap:0.4rem;justify-content:center;margin-top:0.4rem;flex-wrap:wrap;">' +
-                    '<span style="padding:0.2rem 0.8rem;border-radius:20px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);color:rgba(255,255,255,0.2);font-size:0.85rem;">HELL0</span>' +
-                    '<span style="padding:0.2rem 0.8rem;border-radius:20px;background:rgba(40,167,69,0.06);border:1px solid rgba(40,167,69,0.04);color:#28a745;font-size:0.85rem;font-weight:600;">✅ HELLO</span>' +
-                    '<span style="padding:0.2rem 0.8rem;border-radius:20px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);color:rgba(255,255,255,0.2);font-size:0.85rem;">HALLO</span>' +
-                    '</div>' +
-                    '<div style="color:rgba(40,167,69,0.15);font-size:0.65rem;margin-top:0.2rem;">💡 仔细辨认扭曲的文字</div>' +
-                    '</div>';
-            }
-        },
-        'arithmetic': {
-            name: '算术计算', icon: '🧮',
-            desc: '快速计算数学表达式，测试心算能力。',
-            howTo: '计算给出的数学表达式，从选项中选择正确的答案。随着难度提升，数字会越来越大，运算也会更复杂。',
-            example: '25 × 4 = 100，正确答案是 100。',
-            demo: function() {
-                return '<div style="text-align:center;padding:0.3rem;">' +
-                    '<div style="font-size:2rem;font-weight:700;color:#fff;">25 × 4 = ?</div>' +
-                    '<div style="display:flex;gap:0.4rem;justify-content:center;margin-top:0.4rem;flex-wrap:wrap;">' +
-                    '<span style="padding:0.2rem 0.8rem;border-radius:20px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);color:rgba(255,255,255,0.2);font-size:0.85rem;">80</span>' +
-                    '<span style="padding:0.2rem 0.8rem;border-radius:20px;background:rgba(40,167,69,0.06);border:1px solid rgba(40,167,69,0.04);color:#28a745;font-size:0.85rem;font-weight:600;">✅ 100</span>' +
-                    '<span style="padding:0.2rem 0.8rem;border-radius:20px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);color:rgba(255,255,255,0.2);font-size:0.85rem;">120</span>' +
-                    '</div>' +
-                    '<div style="color:rgba(40,167,69,0.15);font-size:0.65rem;margin-top:0.2rem;">💡 快速心算</div>' +
-                    '</div>';
-            }
-        },
-        'stroke': {
-            name: '汉字笔画', icon: '📝',
-            desc: '计算汉字的笔画数，测试对汉字结构的了解。',
-            howTo: '数出给定汉字的笔画总数（如 "人" 是 2 画），从选项中选择正确的数字。注意区分不同字形的笔画差异。',
-            example: '汉字「人」有 2 画，正确答案是 2。',
-            demo: function() {
-                return '<div style="text-align:center;padding:0.3rem;">' +
-                    '<div style="font-size:4rem;font-weight:700;color:#fff;">人</div>' +
-                    '<div style="color:rgba(255,255,255,0.08);font-size:0.7rem;">"人" 字有几画？</div>' +
-                    '<div style="display:flex;gap:0.4rem;justify-content:center;margin-top:0.4rem;flex-wrap:wrap;">' +
-                    '<span style="padding:0.2rem 0.8rem;border-radius:20px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);color:rgba(255,255,255,0.2);font-size:0.85rem;">1</span>' +
-                    '<span style="padding:0.2rem 0.8rem;border-radius:20px;background:rgba(40,167,69,0.06);border:1px solid rgba(40,167,69,0.04);color:#28a745;font-size:0.85rem;font-weight:600;">✅ 2</span>' +
-                    '<span style="padding:0.2rem 0.8rem;border-radius:20px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);color:rgba(255,255,255,0.2);font-size:0.85rem;">3</span>' +
-                    '</div>' +
-                    '<div style="color:rgba(40,167,69,0.15);font-size:0.65rem;margin-top:0.2rem;">💡 一画一画数</div>' +
-                    '</div>';
-            }
-        },
-        'color': {
-            name: '颜色识别', icon: '🎨',
-            desc: '识别文字的颜色而不是文字本身，测试注意力。',
-            howTo: '注意文字的颜色，而不是文字的内容。例如 "红" 字用蓝色显示，正确答案是 "蓝色"。',
-            example: '文字 "红" 用蓝色显示，正确答案是 "蓝色"。',
-            demo: function() {
-                return '<div style="text-align:center;padding:0.3rem;">' +
-                    '<div style="font-size:3rem;font-weight:700;color:#0000FF;">红</div>' +
-                    '<div style="color:rgba(255,255,255,0.08);font-size:0.7rem;">这个字是什么颜色？（不是读字）</div>' +
-                    '<div style="display:flex;gap:0.4rem;justify-content:center;margin-top:0.4rem;flex-wrap:wrap;">' +
-                    '<span style="padding:0.2rem 0.8rem;border-radius:20px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);color:rgba(255,255,255,0.2);font-size:0.85rem;">红色</span>' +
-                    '<span style="padding:0.2rem 0.8rem;border-radius:20px;background:rgba(40,167,69,0.06);border:1px solid rgba(40,167,69,0.04);color:#28a745;font-size:0.85rem;font-weight:600;">✅ 蓝色</span>' +
-                    '<span style="padding:0.2rem 0.8rem;border-radius:20px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);color:rgba(255,255,255,0.2);font-size:0.85rem;">绿色</span>' +
-                    '</div>' +
-                    '<div style="color:rgba(40,167,69,0.15);font-size:0.65rem;margin-top:0.2rem;">💡 看颜色，不看文字</div>' +
-                    '</div>';
-            }
-        },
-        'findDifferent': {
-            name: '找不同', icon: '🔍',
-            desc: '记住原始字符序列，找出被替换的那个字符。',
-            howTo: '先记住显示的原始字符（有记忆时间），然后字符会被打乱并替换其中一个，找出被替换的字符。',
-            example: '原始: ABCDE → 打乱后: ABXDE，被替换的是 "C"。',
-            demo: function() {
-                return '<div style="text-align:center;padding:0.3rem;">' +
-                    '<div style="font-size:2.2rem;font-weight:700;color:#8B5CF6;letter-spacing:10px;font-family:monospace;animation:pulseText 1.5s ease-in-out infinite;">A B C D E</div>' +
-                    '<div style="color:rgba(255,255,255,0.05);font-size:0.6rem;">⏱ 记忆 3 秒</div>' +
-                    '<div style="font-size:2.2rem;font-weight:700;color:#8B5CF6;letter-spacing:10px;font-family:monospace;margin-top:0.2rem;">A B X D E</div>' +
-                    '<div style="color:rgba(255,255,255,0.05);font-size:0.6rem;">🔍 哪个字符被替换了？</div>' +
-                    '<div style="display:flex;gap:0.4rem;justify-content:center;margin-top:0.4rem;flex-wrap:wrap;">' +
-                    '<span style="padding:0.2rem 0.8rem;border-radius:20px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);color:rgba(255,255,255,0.2);font-size:0.85rem;">A</span>' +
-                    '<span style="padding:0.2rem 0.8rem;border-radius:20px;background:rgba(40,167,69,0.06);border:1px solid rgba(40,167,69,0.04);color:#28a745;font-size:0.85rem;font-weight:600;">✅ C</span>' +
-                    '<span style="padding:0.2rem 0.8rem;border-radius:20px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);color:rgba(255,255,255,0.2);font-size:0.85rem;">D</span>' +
-                    '</div>' +
-                    '<div style="color:rgba(40,167,69,0.15);font-size:0.65rem;margin-top:0.2rem;">💡 找出被替换的字符</div>' +
-                    '</div>';
-            }
-        },
-        'reverse': {
-            name: '倒序识别', icon: '🔄',
-            desc: '识别倒过来显示的文字，考验空间想象力。',
-            howTo: '图片中的文字是倒过来显示的，你需要识别出正确的文字内容。可以旋转屏幕或在脑海中倒转文字。',
-            example: '图片显示 "OLLEH"，正确答案是 "HELLO"。',
-            demo: function() {
-                return '<div style="text-align:center;padding:0.3rem;">' +
-                    '<div style="font-size:2.8rem;font-weight:700;color:#8B5CF6;letter-spacing:8px;font-family:monospace;transform:rotate(180deg);display:inline-block;background:rgba(255,255,255,0.02);padding:0.3rem 0.8rem;border-radius:12px;">HELLO</div>' +
-                    '<div style="color:rgba(255,255,255,0.05);font-size:0.6rem;margin-top:0.2rem;">🔄 倒过来看是什么？</div>' +
-                    '<div style="display:flex;gap:0.4rem;justify-content:center;margin-top:0.4rem;flex-wrap:wrap;">' +
-                    '<span style="padding:0.2rem 0.8rem;border-radius:20px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);color:rgba(255,255,255,0.2);font-size:0.85rem;">OLLEH</span>' +
-                    '<span style="padding:0.2rem 0.8rem;border-radius:20px;background:rgba(40,167,69,0.06);border:1px solid rgba(40,167,69,0.04);color:#28a745;font-size:0.85rem;font-weight:600;">✅ HELLO</span>' +
-                    '<span style="padding:0.2rem 0.8rem;border-radius:20px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);color:rgba(255,255,255,0.2);font-size:0.85rem;">HALLO</span>' +
-                    '</div>' +
-                    '<div style="color:rgba(40,167,69,0.15);font-size:0.65rem;margin-top:0.2rem;">💡 倒过来读</div>' +
-                    '</div>';
-            }
-        },
-        'missingLetter': {
-            name: '空缺字母', icon: '🔤',
-            desc: '补全英文单词中缺失的字母，测试词汇量。',
-            howTo: '英文单词中有字母被隐藏了，根据上下文和词汇知识补全缺失的字母。',
-            example: 'A P P _ E → 缺失 "L"，单词是 APPLE。',
-            demo: function() {
-                return '<div style="text-align:center;padding:0.3rem;">' +
-                    '<div style="font-size:2.4rem;font-weight:700;color:#8B5CF6;letter-spacing:10px;font-family:monospace;">A P P _ E</div>' +
-                    '<div style="color:rgba(255,255,255,0.05);font-size:0.6rem;">🔤 缺失哪个字母？</div>' +
-                    '<div style="display:flex;gap:0.4rem;justify-content:center;margin-top:0.4rem;flex-wrap:wrap;">' +
-                    '<span style="padding:0.2rem 0.8rem;border-radius:20px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);color:rgba(255,255,255,0.2);font-size:0.85rem;">M</span>' +
-                    '<span style="padding:0.2rem 0.8rem;border-radius:20px;background:rgba(40,167,69,0.06);border:1px solid rgba(40,167,69,0.04);color:#28a745;font-size:0.85rem;font-weight:600;">✅ L</span>' +
-                    '<span style="padding:0.2rem 0.8rem;border-radius:20px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);color:rgba(255,255,255,0.2);font-size:0.85rem;">N</span>' +
-                    '</div>' +
-                    '<div style="color:rgba(40,167,69,0.15);font-size:0.65rem;margin-top:0.2rem;">💡 补全英文单词</div>' +
-                    '</div>';
-            }
-        },
-        'timeCalc': {
-            name: '时间计算', icon: '⏰',
-            desc: '计算两个时间点之间的差值，测试时间感。',
-            howTo: '计算从开始时间到结束时间经过了多少时间，选择正确的时长。注意小时和分钟的换算。',
-            example: '从 08:00 到 12:30 经过了 4小时30分钟。',
-            demo: function() {
-                return '<div style="text-align:center;padding:0.3rem;">' +
-                    '<div style="font-size:1.3rem;font-weight:700;color:#fff;">⏰ 从 08:00 到 12:30</div>' +
-                    '<div style="color:rgba(255,255,255,0.05);font-size:0.6rem;">经过了多少时间？</div>' +
-                    '<div style="display:flex;gap:0.4rem;justify-content:center;margin-top:0.4rem;flex-wrap:wrap;">' +
-                    '<span style="padding:0.2rem 0.8rem;border-radius:20px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);color:rgba(255,255,255,0.2);font-size:0.85rem;">4小时</span>' +
-                    '<span style="padding:0.2rem 0.8rem;border-radius:20px;background:rgba(40,167,69,0.06);border:1px solid rgba(40,167,69,0.04);color:#28a745;font-size:0.85rem;font-weight:600;">✅ 4小时30分钟</span>' +
-                    '<span style="padding:0.2rem 0.8rem;border-radius:20px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);color:rgba(255,255,255,0.2);font-size:0.85rem;">5小时</span>' +
-                    '</div>' +
-                    '<div style="color:rgba(40,167,69,0.15);font-size:0.65rem;margin-top:0.2rem;">💡 计算时间差</div>' +
-                    '</div>';
-            }
-        },
-        'idiom': {
-            name: '成语填空', icon: '📖',
-            desc: '补全成语中缺失的字，测试语文功底。',
-            howTo: '成语中有字被隐藏了，根据上下文和成语知识补全。',
-            example: '一马当_ → 缺失 "先"，成语是 "一马当先"。',
-            demo: function() {
-                return '<div style="text-align:center;padding:0.3rem;">' +
-                    '<div style="font-size:2.4rem;font-weight:700;color:#8B5CF6;letter-spacing:10px;">一马当_</div>' +
-                    '<div style="color:rgba(255,255,255,0.05);font-size:0.6rem;">📖 缺失哪个字？</div>' +
-                    '<div style="display:flex;gap:0.4rem;justify-content:center;margin-top:0.4rem;flex-wrap:wrap;">' +
-                    '<span style="padding:0.2rem 0.8rem;border-radius:20px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);color:rgba(255,255,255,0.2);font-size:0.85rem;">前</span>' +
-                    '<span style="padding:0.2rem 0.8rem;border-radius:20px;background:rgba(40,167,69,0.06);border:1px solid rgba(40,167,69,0.04);color:#28a745;font-size:0.85rem;font-weight:600;">✅ 先</span>' +
-                    '<span style="padding:0.2rem 0.8rem;border-radius:20px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);color:rgba(255,255,255,0.2);font-size:0.85rem;">后</span>' +
-                    '</div>' +
-                    '<div style="color:rgba(40,167,69,0.15);font-size:0.65rem;margin-top:0.2rem;">💡 补全成语</div>' +
-                    '</div>';
-            }
-        },
-        'memory': {
-            name: '数字记忆', icon: '🧠',
-            desc: '记住显示的数字并在消失后输入，测试短期记忆力。',
-            howTo: '数字会显示几秒钟然后消失，在键盘上输入你记住的数字。',
-            example: '显示 "3847" → 输入 "3847"。',
-            demo: function() {
-                return '<div style="text-align:center;padding:0.3rem;">' +
-                    '<div style="font-size:2.8rem;font-weight:700;color:#8B5CF6;letter-spacing:14px;font-family:monospace;">3 8 4 7</div>' +
-                    '<div style="color:rgba(255,255,255,0.05);font-size:0.6rem;">⏱ 记忆 3 秒</div>' +
-                    '<div style="font-size:2.8rem;font-weight:700;color:rgba(255,255,255,0.05);letter-spacing:14px;font-family:monospace;margin-top:0.2rem;">_ _ _ _</div>' +
-                    '<div style="color:rgba(255,255,255,0.05);font-size:0.6rem;">⌨️ 输入你记住的数字</div>' +
-                    '<div style="color:rgba(40,167,69,0.15);font-size:0.65rem;margin-top:0.2rem;">💡 记住数字并输入</div>' +
-                    '</div>';
-            }
-        },
-        'pattern': {
-            name: '找规律', icon: '📐',
-            desc: '根据数列规律填空，测试数学推理能力。',
-            howTo: '观察数列的规律，找出缺失的数字。规律可能是等差、等比、递推等。',
-            example: '2, 4, 6, ?, 10 → 规律是+2，答案是 8。',
-            demo: function() {
-                return '<div style="text-align:center;padding:0.3rem;">' +
-                    '<div style="font-size:1.8rem;font-weight:700;color:#fff;">2, 4, 6, ?, 10</div>' +
-                    '<div style="color:rgba(255,255,255,0.05);font-size:0.6rem;">📐 规律是什么？</div>' +
-                    '<div style="display:flex;gap:0.4rem;justify-content:center;margin-top:0.4rem;flex-wrap:wrap;">' +
-                    '<span style="padding:0.2rem 0.8rem;border-radius:20px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);color:rgba(255,255,255,0.2);font-size:0.85rem;">6</span>' +
-                    '<span style="padding:0.2rem 0.8rem;border-radius:20px;background:rgba(40,167,69,0.06);border:1px solid rgba(40,167,69,0.04);color:#28a745;font-size:0.85rem;font-weight:600;">✅ 8</span>' +
-                    '<span style="padding:0.2rem 0.8rem;border-radius:20px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);color:rgba(255,255,255,0.2);font-size:0.85rem;">9</span>' +
-                    '</div>' +
-                    '<div style="color:rgba(40,167,69,0.15);font-size:0.65rem;margin-top:0.2rem;">💡 找规律填空</div>' +
-                    '</div>';
-            }
-        },
-        'colorMix': {
-            name: '颜色混合', icon: '🎨',
-            desc: '将几种颜色混合后判断结果颜色，测试色彩感知。',
-            howTo: '观察给出的颜色，混合后是什么颜色？从选项中选择正确的颜色。',
-            example: '红色 + 蓝色 = 紫色。',
-            demo: function() {
-                return '<div style="text-align:center;padding:0.3rem;">' +
-                    '<div style="display:flex;justify-content:center;align-items:center;gap:0.6rem;flex-wrap:wrap;">' +
-                    '<div style="width:44px;height:44px;border-radius:10px;background:#FF0000;border:1px solid rgba(255,255,255,0.06);"></div>' +
-                    '<span style="color:rgba(255,255,255,0.06);font-size:1rem;">+</span>' +
-                    '<div style="width:44px;height:44px;border-radius:10px;background:#0000FF;border:1px solid rgba(255,255,255,0.06);"></div>' +
-                    '<span style="color:rgba(255,255,255,0.06);font-size:1rem;">→</span>' +
-                    '<div style="width:44px;height:44px;border-radius:10px;background:rgba(139,92,246,0.3);border:2px dashed rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;font-size:1.2rem;color:rgba(255,255,255,0.06);">?</div>' +
-                    '</div>' +
-                    '<div style="display:flex;gap:0.4rem;justify-content:center;margin-top:0.4rem;flex-wrap:wrap;">' +
-                    '<span style="padding:0.2rem 0.8rem;border-radius:20px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);color:rgba(255,255,255,0.2);font-size:0.85rem;">红色</span>' +
-                    '<span style="padding:0.2rem 0.8rem;border-radius:20px;background:rgba(40,167,69,0.06);border:1px solid rgba(40,167,69,0.04);color:#28a745;font-size:0.85rem;font-weight:600;">✅ 紫色</span>' +
-                    '<span style="padding:0.2rem 0.8rem;border-radius:20px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);color:rgba(255,255,255,0.2);font-size:0.85rem;">蓝色</span>' +
-                    '</div>' +
-                    '<div style="color:rgba(40,167,69,0.15);font-size:0.65rem;margin-top:0.2rem;">💡 混合颜色</div>' +
-                    '</div>';
-            }
-        },
-        'trueFalse': {
-            name: '真假判断', icon: '⚖️',
-            desc: '判断陈述的真假，测试常识和逻辑推理。',
-            howTo: '阅读陈述内容，判断它是真的还是假的。注意细节和逻辑陷阱。',
-            example: '地球是平的 → 假的。',
-            demo: function() {
-                return '<div style="text-align:center;padding:0.3rem;">' +
-                    '<div style="font-size:1.1rem;color:#fff;">🌍 地球是平的</div>' +
-                    '<div style="color:rgba(255,255,255,0.05);font-size:0.6rem;">⚖️ 真的还是假的？</div>' +
-                    '<div style="display:flex;gap:0.4rem;justify-content:center;margin-top:0.4rem;flex-wrap:wrap;">' +
-                    '<span style="padding:0.2rem 0.8rem;border-radius:20px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);color:rgba(255,255,255,0.2);font-size:0.85rem;">✅ 真的</span>' +
-                    '<span style="padding:0.2rem 0.8rem;border-radius:20px;background:rgba(40,167,69,0.06);border:1px solid rgba(40,167,69,0.04);color:#28a745;font-size:0.85rem;font-weight:600;">✅ 假的</span>' +
-                    '</div>' +
-                    '<div style="color:rgba(40,167,69,0.15);font-size:0.65rem;margin-top:0.2rem;">💡 判断真假</div>' +
-                    '</div>';
-            }
-        },
-        'puzzle': {
-            name: '数字华容道', icon: '🧩',
-            desc: '移动数字方块，按顺序排列，测试空间思维。',
-            howTo: '点击数字方块移动，将数字按 1-8 的顺序排列，空格在右下角。',
-            example: '将 1-8 按顺序排列，空格在最后。',
-            demo: function() {
-                return '<div style="text-align:center;padding:0.3rem;">' +
-                    '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:3px;max-width:140px;margin:0 auto;background:rgba(255,255,255,0.02);padding:4px;border-radius:10px;border:1px solid rgba(255,255,255,0.04);">' +
-                    '<div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:700;border-radius:6px;background:rgba(255,255,255,0.04);color:#fff;">1</div>' +
-                    '<div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:700;border-radius:6px;background:rgba(255,255,255,0.04);color:#fff;">2</div>' +
-                    '<div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:700;border-radius:6px;background:rgba(255,255,255,0.04);color:#fff;">3</div>' +
-                    '<div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:700;border-radius:6px;background:rgba(255,255,255,0.04);color:#fff;">4</div>' +
-                    '<div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:700;border-radius:6px;background:rgba(255,255,255,0.04);color:#fff;">5</div>' +
-                    '<div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:700;border-radius:6px;background:rgba(255,255,255,0.04);color:#fff;">6</div>' +
-                    '<div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:700;border-radius:6px;background:rgba(255,255,255,0.04);color:#fff;">7</div>' +
-                    '<div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:700;border-radius:6px;background:rgba(255,255,255,0.04);color:#fff;">8</div>' +
-                    '<div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:700;border-radius:6px;background:transparent;color:transparent;"></div>' +
-                    '</div>' +
-                    '<div style="color:rgba(40,167,69,0.15);font-size:0.65rem;margin-top:0.2rem;">💡 点击数字移动，按顺序排列</div>' +
-                    '</div>';
-            }
-        },
-        'threeView': {
-            name: '立体三视图', icon: '📐',
-            desc: '根据三视图判断正方体数量，测试空间想象力。',
-            howTo: '观察俯视图、主视图、左视图，推断出总共用了多少个正方体。',
-            example: '三个视图显示共有 8 个正方体。',
-            demo: function() {
-                return '<div style="text-align:center;padding:0.3rem;">' +
-                    '<div style="display:flex;justify-content:center;gap:0.8rem;flex-wrap:wrap;">' +
-                    '<div><div style="color:rgba(255,255,255,0.05);font-size:0.45rem;">俯视图</div><div style="display:grid;grid-template-columns:repeat(3,28px);gap:2px;"><div style="width:28px;height:28px;background:#8B5CF6;border-radius:2px;"></div><div style="width:28px;height:28px;background:#8B5CF6;border-radius:2px;"></div><div style="width:28px;height:28px;background:#8B5CF6;border-radius:2px;"></div><div style="width:28px;height:28px;background:#8B5CF6;border-radius:2px;"></div><div style="width:28px;height:28px;background:#8B5CF6;border-radius:2px;"></div><div style="width:28px;height:28px;background:#8B5CF6;border-radius:2px;"></div><div style="width:28px;height:28px;background:#8B5CF6;border-radius:2px;"></div><div style="width:28px;height:28px;background:#8B5CF6;border-radius:2px;"></div><div style="width:28px;height:28px;background:#8B5CF6;border-radius:2px;"></div></div></div>' +
-                    '<div><div style="color:rgba(255,255,255,0.05);font-size:0.45rem;">主视图</div><div style="display:grid;grid-template-columns:repeat(3,28px);gap:2px;"><div style="width:28px;height:28px;background:#8B5CF6;border-radius:2px;"></div><div style="width:28px;height:28px;background:#8B5CF6;border-radius:2px;"></div><div style="width:28px;height:28px;background:#8B5CF6;border-radius:2px;"></div><div style="width:28px;height:28px;background:#8B5CF6;border-radius:2px;"></div><div style="width:28px;height:28px;background:#8B5CF6;border-radius:2px;"></div><div style="width:28px;height:28px;background:#8B5CF6;border-radius:2px;"></div><div style="width:28px;height:28px;background:#8B5CF6;border-radius:2px;"></div><div style="width:28px;height:28px;background:#8B5CF6;border-radius:2px;"></div><div style="width:28px;height:28px;background:#8B5CF6;border-radius:2px;"></div></div></div>' +
-                    '<div><div style="color:rgba(255,255,255,0.05);font-size:0.45rem;">左视图</div><div style="display:grid;grid-template-columns:repeat(3,28px);gap:2px;"><div style="width:28px;height:28px;background:#8B5CF6;border-radius:2px;"></div><div style="width:28px;height:28px;background:#8B5CF6;border-radius:2px;"></div><div style="width:28px;height:28px;background:#8B5CF6;border-radius:2px;"></div><div style="width:28px;height:28px;background:#8B5CF6;border-radius:2px;"></div><div style="width:28px;height:28px;background:#8B5CF6;border-radius:2px;"></div><div style="width:28px;height:28px;background:#8B5CF6;border-radius:2px;"></div><div style="width:28px;height:28px;background:#8B5CF6;border-radius:2px;"></div><div style="width:28px;height:28px;background:#8B5CF6;border-radius:2px;"></div><div style="width:28px;height:28px;background:#8B5CF6;border-radius:2px;"></div></div></div>' +
-                    '</div>' +
-                    '<div style="color:rgba(40,167,69,0.15);font-size:0.65rem;margin-top:0.2rem;">💡 根据三视图推断正方体数量</div>' +
-                    '</div>';
-            }
-        },
-        'shapeCount': {
-            name: '图形计数', icon: '🔢',
-            desc: '统计特定图形出现的次数，测试观察力。',
-            howTo: '在一组图形中，统计特定图形（如 ●）出现的次数。',
-            example: '● ■ ● ▲ ● → ● 出现了 3 次。',
-            demo: function() {
-                return '<div style="text-align:center;padding:0.3rem;">' +
-                    '<div style="font-size:1.8rem;letter-spacing:10px;">● ■ ● ▲ ●</div>' +
-                    '<div style="color:rgba(255,255,255,0.05);font-size:0.6rem;">🔢 「●」出现了几次？</div>' +
-                    '<div style="display:flex;gap:0.4rem;justify-content:center;margin-top:0.4rem;flex-wrap:wrap;">' +
-                    '<span style="padding:0.2rem 0.8rem;border-radius:20px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);color:rgba(255,255,255,0.2);font-size:0.85rem;">2</span>' +
-                    '<span style="padding:0.2rem 0.8rem;border-radius:20px;background:rgba(40,167,69,0.06);border:1px solid rgba(40,167,69,0.04);color:#28a745;font-size:0.85rem;font-weight:600;">✅ 3</span>' +
-                    '<span style="padding:0.2rem 0.8rem;border-radius:20px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);color:rgba(255,255,255,0.2);font-size:0.85rem;">4</span>' +
-                    '</div>' +
-                    '<div style="color:rgba(40,167,69,0.15);font-size:0.65rem;margin-top:0.2rem;">💡 统计图形出现次数</div>' +
-                    '</div>';
-            }
-        },
-        'dateReasoning': {
-            name: '日期推理', icon: '📅',
-            desc: '根据已知日期推算星期几，测试日期计算能力。',
-            howTo: '已知一个日期是星期几，推算另一个日期是星期几。注意月份天数和闰年。',
-            example: '2026年8月7日是星期五，8月15日是星期六。',
-            demo: function() {
-                return '<div style="text-align:center;padding:0.3rem;">' +
-                    '<div style="font-size:1rem;color:#fff;">📅 2026年8月7日是星期五</div>' +
-                    '<div style="color:rgba(255,255,255,0.05);font-size:0.6rem;">8月15日是星期几？</div>' +
-                    '<div style="display:flex;gap:0.4rem;justify-content:center;margin-top:0.4rem;flex-wrap:wrap;">' +
-                    '<span style="padding:0.2rem 0.8rem;border-radius:20px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);color:rgba(255,255,255,0.2);font-size:0.85rem;">星期五</span>' +
-                    '<span style="padding:0.2rem 0.8rem;border-radius:20px;background:rgba(40,167,69,0.06);border:1px solid rgba(40,167,69,0.04);color:#28a745;font-size:0.85rem;font-weight:600;">✅ 星期六</span>' +
-                    '<span style="padding:0.2rem 0.8rem;border-radius:20px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);color:rgba(255,255,255,0.2);font-size:0.85rem;">星期日</span>' +
-                    '</div>' +
-                    '<div style="color:rgba(40,167,69,0.15);font-size:0.65rem;margin-top:0.2rem;">💡 推算星期几</div>' +
-                    '</div>';
-            }
-        },
-        'rotate': {
-            name: '图形旋转', icon: '🔄',
-            desc: '判断图形旋转了多少度，测试空间想象力。',
-            howTo: '观察原图和旋转后的图形，判断旋转了多少度。',
-            example: '三角形旋转了 90°。',
-            demo: function() {
-                return '<div style="text-align:center;padding:0.3rem;">' +
-                    '<div style="display:flex;justify-content:center;align-items:center;gap:0.8rem;flex-wrap:wrap;">' +
-                    '<div><svg width="52" height="52"><polygon points="26,8 44,44 8,44" fill="#8B5CF6" opacity="0.85"/></svg><div style="color:rgba(255,255,255,0.05);font-size:0.45rem;">原图</div></div>' +
-                    '<span style="color:rgba(255,255,255,0.04);">→</span>' +
-                    '<div><svg width="52" height="52"><polygon points="26,8 44,44 8,44" fill="#8B5CF6" opacity="0.85" transform="rotate(90,26,26)"/></svg><div style="color:rgba(255,255,255,0.05);font-size:0.45rem;">旋转后</div></div>' +
-                    '</div>' +
-                    '<div style="display:flex;gap:0.4rem;justify-content:center;margin-top:0.4rem;flex-wrap:wrap;">' +
-                    '<span style="padding:0.2rem 0.8rem;border-radius:20px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);color:rgba(255,255,255,0.2);font-size:0.85rem;">45°</span>' +
-                    '<span style="padding:0.2rem 0.8rem;border-radius:20px;background:rgba(40,167,69,0.06);border:1px solid rgba(40,167,69,0.04);color:#28a745;font-size:0.85rem;font-weight:600;">✅ 90°</span>' +
-                    '<span style="padding:0.2rem 0.8rem;border-radius:20px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);color:rgba(255,255,255,0.2);font-size:0.85rem;">135°</span>' +
-                    '</div>' +
-                    '<div style="color:rgba(40,167,69,0.15);font-size:0.65rem;margin-top:0.2rem;">💡 判断旋转角度</div>' +
-                    '</div>';
-            }
-        },
-        'abgame': {
-            name: '1A2B猜数字', icon: '🎯',
-            desc: '猜一个不重复的数字组合，根据提示推理出正确答案。',
-            howTo: '输入你猜测的数字组合，系统会返回 A 和 B 的提示：A 表示位置和数字都正确，B 表示数字正确但位置不对。',
-            example: '密码是 1234，猜测 1243 → 提示 2A2B。',
-            demo: function() {
-                return '<div style="text-align:center;padding:0.3rem;">' +
-                    '<div style="font-size:1.2rem;color:#8B5CF6;font-weight:700;letter-spacing:6px;font-family:monospace;">_ _ _ _</div>' +
-                    '<div style="color:rgba(255,255,255,0.05);font-size:0.6rem;">🎯 猜一个4位不重复数字</div>' +
-                    '<div style="display:flex;gap:0.4rem;justify-content:center;margin-top:0.3rem;flex-wrap:wrap;font-size:0.7rem;color:rgba(255,255,255,0.15);">' +
-                    '<span><span style="color:#28a745;">A</span> = 位置和数字都正确</span>' +
-                    '<span><span style="color:#F59E0B;">B</span> = 数字正确但位置不对</span>' +
-                    '</div>' +
-                    '<div style="color:rgba(40,167,69,0.15);font-size:0.65rem;margin-top:0.2rem;">💡 根据提示推理</div>' +
-                    '</div>';
-            }
-        },
-        'tripleColor': {
-            name: '颜色三重干扰', icon: '🎯',
-            desc: '在颜色、背景、文字含义的三重干扰中找出正确答案。',
-            howTo: '文字的颜色、背景色和文字本身的含义可能不同，根据问题要求选择正确的颜色。',
-            example: '文字 "红" 用蓝色显示，背景是绿色，问文字颜色 → 答案是蓝色。',
-            demo: function() {
-                return '<div style="text-align:center;padding:0.3rem;">' +
-                    '<div style="background:#00AA00;padding:0.6rem 1.5rem;border-radius:12px;display:inline-block;">' +
-                    '<span style="color:#0000FF;font-size:2.8rem;font-weight:900;letter-spacing:10px;">红</span>' +
-                    '</div>' +
-                    '<div style="color:rgba(255,255,255,0.05);font-size:0.6rem;margin-top:0.2rem;">🎯 文字颜色是什么？</div>' +
-                    '<div style="display:flex;gap:0.4rem;justify-content:center;margin-top:0.4rem;flex-wrap:wrap;">' +
-                    '<span style="padding:0.2rem 0.8rem;border-radius:20px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);color:rgba(255,255,255,0.2);font-size:0.85rem;">红色</span>' +
-                    '<span style="padding:0.2rem 0.8rem;border-radius:20px;background:rgba(40,167,69,0.06);border:1px solid rgba(40,167,69,0.04);color:#28a745;font-size:0.85rem;font-weight:600;">✅ 蓝色</span>' +
-                    '<span style="padding:0.2rem 0.8rem;border-radius:20px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);color:rgba(255,255,255,0.2);font-size:0.85rem;">绿色</span>' +
-                    '</div>' +
-                    '<div style="color:rgba(40,167,69,0.15);font-size:0.65rem;margin-top:0.2rem;">💡 注意干扰项</div>' +
-                    '</div>';
-            }
-        }
-    };
-
     var tutorialOrder = ['text','arithmetic','stroke','color','findDifferent','reverse','missingLetter','timeCalc','idiom','memory','pattern','colorMix','trueFalse','puzzle','threeView','shapeCount','dateReasoning','rotate','abgame','tripleColor'];
     var currentTutorialIndex = 0;
 
@@ -938,7 +576,7 @@
                     <button class="btn-start ranking" onclick="showRankingOnly()">🏆 排行榜</button>
                     <button class="btn-start tutorial-btn" onclick="showTutorial()">📖 玩法教程</button>
                 </div>
-                <div style="margin-top:1.2rem;color:rgba(255,255,255,0.04);font-size:0.65rem;">
+                <div style="margin-top:1.2rem;color:rgba(255,255,255,0.05);font-size:0.7rem;">
                     💡 点击 "玩法教程" 了解每种玩法的详细说明
                 </div>
             </div>
@@ -948,7 +586,7 @@
     }
 
     // ============================================================
-    // 排行榜（独立）
+    // 排行榜
     // ============================================================
     function showRankingOnly() {
         var container = dom.gameContent;
@@ -983,17 +621,17 @@
                         html += '<div style="display:flex;align-items:center;gap:0.5rem;padding:0.3rem 0.5rem;border-bottom:1px solid rgba(255,255,255,0.02);">' +
                             '<span style="font-size:0.8rem;min-width:28px;text-align:center;color:rgba(255,255,255,0.1);">' + medal + '</span>' +
                             avatarHtml +
-                            '<span style="flex:1;color:rgba(255,255,255,0.3);font-size:0.8rem;">' + item.username + (isMe ? ' <span style="color:#8B5CF6;font-weight:600;">(我)</span>' : '') + '</span>' +
-                            '<span style="color:#F59E0B;font-weight:700;font-size:0.85rem;">' + item.totalPoints + '</span>' +
+                            '<span style="flex:1;color:rgba(255,255,255,0.35);font-size:0.8rem;font-weight:500;">' + item.username + (isMe ? ' <span style="color:#8B5CF6;font-weight:700;">(我)</span>' : '') + '</span>' +
+                            '<span style="color:#F59E0B;font-weight:700;font-size:0.9rem;">' + item.totalPoints + '</span>' +
                             '</div>';
                     });
                     container.innerHTML = html;
                 } else {
-                    container.innerHTML = '<div style="text-align:center;color:rgba(255,255,255,0.06);padding:1.5rem;">暂无排行数据</div>';
+                    container.innerHTML = '<div style="text-align:center;color:rgba(255,255,255,0.08);padding:1.5rem;">暂无排行数据</div>';
                 }
             })
             .catch(function() {
-                container.innerHTML = '<div style="text-align:center;color:rgba(255,255,255,0.06);padding:1.5rem;">加载失败</div>';
+                container.innerHTML = '<div style="text-align:center;color:rgba(255,255,255,0.08);padding:1.5rem;">加载失败</div>';
             });
     }
 
@@ -1016,14 +654,36 @@
 
     function renderTutorial(index) {
         var container = document.getElementById('tutorialContent');
-        var key = tutorialOrder[index];
-        var data = gameTutorials[key];
-        if (!data) return;
-
-        var isDemo = typeof data.demo === 'function';
         var total = tutorialOrder.length;
         var prevDisabled = index === 0 ? 'disabled' : '';
         var nextDisabled = index === total - 1 ? 'disabled' : '';
+
+        var typeNames = {
+            'text': { name: '文字识别', icon: '👁️', desc: '识别扭曲的文字', howTo: '观察图片中扭曲的文字，从选项中选择正确的内容', example: '图片显示 "HELLO" 的扭曲版本，选 "HELLO"' },
+            'arithmetic': { name: '算术计算', icon: '🧮', desc: '快速心算', howTo: '计算表达式，选择正确的答案', example: '25 × 4 = 100' },
+            'stroke': { name: '汉字笔画', icon: '📝', desc: '数笔画数', howTo: '数出汉字的笔画总数', example: '「人」有 2 画' },
+            'color': { name: '颜色识别', icon: '🎨', desc: '识别文字的颜色', howTo: '注意文字的颜色，不是文字内容', example: '"红" 字用蓝色显示 → 答案是 "蓝色"' },
+            'findDifferent': { name: '找不同', icon: '🔍', desc: '找出被替换的字符', howTo: '记住原始字符，找出被替换的那个', example: 'ABCDE → ABXDE，被替换的是 "C"' },
+            'reverse': { name: '倒序识别', icon: '🔄', desc: '识别倒过来的文字', howTo: '文字是倒过来显示的，识别正确内容', example: 'OLLEH → HELLO' },
+            'missingLetter': { name: '空缺字母', icon: '🔤', desc: '补全单词', howTo: '补全英文单词中缺失的字母', example: 'APP_E → 缺 "L"' },
+            'timeCalc': { name: '时间计算', icon: '⏰', desc: '计算时间差', howTo: '计算两个时间点之间的差值', example: '08:00 → 12:30 = 4小时30分钟' },
+            'idiom': { name: '成语填空', icon: '📖', desc: '补全成语', howTo: '补全成语中缺失的字', example: '一马当_ → "先"' },
+            'memory': { name: '数字记忆', icon: '🧠', desc: '记住数字', howTo: '数字显示后消失，输入记住的数字', example: '显示 3847 → 输入 3847' },
+            'pattern': { name: '找规律', icon: '📐', desc: '找数列规律', howTo: '观察数列规律，找出缺失数字', example: '2,4,6,?,10 → 8' },
+            'colorMix': { name: '颜色混合', icon: '🎨', desc: '混合颜色', howTo: '多种颜色混合后是什么颜色', example: '红 + 蓝 = 紫' },
+            'trueFalse': { name: '真假判断', icon: '⚖️', desc: '判断真假', howTo: '判断陈述是真的还是假的', example: '地球是平的 → 假的' },
+            'puzzle': { name: '数字华容道', icon: '🧩', desc: '排列数字', howTo: '点击数字移动，按 1-8 顺序排列', example: '将数字按顺序排好' },
+            'threeView': { name: '立体三视图', icon: '📐', desc: '三视图推理', howTo: '根据三视图推断正方体数量', example: '三个视图 → 8 个正方体' },
+            'shapeCount': { name: '图形计数', icon: '🔢', desc: '统计图形', howTo: '统计特定图形出现的次数', example: '● ■ ● ▲ ● → ● 出现 3 次' },
+            'dateReasoning': { name: '日期推理', icon: '📅', desc: '推算星期几', howTo: '根据已知日期推算星期几', example: '8月7日周五 → 8月15日周六' },
+            'rotate': { name: '图形旋转', icon: '🔄', desc: '判断旋转角度', howTo: '观察图形旋转了多少度', example: '旋转了 90°' },
+            'abgame': { name: '1A2B猜数字', icon: '🎯', desc: '猜数字组合', howTo: 'A=位置数字都正确，B=数字正确位置不对', example: '密码1234，猜1243 → 2A2B' },
+            'tripleColor': { name: '颜色三重干扰', icon: '🎯', desc: '三重干扰找颜色', howTo: '在颜色/背景/含义三重干扰中找答案', example: '红字蓝底 → 文字颜色是蓝色' }
+        };
+
+        var key = tutorialOrder[index];
+        var data = typeNames[key];
+        if (!data) return;
 
         container.innerHTML = `
             <div class="tutorial-title">
@@ -1046,39 +706,14 @@
                 </div>
             </div>
 
-            ${isDemo ? `
-            <div class="tutorial-section">
-                <div class="sec-title">🎬 交互演示</div>
-                <div class="tutorial-demo-area active" id="demoArea">
-                    ${data.demo()}
-                </div>
-            </div>
-            ` : ''}
-
             <div class="tutorial-nav">
                 <button class="nav-btn" onclick="renderTutorial(${index - 1})" ${prevDisabled}>← 上一项</button>
-                ${isDemo ? `<button class="nav-btn demo-btn" onclick="replayDemo('${key}')">🔄 重播演示</button>` : ''}
                 <button class="nav-btn ${index === total - 1 ? 'active' : ''}" onclick="${index === total - 1 ? 'closeTutorial()' : 'renderTutorial(' + (index + 1) + ')'}" ${nextDisabled}>
                     ${index === total - 1 ? '✅ 完成' : '下一项 →'}
                 </button>
                 <button class="nav-btn close-tutorial" onclick="closeTutorial()">✕ 关闭</button>
             </div>
         `;
-    }
-
-    function replayDemo(key) {
-        var data = gameTutorials[key];
-        if (!data || typeof data.demo !== 'function') return;
-        var demoArea = document.getElementById('demoArea');
-        if (demoArea) {
-            demoArea.innerHTML = data.demo();
-            var content = demoArea.querySelector('.demo-content');
-            if (content) {
-                content.style.animation = 'none';
-                setTimeout(function() { content.style.animation = ''; }, 10);
-            }
-            SoundFX.play('start');
-        }
     }
 
     // ============================================================
@@ -1138,7 +773,7 @@
     }
 
     // ============================================================
-    // 渲染挑战（核心渲染器）
+    // 渲染挑战
     // ============================================================
     function renderChallenge(challenge) {
         gameState.currentChallenge = challenge;
@@ -1236,9 +871,6 @@
         updateUI();
     }
 
-    // ============================================================
-    // 渲染选项（通用）
-    // ============================================================
     function renderOptions(challenge, container) {
         if (challenge.options && challenge.options.length > 0) {
             var optGrid = document.createElement('div');
@@ -1260,30 +892,64 @@
     }
 
     // ============================================================
-    // 三视图
+    // 三视图 - 横向排列，部分填充
     // ============================================================
     function renderThreeView(challenge) {
         var container = dom.gameContent;
         var viewContainer = document.createElement('div');
         viewContainer.className = 'view-container';
+
+        // 生成三视图HTML（部分填充）
+        function generateViewHtml(htmlString, label) {
+            // 如果后端已经返回了完整的HTML，直接使用
+            if (htmlString && htmlString.includes('view-grid')) {
+                return htmlString;
+            }
+            // 否则生成一个示例视图（部分填充）
+            var sampleData = [
+                [1,1,1],
+                [1,0,1],
+                [1,1,1]
+            ];
+            var gridHtml = '<div class="view-grid">';
+            for (var r = 0; r < 3; r++) {
+                for (var c = 0; c < 3; c++) {
+                    var isFilled = sampleData[r][c] === 1;
+                    gridHtml += '<div class="cell ' + (isFilled ? 'filled' : 'empty') + '"></div>';
+                }
+            }
+            gridHtml += '</div>';
+            return '<div class="view-item"><span class="view-label">' + label + '</span>' + gridHtml + '</div>';
+        }
+
+        // 使用后端返回的视图，或生成示例
         if (challenge.topView) {
             var topItem = document.createElement('div');
             topItem.className = 'view-item';
             topItem.innerHTML = challenge.topView;
             viewContainer.appendChild(topItem);
+        } else {
+            viewContainer.innerHTML += generateViewHtml('', '俯视图');
         }
+
         if (challenge.frontView) {
             var frontItem = document.createElement('div');
             frontItem.className = 'view-item';
             frontItem.innerHTML = challenge.frontView;
             viewContainer.appendChild(frontItem);
+        } else {
+            viewContainer.innerHTML += generateViewHtml('', '主视图');
         }
+
         if (challenge.sideView) {
             var sideItem = document.createElement('div');
             sideItem.className = 'view-item';
             sideItem.innerHTML = challenge.sideView;
             viewContainer.appendChild(sideItem);
+        } else {
+            viewContainer.innerHTML += generateViewHtml('', '左视图');
         }
+
         container.appendChild(viewContainer);
         renderOptions(challenge, container);
         startTimer(challenge.timeLimit || 20);
@@ -1366,13 +1032,11 @@
     // ============================================================
     // 华容道
     // ============================================================
-    var puzzleState = null, puzzleEmptyRow = 0, puzzleEmptyCol = 0;
-
     function renderPuzzle(puzzle) {
         var container = dom.gameContent;
         container.innerHTML = '';
         var hintDiv = document.createElement('div');
-        hintDiv.style.cssText = 'color:rgba(255,255,255,0.06);font-size:0.65rem;text-align:center;margin-bottom:0.4rem;';
+        hintDiv.style.cssText = 'color:rgba(255,255,255,0.08);font-size:0.7rem;text-align:center;margin-bottom:0.4rem;font-weight:500;';
         hintDiv.textContent = '💡 点击数字 或 滑动方向 移动';
         container.appendChild(hintDiv);
 
@@ -1526,13 +1190,13 @@
         container.innerHTML = '';
 
         var ruleDiv = document.createElement('div');
-        ruleDiv.style.cssText = 'background:rgba(139,92,246,0.03);border:1px solid rgba(139,92,246,0.04);border-radius:12px;padding:0.4rem 0.8rem;margin-bottom:0.5rem;width:100%;';
+        ruleDiv.style.cssText = 'background:rgba(139,92,246,0.04);border:1px solid rgba(139,92,246,0.04);border-radius:12px;padding:0.5rem 0.8rem;margin-bottom:0.5rem;width:100%;';
         ruleDiv.innerHTML = `
-            <div style="color:rgba(255,255,255,0.15);font-size:0.7rem;display:flex;flex-wrap:wrap;gap:0.2rem 0.8rem;justify-content:center;">
-                <span>🎯 猜 <strong style="color:#8B5CF6;">${digitCount}</strong> 位不重复数字（第一位不能是0）</span>
-                <span style="color:rgba(255,255,255,0.04);">|</span>
-                <span style="color:#28a745;">✅ <strong>A</strong> = 位置和数字都正确</span>
-                <span style="color:#F59E0B;">🟡 <strong>B</strong> = 数字正确但位置不对</span>
+            <div style="color:rgba(255,255,255,0.2);font-size:0.75rem;display:flex;flex-wrap:wrap;gap:0.2rem 0.8rem;justify-content:center;font-weight:500;">
+                <span>🎯 猜 <strong style="color:#8B5CF6;">${digitCount}</strong> 位不重复数字</span>
+                <span style="color:rgba(255,255,255,0.05);">|</span>
+                <span style="color:#28a745;">✅ <strong>A</strong> = 位置+数字都正确</span>
+                <span style="color:#F59E0B;">🟡 <strong>B</strong> = 数字正确位置不对</span>
             </div>
         `;
         container.appendChild(ruleDiv);
@@ -1555,10 +1219,16 @@
         historyDiv.textContent = '📝 输入你的猜测...';
         container.appendChild(historyDiv);
 
+        // ⭐ 3列键盘
         var keypadDiv = document.createElement('div');
         keypadDiv.className = 'ab-keypad';
         keypadDiv.id = 'abKeypad';
-        var keypadRows = [['1','2','3'],['4','5','6'],['7','8','9'],['⌫','0','✅']];
+        var keypadRows = [
+            ['1', '2', '3'],
+            ['4', '5', '6'],
+            ['7', '8', '9'],
+            ['⌫', '0', '✅']
+        ];
         keypadRows.forEach(function(row) {
             row.forEach(function(key) {
                 var btn = document.createElement('button');
@@ -1802,7 +1472,7 @@
 
         var statusDiv = document.createElement('div');
         statusDiv.id = 'memoryStatus';
-        statusDiv.style.cssText = 'color:rgba(255,255,255,0.1);font-size:0.75rem;text-align:center;margin:0.1rem 0 0.3rem;';
+        statusDiv.style.cssText = 'color:rgba(255,255,255,0.12);font-size:0.8rem;text-align:center;margin:0.1rem 0 0.3rem;font-weight:500;';
         statusDiv.textContent = '⏱ 记忆 ' + memoryTime + 's';
         container.appendChild(statusDiv);
 
@@ -1860,15 +1530,15 @@
                 var displayEl = document.getElementById('memoryDisplay');
                 if (displayEl) {
                     displayEl.textContent = '✏️ 输入你记住的数字';
-                    displayEl.style.color = 'rgba(255,255,255,0.2)';
-                    displayEl.style.fontSize = '1.2rem';
+                    displayEl.style.color = 'rgba(255,255,255,0.25)';
+                    displayEl.style.fontSize = '1.3rem';
                     displayEl.style.letterSpacing = 'normal';
                     displayEl.style.padding = '1rem';
                 }
                 var statusEl = document.getElementById('memoryStatus');
                 if (statusEl) {
                     statusEl.textContent = '⌨️ 输入你记住的数字';
-                    statusEl.style.color = 'rgba(255,255,255,0.05)';
+                    statusEl.style.color = 'rgba(255,255,255,0.06)';
                 }
                 document.getElementById('memoryInputDisplay').style.display = 'block';
                 document.getElementById('memoryKeyboard').style.display = 'grid';
@@ -1948,7 +1618,7 @@
     }
 
     // ============================================================
-    // 处理答案结果（核心）
+    // 处理答案结果
     // ============================================================
     function handleAnswerResult(challenge, isCorrect) {
         gameState.isAnswered = true;
@@ -2011,7 +1681,6 @@
                     }
                 }
             }
-            // 每秒滴答声（最后5秒）
             if (gameState.timeLeft <= 5 && gameState.timeLeft > 0 && !gameState.isAnswered) {
                 SoundFX.play('tick');
             }
