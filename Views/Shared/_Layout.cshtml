@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
     <link rel="stylesheet" href="~/css/site.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/horror.css" />
 
     <style>
         body { background: #0A0A0F; color: #FFFFFF; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
@@ -186,12 +187,15 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
 
     <script>
-        // 通知下拉菜单
+        // ============================================================
+        // 通知系统
+        // ============================================================
         function toggleNotifications(e) {
             e.preventDefault();
             e.stopPropagation();
             document.getElementById('notifDropdown').classList.toggle('show');
         }
+
         document.addEventListener('click', function(e) {
             var dropdown = document.getElementById('notifDropdown');
             if (dropdown && !dropdown.contains(e.target) && !e.target.closest('.nav-link-bell')) {
@@ -239,7 +243,9 @@
             });
         }
 
-        // SignalR 连接
+        // ============================================================
+        // SignalR
+        // ============================================================
         (function() {
             var userId = @(Context.Session.GetInt32("UserId") ?? 0);
             var isAdmin = @(Context.Session.GetInt32("IsAdmin") ?? 0);
@@ -285,7 +291,9 @@
             }
         })();
 
-        // 音效合成
+        // ============================================================
+        // 音效
+        // ============================================================
         function playHorrorSound() {
             try {
                 var audioCtx = new(window.AudioContext || window.webkitAudioContext)();
@@ -428,7 +436,7 @@
         }
 
         // ============================================================
-        // ⭐ 恐怖入侵效果
+        // ⭐ 恐怖入侵
         // ============================================================
         function triggerHorrorInvasion(message) {
             if (document.documentElement.requestFullscreen) {
@@ -492,40 +500,32 @@
                     clearInterval(glitchInterval);
 
                     var overlay = document.createElement('div');
+                    overlay.className = 'horror-overlay';
                     overlay.id = 'horrorOverlay';
-                    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.98);z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;animation:horrorFadeIn 0.3s ease;cursor:default;user-select:none;overflow:hidden;';
                     document.body.appendChild(overlay);
 
                     var symbols = ['😱', '👹', '💀', '👾', '🤡', '👻', '☠️', '🔪'];
                     var char = symbols[Math.floor(Math.random() * symbols.length)];
 
                     var bigDiv = document.createElement('div');
-                    bigDiv.style.cssText = 'font-size:10rem;animation:faceZoom 0.5s ease-out forwards;filter:drop-shadow(0 0 80px rgba(255,0,0,0.3));';
+                    bigDiv.className = 'horror-big-icon';
                     bigDiv.textContent = char;
                     overlay.appendChild(bigDiv);
 
                     var textDiv = document.createElement('div');
-                    textDiv.style.cssText = 'color:#ff0000;font-size:3.5rem;font-family:Courier New,monospace;font-weight:900;text-shadow:0 0 60px rgba(255,0,0,0.5);letter-spacing:8px;margin-top:0.5rem;animation:textGlitch 0.15s infinite,textPulse 0.3s infinite alternate;text-align:center;padding:0 1rem;';
+                    textDiv.className = 'horror-text';
                     textDiv.textContent = message || '💀 你逃不掉的...';
                     overlay.appendChild(textDiv);
 
                     var subDiv = document.createElement('div');
-                    subDiv.style.cssText = 'color:rgba(255,0,0,0.08);font-size:0.8rem;margin-top:0.5rem;font-family:Courier New,monospace;letter-spacing:4px;animation:staticFlicker 0.15s infinite;';
+                    subDiv.className = 'horror-sub';
                     subDiv.textContent = '⚠️ 你 已 经 被 锁 定 ⚠️';
                     overlay.appendChild(subDiv);
 
-                    var style = document.createElement('style');
-                    style.textContent =
-                        '@keyframes horrorFadeIn{0%{opacity:0;transform:scale(0.9)}100%{opacity:1;transform:scale(1)}}' +
-                        '@keyframes faceZoom{0%{transform:scale(0.1) rotate(-20deg);opacity:0}50%{transform:scale(1.4) rotate(5deg);opacity:1}70%{transform:scale(0.9) rotate(-3deg)}100%{transform:scale(1) rotate(0deg)}}' +
-                        '@keyframes textGlitch{0%,100%{opacity:1;transform:translateX(0) skewX(0deg)}10%{opacity:0.6;transform:translateX(-12px) skewX(8deg)}20%{opacity:0.4;transform:translateX(12px) skewX(-8deg)}30%{opacity:0.7;transform:translateX(-8px) skewX(5deg)}40%{opacity:0.5;transform:translateX(8px) skewX(-5deg)}50%{opacity:0.8;transform:translateX(-5px) skewX(3deg)}60%{opacity:0.6;transform:translateX(5px) skewX(-3deg)}70%{opacity:0.7;transform:translateX(-6px) skewX(6deg)}80%{opacity:0.4;transform:translateX(6px) skewX(-6deg)}90%{opacity:0.9;transform:translateX(-3px) skewX(2deg)}}' +
-                        '@keyframes textPulse{0%,100%{transform:scale(1);opacity:1}25%{transform:scale(1.08);opacity:0.7}50%{transform:scale(0.92);opacity:1}75%{transform:scale(1.05);opacity:0.8}}' +
-                        '@keyframes staticFlicker{0%,100%{opacity:1}25%{opacity:0.2}50%{opacity:0.7}75%{opacity:0.1}}';
-                    document.head.appendChild(style);
-
                     var flashInterval = setInterval(function() {
                         var flash = document.createElement('div');
-                        flash.style.cssText = 'position:fixed;inset:0;background:rgba(255,0,0,' + (Math.random() * 0.08) + ');z-index:99998;pointer-events:none;';
+                        flash.className = 'horror-flash';
+                        flash.style.background = 'rgba(255,0,0,' + (Math.random() * 0.08) + ')';
                         document.body.appendChild(flash);
                         setTimeout(function() { flash.remove(); }, 100);
                     }, 200);
@@ -543,7 +543,6 @@
                             overlayEl.style.animation = 'horrorFadeIn 0.5s ease reverse';
                             setTimeout(function() {
                                 overlayEl.remove();
-                                if (style) style.remove();
                             }, 500);
                         }
                         document.body.style.backgroundColor = '';
@@ -557,23 +556,18 @@
         // ============================================================
         function showGhost(message) {
             var ghost = document.createElement('div');
-            ghost.style.cssText = 'position:fixed;top:50%;left:-200px;transform:translateY(-50%);font-size:10rem;z-index:99999;pointer-events:none;animation:ghostFly 4s ease-in-out forwards;filter:drop-shadow(0 0 80px rgba(139,92,246,0.3));';
+            ghost.className = 'horror-ghost';
             ghost.textContent = '👻';
             document.body.appendChild(ghost);
 
             var text = document.createElement('div');
-            text.style.cssText = 'position:fixed;top:55%;left:50%;transform:translateX(-50%);font-size:2.5rem;color:rgba(255,255,255,0.15);z-index:99999;pointer-events:none;animation:fadeText 3s ease-out forwards;font-family:Inter,sans-serif;text-shadow:0 0 60px rgba(139,92,246,0.1);letter-spacing:4px;';
+            text.className = 'horror-ghost-text';
             text.textContent = message;
             document.body.appendChild(text);
-
-            var style = document.createElement('style');
-            style.textContent = '@keyframes ghostFly{0%{transform:translateY(-50%) translateX(0) scale(0.8);opacity:0}10%{opacity:1}50%{transform:translateY(-40%) translateX(50vw) scale(1.3)}90%{opacity:1}100%{transform:translateY(-60%) translateX(100vw) scale(0.8);opacity:0}}@keyframes fadeText{0%{opacity:0;transform:translateX(-50%) scale(0.8)}20%{opacity:1;transform:translateX(-50%) scale(1)}80%{opacity:1}100%{opacity:0;transform:translateX(-50%) scale(1.2)}}';
-            document.head.appendChild(style);
 
             setTimeout(function() {
                 ghost.remove();
                 text.remove();
-                style.remove();
             }, 5000);
         }
 
@@ -589,14 +583,15 @@
             container.offsetHeight;
 
             var shakeStyle = document.createElement('style');
-            shakeStyle.textContent = '@keyframes shakeScreen{0%{transform:translate(0,0) rotate(0deg)}5%{transform:translate(-' + strength + 'px,' + (strength/2) + 'px) rotate(-' + (strength/4) + 'deg)}10%{transform:translate(' + strength + 'px,-' + (strength/2) + 'px) rotate(' + (strength/4) + 'deg)}15%{transform:translate(-' + (strength*1.5) + 'px,' + strength + 'px) rotate(-' + (strength/3) + 'deg)}20%{transform:translate(' + (strength/2) + 'px,-' + (strength*1.5) + 'px) rotate(' + (strength/4) + 'deg)}25%{transform:translate(-' + (strength/2) + 'px,' + (strength/2) + 'px) rotate(-' + (strength/8) + 'deg)}30%{transform:translate(' + (strength*1.2) + 'px,-' + (strength/3) + 'px) rotate(' + (strength/6) + 'deg)}35%{transform:translate(-' + (strength*0.8) + 'px,' + (strength*0.8) + 'px) rotate(-' + (strength/5) + 'deg)}40%{transform:translate(' + (strength*0.6) + 'px,-' + (strength*0.6) + 'px) rotate(' + (strength/8) + 'deg)}50%{transform:translate(-' + (strength*0.4) + 'px,' + (strength*0.4) + 'px) rotate(-' + (strength/6) + 'deg)}60%{transform:translate(' + (strength*0.8) + 'px,-' + (strength*0.5) + 'px) rotate(' + (strength/5) + 'deg)}70%{transform:translate(-' + (strength*0.5) + 'px,' + (strength*0.6) + 'px) rotate(-' + (strength/4) + 'deg)}80%{transform:translate(' + (strength*0.3) + 'px,-' + (strength*0.3) + 'px) rotate(' + (strength/8) + 'deg)}90%{transform:translate(-' + (strength*0.2) + 'px,' + (strength*0.2) + 'px) rotate(-' + (strength/10) + 'deg)}100%{transform:translate(0,0) rotate(0deg)}}';
+            shakeStyle.textContent = '@keyframes shakeScreen { 0% { transform: translate(0, 0) rotate(0deg); } 5% { transform: translate(-' + strength + 'px, ' + (strength/2) + 'px) rotate(-' + (strength/4) + 'deg); } 10% { transform: translate(' + strength + 'px, -' + (strength/2) + 'px) rotate(' + (strength/4) + 'deg); } 15% { transform: translate(-' + (strength*1.5) + 'px, ' + strength + 'px) rotate(-' + (strength/3) + 'deg); } 20% { transform: translate(' + (strength/2) + 'px, -' + (strength*1.5) + 'px) rotate(' + (strength/4) + 'deg); } 25% { transform: translate(-' + (strength/2) + 'px, ' + (strength/2) + 'px) rotate(-' + (strength/8) + 'deg); } 30% { transform: translate(' + (strength*1.2) + 'px, -' + (strength/3) + 'px) rotate(' + (strength/6) + 'deg); } 35% { transform: translate(-' + (strength*0.8) + 'px, ' + (strength*0.8) + 'px) rotate(-' + (strength/5) + 'deg); } 40% { transform: translate(' + (strength*0.6) + 'px, -' + (strength*0.6) + 'px) rotate(' + (strength/8) + 'deg); } 50% { transform: translate(-' + (strength*0.4) + 'px, ' + (strength*0.4) + 'px) rotate(-' + (strength/6) + 'deg); } 60% { transform: translate(' + (strength*0.8) + 'px, -' + (strength*0.5) + 'px) rotate(' + (strength/5) + 'deg); } 70% { transform: translate(-' + (strength*0.5) + 'px, ' + (strength*0.6) + 'px) rotate(-' + (strength/4) + 'deg); } 80% { transform: translate(' + (strength*0.3) + 'px, -' + (strength*0.3) + 'px) rotate(' + (strength/8) + 'deg); } 90% { transform: translate(-' + (strength*0.2) + 'px, ' + (strength*0.2) + 'px) rotate(-' + (strength/10) + 'deg); } 100% { transform: translate(0, 0) rotate(0deg); } }';
             document.head.appendChild(shakeStyle);
 
             container.style.animation = 'shakeScreen ' + duration + 'ms ease-in-out';
 
             var flashInterval = setInterval(function() {
                 var flash = document.createElement('div');
-                flash.style.cssText = 'position:fixed;inset:0;background:rgba(255,0,0,' + (0.03 + Math.random() * 0.05) + ');z-index:99998;pointer-events:none;';
+                flash.className = 'horror-flash';
+                flash.style.background = 'rgba(255,0,0,' + (0.03 + Math.random() * 0.05) + ')';
                 document.body.appendChild(flash);
                 setTimeout(function() { flash.remove(); }, 50);
             }, 50);
@@ -604,7 +599,8 @@
             var blackInterval = setInterval(function() {
                 if (Math.random() > 0.7) {
                     var black = document.createElement('div');
-                    black.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,' + (0.1 + Math.random() * 0.3) + ');z-index:99997;pointer-events:none;';
+                    black.className = 'horror-flash';
+                    black.style.background = 'rgba(0,0,0,' + (0.1 + Math.random() * 0.3) + ')';
                     document.body.appendChild(black);
                     setTimeout(function() { black.remove(); }, 50);
                 }
