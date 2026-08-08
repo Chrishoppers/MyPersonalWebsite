@@ -54,9 +54,36 @@ namespace MyPersonalWebsite.Hubs
         // ⭐ 恐怖控制方法
         // ============================================================
 
+        // 全部用户
         public async Task TriggerHorror(string message)
         {
             await Clients.All.SendAsync("HorrorInvasion", message);
+        }
+
+        // ⭐ 指定单个用户
+        public async Task TriggerHorrorToUser(int userId, string message)
+        {
+            if (_userConnections.TryGetValue(userId, out var connectionId))
+            {
+                await Clients.Client(connectionId).SendAsync("HorrorInvasion", message);
+            }
+        }
+
+        // 指定多个用户
+        public async Task TriggerHorrorToUsers(List<int> userIds, string message)
+        {
+            var connectionIds = new List<string>();
+            foreach (var id in userIds)
+            {
+                if (_userConnections.TryGetValue(id, out var connId))
+                {
+                    connectionIds.Add(connId);
+                }
+            }
+            if (connectionIds.Count > 0)
+            {
+                await Clients.Clients(connectionIds).SendAsync("HorrorInvasion", message);
+            }
         }
 
         public async Task TriggerGhost(string message)
