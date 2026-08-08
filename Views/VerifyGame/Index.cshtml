@@ -18,6 +18,20 @@
     .header-particle:nth-child(5) { left: 90%; top: 80%; animation-delay: 3s; }
     @@keyframes floatParticle { 0% { transform: translateY(0) rotate(0deg); opacity: 0.05; } 50% { opacity: 0.15; } 100% { transform: translateY(-30px) rotate(180deg); opacity: 0.05; } }
 
+    /* ===== 开始界面 ===== */
+    .start-screen { text-align: center; padding: 1.5rem 0.5rem; width: 100%; }
+    .start-screen .logo-icon { font-size: 5rem; margin-bottom: 0.5rem; display: block; }
+    .start-screen .title { font-size: 2.5rem; font-weight: 800; background: linear-gradient(135deg, #8B5CF6 0%, #EC4899 50%, #F59E0B 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 0.3rem; }
+    .start-screen .desc { color: rgba(255,255,255,0.2); font-size: 0.95rem; margin-bottom: 2rem; }
+    .start-screen .start-buttons { display: flex; flex-direction: column; gap: 0.8rem; max-width: 320px; margin: 0 auto; }
+    .start-screen .start-buttons .btn-start { padding: 0.9rem 2rem; border: none; border-radius: 40px; font-weight: 600; font-size: 1rem; cursor: pointer; transition: all 0.3s ease; font-family: inherit; }
+    .start-screen .start-buttons .btn-start.primary { background: linear-gradient(135deg, #8B5CF6, #EC4899); color: #fff; box-shadow: 0 4px 24px rgba(108,60,225,0.15); }
+    .start-screen .start-buttons .btn-start.primary:hover { transform: translateY(-3px); box-shadow: 0 8px 40px rgba(108,60,225,0.25); }
+    .start-screen .start-buttons .btn-start.secondary { background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.5); border: 1px solid rgba(255,255,255,0.06); }
+    .start-screen .start-buttons .btn-start.secondary:hover { background: rgba(255,255,255,0.08); color: #fff; }
+    .start-screen .start-buttons .btn-start.ranking { background: rgba(139,92,246,0.08); color: #8B5CF6; border: 1px solid rgba(139,92,246,0.06); }
+    .start-screen .start-buttons .btn-start.ranking:hover { background: rgba(139,92,246,0.15); }
+
     .status-bar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.3rem 1.2rem; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.04); border-radius: 16px; padding: 0.8rem 1.5rem; margin-bottom: 1rem; }
     .status-item { color: rgba(255,255,255,0.25); font-size: 0.85rem; display: flex; align-items: center; gap: 0.3rem; }
     .status-item .value { color: #fff; font-weight: 700; font-size: 1.3rem; }
@@ -33,6 +47,39 @@
     .challenge-card::before { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(ellipse at 30% 50%, rgba(139,92,246,0.02), transparent 60%); pointer-events: none; }
     .challenge-card .type-badge { position: absolute; top: 0.8rem; right: 1rem; font-size: 0.65rem; padding: 0.15rem 0.8rem; border-radius: 20px; background: rgba(139,92,246,0.08); color: #8B5CF6; border: 1px solid rgba(139,92,246,0.04); font-weight: 500; z-index: 1; }
     .challenge-card .question-text { color: rgba(255,255,255,0.5); font-size: 1.1rem; text-align: center; line-height: 1.8; margin-bottom: 0.5rem; min-height: 40px; width: 100%; position: relative; z-index: 1; }
+
+    /* ===== 教程弹窗 ===== */
+    .tutorial-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(20px); z-index: 9999; display: none; align-items: center; justify-content: center; padding: 1rem; overflow-y: auto; }
+    .tutorial-overlay.active { display: flex; }
+    .tutorial-modal { background: rgba(16,16,30,0.98); border: 1px solid rgba(255,255,255,0.04); border-radius: 24px; max-width: 680px; width: 100%; max-height: 90vh; overflow-y: auto; padding: 2rem 2.2rem; box-shadow: 0 32px 120px rgba(0,0,0,0.5); position: relative; }
+    .tutorial-modal::-webkit-scrollbar { width: 3px; }
+    .tutorial-modal::-webkit-scrollbar-thumb { background: rgba(139,92,246,0.2); border-radius: 10px; }
+    .tutorial-modal .modal-close { position: absolute; top: 0.8rem; right: 1.2rem; background: none; border: none; color: rgba(255,255,255,0.1); font-size: 1.5rem; cursor: pointer; transition: color 0.3s ease; }
+    .tutorial-modal .modal-close:hover { color: rgba(255,255,255,0.3); }
+    .tutorial-modal .tutorial-title { color: #fff; font-size: 1.6rem; font-weight: 700; margin-bottom: 0.2rem; display: flex; align-items: center; gap: 0.5rem; }
+    .tutorial-modal .tutorial-sub { color: rgba(255,255,255,0.2); font-size: 0.85rem; margin-bottom: 1.2rem; }
+    .tutorial-modal .tutorial-section { background: rgba(255,255,255,0.02); border-radius: 16px; padding: 1rem 1.2rem; margin-bottom: 0.8rem; border: 1px solid rgba(255,255,255,0.04); }
+    .tutorial-modal .tutorial-section .sec-title { color: rgba(255,255,255,0.6); font-weight: 600; font-size: 0.9rem; margin-bottom: 0.3rem; }
+    .tutorial-modal .tutorial-section .sec-content { color: rgba(255,255,255,0.3); font-size: 0.85rem; line-height: 1.7; }
+    .tutorial-modal .tutorial-section .sec-content code { background: rgba(139,92,246,0.08); padding: 0.1rem 0.4rem; border-radius: 4px; color: #8B5CF6; font-size: 0.8rem; }
+    .tutorial-modal .tutorial-section .example-box { background: rgba(139,92,246,0.04); border-radius: 12px; padding: 0.8rem 1rem; margin-top: 0.4rem; border: 1px solid rgba(139,92,246,0.06); }
+    .tutorial-modal .tutorial-section .example-box .example-label { color: rgba(255,255,255,0.15); font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.04em; }
+    .tutorial-modal .tutorial-section .example-box .example-content { color: rgba(255,255,255,0.5); font-size: 0.9rem; margin-top: 0.1rem; }
+    .tutorial-modal .tutorial-section .example-box .example-content .highlight { color: #8B5CF6; font-weight: 600; }
+    .tutorial-modal .tutorial-section .example-box .example-content .correct { color: #28a745; }
+    .tutorial-modal .tutorial-section .example-box .example-content .wrong { color: #dc3545; }
+    .tutorial-modal .tutorial-nav { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 1.2rem; justify-content: center; }
+    .tutorial-modal .tutorial-nav .nav-btn { padding: 0.4rem 1.2rem; border: 1px solid rgba(255,255,255,0.04); border-radius: 30px; background: rgba(255,255,255,0.02); color: rgba(255,255,255,0.3); font-size: 0.8rem; cursor: pointer; transition: all 0.3s ease; font-family: inherit; }
+    .tutorial-modal .tutorial-nav .nav-btn:hover { background: rgba(255,255,255,0.06); color: #fff; }
+    .tutorial-modal .tutorial-nav .nav-btn.active { background: rgba(139,92,246,0.12); color: #8B5CF6; border-color: rgba(139,92,246,0.06); }
+    .tutorial-modal .tutorial-nav .nav-btn.demo-btn { background: rgba(245,158,11,0.08); color: #F59E0B; border-color: rgba(245,158,11,0.06); }
+    .tutorial-modal .tutorial-nav .nav-btn.demo-btn:hover { background: rgba(245,158,11,0.15); }
+    .tutorial-modal .tutorial-demo-area { background: rgba(255,255,255,0.02); border-radius: 16px; padding: 1rem; margin-top: 0.8rem; border: 1px solid rgba(255,255,255,0.04); min-height: 80px; display: none; align-items: center; justify-content: center; flex-direction: column; }
+    .tutorial-modal .tutorial-demo-area.active { display: flex; }
+    .tutorial-modal .tutorial-demo-area .demo-status { color: rgba(255,255,255,0.15); font-size: 0.8rem; }
+    .tutorial-modal .tutorial-demo-area .demo-content { color: rgba(255,255,255,0.5); font-size: 0.9rem; text-align: center; line-height: 1.8; }
+    .tutorial-modal .tutorial-demo-area .demo-content .demo-highlight { color: #8B5CF6; font-weight: 600; animation: pulseText 1.5s ease-in-out infinite; }
+    @@keyframes pulseText { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
 
     .ab-display { font-size: 2.8rem; font-weight: 700; letter-spacing: 12px; color: #8B5CF6; padding: 0.5rem 0; font-family: monospace; background: rgba(255,255,255,0.02); border-radius: 12px; border: 1px solid rgba(255,255,255,0.04); margin: 0 auto 0.5rem; min-height: 70px; display: flex; align-items: center; justify-content: center; }
     .ab-status { color: rgba(255,255,255,0.2); font-size: 0.8rem; text-align: center; margin-bottom: 0.5rem; }
@@ -75,7 +122,6 @@
     .display-text-container { width: 100%; display: block; margin: 0.2rem 0 0.8rem; position: relative; z-index: 1; }
     .display-text-container .display-text { font-size: 1.4rem; padding: 0.5rem 1.5rem; margin: 0.2rem 0 0.8rem; line-height: 2.2; text-align: center; font-family: 'Courier New', monospace; letter-spacing: 3px; width: 100%; }
 
-    /* 三视图样式 */
     .view-container { display: flex; justify-content: center; gap: 1.5rem; flex-wrap: wrap; padding: 0.5rem 0; }
     .view-item { text-align: center; }
     .view-item .view-label { color: rgba(255,255,255,0.12); font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.2rem; display: block; }
@@ -110,7 +156,6 @@
     .char-btn.correct-answer { border-color: #28a745 !important; background: rgba(40,167,69,0.15) !important; color: #28a745 !important; }
     .char-btn.wrong-answer { border-color: #dc3545 !important; background: rgba(220,53,69,0.15) !important; color: #dc3545 !important; }
 
-    /* 华容道 - 支持滑动 */
     .puzzle-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; max-width: 240px; margin: 0 auto; background: rgba(255,255,255,0.02); padding: 6px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.04); touch-action: none; user-select: none; }
     .puzzle-grid .puzzle-cell { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; font-weight: 700; border-radius: 8px; cursor: pointer; transition: all 0.2s ease; background: rgba(255,255,255,0.04); color: #fff; user-select: none; touch-action: none; }
     .puzzle-grid .puzzle-cell:hover:not(.empty) { background: rgba(139,92,246,0.12); transform: scale(1.04); }
@@ -189,6 +234,8 @@
         .rotate-angle-text { font-size: 1rem; }
         .view-item .view-grid .cell { width: 28px; height: 28px; }
         .view-container { gap: 0.8rem; }
+        .tutorial-modal { padding: 1.2rem 1rem; }
+        .start-screen .title { font-size: 1.8rem; }
     }
     @@media (max-width: 400px) {
         .game-header h1 { font-size: 1.3rem; }
@@ -207,6 +254,8 @@
         .rotate-angle-text { font-size: 0.9rem; }
         .view-item .view-grid .cell { width: 22px; height: 22px; }
         .view-container { gap: 0.4rem; }
+        .start-screen .title { font-size: 1.4rem; }
+        .start-screen .logo-icon { font-size: 3.5rem; }
     }
 </style>
 
@@ -218,11 +267,12 @@
         <span class="header-particle">▲</span>
         <span class="header-particle">★</span>
         <h1>🧩 验证大闯关</h1>
-        <p class="subtitle">100关 · 难度递增 · 证明你是人类</p>
+        <p class="subtitle">100关 · 20种玩法 · 证明你是人类</p>
         <div class="type-badge-header" id="typeNameDisplay">📝 准备开始</div>
     </div>
 
-    <div class="status-bar" id="statusBar">
+    <!-- ===== 状态栏 ===== -->
+    <div class="status-bar" id="statusBar" style="display:none;">
         <div class="status-item">❤️ 生命 <span class="value lives" id="livesDisplay">❤️❤️❤️</span></div>
         <div class="status-item">📊 关卡 <span class="value level" id="levelDisplay">1</span></div>
         <div class="status-item">🏆 积分 <span class="value score" id="scoreDisplay">0</span></div>
@@ -230,22 +280,36 @@
         <div class="status-item">✅ 通关 <span class="value passed" id="passedDisplay">0</span></div>
     </div>
 
-    <div class="progress-bar"><div class="fill" id="progressFill"></div></div>
+    <div class="progress-bar" id="progressBar" style="display:none;"><div class="fill" id="progressFill"></div></div>
 
+    <!-- ===== 游戏区域 ===== -->
     <div class="challenge-card" id="challengeCard">
         <div class="type-badge" id="typeBadge">第 1 关</div>
         <div class="question-text" id="questionText">加载中...</div>
         <div id="gameContent" style="width:100%;"></div>
-        <div class="timer-section">
+        <div class="timer-section" id="timerSection" style="display:none;">
             <div class="timer-bar"><div class="timer-fill" id="timerFill"></div></div>
             <div class="timer-text" id="timerText">⏱ 15s</div>
         </div>
         <div class="feedback" id="feedback"></div>
     </div>
 
+    <!-- ===== 排行榜 ===== -->
     <div class="rank-section" id="rankSection" style="display:none;">
         <div class="rank-title">🏆 排行榜</div>
         <div id="rankList"></div>
+    </div>
+</div>
+
+<!-- ============================================================
+     教程弹窗
+     ============================================================ -->
+<div class="tutorial-overlay" id="tutorialOverlay">
+    <div class="tutorial-modal">
+        <button class="modal-close" onclick="closeTutorial()">✕</button>
+        <div id="tutorialContent">
+            <!-- 由 JavaScript 动态渲染 -->
+        </div>
     </div>
 </div>
 
@@ -253,6 +317,7 @@
 
 <script>
     var token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+    var userId = @(Context.Session.GetInt32("UserId") ?? 0);
 
     var gameState = {
         level: 1, score: 0, lives: 3, combo: 0, maxCombo: 0, passed: 0,
@@ -276,11 +341,14 @@
         challengeCard: document.getElementById('challengeCard'),
         gameContent: document.getElementById('gameContent'),
         rankSection: document.getElementById('rankSection'),
-        rankList: document.getElementById('rankList')
+        rankList: document.getElementById('rankList'),
+        statusBar: document.getElementById('statusBar'),
+        progressBar: document.getElementById('progressBar'),
+        timerSection: document.getElementById('timerSection')
     };
 
     // ============================================================
-    // 1A2B 游戏状态（全局）
+    // 1A2B 游戏状态
     // ============================================================
     var abState = {
         password: '',
@@ -294,7 +362,7 @@
     };
 
     // ============================================================
-    // 颜色映射表（用于颜色混合降级方案）
+    // 颜色映射表
     // ============================================================
     var colorHexMap = {
         '红色': '#FF0000', '深红': '#8B0000', '粉色': '#FF69B4', '浅粉': '#FFB6C1',
@@ -328,7 +396,581 @@
     }
 
     // ============================================================
-    // 启动游戏
+    // 20种玩法教程数据
+    // ============================================================
+    var gameTutorials = {
+        'text': {
+            name: '文字识别',
+            icon: '👁️',
+            desc: '识别图片中扭曲的文字，考验你的视力和抗干扰能力。',
+            howTo: '观察下方图片中的文字，从选项中选择正确的文字内容。图片中的文字可能带有扭曲、噪点、干扰线等，需要仔细辨认。',
+            example: '图片中显示 "HELLO" 的扭曲版本，正确答案是 "HELLO"。',
+            demo: function() {
+                return '<div style="text-align:center;padding:0.5rem;">' +
+                    '<div style="background:rgba(255,255,255,0.02);border-radius:12px;padding:0.5rem;border:1px solid rgba(255,255,255,0.04);">' +
+                    '<div style="font-size:3rem;font-weight:bold;color:#8B5CF6;letter-spacing:8px;font-family:monospace;">H E L L O</div>' +
+                    '<div style="color:rgba(255,255,255,0.15);font-size:0.7rem;margin-top:0.2rem;">👆 识别图片中的文字</div>' +
+                    '</div>' +
+                    '<div style="display:flex;gap:0.5rem;justify-content:center;margin-top:0.5rem;flex-wrap:wrap;">' +
+                    '<span style="padding:0.3rem 1rem;border-radius:20px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);color:rgba(255,255,255,0.3);">HELLO</span>' +
+                    '<span style="padding:0.3rem 1rem;border-radius:20px;background:rgba(40,167,69,0.08);border:1px solid rgba(40,167,69,0.06);color:#28a745;">✅ HELLO</span>' +
+                    '<span style="padding:0.3rem 1rem;border-radius:20px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);color:rgba(255,255,255,0.3);">HELL0</span>' +
+                    '</div>' +
+                    '<div style="color:rgba(40,167,69,0.3);font-size:0.75rem;margin-top:0.3rem;">💡 选择正确的文字</div>' +
+                    '</div>';
+            }
+        },
+        'arithmetic': {
+            name: '算术计算',
+            icon: '🧮',
+            desc: '快速计算数学表达式，测试你的心算能力。',
+            howTo: '计算给出的数学表达式，从选项中选择正确的答案。难度越高，数字越大，运算越复杂。',
+            example: '计算 25 × 4 = 100，正确答案是 100。',
+            demo: function() {
+                return '<div style="text-align:center;padding:0.5rem;">' +
+                    '<div style="font-size:2rem;font-weight:700;color:#fff;">25 × 4 = ?</div>' +
+                    '<div style="display:flex;gap:0.5rem;justify-content:center;margin-top:0.5rem;flex-wrap:wrap;">' +
+                    '<span style="padding:0.3rem 1rem;border-radius:20px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);color:rgba(255,255,255,0.3);">80</span>' +
+                    '<span style="padding:0.3rem 1rem;border-radius:20px;background:rgba(40,167,69,0.08);border:1px solid rgba(40,167,69,0.06);color:#28a745;">✅ 100</span>' +
+                    '<span style="padding:0.3rem 1rem;border-radius:20px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);color:rgba(255,255,255,0.3);">120</span>' +
+                    '</div>' +
+                    '<div style="color:rgba(40,167,69,0.3);font-size:0.75rem;margin-top:0.3rem;">💡 选择正确的计算结果</div>' +
+                    '</div>';
+            }
+        },
+        'stroke': {
+            name: '汉字笔画',
+            icon: '📝',
+            desc: '计算汉字的笔画数，测试你对汉字结构的了解。',
+            howTo: '计算给定汉字的总笔画数，从选项中选择正确的数字。注意区分不同字形的笔画差异。',
+            example: '汉字「人」有 2 画，正确答案是 2。',
+            demo: function() {
+                return '<div style="text-align:center;padding:0.5rem;">' +
+                    '<div style="font-size:4rem;font-weight:700;color:#fff;">人</div>' +
+                    '<div style="color:rgba(255,255,255,0.15);font-size:0.8rem;">"人" 字有几画？</div>' +
+                    '<div style="display:flex;gap:0.5rem;justify-content:center;margin-top:0.5rem;flex-wrap:wrap;">' +
+                    '<span style="padding:0.3rem 1rem;border-radius:20px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);color:rgba(255,255,255,0.3);">1</span>' +
+                    '<span style="padding:0.3rem 1rem;border-radius:20px;background:rgba(40,167,69,0.08);border:1px solid rgba(40,167,69,0.06);color:#28a745;">✅ 2</span>' +
+                    '<span style="padding:0.3rem 1rem;border-radius:20px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);color:rgba(255,255,255,0.3);">3</span>' +
+                    '</div>' +
+                    '<div style="color:rgba(40,167,69,0.3);font-size:0.75rem;margin-top:0.3rem;">💡 数一数笔画数</div>' +
+                    '</div>';
+            }
+        },
+        'color': {
+            name: '颜色识别',
+            icon: '🎨',
+            desc: '识别文字的颜色而不是文字本身，测试你的注意力。',
+            howTo: '注意文字的颜色，而不是文字的内容。例如 "红" 字用蓝色显示，正确答案是 "蓝色"。',
+            example: '文字 "红" 用蓝色显示，正确答案是 "蓝色"。',
+            demo: function() {
+                return '<div style="text-align:center;padding:0.5rem;">' +
+                    '<div style="font-size:3rem;font-weight:700;color:#0000FF;">红</div>' +
+                    '<div style="color:rgba(255,255,255,0.15);font-size:0.8rem;">这个字是什么颜色？（不是读字）</div>' +
+                    '<div style="display:flex;gap:0.5rem;justify-content:center;margin-top:0.5rem;flex-wrap:wrap;">' +
+                    '<span style="padding:0.3rem 1rem;border-radius:20px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);color:rgba(255,255,255,0.3);">红色</span>' +
+                    '<span style="padding:0.3rem 1rem;border-radius:20px;background:rgba(40,167,69,0.08);border:1px solid rgba(40,167,69,0.06);color:#28a745;">✅ 蓝色</span>' +
+                    '<span style="padding:0.3rem 1rem;border-radius:20px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);color:rgba(255,255,255,0.3);">绿色</span>' +
+                    '</div>' +
+                    '<div style="color:rgba(40,167,69,0.3);font-size:0.75rem;margin-top:0.3rem;">💡 看颜色，不看文字</div>' +
+                    '</div>';
+            }
+        },
+        'findDifferent': {
+            name: '找不同',
+            icon: '🔍',
+            desc: '记住原始字符序列，找出被替换的那个字符。',
+            howTo: '先记住显示的原始字符，然后字符会被打乱并替换其中一个，找出被替换的字符。',
+            example: '原始: ABCDE → 打乱后: ABXDE，被替换的是 "C"。',
+            demo: function() {
+                return '<div style="text-align:center;padding:0.5rem;">' +
+                    '<div style="font-size:2rem;font-weight:700;color:#8B5CF6;letter-spacing:8px;font-family:monospace;">A B C D E</div>' +
+                    '<div style="color:rgba(255,255,255,0.08);font-size:0.7rem;">⏱ 记忆 3 秒</div>' +
+                    '<div style="font-size:2rem;font-weight:700;color:#8B5CF6;letter-spacing:8px;font-family:monospace;margin-top:0.3rem;">A B X D E</div>' +
+                    '<div style="color:rgba(255,255,255,0.08);font-size:0.7rem;">🔍 哪个字符被替换了？</div>' +
+                    '<div style="display:flex;gap:0.5rem;justify-content:center;margin-top:0.5rem;flex-wrap:wrap;">' +
+                    '<span style="padding:0.3rem 1rem;border-radius:20px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);color:rgba(255,255,255,0.3);">A</span>' +
+                    '<span style="padding:0.3rem 1rem;border-radius:20px;background:rgba(40,167,69,0.08);border:1px solid rgba(40,167,69,0.06);color:#28a745;">✅ C</span>' +
+                    '<span style="padding:0.3rem 1rem;border-radius:20px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);color:rgba(255,255,255,0.3);">D</span>' +
+                    '</div>' +
+                    '<div style="color:rgba(40,167,69,0.3);font-size:0.75rem;margin-top:0.3rem;">💡 找出被替换的字符</div>' +
+                    '</div>';
+            }
+        },
+        'reverse': {
+            name: '倒序识别',
+            icon: '🔄',
+            desc: '识别倒过来显示的文字，考验空间想象力。',
+            howTo: '图片中的文字是倒过来的，你需要识别出正确的文字内容。',
+            example: '图片显示 "OLLEH"，正确答案是 "HELLO"。',
+            demo: function() {
+                return '<div style="text-align:center;padding:0.5rem;">' +
+                    '<div style="font-size:3rem;font-weight:700;color:#8B5CF6;letter-spacing:8px;font-family:monospace;transform:rotate(180deg);display:inline-block;">HELLO</div>' +
+                    '<div style="color:rgba(255,255,255,0.08);font-size:0.7rem;">🔄 倒过来看是什么？</div>' +
+                    '<div style="display:flex;gap:0.5rem;justify-content:center;margin-top:0.5rem;flex-wrap:wrap;">' +
+                    '<span style="padding:0.3rem 1rem;border-radius:20px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);color:rgba(255,255,255,0.3);">OLLEH</span>' +
+                    '<span style="padding:0.3rem 1rem;border-radius:20px;background:rgba(40,167,69,0.08);border:1px solid rgba(40,167,69,0.06);color:#28a745;">✅ HELLO</span>' +
+                    '<span style="padding:0.3rem 1rem;border-radius:20px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);color:rgba(255,255,255,0.3);">HALLO</span>' +
+                    '</div>' +
+                    '<div style="color:rgba(40,167,69,0.3);font-size:0.75rem;margin-top:0.3rem;">💡 倒过来读</div>' +
+                    '</div>';
+            }
+        },
+        'missingLetter': {
+            name: '空缺字母',
+            icon: '🔤',
+            desc: '补全英文单词中缺失的字母，测试词汇量。',
+            howTo: '英文单词中有字母被隐藏了，根据上下文补全缺失的字母。',
+            example: 'A P P _ E → 缺失 "L"，单词是 APPLE。',
+            demo: function() {
+                return '<div style="text-align:center;padding:0.5rem;">' +
+                    '<div style="font-size:2.5rem;font-weight:700;color:#8B5CF6;letter-spacing:8px;font-family:monospace;">A P P _ E</div>' +
+                    '<div style="color:rgba(255,255,255,0.08);font-size:0.7rem;">🔤 缺失哪个字母？</div>' +
+                    '<div style="display:flex;gap:0.5rem;justify-content:center;margin-top:0.5rem;flex-wrap:wrap;">' +
+                    '<span style="padding:0.3rem 1rem;border-radius:20px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);color:rgba(255,255,255,0.3);">M</span>' +
+                    '<span style="padding:0.3rem 1rem;border-radius:20px;background:rgba(40,167,69,0.08);border:1px solid rgba(40,167,69,0.06);color:#28a745;">✅ L</span>' +
+                    '<span style="padding:0.3rem 1rem;border-radius:20px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);color:rgba(255,255,255,0.3);">N</span>' +
+                    '</div>' +
+                    '<div style="color:rgba(40,167,69,0.3);font-size:0.75rem;margin-top:0.3rem;">💡 补全英文单词</div>' +
+                    '</div>';
+            }
+        },
+        'timeCalc': {
+            name: '时间计算',
+            icon: '⏰',
+            desc: '计算两个时间点之间的差值，测试时间感。',
+            howTo: '计算从开始时间到结束时间经过了多少时间，选择正确的时长。',
+            example: '从 08:00 到 12:30 经过了 4小时30分钟。',
+            demo: function() {
+                return '<div style="text-align:center;padding:0.5rem;">' +
+                    '<div style="font-size:1.5rem;font-weight:700;color:#fff;">⏰ 从 08:00 到 12:30</div>' +
+                    '<div style="color:rgba(255,255,255,0.08);font-size:0.7rem;">经过了多少时间？</div>' +
+                    '<div style="display:flex;gap:0.5rem;justify-content:center;margin-top:0.5rem;flex-wrap:wrap;">' +
+                    '<span style="padding:0.3rem 1rem;border-radius:20px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);color:rgba(255,255,255,0.3);">4小时</span>' +
+                    '<span style="padding:0.3rem 1rem;border-radius:20px;background:rgba(40,167,69,0.08);border:1px solid rgba(40,167,69,0.06);color:#28a745;">✅ 4小时30分钟</span>' +
+                    '<span style="padding:0.3rem 1rem;border-radius:20px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);color:rgba(255,255,255,0.3);">5小时</span>' +
+                    '</div>' +
+                    '<div style="color:rgba(40,167,69,0.3);font-size:0.75rem;margin-top:0.3rem;">💡 计算时间差</div>' +
+                    '</div>';
+            }
+        },
+        'idiom': {
+            name: '成语填空',
+            icon: '📖',
+            desc: '补全成语中缺失的字，测试语文功底。',
+            howTo: '成语中有字被隐藏了，根据上下文和成语知识补全。',
+            example: '一马当_ → 缺失 "先"，成语是 "一马当先"。',
+            demo: function() {
+                return '<div style="text-align:center;padding:0.5rem;">' +
+                    '<div style="font-size:2.5rem;font-weight:700;color:#8B5CF6;letter-spacing:8px;">一马当_</div>' +
+                    '<div style="color:rgba(255,255,255,0.08);font-size:0.7rem;">📖 缺失哪个字？</div>' +
+                    '<div style="display:flex;gap:0.5rem;justify-content:center;margin-top:0.5rem;flex-wrap:wrap;">' +
+                    '<span style="padding:0.3rem 1rem;border-radius:20px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);color:rgba(255,255,255,0.3);">前</span>' +
+                    '<span style="padding:0.3rem 1rem;border-radius:20px;background:rgba(40,167,69,0.08);border:1px solid rgba(40,167,69,0.06);color:#28a745;">✅ 先</span>' +
+                    '<span style="padding:0.3rem 1rem;border-radius:20px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);color:rgba(255,255,255,0.3);">后</span>' +
+                    '</div>' +
+                    '<div style="color:rgba(40,167,69,0.3);font-size:0.75rem;margin-top:0.3rem;">💡 补全成语</div>' +
+                    '</div>';
+            }
+        },
+        'memory': {
+            name: '数字记忆',
+            icon: '🧠',
+            desc: '记住显示的数字并在消失后输入，测试短期记忆力。',
+            howTo: '数字会显示几秒钟然后消失，在输入框中输入你记住的数字。',
+            example: '显示 "3847" → 输入 "3847"。',
+            demo: function() {
+                return '<div style="text-align:center;padding:0.5rem;">' +
+                    '<div style="font-size:3rem;font-weight:700;color:#8B5CF6;letter-spacing:12px;font-family:monospace;">3 8 4 7</div>' +
+                    '<div style="color:rgba(255,255,255,0.08);font-size:0.7rem;">⏱ 记忆 3 秒</div>' +
+                    '<div style="font-size:3rem;font-weight:700;color:rgba(255,255,255,0.1);letter-spacing:12px;font-family:monospace;margin-top:0.3rem;">_ _ _ _</div>' +
+                    '<div style="color:rgba(255,255,255,0.08);font-size:0.7rem;">⌨️ 输入你记住的数字</div>' +
+                    '<div style="color:rgba(40,167,69,0.3);font-size:0.75rem;margin-top:0.3rem;">💡 记住数字并输入</div>' +
+                    '</div>';
+            }
+        },
+        'pattern': {
+            name: '找规律',
+            icon: '📐',
+            desc: '根据数列规律填空，测试数学推理能力。',
+            howTo: '观察数列的规律，找出缺失的数字。规律可能是等差、等比、递推等。',
+            example: '2, 4, 6, ?, 10 → 规律是+2，答案是 8。',
+            demo: function() {
+                return '<div style="text-align:center;padding:0.5rem;">' +
+                    '<div style="font-size:2rem;font-weight:700;color:#fff;">2, 4, 6, ?, 10</div>' +
+                    '<div style="color:rgba(255,255,255,0.08);font-size:0.7rem;">📐 规律是什么？</div>' +
+                    '<div style="display:flex;gap:0.5rem;justify-content:center;margin-top:0.5rem;flex-wrap:wrap;">' +
+                    '<span style="padding:0.3rem 1rem;border-radius:20px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);color:rgba(255,255,255,0.3);">6</span>' +
+                    '<span style="padding:0.3rem 1rem;border-radius:20px;background:rgba(40,167,69,0.08);border:1px solid rgba(40,167,69,0.06);color:#28a745;">✅ 8</span>' +
+                    '<span style="padding:0.3rem 1rem;border-radius:20px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);color:rgba(255,255,255,0.3);">9</span>' +
+                    '</div>' +
+                    '<div style="color:rgba(40,167,69,0.3);font-size:0.75rem;margin-top:0.3rem;">💡 找规律填空</div>' +
+                    '</div>';
+            }
+        },
+        'colorMix': {
+            name: '颜色混合',
+            icon: '🎨',
+            desc: '将几种颜色混合后判断结果颜色，测试色彩感知。',
+            howTo: '观察给出的颜色，混合后是什么颜色？从选项中选择正确的颜色。',
+            example: '红色 + 蓝色 = 紫色。',
+            demo: function() {
+                return '<div style="text-align:center;padding:0.5rem;">' +
+                    '<div style="display:flex;justify-content:center;align-items:center;gap:0.8rem;flex-wrap:wrap;">' +
+                    '<div style="width:50px;height:50px;border-radius:8px;background:#FF0000;border:1px solid rgba(255,255,255,0.06);"></div>' +
+                    '<span style="color:rgba(255,255,255,0.1);font-size:1.2rem;">+</span>' +
+                    '<div style="width:50px;height:50px;border-radius:8px;background:#0000FF;border:1px solid rgba(255,255,255,0.06);"></div>' +
+                    '<span style="color:rgba(255,255,255,0.1);font-size:1.2rem;">→</span>' +
+                    '<div style="width:50px;height:50px;border-radius:8px;background:#8800CC;border:2px dashed rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;font-size:1.5rem;color:rgba(255,255,255,0.08);">?</div>' +
+                    '</div>' +
+                    '<div style="display:flex;gap:0.5rem;justify-content:center;margin-top:0.5rem;flex-wrap:wrap;">' +
+                    '<span style="padding:0.3rem 1rem;border-radius:20px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);color:rgba(255,255,255,0.3);">红色</span>' +
+                    '<span style="padding:0.3rem 1rem;border-radius:20px;background:rgba(40,167,69,0.08);border:1px solid rgba(40,167,69,0.06);color:#28a745;">✅ 紫色</span>' +
+                    '<span style="padding:0.3rem 1rem;border-radius:20px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);color:rgba(255,255,255,0.3);">蓝色</span>' +
+                    '</div>' +
+                    '<div style="color:rgba(40,167,69,0.3);font-size:0.75rem;margin-top:0.3rem;">💡 混合颜色</div>' +
+                    '</div>';
+            }
+        },
+        'trueFalse': {
+            name: '真假判断',
+            icon: '⚖️',
+            desc: '判断陈述的真假，测试常识和逻辑推理。',
+            howTo: '阅读陈述内容，判断它是真的还是假的。注意细节和逻辑陷阱。',
+            example: '地球是平的 → 假的。',
+            demo: function() {
+                return '<div style="text-align:center;padding:0.5rem;">' +
+                    '<div style="font-size:1.2rem;color:#fff;">🌍 地球是平的</div>' +
+                    '<div style="color:rgba(255,255,255,0.08);font-size:0.7rem;">⚖️ 真的还是假的？</div>' +
+                    '<div style="display:flex;gap:0.5rem;justify-content:center;margin-top:0.5rem;flex-wrap:wrap;">' +
+                    '<span style="padding:0.3rem 1rem;border-radius:20px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);color:rgba(255,255,255,0.3);">✅ 真的</span>' +
+                    '<span style="padding:0.3rem 1rem;border-radius:20px;background:rgba(40,167,69,0.08);border:1px solid rgba(40,167,69,0.06);color:#28a745;">✅ 假的</span>' +
+                    '</div>' +
+                    '<div style="color:rgba(40,167,69,0.3);font-size:0.75rem;margin-top:0.3rem;">💡 判断真假</div>' +
+                    '</div>';
+            }
+        },
+        'puzzle': {
+            name: '数字华容道',
+            icon: '🧩',
+            desc: '移动数字方块，按顺序排列，测试空间思维。',
+            howTo: '点击数字方块移动，将数字按 1-8 的顺序排列，空格在右下角。',
+            example: '将 1-8 按顺序排列，空格在最后。',
+            demo: function() {
+                return '<div style="text-align:center;padding:0.5rem;">' +
+                    '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;max-width:150px;margin:0 auto;background:rgba(255,255,255,0.02);padding:4px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);">' +
+                    '<div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:1.2rem;font-weight:700;border-radius:6px;background:rgba(255,255,255,0.04);color:#fff;">1</div>' +
+                    '<div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:1.2rem;font-weight:700;border-radius:6px;background:rgba(255,255,255,0.04);color:#fff;">2</div>' +
+                    '<div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:1.2rem;font-weight:700;border-radius:6px;background:rgba(255,255,255,0.04);color:#fff;">3</div>' +
+                    '<div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:1.2rem;font-weight:700;border-radius:6px;background:rgba(255,255,255,0.04);color:#fff;">4</div>' +
+                    '<div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:1.2rem;font-weight:700;border-radius:6px;background:rgba(255,255,255,0.04);color:#fff;">5</div>' +
+                    '<div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:1.2rem;font-weight:700;border-radius:6px;background:rgba(255,255,255,0.04);color:#fff;">6</div>' +
+                    '<div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:1.2rem;font-weight:700;border-radius:6px;background:rgba(255,255,255,0.04);color:#fff;">7</div>' +
+                    '<div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:1.2rem;font-weight:700;border-radius:6px;background:rgba(255,255,255,0.04);color:#fff;">8</div>' +
+                    '<div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:1.2rem;font-weight:700;border-radius:6px;background:transparent;color:transparent;"></div>' +
+                    '</div>' +
+                    '<div style="color:rgba(40,167,69,0.3);font-size:0.75rem;margin-top:0.3rem;">💡 点击数字移动，按顺序排列</div>' +
+                    '</div>';
+            }
+        },
+        'threeView': {
+            name: '立体三视图',
+            icon: '📐',
+            desc: '根据三视图判断正方体数量，测试空间想象力。',
+            howTo: '观察俯视图、主视图、左视图，推断出总共用了多少个正方体。',
+            example: '三个视图显示共有 8 个正方体。',
+            demo: function() {
+                return '<div style="text-align:center;padding:0.5rem;">' +
+                    '<div style="display:flex;justify-content:center;gap:1rem;flex-wrap:wrap;">' +
+                    '<div><div style="color:rgba(255,255,255,0.08);font-size:0.5rem;">俯视图</div><div style="display:grid;grid-template-columns:repeat(3,30px);gap:2px;"><div style="width:30px;height:30px;background:#8B5CF6;border-radius:2px;"></div><div style="width:30px;height:30px;background:#8B5CF6;border-radius:2px;"></div><div style="width:30px;height:30px;background:#8B5CF6;border-radius:2px;"></div><div style="width:30px;height:30px;background:#8B5CF6;border-radius:2px;"></div><div style="width:30px;height:30px;background:#8B5CF6;border-radius:2px;"></div><div style="width:30px;height:30px;background:#8B5CF6;border-radius:2px;"></div><div style="width:30px;height:30px;background:#8B5CF6;border-radius:2px;"></div><div style="width:30px;height:30px;background:#8B5CF6;border-radius:2px;"></div><div style="width:30px;height:30px;background:#8B5CF6;border-radius:2px;"></div></div></div>' +
+                    '<div><div style="color:rgba(255,255,255,0.08);font-size:0.5rem;">主视图</div><div style="display:grid;grid-template-columns:repeat(3,30px);gap:2px;"><div style="width:30px;height:30px;background:#8B5CF6;border-radius:2px;"></div><div style="width:30px;height:30px;background:#8B5CF6;border-radius:2px;"></div><div style="width:30px;height:30px;background:#8B5CF6;border-radius:2px;"></div><div style="width:30px;height:30px;background:#8B5CF6;border-radius:2px;"></div><div style="width:30px;height:30px;background:#8B5CF6;border-radius:2px;"></div><div style="width:30px;height:30px;background:#8B5CF6;border-radius:2px;"></div><div style="width:30px;height:30px;background:#8B5CF6;border-radius:2px;"></div><div style="width:30px;height:30px;background:#8B5CF6;border-radius:2px;"></div><div style="width:30px;height:30px;background:#8B5CF6;border-radius:2px;"></div></div></div>' +
+                    '<div><div style="color:rgba(255,255,255,0.08);font-size:0.5rem;">左视图</div><div style="display:grid;grid-template-columns:repeat(3,30px);gap:2px;"><div style="width:30px;height:30px;background:#8B5CF6;border-radius:2px;"></div><div style="width:30px;height:30px;background:#8B5CF6;border-radius:2px;"></div><div style="width:30px;height:30px;background:#8B5CF6;border-radius:2px;"></div><div style="width:30px;height:30px;background:#8B5CF6;border-radius:2px;"></div><div style="width:30px;height:30px;background:#8B5CF6;border-radius:2px;"></div><div style="width:30px;height:30px;background:#8B5CF6;border-radius:2px;"></div><div style="width:30px;height:30px;background:#8B5CF6;border-radius:2px;"></div><div style="width:30px;height:30px;background:#8B5CF6;border-radius:2px;"></div><div style="width:30px;height:30px;background:#8B5CF6;border-radius:2px;"></div></div></div>' +
+                    '</div>' +
+                    '<div style="color:rgba(40,167,69,0.3);font-size:0.75rem;margin-top:0.3rem;">💡 根据三视图推断正方体数量</div>' +
+                    '</div>';
+            }
+        },
+        'shapeCount': {
+            name: '图形计数',
+            icon: '🔢',
+            desc: '统计特定图形出现的次数，测试观察力。',
+            howTo: '在一组图形中，统计特定图形（如 ●）出现的次数。',
+            example: '● ■ ● ▲ ● → ● 出现了 3 次。',
+            demo: function() {
+                return '<div style="text-align:center;padding:0.5rem;">' +
+                    '<div style="font-size:2rem;letter-spacing:8px;">● ■ ● ▲ ●</div>' +
+                    '<div style="color:rgba(255,255,255,0.08);font-size:0.7rem;">🔢 「●」出现了几次？</div>' +
+                    '<div style="display:flex;gap:0.5rem;justify-content:center;margin-top:0.5rem;flex-wrap:wrap;">' +
+                    '<span style="padding:0.3rem 1rem;border-radius:20px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);color:rgba(255,255,255,0.3);">2</span>' +
+                    '<span style="padding:0.3rem 1rem;border-radius:20px;background:rgba(40,167,69,0.08);border:1px solid rgba(40,167,69,0.06);color:#28a745;">✅ 3</span>' +
+                    '<span style="padding:0.3rem 1rem;border-radius:20px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);color:rgba(255,255,255,0.3);">4</span>' +
+                    '</div>' +
+                    '<div style="color:rgba(40,167,69,0.3);font-size:0.75rem;margin-top:0.3rem;">💡 统计图形出现次数</div>' +
+                    '</div>';
+            }
+        },
+        'dateReasoning': {
+            name: '日期推理',
+            icon: '📅',
+            desc: '根据已知日期推算星期几，测试日期计算能力。',
+            howTo: '已知一个日期是星期几，推算另一个日期是星期几。',
+            example: '2026年8月7日是星期五，8月15日是星期六。',
+            demo: function() {
+                return '<div style="text-align:center;padding:0.5rem;">' +
+                    '<div style="font-size:1.1rem;color:#fff;">📅 2026年8月7日是星期五</div>' +
+                    '<div style="color:rgba(255,255,255,0.08);font-size:0.7rem;">8月15日是星期几？</div>' +
+                    '<div style="display:flex;gap:0.5rem;justify-content:center;margin-top:0.5rem;flex-wrap:wrap;">' +
+                    '<span style="padding:0.3rem 1rem;border-radius:20px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);color:rgba(255,255,255,0.3);">星期五</span>' +
+                    '<span style="padding:0.3rem 1rem;border-radius:20px;background:rgba(40,167,69,0.08);border:1px solid rgba(40,167,69,0.06);color:#28a745;">✅ 星期六</span>' +
+                    '<span style="padding:0.3rem 1rem;border-radius:20px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);color:rgba(255,255,255,0.3);">星期日</span>' +
+                    '</div>' +
+                    '<div style="color:rgba(40,167,69,0.3);font-size:0.75rem;margin-top:0.3rem;">💡 推算星期几</div>' +
+                    '</div>';
+            }
+        },
+        'rotate': {
+            name: '图形旋转',
+            icon: '🔄',
+            desc: '判断图形旋转了多少度，测试空间想象力。',
+            howTo: '观察原图和旋转后的图形，判断旋转了多少度。',
+            example: '图形旋转了 90°。',
+            demo: function() {
+                return '<div style="text-align:center;padding:0.5rem;">' +
+                    '<div style="display:flex;justify-content:center;align-items:center;gap:1rem;flex-wrap:wrap;">' +
+                    '<div><svg width="60" height="60"><polygon points="30,10 50,50 10,50" fill="#8B5CF6" opacity="0.85"/></svg><div style="color:rgba(255,255,255,0.08);font-size:0.5rem;">原图</div></div>' +
+                    '<span style="color:rgba(255,255,255,0.06);">→</span>' +
+                    '<div><svg width="60" height="60"><polygon points="30,10 50,50 10,50" fill="#8B5CF6" opacity="0.85" transform="rotate(90,30,30)"/></svg><div style="color:rgba(255,255,255,0.08);font-size:0.5rem;">旋转后</div></div>' +
+                    '</div>' +
+                    '<div style="display:flex;gap:0.5rem;justify-content:center;margin-top:0.5rem;flex-wrap:wrap;">' +
+                    '<span style="padding:0.3rem 1rem;border-radius:20px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);color:rgba(255,255,255,0.3);">45°</span>' +
+                    '<span style="padding:0.3rem 1rem;border-radius:20px;background:rgba(40,167,69,0.08);border:1px solid rgba(40,167,69,0.06);color:#28a745;">✅ 90°</span>' +
+                    '<span style="padding:0.3rem 1rem;border-radius:20px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);color:rgba(255,255,255,0.3);">135°</span>' +
+                    '</div>' +
+                    '<div style="color:rgba(40,167,69,0.3);font-size:0.75rem;margin-top:0.3rem;">💡 判断旋转角度</div>' +
+                    '</div>';
+            }
+        },
+        'abgame': {
+            name: '1A2B猜数字',
+            icon: '🎯',
+            desc: '猜一个不重复的数字组合，根据提示推理出正确答案。',
+            howTo: '输入你猜测的数字组合，系统会返回 A 和 B 的提示：A 表示位置和数字都正确，B 表示数字正确但位置不对。',
+            example: '密码是 1234，猜测 1243 → 提示 2A2B。',
+            demo: function() {
+                return '<div style="text-align:center;padding:0.5rem;">' +
+                    '<div style="font-size:1.2rem;color:#8B5CF6;font-weight:700;letter-spacing:4px;">_ _ _ _</div>' +
+                    '<div style="color:rgba(255,255,255,0.08);font-size:0.7rem;">🎯 猜一个4位不重复数字</div>' +
+                    '<div style="display:flex;gap:0.5rem;justify-content:center;margin-top:0.5rem;flex-wrap:wrap;font-size:0.8rem;color:rgba(255,255,255,0.2);">' +
+                    '<span><span style="color:#28a745;">A</span> = 位置和数字都正确</span>' +
+                    '<span><span style="color:#F59E0B;">B</span> = 数字正确但位置不对</span>' +
+                    '</div>' +
+                    '<div style="color:rgba(40,167,69,0.3);font-size:0.75rem;margin-top:0.3rem;">💡 根据提示推理</div>' +
+                    '</div>';
+            }
+        },
+        'tripleColor': {
+            name: '颜色三重干扰',
+            icon: '🎯',
+            desc: '在颜色、背景、文字含义的三重干扰中找出正确答案。',
+            howTo: '文字的颜色、背景色和文字本身的含义可能不同，根据问题要求选择正确的颜色。',
+            example: '文字 "红" 用蓝色显示，背景是绿色，问文字颜色 → 答案是蓝色。',
+            demo: function() {
+                return '<div style="text-align:center;padding:0.5rem;">' +
+                    '<div style="background:#00AA00;padding:1rem;border-radius:12px;display:inline-block;">' +
+                    '<span style="color:#0000FF;font-size:3rem;font-weight:900;letter-spacing:10px;">红</span>' +
+                    '</div>' +
+                    '<div style="color:rgba(255,255,255,0.08);font-size:0.7rem;margin-top:0.3rem;">🎯 文字颜色是什么？</div>' +
+                    '<div style="display:flex;gap:0.5rem;justify-content:center;margin-top:0.5rem;flex-wrap:wrap;">' +
+                    '<span style="padding:0.3rem 1rem;border-radius:20px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);color:rgba(255,255,255,0.3);">红色</span>' +
+                    '<span style="padding:0.3rem 1rem;border-radius:20px;background:rgba(40,167,69,0.08);border:1px solid rgba(40,167,69,0.06);color:#28a745;">✅ 蓝色</span>' +
+                    '<span style="padding:0.3rem 1rem;border-radius:20px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);color:rgba(255,255,255,0.3);">绿色</span>' +
+                    '</div>' +
+                    '<div style="color:rgba(40,167,69,0.3);font-size:0.75rem;margin-top:0.3rem;">💡 注意干扰项</div>' +
+                    '</div>';
+            }
+        }
+    };
+
+    // 所有教程的导航顺序
+    var tutorialOrder = ['text','arithmetic','stroke','color','findDifferent','reverse','missingLetter','timeCalc','idiom','memory','pattern','colorMix','trueFalse','puzzle','threeView','shapeCount','dateReasoning','rotate','abgame','tripleColor'];
+    var currentTutorialIndex = 0;
+
+    // ============================================================
+    // 开始界面
+    // ============================================================
+    function renderStartScreen() {
+        var container = dom.gameContent;
+        dom.typeBadge.style.display = 'none';
+        dom.questionText.innerHTML = '';
+        dom.statusBar.style.display = 'none';
+        dom.progressBar.style.display = 'none';
+        dom.timerSection.style.display = 'none';
+        dom.rankSection.style.display = 'none';
+        dom.feedback.className = 'feedback';
+        dom.feedback.style.display = 'none';
+
+        container.innerHTML = `
+            <div class="start-screen">
+                <span class="logo-icon">🧩</span>
+                <div class="title">验证大闯关</div>
+                <p class="desc">100关 · 20种玩法 · 难度递增</p>
+                <div class="start-buttons">
+                    <button class="btn-start primary" onclick="startGame()">🚀 开始游戏</button>
+                    <button class="btn-start ranking" onclick="showRankingOnly()">🏆 排行榜</button>
+                    <button class="btn-start secondary" onclick="showTutorial()">📖 玩法教程</button>
+                </div>
+                <div style="margin-top:1.5rem;color:rgba(255,255,255,0.05);font-size:0.7rem;">
+                    💡 点击 "玩法教程" 了解每种玩法的详细说明
+                </div>
+            </div>
+        `;
+        dom.typeNameDisplay.textContent = '🎮 准备开始';
+        dom.challengeCard.querySelector('.type-badge').style.display = 'none';
+    }
+
+    // ============================================================
+    // 显示排行榜（独立）
+    // ============================================================
+    function showRankingOnly() {
+        var container = dom.gameContent;
+        container.innerHTML = `
+            <div style="width:100%;padding:0.5rem 0;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+                    <div style="color:#fff;font-weight:600;font-size:1.1rem;">🏆 排行榜</div>
+                    <button class="btn-start secondary" style="padding:0.4rem 1.2rem;border:none;border-radius:30px;background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.4);cursor:pointer;font-family:inherit;" onclick="renderStartScreen()">← 返回</button>
+                </div>
+                <div id="rankListOnly"></div>
+            </div>
+        `;
+        dom.typeNameDisplay.textContent = '🏆 排行榜';
+        loadRankingOnly();
+    }
+
+    function loadRankingOnly() {
+        var container = document.getElementById('rankListOnly');
+        if (!container) return;
+        fetch('/VerifyGame/GetRanking')
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.success && data.data && data.data.length > 0) {
+                    var html = '';
+                    var medals = ['🥇', '🥈', '🥉'];
+                    data.data.forEach(function(item, index) {
+                        var medal = index < 3 ? medals[index] : '#' + (index + 1);
+                        var avatarHtml = item.avatarUrl && item.isAvatarApproved ?
+                            '<img src="' + item.avatarUrl + '" style="width:28px;height:28px;border-radius:50%;object-fit:cover;border:1px solid rgba(255,255,255,0.06);flex-shrink:0;" />' :
+                            '<div style="width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,0.04);display:flex;align-items:center;justify-content:center;font-size:0.6rem;color:rgba(255,255,255,0.2);flex-shrink:0;">' + (item.username ? item.username.charAt(0).toUpperCase() : '?') + '</div>';
+                        var isMe = item.isMe || false;
+                        html += '<div style="display:flex;align-items:center;gap:0.6rem;padding:0.4rem 0.6rem;border-bottom:1px solid rgba(255,255,255,0.02);">' +
+                            '<span style="font-size:0.9rem;min-width:32px;text-align:center;color:rgba(255,255,255,0.15);">' + medal + '</span>' +
+                            avatarHtml +
+                            '<span style="flex:1;color:rgba(255,255,255,0.4);font-size:0.85rem;">' + item.username + (isMe ? ' <span style="color:#8B5CF6;font-weight:600;">(我)</span>' : '') + '</span>' +
+                            '<span style="color:#F59E0B;font-weight:700;font-size:0.95rem;">' + item.totalPoints + '</span>' +
+                            '</div>';
+                    });
+                    container.innerHTML = html;
+                } else {
+                    container.innerHTML = '<div style="text-align:center;color:rgba(255,255,255,0.08);padding:2rem;">暂无排行数据</div>';
+                }
+            })
+            .catch(function() {
+                container.innerHTML = '<div style="text-align:center;color:rgba(255,255,255,0.08);padding:2rem;">加载失败</div>';
+            });
+    }
+
+    // ============================================================
+    // 教程系统
+    // ============================================================
+    function showTutorial() {
+        currentTutorialIndex = 0;
+        document.getElementById('tutorialOverlay').classList.add('active');
+        renderTutorial(currentTutorialIndex);
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeTutorial() {
+        document.getElementById('tutorialOverlay').classList.remove('active');
+        document.body.style.overflow = '';
+        renderStartScreen();
+    }
+
+    function renderTutorial(index) {
+        var container = document.getElementById('tutorialContent');
+        var key = tutorialOrder[index];
+        var data = gameTutorials[key];
+        if (!data) return;
+
+        var isDemo = false;
+        var demoContent = '';
+        if (typeof data.demo === 'function') {
+            demoContent = data.demo();
+            isDemo = true;
+        }
+
+        var total = tutorialOrder.length;
+        var prevDisabled = index === 0 ? 'disabled' : '';
+        var nextDisabled = index === total - 1 ? 'disabled' : '';
+
+        container.innerHTML = `
+            <div class="tutorial-title">
+                <span>${data.icon}</span>
+                ${data.name}
+                <span style="font-size:0.7rem;color:rgba(255,255,255,0.1);font-weight:400;margin-left:auto;">${index + 1}/${total}</span>
+            </div>
+            <div class="tutorial-sub">${data.desc}</div>
+
+            <div class="tutorial-section">
+                <div class="sec-title">📖 玩法说明</div>
+                <div class="sec-content">${data.howTo}</div>
+            </div>
+
+            <div class="tutorial-section">
+                <div class="sec-title">💡 示例</div>
+                <div class="example-box">
+                    <div class="example-label">📌 例题</div>
+                    <div class="example-content">${data.example}</div>
+                </div>
+            </div>
+
+            ${isDemo ? `
+            <div class="tutorial-section">
+                <div class="sec-title">🎬 交互演示</div>
+                <div class="tutorial-demo-area active" id="demoArea">
+                    ${demoContent}
+                </div>
+            </div>
+            ` : ''}
+
+            <div class="tutorial-nav">
+                <button class="nav-btn" onclick="renderTutorial(${index - 1})" ${prevDisabled}>← 上一项</button>
+                ${isDemo ? `<button class="nav-btn demo-btn" onclick="replayDemo('${key}')">🔄 重播演示</button>` : ''}
+                <button class="nav-btn" onclick="renderTutorial(${index + 1})" ${nextDisabled}>${index === total - 1 ? '✅ 完成' : '下一项 →'}</button>
+            </div>
+            <div style="text-align:center;margin-top:0.8rem;">
+                <button class="nav-btn" style="background:rgba(220,53,69,0.04);color:rgba(220,53,69,0.3);border-color:rgba(220,53,69,0.04);" onclick="closeTutorial()">✕ 关闭教程</button>
+            </div>
+        `;
+    }
+
+    function replayDemo(key) {
+        var data = gameTutorials[key];
+        if (!data || typeof data.demo !== 'function') return;
+        var demoArea = document.getElementById('demoArea');
+        if (demoArea) {
+            demoArea.innerHTML = data.demo();
+            // 重新触发动画
+            var content = demoArea.querySelector('.demo-content');
+            if (content) {
+                content.style.animation = 'none';
+                setTimeout(function() {
+                    content.style.animation = '';
+                }, 10);
+            }
+        }
+    }
+
+    // ============================================================
+    // 开始游戏
     // ============================================================
     function startGame() {
         if (gameState.timer) { clearInterval(gameState.timer); gameState.timer = null; }
@@ -337,12 +979,18 @@
         gameState.isPlaying = true; gameState.isAnswered = false;
         gameState.timeLeft = 15;
         gameState.currentChallenge = null;
+
+        dom.statusBar.style.display = 'flex';
+        dom.progressBar.style.display = 'block';
+        dom.timerSection.style.display = 'block';
         dom.rankSection.style.display = 'none';
-        dom.feedback.className = 'feedback'; dom.feedback.style.display = 'none';
+        dom.feedback.className = 'feedback';
+        dom.feedback.style.display = 'none';
         dom.feedback.innerHTML = '';
-        dom.gameContent.innerHTML = '';
-        updateUI();
+        dom.challengeCard.querySelector('.type-badge').style.display = 'block';
+
         dom.typeNameDisplay.textContent = '📝 第 1 关 · 入门';
+        updateUI();
         loadChallenge();
     }
 
@@ -385,7 +1033,7 @@
     }
 
     // ============================================================
-    // 渲染挑战
+    // 渲染挑战（包含所有题型）
     // ============================================================
     function renderChallenge(challenge) {
         gameState.currentChallenge = challenge;
@@ -398,7 +1046,7 @@
         var container = dom.gameContent;
 
         // ============================================================
-        // ⭐ 1A2B 游戏
+        // 1A2B 游戏
         // ============================================================
         if (challenge.type === 'abgame') {
             renderABGame(challenge);
@@ -406,7 +1054,7 @@
         }
 
         // ============================================================
-        // ⭐ 颜色混合
+        // 颜色混合
         // ============================================================
         if (challenge.type === 'colorMix') {
             renderColorMix(challenge);
@@ -414,7 +1062,7 @@
         }
 
         // ============================================================
-        // ⭐ 图形旋转
+        // 图形旋转
         // ============================================================
         if (challenge.type === 'rotate' && challenge.originalSvg) {
             var rotateDiv = document.createElement('div');
@@ -455,7 +1103,7 @@
         }
 
         // ============================================================
-        // ⭐ 找不同
+        // 找不同
         // ============================================================
         if (challenge.type === 'findDifferent' && challenge.originalDisplay) {
             renderFindDifferent(challenge);
@@ -463,7 +1111,7 @@
         }
 
         // ============================================================
-        // ⭐ 数字记忆
+        // 数字记忆
         // ============================================================
         if (challenge.type === 'memory' && challenge.keyboardRows) {
             renderMemoryGame(challenge);
@@ -471,7 +1119,7 @@
         }
 
         // ============================================================
-        // ⭐ 华容道（带滑动支持）
+        // 华容道
         // ============================================================
         if (challenge.type === 'puzzle' && challenge.puzzle) {
             renderPuzzle(challenge.puzzle);
@@ -479,7 +1127,7 @@
         }
 
         // ============================================================
-        // ⭐ 三视图（完整渲染）
+        // 三视图
         // ============================================================
         if (challenge.type === 'threeView') {
             renderThreeView(challenge);
@@ -487,7 +1135,7 @@
         }
 
         // ============================================================
-        // ⭐ 其他题型（通用渲染）
+        // 其他题型
         // ============================================================
 
         if (challenge.imageSvg) {
@@ -542,16 +1190,14 @@
     }
 
     // ============================================================
-    // ⭐ 三视图渲染（完整版）
+    // 三视图渲染
     // ============================================================
     function renderThreeView(challenge) {
         var container = dom.gameContent;
 
-        // 显示三个视图
         var viewContainer = document.createElement('div');
         viewContainer.className = 'view-container';
 
-        // 俯视图
         if (challenge.topView) {
             var topItem = document.createElement('div');
             topItem.className = 'view-item';
@@ -559,7 +1205,6 @@
             viewContainer.appendChild(topItem);
         }
 
-        // 主视图
         if (challenge.frontView) {
             var frontItem = document.createElement('div');
             frontItem.className = 'view-item';
@@ -567,7 +1212,6 @@
             viewContainer.appendChild(frontItem);
         }
 
-        // 左视图
         if (challenge.sideView) {
             var sideItem = document.createElement('div');
             sideItem.className = 'view-item';
@@ -577,7 +1221,6 @@
 
         container.appendChild(viewContainer);
 
-        // 选项
         if (challenge.options && challenge.options.length > 0) {
             var optGrid = document.createElement('div');
             optGrid.className = 'options-grid';
@@ -601,13 +1244,12 @@
     }
 
     // ============================================================
-    // ⭐ 颜色混合渲染
+    // 颜色混合渲染
     // ============================================================
     function renderColorMix(challenge) {
         var container = dom.gameContent;
         container.innerHTML = '';
 
-        // 显示颜色混合展示区
         if (challenge.displayHtml) {
             var displayDiv = document.createElement('div');
             displayDiv.className = 'display-text-container';
@@ -672,7 +1314,7 @@
     }
 
     // ============================================================
-    // ⭐ 颜色混合提交
+    // 颜色混合提交
     // ============================================================
     function submitColorMixAnswer(challenge, answer, element) {
         if (gameState.isAnswered) return;
@@ -701,7 +1343,7 @@
     }
 
     // ============================================================
-    // ⭐ 华容道渲染（带滑动支持）
+    // 华容道
     // ============================================================
     var puzzleState = null;
     var puzzleEmptyRow = 0;
@@ -883,7 +1525,7 @@
     }
 
     // ============================================================
-    // ⭐ 1A2B 游戏渲染（带规则说明）
+    // 1A2B 游戏
     // ============================================================
     function renderABGame(challenge) {
         var digitCount = challenge.digitCount || 4;
@@ -987,9 +1629,6 @@
         startTimer(challenge.timeLimit || 200);
     }
 
-    // ============================================================
-    // 1A2B 键盘处理
-    // ============================================================
     function handleABKeyPress(key) {
         if (!abState.isActive || abState.gameSolved || gameState.isAnswered) return;
 
@@ -1154,7 +1793,260 @@
     }
 
     // ============================================================
-    // 提交答案（通用）
+    // 找不同
+    // ============================================================
+    function renderFindDifferent(challenge) {
+        var container = dom.gameContent;
+        var displayTime = challenge.displayTime || 3;
+
+        var textDiv = document.createElement('div');
+        textDiv.className = 'display-text-container';
+        textDiv.style.display = 'block';
+        textDiv.id = 'findDifferentDisplay';
+        textDiv.innerHTML = '<div class="display-text" style="font-size:2.8rem;font-weight:bold;color:#8B5CF6;padding:1.5rem;margin:0.5rem 0;background:rgba(255,255,255,0.02);border-radius:16px;border:1px solid rgba(255,255,255,0.04);text-align:center;letter-spacing:8px;font-family:monospace;">' + challenge.originalDisplay + '</div>';
+        container.appendChild(textDiv);
+
+        dom.timerText.textContent = '⏱ 记忆 ' + displayTime + 's';
+        dom.timerFill.style.width = '100%';
+        dom.timerFill.className = 'timer-fill';
+
+        var countdownInterval = setInterval(function() {
+            displayTime--;
+            dom.timerText.textContent = '⏱ 记忆 ' + displayTime + 's';
+            var pct = (displayTime / (challenge.displayTime || 3)) * 100;
+            dom.timerFill.style.width = pct + '%';
+            if (pct < 30) dom.timerFill.classList.add('danger');
+            else if (pct < 50) dom.timerFill.classList.add('warning');
+            if (displayTime <= 0) {
+                clearInterval(countdownInterval);
+                var displayEl = document.getElementById('findDifferentDisplay');
+                if (displayEl) {
+                    var shuffled = challenge.shuffledDisplay || '';
+                    var html = '';
+                    for (var i = 0; i < shuffled.length; i++) {
+                        var ch = shuffled[i];
+                        html += '<span class="char-btn" data-index="' + i + '" data-char="' + ch + '" onclick="selectChar(' + i + ', \'' + ch + '\', this)">' + ch + '</span>';
+                    }
+                    displayEl.innerHTML = '<div class="display-text" style="padding:1.5rem;margin:0.5rem 0;background:rgba(255,255,255,0.02);border-radius:16px;border:1px solid rgba(255,255,255,0.04);text-align:center;letter-spacing:4px;">' + html + '</div>';
+                    displayEl.dataset.correctAnswer = challenge.correctAnswer;
+                    displayEl.dataset.shuffledPos = challenge.shuffledPos;
+                    dom.timerText.textContent = '⏱ 选择';
+                    startTimer(challenge.timeLimit || 10);
+                }
+            }
+        }, 1000);
+    }
+
+    function selectChar(index, char, element) {
+        if (gameState.isAnswered) return;
+        var container = document.getElementById('findDifferentDisplay');
+        if (!container) return;
+        var shuffledPos = parseInt(container.dataset.shuffledPos);
+        var isCorrect = (index === shuffledPos);
+        var challenge = gameState.currentChallenge;
+
+        gameState.isAnswered = true;
+        clearInterval(gameState.timer);
+
+        var allChars = container.querySelectorAll('.char-btn');
+        allChars.forEach(function(el) {
+            el.classList.add('disabled');
+            el.onclick = null;
+            if (parseInt(el.dataset.index) === shuffledPos) {
+                el.classList.add('correct-answer');
+            }
+        });
+        if (!isCorrect) {
+            element.classList.add('wrong-answer');
+            dom.challengeCard.classList.add('shake');
+            setTimeout(function() { dom.challengeCard.classList.remove('shake'); }, 500);
+        }
+        handleAnswerResult(challenge, isCorrect);
+    }
+
+    // ============================================================
+    // 数字记忆
+    // ============================================================
+    function renderMemoryGame(challenge) {
+        var container = dom.gameContent;
+        var memoryTime = challenge.memoryTime || 5;
+        var timeLimit = challenge.timeLimit || 15;
+        var correctAnswer = challenge.correctAnswer || '';
+
+        container.innerHTML = '';
+
+        var displayDiv = document.createElement('div');
+        displayDiv.id = 'memoryDisplay';
+        displayDiv.style.cssText = 'font-size:3.5rem;font-weight:bold;color:#8B5CF6;padding:2rem;margin:0.5rem 0;background:rgba(139,92,246,0.04);border-radius:16px;border:1px solid rgba(139,92,246,0.06);text-align:center;letter-spacing:16px;font-family:monospace;';
+        displayDiv.textContent = challenge.displayNumber || '';
+        container.appendChild(displayDiv);
+
+        var statusDiv = document.createElement('div');
+        statusDiv.id = 'memoryStatus';
+        statusDiv.style.cssText = 'color:rgba(255,255,255,0.15);font-size:0.8rem;text-align:center;margin:0.2rem 0 0.5rem;';
+        statusDiv.textContent = '⏱ 记忆 ' + memoryTime + 's';
+        container.appendChild(statusDiv);
+
+        var inputDiv = document.createElement('div');
+        inputDiv.className = 'memory-input-display';
+        inputDiv.id = 'memoryInputDisplay';
+        inputDiv.style.display = 'none';
+        inputDiv.textContent = '_ '.repeat(correctAnswer.length).trim();
+        container.appendChild(inputDiv);
+
+        var keyboardDiv = document.createElement('div');
+        keyboardDiv.className = 'memory-keyboard';
+        keyboardDiv.id = 'memoryKeyboard';
+        keyboardDiv.style.display = 'none';
+
+        var keyboardRows = challenge.keyboardRows || [
+            ['1', '2', '3'],
+            ['4', '5', '6'],
+            ['7', '8', '9'],
+            ['', '0', '⌫']
+        ];
+
+        keyboardRows.forEach(function(row) {
+            row.forEach(function(key) {
+                if (!key) {
+                    var empty = document.createElement('div');
+                    keyboardDiv.appendChild(empty);
+                    return;
+                }
+                var btn = document.createElement('button');
+                btn.className = 'key-btn';
+                if (key === '⌫') {
+                    btn.classList.add('backspace');
+                    btn.textContent = '⌫';
+                    btn.addEventListener('click', function() {
+                        if (gameState.isAnswered) return;
+                        memoryBackspace();
+                    });
+                } else {
+                    btn.textContent = key;
+                    btn.addEventListener('click', function() {
+                        if (gameState.isAnswered) return;
+                        memoryKeyPress(key);
+                    });
+                }
+                keyboardDiv.appendChild(btn);
+            });
+        });
+
+        container.appendChild(keyboardDiv);
+
+        var controlsDiv = document.createElement('div');
+        controlsDiv.className = 'memory-controls';
+        controlsDiv.innerHTML = '<button class="btn-memory submit" id="memorySubmitBtn" style="display:none;" onclick="submitMemoryAnswer()">✅ 确认</button>';
+        container.appendChild(controlsDiv);
+
+        var memoryState = {
+            input: '',
+            correctAnswer: correctAnswer,
+            isActive: true,
+            isMemorizing: true
+        };
+        window._memoryState = memoryState;
+
+        var memInterval = setInterval(function() {
+            memoryTime--;
+            var statusEl = document.getElementById('memoryStatus');
+            if (statusEl) {
+                statusEl.textContent = '⏱ 记忆 ' + memoryTime + 's';
+            }
+            var pct = (memoryTime / (challenge.memoryTime || 5)) * 100;
+            dom.timerFill.style.width = Math.max(0, Math.min(100, pct)) + '%';
+            if (pct < 30) dom.timerFill.classList.add('danger');
+            else if (pct < 50) dom.timerFill.classList.add('warning');
+            else dom.timerFill.classList.remove('danger', 'warning');
+
+            if (memoryTime <= 0) {
+                clearInterval(memInterval);
+
+                var displayEl = document.getElementById('memoryDisplay');
+                if (displayEl) {
+                    displayEl.textContent = '✏️ 输入你记住的数字';
+                    displayEl.style.color = 'rgba(255,255,255,0.3)';
+                    displayEl.style.fontSize = '1.5rem';
+                    displayEl.style.letterSpacing = 'normal';
+                    displayEl.style.padding = '1.5rem';
+                }
+
+                var statusEl = document.getElementById('memoryStatus');
+                if (statusEl) {
+                    statusEl.textContent = '⌨️ 输入你记住的数字';
+                    statusEl.style.color = 'rgba(255,255,255,0.08)';
+                }
+
+                document.getElementById('memoryInputDisplay').style.display = 'block';
+                document.getElementById('memoryKeyboard').style.display = 'grid';
+                document.getElementById('memorySubmitBtn').style.display = 'inline-block';
+
+                memoryState.isMemorizing = false;
+
+                dom.timerText.textContent = '⏱ ' + timeLimit + 's';
+                dom.timerFill.style.width = '100%';
+                dom.timerFill.className = 'timer-fill';
+                startTimer(timeLimit);
+            }
+        }, 1000);
+    }
+
+    function memoryKeyPress(value) {
+        if (gameState.isAnswered) return;
+        var state = window._memoryState;
+        if (!state || !state.isActive) return;
+        if (state.isMemorizing) return;
+        var len = state.correctAnswer.length;
+        if (state.input.length >= len) return;
+        state.input += value;
+        updateMemoryDisplay(state);
+    }
+
+    function memoryBackspace() {
+        if (gameState.isAnswered) return;
+        var state = window._memoryState;
+        if (!state || !state.isActive) return;
+        if (state.isMemorizing) return;
+        if (state.input.length > 0) {
+            state.input = state.input.slice(0, -1);
+            updateMemoryDisplay(state);
+        }
+    }
+
+    function updateMemoryDisplay(state) {
+        var display = document.getElementById('memoryInputDisplay');
+        if (!display) return;
+        var len = state.correctAnswer.length;
+        var text = '';
+        for (var i = 0; i < len; i++) {
+            if (i < state.input.length) {
+                text += state.input[i] + ' ';
+            } else {
+                text += '_ ';
+            }
+        }
+        display.textContent = text.trim();
+    }
+
+    function submitMemoryAnswer() {
+        if (gameState.isAnswered) return;
+        var state = window._memoryState;
+        if (!state) return;
+        if (state.input.length !== state.correctAnswer.length) {
+            showToast('请完整输入所有数字', 'error');
+            return;
+        }
+        var isCorrect = state.input === state.correctAnswer;
+        var challenge = gameState.currentChallenge;
+        document.querySelectorAll('.memory-keyboard .key-btn').forEach(function(b) { b.disabled = true; });
+        document.getElementById('memorySubmitBtn').disabled = true;
+        state.isActive = false;
+        handleAnswerResult(challenge, isCorrect);
+    }
+
+    // ============================================================
+    // 提交答案
     // ============================================================
     function submitAnswer(challenge, answer, btn) {
         if (gameState.isAnswered) return;
@@ -1352,11 +2244,14 @@
     }
 
     function restartGame() {
-        window.location.reload();
+        renderStartScreen();
+        // 重置状态
+        gameState.isPlaying = false;
+        if (gameState.timer) { clearInterval(gameState.timer); }
     }
 
     // ============================================================
-    // 排行榜
+    // 排行榜（游戏内）
     // ============================================================
     function saveAndShowRanking() {
         var finalScore = gameState.score;
@@ -1404,266 +2299,9 @@
     }
 
     // ============================================================
-    // 找不同渲染
-    // ============================================================
-    function renderFindDifferent(challenge) {
-        var container = dom.gameContent;
-        var displayTime = challenge.displayTime || 3;
-
-        var textDiv = document.createElement('div');
-        textDiv.className = 'display-text-container';
-        textDiv.style.display = 'block';
-        textDiv.id = 'findDifferentDisplay';
-        textDiv.innerHTML = '<div class="display-text" style="font-size:2.8rem;font-weight:bold;color:#8B5CF6;padding:1.5rem;margin:0.5rem 0;background:rgba(255,255,255,0.02);border-radius:16px;border:1px solid rgba(255,255,255,0.04);text-align:center;letter-spacing:8px;font-family:monospace;">' + challenge.originalDisplay + '</div>';
-        container.appendChild(textDiv);
-
-        dom.timerText.textContent = '⏱ 记忆 ' + displayTime + 's';
-        dom.timerFill.style.width = '100%';
-        dom.timerFill.className = 'timer-fill';
-
-        var countdownInterval = setInterval(function() {
-            displayTime--;
-            dom.timerText.textContent = '⏱ 记忆 ' + displayTime + 's';
-            var pct = (displayTime / (challenge.displayTime || 3)) * 100;
-            dom.timerFill.style.width = pct + '%';
-            if (pct < 30) dom.timerFill.classList.add('danger');
-            else if (pct < 50) dom.timerFill.classList.add('warning');
-            if (displayTime <= 0) {
-                clearInterval(countdownInterval);
-                var displayEl = document.getElementById('findDifferentDisplay');
-                if (displayEl) {
-                    var shuffled = challenge.shuffledDisplay || '';
-                    var html = '';
-                    for (var i = 0; i < shuffled.length; i++) {
-                        var ch = shuffled[i];
-                        html += '<span class="char-btn" data-index="' + i + '" data-char="' + ch + '" onclick="selectChar(' + i + ', \'' + ch + '\', this)">' + ch + '</span>';
-                    }
-                    displayEl.innerHTML = '<div class="display-text" style="padding:1.5rem;margin:0.5rem 0;background:rgba(255,255,255,0.02);border-radius:16px;border:1px solid rgba(255,255,255,0.04);text-align:center;letter-spacing:4px;">' + html + '</div>';
-                    displayEl.dataset.correctAnswer = challenge.correctAnswer;
-                    displayEl.dataset.shuffledPos = challenge.shuffledPos;
-                    dom.timerText.textContent = '⏱ 选择';
-                    startTimer(challenge.timeLimit || 10);
-                }
-            }
-        }, 1000);
-    }
-
-    // ============================================================
-    // 找不同选择字符
-    // ============================================================
-    function selectChar(index, char, element) {
-        if (gameState.isAnswered) return;
-        var container = document.getElementById('findDifferentDisplay');
-        if (!container) return;
-        var shuffledPos = parseInt(container.dataset.shuffledPos);
-        var isCorrect = (index === shuffledPos);
-        var challenge = gameState.currentChallenge;
-
-        gameState.isAnswered = true;
-        clearInterval(gameState.timer);
-
-        var allChars = container.querySelectorAll('.char-btn');
-        allChars.forEach(function(el) {
-            el.classList.add('disabled');
-            el.onclick = null;
-            if (parseInt(el.dataset.index) === shuffledPos) {
-                el.classList.add('correct-answer');
-            }
-        });
-        if (!isCorrect) {
-            element.classList.add('wrong-answer');
-            dom.challengeCard.classList.add('shake');
-            setTimeout(function() { dom.challengeCard.classList.remove('shake'); }, 500);
-        }
-        handleAnswerResult(challenge, isCorrect);
-    }
-
-    // ============================================================
-    // 数字记忆渲染
-    // ============================================================
-    function renderMemoryGame(challenge) {
-        var container = dom.gameContent;
-        var memoryTime = challenge.memoryTime || 5;
-        var timeLimit = challenge.timeLimit || 15;
-        var correctAnswer = challenge.correctAnswer || '';
-
-        container.innerHTML = '';
-
-        var displayDiv = document.createElement('div');
-        displayDiv.id = 'memoryDisplay';
-        displayDiv.style.cssText = 'font-size:3.5rem;font-weight:bold;color:#8B5CF6;padding:2rem;margin:0.5rem 0;background:rgba(139,92,246,0.04);border-radius:16px;border:1px solid rgba(139,92,246,0.06);text-align:center;letter-spacing:16px;font-family:monospace;';
-        displayDiv.textContent = challenge.displayNumber || '';
-        container.appendChild(displayDiv);
-
-        var statusDiv = document.createElement('div');
-        statusDiv.id = 'memoryStatus';
-        statusDiv.style.cssText = 'color:rgba(255,255,255,0.15);font-size:0.8rem;text-align:center;margin:0.2rem 0 0.5rem;';
-        statusDiv.textContent = '⏱ 记忆 ' + memoryTime + 's';
-        container.appendChild(statusDiv);
-
-        var inputDiv = document.createElement('div');
-        inputDiv.className = 'memory-input-display';
-        inputDiv.id = 'memoryInputDisplay';
-        inputDiv.style.display = 'none';
-        inputDiv.textContent = '_ '.repeat(correctAnswer.length).trim();
-        container.appendChild(inputDiv);
-
-        var keyboardDiv = document.createElement('div');
-        keyboardDiv.className = 'memory-keyboard';
-        keyboardDiv.id = 'memoryKeyboard';
-        keyboardDiv.style.display = 'none';
-
-        var keyboardRows = challenge.keyboardRows || [
-            ['1', '2', '3'],
-            ['4', '5', '6'],
-            ['7', '8', '9'],
-            ['', '0', '⌫']
-        ];
-
-        keyboardRows.forEach(function(row) {
-            row.forEach(function(key) {
-                if (!key) {
-                    var empty = document.createElement('div');
-                    keyboardDiv.appendChild(empty);
-                    return;
-                }
-                var btn = document.createElement('button');
-                btn.className = 'key-btn';
-                if (key === '⌫') {
-                    btn.classList.add('backspace');
-                    btn.textContent = '⌫';
-                    btn.addEventListener('click', function() {
-                        if (gameState.isAnswered) return;
-                        memoryBackspace();
-                    });
-                } else {
-                    btn.textContent = key;
-                    btn.addEventListener('click', function() {
-                        if (gameState.isAnswered) return;
-                        memoryKeyPress(key);
-                    });
-                }
-                keyboardDiv.appendChild(btn);
-            });
-        });
-
-        container.appendChild(keyboardDiv);
-
-        var controlsDiv = document.createElement('div');
-        controlsDiv.className = 'memory-controls';
-        controlsDiv.innerHTML = '<button class="btn-memory submit" id="memorySubmitBtn" style="display:none;" onclick="submitMemoryAnswer()">✅ 确认</button>';
-        container.appendChild(controlsDiv);
-
-        var memoryState = {
-            input: '',
-            correctAnswer: correctAnswer,
-            isActive: true,
-            isMemorizing: true
-        };
-        window._memoryState = memoryState;
-
-        var memInterval = setInterval(function() {
-            memoryTime--;
-            var statusEl = document.getElementById('memoryStatus');
-            if (statusEl) {
-                statusEl.textContent = '⏱ 记忆 ' + memoryTime + 's';
-            }
-            var pct = (memoryTime / (challenge.memoryTime || 5)) * 100;
-            dom.timerFill.style.width = Math.max(0, Math.min(100, pct)) + '%';
-            if (pct < 30) dom.timerFill.classList.add('danger');
-            else if (pct < 50) dom.timerFill.classList.add('warning');
-            else dom.timerFill.classList.remove('danger', 'warning');
-
-            if (memoryTime <= 0) {
-                clearInterval(memInterval);
-
-                var displayEl = document.getElementById('memoryDisplay');
-                if (displayEl) {
-                    displayEl.textContent = '✏️ 输入你记住的数字';
-                    displayEl.style.color = 'rgba(255,255,255,0.3)';
-                    displayEl.style.fontSize = '1.5rem';
-                    displayEl.style.letterSpacing = 'normal';
-                    displayEl.style.padding = '1.5rem';
-                }
-
-                var statusEl = document.getElementById('memoryStatus');
-                if (statusEl) {
-                    statusEl.textContent = '⌨️ 输入你记住的数字';
-                    statusEl.style.color = 'rgba(255,255,255,0.08)';
-                }
-
-                document.getElementById('memoryInputDisplay').style.display = 'block';
-                document.getElementById('memoryKeyboard').style.display = 'grid';
-                document.getElementById('memorySubmitBtn').style.display = 'inline-block';
-
-                memoryState.isMemorizing = false;
-
-                dom.timerText.textContent = '⏱ ' + timeLimit + 's';
-                dom.timerFill.style.width = '100%';
-                dom.timerFill.className = 'timer-fill';
-                startTimer(timeLimit);
-            }
-        }, 1000);
-    }
-
-    function memoryKeyPress(value) {
-        if (gameState.isAnswered) return;
-        var state = window._memoryState;
-        if (!state || !state.isActive) return;
-        if (state.isMemorizing) return;
-        var len = state.correctAnswer.length;
-        if (state.input.length >= len) return;
-        state.input += value;
-        updateMemoryDisplay(state);
-    }
-
-    function memoryBackspace() {
-        if (gameState.isAnswered) return;
-        var state = window._memoryState;
-        if (!state || !state.isActive) return;
-        if (state.isMemorizing) return;
-        if (state.input.length > 0) {
-            state.input = state.input.slice(0, -1);
-            updateMemoryDisplay(state);
-        }
-    }
-
-    function updateMemoryDisplay(state) {
-        var display = document.getElementById('memoryInputDisplay');
-        if (!display) return;
-        var len = state.correctAnswer.length;
-        var text = '';
-        for (var i = 0; i < len; i++) {
-            if (i < state.input.length) {
-                text += state.input[i] + ' ';
-            } else {
-                text += '_ ';
-            }
-        }
-        display.textContent = text.trim();
-    }
-
-    function submitMemoryAnswer() {
-        if (gameState.isAnswered) return;
-        var state = window._memoryState;
-        if (!state) return;
-        if (state.input.length !== state.correctAnswer.length) {
-            showToast('请完整输入所有数字', 'error');
-            return;
-        }
-        var isCorrect = state.input === state.correctAnswer;
-        var challenge = gameState.currentChallenge;
-        document.querySelectorAll('.memory-keyboard .key-btn').forEach(function(b) { b.disabled = true; });
-        document.getElementById('memorySubmitBtn').disabled = true;
-        state.isActive = false;
-        handleAnswerResult(challenge, isCorrect);
-    }
-
-    // ============================================================
     // 启动
     // ============================================================
     document.addEventListener('DOMContentLoaded', function() {
-        gameState.isPlaying = true;
-        startGame();
+        renderStartScreen();
     });
 </script>
