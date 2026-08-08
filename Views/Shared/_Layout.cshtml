@@ -429,15 +429,15 @@
                     'Content-Type': 'application/x-www-form-urlencoded',
                     'RequestVerificationToken': token
                 },
-                body: `id=${id}`
+                body: 'id=' + id
             })
-            .then(r => r.json())
-            .then(data => {
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
                 if (data.success) {
                     element.classList.add('read');
-                    const badge = document.querySelector('.notif-badge');
+                    var badge = document.querySelector('.notif-badge');
                     if (badge) {
-                        const count = parseInt(badge.textContent) - 1;
+                        var count = parseInt(badge.textContent) - 1;
                         if (count > 0) {
                             badge.textContent = count;
                         } else {
@@ -461,13 +461,13 @@
                 },
                 body: ''
             })
-            .then(r => r.json())
-            .then(data => {
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
                 if (data.success) {
-                    document.querySelectorAll('.notif-item').forEach(el => el.classList.add('read'));
-                    const badge = document.querySelector('.notif-badge');
+                    document.querySelectorAll('.notif-item').forEach(function(el) { el.classList.add('read'); });
+                    var badge = document.querySelector('.notif-badge');
                     if (badge) badge.remove();
-                    const btn = document.querySelector('.notif-mark-all');
+                    var btn = document.querySelector('.notif-mark-all');
                     if (btn) btn.remove();
                 }
             });
@@ -477,46 +477,41 @@
         // ⭐ SignalR 连接
         // ============================================================
         (function() {
-            const userId = @(Context.Session.GetInt32("UserId") ?? 0);
-            const isAdmin = @(Context.Session.GetInt32("IsAdmin") ?? 0);
+            var userId = @(Context.Session.GetInt32("UserId") ?? 0);
+            var isAdmin = @(Context.Session.GetInt32("IsAdmin") ?? 0);
             if (!userId) return;
 
             try {
-                const connection = new signalR.HubConnectionBuilder()
+                var connection = new signalR.HubConnectionBuilder()
                     .withUrl('/messageHub')
                     .configureLogging(signalR.LogLevel.Information)
                     .build();
 
                 connection.start()
-                    .then(() => {
+                    .then(function() {
                         connection.invoke('UserOnline', userId);
                         console.log('✅ SignalR 已连接');
                     })
-                    .catch(err => console.error('❌ SignalR 连接失败:', err));
+                    .catch(function(err) { console.error('❌ SignalR 连接失败:', err); });
 
-                // 监听在线用户更新
                 connection.on('OnlineUsersUpdated', function(onlineUserIds) {
                     if (isAdmin === 1) {
                         window._updateOnlineList && window._updateOnlineList(onlineUserIds);
                     }
                 });
 
-                // ⭐ 恐怖入侵监听
                 connection.on('HorrorInvasion', function(message) {
                     triggerHorrorInvasion(message || '💀 你逃不掉的...');
                 });
 
-                // ⭐ 幽灵飘过监听
                 connection.on('GhostEvent', function(message) {
                     showGhost(message || '👻 幽灵出没！');
                 });
 
-                // ⭐ 屏幕震动监听
                 connection.on('ShakeEvent', function(intensity) {
                     triggerScreenShake(intensity || 'medium');
                 });
 
-                // 页面关闭时断开连接
                 window.addEventListener('beforeunload', function() {
                     connection.stop();
                 });
@@ -527,14 +522,13 @@
         })();
 
         // ============================================================
-        // ⭐ 恐怖音效合成（优化版 - 听感更真实）
+        // ⭐ 恐怖音效合成
         // ============================================================
 
         function playHorrorSound() {
             try {
                 var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
-                // ===== 创建混响效果（让声音有空间感） =====
                 var convolver = audioCtx.createConvolver();
                 var reverbBuffer = createReverbBuffer(audioCtx);
                 convolver.buffer = reverbBuffer;
@@ -548,7 +542,6 @@
                 var types = ['scream', 'whisper', 'knock', 'breath', 'laugh', 'ambient'];
                 var selected = types[Math.floor(Math.random() * types.length)];
 
-                // ===== 1. 尖叫声 =====
                 if (selected === 'scream') {
                     var freqs = [700, 500, 900];
                     var gains = [0.35, 0.25, 0.2];
@@ -570,10 +563,7 @@
                         osc.start(audioCtx.currentTime + idx * 0.02);
                         osc.stop(audioCtx.currentTime + durations[idx] + 0.1);
                     });
-                }
-
-                // ===== 2. 低语声 =====
-                else if (selected === 'whisper') {
+                } else if (selected === 'whisper') {
                     var bufferSize = audioCtx.sampleRate * 2.5;
                     var buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
                     var data = buffer.getChannelData(0);
@@ -594,15 +584,11 @@
                     gain.connect(convolver);
                     source.start();
                     source.stop(audioCtx.currentTime + 2.8);
-                }
-
-                // ===== 3. 敲门声 =====
-                else if (selected === 'knock') {
+                } else if (selected === 'knock') {
                     for (var i = 0; i < 4; i++) {
                         var delay = i * 0.4;
                         var osc = audioCtx.createOscillator();
                         var gain = audioCtx.createGain();
-                        var noise = createWhiteNoise(audioCtx, 0.06);
 
                         osc.type = 'square';
                         osc.frequency.setValueAtTime(250 - i * 15, audioCtx.currentTime + delay);
@@ -617,10 +603,7 @@
                         osc.start(audioCtx.currentTime + delay);
                         osc.stop(audioCtx.currentTime + delay + 0.08);
                     }
-                }
-
-                // ===== 4. 呼吸声 =====
-                else if (selected === 'breath') {
+                } else if (selected === 'breath') {
                     var bufSize = audioCtx.sampleRate * 3;
                     var buf = audioCtx.createBuffer(1, bufSize, audioCtx.sampleRate);
                     var d = buf.getChannelData(0);
@@ -642,10 +625,7 @@
                     g.connect(convolver);
                     src.start();
                     src.stop(audioCtx.currentTime + 3.2);
-                }
-
-                // ===== 5. 诡异笑声 =====
-                else if (selected === 'laugh') {
+                } else if (selected === 'laugh') {
                     var pitches = [300, 400, 350, 500, 450, 600];
                     var times = [0, 0.25, 0.5, 0.8, 1.05, 1.35];
                     pitches.forEach(function(p, idx) {
@@ -664,10 +644,7 @@
                         osc.start(audioCtx.currentTime + times[idx]);
                         osc.stop(audioCtx.currentTime + times[idx] + 0.15);
                     });
-                }
-
-                // ===== 6. 环境阴森音 =====
-                else {
+                } else {
                     var envBufSize = audioCtx.sampleRate * 6;
                     var envBuf = audioCtx.createBuffer(1, envBufSize, audioCtx.sampleRate);
                     var envData = envBuf.getChannelData(0);
@@ -691,14 +668,10 @@
                 }
 
             } catch (e) {
-                // 静默失败，不影响恐怖效果
                 console.log('音效跳过');
             }
         }
 
-        // ============================================================
-        // ⭐ 辅助函数：创建混响效果
-        // ============================================================
         function createReverbBuffer(audioCtx) {
             var sampleRate = audioCtx.sampleRate;
             var length = sampleRate * 1.5;
@@ -715,34 +688,16 @@
         }
 
         // ============================================================
-        // ⭐ 辅助函数：创建白噪声
-        // ============================================================
-        function createWhiteNoise(audioCtx, amplitude) {
-            var bufferSize = audioCtx.sampleRate * 0.5;
-            var buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-            var data = buffer.getChannelData(0);
-            for (var i = 0; i < bufferSize; i++) {
-                data[i] = (Math.random() * 2 - 1) * amplitude;
-            }
-            var source = audioCtx.createBufferSource();
-            source.buffer = buffer;
-            return source;
-        }
-
-        // ============================================================
-        // ⭐ 恐怖入侵效果（完整版 - 超级恐怖）
+        // ⭐ 恐怖入侵效果（完整版）
         // ============================================================
 
         function triggerHorrorInvasion(message) {
-            // ===== 1. 强制全屏 =====
             if (document.documentElement.requestFullscreen) {
                 document.documentElement.requestFullscreen().catch(function() {});
             }
 
-            // ===== 2. 播放恐怖音效 =====
             playHorrorSound();
 
-            // ===== 3. 逐渐乱码 =====
             var textNodes = [];
             var walker = document.createTreeWalker(
                 document.body,
@@ -765,8 +720,6 @@
 
             var originalTexts = textNodes.map(function(n) { return n.textContent; });
             var glitchLevel = 0;
-
-            // 乱码字符集（包含恐怖符号）
             var glitchChars = '!@#$%^&*()_+-=<>?/[]{}|;:,.\'"\\`~';
             var bloodChars = '🩸💀☠️👁️🔪⚰️🕷️🦇👹🔥';
 
@@ -792,7 +745,6 @@
                     node.textContent = glitched;
                 });
 
-                // 屏幕闪烁
                 if (glitchLevel > 0.2) {
                     document.body.style.backgroundColor = 'rgba(255,0,0,0.02)';
                     setTimeout(function() { document.body.style.backgroundColor = ''; }, 50);
@@ -801,288 +753,53 @@
                 if (glitchLevel >= 1) {
                     clearInterval(glitchInterval);
 
-                    // ===== 4. 随机选择恐怖类型 =====
-                    var horrorTypes = [
-                        'face_zoom',
-                        'blood_wall',
-                        'demon_face',
-                        'skull_zoom',
-                        'scream_face',
-                        'ghost_fly',
-                        'red_glitch',
-                        'eye_zoom'
-                    ];
-
-                    var type = horrorTypes[Math.floor(Math.random() * horrorTypes.length)];
-
-                    // ===== 5. 创建遮罩 =====
                     var overlay = document.createElement('div');
                     overlay.id = 'horrorOverlay';
-                    overlay.style.cssText = `
-                        position: fixed;
-                        inset: 0;
-                        background: rgba(0, 0, 0, 0.98);
-                        z-index: 99999;
-                        display: flex;
-                        flex-direction: column;
-                        align-items: center;
-                        justify-content: center;
-                        animation: horrorFadeIn 0.3s ease;
-                        cursor: default;
-                        user-select: none;
-                        overflow: hidden;
-                    `;
+                    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.98);z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;animation:horrorFadeIn 0.3s ease;cursor:default;user-select:none;overflow:hidden;';
                     document.body.appendChild(overlay);
 
-                    // ===== 6. 根据类型渲染内容 =====
-                    var contentHtml = '';
-                    var imagePath = '/images/horror/';
+                    var symbols = ['😱', '👹', '💀', '👾', '🤡', '👻', '☠️', '🔪'];
+                    var char = symbols[Math.floor(Math.random() * symbols.length)];
 
-                    switch(type) {
-                        case 'face_zoom':
-                            var faces = ['face1.png', 'face2.png', 'face3.png', 'scream.png'];
-                            var img = faces[Math.floor(Math.random() * faces.length)];
-                            contentHtml = `
-                                <div style="position:relative;z-index:2;text-align:center;">
-                                    <img src="${imagePath}${img}"
-                                         style="max-width:85vw;max-height:70vh;border-radius:8px;animation:faceZoom 0.5s ease-out forwards, glitchImage 0.15s infinite;box-shadow:0 0 150px rgba(255,0,0,0.3);"
-                                         onerror="this.style.display='none'"
-                                         id="horrorImg" />
-                                    <div style="color:#ff0000;font-size:3.5rem;font-family:'Courier New',monospace;font-weight:900;text-shadow:0 0 60px rgba(255,0,0,0.5);letter-spacing:8px;margin-top:1rem;animation:textGlitch 0.15s infinite, textPulse 0.3s infinite alternate;">
-                                        ${message}
-                                    </div>
-                                    <div style="color:rgba(255,0,0,0.1);font-size:0.8rem;margin-top:0.5rem;font-family:'Courier New',monospace;letter-spacing:4px;animation:staticFlicker 0.1s infinite;">
-                                        ⚠️ 你 已 经 被 锁 定 ⚠️
-                                    </div>
-                                </div>
-                                <div style="position:absolute;inset:0;background:radial-gradient(ellipse at center,rgba(255,0,0,0.05),transparent 60%);pointer-events:none;"></div>
-                            `;
-                            break;
+                    var bigDiv = document.createElement('div');
+                    bigDiv.style.cssText = 'font-size:10rem;animation:faceZoom 0.5s ease-out forwards;filter:drop-shadow(0 0 80px rgba(255,0,0,0.3));';
+                    bigDiv.textContent = char;
+                    overlay.appendChild(bigDiv);
 
-                        case 'blood_wall':
-                            contentHtml = `
-                                <div style="position:relative;z-index:2;text-align:center;">
-                                    <div style="font-size:8rem;animation:bloodDrip 0.5s ease-in-out infinite;filter:drop-shadow(0 0 80px rgba(255,0,0,0.3));">
-                                        🩸
-                                    </div>
-                                    <div style="color:#ff0000;font-size:4rem;font-family:'Courier New',monospace;font-weight:900;text-shadow:0 0 80px rgba(255,0,0,0.5);letter-spacing:12px;animation:textGlitch 0.1s infinite, textPulse 0.2s infinite alternate;">
-                                        ${message}
-                                    </div>
-                                    <div style="color:rgba(255,0,0,0.08);font-size:1rem;margin-top:1rem;font-family:'Courier New',monospace;letter-spacing:8px;animation:staticFlicker 0.15s infinite;">
-                                        ██████████████████████████████████
-                                    </div>
-                                    <div style="color:rgba(255,0,0,0.05);font-size:0.7rem;margin-top:0.3rem;font-family:'Courier New',monospace;letter-spacing:2px;animation:staticFlicker 0.2s infinite;">
-                                        血 液 正 在 渗 透 。 。 。
-                                    </div>
-                                </div>
-                                <div style="position:absolute;inset:0;background:radial-gradient(ellipse at center,rgba(255,0,0,0.08),transparent 50%);pointer-events:none;animation:bloodPulse 0.3s ease-in-out infinite alternate;"></div>
-                            `;
-                            break;
+                    var textDiv = document.createElement('div');
+                    textDiv.style.cssText = 'color:#ff0000;font-size:3.5rem;font-family:Courier New,monospace;font-weight:900;text-shadow:0 0 60px rgba(255,0,0,0.5);letter-spacing:8px;margin-top:0.5rem;animation:textGlitch 0.15s infinite,textPulse 0.3s infinite alternate;text-align:center;padding:0 1rem;';
+                    textDiv.textContent = message || '💀 你逃不掉的...';
+                    overlay.appendChild(textDiv);
 
-                        case 'demon_face':
-                            contentHtml = `
-                                <div style="position:relative;z-index:2;text-align:center;">
-                                    <img src="${imagePath}demon.png"
-                                         style="max-width:70vw;max-height:60vh;border-radius:8px;animation:faceZoom 0.6s ease-out forwards, glitchImage 0.2s infinite;box-shadow:0 0 150px rgba(255,0,0,0.4);"
-                                         onerror="this.style.display='none'"
-                                         id="horrorImg" />
-                                    <div style="color:#ff2200;font-size:3.5rem;font-family:'Courier New',monospace;font-weight:900;text-shadow:0 0 80px rgba(255,0,0,0.6);letter-spacing:10px;margin-top:0.5rem;animation:textGlitch 0.1s infinite;">
-                                        ${message}
-                                    </div>
-                                    <div style="color:rgba(255,0,0,0.05);font-size:0.8rem;margin-top:0.5rem;font-family:'Courier New',monospace;letter-spacing:4px;animation:staticFlicker 0.15s infinite;">
-                                        👹 地 狱 之 门 已 打 开 👹
-                                    </div>
-                                </div>
-                            `;
-                            break;
+                    var subDiv = document.createElement('div');
+                    subDiv.style.cssText = 'color:rgba(255,0,0,0.08);font-size:0.8rem;margin-top:0.5rem;font-family:Courier New,monospace;letter-spacing:4px;animation:staticFlicker 0.15s infinite;';
+                    subDiv.textContent = '⚠️ 你 已 经 被 锁 定 ⚠️';
+                    overlay.appendChild(subDiv);
 
-                        case 'skull_zoom':
-                            contentHtml = `
-                                <div style="position:relative;z-index:2;text-align:center;">
-                                    <img src="${imagePath}skull.png"
-                                         style="max-width:75vw;max-height:65vh;border-radius:8px;animation:faceZoom 0.5s ease-out forwards, glitchImage 0.15s infinite;box-shadow:0 0 150px rgba(255,0,0,0.3);filter:drop-shadow(0 0 60px rgba(255,0,0,0.2));"
-                                         onerror="this.style.display='none'"
-                                         id="horrorImg" />
-                                    <div style="color:#ff3333;font-size:3.5rem;font-family:'Courier New',monospace;font-weight:900;text-shadow:0 0 80px rgba(255,0,0,0.5);letter-spacing:12px;margin-top:0.5rem;animation:textGlitch 0.1s infinite, textPulse 0.3s infinite alternate;">
-                                        ${message}
-                                    </div>
-                                    <div style="color:rgba(255,0,0,0.05);font-size:0.8rem;margin-top:0.5rem;font-family:'Courier New',monospace;letter-spacing:4px;animation:staticFlicker 0.2s infinite;">
-                                        ☠️ 死 亡 正 在 逼 近 ☠️
-                                    </div>
-                                </div>
-                            `;
-                            break;
-
-                        case 'scream_face':
-                            contentHtml = `
-                                <div style="position:relative;z-index:2;text-align:center;">
-                                    <img src="${imagePath}scream.png"
-                                         style="max-width:80vw;max-height:70vh;border-radius:8px;animation:faceZoom 0.4s ease-out forwards, glitchImage 0.1s infinite;box-shadow:0 0 150px rgba(255,0,0,0.3);"
-                                         onerror="this.style.display='none'"
-                                         id="horrorImg" />
-                                    <div style="color:#ff0000;font-size:3.5rem;font-family:'Courier New',monospace;font-weight:900;text-shadow:0 0 80px rgba(255,0,0,0.5);letter-spacing:8px;margin-top:0.5rem;animation:textGlitch 0.1s infinite;">
-                                        ${message}
-                                    </div>
-                                    <div style="color:rgba(255,0,0,0.05);font-size:0.8rem;margin-top:0.5rem;font-family:'Courier New',monospace;letter-spacing:4px;animation:staticFlicker 0.15s infinite;">
-                                        🔊 尖 叫 吧 。 。 。 没 人 听 得 到 🔊
-                                    </div>
-                                </div>
-                            `;
-                            break;
-
-                        case 'ghost_fly':
-                            contentHtml = `
-                                <div style="position:relative;z-index:2;text-align:center;">
-                                    <div style="font-size:10rem;animation:ghostPulse 0.5s ease-in-out infinite;filter:drop-shadow(0 0 100px rgba(139,92,246,0.4));">
-                                        👻
-                                    </div>
-                                    <div style="color:#8B5CF6;font-size:3.5rem;font-family:'Courier New',monospace;font-weight:900;text-shadow:0 0 80px rgba(139,92,246,0.4);letter-spacing:12px;margin-top:0.5rem;animation:textGlitch 0.15s infinite, textPulse 0.3s infinite alternate;">
-                                        ${message}
-                                    </div>
-                                    <div style="color:rgba(139,92,246,0.05);font-size:0.8rem;margin-top:0.5rem;font-family:'Courier New',monospace;letter-spacing:4px;animation:staticFlicker 0.2s infinite;">
-                                        👻 它 就 在 你 身 后 👻
-                                    </div>
-                                </div>
-                            `;
-                            break;
-
-                        case 'red_glitch':
-                            contentHtml = `
-                                <div style="position:relative;z-index:2;text-align:center;">
-                                    <div style="font-size:8rem;color:#ff0000;animation:textPulse 0.1s infinite alternate;text-shadow:0 0 100px rgba(255,0,0,0.5);">
-                                        ⚠️
-                                    </div>
-                                    <div style="color:#ff0000;font-size:4rem;font-family:'Courier New',monospace;font-weight:900;text-shadow:0 0 80px rgba(255,0,0,0.6);letter-spacing:10px;animation:textGlitch 0.08s infinite, textPulse 0.15s infinite alternate;">
-                                        ${message}
-                                    </div>
-                                    <div style="color:rgba(255,0,0,0.08);font-size:1rem;margin-top:1rem;font-family:'Courier New',monospace;letter-spacing:6px;animation:staticFlicker 0.1s infinite;">
-                                        ⚠️ 系 统 崩 溃 ⚠️ 无 法 逃 离 ⚠️
-                                    </div>
-                                    <div style="color:rgba(255,0,0,0.03);font-size:0.6rem;margin-top:0.3rem;font-family:'Courier New',monospace;letter-spacing:2px;animation:staticFlicker 0.2s infinite;">
-                                        01001101 01100001 01101100 01100110 01110101 01101110 01100011 01110100 01101001 01101111 01101110
-                                    </div>
-                                </div>
-                                <div style="position:absolute;inset:0;border:8px solid rgba(255,0,0,0.05);animation:borderPulse 0.2s ease-in-out infinite alternate;pointer-events:none;"></div>
-                            `;
-                            break;
-
-                        case 'eye_zoom':
-                            contentHtml = `
-                                <div style="position:relative;z-index:2;text-align:center;">
-                                    <img src="${imagePath}blood_eyes.png"
-                                         style="max-width:70vw;max-height:60vh;border-radius:8px;animation:faceZoom 0.6s ease-out forwards, glitchImage 0.2s infinite;box-shadow:0 0 150px rgba(255,0,0,0.3);"
-                                         onerror="this.style.display='none'"
-                                         id="horrorImg" />
-                                    <div style="color:#ff0000;font-size:3.5rem;font-family:'Courier New',monospace;font-weight:900;text-shadow:0 0 80px rgba(255,0,0,0.5);letter-spacing:8px;margin-top:0.5rem;animation:textGlitch 0.1s infinite, textPulse 0.2s infinite alternate;">
-                                        ${message}
-                                    </div>
-                                    <div style="color:rgba(255,0,0,0.05);font-size:0.8rem;margin-top:0.5rem;font-family:'Courier New',monospace;letter-spacing:4px;animation:staticFlicker 0.15s infinite;">
-                                        👁️ 它 在 看 你 👁️
-                                    </div>
-                                </div>
-                            `;
-                            break;
-                    }
-
-                    overlay.innerHTML = contentHtml;
-
-                    // ===== 7. 注入动画样式 =====
                     var style = document.createElement('style');
-                    style.textContent = `
-                        @keyframes horrorFadeIn {
-                            0% { opacity: 0; transform: scale(0.9); }
-                            100% { opacity: 1; transform: scale(1); }
-                        }
-                        @keyframes faceZoom {
-                            0% { transform: scale(0.1) rotate(-20deg); opacity: 0; }
-                            50% { transform: scale(1.4) rotate(5deg); opacity: 1; }
-                            70% { transform: scale(0.9) rotate(-3deg); }
-                            100% { transform: scale(1) rotate(0deg); }
-                        }
-                        @keyframes glitchImage {
-                            0%, 100% { transform: translate(0, 0) scale(1); opacity: 1; }
-                            10% { transform: translate(-20px, 10px) scale(1.04); opacity: 0.7; }
-                            20% { transform: translate(15px, -8px) scale(0.96); opacity: 0.5; }
-                            30% { transform: translate(-12px, 18px) scale(1.06); opacity: 0.8; }
-                            40% { transform: translate(25px, -12px) scale(0.94); opacity: 0.4; }
-                            50% { transform: translate(-15px, 8px) scale(1.03); opacity: 0.6; }
-                            60% { transform: translate(12px, -22px) scale(0.97); opacity: 0.7; }
-                            70% { transform: translate(-25px, 15px) scale(1.05); opacity: 0.5; }
-                            80% { transform: translate(15px, -10px) scale(0.95); opacity: 0.6; }
-                            90% { transform: translate(-10px, 18px) scale(1.02); opacity: 0.8; }
-                        }
-                        @keyframes textGlitch {
-                            0%, 100% { opacity: 1; transform: translateX(0) skewX(0deg); }
-                            10% { opacity: 0.6; transform: translateX(-12px) skewX(8deg); }
-                            20% { opacity: 0.4; transform: translateX(12px) skewX(-8deg); }
-                            30% { opacity: 0.7; transform: translateX(-8px) skewX(5deg); }
-                            40% { opacity: 0.5; transform: translateX(8px) skewX(-5deg); }
-                            50% { opacity: 0.8; transform: translateX(-5px) skewX(3deg); }
-                            60% { opacity: 0.6; transform: translateX(5px) skewX(-3deg); }
-                            70% { opacity: 0.7; transform: translateX(-6px) skewX(6deg); }
-                            80% { opacity: 0.4; transform: translateX(6px) skewX(-6deg); }
-                            90% { opacity: 0.9; transform: translateX(-3px) skewX(2deg); }
-                        }
-                        @keyframes textPulse {
-                            0%, 100% { transform: scale(1); opacity: 1; }
-                            25% { transform: scale(1.08); opacity: 0.7; }
-                            50% { transform: scale(0.92); opacity: 1; }
-                            75% { transform: scale(1.05); opacity: 0.8; }
-                        }
-                        @keyframes ghostPulse {
-                            0%, 100% { transform: scale(1) translateY(0); opacity: 0.8; }
-                            50% { transform: scale(1.15) translateY(-30px); opacity: 1; }
-                        }
-                        @keyframes bloodDrip {
-                            0%, 100% { transform: scale(1); opacity: 0.8; }
-                            50% { transform: scale(1.1); opacity: 1; }
-                        }
-                        @keyframes bloodPulse {
-                            0%, 100% { opacity: 0.05; transform: scale(1); }
-                            50% { opacity: 0.15; transform: scale(1.1); }
-                        }
-                        @keyframes borderPulse {
-                            0%, 100% { opacity: 0.03; transform: scale(1); }
-                            50% { opacity: 0.1; transform: scale(0.98); }
-                        }
-                        @keyframes staticFlicker {
-                            0%, 100% { opacity: 1; }
-                            25% { opacity: 0.2; }
-                            50% { opacity: 0.7; }
-                            75% { opacity: 0.1; }
-                        }
-                    `;
+                    style.textContent =
+                        '@keyframes horrorFadeIn{0%{opacity:0;transform:scale(0.9)}100%{opacity:1;transform:scale(1)}}' +
+                        '@keyframes faceZoom{0%{transform:scale(0.1) rotate(-20deg);opacity:0}50%{transform:scale(1.4) rotate(5deg);opacity:1}70%{transform:scale(0.9) rotate(-3deg)}100%{transform:scale(1) rotate(0deg)}}' +
+                        '@keyframes textGlitch{0%,100%{opacity:1;transform:translateX(0) skewX(0deg)}10%{opacity:0.6;transform:translateX(-12px) skewX(8deg)}20%{opacity:0.4;transform:translateX(12px) skewX(-8deg)}30%{opacity:0.7;transform:translateX(-8px) skewX(5deg)}40%{opacity:0.5;transform:translateX(8px) skewX(-5deg)}50%{opacity:0.8;transform:translateX(-5px) skewX(3deg)}60%{opacity:0.6;transform:translateX(5px) skewX(-3deg)}70%{opacity:0.7;transform:translateX(-6px) skewX(6deg)}80%{opacity:0.4;transform:translateX(6px) skewX(-6deg)}90%{opacity:0.9;transform:translateX(-3px) skewX(2deg)}}' +
+                        '@keyframes textPulse{0%,100%{transform:scale(1);opacity:1}25%{transform:scale(1.08);opacity:0.7}50%{transform:scale(0.92);opacity:1}75%{transform:scale(1.05);opacity:0.8}}' +
+                        '@keyframes staticFlicker{0%,100%{opacity:1}25%{opacity:0.2}50%{opacity:0.7}75%{opacity:0.1}}';
                     document.head.appendChild(style);
 
-                    // ===== 8. 红色闪烁 =====
                     var flashInterval = setInterval(function() {
                         var flash = document.createElement('div');
-                        flash.style.cssText = `
-                            position: fixed;
-                            inset: 0;
-                            background: rgba(255,0,0,${Math.random() * 0.08});
-                            z-index: 99998;
-                            pointer-events: none;
-                        `;
+                        flash.style.cssText = 'position:fixed;inset:0;background:rgba(255,0,0,' + (Math.random() * 0.08) + ');z-index:99998;pointer-events:none;';
                         document.body.appendChild(flash);
                         setTimeout(function() { flash.remove(); }, 100);
                     }, 200);
 
-                    // ===== 9. 恢复 =====
                     setTimeout(function() {
                         clearInterval(flashInterval);
-
-                        // 恢复文本
                         textNodes.forEach(function(node, idx) {
                             node.textContent = originalTexts[idx] || '';
                         });
-
-                        // 退出全屏
                         if (document.fullscreenElement) {
                             document.exitFullscreen().catch(function() {});
                         }
-
-                        // 移除遮罩
                         var overlayEl = document.getElementById('horrorOverlay');
                         if (overlayEl) {
                             overlayEl.style.animation = 'horrorFadeIn 0.5s ease reverse';
@@ -1091,11 +808,8 @@
                                 if (style) style.remove();
                             }, 500);
                         }
-
                         document.body.style.backgroundColor = '';
-
                     }, 5000);
-
                 }
             }, 80);
         }
@@ -1105,54 +819,17 @@
         // ============================================================
         function showGhost(message) {
             var ghost = document.createElement('div');
-            ghost.style.cssText = `
-                position: fixed;
-                top: 50%;
-                left: -200px;
-                transform: translateY(-50%);
-                font-size: 10rem;
-                z-index: 99999;
-                pointer-events: none;
-                animation: ghostFly 4s ease-in-out forwards;
-                filter: drop-shadow(0 0 80px rgba(139,92,246,0.3));
-            `;
+            ghost.style.cssText = 'position:fixed;top:50%;left:-200px;transform:translateY(-50%);font-size:10rem;z-index:99999;pointer-events:none;animation:ghostFly 4s ease-in-out forwards;filter:drop-shadow(0 0 80px rgba(139,92,246,0.3));';
             ghost.textContent = '👻';
             document.body.appendChild(ghost);
 
             var text = document.createElement('div');
-            text.style.cssText = `
-                position: fixed;
-                top: 55%;
-                left: 50%;
-                transform: translateX(-50%);
-                font-size: 2.5rem;
-                color: rgba(255,255,255,0.15);
-                z-index: 99999;
-                pointer-events: none;
-                animation: fadeText 3s ease-out forwards;
-                font-family: 'Inter', sans-serif;
-                text-shadow: 0 0 60px rgba(139,92,246,0.1);
-                letter-spacing: 4px;
-            `;
+            text.style.cssText = 'position:fixed;top:55%;left:50%;transform:translateX(-50%);font-size:2.5rem;color:rgba(255,255,255,0.15);z-index:99999;pointer-events:none;animation:fadeText 3s ease-out forwards;font-family:Inter,sans-serif;text-shadow:0 0 60px rgba(139,92,246,0.1);letter-spacing:4px;';
             text.textContent = message;
             document.body.appendChild(text);
 
             var style = document.createElement('style');
-            style.textContent = `
-                @keyframes ghostFly {
-                    0% { transform: translateY(-50%) translateX(0) scale(0.8); opacity: 0; }
-                    10% { opacity: 1; }
-                    50% { transform: translateY(-40%) translateX(50vw) scale(1.3); }
-                    90% { opacity: 1; }
-                    100% { transform: translateY(-60%) translateX(100vw) scale(0.8); opacity: 0; }
-                }
-                @keyframes fadeText {
-                    0% { opacity: 0; transform: translateX(-50%) scale(0.8); }
-                    20% { opacity: 1; transform: translateX(-50%) scale(1); }
-                    80% { opacity: 1; }
-                    100% { opacity: 0; transform: translateX(-50%) scale(1.2); }
-                }
-            `;
+            style.textContent = '@keyframes ghostFly{0%{transform:translateY(-50%) translateX(0) scale(0.8);opacity:0}10%{opacity:1}50%{transform:translateY(-40%) translateX(50vw) scale(1.3)}90%{opacity:1}100%{transform:translateY(-60%) translateX(100vw) scale(0.8);opacity:0}}@keyframes fadeText{0%{opacity:0;transform:translateX(-50%) scale(0.8)}20%{opacity:1;transform:translateX(-50%) scale(1)}80%{opacity:1}100%{opacity:0;transform:translateX(-50%) scale(1.2)}}';
             document.head.appendChild(style);
 
             setTimeout(function() {
@@ -1174,54 +851,22 @@
             container.offsetHeight;
 
             var shakeStyle = document.createElement('style');
-            shakeStyle.textContent = `
-                @keyframes shakeScreen {
-                    0% { transform: translate(0, 0) rotate(0deg); }
-                    5% { transform: translate(${-strength}px, ${strength/2}px) rotate(${-strength/4}deg); }
-                    10% { transform: translate(${strength}px, ${-strength/2}px) rotate(${strength/4}deg); }
-                    15% { transform: translate(${-strength*1.5}px, ${strength}px) rotate(${-strength/3}deg); }
-                    20% { transform: translate(${strength/2}px, ${-strength*1.5}px) rotate(${strength/4}deg); }
-                    25% { transform: translate(${-strength/2}px, ${strength/2}px) rotate(${-strength/8}deg); }
-                    30% { transform: translate(${strength*1.2}px, ${-strength/3}px) rotate(${strength/6}deg); }
-                    35% { transform: translate(${-strength*0.8}px, ${strength*0.8}px) rotate(${-strength/5}deg); }
-                    40% { transform: translate(${strength*0.6}px, ${-strength*0.6}px) rotate(${strength/8}deg); }
-                    50% { transform: translate(${-strength*0.4}px, ${strength*0.4}px) rotate(${-strength/6}deg); }
-                    60% { transform: translate(${strength*0.8}px, ${-strength*0.5}px) rotate(${strength/5}deg); }
-                    70% { transform: translate(${-strength*0.5}px, ${strength*0.6}px) rotate(${-strength/4}deg); }
-                    80% { transform: translate(${strength*0.3}px, ${-strength*0.3}px) rotate(${strength/8}deg); }
-                    90% { transform: translate(${-strength*0.2}px, ${strength*0.2}px) rotate(${-strength/10}deg); }
-                    100% { transform: translate(0, 0) rotate(0deg); }
-                }
-            `;
+            shakeStyle.textContent = '@keyframes shakeScreen{0%{transform:translate(0,0) rotate(0deg)}5%{transform:translate(-' + strength + 'px,' + (strength/2) + 'px) rotate(-' + (strength/4) + 'deg)}10%{transform:translate(' + strength + 'px,-' + (strength/2) + 'px) rotate(' + (strength/4) + 'deg)}15%{transform:translate(-' + (strength*1.5) + 'px,' + strength + 'px) rotate(-' + (strength/3) + 'deg)}20%{transform:translate(' + (strength/2) + 'px,-' + (strength*1.5) + 'px) rotate(' + (strength/4) + 'deg)}25%{transform:translate(-' + (strength/2) + 'px,' + (strength/2) + 'px) rotate(-' + (strength/8) + 'deg)}30%{transform:translate(' + (strength*1.2) + 'px,-' + (strength/3) + 'px) rotate(' + (strength/6) + 'deg)}35%{transform:translate(-' + (strength*0.8) + 'px,' + (strength*0.8) + 'px) rotate(-' + (strength/5) + 'deg)}40%{transform:translate(' + (strength*0.6) + 'px,-' + (strength*0.6) + 'px) rotate(' + (strength/8) + 'deg)}50%{transform:translate(-' + (strength*0.4) + 'px,' + (strength*0.4) + 'px) rotate(-' + (strength/6) + 'deg)}60%{transform:translate(' + (strength*0.8) + 'px,-' + (strength*0.5) + 'px) rotate(' + (strength/5) + 'deg)}70%{transform:translate(-' + (strength*0.5) + 'px,' + (strength*0.6) + 'px) rotate(-' + (strength/4) + 'deg)}80%{transform:translate(' + (strength*0.3) + 'px,-' + (strength*0.3) + 'px) rotate(' + (strength/8) + 'deg)}90%{transform:translate(-' + (strength*0.2) + 'px,' + (strength*0.2) + 'px) rotate(-' + (strength/10) + 'deg)}100%{transform:translate(0,0) rotate(0deg)}}';
             document.head.appendChild(shakeStyle);
 
-            container.style.animation = `shakeScreen ${duration}ms ease-in-out`;
+            container.style.animation = 'shakeScreen ' + duration + 'ms ease-in-out';
 
-            // 红色闪烁
             var flashInterval = setInterval(function() {
                 var flash = document.createElement('div');
-                flash.style.cssText = `
-                    position: fixed;
-                    inset: 0;
-                    background: rgba(255, 0, 0, ${0.03 + Math.random() * 0.05});
-                    z-index: 99998;
-                    pointer-events: none;
-                `;
+                flash.style.cssText = 'position:fixed;inset:0;background:rgba(255,0,0,' + (0.03 + Math.random() * 0.05) + ');z-index:99998;pointer-events:none;';
                 document.body.appendChild(flash);
                 setTimeout(function() { flash.remove(); }, 50);
             }, 50);
 
-            // 黑屏闪烁
             var blackInterval = setInterval(function() {
                 if (Math.random() > 0.7) {
                     var black = document.createElement('div');
-                    black.style.cssText = `
-                        position: fixed;
-                        inset: 0;
-                        background: rgba(0, 0, 0, ${0.1 + Math.random() * 0.3});
-                        z-index: 99997;
-                        pointer-events: none;
-                    `;
+                    black.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,' + (0.1 + Math.random() * 0.3) + ');z-index:99997;pointer-events:none;';
                     document.body.appendChild(black);
                     setTimeout(function() { black.remove(); }, 50);
                 }
@@ -1239,9 +884,9 @@
         // 点击通知项标记已读
         // ============================================================
         document.addEventListener('click', function(e) {
-            const item = e.target.closest('.notif-item');
+            var item = e.target.closest('.notif-item');
             if (item && !item.classList.contains('read')) {
-                const id = item.dataset.id;
+                var id = item.dataset.id;
                 if (id) {
                     markNotifRead(id, item);
                 }
