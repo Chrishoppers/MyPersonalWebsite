@@ -104,6 +104,29 @@ public async Task<IActionResult> BatchDeleteQuestions([FromBody] List<int> ids)
         message = $"✅ 已删除 {successCount} 道题" + (failCount > 0 ? $"，{failCount} 道失败" : "")
     });
 }
+//在线人数
+[HttpGet]
+public async Task<IActionResult> GetAllUsersBrief()
+{
+    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+    if (isAdmin != 1)
+        return Json(new { success = false, message = "权限不足" });
+
+    var users = await _dataSync.GetAllUsersAsync();
+    var brief = users
+        .Where(u => !u.IsDeleted)
+        .Select(u => new
+        {
+            id = u.Id,
+            username = u.Username,
+            avatarUrl = u.AvatarUrl,
+            isAvatarApproved = u.IsAvatarApproved,
+            isAdmin = u.IsAdmin
+        })
+        .ToList();
+
+    return Json(new { success = true, users = brief });
+}
         
         // ============================================================
 // 📅 未来题目安排（自动AI安排 + 手动变更）
