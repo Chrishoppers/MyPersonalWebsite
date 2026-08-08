@@ -505,7 +505,18 @@ namespace MyPersonalWebsite.Controllers
             {"inverseColor", new[]{"🎨 视觉之神！", "🌈 火眼金睛！", "✨ 色彩大师！"}},
             {"rotate", new[]{"🔄 空间之神！", "🧠 超脑！", "✨ 旋转之王！"}},
             {"abgame", new[]{"🧠 推理大师！", "🔢 数字天才！", "🎯 精准打击！", "💡 逻辑王者！", "🏆 解密高手！", "⚡ 人形计算机！", "✨ 洞察秋毫！", "🎯 一击即中！", "🧩 逻辑之眼！", "🔥 推理之火！", "💪 头脑风暴！", "🌟 数字掌控者！", "🚀 推理加速！"}},
-            {"tripleColor", new[]{"🎯 三重干扰通关！", "🌈 视觉之神！", "✨ 不是人类！"}}
+            {"tripleColor", new[]{"🎯 三重干扰通关！", "🌈 视觉之神！", "✨ 不是人类！"}},
+            {"dateReasoning", new[]{
+    "📅 日历大师！",
+    "⏰ 时间掌控者！",
+    "🧠 日期天才！",
+    "🎯 精准推算！",
+    "📆 日历杀手！",
+    "🔢 数字日历！",
+    "🌟 星期王者！",
+    "💪 日期推理王！",
+    "🔥 时间魔术师！"
+}},
         };
 
         // ============================================================
@@ -677,7 +688,7 @@ namespace MyPersonalWebsite.Controllers
                 "数字华容道",    // 13
                 "立体三视图",    // 14
                 "图形计数",      // 15
-                "反色识别",      // 16
+                "日期推理",      // 16
                 "图形旋转",      // 17
                 "1A2B猜数字",    // 18
                 "颜色三重干扰"   // 19
@@ -702,7 +713,9 @@ namespace MyPersonalWebsite.Controllers
                 case 13: result = GeneratePuzzle(level, difficulty, typesCompleted); break;
                 case 14: result = GenerateThreeViewCounting(level, difficulty, typesCompleted); break;
                 case 15: result = GenerateShapeCount(level, difficulty, typesCompleted); break;
-                case 16: result = GenerateInverseColor(level, difficulty, typesCompleted); break;
+               case 16:
+    result = GenerateDateReasoning(level, difficulty, typesCompleted);
+    break;
                 case 17: result = GenerateRotateShape(level, difficulty, typesCompleted); break;
                 case 18: result = Generate1A2B(level, difficulty, typesCompleted); break;
                 default: result = GenerateTripleColorInterference(level, difficulty, typesCompleted); break;
@@ -2208,35 +2221,161 @@ namespace MyPersonalWebsite.Controllers
             };
         }
 
-        // ============================================================
-        // ⭐ 题型 16：反色识别
-        // ============================================================
-        private object GenerateInverseColor(int level, int difficulty, int typesCompleted)
+       // ============================================================
+// ⭐ 题型 16：日期推理（替换反色识别）
+// ============================================================
+
+private object GenerateDateReasoning(int level, int difficulty, int typesCompleted)
+{
+    int timeLimit;
+    string question;
+    string correctAnswer;
+    List<string> options;
+
+    // 基础日期（2026年8月7日是星期五）
+    var baseDate = new DateTime(2026, 8, 7);
+    var baseDayOfWeek = DayOfWeek.Friday;
+
+    if (difficulty <= 20)  // ⭐ 入门
+    {
+        // 同月内推算
+        int offset = _random.Next(1, 6);
+        int direction = _random.Next(0, 2); // 0=往前, 1=往后
+        int targetDay = direction == 0 ? 7 - offset : 7 + offset;
+        var targetDate = new DateTime(2026, 8, targetDay);
+        var targetWeekday = targetDate.DayOfWeek;
+
+        string directionText = direction == 0 ? "前几天" : "后几天";
+        string[] weekdays = { "星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六" };
+
+        question = $"📅 2026年8月7日是星期五，8月{targetDay}日是星期几？";
+        correctAnswer = weekdays[(int)targetWeekday];
+
+        options = new List<string> { correctAnswer };
+        var allWeekdays = new List<string> { "星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六" };
+        var shuffled = allWeekdays.Where(w => w != correctAnswer).OrderBy(_ => _random.Next()).ToList();
+        for (int i = 0; i < Math.Min(3, shuffled.Count); i++)
         {
-            var colors = new[] { "黑色", "白色", "灰色", "深灰", "浅灰" };
-            int idx = _random.Next(colors.Length);
-            string color = colors[idx];
-
-            string bg = color == "黑色" ? "#FFFFFF" : color == "白色" ? "#000000" : "#808080";
-            string textColor = color == "黑色" ? "#000000" : color == "白色" ? "#FFFFFF" : "#404040";
-
-            int timeLimit = Math.Max(2, 7 - difficulty / 12);
-            string[] texts = { "颜色", "色彩", "文字" };
-            string displayText = texts[_random.Next(texts.Length)];
-
-            return new Dictionary<string, object>
-            {
-                ["type"] = "inverseColor",
-                ["level"] = level,
-                ["question"] = $"🎨 下面文字是什么颜色？（注意背景）",
-                ["displayHtml"] = $"<span style='color:{textColor};background:{bg};padding:0.3rem 1.5rem;border-radius:8px;font-size:2rem;font-weight:bold;'>{displayText}</span>",
-                ["correctAnswer"] = color,
-                ["options"] = new List<string>(colors),
-                ["timeLimit"] = timeLimit,
-                ["typesCompleted"] = typesCompleted,
-                ["funMessage"] = GetFunMessage("inverseColor")
-            };
+            options.Add(shuffled[i]);
         }
+        options = options.OrderBy(_ => _random.Next()).ToList();
+        timeLimit = 10;
+    }
+    else if (difficulty <= 40)  // ⭐⭐ 简单
+    {
+        // 跨多天推算
+        int offset = _random.Next(7, 30);
+        int direction = _random.Next(0, 2);
+        var targetDate = direction == 0 ? baseDate.AddDays(-offset) : baseDate.AddDays(offset);
+        var targetWeekday = targetDate.DayOfWeek;
+
+        string directionText = direction == 0 ? "前" : "后";
+        string[] weekdays = { "星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六" };
+
+        question = $"📅 2026年8月7日是星期五，{offset}天{directionText}是星期几？";
+        correctAnswer = weekdays[(int)targetWeekday];
+
+        options = new List<string> { correctAnswer };
+        var allWeekdays = new List<string> { "星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六" };
+        var shuffled = allWeekdays.Where(w => w != correctAnswer).OrderBy(_ => _random.Next()).ToList();
+        for (int i = 0; i < Math.Min(3, shuffled.Count); i++)
+        {
+            options.Add(shuffled[i]);
+        }
+        options = options.OrderBy(_ => _random.Next()).ToList();
+        timeLimit = 12;
+    }
+    else if (difficulty <= 60)  // ⭐⭐⭐ 中等
+    {
+        // 跨月推算
+        int month = _random.Next(8, 12);
+        int day = _random.Next(1, 28);
+        var targetDate = new DateTime(2026, month, day);
+        var targetWeekday = targetDate.DayOfWeek;
+
+        string[] weekdays = { "星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六" };
+
+        question = $"📅 2026年8月7日是星期五，{month}月{day}日是星期几？";
+        correctAnswer = weekdays[(int)targetWeekday];
+
+        options = new List<string> { correctAnswer };
+        var allWeekdays = new List<string> { "星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六" };
+        var shuffled = allWeekdays.Where(w => w != correctAnswer).OrderBy(_ => _random.Next()).ToList();
+        for (int i = 0; i < Math.Min(3, shuffled.Count); i++)
+        {
+            options.Add(shuffled[i]);
+        }
+        options = options.OrderBy(_ => _random.Next()).ToList();
+        timeLimit = 15;
+    }
+    else if (difficulty <= 80)  // ⭐⭐⭐⭐ 困难
+    {
+        // 跨年推算（2025-2027）
+        int year = _random.Next(2025, 2028);
+        int month = _random.Next(1, 13);
+        int day = _random.Next(1, 28);
+        var targetDate = new DateTime(year, month, day);
+        var targetWeekday = targetDate.DayOfWeek;
+
+        string[] weekdays = { "星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六" };
+
+        question = $"📅 2026年8月7日是星期五，{year}年{month}月{day}日是星期几？";
+        correctAnswer = weekdays[(int)targetWeekday];
+
+        options = new List<string> { correctAnswer };
+        var allWeekdays = new List<string> { "星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六" };
+        var shuffled = allWeekdays.Where(w => w != correctAnswer).OrderBy(_ => _random.Next()).ToList();
+        for (int i = 0; i < Math.Min(3, shuffled.Count); i++)
+        {
+            options.Add(shuffled[i]);
+        }
+        options = options.OrderBy(_ => _random.Next()).ToList();
+        timeLimit = 18;
+    }
+    else  // ⭐⭐⭐⭐⭐ 地狱
+    {
+        // 闰年 + 复杂跨年
+        int year = _random.Next(2024, 2029);
+        int month = _random.Next(1, 13);
+        int day = _random.Next(1, 28);
+        var targetDate = new DateTime(year, month, day);
+        var targetWeekday = targetDate.DayOfWeek;
+
+        string[] weekdays = { "星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六" };
+
+        // 题目描述更复杂
+        string monthName = month switch
+        {
+            1 => "1月", 2 => "2月", 3 => "3月", 4 => "4月", 5 => "5月", 6 => "6月",
+            7 => "7月", 8 => "8月", 9 => "9月", 10 => "10月", 11 => "11月", 12 => "12月"
+        };
+
+        question = $"📅 2026年8月7日是星期五，{year}年{monthName}{day}日是星期几？（提示：{year}年{(DateTime.IsLeapYear(year) ? "是" : "不是")}闰年）";
+        correctAnswer = weekdays[(int)targetWeekday];
+
+        options = new List<string> { correctAnswer };
+        var allWeekdays = new List<string> { "星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六" };
+        var shuffled = allWeekdays.Where(w => w != correctAnswer).OrderBy(_ => _random.Next()).ToList();
+        for (int i = 0; i < Math.Min(3, shuffled.Count); i++)
+        {
+            options.Add(shuffled[i]);
+        }
+        options = options.OrderBy(_ => _random.Next()).ToList();
+        timeLimit = 20;
+    }
+
+    return new Dictionary<string, object>
+    {
+        ["type"] = "dateReasoning",
+        ["level"] = level,
+        ["question"] = question,
+        ["correctAnswer"] = correctAnswer,
+        ["options"] = options,
+        ["timeLimit"] = timeLimit,
+        ["typesCompleted"] = typesCompleted,
+        ["funMessage"] = GetFunMessage("dateReasoning")
+    };
+}
 
         // ============================================================
         // ⭐ 题型 17：图形旋转
