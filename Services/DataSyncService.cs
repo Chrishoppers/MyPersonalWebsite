@@ -1679,6 +1679,139 @@ public async Task AddCheatEventAsync(CheatEvent cheatEvent)
     
     await _tursoService.ExecuteSqlAsync(sql);
 }
+        // ============================================================
+// 解析 GameSession
+// ============================================================
+private GameSession? ParseGameSession(string json)
+{
+    try
+    {
+        using var doc = JsonDocument.Parse(json);
+        var root = doc.RootElement;
+
+        if (root.TryGetProperty("results", out var results) && results.GetArrayLength() > 0)
+        {
+            var firstResult = results[0];
+            if (firstResult.TryGetProperty("response", out var response) &&
+                response.TryGetProperty("result", out var result))
+            {
+                if (result.TryGetProperty("rows", out var rows) && rows.GetArrayLength() > 0)
+                {
+                    var row = rows[0];
+                    var cols = result.GetProperty("cols");
+
+                    if (row.ValueKind != JsonValueKind.Array)
+                        return null;
+
+                    var session = new GameSession();
+
+                    for (int i = 0; i < cols.GetArrayLength(); i++)
+                    {
+                        var colName = cols[i].GetProperty("name").GetString();
+                        var element = row[i];
+
+                        switch (colName)
+                        {
+                            case "Id": session.Id = GetIntFromRow(element); break;
+                            case "UserId": session.UserId = GetIntFromRow(element); break;
+                            case "SessionId": session.SessionId = GetStringFromRow(element); break;
+                            case "StartTime": session.StartTime = GetDateTimeFromRow(element) ?? DateTime.Now; break;
+                            case "EndTime": session.EndTime = GetDateTimeFromRow(element); break;
+                            case "TotalScore": session.TotalScore = GetIntFromRow(element); break;
+                            case "FinalScore": session.FinalScore = GetIntFromRow(element); break;
+                            case "PassedCount": session.PassedCount = GetIntFromRow(element); break;
+                            case "MaxCombo": session.MaxCombo = GetIntFromRow(element); break;
+                            case "CheatCount": session.CheatCount = GetIntFromRow(element); break;
+                            case "MicEnabled": session.MicEnabled = GetBoolFromRow(element); break;
+                            case "CamEnabled": session.CamEnabled = GetBoolFromRow(element); break;
+                            case "PenaltyMic": session.PenaltyMic = GetIntFromRow(element); break;
+                            case "PenaltyCam": session.PenaltyCam = GetIntFromRow(element); break;
+                            case "IsCompleted": session.IsCompleted = GetBoolFromRow(element); break;
+                            case "Status": session.Status = GetStringFromRow(element); break;
+                        }
+                    }
+                    return session;
+                }
+            }
+        }
+        return null;
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"⚠️ 解析 GameSession JSON 失败: {ex.Message}");
+        return null;
+    }
+}
+
+// ============================================================
+// 解析 GameAnswerLog 列表
+// ============================================================
+private List<GameAnswerLog> ParseGameAnswerLogs(string json)
+{
+    var list = new List<GameAnswerLog>();
+    try
+    {
+        using var doc = JsonDocument.Parse(json);
+        var root = doc.RootElement;
+
+        if (root.TryGetProperty("results", out var results) && results.GetArrayLength() > 0)
+        {
+            var firstResult = results[0];
+            if (firstResult.TryGetProperty("response", out var response) &&
+                response.TryGetProperty("result", out var result))
+            {
+                if (result.TryGetProperty("rows", out var rows) && rows.GetArrayLength() > 0)
+                {
+                    var cols = result.GetProperty("cols");
+
+                    for (int r = 0; r < rows.GetArrayLength(); r++)
+                    {
+                        var row = rows[r];
+                        if (row.ValueKind != JsonValueKind.Array) continue;
+
+                        var log = new GameAnswerLog();
+
+                        for (int i = 0; i < cols.GetArrayLength(); i++)
+                        {
+                            var colName = cols[i].GetProperty("name").GetString();
+                            var element = row[i];
+
+                            switch (colName)
+                            {
+                                case "Id": log.Id = GetIntFromRow(element); break;
+                                case "SessionId": log.SessionId = GetStringFromRow(element); break;
+                                case "UserId": log.UserId = GetIntFromRow(element); break;
+                                case "Level": log.Level = GetIntFromRow(element); break;
+                                case "QuestionType": log.QuestionType = GetStringFromRow(element); break;
+                                case "StartTime": log.StartTime = GetDateTimeFromRow(element) ?? DateTime.Now; break;
+                                case "SubmitTime": log.SubmitTime = GetDateTimeFromRow(element) ?? DateTime.Now; break;
+                                case "ElapsedSeconds": 
+                                    var val = GetValueFromRow(element);
+                                    if (val is JsonElement je && je.ValueKind == JsonValueKind.Number)
+                                        log.ElapsedSeconds = je.GetDouble();
+                                    else if (val is JsonElement je2 && je2.ValueKind == JsonValueKind.String)
+                                        double.TryParse(je2.GetString(), out log.ElapsedSeconds);
+                                    break;
+                                case "IsCorrect": log.IsCorrect = GetBoolFromRow(element); break;
+                                case "IsTimeout": log.IsTimeout = GetBoolFromRow(element); break;
+                                case "CheatDetected": log.CheatDetected = GetBoolFromRow(element); break;
+                                case "CheatReason": log.CheatReason = GetStringOrNullFromRow(element); break;
+                                case "PointsEarned": log.PointsEarned = GetIntFromRow(element); break;
+                                case "PenaltyApplied": log.PenaltyApplied = GetIntFromRow(element); break;
+                            }
+                        }
+                        list.Add(log);
+                    }
+                }
+            }
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"⚠️ 解析 GameAnswerLog 列表 JSON 失败: {ex.Message}");
+    }
+    return list;
+}
        
     }
 }
