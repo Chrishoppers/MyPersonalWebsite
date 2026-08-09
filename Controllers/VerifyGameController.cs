@@ -81,7 +81,7 @@ namespace MyPersonalWebsite.Controllers
         };
 
         // ============================================================
-        // 真/假判断题库（完整版）
+        // 真/假判断题库
         // ============================================================
         private readonly (string statement, bool isTrue, int minLevel, int maxLevel)[] _trueFalseQuestions = new (string, bool, int, int)[]
         {
@@ -113,7 +113,6 @@ namespace MyPersonalWebsite.Controllers
             ("植物会走路", false, 1, 20), ("石头会说话", false, 1, 20),
             ("水是黑色的", false, 1, 20), ("所有花都是红色的", false, 1, 20),
             ("飞鱼能在空中滑翔", true, 1, 20),
-
             // 困难 (21-40)
             ("鲸鱼是哺乳动物", true, 21, 40), ("光速是宇宙中已知的最快速度", true, 21, 40),
             ("2是最小的质数", true, 21, 40), ("1不是质数", true, 21, 40),
@@ -146,7 +145,6 @@ namespace MyPersonalWebsite.Controllers
             ("两个连续整数的和是奇数", true, 21, 40), ("两个连续整数的积是偶数", true, 21, 40),
             ("三个连续整数的和能被3整除", true, 21, 40), ("三个连续整数的积能被6整除", true, 21, 40),
             ("所有偶数都是合数", false, 21, 40),
-
             // 噩梦 (41-60)
             ("如果今天是周三，那么后天是周五", true, 41, 60), ("如果今天是周一，那么昨天是周日", true, 41, 60),
             ("如果今天是周五，那么明天是周六", true, 41, 60), ("如果今天是周二，那么前天是周日", true, 41, 60),
@@ -185,7 +183,6 @@ namespace MyPersonalWebsite.Controllers
             ("0既不是正数也不是负数", true, 41, 60), ("正数的相反数是负数", true, 41, 60),
             ("负数的相反数是正数", true, 41, 60), ("0的相反数是0", true, 41, 60),
             ("所有自然数都是整数", true, 41, 60),
-
             // 地狱 (61-80)
             ("如果a和b都是正整数，且a+b是奇数，则a和b一奇一偶", true, 61, 80),
             ("如果a和b都是正整数，且a+b是偶数，则a和b同奇同偶", true, 61, 80),
@@ -232,7 +229,6 @@ namespace MyPersonalWebsite.Controllers
             ("数轴上的点都对应一个实数", true, 61, 80),
             ("有理数集在数轴上是稠密的", true, 61, 80),
             ("无理数集在数轴上是稠密的", true, 61, 80),
-
             // 传说 (81-100)
             ("如果a和b都是实数，且a²=b²，则a=b", false, 81, 100),
             ("如果a和b都是实数，且a³=b³，则a=b", true, 81, 100),
@@ -306,7 +302,7 @@ namespace MyPersonalWebsite.Controllers
         };
 
         // ============================================================
-        // 成语库（完整版）
+        // 成语库
         // ============================================================
         private readonly string[] _idioms = new string[]
         {
@@ -362,7 +358,7 @@ namespace MyPersonalWebsite.Controllers
         };
 
         // ============================================================
-        // 找规律题库（完整版）
+        // 找规律题库
         // ============================================================
         private readonly (string pattern, int answer, int minLevel, int maxLevel)[] _patternQuestions = new (string, int, int, int)[]
         {
@@ -530,7 +526,7 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // 保存分数（修复版 - 使用 User 表字段）
+        // 保存分数（使用 User 表字段）
         // ============================================================
         [HttpPost]
         public async Task<IActionResult> SaveScore(int score, int level, int maxCombo, int passed)
@@ -545,7 +541,6 @@ namespace MyPersonalWebsite.Controllers
                 if (user == null)
                     return Json(new { success = false, message = "用户不存在" });
 
-                // 更新验证大闯关数据
                 if (score > user.VerifyGameScore) user.VerifyGameScore = score;
                 if (level > user.VerifyGameMaxLevel) user.VerifyGameMaxLevel = level;
                 if (maxCombo > user.VerifyGameMaxCombo) user.VerifyGameMaxCombo = maxCombo;
@@ -591,7 +586,7 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // 获取排行榜（修复版 - 从 User 表读取验证大闯关数据）
+        // 获取排行榜
         // ============================================================
         [HttpGet]
         public async Task<IActionResult> GetRanking()
@@ -646,6 +641,18 @@ namespace MyPersonalWebsite.Controllers
                 Console.WriteLine($"❌ 生成挑战失败: {ex.Message}");
                 return Json(new { success = false, message = ex.Message });
             }
+        }
+
+        // ============================================================
+        // 获取难度级别（用于前端语音功能）
+        // ============================================================
+        private string GetDifficultyLevel(int difficulty)
+        {
+            if (difficulty >= 81) return "legend";
+            if (difficulty >= 61) return "hell";
+            if (difficulty >= 41) return "nightmare";
+            if (difficulty >= 21) return "hard";
+            return "normal";
         }
 
         // ============================================================
@@ -716,6 +723,9 @@ namespace MyPersonalWebsite.Controllers
                 }
             }
             dict["typeName"] = typeNames[typeIndex];
+            
+            // ⭐ 添加难度级别字段（供前端语音功能使用）
+            dict["difficultyLevel"] = GetDifficultyLevel(difficulty);
 
             return dict;
         }
@@ -1000,7 +1010,8 @@ namespace MyPersonalWebsite.Controllers
                 ["options"] = options,
                 ["timeLimit"] = timeLimit,
                 ["typesCompleted"] = typesCompleted,
-                ["funMessage"] = GetFunMessage("text")
+                ["funMessage"] = GetFunMessage("text"),
+                ["difficultyLevel"] = GetDifficultyLevel(difficulty)
             };
         }
 
@@ -1045,7 +1056,8 @@ namespace MyPersonalWebsite.Controllers
                 ["options"] = options,
                 ["timeLimit"] = timeLimit,
                 ["typesCompleted"] = typesCompleted,
-                ["funMessage"] = GetFunMessage("arithmetic")
+                ["funMessage"] = GetFunMessage("arithmetic"),
+                ["difficultyLevel"] = GetDifficultyLevel(difficulty)
             };
         }
 
@@ -1131,7 +1143,8 @@ namespace MyPersonalWebsite.Controllers
                 ["options"] = options.OrderBy(_ => _random.Next()).ToList(),
                 ["timeLimit"] = timeLimit,
                 ["typesCompleted"] = typesCompleted,
-                ["funMessage"] = GetFunMessage("stroke")
+                ["funMessage"] = GetFunMessage("stroke"),
+                ["difficultyLevel"] = GetDifficultyLevel(difficulty)
             };
         }
 
@@ -1170,7 +1183,8 @@ namespace MyPersonalWebsite.Controllers
                 ["options"] = options.OrderBy(_ => _random.Next()).ToList(),
                 ["timeLimit"] = timeLimit,
                 ["typesCompleted"] = typesCompleted,
-                ["funMessage"] = GetFunMessage("color")
+                ["funMessage"] = GetFunMessage("color"),
+                ["difficultyLevel"] = GetDifficultyLevel(difficulty)
             };
         }
 
@@ -1248,7 +1262,8 @@ namespace MyPersonalWebsite.Controllers
                 ["options"] = GenerateOptions(originalChar.ToString(), 4 + Math.Min(difficulty / 10, 3)),
                 ["timeLimit"] = timeLimit,
                 ["typesCompleted"] = typesCompleted,
-                ["funMessage"] = GetFunMessage("findDifferent")
+                ["funMessage"] = GetFunMessage("findDifferent"),
+                ["difficultyLevel"] = GetDifficultyLevel(difficulty)
             };
         }
 
@@ -1281,7 +1296,8 @@ namespace MyPersonalWebsite.Controllers
                 ["options"] = options,
                 ["timeLimit"] = timeLimit,
                 ["typesCompleted"] = typesCompleted,
-                ["funMessage"] = GetFunMessage("reverse")
+                ["funMessage"] = GetFunMessage("reverse"),
+                ["difficultyLevel"] = GetDifficultyLevel(difficulty)
             };
         }
 
@@ -1383,7 +1399,8 @@ namespace MyPersonalWebsite.Controllers
                 ["options"] = options.OrderBy(_ => _random.Next()).ToList(),
                 ["timeLimit"] = timeLimit,
                 ["typesCompleted"] = typesCompleted,
-                ["funMessage"] = GetFunMessage("missingLetter")
+                ["funMessage"] = GetFunMessage("missingLetter"),
+                ["difficultyLevel"] = GetDifficultyLevel(difficulty)
             };
         }
 
@@ -1442,7 +1459,8 @@ namespace MyPersonalWebsite.Controllers
                 ["options"] = options,
                 ["timeLimit"] = timeLimit,
                 ["typesCompleted"] = typesCompleted,
-                ["funMessage"] = GetFunMessage("timeCalc")
+                ["funMessage"] = GetFunMessage("timeCalc"),
+                ["difficultyLevel"] = GetDifficultyLevel(difficulty)
             };
         }
 
@@ -1516,7 +1534,8 @@ namespace MyPersonalWebsite.Controllers
                 ["options"] = options.OrderBy(_ => _random.Next()).ToList(),
                 ["timeLimit"] = timeLimit,
                 ["typesCompleted"] = typesCompleted,
-                ["funMessage"] = GetFunMessage("idiom")
+                ["funMessage"] = GetFunMessage("idiom"),
+                ["difficultyLevel"] = GetDifficultyLevel(difficulty)
             };
         }
 
@@ -1629,7 +1648,8 @@ namespace MyPersonalWebsite.Controllers
                 ["keyboardRows"] = keyboardRows,
                 ["timeLimit"] = timeLimit,
                 ["typesCompleted"] = typesCompleted,
-                ["funMessage"] = GetFunMessage("memory")
+                ["funMessage"] = GetFunMessage("memory"),
+                ["difficultyLevel"] = GetDifficultyLevel(difficulty)
             };
         }
 
@@ -1657,7 +1677,8 @@ namespace MyPersonalWebsite.Controllers
                 ["options"] = options,
                 ["timeLimit"] = timeLimit,
                 ["typesCompleted"] = typesCompleted,
-                ["funMessage"] = GetFunMessage("pattern")
+                ["funMessage"] = GetFunMessage("pattern"),
+                ["difficultyLevel"] = GetDifficultyLevel(difficulty)
             };
         }
 
@@ -1769,7 +1790,8 @@ namespace MyPersonalWebsite.Controllers
                 ["correctAnswer"] = resultColor,
                 ["timeLimit"] = timeLimit,
                 ["typesCompleted"] = typesCompleted,
-                ["funMessage"] = GetFunMessage("colorMix")
+                ["funMessage"] = GetFunMessage("colorMix"),
+                ["difficultyLevel"] = GetDifficultyLevel(difficulty)
             };
         }
 
@@ -1799,7 +1821,8 @@ namespace MyPersonalWebsite.Controllers
                 ["options"] = options,
                 ["timeLimit"] = timeLimit,
                 ["typesCompleted"] = typesCompleted,
-                ["funMessage"] = GetFunMessage("trueFalse")
+                ["funMessage"] = GetFunMessage("trueFalse"),
+                ["difficultyLevel"] = GetDifficultyLevel(difficulty)
             };
         }
 
@@ -1823,7 +1846,8 @@ namespace MyPersonalWebsite.Controllers
                 ["correctAnswer"] = "solved",
                 ["timeLimit"] = timeLimit,
                 ["typesCompleted"] = typesCompleted,
-                ["funMessage"] = GetFunMessage("puzzle")
+                ["funMessage"] = GetFunMessage("puzzle"),
+                ["difficultyLevel"] = GetDifficultyLevel(difficulty)
             };
         }
 
@@ -1901,254 +1925,252 @@ namespace MyPersonalWebsite.Controllers
             return moves;
         }
 
-       // ============================================================
-// 题型 14：立体三视图（修复版）
-// ============================================================
-private object GenerateThreeViewCounting(int level, int difficulty, int typesCompleted)
-{
-    int cubeCount;
-    int timeLimit;
-
-    if (difficulty <= 20)
-    {
-        cubeCount = _random.Next(4, 7);
-        timeLimit = 30;
-    }
-    else if (difficulty <= 40)
-    {
-        cubeCount = _random.Next(7, 12);
-        timeLimit = 25;
-    }
-    else if (difficulty <= 60)
-    {
-        cubeCount = _random.Next(12, 18);
-        timeLimit = 20;
-    }
-    else if (difficulty <= 80)
-    {
-        cubeCount = _random.Next(18, 25);
-        timeLimit = 15;
-    }
-    else
-    {
-        cubeCount = _random.Next(25, 35);
-        timeLimit = 12;
-    }
-
-    var views = GenerateViews(cubeCount, difficulty);
-
-    string topView = ViewsToHtml(views.top, "俯视图");
-    string frontView = ViewsToHtml(views.front, "主视图");
-    string sideView = ViewsToHtml(views.side, "左视图");
-
-    var options = GenerateNumberOptions(cubeCount, 4 + Math.Min(difficulty / 10, 3), 5 + difficulty / 5);
-
-    return new Dictionary<string, object>
-    {
-        ["type"] = "threeView",
-        ["level"] = level,
-        ["question"] = $"📐 根据三视图，计算共有多少个正方体？<br><span style='color:rgba(255,255,255,0.12);font-size:0.7rem;'>■ 代表一个正方体 · 难度 {GetDifficultyLabel(difficulty)}</span>",
-        ["topView"] = topView,
-        ["frontView"] = frontView,
-        ["sideView"] = sideView,
-        ["correctAnswer"] = cubeCount.ToString(),
-        ["options"] = options,
-        ["timeLimit"] = timeLimit,
-        ["typesCompleted"] = typesCompleted,
-        ["funMessage"] = GetFunMessage("threeView")
-    };
-}
-
-private (int[][] top, int[][] front, int[][] side) GenerateViews(int cubeCount, int difficulty)
-{
-    int rows, cols, maxHeight;
-    if (difficulty <= 20)
-    {
-        rows = 3; cols = 3; maxHeight = 2;
-    }
-    else if (difficulty <= 40)
-    {
-        rows = 4; cols = 4; maxHeight = 3;
-    }
-    else if (difficulty <= 60)
-    {
-        rows = 4; cols = 4; maxHeight = 4;
-    }
-    else if (difficulty <= 80)
-    {
-        rows = 5; cols = 5; maxHeight = 4;
-    }
-    else
-    {
-        rows = 6; cols = 6; maxHeight = 5;
-    }
-
-    var grid = new bool[maxHeight, rows, cols];
-    int placed = 0;
-    int maxAttempts = 10000;
-
-    // 从底层开始逐层放置
-    for (int h = 0; h < maxHeight && placed < cubeCount; h++)
-    {
-        int maxPerLayer = Math.Min(cubeCount - placed, rows * cols);
-        int targetThisLayer;
-        if (h == 0)
-            targetThisLayer = Math.Min(maxPerLayer, (int)(cubeCount * 0.5 + _random.Next(0, 3)));
-        else if (h == 1)
-            targetThisLayer = Math.Min(maxPerLayer, (int)(cubeCount * 0.3 + _random.Next(0, 2)));
-        else
-            targetThisLayer = Math.Min(maxPerLayer, (int)(cubeCount * 0.15 + _random.Next(0, 1)));
-
-        targetThisLayer = Math.Max(1, targetThisLayer);
-
-        int attempts = 0;
-        int placedThisLayer = 0;
-        while (placedThisLayer < targetThisLayer && placed < cubeCount && attempts < maxAttempts)
+        // ============================================================
+        // 题型 14：立体三视图
+        // ============================================================
+        private object GenerateThreeViewCounting(int level, int difficulty, int typesCompleted)
         {
-            int r = _random.Next(rows);
-            int c = _random.Next(cols);
+            int cubeCount;
+            int timeLimit;
 
-            if (h > 0 && !grid[h - 1, r, c])
+            if (difficulty <= 20)
             {
-                attempts++;
-                continue;
+                cubeCount = _random.Next(4, 7);
+                timeLimit = 30;
             }
-
-            if (!grid[h, r, c])
+            else if (difficulty <= 40)
             {
-                grid[h, r, c] = true;
-                placed++;
-                placedThisLayer++;
+                cubeCount = _random.Next(7, 12);
+                timeLimit = 25;
             }
-            attempts++;
-        }
-
-        if (placedThisLayer == 0 && h > 0) break;
-    }
-
-    // 补充剩余方块到底层
-    while (placed < cubeCount)
-    {
-        int r = _random.Next(rows);
-        int c = _random.Next(cols);
-        if (!grid[0, r, c])
-        {
-            grid[0, r, c] = true;
-            placed++;
-        }
-    }
-
-    // 俯视图（从上往下看）
-    var top = new int[rows][];
-    for (int r = 0; r < rows; r++)
-    {
-        top[r] = new int[cols];
-        for (int c = 0; c < cols; c++)
-        {
-            bool has = false;
-            for (int h = 0; h < maxHeight; h++)
+            else if (difficulty <= 60)
             {
-                if (grid[h, r, c]) { has = true; break; }
+                cubeCount = _random.Next(12, 18);
+                timeLimit = 20;
             }
-            top[r][c] = has ? 1 : 0;
-        }
-    }
-
-    // 主视图（从正面看）
-    var front = new int[maxHeight][];
-    for (int h = 0; h < maxHeight; h++)
-    {
-        front[h] = new int[cols];
-        for (int c = 0; c < cols; c++)
-        {
-            bool has = false;
-            for (int r = 0; r < rows; r++)
+            else if (difficulty <= 80)
             {
-                if (grid[h, r, c]) { has = true; break; }
-            }
-            front[h][c] = has ? 1 : 0;
-        }
-    }
-
-    // 左视图（从左侧看）
-    var side = new int[maxHeight][];
-    for (int h = 0; h < maxHeight; h++)
-    {
-        side[h] = new int[rows];
-        for (int r = 0; r < rows; r++)
-        {
-            bool has = false;
-            for (int c = 0; c < cols; c++)
-            {
-                if (grid[h, r, c]) { has = true; break; }
-            }
-            side[h][r] = has ? 1 : 0;
-        }
-    }
-
-    // 难度越高，视图越复杂
-    if (difficulty > 60)
-    {
-        int removeCount = Math.Min(cubeCount / 6, 4);
-        for (int i = 0; i < removeCount; i++)
-        {
-            int r = _random.Next(rows);
-            int c = _random.Next(cols);
-            int h = _random.Next(1, maxHeight);
-            if (grid[h, r, c])
-            {
-                bool hasSupport = false;
-                for (int hr = 0; hr < h; hr++)
-                {
-                    if (grid[hr, r, c]) { hasSupport = true; break; }
-                }
-                if (hasSupport)
-                {
-                    grid[h, r, c] = false;
-                }
-            }
-        }
-        return GenerateViews(cubeCount - removeCount, difficulty);
-    }
-
-    return (top, front, side);
-}
-
-// ⭐ 修复后的 ViewsToHtml - 主视图和左视图反转行顺序
-private string ViewsToHtml(int[][] view, string label)
-{
-    var sb = new StringBuilder();
-    int cols = view[0].Length;
-    int rows = view.Length;
-
-    int cellSize = Math.Max(28, Math.Min(40, 45 - rows * 2));
-
-    sb.Append($"<div class='view-item'>");
-    sb.Append($"<span class='view-label'>{label}</span>");
-    sb.Append($"<div class='view-grid' style='grid-template-columns:repeat({cols}, {cellSize}px);'>");
-
-    // ⭐ 主视图和左视图需要反转行顺序（底部在地面）
-    bool isTopView = label == "俯视图";
-    
-    for (int r = 0; r < rows; r++)
-    {
-        int actualRow = isTopView ? r : (rows - 1 - r);
-        for (int c = 0; c < cols; c++)
-        {
-            if (view[actualRow][c] == 1)
-            {
-                sb.Append($"<div class='cell filled' style='width:{cellSize}px;height:{cellSize}px;'></div>");
+                cubeCount = _random.Next(18, 25);
+                timeLimit = 15;
             }
             else
             {
-                sb.Append($"<div class='cell empty' style='width:{cellSize}px;height:{cellSize}px;'></div>");
+                cubeCount = _random.Next(25, 35);
+                timeLimit = 12;
             }
-        }
-    }
 
-    sb.Append("</div></div>");
-    return sb.ToString();
-}
+            var views = GenerateViews(cubeCount, difficulty);
+
+            string topView = ViewsToHtml(views.top, "俯视图");
+            string frontView = ViewsToHtml(views.front, "主视图");
+            string sideView = ViewsToHtml(views.side, "左视图");
+
+            var options = GenerateNumberOptions(cubeCount, 4 + Math.Min(difficulty / 10, 3), 5 + difficulty / 5);
+
+            return new Dictionary<string, object>
+            {
+                ["type"] = "threeView",
+                ["level"] = level,
+                ["question"] = $"📐 根据三视图，计算共有多少个正方体？<br><span style='color:rgba(255,255,255,0.12);font-size:0.7rem;'>■ 代表一个正方体 · 难度 {GetDifficultyLabel(difficulty)}</span>",
+                ["topView"] = topView,
+                ["frontView"] = frontView,
+                ["sideView"] = sideView,
+                ["correctAnswer"] = cubeCount.ToString(),
+                ["options"] = options,
+                ["timeLimit"] = timeLimit,
+                ["typesCompleted"] = typesCompleted,
+                ["funMessage"] = GetFunMessage("threeView"),
+                ["difficultyLevel"] = GetDifficultyLevel(difficulty)
+            };
+        }
+
+        private (int[][] top, int[][] front, int[][] side) GenerateViews(int cubeCount, int difficulty)
+        {
+            int rows, cols, maxHeight;
+            if (difficulty <= 20)
+            {
+                rows = 3; cols = 3; maxHeight = 2;
+            }
+            else if (difficulty <= 40)
+            {
+                rows = 4; cols = 4; maxHeight = 3;
+            }
+            else if (difficulty <= 60)
+            {
+                rows = 4; cols = 4; maxHeight = 4;
+            }
+            else if (difficulty <= 80)
+            {
+                rows = 5; cols = 5; maxHeight = 4;
+            }
+            else
+            {
+                rows = 6; cols = 6; maxHeight = 5;
+            }
+
+            var grid = new bool[maxHeight, rows, cols];
+            int placed = 0;
+            int maxAttempts = 10000;
+
+            // 从底层开始逐层放置
+            for (int h = 0; h < maxHeight && placed < cubeCount; h++)
+            {
+                int maxPerLayer = Math.Min(cubeCount - placed, rows * cols);
+                int targetThisLayer;
+                if (h == 0)
+                    targetThisLayer = Math.Min(maxPerLayer, (int)(cubeCount * 0.5 + _random.Next(0, 3)));
+                else if (h == 1)
+                    targetThisLayer = Math.Min(maxPerLayer, (int)(cubeCount * 0.3 + _random.Next(0, 2)));
+                else
+                    targetThisLayer = Math.Min(maxPerLayer, (int)(cubeCount * 0.15 + _random.Next(0, 1)));
+
+                targetThisLayer = Math.Max(1, targetThisLayer);
+
+                int attempts = 0;
+                int placedThisLayer = 0;
+                while (placedThisLayer < targetThisLayer && placed < cubeCount && attempts < maxAttempts)
+                {
+                    int r = _random.Next(rows);
+                    int c = _random.Next(cols);
+
+                    if (h > 0 && !grid[h - 1, r, c])
+                    {
+                        attempts++;
+                        continue;
+                    }
+
+                    if (!grid[h, r, c])
+                    {
+                        grid[h, r, c] = true;
+                        placed++;
+                        placedThisLayer++;
+                    }
+                    attempts++;
+                }
+
+                if (placedThisLayer == 0 && h > 0) break;
+            }
+
+            while (placed < cubeCount)
+            {
+                int r = _random.Next(rows);
+                int c = _random.Next(cols);
+                if (!grid[0, r, c])
+                {
+                    grid[0, r, c] = true;
+                    placed++;
+                }
+            }
+
+            // 俯视图（从上往下看）
+            var top = new int[rows][];
+            for (int r = 0; r < rows; r++)
+            {
+                top[r] = new int[cols];
+                for (int c = 0; c < cols; c++)
+                {
+                    bool has = false;
+                    for (int h = 0; h < maxHeight; h++)
+                    {
+                        if (grid[h, r, c]) { has = true; break; }
+                    }
+                    top[r][c] = has ? 1 : 0;
+                }
+            }
+
+            // 主视图（从正面看）
+            var front = new int[maxHeight][];
+            for (int h = 0; h < maxHeight; h++)
+            {
+                front[h] = new int[cols];
+                for (int c = 0; c < cols; c++)
+                {
+                    bool has = false;
+                    for (int r = 0; r < rows; r++)
+                    {
+                        if (grid[h, r, c]) { has = true; break; }
+                    }
+                    front[h][c] = has ? 1 : 0;
+                }
+            }
+
+            // 左视图（从左侧看）
+            var side = new int[maxHeight][];
+            for (int h = 0; h < maxHeight; h++)
+            {
+                side[h] = new int[rows];
+                for (int r = 0; r < rows; r++)
+                {
+                    bool has = false;
+                    for (int c = 0; c < cols; c++)
+                    {
+                        if (grid[h, r, c]) { has = true; break; }
+                    }
+                    side[h][r] = has ? 1 : 0;
+                }
+            }
+
+            if (difficulty > 60)
+            {
+                int removeCount = Math.Min(cubeCount / 6, 4);
+                for (int i = 0; i < removeCount; i++)
+                {
+                    int r = _random.Next(rows);
+                    int c = _random.Next(cols);
+                    int h = _random.Next(1, maxHeight);
+                    if (grid[h, r, c])
+                    {
+                        bool hasSupport = false;
+                        for (int hr = 0; hr < h; hr++)
+                        {
+                            if (grid[hr, r, c]) { hasSupport = true; break; }
+                        }
+                        if (hasSupport)
+                        {
+                            grid[h, r, c] = false;
+                        }
+                    }
+                }
+                return GenerateViews(cubeCount - removeCount, difficulty);
+            }
+
+            return (top, front, side);
+        }
+
+        private string ViewsToHtml(int[][] view, string label)
+        {
+            var sb = new StringBuilder();
+            int cols = view[0].Length;
+            int rows = view.Length;
+
+            int cellSize = Math.Max(28, Math.Min(40, 45 - rows * 2));
+
+            sb.Append($"<div class='view-item'>");
+            sb.Append($"<span class='view-label'>{label}</span>");
+            sb.Append($"<div class='view-grid' style='grid-template-columns:repeat({cols}, {cellSize}px);'>");
+
+            // ⭐ 主视图和左视图反转行顺序（底部在地面）
+            bool isTopView = label == "俯视图";
+            
+            for (int r = 0; r < rows; r++)
+            {
+                int actualRow = isTopView ? r : (rows - 1 - r);
+                for (int c = 0; c < cols; c++)
+                {
+                    if (view[actualRow][c] == 1)
+                    {
+                        sb.Append($"<div class='cell filled' style='width:{cellSize}px;height:{cellSize}px;'></div>");
+                    }
+                    else
+                    {
+                        sb.Append($"<div class='cell empty' style='width:{cellSize}px;height:{cellSize}px;'></div>");
+                    }
+                }
+            }
+
+            sb.Append("</div></div>");
+            return sb.ToString();
+        }
 
         // ============================================================
         // 题型 15：图形计数
@@ -2187,7 +2209,8 @@ private string ViewsToHtml(int[][] view, string label)
                 ["options"] = options,
                 ["timeLimit"] = timeLimit,
                 ["typesCompleted"] = typesCompleted,
-                ["funMessage"] = GetFunMessage("shapeCount")
+                ["funMessage"] = GetFunMessage("shapeCount"),
+                ["difficultyLevel"] = GetDifficultyLevel(difficulty)
             };
         }
 
@@ -2332,7 +2355,8 @@ private string ViewsToHtml(int[][] view, string label)
                 ["options"] = options,
                 ["timeLimit"] = timeLimit,
                 ["typesCompleted"] = typesCompleted,
-                ["funMessage"] = GetFunMessage("dateReasoning")
+                ["funMessage"] = GetFunMessage("dateReasoning"),
+                ["difficultyLevel"] = GetDifficultyLevel(difficulty)
             };
         }
 
@@ -2409,7 +2433,8 @@ private string ViewsToHtml(int[][] view, string label)
                 ["options"] = optionStrings,
                 ["timeLimit"] = timeLimit,
                 ["typesCompleted"] = typesCompleted,
-                ["funMessage"] = GetFunMessage("rotate")
+                ["funMessage"] = GetFunMessage("rotate"),
+                ["difficultyLevel"] = GetDifficultyLevel(difficulty)
             };
         }
 
@@ -2503,7 +2528,8 @@ private string ViewsToHtml(int[][] view, string label)
                 ["timeLimit"] = timeLimit,
                 ["typesCompleted"] = typesCompleted,
                 ["question"] = $"🎯 猜一个 {digitCount} 位不重复数字（第一位不能是0）",
-                ["funMessage"] = GetFunMessage("abgame")
+                ["funMessage"] = GetFunMessage("abgame"),
+                ["difficultyLevel"] = GetDifficultyLevel(difficulty)
             };
         }
 
@@ -2530,118 +2556,104 @@ private string ViewsToHtml(int[][] view, string label)
         }
 
         // ============================================================
-// 题型 19：颜色三重干扰（修复版）
-// ============================================================
-private object GenerateTripleColorInterference(int level, int difficulty, int typesCompleted)
-{
-    var pureColors = new Dictionary<string, string>
-    {
-        {"红色", "#FF0000"},
-        {"蓝色", "#0000FF"},
-        {"绿色", "#00AA00"},
-        {"黄色", "#FFD700"},
-        {"紫色", "#8800CC"},
-        {"橙色", "#FF6600"},
-        {"粉色", "#FF69B4"},
-        {"青色", "#00CED1"},
-    };
-
-    var colorPool = pureColors.ToArray();
-    var selectedColors = new List<KeyValuePair<string, string>>();
-
-    while (selectedColors.Count < 3)
-    {
-        var c = colorPool[_random.Next(colorPool.Length)];
-        if (!selectedColors.Any(x => x.Key == c.Key))
+        // 题型 19：颜色三重干扰
+        // ============================================================
+        private object GenerateTripleColorInterference(int level, int difficulty, int typesCompleted)
         {
-            selectedColors.Add(c);
+            var pureColors = new Dictionary<string, string>
+            {
+                {"红色", "#FF0000"},
+                {"蓝色", "#0000FF"},
+                {"绿色", "#00AA00"},
+                {"黄色", "#FFD700"},
+                {"紫色", "#8800CC"},
+                {"橙色", "#FF6600"},
+                {"粉色", "#FF69B4"},
+                {"青色", "#00CED1"},
+            };
+
+            var colorPool = pureColors.ToArray();
+
+            // ⭐ 先确定显示的文字
+            string displayWord = _singleColorWords[_random.Next(_singleColorWords.Length)];
+            string displayColorName = displayWord + "色";
+
+            // ⭐ 找到与 displayWord 对应的颜色作为 meaningColor
+            var meaningColor = colorPool.FirstOrDefault(c => c.Key == displayColorName);
+            if (meaningColor.Key == null)
+            {
+                meaningColor = colorPool[_random.Next(colorPool.Length)];
+                displayWord = meaningColor.Key.Replace("色", "");
+            }
+
+            // ⭐ 随机选另外两个颜色
+            var otherColors = colorPool.Where(c => c.Key != meaningColor.Key).ToList();
+            if (otherColors.Count < 2)
+            {
+                return GenerateTripleColorInterference(level, difficulty, typesCompleted);
+            }
+
+            var shuffledOther = otherColors.OrderBy(_ => _random.Next()).ToList();
+            var wordColor = shuffledOther[0];
+            var bgColor = shuffledOther[1];
+
+            if (bgColor.Key == wordColor.Key || bgColor.Key == meaningColor.Key || wordColor.Key == meaningColor.Key)
+            {
+                shuffledOther = otherColors.OrderBy(_ => _random.Next()).ToList();
+                wordColor = shuffledOther[0];
+                bgColor = shuffledOther[1];
+            }
+
+            string[] questions = new[]
+            {
+                $"文字的颜色是什么？",
+                $"背景是什么颜色？",
+                $"「{displayWord}」这个字代表什么颜色？"
+            };
+
+            int qIndex = _random.Next(3);
+            string questionText = questions[qIndex];
+
+            string correctAnswer;
+            if (qIndex == 0)
+                correctAnswer = wordColor.Key;
+            else if (qIndex == 1)
+                correctAnswer = bgColor.Key;
+            else
+                correctAnswer = meaningColor.Key;
+
+            var options = new List<string> { correctAnswer };
+            int optionCount = 4 + Math.Min(difficulty / 10, 3);
+
+            var pureColorNames = pureColors.Keys.ToList();
+            var shuffled = pureColorNames.Where(c => c != correctAnswer).OrderBy(_ => _random.Next()).ToList();
+
+            for (int i = 0; i < Math.Min(optionCount - 1, shuffled.Count); i++)
+            {
+                options.Add(shuffled[i]);
+            }
+
+            options = options.OrderBy(_ => _random.Next()).ToList();
+
+            string displayHtml = $"<div style='background:{bgColor.Value};padding:2rem 3.5rem;border-radius:20px;border:3px solid rgba(255,255,255,0.05);display:inline-block;box-shadow:0 0 60px {bgColor.Value}30;'>";
+            displayHtml += $"<span style='color:{wordColor.Value};font-size:4rem;font-weight:900;text-shadow:0 0 50px {wordColor.Value}50;letter-spacing:10px;'>{displayWord}</span>";
+            displayHtml += "</div>";
+
+            int timeLimit = Math.Max(5, 20 - difficulty / 7);
+
+            return new Dictionary<string, object>
+            {
+                ["type"] = "tripleColor",
+                ["level"] = level,
+                ["question"] = $"🎯 颜色三重干扰！<br><span style='font-size:0.9rem;color:rgba(255,255,255,0.3);'>{questionText}</span>",
+                ["displayHtml"] = displayHtml,
+                ["correctAnswer"] = correctAnswer,
+                ["options"] = options.OrderBy(_ => _random.Next()).ToList(),
+                ["timeLimit"] = timeLimit,
+                ["typesCompleted"] = typesCompleted,
+                ["funMessage"] = GetFunMessage("tripleColor"),
+                ["difficultyLevel"] = GetDifficultyLevel(difficulty)
+            };
         }
-    }
-
-    string displayWord = _singleColorWords[_random.Next(_singleColorWords.Length)];
-
-    var shuffledColors = selectedColors.OrderBy(_ => _random.Next()).ToList();
-    
-    // wordColor: 文字显示的颜色（字体的颜色）
-    // bgColor: 背景色
-    // meaningColor: 文字本身的含义（即文字内容代表的颜色）
-    var wordColor = shuffledColors[0];
-    var bgColor = shuffledColors[1];
-    var meaningColor = shuffledColors[2];
-
-    // 确保三者不同
-    int maxAttempts = 50;
-    int attempts = 0;
-    while ((bgColor.Key == wordColor.Key || meaningColor.Key == wordColor.Key || meaningColor.Key == bgColor.Key) && attempts < maxAttempts)
-    {
-        shuffledColors = selectedColors.OrderBy(_ => _random.Next()).ToList();
-        wordColor = shuffledColors[0];
-        bgColor = shuffledColors[1];
-        meaningColor = shuffledColors[2];
-        attempts++;
-    }
-
-    if (bgColor.Key == wordColor.Key || meaningColor.Key == wordColor.Key || meaningColor.Key == bgColor.Key)
-    {
-        var allColors = pureColors.ToArray();
-        wordColor = allColors[_random.Next(allColors.Length)];
-        do { bgColor = allColors[_random.Next(allColors.Length)]; } while (bgColor.Key == wordColor.Key);
-        do { meaningColor = allColors[_random.Next(allColors.Length)]; } while (meaningColor.Key == wordColor.Key || meaningColor.Key == bgColor.Key);
-    }
-
-    // ⭐ 三个问题，对应三个不同的答案
-    string[] questions = new[]
-    {
-        $"文字的颜色是什么？",                    // 问 wordColor
-        $"背景是什么颜色？",                      // 问 bgColor  
-        $"「{displayWord}」这个字本身代表什么颜色？"  // 问 meaningColor（文字含义）
-    };
-
-    int qIndex = _random.Next(3);
-    string questionText = questions[qIndex];
-    
-    // ⭐ 根据问题类型选择正确答案
-    string correctAnswer;
-    if (qIndex == 0)
-        correctAnswer = wordColor.Key;      // 文字颜色
-    else if (qIndex == 1)
-        correctAnswer = bgColor.Key;        // 背景色
-    else
-        correctAnswer = meaningColor.Key;   // 文字含义
-
-    // 生成选项（包含正确答案 + 干扰项）
-    var options = new List<string> { correctAnswer };
-    int optionCount = 4 + Math.Min(difficulty / 10, 3);
-
-    var pureColorNames = pureColors.Keys.ToList();
-    var shuffled = pureColorNames.Where(c => c != correctAnswer).OrderBy(_ => _random.Next()).ToList();
-
-    for (int i = 0; i < Math.Min(optionCount - 1, shuffled.Count); i++)
-    {
-        options.Add(shuffled[i]);
-    }
-
-    options = options.OrderBy(_ => _random.Next()).ToList();
-
-    // ⭐ 显示HTML：背景色 + 文字颜色 + 显示的文字
-    string displayHtml = $"<div style='background:{bgColor.Value};padding:2rem 3.5rem;border-radius:20px;border:3px solid rgba(255,255,255,0.05);display:inline-block;box-shadow:0 0 60px {bgColor.Value}30;'>";
-    displayHtml += $"<span style='color:{wordColor.Value};font-size:4rem;font-weight:900;text-shadow:0 0 50px {wordColor.Value}50;letter-spacing:10px;'>{displayWord}</span>";
-    displayHtml += "</div>";
-
-    int timeLimit = Math.Max(5, 20 - difficulty / 7);
-
-    return new Dictionary<string, object>
-    {
-        ["type"] = "tripleColor",
-        ["level"] = level,
-        ["question"] = $"🎯 颜色三重干扰！<br><span style='font-size:0.9rem;color:rgba(255,255,255,0.3);'>{questionText}</span>",
-        ["displayHtml"] = displayHtml,
-        ["correctAnswer"] = correctAnswer,
-        ["options"] = options.OrderBy(_ => _random.Next()).ToList(),
-        ["timeLimit"] = timeLimit,
-        ["typesCompleted"] = typesCompleted,
-        ["funMessage"] = GetFunMessage("tripleColor")
-    };
-}
     }
 }
