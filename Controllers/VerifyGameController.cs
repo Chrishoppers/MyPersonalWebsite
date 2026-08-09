@@ -1893,189 +1893,267 @@ namespace MyPersonalWebsite.Controllers
             return moves;
         }
 
-        // ============================================================
-        // 题型 14：立体三视图
-        // ============================================================
-        private object GenerateThreeViewCounting(int level, int difficulty, int typesCompleted)
-        {
-            int cubeCount;
-            int timeLimit;
+       // ============================================================
+// 题型 14：立体三视图（修复版 - 难度递增 + 正确布局）
+// ============================================================
+private object GenerateThreeViewCounting(int level, int difficulty, int typesCompleted)
+{
+    int cubeCount;
+    int timeLimit;
 
-            if (difficulty <= 20)
+    // ⭐ 难度递增：关卡越高，正方体越多，视图越复杂
+    if (difficulty <= 20)
+    {
+        cubeCount = _random.Next(4, 7);
+        timeLimit = 30;
+    }
+    else if (difficulty <= 40)
+    {
+        cubeCount = _random.Next(7, 12);
+        timeLimit = 25;
+    }
+    else if (difficulty <= 60)
+    {
+        cubeCount = _random.Next(12, 18);
+        timeLimit = 20;
+    }
+    else if (difficulty <= 80)
+    {
+        cubeCount = _random.Next(18, 25);
+        timeLimit = 15;
+    }
+    else
+    {
+        cubeCount = _random.Next(25, 35);
+        timeLimit = 12;
+    }
+
+    var views = GenerateViews(cubeCount, difficulty);
+
+    // ⭐ 使用新的 HTML 生成方法（横向排列 + 单元格样式）
+    string topView = ViewsToHtml(views.top, "俯视图", "俯视图");
+    string frontView = ViewsToHtml(views.front, "主视图", "主视图");
+    string sideView = ViewsToHtml(views.side, "左视图", "左视图");
+
+    var options = GenerateNumberOptions(cubeCount, 4 + Math.Min(difficulty / 10, 3), 5 + difficulty / 5);
+
+    return new Dictionary<string, object>
+    {
+        ["type"] = "threeView",
+        ["level"] = level,
+        ["question"] = $"📐 根据三视图，计算共有多少个正方体？<br><span style='color:rgba(255,255,255,0.12);font-size:0.7rem;'>■ 代表一个正方体 · 难度 {GetDifficultyLabel(difficulty)}</span>",
+        ["topView"] = topView,
+        ["frontView"] = frontView,
+        ["sideView"] = sideView,
+        ["correctAnswer"] = cubeCount.ToString(),
+        ["options"] = options,
+        ["timeLimit"] = timeLimit,
+        ["typesCompleted"] = typesCompleted,
+        ["funMessage"] = GetFunMessage("threeView")
+    };
+}
+
+// ============================================================
+// 生成三视图（修复版 - 正确的视图生成逻辑）
+// ============================================================
+private (int[][] top, int[][] front, int[][] side) GenerateViews(int cubeCount, int difficulty)
+{
+    // ⭐ 难度越高，行列越多
+    int rows, cols, maxHeight;
+    if (difficulty <= 20)
+    {
+        rows = 3; cols = 3; maxHeight = 2;
+    }
+    else if (difficulty <= 40)
+    {
+        rows = 4; cols = 4; maxHeight = 3;
+    }
+    else if (difficulty <= 60)
+    {
+        rows = 4; cols = 4; maxHeight = 4;
+    }
+    else if (difficulty <= 80)
+    {
+        rows = 5; cols = 5; maxHeight = 4;
+    }
+    else
+    {
+        rows = 6; cols = 6; maxHeight = 5;
+    }
+
+    var grid = new bool[maxHeight, rows, cols];
+    int placed = 0;
+    int maxAttempts = 10000;
+
+    // ⭐ 从底层开始逐层放置（先放底层，再放上层）
+    for (int h = 0; h < maxHeight && placed < cubeCount; h++)
+    {
+        // 每层放置的数量随高度递减（下面多，上面少）
+        int maxPerLayer = Math.Min(cubeCount - placed, rows * cols);
+        int targetThisLayer;
+        if (h == 0)
+            targetThisLayer = Math.Min(maxPerLayer, (int)(cubeCount * 0.5 + _random.Next(0, 3)));
+        else if (h == 1)
+            targetThisLayer = Math.Min(maxPerLayer, (int)(cubeCount * 0.3 + _random.Next(0, 2)));
+        else
+            targetThisLayer = Math.Min(maxPerLayer, (int)(cubeCount * 0.15 + _random.Next(0, 1)));
+
+        targetThisLayer = Math.Max(1, targetThisLayer);
+
+        int attempts = 0;
+        int placedThisLayer = 0;
+        while (placedThisLayer < targetThisLayer && placed < cubeCount && attempts < maxAttempts)
+        {
+            int r = _random.Next(rows);
+            int c = _random.Next(cols);
+
+            // ⭐ 上层必须依赖下层有支撑
+            if (h > 0 && !grid[h - 1, r, c])
             {
-                cubeCount = _random.Next(5, 9);
-                timeLimit = 30;
+                attempts++;
+                continue;
             }
-            else if (difficulty <= 40)
+
+            if (!grid[h, r, c])
             {
-                cubeCount = _random.Next(9, 14);
-                timeLimit = 25;
+                grid[h, r, c] = true;
+                placed++;
+                placedThisLayer++;
             }
-            else if (difficulty <= 60)
+            attempts++;
+        }
+
+        // 如果这一层完全放不下，跳出
+        if (placedThisLayer == 0 && h > 0) break;
+    }
+
+    // 如果还有剩余方块没放完，强行补充到最底层
+    while (placed < cubeCount)
+    {
+        int r = _random.Next(rows);
+        int c = _random.Next(cols);
+        if (!grid[0, r, c])
+        {
+            grid[0, r, c] = true;
+            placed++;
+        }
+    }
+
+    // ===== 生成俯视图（从上往下看） =====
+    var top = new int[rows][];
+    for (int r = 0; r < rows; r++)
+    {
+        top[r] = new int[cols];
+        for (int c = 0; c < cols; c++)
+        {
+            bool has = false;
+            for (int h = 0; h < maxHeight; h++)
             {
-                cubeCount = _random.Next(14, 19);
-                timeLimit = 20;
+                if (grid[h, r, c]) { has = true; break; }
             }
-            else if (difficulty <= 80)
+            top[r][c] = has ? 1 : 0;
+        }
+    }
+
+    // ===== 生成主视图（从正面看，面向 rows 方向） =====
+    // ⭐ 主视图应该显示每列的最高高度（从上往下看）
+    var front = new int[maxHeight][];
+    for (int h = 0; h < maxHeight; h++)
+    {
+        front[h] = new int[cols];
+        for (int c = 0; c < cols; c++)
+        {
+            bool has = false;
+            for (int r = 0; r < rows; r++)
             {
-                cubeCount = _random.Next(19, 24);
-                timeLimit = 15;
+                if (grid[h, r, c]) { has = true; break; }
+            }
+            front[h][c] = has ? 1 : 0;
+        }
+    }
+
+    // ===== 生成左视图（从左侧看，面向 cols 方向） =====
+    // ⭐ 左视图应该显示每行的最高高度（从右往左看）
+    var side = new int[maxHeight][];
+    for (int h = 0; h < maxHeight; h++)
+    {
+        side[h] = new int[rows];
+        for (int r = 0; r < rows; r++)
+        {
+            bool has = false;
+            for (int c = 0; c < cols; c++)
+            {
+                if (grid[h, r, c]) { has = true; break; }
+            }
+            side[h][r] = has ? 1 : 0;
+        }
+    }
+
+    // ⭐ 难度越高，视图越稀疏（更复杂的结构）
+    if (difficulty > 60)
+    {
+        // 随机移除一些方块，让视图更复杂
+        int removeCount = Math.Min(cubeCount / 5, 5);
+        for (int i = 0; i < removeCount; i++)
+        {
+            int r = _random.Next(rows);
+            int c = _random.Next(cols);
+            int h = _random.Next(maxHeight);
+            if (grid[h, r, c] && h > 0)
+            {
+                // 检查移除后是否有支撑
+                bool hasSupport = false;
+                for (int hr = 0; hr < h; hr++)
+                {
+                    if (grid[hr, r, c]) { hasSupport = true; break; }
+                }
+                if (hasSupport || h == 0)
+                {
+                    grid[h, r, c] = false;
+                    // 重新计算视图
+                    return GenerateViews(cubeCount - 1, difficulty);
+                }
+            }
+        }
+    }
+
+    return (top, front, side);
+}
+
+// ============================================================
+// 生成三视图 HTML（修复版 - 横向排列 + 合适的单元格大小）
+// ============================================================
+private string ViewsToHtml(int[][] view, string title, string label)
+{
+    var sb = new StringBuilder();
+    int cols = view[0].Length;
+    int rows = view.Length;
+
+    // ⭐ 单元格大小根据视图大小自适应
+    int cellSize = Math.Max(28, Math.Min(40, 45 - rows * 2));
+
+    sb.Append($"<div class='view-item'>");
+    sb.Append($"<span class='view-label'>{label}</span>");
+    sb.Append($"<div class='view-grid' style='grid-template-columns:repeat({cols}, {cellSize}px);'>");
+
+    for (int r = 0; r < rows; r++)
+    {
+        for (int c = 0; c < cols; c++)
+        {
+            if (view[r][c] == 1)
+            {
+                sb.Append($"<div class='cell filled' style='width:{cellSize}px;height:{cellSize}px;'></div>");
             }
             else
             {
-                cubeCount = _random.Next(24, 31);
-                timeLimit = 10;
+                sb.Append($"<div class='cell empty' style='width:{cellSize}px;height:{cellSize}px;'></div>");
             }
-
-            var views = GenerateViews(cubeCount);
-
-            string topView = ViewsToHtml(views.top, "俯视图");
-            string frontView = ViewsToHtml(views.front, "主视图");
-            string sideView = ViewsToHtml(views.side, "左视图");
-
-            var options = GenerateNumberOptions(cubeCount, 4 + Math.Min(difficulty / 10, 3), 5 + difficulty / 5);
-
-            return new Dictionary<string, object>
-            {
-                ["type"] = "threeView",
-                ["level"] = level,
-                ["question"] = $"📐 根据三视图，计算共有多少个正方体？<br><span style='color:rgba(255,255,255,0.12);font-size:0.7rem;'>■ 代表一个正方体</span>",
-                ["topView"] = topView,
-                ["frontView"] = frontView,
-                ["sideView"] = sideView,
-                ["correctAnswer"] = cubeCount.ToString(),
-                ["options"] = options,
-                ["timeLimit"] = timeLimit,
-                ["typesCompleted"] = typesCompleted,
-                ["funMessage"] = GetFunMessage("threeView")
-            };
         }
+    }
 
-        private (int[][] top, int[][] front, int[][] side) GenerateViews(int cubeCount)
-        {
-            int rows = 4 + _random.Next(3);
-            int cols = 4 + _random.Next(3);
-            int maxHeight = 3 + _random.Next(2);
-
-            var grid = new bool[maxHeight, rows, cols];
-            int placed = 0;
-
-            for (int h = 0; h < maxHeight && placed < cubeCount; h++)
-            {
-                int maxPerLayer = Math.Min(cubeCount - placed, rows * cols);
-                int targetThisLayer = (int)(maxPerLayer * (1.0 - h * 0.2));
-
-                int attempts = 0;
-                while (placed < cubeCount && attempts < 1000)
-                {
-                    int r = _random.Next(rows);
-                    int c = _random.Next(cols);
-
-                    if (h > 0 && !grid[h - 1, r, c])
-                    {
-                        attempts++;
-                        continue;
-                    }
-
-                    if (!grid[h, r, c])
-                    {
-                        grid[h, r, c] = true;
-                        placed++;
-                    }
-                    attempts++;
-                }
-            }
-
-            while (placed < cubeCount)
-            {
-                int r = _random.Next(rows);
-                int c = _random.Next(cols);
-                int h = _random.Next(maxHeight);
-
-                if (!grid[h, r, c])
-                {
-                    bool hasSupport = h == 0 || grid[h - 1, r, c];
-                    if (hasSupport)
-                    {
-                        grid[h, r, c] = true;
-                        placed++;
-                    }
-                }
-            }
-
-            var top = new int[rows][];
-            for (int r = 0; r < rows; r++)
-            {
-                top[r] = new int[cols];
-                for (int c = 0; c < cols; c++)
-                {
-                    bool has = false;
-                    for (int h = 0; h < maxHeight; h++)
-                    {
-                        if (grid[h, r, c]) { has = true; break; }
-                    }
-                    top[r][c] = has ? 1 : 0;
-                }
-            }
-
-            var front = new int[maxHeight][];
-            for (int h = 0; h < maxHeight; h++)
-            {
-                front[h] = new int[cols];
-                for (int c = 0; c < cols; c++)
-                {
-                    bool has = false;
-                    for (int r = 0; r < rows; r++)
-                    {
-                        if (grid[h, r, c]) { has = true; break; }
-                    }
-                    front[h][c] = has ? 1 : 0;
-                }
-            }
-
-            var side = new int[maxHeight][];
-            for (int h = 0; h < maxHeight; h++)
-            {
-                side[h] = new int[rows];
-                for (int r = 0; r < rows; r++)
-                {
-                    bool has = false;
-                    for (int c = 0; c < cols; c++)
-                    {
-                        if (grid[h, r, c]) { has = true; break; }
-                    }
-                    side[h][r] = has ? 1 : 0;
-                }
-            }
-
-            return (top, front, side);
-        }
-
-        private string ViewsToHtml(int[][] view, string title)
-        {
-            var sb = new StringBuilder();
-            sb.Append($"<div class='view-item'>");
-            sb.Append($"<span class='view-label'>{title}</span>");
-            sb.Append("<div class='view-grid'>");
-
-            for (int r = 0; r < view.Length; r++)
-            {
-                for (int c = 0; c < view[r].Length; c++)
-                {
-                    if (view[r][c] == 1)
-                    {
-                        sb.Append($"<div class='cell filled'></div>");
-                    }
-                    else
-                    {
-                        sb.Append($"<div class='cell empty'></div>");
-                    }
-                }
-            }
-
-            sb.Append("</div></div>");
-            return sb.ToString();
-        }
+    sb.Append("</div></div>");
+    return sb.ToString();
+}
 
         // ============================================================
         // 题型 15：图形计数
