@@ -112,7 +112,7 @@
     .ab-history .history-item.correct { color: #28a745; }
 
     /* ============================================================
-       三视图 - 横向排列，正方形大框
+       三视图 - 横向排列
        ============================================================ */
     .view-container { display: flex; justify-content: center; gap: 1.5rem; flex-wrap: wrap; padding: 0.5rem 0; }
     .view-item { text-align: center; }
@@ -547,7 +547,7 @@
     function getColorHex(name) { return colorHexMap[name] || '#808080'; }
 
     // ============================================================
-    // 教程数据（简化版，只保留关键演示）
+    // 教程数据
     // ============================================================
     var tutorialOrder = ['text','arithmetic','stroke','color','findDifferent','reverse','missingLetter','timeCalc','idiom','memory','pattern','colorMix','trueFalse','puzzle','threeView','shapeCount','dateReasoning','rotate','abgame','tripleColor'];
     var currentTutorialIndex = 0;
@@ -892,71 +892,69 @@
     }
 
     // ============================================================
-    // 三视图 - 横向排列，部分填充
+    // 三视图 - 横向排列
     // ============================================================
-    // ============================================================
-// 三视图 - 横向排列，正方形大框（修复版）
-// ============================================================
-function renderThreeView(challenge) {
-    var container = dom.gameContent;
-    container.innerHTML = '';
+    function renderThreeView(challenge) {
+        var container = dom.gameContent;
+        container.innerHTML = '';
 
-    // 创建横向排列的视图容器
-    var viewContainer = document.createElement('div');
-    viewContainer.className = 'view-container';
-    viewContainer.style.cssText = 'display:flex;justify-content:center;gap:2rem;flex-wrap:wrap;padding:0.5rem 0;';
+        // 创建横向排列的视图容器
+        var viewContainer = document.createElement('div');
+        viewContainer.className = 'view-container';
+        viewContainer.style.cssText = 'display:flex;justify-content:center;gap:1.5rem;flex-wrap:wrap;padding:0.5rem 0;';
 
-    // 添加俯视图
-    if (challenge.topView) {
-        var topItem = document.createElement('div');
-        topItem.className = 'view-item';
-        topItem.style.cssText = 'text-align:center;';
-        topItem.innerHTML = challenge.topView;
-        viewContainer.appendChild(topItem);
-    }
+        // 添加俯视图
+        if (challenge.topView) {
+            var topItem = document.createElement('div');
+            topItem.className = 'view-item';
+            topItem.style.cssText = 'text-align:center;';
+            topItem.innerHTML = challenge.topView;
+            viewContainer.appendChild(topItem);
+        }
 
-    // 添加主视图
-    if (challenge.frontView) {
-        var frontItem = document.createElement('div');
-        frontItem.className = 'view-item';
-        frontItem.style.cssText = 'text-align:center;';
-        frontItem.innerHTML = challenge.frontView;
-        viewContainer.appendChild(frontItem);
-    }
+        // 添加主视图
+        if (challenge.frontView) {
+            var frontItem = document.createElement('div');
+            frontItem.className = 'view-item';
+            frontItem.style.cssText = 'text-align:center;';
+            frontItem.innerHTML = challenge.frontView;
+            viewContainer.appendChild(frontItem);
+        }
 
-    // 添加左视图
-    if (challenge.sideView) {
-        var sideItem = document.createElement('div');
-        sideItem.className = 'view-item';
-        sideItem.style.cssText = 'text-align:center;';
-        sideItem.innerHTML = challenge.sideView;
-        viewContainer.appendChild(sideItem);
-    }
+        // 添加左视图
+        if (challenge.sideView) {
+            var sideItem = document.createElement('div');
+            sideItem.className = 'view-item';
+            sideItem.style.cssText = 'text-align:center;';
+            sideItem.innerHTML = challenge.sideView;
+            viewContainer.appendChild(sideItem);
+        }
 
-    container.appendChild(viewContainer);
+        container.appendChild(viewContainer);
 
-    // 渲染选项
-    if (challenge.options && challenge.options.length > 0) {
-        var optGrid = document.createElement('div');
-        optGrid.className = 'options-grid';
-        var letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
-        challenge.options.forEach(function(opt, idx) {
-            var btn = document.createElement('button');
-            btn.className = 'option-btn';
-            btn.textContent = (idx < letters.length ? letters[idx] + '. ' : '') + opt;
-            btn.dataset.answer = opt;
-            btn.addEventListener('click', function() {
-                if (gameState.isAnswered) return;
-                submitAnswer(challenge, this.dataset.answer, this);
+        // 渲染选项
+        if (challenge.options && challenge.options.length > 0) {
+            var optGrid = document.createElement('div');
+            optGrid.className = 'options-grid';
+            var letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+            challenge.options.forEach(function(opt, idx) {
+                var btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.textContent = (idx < letters.length ? letters[idx] + '. ' : '') + opt;
+                btn.dataset.answer = opt;
+                btn.addEventListener('click', function() {
+                    if (gameState.isAnswered) return;
+                    submitAnswer(challenge, this.dataset.answer, this);
+                });
+                optGrid.appendChild(btn);
             });
-            optGrid.appendChild(btn);
-        });
-        container.appendChild(optGrid);
+            container.appendChild(optGrid);
+        }
+
+        startTimer(challenge.timeLimit || 20);
+        updateUI();
     }
 
-    startTimer(challenge.timeLimit || 20);
-    updateUI();
-}
     // ============================================================
     // 颜色混合
     // ============================================================
@@ -1220,7 +1218,7 @@ function renderThreeView(challenge) {
         historyDiv.textContent = '📝 输入你的猜测...';
         container.appendChild(historyDiv);
 
-        // ⭐ 3列键盘
+        // 3列键盘
         var keypadDiv = document.createElement('div');
         keypadDiv.className = 'ab-keypad';
         keypadDiv.id = 'abKeypad';
@@ -1369,34 +1367,28 @@ function renderThreeView(challenge) {
     }
 
     function updateABHistory() {
-    var historyEl = document.getElementById('abHistory');
-    if (!historyEl) return;
-    if (abState.history.length === 0) {
-        historyEl.textContent = '📝 输入你的猜测...';
-        return;
-    }
-    var html = '';
-    var items = abState.history.slice(-6);
-    for (var i = 0; i < items.length; i++) {
-        var isCorrect = false;
-        // 从 "1 2 3 4 → 4A0B" 中提取结果部分
-        var parts = items[i].split('→');
-        if (parts.length === 2) {
-            var result = parts[1].trim();
-            // 匹配 "数字A数字B" 格式
-            var match = result.match(/^(\d+)A(\d+)B$/);
-            if (match) {
-                var aCount = parseInt(match[1]);
-                if (aCount === abState.digitCount) {
-                    isCorrect = true;
+        var historyEl = document.getElementById('abHistory');
+        if (!historyEl) return;
+        if (abState.history.length === 0) { historyEl.textContent = '📝 输入你的猜测...'; return; }
+        var html = '', items = abState.history.slice(-6);
+        for (var i = 0; i < items.length; i++) {
+            var isCorrect = false;
+            var parts = items[i].split('→');
+            if (parts.length === 2) {
+                var result = parts[1].trim();
+                var match = result.match(/^(\d+)A(\d+)B$/);
+                if (match) {
+                    var aCount = parseInt(match[1]);
+                    if (aCount === abState.digitCount) {
+                        isCorrect = true;
+                    }
                 }
             }
+            html += '<div class="history-item' + (isCorrect ? ' correct' : '') + '">🔹 ' + items[i] + '</div>';
         }
-        html += '<div class="history-item' + (isCorrect ? ' correct' : '') + '">🔹 ' + items[i] + '</div>';
+        historyEl.innerHTML = html;
+        historyEl.scrollTop = historyEl.scrollHeight;
     }
-    historyEl.innerHTML = html;
-    historyEl.scrollTop = historyEl.scrollHeight;
-}
 
     function disableABKeyboard() {
         document.querySelectorAll('.ab-key-btn').forEach(function(b) { b.disabled = true; });
@@ -1784,13 +1776,15 @@ function renderThreeView(challenge) {
     function gameOver() {
         gameState.isPlaying = false;
         clearInterval(gameState.timer);
-        var finalScore = gameState.score;
+        var currentScore = gameState.score;
         dom.challengeCard.innerHTML = `
             <div class="game-over">
-                <div class="big-icon">${finalScore > 100 ? '🏆' : '💪'}</div>
-                <div class="title">${finalScore > 100 ? '🎉 挑战结束！' : '😅 继续加油！'}</div>
+                <div class="big-icon">${currentScore > 50 ? '🏆' : '💪'}</div>
+                <div class="title">${currentScore > 50 ? '🎉 挑战结束！' : '😅 继续加油！'}</div>
                 <div class="sub">你成功通过了 ${gameState.passed} 关</div>
-                <div class="final-score">${finalScore}</div>
+                <div style="font-size:0.85rem;color:rgba(255,255,255,0.1);margin-bottom:0.2rem;">本局得分</div>
+                <div class="final-score" id="finalScoreDisplay">${currentScore}</div>
+                <div style="font-size:0.7rem;color:rgba(255,255,255,0.06);margin-top:-0.2rem;margin-bottom:0.3rem;">🔄 正在保存最高分...</div>
                 <div class="stats-grid">
                     <div class="stat-item"><div class="stat-value">${gameState.passed}</div><div class="stat-label">通关</div></div>
                     <div class="stat-item"><div class="stat-value">${gameState.maxCombo}</div><div class="stat-label">最高连击</div></div>
@@ -1802,15 +1796,21 @@ function renderThreeView(challenge) {
         saveAndShowRanking();
     }
 
+    // ============================================================
+    // 通关
+    // ============================================================
     function gameWin() {
         gameState.isPlaying = false;
         clearInterval(gameState.timer);
+        var currentScore = gameState.score;
         dom.challengeCard.innerHTML = `
             <div class="game-over">
                 <div class="big-icon">👑</div>
                 <div class="title">🎉 恭喜通关！</div>
                 <div class="sub">你通过了全部 100 关！</div>
-                <div class="final-score">${gameState.score}</div>
+                <div style="font-size:0.85rem;color:rgba(255,255,255,0.1);margin-bottom:0.2rem;">本局得分</div>
+                <div class="final-score" id="finalScoreDisplay">${currentScore}</div>
+                <div style="font-size:0.7rem;color:rgba(255,255,255,0.06);margin-top:-0.2rem;margin-bottom:0.3rem;">🔄 正在保存最高分...</div>
                 <div class="stats-grid">
                     <div class="stat-item"><div class="stat-value">100</div><div class="stat-label">通关</div></div>
                     <div class="stat-item"><div class="stat-value">${gameState.maxCombo}</div><div class="stat-label">最高连击</div></div>
@@ -1822,20 +1822,51 @@ function renderThreeView(challenge) {
         saveAndShowRanking();
     }
 
+    // ============================================================
+    // 保存分数并显示最高分
+    // ============================================================
+    function saveAndShowRanking() {
+        var currentScore = gameState.score;
+        fetch('/VerifyGame/SaveScore', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'RequestVerificationToken': token },
+            body: 'score=' + currentScore + '&level=' + gameState.level + '&maxCombo=' + gameState.maxCombo + '&passed=' + gameState.passed
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.success) {
+                return fetch('/VerifyGame/GetUserScore');
+            }
+            return null;
+        })
+        .then(function(r) {
+            if (r) return r.json();
+            return null;
+        })
+        .then(function(data) {
+            if (data && data.success) {
+                var scoreEl = document.getElementById('finalScoreDisplay');
+                if (scoreEl) {
+                    scoreEl.textContent = data.totalScore;
+                    var loadingEl = document.querySelector('.game-over .sub + div');
+                    if (loadingEl) {
+                        loadingEl.textContent = '🏆 历史最高分';
+                        loadingEl.style.color = 'rgba(255,255,255,0.15)';
+                    }
+                }
+            }
+            loadRanking();
+        })
+        .catch(function() {
+            loadRanking();
+        });
+    }
+
     function restartGame() { renderStartScreen(); gameState.isPlaying = false; if (gameState.timer) { clearInterval(gameState.timer); } }
 
     // ============================================================
     // 排行榜（游戏内）
     // ============================================================
-    function saveAndShowRanking() {
-        var finalScore = gameState.score;
-        fetch('/VerifyGame/SaveScore', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'RequestVerificationToken': token },
-            body: 'score=' + finalScore + '&level=' + gameState.level + '&maxCombo=' + gameState.maxCombo + '&passed=' + gameState.passed
-        }).then(function() { loadRanking(); });
-    }
-
     function loadRanking() {
         var userId = @(Context.Session.GetInt32("UserId") ?? 0);
         fetch('/VerifyGame/GetRanking')
