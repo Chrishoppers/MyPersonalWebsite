@@ -1790,7 +1790,10 @@ private List<GameAnswerLog> ParseGameAnswerLogs(string json)
                                     if (val is JsonElement je && je.ValueKind == JsonValueKind.Number)
                                         log.ElapsedSeconds = je.GetDouble();
                                     else if (val is JsonElement je2 && je2.ValueKind == JsonValueKind.String)
-                                        double.TryParse(je2.GetString(), out log.ElapsedSeconds);
+                                       if (double.TryParse(je2.GetString(), out var parsedValue))
+{
+    log.ElapsedSeconds = parsedValue;
+}
                                     break;
                                 case "IsCorrect": log.IsCorrect = GetBoolFromRow(element); break;
                                 case "IsTimeout": log.IsTimeout = GetBoolFromRow(element); break;
