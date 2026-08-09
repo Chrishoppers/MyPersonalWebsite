@@ -1576,6 +1576,109 @@ private List<VerifyGameStat> ParseVerifyGameStatList(string json)
             if (string.IsNullOrEmpty(value)) return "";
             return value.Replace("'", "''");
         }
+        // ============================================================
+// 游戏会话相关
+// ============================================================
+
+public async Task AddGameSessionAsync(GameSession session)
+{
+    if (!_tursoAvailable) return;
+    
+    var sql = $@"INSERT INTO GameSessions (
+        UserId, SessionId, StartTime, EndTime, TotalScore, FinalScore,
+        PassedCount, MaxCombo, CheatCount, MicEnabled, CamEnabled,
+        PenaltyMic, PenaltyCam, IsCompleted, Status
+    ) VALUES (
+        {session.UserId}, '{session.SessionId}', '{session.StartTime:yyyy-MM-dd HH:mm:ss}',
+        {(session.EndTime.HasValue ? $"'{session.EndTime.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
+        {session.TotalScore}, {session.FinalScore}, {session.PassedCount},
+        {session.MaxCombo}, {session.CheatCount}, {(session.MicEnabled ? 1 : 0)},
+        {(session.CamEnabled ? 1 : 0)}, {session.PenaltyMic}, {session.PenaltyCam},
+        {(session.IsCompleted ? 1 : 0)}, '{session.Status}'
+    )";
+    
+    await _tursoService.ExecuteSqlAsync(sql);
+}
+
+public async Task<GameSession?> GetGameSessionAsync(string sessionId)
+{
+    if (!_tursoAvailable) return null;
+    
+    var result = await _tursoService.QueryAsync(
+        $"SELECT * FROM GameSessions WHERE SessionId = '{sessionId}'"
+    );
+    return ParseGameSession(result);
+}
+
+public async Task UpdateGameSessionAsync(GameSession session)
+{
+    if (!_tursoAvailable) return;
+    
+    var sql = $@"UPDATE GameSessions SET
+        EndTime = {(session.EndTime.HasValue ? $"'{session.EndTime.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
+        TotalScore = {session.TotalScore},
+        FinalScore = {session.FinalScore},
+        PassedCount = {session.PassedCount},
+        MaxCombo = {session.MaxCombo},
+        CheatCount = {session.CheatCount},
+        IsCompleted = {(session.IsCompleted ? 1 : 0)},
+        Status = '{session.Status}'
+    WHERE SessionId = '{session.SessionId}'";
+    
+    await _tursoService.ExecuteSqlAsync(sql);
+}
+
+// ============================================================
+// 答题日志相关
+// ============================================================
+
+public async Task AddGameAnswerLogAsync(GameAnswerLog log)
+{
+    if (!_tursoAvailable) return;
+    
+    var sql = $@"INSERT INTO GameAnswerLogs (
+        SessionId, UserId, Level, QuestionType, StartTime, SubmitTime,
+        ElapsedSeconds, IsCorrect, IsTimeout, CheatDetected, CheatReason,
+        PointsEarned, PenaltyApplied
+    ) VALUES (
+        '{log.SessionId}', {log.UserId}, {log.Level}, '{log.QuestionType}',
+        '{log.StartTime:yyyy-MM-dd HH:mm:ss}', '{log.SubmitTime:yyyy-MM-dd HH:mm:ss}',
+        {log.ElapsedSeconds:F2}, {(log.IsCorrect ? 1 : 0)}, {(log.IsTimeout ? 1 : 0)},
+        {(log.CheatDetected ? 1 : 0)}, {(string.IsNullOrEmpty(log.CheatReason) ? "NULL" : $"'{log.CheatReason}'")},
+        {log.PointsEarned}, {log.PenaltyApplied}
+    )";
+    
+    await _tursoService.ExecuteSqlAsync(sql);
+}
+
+public async Task<List<GameAnswerLog>> GetGameAnswerLogsAsync(string sessionId)
+{
+    if (!_tursoAvailable) return new List<GameAnswerLog>();
+    
+    var result = await _tursoService.QueryAsync(
+        $"SELECT * FROM GameAnswerLogs WHERE SessionId = '{sessionId}' ORDER BY Id ASC"
+    );
+    return ParseGameAnswerLogs(result);
+}
+
+// ============================================================
+// 作弊事件相关
+// ============================================================
+
+public async Task AddCheatEventAsync(CheatEvent cheatEvent)
+{
+    if (!_tursoAvailable) return;
+    
+    var sql = $@"INSERT INTO CheatEvents (
+        SessionId, UserId, EventType, EventDetail, DetectedAt, PenaltyAmount
+    ) VALUES (
+        '{cheatEvent.SessionId}', {cheatEvent.UserId}, '{cheatEvent.EventType}',
+        {(string.IsNullOrEmpty(cheatEvent.EventDetail) ? "NULL" : $"'{cheatEvent.EventDetail}'")},
+        '{cheatEvent.DetectedAt:yyyy-MM-dd HH:mm:ss}', {cheatEvent.PenaltyAmount}
+    )";
+    
+    await _tursoService.ExecuteSqlAsync(sql);
+}
        
     }
 }
