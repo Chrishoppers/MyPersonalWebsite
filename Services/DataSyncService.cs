@@ -123,6 +123,124 @@ namespace MyPersonalWebsite.Services
             await _tursoService.ExecuteSqlAsync(sql);
             return token;
         }
+        // ============================================================
+// 验证大闯关独立统计（不依赖 User 表字段）
+// ============================================================
+
+public async Task<VerifyGameStat?> GetVerifyGameStatAsync(int userId)
+{
+    if (!_tursoAvailable) return null;
+
+    var result = await _tursoService.QueryAsync(
+        $"SELECT * FROM VerifyGameStats WHERE UserId = {userId}"
+    );
+    return ParseVerifyGameStat(result);
+}
+
+public async Task<List<VerifyGameStat>> GetAllVerifyGameStatsAsync()
+{
+    if (!_tursoAvailable) return new List<VerifyGameStat>();
+
+    var result = await _tursoService.QueryAsync(
+        "SELECT * FROM VerifyGameStats ORDER BY TotalScore DESC"
+    );
+    return ParseVerifyGameStatList(result);
+}
+
+public async Task AddVerifyGameStatAsync(VerifyGameStat stat)
+{
+    if (!_tursoAvailable) return;
+
+    var maxIdResult = await _tursoService.QueryAsync("SELECT MAX(Id) as MaxId FROM VerifyGameStats");
+    var maxId = ParseMaxId(maxIdResult);
+    stat.Id = maxId + 1;
+
+    var sql = $@"INSERT INTO VerifyGameStats (
+        Id, UserId, TotalScore, MaxCombo, MaxLevel, GamesPlayed, UpdatedAt
+    ) VALUES (
+        {stat.Id}, {stat.UserId}, {stat.TotalScore}, {stat.MaxCombo},
+        {stat.MaxLevel}, {stat.GamesPlayed}, '{stat.UpdatedAt:yyyy-MM-dd HH:mm:ss}'
+    )";
+
+    await _tursoService.ExecuteSqlAsync(sql);
+    Console.WriteLine($"✅ 验证大闯关统计已创建: UserId={stat.UserId}, Score={stat.TotalScore}");
+}
+
+public async Task UpdateVerifyGameStatAsync(VerifyGameStat stat)
+{
+    if (!_tursoAvailable) return;
+
+    var sql = $@"UPDATE VerifyGameStats SET
+        TotalScore = {stat.TotalScore},
+        MaxCombo = {stat.MaxCombo},
+        MaxLevel = {stat.MaxLevel},
+        GamesPlayed = {stat.GamesPlayed},
+        UpdatedAt = '{stat.UpdatedAt:yyyy-MM-dd HH:mm:ss}'
+    WHERE UserId = {stat.UserId}";
+
+    await _tursoService.ExecuteSqlAsync(sql);
+    Console.WriteLine($"✅ 验证大闯关统计已更新: UserId={stat.UserId}, Score={stat.TotalScore}");
+}
+
+// 解析方法
+private VerifyGameStat? ParseVerifyGameStat(string json)
+{
+    var list = ParseVerifyGameStatList(json);
+    return list.FirstOrDefault();
+}
+
+private List<VerifyGameStat> ParseVerifyGameStatList(string json)
+{
+    var list = new List<VerifyGameStat>();
+    try
+    {
+        using var doc = JsonDocument.Parse(json);
+        var root = doc.RootElement;
+
+        if (root.TryGetProperty("results", out var results) && results.GetArrayLength() > 0)
+        {
+            var firstResult = results[0];
+            if (firstResult.TryGetProperty("response", out var response) &&
+                response.TryGetProperty("result", out var result))
+            {
+                if (result.TryGetProperty("rows", out var rows) && rows.GetArrayLength() > 0)
+                {
+                    var cols = result.GetProperty("cols");
+
+                    for (int r = 0; r < rows.GetArrayLength(); r++)
+                    {
+                        var row = rows[r];
+                        if (row.ValueKind != JsonValueKind.Array) continue;
+
+                        var stat = new VerifyGameStat();
+                        for (int i = 0; i < cols.GetArrayLength(); i++)
+                        {
+                            var colName = cols[i].GetProperty("name").GetString();
+                            var element = row[i];
+
+                            switch (colName)
+                            {
+                                case "Id": stat.Id = GetIntFromRow(element); break;
+                                case "UserId": stat.UserId = GetIntFromRow(element); break;
+                                case "TotalScore": stat.TotalScore = GetIntFromRow(element); break;
+                                case "MaxCombo": stat.MaxCombo = GetIntFromRow(element); break;
+                                case "MaxLevel": stat.MaxLevel = GetIntFromRow(element); break;
+                                case "GamesPlayed": stat.GamesPlayed = GetIntFromRow(element); break;
+                                case "UpdatedAt": stat.UpdatedAt = GetDateTimeFromRow(element) ?? DateTime.Now; break;
+                            }
+                        }
+                        list.Add(stat);
+                    }
+                }
+            }
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"⚠️ 解析验证大闯关统计 JSON 失败: {ex.Message}");
+    }
+    return list;
+}
 
         public async Task UpdateUserAsync(User user)
         {
