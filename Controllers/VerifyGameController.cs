@@ -526,104 +526,133 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // 保存分数（使用 User 表字段）
-        // ============================================================
-        [HttpPost]
-        public async Task<IActionResult> SaveScore(int score, int level, int maxCombo, int passed)
+// 保存分数（使用独立的 VerifyGameStats 表）
+// ============================================================
+[HttpPost]
+public async Task<IActionResult> SaveScore(int score, int level, int maxCombo, int passed)
+{
+    var userId = HttpContext.Session.GetInt32("UserId");
+    if (!userId.HasValue)
+        return Json(new { success = false, message = "请先登录" });
+
+    try
+    {
+        var stat = await _dataSync.GetVerifyGameStatAsync(userId.Value);
+        
+        if (stat == null)
         {
-            var userId = HttpContext.Session.GetInt32("UserId");
-            if (!userId.HasValue)
-                return Json(new { success = false, message = "请先登录" });
-
-            try
+            // 首次创建
+            stat = new VerifyGameStat
             {
-                var user = await _dataSync.GetUserByIdAsync(userId.Value);
-                if (user == null)
-                    return Json(new { success = false, message = "用户不存在" });
-
-                if (score > user.VerifyGameScore) user.VerifyGameScore = score;
-                if (level > user.VerifyGameMaxLevel) user.VerifyGameMaxLevel = level;
-                if (maxCombo > user.VerifyGameMaxCombo) user.VerifyGameMaxCombo = maxCombo;
-
-                await _dataSync.UpdateUserAsync(user);
-                Console.WriteLine($"✅ 验证大闯关保存: UserId={userId}, Score={score}, Level={level}, Combo={maxCombo}");
-                return Json(new { success = true });
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"❌ 保存分数失败: {ex.Message}");
-                return Json(new { success = false, message = ex.Message });
-            }
+                UserId = userId.Value,
+                TotalScore = score,
+                MaxCombo = maxCombo,
+                MaxLevel = level,
+                GamesPlayed = 1,
+                UpdatedAt = DateTime.Now
+            };
+            await _dataSync.AddVerifyGameStatAsync(stat);
+            Console.WriteLine($"✅ 首次保存验证大闯关: UserId={userId}, Score={score}");
+        }
+        else
+        {
+            // 更新最高分
+            if (score > stat.TotalScore) stat.TotalScore = score;
+            if (maxCombo > stat.MaxCombo) stat.MaxCombo = maxCombo;
+            if (level > stat.MaxLevel) stat.MaxLevel = level;
+            stat.GamesPlayed += 1;
+            stat.UpdatedAt = DateTime.Now;
+            await _dataSync.UpdateVerifyGameStatAsync(stat);
+            Console.WriteLine($"✅ 更新验证大闯关: UserId={userId}, Score={stat.TotalScore}");
         }
 
-        // ============================================================
-        // 获取用户验证大闯关总积分
-        // ============================================================
-        [HttpGet]
-        public async Task<IActionResult> GetUserScore()
+        return Json(new { success = true, savedScore = stat.TotalScore });
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"❌ 保存分数失败: {ex.Message}");
+        return Json(new { success = false, message = ex.Message });
+    }
+}
+
+// ============================================================
+// 获取用户验证大闯关总积分
+// ============================================================
+[HttpGet]
+public async Task<IActionResult> GetUserScore()
+{
+    var userId = HttpContext.Session.GetInt32("UserId");
+    if (!userId.HasValue)
+        return Json(new { success = false, message = "请先登录" });
+
+    try
+    {
+        var stat = await _dataSync.GetVerifyGameStatAsync(userId.Value);
+        if (stat == null)
         {
-            var userId = HttpContext.Session.GetInt32("UserId");
-            if (!userId.HasValue)
-                return Json(new { success = false, message = "请先登录" });
-
-            try
-            {
-                var user = await _dataSync.GetUserByIdAsync(userId.Value);
-                if (user == null)
-                    return Json(new { success = false, message = "用户不存在" });
-
-                return Json(new { 
-                    success = true, 
-                    totalScore = user.VerifyGameScore,
-                    maxLevel = user.VerifyGameMaxLevel,
-                    maxCombo = user.VerifyGameMaxCombo
-                });
-            }
-            catch (Exception ex)
-            {
-                return Json(new { success = false, message = ex.Message });
-            }
+            return Json(new { success = true, totalScore = 0, maxLevel = 0, maxCombo = 0 });
         }
 
-        // ============================================================
-        // 获取排行榜
-        // ============================================================
-        [HttpGet]
-        public async Task<IActionResult> GetRanking()
-        {
-            try
-            {
-                var userId = HttpContext.Session.GetInt32("UserId");
-                var users = await _dataSync.GetAllUsersAsync();
-                
-                var ranking = users
-                    .Where(u => !u.IsDeleted && u.VerifyGameScore > 0)
-                    .OrderByDescending(u => u.VerifyGameScore)
-                    .ThenByDescending(u => u.VerifyGameMaxLevel)
-                    .Take(100)
-                    .Select((u, index) => new
-                    {
-                        userId = u.Id,
-                        username = u.Username,
-                        avatarUrl = u.AvatarUrl,
-                        isAvatarApproved = u.IsAvatarApproved,
-                        totalPoints = u.VerifyGameScore,
-                        maxCombo = u.VerifyGameMaxCombo,
-                        maxLevel = u.VerifyGameMaxLevel,
-                        rank = index + 1,
-                        isMe = u.Id == userId
-                    })
-                    .ToList();
+        return Json(new { 
+            success = true, 
+            totalScore = stat.TotalScore,
+            maxLevel = stat.MaxLevel,
+            maxCombo = stat.MaxCombo
+        });
+    }
+    catch (Exception ex)
+    {
+        return Json(new { success = false, message = ex.Message });
+    }
+}
 
-                Console.WriteLine($"📊 验证大闯关排行榜: {ranking.Count} 条记录");
-                return Json(new { success = true, data = ranking });
-            }
-            catch (Exception ex)
+// ============================================================
+// 获取排行榜（从 VerifyGameStats 表读取）
+// ============================================================
+[HttpGet]
+public async Task<IActionResult> GetRanking()
+{
+    try
+    {
+        var userId = HttpContext.Session.GetInt32("UserId");
+        var stats = await _dataSync.GetAllVerifyGameStatsAsync();
+        var users = await _dataSync.GetAllUsersAsync();
+
+        var ranking = stats
+            .Where(s => s.TotalScore > 0)
+            .OrderByDescending(s => s.TotalScore)
+            .ThenByDescending(s => s.MaxLevel)
+            .Take(100)
+            .Select((s, index) =>
             {
-                Console.WriteLine($"❌ 获取排行榜失败: {ex.Message}");
-                return Json(new { success = false, data = new List<object>(), message = ex.Message });
-            }
-        }
+                var user = users.FirstOrDefault(u => u.Id == s.UserId);
+                return new
+                {
+                    userId = s.UserId,
+                    username = user?.Username ?? "已删除用户",
+                    avatarUrl = user?.AvatarUrl,
+                    isAvatarApproved = user?.IsAvatarApproved ?? false,
+                    totalPoints = s.TotalScore,
+                    maxCombo = s.MaxCombo,
+                    maxLevel = s.MaxLevel,
+                    gamesPlayed = s.GamesPlayed,
+                    rank = index + 1,
+                    isMe = s.UserId == userId
+                };
+            })
+            .ToList();
+
+        Console.WriteLine($"📊 验证大闯关排行榜: {ranking.Count} 条记录");
+        return Json(new { success = true, data = ranking });
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"❌ 获取排行榜失败: {ex.Message}");
+        return Json(new { success = false, data = new List<object>(), message = ex.Message });
+    }
+}
+
+        
 
         // ============================================================
         // 获取挑战
