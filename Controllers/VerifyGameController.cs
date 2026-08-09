@@ -81,10 +81,11 @@ namespace MyPersonalWebsite.Controllers
         };
 
         // ============================================================
-        // 真/假判断题库
+        // 真/假判断题库（完整版）
         // ============================================================
         private readonly (string statement, bool isTrue, int minLevel, int maxLevel)[] _trueFalseQuestions = new (string, bool, int, int)[]
         {
+            // 入门 (1-20)
             ("地球是球体", true, 1, 20), ("太阳从东方升起", true, 1, 20),
             ("水在标准大气压下0度结冰", true, 1, 20), ("成年人体内有206块骨头", true, 1, 20),
             ("熊猫是中国的特有物种", true, 1, 20), ("北京是中国的首都", true, 1, 20),
@@ -112,6 +113,8 @@ namespace MyPersonalWebsite.Controllers
             ("植物会走路", false, 1, 20), ("石头会说话", false, 1, 20),
             ("水是黑色的", false, 1, 20), ("所有花都是红色的", false, 1, 20),
             ("飞鱼能在空中滑翔", true, 1, 20),
+
+            // 困难 (21-40)
             ("鲸鱼是哺乳动物", true, 21, 40), ("光速是宇宙中已知的最快速度", true, 21, 40),
             ("2是最小的质数", true, 21, 40), ("1不是质数", true, 21, 40),
             ("0不是正整数", true, 21, 40), ("光年是距离单位", true, 21, 40),
@@ -143,6 +146,8 @@ namespace MyPersonalWebsite.Controllers
             ("两个连续整数的和是奇数", true, 21, 40), ("两个连续整数的积是偶数", true, 21, 40),
             ("三个连续整数的和能被3整除", true, 21, 40), ("三个连续整数的积能被6整除", true, 21, 40),
             ("所有偶数都是合数", false, 21, 40),
+
+            // 噩梦 (41-60)
             ("如果今天是周三，那么后天是周五", true, 41, 60), ("如果今天是周一，那么昨天是周日", true, 41, 60),
             ("如果今天是周五，那么明天是周六", true, 41, 60), ("如果今天是周二，那么前天是周日", true, 41, 60),
             ("如果a>b且b>c，则a>c", true, 41, 60), ("如果a=b且b=c，则a=c", true, 41, 60),
@@ -180,6 +185,8 @@ namespace MyPersonalWebsite.Controllers
             ("0既不是正数也不是负数", true, 41, 60), ("正数的相反数是负数", true, 41, 60),
             ("负数的相反数是正数", true, 41, 60), ("0的相反数是0", true, 41, 60),
             ("所有自然数都是整数", true, 41, 60),
+
+            // 地狱 (61-80)
             ("如果a和b都是正整数，且a+b是奇数，则a和b一奇一偶", true, 61, 80),
             ("如果a和b都是正整数，且a+b是偶数，则a和b同奇同偶", true, 61, 80),
             ("如果a和b都是正整数，且a×b是奇数，则a和b都是奇数", true, 61, 80),
@@ -225,6 +232,8 @@ namespace MyPersonalWebsite.Controllers
             ("数轴上的点都对应一个实数", true, 61, 80),
             ("有理数集在数轴上是稠密的", true, 61, 80),
             ("无理数集在数轴上是稠密的", true, 61, 80),
+
+            // 传说 (81-100)
             ("如果a和b都是实数，且a²=b²，则a=b", false, 81, 100),
             ("如果a和b都是实数，且a³=b³，则a=b", true, 81, 100),
             ("如果a和b都是正实数，且a/b=b/a，则a=b", true, 81, 100),
@@ -276,7 +285,7 @@ namespace MyPersonalWebsite.Controllers
         };
 
         // ============================================================
-        // 汉字笔画数据（修复：使用字符串数组而不是字符列表）
+        // 汉字笔画数据
         // ============================================================
         private readonly Dictionary<int, string[]> _strokeGroups = new()
         {
@@ -297,7 +306,7 @@ namespace MyPersonalWebsite.Controllers
         };
 
         // ============================================================
-        // 成语库
+        // 成语库（完整版）
         // ============================================================
         private readonly string[] _idioms = new string[]
         {
@@ -353,7 +362,7 @@ namespace MyPersonalWebsite.Controllers
         };
 
         // ============================================================
-        // 找规律题库
+        // 找规律题库（完整版）
         // ============================================================
         private readonly (string pattern, int answer, int minLevel, int maxLevel)[] _patternQuestions = new (string, int, int, int)[]
         {
@@ -372,6 +381,7 @@ namespace MyPersonalWebsite.Controllers
             ("1, 2, 4, 8, 16, ?", 32, 1, 20), ("2, 4, 6, 10, 16, ?", 26, 1, 20),
             ("1, 3, 6, 10, 15, ?", 21, 1, 20), ("1, 4, 10, 20, 35, ?", 56, 1, 20),
             ("2, 5, 10, 17, 26, ?", 37, 1, 20), ("1, 2, 6, 15, 31, ?", 56, 1, 20),
+            // 困难 (21-40)
             ("2, 5, 10, 17, ?, 37", 26, 21, 40), ("1, 3, 6, 10, ?, 21", 15, 21, 40),
             ("2, 6, 12, 20, ?, 42", 30, 21, 40), ("1, 2, 5, 10, ?, 26", 17, 21, 40),
             ("3, 8, 15, 24, ?, 48", 35, 21, 40), ("2, 3, 5, 9, ?, 33", 17, 21, 40),
@@ -387,6 +397,7 @@ namespace MyPersonalWebsite.Controllers
             ("2, 5, 11, 23, 47, ?", 95, 21, 40), ("3, 7, 15, 31, 63, ?", 127, 21, 40),
             ("1, 2, 5, 14, 41, ?", 122, 21, 40), ("2, 3, 7, 18, 47, ?", 123, 21, 40),
             ("1, 3, 11, 47, 239, ?", 1439, 21, 40), ("2, 5, 13, 35, 97, ?", 275, 21, 40),
+            // 噩梦 (41-60)
             ("1, 2, 6, 15, 31, ?, 92", 56, 41, 60), ("2, 3, 7, 18, 47, ?, 322", 123, 41, 60),
             ("1, 4, 10, 22, 46, ?, 190", 94, 41, 60), ("3, 7, 15, 31, 63, ?, 255", 127, 41, 60),
             ("1, 3, 9, 31, 113, ?, 1913", 481, 41, 60), ("2, 5, 14, 41, 122, ?, 1094", 365, 41, 60),
@@ -400,6 +411,7 @@ namespace MyPersonalWebsite.Controllers
             ("2, 6, 20, 70, 252, ?", 924, 41, 60), ("3, 8, 24, 80, 280, ?", 1008, 41, 60),
             ("1, 4, 18, 96, 600, ?", 4320, 41, 60), ("2, 6, 24, 120, 720, ?", 5040, 41, 60),
             ("1, 2, 8, 48, 384, ?", 3840, 41, 60),
+            // 地狱 (61-80)
             ("1, 3, 7, 13, 21, ?, 43", 31, 61, 80), ("2, 6, 14, 30, 62, ?, 254", 126, 61, 80),
             ("1, 5, 13, 29, 61, ?, 253", 125, 61, 80), ("3, 10, 29, 66, 127, ?, 365", 218, 61, 80),
             ("1, 4, 18, 96, 600, ?, 45360", 4320, 61, 80), ("2, 6, 24, 120, 720, ?, 40320", 5040, 61, 80),
@@ -410,6 +422,7 @@ namespace MyPersonalWebsite.Controllers
             ("1, 5, 19, 77, 309, ?", 1237, 61, 80), ("3, 8, 26, 82, 258, ?", 818, 61, 80),
             ("2, 10, 38, 154, 618, ?", 2474, 61, 80), ("1, 4, 21, 106, 531, ?", 2656, 61, 80),
             ("3, 9, 29, 99, 349, ?", 1229, 61, 80), ("2, 8, 34, 140, 568, ?", 2296, 61, 80),
+            // 传说 (81-100)
             ("1, 4, 27, 256, ?, 46656", 3125, 81, 100), ("2, 12, 36, 80, 150, ?, 392", 252, 81, 100),
             ("1, 3, 11, 51, 251, ?, 8255", 1251, 81, 100), ("3, 16, 45, 96, 175, ?, 441", 288, 81, 100),
             ("1, 2, 12, 72, 480, ?, 34560", 3600, 81, 100), ("2, 5, 14, 41, 122, ?", 365, 81, 100),
@@ -517,7 +530,7 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // 保存分数（修复版）
+        // 保存分数（修复版 - 使用 User 表字段）
         // ============================================================
         [HttpPost]
         public async Task<IActionResult> SaveScore(int score, int level, int maxCombo, int passed)
@@ -528,45 +541,57 @@ namespace MyPersonalWebsite.Controllers
 
             try
             {
-                var actualLevel = level > 0 ? level : 1;
+                var user = await _dataSync.GetUserByIdAsync(userId.Value);
+                if (user == null)
+                    return Json(new { success = false, message = "用户不存在" });
 
-                var stats = await _dataSync.GetUserGameStatsAsync(userId.Value);
-                if (stats == null)
-                {
-                    stats = new UserGameStats
-                    {
-                        UserId = userId.Value,
-                        TotalPoints = score,
-                        MaxCombo = maxCombo,
-                        MaxLevel = actualLevel,
-                        GamesPlayed = 1,
-                        UpdatedAt = DateTime.Now
-                    };
-                    await _dataSync.AddUserGameStatsAsync(stats);
-                    Console.WriteLine($"✅ 新用户游戏统计创建成功: UserId={userId}, Score={score}, Level={actualLevel}");
-                }
-                else
-                {
-                    if (score > stats.TotalPoints) stats.TotalPoints = score;
-                    if (maxCombo > stats.MaxCombo) stats.MaxCombo = maxCombo;
-                    if (actualLevel > stats.MaxLevel) stats.MaxLevel = actualLevel;
-                    stats.GamesPlayed += 1;
-                    stats.UpdatedAt = DateTime.Now;
-                    await _dataSync.UpdateUserGameStatsAsync(stats);
-                    Console.WriteLine($"✅ 用户游戏统计更新成功: UserId={userId}, Score={score}, Level={actualLevel}");
-                }
+                // 更新验证大闯关数据
+                if (score > user.VerifyGameScore) user.VerifyGameScore = score;
+                if (level > user.VerifyGameMaxLevel) user.VerifyGameMaxLevel = level;
+                if (maxCombo > user.VerifyGameMaxCombo) user.VerifyGameMaxCombo = maxCombo;
+
+                await _dataSync.UpdateUserAsync(user);
+                Console.WriteLine($"✅ 验证大闯关保存: UserId={userId}, Score={score}, Level={level}, Combo={maxCombo}");
                 return Json(new { success = true });
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"❌ 保存分数失败: {ex.Message}");
-                Console.WriteLine($"堆栈: {ex.StackTrace}");
                 return Json(new { success = false, message = ex.Message });
             }
         }
 
         // ============================================================
-        // 获取排行榜（修复版）
+        // 获取用户验证大闯关总积分
+        // ============================================================
+        [HttpGet]
+        public async Task<IActionResult> GetUserScore()
+        {
+            var userId = HttpContext.Session.GetInt32("UserId");
+            if (!userId.HasValue)
+                return Json(new { success = false, message = "请先登录" });
+
+            try
+            {
+                var user = await _dataSync.GetUserByIdAsync(userId.Value);
+                if (user == null)
+                    return Json(new { success = false, message = "用户不存在" });
+
+                return Json(new { 
+                    success = true, 
+                    totalScore = user.VerifyGameScore,
+                    maxLevel = user.VerifyGameMaxLevel,
+                    maxCombo = user.VerifyGameMaxCombo
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        // ============================================================
+        // 获取排行榜（修复版 - 从 User 表读取验证大闯关数据）
         // ============================================================
         [HttpGet]
         public async Task<IActionResult> GetRanking()
@@ -574,50 +599,33 @@ namespace MyPersonalWebsite.Controllers
             try
             {
                 var userId = HttpContext.Session.GetInt32("UserId");
-
-                var allStats = await _dataSync.GetAllUserGameStatsAsync();
-                Console.WriteLine($"📊 获取到 {allStats?.Count ?? 0} 条游戏统计记录");
-
-                if (allStats == null || !allStats.Any())
-                {
-                    Console.WriteLine("⚠️ 没有找到任何游戏统计记录");
-                    return Json(new { success = true, data = new List<object>() });
-                }
-
                 var users = await _dataSync.GetAllUsersAsync();
-                Console.WriteLine($"📊 获取到 {users?.Count ?? 0} 个用户");
-
-                var ranking = allStats
-                    .Where(s => s.MaxLevel > 0 || s.TotalPoints > 0)
-                    .OrderByDescending(s => s.TotalPoints)
-                    .ThenByDescending(s => s.MaxLevel)
+                
+                var ranking = users
+                    .Where(u => !u.IsDeleted && u.VerifyGameScore > 0)
+                    .OrderByDescending(u => u.VerifyGameScore)
+                    .ThenByDescending(u => u.VerifyGameMaxLevel)
                     .Take(100)
-                    .Select((s, index) =>
+                    .Select((u, index) => new
                     {
-                        var user = users.FirstOrDefault(u => u.Id == s.UserId);
-                        return new
-                        {
-                            userId = s.UserId,
-                            username = user?.Username ?? "已删除用户",
-                            avatarUrl = user?.AvatarUrl,
-                            isAvatarApproved = user?.IsAvatarApproved ?? false,
-                            totalPoints = s.TotalPoints,
-                            maxCombo = s.MaxCombo,
-                            maxLevel = s.MaxLevel,
-                            gamesPlayed = s.GamesPlayed,
-                            rank = index + 1,
-                            isMe = s.UserId == userId
-                        };
+                        userId = u.Id,
+                        username = u.Username,
+                        avatarUrl = u.AvatarUrl,
+                        isAvatarApproved = u.IsAvatarApproved,
+                        totalPoints = u.VerifyGameScore,
+                        maxCombo = u.VerifyGameMaxCombo,
+                        maxLevel = u.VerifyGameMaxLevel,
+                        rank = index + 1,
+                        isMe = u.Id == userId
                     })
                     .ToList();
 
-                Console.WriteLine($"📊 排行榜返回 {ranking.Count} 条记录");
+                Console.WriteLine($"📊 验证大闯关排行榜: {ranking.Count} 条记录");
                 return Json(new { success = true, data = ranking });
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"❌ 获取排行榜失败: {ex.Message}");
-                Console.WriteLine($"堆栈: {ex.StackTrace}");
                 return Json(new { success = false, data = new List<object>(), message = ex.Message });
             }
         }
@@ -964,7 +972,8 @@ namespace MyPersonalWebsite.Controllers
             sb.Append("</div>");
             return sb.ToString();
         }
-                // ============================================================
+
+        // ============================================================
         // 题型 0：文字识别
         // ============================================================
         private object GenerateTextRecognition(int level, int difficulty, int typesCompleted)
@@ -1809,7 +1818,6 @@ namespace MyPersonalWebsite.Controllers
             {
                 ["type"] = "puzzle",
                 ["level"] = level,
-                ["size"] = size,
                 ["question"] = $"🧩 将数字按顺序排列（1-{(size * size) - 1}），空格为0<br><span style='color:rgba(255,255,255,0.15);font-size:0.8rem;'>点击数字移动，限时{timeLimit}秒</span>",
                 ["puzzle"] = puzzle,
                 ["correctAnswer"] = "solved",
@@ -1893,267 +1901,250 @@ namespace MyPersonalWebsite.Controllers
             return moves;
         }
 
-       // ============================================================
-// 题型 14：立体三视图（修复版 - 难度递增 + 正确布局）
-// ============================================================
-private object GenerateThreeViewCounting(int level, int difficulty, int typesCompleted)
-{
-    int cubeCount;
-    int timeLimit;
-
-    // ⭐ 难度递增：关卡越高，正方体越多，视图越复杂
-    if (difficulty <= 20)
-    {
-        cubeCount = _random.Next(4, 7);
-        timeLimit = 30;
-    }
-    else if (difficulty <= 40)
-    {
-        cubeCount = _random.Next(7, 12);
-        timeLimit = 25;
-    }
-    else if (difficulty <= 60)
-    {
-        cubeCount = _random.Next(12, 18);
-        timeLimit = 20;
-    }
-    else if (difficulty <= 80)
-    {
-        cubeCount = _random.Next(18, 25);
-        timeLimit = 15;
-    }
-    else
-    {
-        cubeCount = _random.Next(25, 35);
-        timeLimit = 12;
-    }
-
-    var views = GenerateViews(cubeCount, difficulty);
-
-    // ⭐ 使用新的 HTML 生成方法（横向排列 + 单元格样式）
-    string topView = ViewsToHtml(views.top, "俯视图", "俯视图");
-    string frontView = ViewsToHtml(views.front, "主视图", "主视图");
-    string sideView = ViewsToHtml(views.side, "左视图", "左视图");
-
-    var options = GenerateNumberOptions(cubeCount, 4 + Math.Min(difficulty / 10, 3), 5 + difficulty / 5);
-
-    return new Dictionary<string, object>
-    {
-        ["type"] = "threeView",
-        ["level"] = level,
-        ["question"] = $"📐 根据三视图，计算共有多少个正方体？<br><span style='color:rgba(255,255,255,0.12);font-size:0.7rem;'>■ 代表一个正方体 · 难度 {GetDifficultyLabel(difficulty)}</span>",
-        ["topView"] = topView,
-        ["frontView"] = frontView,
-        ["sideView"] = sideView,
-        ["correctAnswer"] = cubeCount.ToString(),
-        ["options"] = options,
-        ["timeLimit"] = timeLimit,
-        ["typesCompleted"] = typesCompleted,
-        ["funMessage"] = GetFunMessage("threeView")
-    };
-}
-
-// ============================================================
-// 生成三视图（修复版 - 正确的视图生成逻辑）
-// ============================================================
-private (int[][] top, int[][] front, int[][] side) GenerateViews(int cubeCount, int difficulty)
-{
-    // ⭐ 难度越高，行列越多
-    int rows, cols, maxHeight;
-    if (difficulty <= 20)
-    {
-        rows = 3; cols = 3; maxHeight = 2;
-    }
-    else if (difficulty <= 40)
-    {
-        rows = 4; cols = 4; maxHeight = 3;
-    }
-    else if (difficulty <= 60)
-    {
-        rows = 4; cols = 4; maxHeight = 4;
-    }
-    else if (difficulty <= 80)
-    {
-        rows = 5; cols = 5; maxHeight = 4;
-    }
-    else
-    {
-        rows = 6; cols = 6; maxHeight = 5;
-    }
-
-    var grid = new bool[maxHeight, rows, cols];
-    int placed = 0;
-    int maxAttempts = 10000;
-
-    // ⭐ 从底层开始逐层放置（先放底层，再放上层）
-    for (int h = 0; h < maxHeight && placed < cubeCount; h++)
-    {
-        // 每层放置的数量随高度递减（下面多，上面少）
-        int maxPerLayer = Math.Min(cubeCount - placed, rows * cols);
-        int targetThisLayer;
-        if (h == 0)
-            targetThisLayer = Math.Min(maxPerLayer, (int)(cubeCount * 0.5 + _random.Next(0, 3)));
-        else if (h == 1)
-            targetThisLayer = Math.Min(maxPerLayer, (int)(cubeCount * 0.3 + _random.Next(0, 2)));
-        else
-            targetThisLayer = Math.Min(maxPerLayer, (int)(cubeCount * 0.15 + _random.Next(0, 1)));
-
-        targetThisLayer = Math.Max(1, targetThisLayer);
-
-        int attempts = 0;
-        int placedThisLayer = 0;
-        while (placedThisLayer < targetThisLayer && placed < cubeCount && attempts < maxAttempts)
+        // ============================================================
+        // 题型 14：立体三视图（修复版）
+        // ============================================================
+        private object GenerateThreeViewCounting(int level, int difficulty, int typesCompleted)
         {
-            int r = _random.Next(rows);
-            int c = _random.Next(cols);
+            int cubeCount;
+            int timeLimit;
 
-            // ⭐ 上层必须依赖下层有支撑
-            if (h > 0 && !grid[h - 1, r, c])
+            // 难度递增
+            if (difficulty <= 20)
             {
-                attempts++;
-                continue;
+                cubeCount = _random.Next(4, 7);
+                timeLimit = 30;
             }
-
-            if (!grid[h, r, c])
+            else if (difficulty <= 40)
             {
-                grid[h, r, c] = true;
-                placed++;
-                placedThisLayer++;
+                cubeCount = _random.Next(7, 12);
+                timeLimit = 25;
             }
-            attempts++;
-        }
-
-        // 如果这一层完全放不下，跳出
-        if (placedThisLayer == 0 && h > 0) break;
-    }
-
-    // 如果还有剩余方块没放完，强行补充到最底层
-    while (placed < cubeCount)
-    {
-        int r = _random.Next(rows);
-        int c = _random.Next(cols);
-        if (!grid[0, r, c])
-        {
-            grid[0, r, c] = true;
-            placed++;
-        }
-    }
-
-    // ===== 生成俯视图（从上往下看） =====
-    var top = new int[rows][];
-    for (int r = 0; r < rows; r++)
-    {
-        top[r] = new int[cols];
-        for (int c = 0; c < cols; c++)
-        {
-            bool has = false;
-            for (int h = 0; h < maxHeight; h++)
+            else if (difficulty <= 60)
             {
-                if (grid[h, r, c]) { has = true; break; }
+                cubeCount = _random.Next(12, 18);
+                timeLimit = 20;
             }
-            top[r][c] = has ? 1 : 0;
-        }
-    }
-
-    // ===== 生成主视图（从正面看，面向 rows 方向） =====
-    // ⭐ 主视图应该显示每列的最高高度（从上往下看）
-    var front = new int[maxHeight][];
-    for (int h = 0; h < maxHeight; h++)
-    {
-        front[h] = new int[cols];
-        for (int c = 0; c < cols; c++)
-        {
-            bool has = false;
-            for (int r = 0; r < rows; r++)
+            else if (difficulty <= 80)
             {
-                if (grid[h, r, c]) { has = true; break; }
-            }
-            front[h][c] = has ? 1 : 0;
-        }
-    }
-
-    // ===== 生成左视图（从左侧看，面向 cols 方向） =====
-    // ⭐ 左视图应该显示每行的最高高度（从右往左看）
-    var side = new int[maxHeight][];
-    for (int h = 0; h < maxHeight; h++)
-    {
-        side[h] = new int[rows];
-        for (int r = 0; r < rows; r++)
-        {
-            bool has = false;
-            for (int c = 0; c < cols; c++)
-            {
-                if (grid[h, r, c]) { has = true; break; }
-            }
-            side[h][r] = has ? 1 : 0;
-        }
-    }
-
-    // ⭐ 难度越高，视图越稀疏（更复杂的结构）
-    if (difficulty > 60)
-    {
-        // 随机移除一些方块，让视图更复杂
-        int removeCount = Math.Min(cubeCount / 5, 5);
-        for (int i = 0; i < removeCount; i++)
-        {
-            int r = _random.Next(rows);
-            int c = _random.Next(cols);
-            int h = _random.Next(maxHeight);
-            if (grid[h, r, c] && h > 0)
-            {
-                // 检查移除后是否有支撑
-                bool hasSupport = false;
-                for (int hr = 0; hr < h; hr++)
-                {
-                    if (grid[hr, r, c]) { hasSupport = true; break; }
-                }
-                if (hasSupport || h == 0)
-                {
-                    grid[h, r, c] = false;
-                    // 重新计算视图
-                    return GenerateViews(cubeCount - 1, difficulty);
-                }
-            }
-        }
-    }
-
-    return (top, front, side);
-}
-
-// ============================================================
-// 生成三视图 HTML（修复版 - 横向排列 + 合适的单元格大小）
-// ============================================================
-private string ViewsToHtml(int[][] view, string title, string label)
-{
-    var sb = new StringBuilder();
-    int cols = view[0].Length;
-    int rows = view.Length;
-
-    // ⭐ 单元格大小根据视图大小自适应
-    int cellSize = Math.Max(28, Math.Min(40, 45 - rows * 2));
-
-    sb.Append($"<div class='view-item'>");
-    sb.Append($"<span class='view-label'>{label}</span>");
-    sb.Append($"<div class='view-grid' style='grid-template-columns:repeat({cols}, {cellSize}px);'>");
-
-    for (int r = 0; r < rows; r++)
-    {
-        for (int c = 0; c < cols; c++)
-        {
-            if (view[r][c] == 1)
-            {
-                sb.Append($"<div class='cell filled' style='width:{cellSize}px;height:{cellSize}px;'></div>");
+                cubeCount = _random.Next(18, 25);
+                timeLimit = 15;
             }
             else
             {
-                sb.Append($"<div class='cell empty' style='width:{cellSize}px;height:{cellSize}px;'></div>");
+                cubeCount = _random.Next(25, 35);
+                timeLimit = 12;
             }
-        }
-    }
 
-    sb.Append("</div></div>");
-    return sb.ToString();
-}
+            var views = GenerateViews(cubeCount, difficulty);
+
+            string topView = ViewsToHtml(views.top, "俯视图");
+            string frontView = ViewsToHtml(views.front, "主视图");
+            string sideView = ViewsToHtml(views.side, "左视图");
+
+            var options = GenerateNumberOptions(cubeCount, 4 + Math.Min(difficulty / 10, 3), 5 + difficulty / 5);
+
+            return new Dictionary<string, object>
+            {
+                ["type"] = "threeView",
+                ["level"] = level,
+                ["question"] = $"📐 根据三视图，计算共有多少个正方体？<br><span style='color:rgba(255,255,255,0.12);font-size:0.7rem;'>■ 代表一个正方体 · 难度 {GetDifficultyLabel(difficulty)}</span>",
+                ["topView"] = topView,
+                ["frontView"] = frontView,
+                ["sideView"] = sideView,
+                ["correctAnswer"] = cubeCount.ToString(),
+                ["options"] = options,
+                ["timeLimit"] = timeLimit,
+                ["typesCompleted"] = typesCompleted,
+                ["funMessage"] = GetFunMessage("threeView")
+            };
+        }
+
+        private (int[][] top, int[][] front, int[][] side) GenerateViews(int cubeCount, int difficulty)
+        {
+            int rows, cols, maxHeight;
+            if (difficulty <= 20)
+            {
+                rows = 3; cols = 3; maxHeight = 2;
+            }
+            else if (difficulty <= 40)
+            {
+                rows = 4; cols = 4; maxHeight = 3;
+            }
+            else if (difficulty <= 60)
+            {
+                rows = 4; cols = 4; maxHeight = 4;
+            }
+            else if (difficulty <= 80)
+            {
+                rows = 5; cols = 5; maxHeight = 4;
+            }
+            else
+            {
+                rows = 6; cols = 6; maxHeight = 5;
+            }
+
+            var grid = new bool[maxHeight, rows, cols];
+            int placed = 0;
+            int maxAttempts = 10000;
+
+            // 从底层开始逐层放置
+            for (int h = 0; h < maxHeight && placed < cubeCount; h++)
+            {
+                int maxPerLayer = Math.Min(cubeCount - placed, rows * cols);
+                int targetThisLayer;
+                if (h == 0)
+                    targetThisLayer = Math.Min(maxPerLayer, (int)(cubeCount * 0.5 + _random.Next(0, 3)));
+                else if (h == 1)
+                    targetThisLayer = Math.Min(maxPerLayer, (int)(cubeCount * 0.3 + _random.Next(0, 2)));
+                else
+                    targetThisLayer = Math.Min(maxPerLayer, (int)(cubeCount * 0.15 + _random.Next(0, 1)));
+
+                targetThisLayer = Math.Max(1, targetThisLayer);
+
+                int attempts = 0;
+                int placedThisLayer = 0;
+                while (placedThisLayer < targetThisLayer && placed < cubeCount && attempts < maxAttempts)
+                {
+                    int r = _random.Next(rows);
+                    int c = _random.Next(cols);
+
+                    if (h > 0 && !grid[h - 1, r, c])
+                    {
+                        attempts++;
+                        continue;
+                    }
+
+                    if (!grid[h, r, c])
+                    {
+                        grid[h, r, c] = true;
+                        placed++;
+                        placedThisLayer++;
+                    }
+                    attempts++;
+                }
+
+                if (placedThisLayer == 0 && h > 0) break;
+            }
+
+            while (placed < cubeCount)
+            {
+                int r = _random.Next(rows);
+                int c = _random.Next(cols);
+                if (!grid[0, r, c])
+                {
+                    grid[0, r, c] = true;
+                    placed++;
+                }
+            }
+
+            // 俯视图（从上往下看）
+            var top = new int[rows][];
+            for (int r = 0; r < rows; r++)
+            {
+                top[r] = new int[cols];
+                for (int c = 0; c < cols; c++)
+                {
+                    bool has = false;
+                    for (int h = 0; h < maxHeight; h++)
+                    {
+                        if (grid[h, r, c]) { has = true; break; }
+                    }
+                    top[r][c] = has ? 1 : 0;
+                }
+            }
+
+            // 主视图（从正面看）
+            var front = new int[maxHeight][];
+            for (int h = 0; h < maxHeight; h++)
+            {
+                front[h] = new int[cols];
+                for (int c = 0; c < cols; c++)
+                {
+                    bool has = false;
+                    for (int r = 0; r < rows; r++)
+                    {
+                        if (grid[h, r, c]) { has = true; break; }
+                    }
+                    front[h][c] = has ? 1 : 0;
+                }
+            }
+
+            // 左视图（从左侧看）
+            var side = new int[maxHeight][];
+            for (int h = 0; h < maxHeight; h++)
+            {
+                side[h] = new int[rows];
+                for (int r = 0; r < rows; r++)
+                {
+                    bool has = false;
+                    for (int c = 0; c < cols; c++)
+                    {
+                        if (grid[h, r, c]) { has = true; break; }
+                    }
+                    side[h][r] = has ? 1 : 0;
+                }
+            }
+
+            // 难度越高，视图越复杂（随机移除一些方块）
+            if (difficulty > 60)
+            {
+                int removeCount = Math.Min(cubeCount / 6, 4);
+                for (int i = 0; i < removeCount; i++)
+                {
+                    int r = _random.Next(rows);
+                    int c = _random.Next(cols);
+                    int h = _random.Next(1, maxHeight);
+                    if (grid[h, r, c])
+                    {
+                        bool hasSupport = false;
+                        for (int hr = 0; hr < h; hr++)
+                        {
+                            if (grid[hr, r, c]) { hasSupport = true; break; }
+                        }
+                        if (hasSupport)
+                        {
+                            grid[h, r, c] = false;
+                        }
+                    }
+                }
+                // 重新计算视图
+                return GenerateViews(cubeCount - removeCount, difficulty);
+            }
+
+            return (top, front, side);
+        }
+
+        private string ViewsToHtml(int[][] view, string label)
+        {
+            var sb = new StringBuilder();
+            int cols = view[0].Length;
+            int rows = view.Length;
+
+            int cellSize = Math.Max(28, Math.Min(40, 45 - rows * 2));
+
+            sb.Append($"<div class='view-item'>");
+            sb.Append($"<span class='view-label'>{label}</span>");
+            sb.Append($"<div class='view-grid' style='grid-template-columns:repeat({cols}, {cellSize}px);'>");
+
+            for (int r = 0; r < rows; r++)
+            {
+                for (int c = 0; c < cols; c++)
+                {
+                    if (view[r][c] == 1)
+                    {
+                        sb.Append($"<div class='cell filled' style='width:{cellSize}px;height:{cellSize}px;'></div>");
+                    }
+                    else
+                    {
+                        sb.Append($"<div class='cell empty' style='width:{cellSize}px;height:{cellSize}px;'></div>");
+                    }
+                }
+            }
+
+            sb.Append("</div></div>");
+            return sb.ToString();
+        }
 
         // ============================================================
         // 题型 15：图形计数
@@ -2207,7 +2198,6 @@ private string ViewsToHtml(int[][] view, string title, string label)
             List<string> options;
 
             var baseDate = new DateTime(2026, 8, 7);
-            var baseDayOfWeek = DayOfWeek.Friday;
 
             if (difficulty <= 20)
             {
