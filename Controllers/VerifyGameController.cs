@@ -2358,7 +2358,7 @@ public async Task<IActionResult> GetRanking()
                 string monthName = month switch
                 {
                     1 => "1月", 2 => "2月", 3 => "3月", 4 => "4月", 5 => "5月", 6 => "6月",
-                    7 => "7月", 8 => "8月", 9 => "9月", 10 => "10月", 11 => "11月", 12 => "12月"
+                    7 => "7月", 8 => "8月", 9 => "9月", 10 => "10月", 11 => "11月", 12 => "12月",_ =>"未知月份"
                 };
 
                 question = $"📅 2026年8月7日是星期五，{year}年{monthName}{day}日是星期几？（提示：{year}年{(DateTime.IsLeapYear(year) ? "是" : "不是")}闰年）";
