@@ -2511,43 +2511,63 @@
         saveAndShowRanking();
     }
 
-    function saveAndShowRanking() {
-        var currentScore = gameState.score;
-        fetch('/VerifyGame/SaveScore', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'RequestVerificationToken': token },
-            body: 'score=' + currentScore + '&level=' + gameState.level + '&maxCombo=' + gameState.maxCombo + '&passed=' + gameState.passed
-        })
-        .then(function(r) { return r.json(); })
-        .then(function(data) {
-            if (data.success) {
-                return fetch('/VerifyGame/GetUserScore');
+   function saveAndShowRanking() {
+    var currentScore = gameState.score;
+    var finalDisplayScore = currentScore; // 默认使用本局得分
+    
+    fetch('/VerifyGame/SaveScore', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'RequestVerificationToken': token },
+        body: 'score=' + currentScore + '&level=' + gameState.level + '&maxCombo=' + gameState.maxCombo + '&passed=' + gameState.passed
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        if (data.success) {
+            // ⭐ 如果后端返回了保存后的分数，直接使用
+            if (data.savedScore !== undefined && data.savedScore > 0) {
+                finalDisplayScore = data.savedScore;
+                updateFinalScore(finalDisplayScore);
+                loadRanking();
+                return;
             }
-            return null;
-        })
-        .then(function(r) {
-            if (r) return r.json();
-            return null;
-        })
-        .then(function(data) {
-            if (data && data.success) {
-                var scoreEl = document.getElementById('finalScoreDisplay');
-                if (scoreEl) {
-                    scoreEl.textContent = data.totalScore;
-                    var loadingEl = document.querySelector('.game-over .sub + div');
-                    if (loadingEl) {
-                        loadingEl.textContent = '🏆 历史最高分';
-                        loadingEl.style.color = 'rgba(255,255,255,0.15)';
-                    }
-                }
-            }
-            loadRanking();
-        })
-        .catch(function() {
-            loadRanking();
-        });
-    }
+            // 否则调用 GetUserScore
+            return fetch('/VerifyGame/GetUserScore');
+        }
+        return null;
+    })
+    .then(function(r) {
+        if (r) {
+            return r.json();
+        }
+        return null;
+    })
+    .then(function(data) {
+        if (data && data.success && data.totalScore > 0) {
+            finalDisplayScore = data.totalScore;
+        }
+        // ⭐ 确保最终分数显示正确的值
+        updateFinalScore(finalDisplayScore);
+        loadRanking();
+    })
+    .catch(function() {
+        // ⭐ 出错时使用本局得分
+        updateFinalScore(currentScore);
+        loadRanking();
+    });
+}
 
+function updateFinalScore(score) {
+    var scoreEl = document.getElementById('finalScoreDisplay');
+    if (scoreEl) {
+        scoreEl.textContent = score;
+        // 更新提示文字
+        var loadingEl = document.querySelector('.game-over .sub + div');
+        if (loadingEl) {
+            loadingEl.textContent = '🏆 历史最高分';
+            loadingEl.style.color = 'rgba(255,255,255,0.15)';
+        }
+    }
+}
     function restartGame() {
         // 清理所有 TTS 和键盘变换
         if (window._memoryTTSCleanup) {
