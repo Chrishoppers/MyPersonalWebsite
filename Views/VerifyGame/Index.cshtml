@@ -894,68 +894,69 @@
     // ============================================================
     // 三视图 - 横向排列，部分填充
     // ============================================================
-    function renderThreeView(challenge) {
-        var container = dom.gameContent;
-        var viewContainer = document.createElement('div');
-        viewContainer.className = 'view-container';
+    // ============================================================
+// 三视图 - 横向排列，正方形大框（修复版）
+// ============================================================
+function renderThreeView(challenge) {
+    var container = dom.gameContent;
+    container.innerHTML = '';
 
-        // 生成三视图HTML（部分填充）
-        function generateViewHtml(htmlString, label) {
-            // 如果后端已经返回了完整的HTML，直接使用
-            if (htmlString && htmlString.includes('view-grid')) {
-                return htmlString;
-            }
-            // 否则生成一个示例视图（部分填充）
-            var sampleData = [
-                [1,1,1],
-                [1,0,1],
-                [1,1,1]
-            ];
-            var gridHtml = '<div class="view-grid">';
-            for (var r = 0; r < 3; r++) {
-                for (var c = 0; c < 3; c++) {
-                    var isFilled = sampleData[r][c] === 1;
-                    gridHtml += '<div class="cell ' + (isFilled ? 'filled' : 'empty') + '"></div>';
-                }
-            }
-            gridHtml += '</div>';
-            return '<div class="view-item"><span class="view-label">' + label + '</span>' + gridHtml + '</div>';
-        }
+    // 创建横向排列的视图容器
+    var viewContainer = document.createElement('div');
+    viewContainer.className = 'view-container';
+    viewContainer.style.cssText = 'display:flex;justify-content:center;gap:2rem;flex-wrap:wrap;padding:0.5rem 0;';
 
-        // 使用后端返回的视图，或生成示例
-        if (challenge.topView) {
-            var topItem = document.createElement('div');
-            topItem.className = 'view-item';
-            topItem.innerHTML = challenge.topView;
-            viewContainer.appendChild(topItem);
-        } else {
-            viewContainer.innerHTML += generateViewHtml('', '俯视图');
-        }
-
-        if (challenge.frontView) {
-            var frontItem = document.createElement('div');
-            frontItem.className = 'view-item';
-            frontItem.innerHTML = challenge.frontView;
-            viewContainer.appendChild(frontItem);
-        } else {
-            viewContainer.innerHTML += generateViewHtml('', '主视图');
-        }
-
-        if (challenge.sideView) {
-            var sideItem = document.createElement('div');
-            sideItem.className = 'view-item';
-            sideItem.innerHTML = challenge.sideView;
-            viewContainer.appendChild(sideItem);
-        } else {
-            viewContainer.innerHTML += generateViewHtml('', '左视图');
-        }
-
-        container.appendChild(viewContainer);
-        renderOptions(challenge, container);
-        startTimer(challenge.timeLimit || 20);
-        updateUI();
+    // 添加俯视图
+    if (challenge.topView) {
+        var topItem = document.createElement('div');
+        topItem.className = 'view-item';
+        topItem.style.cssText = 'text-align:center;';
+        topItem.innerHTML = challenge.topView;
+        viewContainer.appendChild(topItem);
     }
 
+    // 添加主视图
+    if (challenge.frontView) {
+        var frontItem = document.createElement('div');
+        frontItem.className = 'view-item';
+        frontItem.style.cssText = 'text-align:center;';
+        frontItem.innerHTML = challenge.frontView;
+        viewContainer.appendChild(frontItem);
+    }
+
+    // 添加左视图
+    if (challenge.sideView) {
+        var sideItem = document.createElement('div');
+        sideItem.className = 'view-item';
+        sideItem.style.cssText = 'text-align:center;';
+        sideItem.innerHTML = challenge.sideView;
+        viewContainer.appendChild(sideItem);
+    }
+
+    container.appendChild(viewContainer);
+
+    // 渲染选项
+    if (challenge.options && challenge.options.length > 0) {
+        var optGrid = document.createElement('div');
+        optGrid.className = 'options-grid';
+        var letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+        challenge.options.forEach(function(opt, idx) {
+            var btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.textContent = (idx < letters.length ? letters[idx] + '. ' : '') + opt;
+            btn.dataset.answer = opt;
+            btn.addEventListener('click', function() {
+                if (gameState.isAnswered) return;
+                submitAnswer(challenge, this.dataset.answer, this);
+            });
+            optGrid.appendChild(btn);
+        });
+        container.appendChild(optGrid);
+    }
+
+    startTimer(challenge.timeLimit || 20);
+    updateUI();
+}
     // ============================================================
     // 颜色混合
     // ============================================================
