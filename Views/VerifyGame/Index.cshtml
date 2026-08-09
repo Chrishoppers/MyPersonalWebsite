@@ -226,42 +226,71 @@
     @@keyframes toastIn { from { opacity: 0; transform: translateY(16px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
 
     /* ============================================================
-       教程弹窗
+       教程弹窗 - 保姆级 + 演示动画
        ============================================================ */
-    .tutorial-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.88); backdrop-filter: blur(24px); z-index: 9999; display: none; align-items: center; justify-content: center; padding: 1rem; overflow-y: auto; }
+    .tutorial-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.92); backdrop-filter: blur(30px); z-index: 9999; display: none; align-items: center; justify-content: center; padding: 1rem; overflow-y: auto; }
     .tutorial-overlay.active { display: flex; }
-    .tutorial-overlay::-webkit-scrollbar { width: 3px; }
+    .tutorial-overlay::-webkit-scrollbar { width: 4px; }
     .tutorial-overlay::-webkit-scrollbar-thumb { background: rgba(139,92,246,0.15); border-radius: 10px; }
 
-    .tutorial-modal { background: rgba(20,20,40,0.98); border: 1px solid rgba(255,255,255,0.04); border-radius: 28px; max-width: 660px; width: 100%; max-height: 90vh; overflow-y: auto; padding: 2rem 2.2rem; box-shadow: 0 40px 120px rgba(0,0,0,0.6); position: relative; animation: modalIn 0.4s cubic-bezier(0.23, 1, 0.32, 1); }
+    .tutorial-modal { background: rgba(20,20,40,0.98); border: 1px solid rgba(255,255,255,0.04); border-radius: 28px; max-width: 700px; width: 100%; max-height: 92vh; overflow-y: auto; padding: 2rem 2.2rem; box-shadow: 0 40px 120px rgba(0,0,0,0.6); position: relative; animation: modalIn 0.4s cubic-bezier(0.23, 1, 0.32, 1); }
     @@keyframes modalIn { from { opacity: 0; transform: scale(0.96) translateY(20px); } to { opacity: 1; transform: scale(1) translateY(0); } }
-    .tutorial-modal::-webkit-scrollbar { width: 3px; }
+    .tutorial-modal::-webkit-scrollbar { width: 4px; }
     .tutorial-modal::-webkit-scrollbar-thumb { background: rgba(139,92,246,0.15); border-radius: 10px; }
-    .tutorial-modal .modal-close { position: absolute; top: 0.8rem; right: 1.2rem; background: none; border: none; color: rgba(255,255,255,0.06); font-size: 1.5rem; cursor: pointer; transition: color 0.3s ease; }
-    .tutorial-modal .modal-close:hover { color: rgba(255,255,255,0.2); }
-    .tutorial-modal .tutorial-title { color: #fff; font-size: 1.5rem; font-weight: 700; margin-bottom: 0.1rem; display: flex; align-items: center; gap: 0.5rem; }
-    .tutorial-modal .tutorial-sub { color: rgba(255,255,255,0.18); font-size: 0.85rem; margin-bottom: 1rem; }
-    .tutorial-modal .tutorial-section { background: rgba(255,255,255,0.02); border-radius: 16px; padding: 0.8rem 1rem; margin-bottom: 0.6rem; border: 1px solid rgba(255,255,255,0.03); }
-    .tutorial-modal .tutorial-section .sec-title { color: rgba(255,255,255,0.5); font-weight: 600; font-size: 0.85rem; margin-bottom: 0.2rem; }
-    .tutorial-modal .tutorial-section .sec-content { color: rgba(255,255,255,0.3); font-size: 0.9rem; line-height: 1.7; }
-    .tutorial-modal .tutorial-section .example-box { background: rgba(139,92,246,0.03); border-radius: 12px; padding: 0.6rem 0.8rem; margin-top: 0.3rem; border: 1px solid rgba(139,92,246,0.04); }
-    .tutorial-modal .tutorial-section .example-box .example-label { color: rgba(255,255,255,0.1); font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.06em; }
-    .tutorial-modal .tutorial-section .example-box .example-content { color: rgba(255,255,255,0.4); font-size: 0.9rem; margin-top: 0.05rem; }
+    .tutorial-modal .modal-close { position: absolute; top: 0.6rem; right: 1rem; background: none; border: none; color: rgba(255,255,255,0.08); font-size: 1.8rem; cursor: pointer; transition: color 0.3s ease; font-weight: 300; }
+    .tutorial-modal .modal-close:hover { color: rgba(255,255,255,0.25); }
 
-    .tutorial-demo-area { background: rgba(255,255,255,0.02); border-radius: 16px; padding: 0.8rem; margin-top: 0.6rem; border: 1px solid rgba(255,255,255,0.03); min-height: 70px; display: none; align-items: center; justify-content: center; flex-direction: column; }
-    .tutorial-demo-area.active { display: flex; animation: demoFadeIn 0.5s ease; }
-    @@keyframes demoFadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    /* 标题区域 - 页码做大 */
+    .tutorial-modal .tutorial-title { color: #fff; font-size: 1.6rem; font-weight: 800; margin-bottom: 0.05rem; display: flex; align-items: center; gap: 0.6rem; }
+    .tutorial-modal .tutorial-title .page-counter { font-size: 1.2rem; font-weight: 700; color: rgba(139,92,246,0.3); margin-left: auto; background: rgba(139,92,246,0.06); padding: 0.1rem 1rem; border-radius: 30px; border: 1px solid rgba(139,92,246,0.04); letter-spacing: 0.04em; }
+    .tutorial-modal .tutorial-sub { color: rgba(255,255,255,0.2); font-size: 0.9rem; margin-bottom: 1rem; font-weight: 400; }
+
+    /* 教程卡片 - 每个步骤独立 */
+    .tutorial-modal .tutorial-step { background: rgba(255,255,255,0.02); border-radius: 16px; padding: 1rem 1.2rem; margin-bottom: 0.8rem; border: 1px solid rgba(255,255,255,0.03); transition: all 0.3s ease; }
+    .tutorial-modal .tutorial-step:hover { border-color: rgba(139,92,246,0.06); }
+    .tutorial-modal .tutorial-step .step-number { display: inline-block; background: rgba(139,92,246,0.08); color: #8B5CF6; font-size: 0.7rem; font-weight: 700; padding: 0.05rem 0.6rem; border-radius: 20px; margin-bottom: 0.2rem; letter-spacing: 0.04em; }
+    .tutorial-modal .tutorial-step .step-title { color: rgba(255,255,255,0.6); font-weight: 600; font-size: 0.95rem; margin-bottom: 0.1rem; }
+    .tutorial-modal .tutorial-step .step-desc { color: rgba(255,255,255,0.3); font-size: 0.9rem; line-height: 1.7; }
+    .tutorial-modal .tutorial-step .step-example { background: rgba(139,92,246,0.03); border-radius: 12px; padding: 0.6rem 0.8rem; margin-top: 0.3rem; border: 1px solid rgba(139,92,246,0.04); }
+    .tutorial-modal .tutorial-step .step-example .ex-label { color: rgba(255,255,255,0.08); font-size: 0.55rem; text-transform: uppercase; letter-spacing: 0.06em; }
+    .tutorial-modal .tutorial-step .step-example .ex-content { color: rgba(255,255,255,0.4); font-size: 0.9rem; margin-top: 0.05rem; }
+
+    /* 演示动画区域 */
+    .tutorial-demo-area { background: rgba(255,255,255,0.02); border-radius: 16px; padding: 1rem; margin-top: 0.6rem; border: 1px solid rgba(255,255,255,0.04); min-height: 100px; display: none; align-items: center; justify-content: center; flex-direction: column; position: relative; overflow: hidden; }
+    .tutorial-demo-area.active { display: flex; animation: demoFadeIn 0.6s ease; }
+    @@keyframes demoFadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     .tutorial-demo-area .demo-content { color: rgba(255,255,255,0.5); font-size: 0.95rem; text-align: center; line-height: 1.8; width: 100%; }
+    .tutorial-demo-area .demo-content .highlight-correct { color: #28a745; font-weight: 700; }
+    .tutorial-demo-area .demo-content .highlight-wrong { color: #dc3545; font-weight: 700; }
+    .tutorial-demo-area .demo-content .highlight-primary { color: #8B5CF6; font-weight: 700; }
+    .tutorial-demo-area .demo-content .highlight-yellow { color: #F59E0B; font-weight: 700; }
 
-    .tutorial-nav { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: 1rem; justify-content: center; }
-    .tutorial-nav .nav-btn { padding: 0.4rem 1.2rem; border: 1px solid rgba(255,255,255,0.04); border-radius: 30px; background: rgba(255,255,255,0.02); color: rgba(255,255,255,0.25); font-size: 0.85rem; cursor: pointer; transition: all 0.3s ease; font-family: inherit; font-weight: 500; }
-    .tutorial-nav .nav-btn:hover:not(:disabled) { background: rgba(255,255,255,0.04); color: #fff; }
+    /* 演示动画 - 闪烁/跳动 */
+    .demo-blink { animation: blink 1.2s ease-in-out infinite; }
+    @@keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.2; } }
+    .demo-bounce { animation: bounce 1s ease-in-out infinite; }
+    @@keyframes bounce { 0%,100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+    .demo-slide { animation: slideIn 0.8s ease; }
+    @@keyframes slideIn { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
+    .demo-pulse { animation: pulse 1.5s ease-in-out infinite; }
+    @@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+    /* 演示中的选项按钮 */
+    .demo-option { padding: 0.4rem 0.8rem; border-radius: 12px; border: 2px solid rgba(255,255,255,0.04); background: rgba(255,255,255,0.02); color: rgba(255,255,255,0.3); font-size: 0.85rem; font-weight: 500; display: inline-block; margin: 0.1rem; transition: all 0.3s ease; }
+    .demo-option.correct { border-color: #28a745; background: rgba(40,167,69,0.08); color: #28a745; }
+    .demo-option.wrong { border-color: #dc3545; background: rgba(220,53,69,0.08); color: #dc3545; }
+    .demo-option.hover { border-color: rgba(139,92,246,0.15); background: rgba(139,92,246,0.04); color: #fff; }
+
+    /* 底部导航 - 更大更清晰 */
+    .tutorial-nav { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 1.2rem; justify-content: center; }
+    .tutorial-nav .nav-btn { padding: 0.5rem 1.5rem; border: 1px solid rgba(255,255,255,0.04); border-radius: 40px; background: rgba(255,255,255,0.02); color: rgba(255,255,255,0.3); font-size: 0.9rem; cursor: pointer; transition: all 0.3s ease; font-family: inherit; font-weight: 600; }
+    .tutorial-nav .nav-btn:hover:not(:disabled) { background: rgba(255,255,255,0.05); color: #fff; border-color: rgba(255,255,255,0.08); }
     .tutorial-nav .nav-btn.active { background: rgba(139,92,246,0.08); color: #8B5CF6; border-color: rgba(139,92,246,0.06); }
-    .tutorial-nav .nav-btn:disabled { opacity: 0.2; cursor: not-allowed; }
+    .tutorial-nav .nav-btn:disabled { opacity: 0.15; cursor: not-allowed; }
     .tutorial-nav .nav-btn.demo-btn { background: rgba(245,158,11,0.06); color: #F59E0B; border-color: rgba(245,158,11,0.06); }
     .tutorial-nav .nav-btn.demo-btn:hover { background: rgba(245,158,11,0.1); }
-    .tutorial-nav .nav-btn.close-tutorial { background: rgba(220,53,69,0.04); color: rgba(220,53,69,0.2); border-color: rgba(220,53,69,0.04); }
-    .tutorial-nav .nav-btn.close-tutorial:hover { background: rgba(220,53,69,0.08); color: rgba(220,53,69,0.3); }
+    .tutorial-nav .nav-btn.close-tutorial { background: rgba(220,53,69,0.04); color: rgba(220,53,69,0.15); border-color: rgba(220,53,69,0.04); }
+    .tutorial-nav .nav-btn.close-tutorial:hover { background: rgba(220,53,69,0.08); color: rgba(220,53,69,0.25); }
 
     /* ============================================================
        响应式
@@ -295,10 +324,13 @@
         .game-over .final-score { font-size: 2.4rem; }
         .game-over .big-icon { font-size: 3rem; }
         .tutorial-modal { padding: 1.2rem 1rem; }
+        .tutorial-modal .tutorial-title { font-size: 1.3rem; }
+        .tutorial-modal .tutorial-title .page-counter { font-size: 1rem; padding: 0.05rem 0.8rem; }
         .memory-keyboard { max-width: 220px; }
         .memory-keyboard .key-btn { font-size: 1.2rem; padding: 0.5rem 0.2rem; }
         .memory-input-display { font-size: 1.6rem; letter-spacing: 6px; max-width: 220px; }
         .display-text-container .display-text { font-size: 1.1rem; }
+        .tutorial-nav .nav-btn { padding: 0.4rem 1rem; font-size: 0.8rem; }
     }
 
     @@media (max-width: 400px) {
@@ -329,12 +361,15 @@
         .game-over .title { font-size: 1.3rem; }
         .tutorial-modal { padding: 0.8rem 0.6rem; }
         .tutorial-modal .tutorial-title { font-size: 1.1rem; }
-        .tutorial-modal .tutorial-section { padding: 0.5rem 0.6rem; }
-        .tutorial-modal .tutorial-section .sec-content { font-size: 0.8rem; }
+        .tutorial-modal .tutorial-title .page-counter { font-size: 0.85rem; padding: 0.05rem 0.6rem; }
+        .tutorial-modal .tutorial-step { padding: 0.5rem 0.6rem; }
+        .tutorial-modal .tutorial-step .step-desc { font-size: 0.8rem; }
+        .tutorial-modal .tutorial-step .step-example .ex-content { font-size: 0.8rem; }
         .memory-keyboard { max-width: 180px; gap: 3px; }
         .memory-keyboard .key-btn { font-size: 1rem; padding: 0.4rem 0.1rem; }
         .memory-input-display { font-size: 1.3rem; letter-spacing: 4px; max-width: 180px; }
         .display-text-container .display-text { font-size: 0.9rem; }
+        .tutorial-nav .nav-btn { padding: 0.3rem 0.8rem; font-size: 0.75rem; }
     }
 </style>
 
@@ -547,10 +582,448 @@
     function getColorHex(name) { return colorHexMap[name] || '#808080'; }
 
     // ============================================================
-    // 教程数据
+    // 保姆级教程数据 - 每个玩法都有详细步骤 + 演示动画
     // ============================================================
     var tutorialOrder = ['text','arithmetic','stroke','color','findDifferent','reverse','missingLetter','timeCalc','idiom','memory','pattern','colorMix','trueFalse','puzzle','threeView','shapeCount','dateReasoning','rotate','abgame','tripleColor'];
     var currentTutorialIndex = 0;
+
+    // 教程生成函数（每个玩法返回完整的HTML）
+    function generateTutorialContent(type) {
+        var tutorials = {
+            'text': {
+                icon: '👁️', name: '文字识别',
+                steps: [
+                    { title: '📌 玩法说明', desc: '图片中显示的是扭曲、带有噪点和干扰线的文字，你需要从选项中识别出正确的文字内容。' },
+                    { title: '🎯 怎么操作', desc: '仔细观察图片中的文字 → 从下方的选项中选择你认为正确的文字 → 点击提交答案' },
+                    { title: '💡 小技巧', desc: '注意干扰线可能覆盖在文字上，可以尝试从整体轮廓来判断。难度越高，扭曲和干扰越严重。' }
+                ],
+                example: '图片显示 "HELLO" 的扭曲版本 → 正确答案是 "HELLO"',
+                demo: function() {
+                    return '<div style="text-align:center;padding:0.3rem;">' +
+                        '<div style="background:rgba(255,255,255,0.02);border-radius:14px;padding:1rem;border:1px solid rgba(255,255,255,0.04);">' +
+                        '<div style="font-size:2.8rem;font-weight:bold;color:#8B5CF6;letter-spacing:10px;font-family:monospace;text-shadow:2px 2px 0 rgba(139,92,246,0.1);transform:rotate(-2deg) scale(1.02);" class="demo-bounce">H E L L O</div>' +
+                        '<div style="color:rgba(255,255,255,0.08);font-size:0.6rem;margin-top:0.2rem;">👆 识别图片中的文字（演示动画）</div>' +
+                        '</div>' +
+                        '<div style="display:flex;gap:0.4rem;justify-content:center;margin-top:0.5rem;flex-wrap:wrap;">' +
+                        '<span class="demo-option wrong">HELL0</span>' +
+                        '<span class="demo-option correct">✅ HELLO</span>' +
+                        '<span class="demo-option">HALLO</span>' +
+                        '</div>' +
+                        '<div style="color:rgba(40,167,69,0.15);font-size:0.65rem;margin-top:0.3rem;">💡 <span class="highlight-correct">绿色</span> = 正确答案，<span class="highlight-wrong">红色</span> = 错误答案</div>' +
+                        '</div>';
+                }
+            },
+            'arithmetic': {
+                icon: '🧮', name: '算术计算',
+                steps: [
+                    { title: '📌 玩法说明', desc: '计算给出的数学表达式，从选项中选择正确的答案。随着难度提升，数字会越来越大，运算也会更复杂。' },
+                    { title: '🎯 怎么操作', desc: '阅读表达式 → 在心里计算 → 点击你认为正确的答案 → 系统会告诉你对错' },
+                    { title: '💡 小技巧', desc: '先算乘除后算加减，注意括号优先级。难度越高，计算越复杂。' }
+                ],
+                example: '25 × 4 = 100，正确答案是 100',
+                demo: function() {
+                    return '<div style="text-align:center;padding:0.3rem;">' +
+                        '<div style="font-size:2rem;font-weight:700;color:#fff;" class="demo-blink">25 × 4 = ?</div>' +
+                        '<div style="display:flex;gap:0.4rem;justify-content:center;margin-top:0.5rem;flex-wrap:wrap;">' +
+                        '<span class="demo-option">80</span>' +
+                        '<span class="demo-option correct">✅ 100</span>' +
+                        '<span class="demo-option">120</span>' +
+                        '</div>' +
+                        '<div style="color:rgba(40,167,69,0.15);font-size:0.65rem;margin-top:0.3rem;">💡 <span class="highlight-correct">绿色</span> = 正确答案</div>' +
+                        '</div>';
+                }
+            },
+            'stroke': {
+                icon: '📝', name: '汉字笔画',
+                steps: [
+                    { title: '📌 玩法说明', desc: '数出给定汉字的笔画总数，从选项中选择正确的数字。' },
+                    { title: '🎯 怎么操作', desc: '观察汉字 → 一画一画数 → 选择正确的笔画数' },
+                    { title: '💡 小技巧', desc: '注意区分横、竖、撇、捺、点等基本笔画。难度越高，汉字越复杂。' }
+                ],
+                example: '汉字「人」有 2 画，正确答案是 2',
+                demo: function() {
+                    return '<div style="text-align:center;padding:0.3rem;">' +
+                        '<div style="font-size:4rem;font-weight:700;color:#fff;" class="demo-bounce">人</div>' +
+                        '<div style="color:rgba(255,255,255,0.08);font-size:0.7rem;">"人" 字有几画？</div>' +
+                        '<div style="display:flex;gap:0.4rem;justify-content:center;margin-top:0.5rem;flex-wrap:wrap;">' +
+                        '<span class="demo-option">1</span>' +
+                        '<span class="demo-option correct">✅ 2</span>' +
+                        '<span class="demo-option">3</span>' +
+                        '</div>' +
+                        '<div style="color:rgba(40,167,69,0.15);font-size:0.65rem;margin-top:0.3rem;">💡 <span class="highlight-correct">绿色</span> = 正确答案</div>' +
+                        '</div>';
+                }
+            },
+            'color': {
+                icon: '🎨', name: '颜色识别',
+                steps: [
+                    { title: '📌 玩法说明', desc: '注意文字的颜色，而不是文字的内容。这是一个经典的"Stroop效应"测试。' },
+                    { title: '🎯 怎么操作', desc: '看文字的颜色 → 从选项中选择颜色名称 → 注意不要被文字含义干扰' },
+                    { title: '💡 小技巧', desc: '闭眼再睁开，直接看颜色。文字含义和颜色不一致时，大脑会打架，这是正常的！' }
+                ],
+                example: '文字 "红" 用蓝色显示 → 正确答案是 "蓝色"',
+                demo: function() {
+                    return '<div style="text-align:center;padding:0.3rem;">' +
+                        '<div style="font-size:3rem;font-weight:700;color:#0000FF;" class="demo-blink">红</div>' +
+                        '<div style="color:rgba(255,255,255,0.08);font-size:0.7rem;">这个字是什么颜色？（不是读字！）</div>' +
+                        '<div style="display:flex;gap:0.4rem;justify-content:center;margin-top:0.5rem;flex-wrap:wrap;">' +
+                        '<span class="demo-option">红色</span>' +
+                        '<span class="demo-option correct">✅ 蓝色</span>' +
+                        '<span class="demo-option">绿色</span>' +
+                        '</div>' +
+                        '<div style="color:rgba(40,167,69,0.15);font-size:0.65rem;margin-top:0.3rem;">💡 <span class="highlight-correct">绿色</span> = 正确答案（看颜色不看字）</div>' +
+                        '</div>';
+                }
+            },
+            'findDifferent': {
+                icon: '🔍', name: '找不同',
+                steps: [
+                    { title: '📌 玩法说明', desc: '先记住显示的原始字符，然后字符会被打乱并替换其中一个，找出被替换的字符。' },
+                    { title: '🎯 怎么操作', desc: '记忆阶段：记住原始字符 → 消失后：查看打乱后的字符 → 找出被替换的那个' },
+                    { title: '💡 小技巧', desc: '重点记住每个字符的位置，或者记住整个序列的"整体感觉"。难度越高，字符越多。' }
+                ],
+                example: '原始: ABCDE → 打乱后: ABXDE，被替换的是 "C"',
+                demo: function() {
+                    return '<div style="text-align:center;padding:0.3rem;">' +
+                        '<div style="font-size:2.2rem;font-weight:700;color:#8B5CF6;letter-spacing:12px;font-family:monospace;background:rgba(139,92,246,0.04);padding:0.3rem;border-radius:10px;" class="demo-blink">A B C D E</div>' +
+                        '<div style="color:rgba(255,255,255,0.05);font-size:0.6rem;">⏱ 记忆 3 秒</div>' +
+                        '<div style="font-size:2.2rem;font-weight:700;color:#8B5CF6;letter-spacing:12px;font-family:monospace;margin-top:0.2rem;">A B X D E</div>' +
+                        '<div style="color:rgba(255,255,255,0.05);font-size:0.6rem;">🔍 哪个字符被替换了？</div>' +
+                        '<div style="display:flex;gap:0.4rem;justify-content:center;margin-top:0.4rem;flex-wrap:wrap;">' +
+                        '<span class="demo-option">A</span>' +
+                        '<span class="demo-option correct">✅ C</span>' +
+                        '<span class="demo-option">D</span>' +
+                        '</div>' +
+                        '<div style="color:rgba(40,167,69,0.15);font-size:0.65rem;margin-top:0.2rem;">💡 <span class="highlight-correct">绿色</span> = 正确答案</div>' +
+                        '</div>';
+                }
+            },
+            'reverse': {
+                icon: '🔄', name: '倒序识别',
+                steps: [
+                    { title: '📌 玩法说明', desc: '文字是倒过来显示的，你需要识别出正确的文字内容。考验空间想象力！' },
+                    { title: '🎯 怎么操作', desc: '看倒过来的文字 → 在脑海中翻转 → 选择正确的文字' },
+                    { title: '💡 小技巧', desc: '可以倒转手机来看，或者在脑海中把文字翻转180度。难度越高，文字越长。' }
+                ],
+                example: '图片显示 "OLLEH" → 正确答案是 "HELLO"',
+                demo: function() {
+                    return '<div style="text-align:center;padding:0.3rem;">' +
+                        '<div style="font-size:2.8rem;font-weight:700;color:#8B5CF6;letter-spacing:10px;font-family:monospace;transform:rotate(180deg);display:inline-block;background:rgba(255,255,255,0.02);padding:0.3rem 1rem;border-radius:12px;" class="demo-bounce">HELLO</div>' +
+                        '<div style="color:rgba(255,255,255,0.05);font-size:0.6rem;margin-top:0.2rem;">🔄 倒过来看是什么？</div>' +
+                        '<div style="display:flex;gap:0.4rem;justify-content:center;margin-top:0.4rem;flex-wrap:wrap;">' +
+                        '<span class="demo-option">OLLEH</span>' +
+                        '<span class="demo-option correct">✅ HELLO</span>' +
+                        '<span class="demo-option">HALLO</span>' +
+                        '</div>' +
+                        '<div style="color:rgba(40,167,69,0.15);font-size:0.65rem;margin-top:0.2rem;">💡 <span class="highlight-correct">绿色</span> = 正确答案</div>' +
+                        '</div>';
+                }
+            },
+            'missingLetter': {
+                icon: '🔤', name: '空缺字母',
+                steps: [
+                    { title: '📌 玩法说明', desc: '英文单词中有字母被隐藏了，根据上下文和词汇知识补全缺失的字母。' },
+                    { title: '🎯 怎么操作', desc: '看单词 → 根据上下文推测 → 选择正确的字母' },
+                    { title: '💡 小技巧', desc: '先读整个单词，想想可能是什么词。难度越高，单词越长，缺失字母越多。' }
+                ],
+                example: 'A P P _ E → 缺失 "L"，单词是 APPLE',
+                demo: function() {
+                    return '<div style="text-align:center;padding:0.3rem;">' +
+                        '<div style="font-size:2.4rem;font-weight:700;color:#8B5CF6;letter-spacing:12px;font-family:monospace;" class="demo-blink">A P P _ E</div>' +
+                        '<div style="color:rgba(255,255,255,0.05);font-size:0.6rem;">🔤 缺失哪个字母？</div>' +
+                        '<div style="display:flex;gap:0.4rem;justify-content:center;margin-top:0.4rem;flex-wrap:wrap;">' +
+                        '<span class="demo-option">M</span>' +
+                        '<span class="demo-option correct">✅ L</span>' +
+                        '<span class="demo-option">N</span>' +
+                        '</div>' +
+                        '<div style="color:rgba(40,167,69,0.15);font-size:0.65rem;margin-top:0.2rem;">💡 <span class="highlight-correct">绿色</span> = 正确答案</div>' +
+                        '</div>';
+                }
+            },
+            'timeCalc': {
+                icon: '⏰', name: '时间计算',
+                steps: [
+                    { title: '📌 玩法说明', desc: '计算从开始时间到结束时间经过了多少时间，选择正确的时长。' },
+                    { title: '🎯 怎么操作', desc: '读开始时间 → 读结束时间 → 计算时间差 → 选择正确答案' },
+                    { title: '💡 小技巧', desc: '注意小时和分钟的换算。难度越高，时间跨度越大，可能跨过12点。' }
+                ],
+                example: '从 08:00 到 12:30 经过了 4小时30分钟',
+                demo: function() {
+                    return '<div style="text-align:center;padding:0.3rem;">' +
+                        '<div style="font-size:1.4rem;font-weight:700;color:#fff;" class="demo-blink">⏰ 08:00 → 12:30</div>' +
+                        '<div style="color:rgba(255,255,255,0.05);font-size:0.6rem;">经过了多少时间？</div>' +
+                        '<div style="display:flex;gap:0.4rem;justify-content:center;margin-top:0.4rem;flex-wrap:wrap;">' +
+                        '<span class="demo-option">4小时</span>' +
+                        '<span class="demo-option correct">✅ 4小时30分钟</span>' +
+                        '<span class="demo-option">5小时</span>' +
+                        '</div>' +
+                        '<div style="color:rgba(40,167,69,0.15);font-size:0.65rem;margin-top:0.2rem;">💡 <span class="highlight-correct">绿色</span> = 正确答案</div>' +
+                        '</div>';
+                }
+            },
+            'idiom': {
+                icon: '📖', name: '成语填空',
+                steps: [
+                    { title: '📌 玩法说明', desc: '成语中有字被隐藏了，根据上下文和成语知识补全。' },
+                    { title: '🎯 怎么操作', desc: '读成语 → 回忆完整的成语 → 选择正确的字' },
+                    { title: '💡 小技巧', desc: '想想这个成语的意思和出处。难度越高，成语越生僻。' }
+                ],
+                example: '一马当_ → 缺失 "先"，成语是 "一马当先"',
+                demo: function() {
+                    return '<div style="text-align:center;padding:0.3rem;">' +
+                        '<div style="font-size:2.4rem;font-weight:700;color:#8B5CF6;letter-spacing:12px;" class="demo-blink">一马当_</div>' +
+                        '<div style="color:rgba(255,255,255,0.05);font-size:0.6rem;">📖 缺失哪个字？</div>' +
+                        '<div style="display:flex;gap:0.4rem;justify-content:center;margin-top:0.4rem;flex-wrap:wrap;">' +
+                        '<span class="demo-option">前</span>' +
+                        '<span class="demo-option correct">✅ 先</span>' +
+                        '<span class="demo-option">后</span>' +
+                        '</div>' +
+                        '<div style="color:rgba(40,167,69,0.15);font-size:0.65rem;margin-top:0.2rem;">💡 <span class="highlight-correct">绿色</span> = 正确答案</div>' +
+                        '</div>';
+                }
+            },
+            'memory': {
+                icon: '🧠', name: '数字记忆',
+                steps: [
+                    { title: '📌 玩法说明', desc: '数字会显示几秒钟然后消失，在键盘上输入你记住的数字。测试短期记忆力！' },
+                    { title: '🎯 怎么操作', desc: '记忆阶段：记住显示的数字 → 消失后：点击数字键盘输入 → 点击确认提交' },
+                    { title: '💡 小技巧', desc: '可以分组记忆，比如 3847 → 38 和 47。难度越高，数字越长。' }
+                ],
+                example: '显示 "3847" → 输入 "3847"',
+                demo: function() {
+                    return '<div style="text-align:center;padding:0.3rem;">' +
+                        '<div style="font-size:2.8rem;font-weight:700;color:#8B5CF6;letter-spacing:14px;font-family:monospace;" class="demo-blink">3 8 4 7</div>' +
+                        '<div style="color:rgba(255,255,255,0.05);font-size:0.6rem;">⏱ 记忆 3 秒</div>' +
+                        '<div style="font-size:2.8rem;font-weight:700;color:rgba(255,255,255,0.05);letter-spacing:14px;font-family:monospace;margin-top:0.2rem;">_ _ _ _</div>' +
+                        '<div style="color:rgba(255,255,255,0.05);font-size:0.6rem;">⌨️ 输入你记住的数字</div>' +
+                        '<div style="color:rgba(40,167,69,0.15);font-size:0.65rem;margin-top:0.2rem;">💡 记住数字并输入</div>' +
+                        '</div>';
+                }
+            },
+            'pattern': {
+                icon: '📐', name: '找规律',
+                steps: [
+                    { title: '📌 玩法说明', desc: '观察数列的规律，找出缺失的数字。规律可能是等差、等比、递推等。' },
+                    { title: '🎯 怎么操作', desc: '看数列 → 找规律 → 计算缺失值 → 选择答案' },
+                    { title: '💡 小技巧', desc: '先看相邻数字的差，再看倍数关系。难度越高，规律越隐蔽。' }
+                ],
+                example: '2, 4, 6, ?, 10 → 规律是+2，答案是 8',
+                demo: function() {
+                    return '<div style="text-align:center;padding:0.3rem;">' +
+                        '<div style="font-size:1.8rem;font-weight:700;color:#fff;" class="demo-blink">2, 4, 6, ?, 10</div>' +
+                        '<div style="color:rgba(255,255,255,0.05);font-size:0.6rem;">📐 规律是什么？</div>' +
+                        '<div style="display:flex;gap:0.4rem;justify-content:center;margin-top:0.4rem;flex-wrap:wrap;">' +
+                        '<span class="demo-option">6</span>' +
+                        '<span class="demo-option correct">✅ 8</span>' +
+                        '<span class="demo-option">9</span>' +
+                        '</div>' +
+                        '<div style="color:rgba(40,167,69,0.15);font-size:0.65rem;margin-top:0.2rem;">💡 <span class="highlight-correct">绿色</span> = 正确答案</div>' +
+                        '</div>';
+                }
+            },
+            'colorMix': {
+                icon: '🎨', name: '颜色混合',
+                steps: [
+                    { title: '📌 玩法说明', desc: '将几种颜色混合后判断结果颜色。考验色彩感知能力！' },
+                    { title: '🎯 怎么操作', desc: '看颜色组合 → 在脑海中混合 → 选择正确的混合结果' },
+                    { title: '💡 小技巧', desc: '红+蓝=紫，红+黄=橙，蓝+黄=绿。难度越高，混合的颜色越多。' }
+                ],
+                example: '红色 + 蓝色 = 紫色',
+                demo: function() {
+                    return '<div style="text-align:center;padding:0.3rem;">' +
+                        '<div style="display:flex;justify-content:center;align-items:center;gap:0.6rem;flex-wrap:wrap;">' +
+                        '<div style="width:44px;height:44px;border-radius:10px;background:#FF0000;border:1px solid rgba(255,255,255,0.06);" class="demo-bounce"></div>' +
+                        '<span style="color:rgba(255,255,255,0.06);font-size:1rem;">+</span>' +
+                        '<div style="width:44px;height:44px;border-radius:10px;background:#0000FF;border:1px solid rgba(255,255,255,0.06);" class="demo-bounce"></div>' +
+                        '<span style="color:rgba(255,255,255,0.06);font-size:1rem;">→</span>' +
+                        '<div style="width:44px;height:44px;border-radius:10px;background:#8800CC;border:2px solid rgba(255,255,255,0.06);" class="demo-blink"></div>' +
+                        '</div>' +
+                        '<div style="display:flex;gap:0.4rem;justify-content:center;margin-top:0.4rem;flex-wrap:wrap;">' +
+                        '<span class="demo-option">红色</span>' +
+                        '<span class="demo-option correct">✅ 紫色</span>' +
+                        '<span class="demo-option">蓝色</span>' +
+                        '</div>' +
+                        '<div style="color:rgba(40,167,69,0.15);font-size:0.65rem;margin-top:0.2rem;">💡 <span class="highlight-correct">绿色</span> = 正确答案</div>' +
+                        '</div>';
+                }
+            },
+            'trueFalse': {
+                icon: '⚖️', name: '真假判断',
+                steps: [
+                    { title: '📌 玩法说明', desc: '判断陈述是真的还是假的。测试常识和逻辑推理能力！' },
+                    { title: '🎯 怎么操作', desc: '读陈述 → 判断真假 → 点击 "真的" 或 "假的"' },
+                    { title: '💡 小技巧', desc: '注意细节和逻辑陷阱。难度越高，陈述越有迷惑性。' }
+                ],
+                example: '地球是平的 → 假的',
+                demo: function() {
+                    return '<div style="text-align:center;padding:0.3rem;">' +
+                        '<div style="font-size:1.2rem;color:#fff;" class="demo-blink">🌍 地球是平的</div>' +
+                        '<div style="color:rgba(255,255,255,0.05);font-size:0.6rem;">⚖️ 真的还是假的？</div>' +
+                        '<div style="display:flex;gap:0.4rem;justify-content:center;margin-top:0.4rem;flex-wrap:wrap;">' +
+                        '<span class="demo-option">✅ 真的</span>' +
+                        '<span class="demo-option correct">✅ 假的</span>' +
+                        '</div>' +
+                        '<div style="color:rgba(40,167,69,0.15);font-size:0.65rem;margin-top:0.2rem;">💡 <span class="highlight-correct">绿色</span> = 正确答案</div>' +
+                        '</div>';
+                }
+            },
+            'puzzle': {
+                icon: '🧩', name: '数字华容道',
+                steps: [
+                    { title: '📌 玩法说明', desc: '点击数字方块移动，将数字按 1-8 的顺序排列，空格在右下角。' },
+                    { title: '🎯 怎么操作', desc: '点击数字方块 → 数字会移动到空格位置 → 按顺序排列好即通关' },
+                    { title: '💡 小技巧', desc: '先排好第一行，再排第二行。难度越高，格子越多。' }
+                ],
+                example: '将 1-8 按顺序排列，空格在最后',
+                demo: function() {
+                    return '<div style="text-align:center;padding:0.3rem;">' +
+                        '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:3px;max-width:140px;margin:0 auto;background:rgba(255,255,255,0.02);padding:4px;border-radius:10px;border:1px solid rgba(255,255,255,0.04);">' +
+                        '<div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:700;border-radius:6px;background:rgba(255,255,255,0.04);color:#fff;">1</div>' +
+                        '<div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:700;border-radius:6px;background:rgba(255,255,255,0.04);color:#fff;">2</div>' +
+                        '<div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:700;border-radius:6px;background:rgba(255,255,255,0.04);color:#fff;">3</div>' +
+                        '<div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:700;border-radius:6px;background:rgba(255,255,255,0.04);color:#fff;">4</div>' +
+                        '<div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:700;border-radius:6px;background:rgba(255,255,255,0.04);color:#fff;">5</div>' +
+                        '<div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:700;border-radius:6px;background:rgba(255,255,255,0.04);color:#fff;">6</div>' +
+                        '<div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:700;border-radius:6px;background:rgba(255,255,255,0.04);color:#fff;">7</div>' +
+                        '<div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:700;border-radius:6px;background:rgba(255,255,255,0.04);color:#fff;">8</div>' +
+                        '<div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:700;border-radius:6px;background:transparent;color:transparent;"></div>' +
+                        '</div>' +
+                        '<div style="color:rgba(40,167,69,0.15);font-size:0.65rem;margin-top:0.3rem;">💡 点击数字移动，按顺序排列</div>' +
+                        '</div>';
+                }
+            },
+            'threeView': {
+                icon: '📐', name: '立体三视图',
+                steps: [
+                    { title: '📌 玩法说明', desc: '观察俯视图、主视图、左视图，推断出总共用了多少个正方体。' },
+                    { title: '🎯 怎么操作', desc: '看三个视图 → 在脑海中构建立体图形 → 计算正方体数量 → 选择答案' },
+                    { title: '💡 小技巧', desc: '俯视图看"脚印"，主视图看"高度"，左视图看"深度"。三个视图合起来就是立体图形。' }
+                ],
+                example: '三个视图 → 8 个正方体',
+                demo: function() {
+                    return '<div style="text-align:center;padding:0.3rem;">' +
+                        '<div style="display:flex;justify-content:center;gap:0.6rem;flex-wrap:wrap;">' +
+                        '<div><div style="color:rgba(255,255,255,0.05);font-size:0.45rem;">俯视图</div><div style="display:grid;grid-template-columns:repeat(3,28px);gap:2px;"><div style="width:28px;height:28px;background:#8B5CF6;border-radius:2px;"></div><div style="width:28px;height:28px;background:#8B5CF6;border-radius:2px;"></div><div style="width:28px;height:28px;background:#8B5CF6;border-radius:2px;"></div><div style="width:28px;height:28px;background:#8B5CF6;border-radius:2px;"></div><div style="width:28px;height:28px;background:rgba(255,255,255,0.02);border-radius:2px;border:1px solid rgba(255,255,255,0.02);"></div><div style="width:28px;height:28px;background:#8B5CF6;border-radius:2px;"></div><div style="width:28px;height:28px;background:#8B5CF6;border-radius:2px;"></div><div style="width:28px;height:28px;background:#8B5CF6;border-radius:2px;"></div><div style="width:28px;height:28px;background:#8B5CF6;border-radius:2px;"></div></div></div>' +
+                        '<div><div style="color:rgba(255,255,255,0.05);font-size:0.45rem;">主视图</div><div style="display:grid;grid-template-columns:repeat(3,28px);gap:2px;"><div style="width:28px;height:28px;background:#8B5CF6;border-radius:2px;"></div><div style="width:28px;height:28px;background:#8B5CF6;border-radius:2px;"></div><div style="width:28px;height:28px;background:#8B5CF6;border-radius:2px;"></div><div style="width:28px;height:28px;background:#8B5CF6;border-radius:2px;"></div><div style="width:28px;height:28px;background:#8B5CF6;border-radius:2px;"></div><div style="width:28px;height:28px;background:#8B5CF6;border-radius:2px;"></div><div style="width:28px;height:28px;background:#8B5CF6;border-radius:2px;"></div><div style="width:28px;height:28px;background:#8B5CF6;border-radius:2px;"></div><div style="width:28px;height:28px;background:rgba(255,255,255,0.02);border-radius:2px;border:1px solid rgba(255,255,255,0.02);"></div></div></div>' +
+                        '<div><div style="color:rgba(255,255,255,0.05);font-size:0.45rem;">左视图</div><div style="display:grid;grid-template-columns:repeat(3,28px);gap:2px;"><div style="width:28px;height:28px;background:#8B5CF6;border-radius:2px;"></div><div style="width:28px;height:28px;background:#8B5CF6;border-radius:2px;"></div><div style="width:28px;height:28px;background:#8B5CF6;border-radius:2px;"></div><div style="width:28px;height:28px;background:#8B5CF6;border-radius:2px;"></div><div style="width:28px;height:28px;background:#8B5CF6;border-radius:2px;"></div><div style="width:28px;height:28px;background:#8B5CF6;border-radius:2px;"></div><div style="width:28px;height:28px;background:#8B5CF6;border-radius:2px;"></div><div style="width:28px;height:28px;background:#8B5CF6;border-radius:2px;"></div><div style="width:28px;height:28px;background:rgba(255,255,255,0.02);border-radius:2px;border:1px solid rgba(255,255,255,0.02);"></div></div></div>' +
+                        '</div>' +
+                        '<div style="color:rgba(40,167,69,0.15);font-size:0.65rem;margin-top:0.3rem;">💡 根据三视图推断正方体数量</div>' +
+                        '</div>';
+                }
+            },
+            'shapeCount': {
+                icon: '🔢', name: '图形计数',
+                steps: [
+                    { title: '📌 玩法说明', desc: '在一组图形中，统计特定图形（如 ●）出现的次数。' },
+                    { title: '🎯 怎么操作', desc: '看图形序列 → 数目标图形出现的次数 → 选择答案' },
+                    { title: '💡 小技巧', desc: '可以按顺序一个一个数，或者分组数。难度越高，图形越多，干扰项越多。' }
+                ],
+                example: '● ■ ● ▲ ● → ● 出现了 3 次',
+                demo: function() {
+                    return '<div style="text-align:center;padding:0.3rem;">' +
+                        '<div style="font-size:1.8rem;letter-spacing:12px;" class="demo-blink">● ■ ● ▲ ●</div>' +
+                        '<div style="color:rgba(255,255,255,0.05);font-size:0.6rem;">🔢 「●」出现了几次？</div>' +
+                        '<div style="display:flex;gap:0.4rem;justify-content:center;margin-top:0.4rem;flex-wrap:wrap;">' +
+                        '<span class="demo-option">2</span>' +
+                        '<span class="demo-option correct">✅ 3</span>' +
+                        '<span class="demo-option">4</span>' +
+                        '</div>' +
+                        '<div style="color:rgba(40,167,69,0.15);font-size:0.65rem;margin-top:0.2rem;">💡 <span class="highlight-correct">绿色</span> = 正确答案</div>' +
+                        '</div>';
+                }
+            },
+            'dateReasoning': {
+                icon: '📅', name: '日期推理',
+                steps: [
+                    { title: '📌 玩法说明', desc: '已知一个日期是星期几，推算另一个日期是星期几。' },
+                    { title: '🎯 怎么操作', desc: '读已知日期 → 算天数差 → 推算出目标日期的星期几' },
+                    { title: '💡 小技巧', desc: '7天一个循环。难度越高，时间跨度越大，可能跨月跨年。' }
+                ],
+                example: '2026年8月7日是星期五，8月15日是星期六',
+                demo: function() {
+                    return '<div style="text-align:center;padding:0.3rem;">' +
+                        '<div style="font-size:1rem;color:#fff;" class="demo-blink">📅 2026年8月7日是星期五</div>' +
+                        '<div style="color:rgba(255,255,255,0.05);font-size:0.6rem;">8月15日是星期几？</div>' +
+                        '<div style="display:flex;gap:0.4rem;justify-content:center;margin-top:0.4rem;flex-wrap:wrap;">' +
+                        '<span class="demo-option">星期五</span>' +
+                        '<span class="demo-option correct">✅ 星期六</span>' +
+                        '<span class="demo-option">星期日</span>' +
+                        '</div>' +
+                        '<div style="color:rgba(40,167,69,0.15);font-size:0.65rem;margin-top:0.2rem;">💡 <span class="highlight-correct">绿色</span> = 正确答案</div>' +
+                        '</div>';
+                }
+            },
+            'rotate': {
+                icon: '🔄', name: '图形旋转',
+                steps: [
+                    { title: '📌 玩法说明', desc: '观察原图和旋转后的图形，判断旋转了多少度。' },
+                    { title: '🎯 怎么操作', desc: '看原图 → 看旋转后的图 → 判断旋转角度 → 选择答案' },
+                    { title: '💡 小技巧', desc: '找一个参考点，看它移动了多少度。难度越高，图形越复杂，角度越刁钻。' }
+                ],
+                example: '图形旋转了 90°',
+                demo: function() {
+                    return '<div style="text-align:center;padding:0.3rem;">' +
+                        '<div style="display:flex;justify-content:center;align-items:center;gap:0.8rem;flex-wrap:wrap;">' +
+                        '<div><svg width="52" height="52"><polygon points="26,8 44,44 8,44" fill="#8B5CF6" opacity="0.85"/></svg><div style="color:rgba(255,255,255,0.05);font-size:0.45rem;">原图</div></div>' +
+                        '<span style="color:rgba(255,255,255,0.04);">→</span>' +
+                        '<div><svg width="52" height="52"><polygon points="26,8 44,44 8,44" fill="#8B5CF6" opacity="0.85" transform="rotate(90,26,26)"/></svg><div style="color:rgba(255,255,255,0.05);font-size:0.45rem;">旋转后</div></div>' +
+                        '</div>' +
+                        '<div style="display:flex;gap:0.4rem;justify-content:center;margin-top:0.4rem;flex-wrap:wrap;">' +
+                        '<span class="demo-option">45°</span>' +
+                        '<span class="demo-option correct">✅ 90°</span>' +
+                        '<span class="demo-option">135°</span>' +
+                        '</div>' +
+                        '<div style="color:rgba(40,167,69,0.15);font-size:0.65rem;margin-top:0.2rem;">💡 <span class="highlight-correct">绿色</span> = 正确答案</div>' +
+                        '</div>';
+                }
+            },
+            'abgame': {
+                icon: '🎯', name: '1A2B猜数字',
+                steps: [
+                    { title: '📌 玩法说明', desc: '猜一个不重复的数字组合。A = 位置和数字都正确，B = 数字正确但位置不对。' },
+                    { title: '🎯 怎么操作', desc: '输入猜测的数字 → 查看 A 和 B 的提示 → 根据提示推理 → 直到全部猜对' },
+                    { title: '💡 小技巧', desc: '先确定哪些数字在答案中，再确定它们的位置。4A0B 就是完全正确！' }
+                ],
+                example: '密码是 1234，猜 1243 → 提示 2A2B',
+                demo: function() {
+                    return '<div style="text-align:center;padding:0.3rem;">' +
+                        '<div style="font-size:1.2rem;color:#8B5CF6;font-weight:700;letter-spacing:8px;font-family:monospace;" class="demo-blink">_ _ _ _</div>' +
+                        '<div style="color:rgba(255,255,255,0.05);font-size:0.6rem;">🎯 猜一个4位不重复数字</div>' +
+                        '<div style="display:flex;gap:0.4rem;justify-content:center;margin-top:0.3rem;flex-wrap:wrap;font-size:0.7rem;color:rgba(255,255,255,0.15);">' +
+                        '<span><span style="color:#28a745;">A</span> = 位置+数字都正确</span>' +
+                        '<span><span style="color:#F59E0B;">B</span> = 数字正确位置不对</span>' +
+                        '</div>' +
+                        '<div style="color:rgba(40,167,69,0.15);font-size:0.65rem;margin-top:0.3rem;">💡 根据提示推理出正确答案</div>' +
+                        '</div>';
+                }
+            },
+            'tripleColor': {
+                icon: '🎯', name: '颜色三重干扰',
+                steps: [
+                    { title: '📌 玩法说明', desc: '文字的颜色、背景色和文字本身的含义可能不同，根据问题要求选择正确的颜色。' },
+                    { title: '🎯 怎么操作', desc: '看问题 → 观察颜色、背景、文字含义 → 选择正确的颜色' },
+                    { title: '💡 小技巧', desc: '先看清问题问的是什么（文字颜色？背景色？还是文字含义？），再仔细观察。' }
+                ],
+                example: '文字 "红" 用蓝色显示，背景是绿色，问文字颜色 → 答案是蓝色',
+                demo: function() {
+                    return '<div style="text-align:center;padding:0.3rem;">' +
+                        '<div style="background:#00AA00;padding:0.6rem 1.5rem;border-radius:12px;display:inline-block;" class="demo-bounce">' +
+                        '<span style="color:#0000FF;font-size:2.8rem;font-weight:900;letter-spacing:10px;">红</span>' +
+                        '</div>' +
+                        '<div style="color:rgba(255,255,255,0.05);font-size:0.6rem;margin-top:0.2rem;">🎯 文字颜色是什么？</div>' +
+                        '<div style="display:flex;gap:0.4rem;justify-content:center;margin-top:0.4rem;flex-wrap:wrap;">' +
+                        '<span class="demo-option">红色</span>' +
+                        '<span class="demo-option correct">✅ 蓝色</span>' +
+                        '<span class="demo-option">绿色</span>' +
+                        '</div>' +
+                        '<div style="color:rgba(40,167,69,0.15);font-size:0.65rem;margin-top:0.2rem;">💡 <span class="highlight-correct">绿色</span> = 正确答案（注意干扰项）</div>' +
+                        '</div>';
+                }
+            }
+        };
+
+        return tutorials[type] || tutorials['text'];
+    }
 
     // ============================================================
     // 开始界面
@@ -574,10 +1047,10 @@
                 <div class="start-buttons">
                     <button class="btn-start primary" onclick="startGame()">🚀 开始游戏</button>
                     <button class="btn-start ranking" onclick="showRankingOnly()">🏆 排行榜</button>
-                    <button class="btn-start tutorial-btn" onclick="showTutorial()">📖 玩法教程</button>
+                    <button class="btn-start tutorial-btn" onclick="showTutorial()">📖 保姆级教程</button>
                 </div>
                 <div style="margin-top:1.2rem;color:rgba(255,255,255,0.05);font-size:0.7rem;">
-                    💡 点击 "玩法教程" 了解每种玩法的详细说明
+                    💡 点击 "保姆级教程" 了解每种玩法的详细说明 + 演示动画
                 </div>
             </div>
         `;
@@ -636,7 +1109,7 @@
     }
 
     // ============================================================
-    // 教程系统
+    // 保姆级教程系统
     // ============================================================
     function showTutorial() {
         currentTutorialIndex = 0;
@@ -655,65 +1128,81 @@
     function renderTutorial(index) {
         var container = document.getElementById('tutorialContent');
         var total = tutorialOrder.length;
+        var key = tutorialOrder[index];
+        var data = generateTutorialContent(key);
+
+        if (!data) return;
+
+        // 生成步骤 HTML
+        var stepsHtml = '';
+        data.steps.forEach(function(step, idx) {
+            stepsHtml += `
+                <div class="tutorial-step">
+                    <div class="step-number">步骤 ${idx + 1}</div>
+                    <div class="step-title">${step.title}</div>
+                    <div class="step-desc">${step.desc}</div>
+                </div>
+            `;
+        });
+
+        // 生成演示 HTML
+        var demoHtml = '';
+        if (data.demo) {
+            demoHtml = `
+                <div class="tutorial-demo-area active">
+                    ${data.demo()}
+                </div>
+            `;
+        }
+
         var prevDisabled = index === 0 ? 'disabled' : '';
         var nextDisabled = index === total - 1 ? 'disabled' : '';
-
-        var typeNames = {
-            'text': { name: '文字识别', icon: '👁️', desc: '识别扭曲的文字', howTo: '观察图片中扭曲的文字，从选项中选择正确的内容', example: '图片显示 "HELLO" 的扭曲版本，选 "HELLO"' },
-            'arithmetic': { name: '算术计算', icon: '🧮', desc: '快速心算', howTo: '计算表达式，选择正确的答案', example: '25 × 4 = 100' },
-            'stroke': { name: '汉字笔画', icon: '📝', desc: '数笔画数', howTo: '数出汉字的笔画总数', example: '「人」有 2 画' },
-            'color': { name: '颜色识别', icon: '🎨', desc: '识别文字的颜色', howTo: '注意文字的颜色，不是文字内容', example: '"红" 字用蓝色显示 → 答案是 "蓝色"' },
-            'findDifferent': { name: '找不同', icon: '🔍', desc: '找出被替换的字符', howTo: '记住原始字符，找出被替换的那个', example: 'ABCDE → ABXDE，被替换的是 "C"' },
-            'reverse': { name: '倒序识别', icon: '🔄', desc: '识别倒过来的文字', howTo: '文字是倒过来显示的，识别正确内容', example: 'OLLEH → HELLO' },
-            'missingLetter': { name: '空缺字母', icon: '🔤', desc: '补全单词', howTo: '补全英文单词中缺失的字母', example: 'APP_E → 缺 "L"' },
-            'timeCalc': { name: '时间计算', icon: '⏰', desc: '计算时间差', howTo: '计算两个时间点之间的差值', example: '08:00 → 12:30 = 4小时30分钟' },
-            'idiom': { name: '成语填空', icon: '📖', desc: '补全成语', howTo: '补全成语中缺失的字', example: '一马当_ → "先"' },
-            'memory': { name: '数字记忆', icon: '🧠', desc: '记住数字', howTo: '数字显示后消失，输入记住的数字', example: '显示 3847 → 输入 3847' },
-            'pattern': { name: '找规律', icon: '📐', desc: '找数列规律', howTo: '观察数列规律，找出缺失数字', example: '2,4,6,?,10 → 8' },
-            'colorMix': { name: '颜色混合', icon: '🎨', desc: '混合颜色', howTo: '多种颜色混合后是什么颜色', example: '红 + 蓝 = 紫' },
-            'trueFalse': { name: '真假判断', icon: '⚖️', desc: '判断真假', howTo: '判断陈述是真的还是假的', example: '地球是平的 → 假的' },
-            'puzzle': { name: '数字华容道', icon: '🧩', desc: '排列数字', howTo: '点击数字移动，按 1-8 顺序排列', example: '将数字按顺序排好' },
-            'threeView': { name: '立体三视图', icon: '📐', desc: '三视图推理', howTo: '根据三视图推断正方体数量', example: '三个视图 → 8 个正方体' },
-            'shapeCount': { name: '图形计数', icon: '🔢', desc: '统计图形', howTo: '统计特定图形出现的次数', example: '● ■ ● ▲ ● → ● 出现 3 次' },
-            'dateReasoning': { name: '日期推理', icon: '📅', desc: '推算星期几', howTo: '根据已知日期推算星期几', example: '8月7日周五 → 8月15日周六' },
-            'rotate': { name: '图形旋转', icon: '🔄', desc: '判断旋转角度', howTo: '观察图形旋转了多少度', example: '旋转了 90°' },
-            'abgame': { name: '1A2B猜数字', icon: '🎯', desc: '猜数字组合', howTo: 'A=位置数字都正确，B=数字正确位置不对', example: '密码1234，猜1243 → 2A2B' },
-            'tripleColor': { name: '颜色三重干扰', icon: '🎯', desc: '三重干扰找颜色', howTo: '在颜色/背景/含义三重干扰中找答案', example: '红字蓝底 → 文字颜色是蓝色' }
-        };
-
-        var key = tutorialOrder[index];
-        var data = typeNames[key];
-        if (!data) return;
 
         container.innerHTML = `
             <div class="tutorial-title">
                 <span>${data.icon}</span>
                 ${data.name}
-                <span style="font-size:0.6rem;color:rgba(255,255,255,0.06);font-weight:400;margin-left:auto;">${index + 1}/${total}</span>
+                <span class="page-counter">${index + 1} / ${total}</span>
             </div>
-            <div class="tutorial-sub">${data.desc}</div>
+            <div class="tutorial-sub">保姆级教程 · 含演示动画</div>
 
-            <div class="tutorial-section">
-                <div class="sec-title">📖 玩法说明</div>
-                <div class="sec-content">${data.howTo}</div>
-            </div>
+            ${stepsHtml}
 
-            <div class="tutorial-section">
-                <div class="sec-title">💡 示例</div>
-                <div class="example-box">
-                    <div class="example-label">📌 例题</div>
-                    <div class="example-content">${data.example}</div>
+            <div class="tutorial-step" style="border-color:rgba(139,92,246,0.06);">
+                <div class="step-number">💡 示例</div>
+                <div class="step-example">
+                    <div class="ex-label">📌 例题</div>
+                    <div class="ex-content">${data.example}</div>
                 </div>
             </div>
 
+            ${demoHtml}
+
             <div class="tutorial-nav">
                 <button class="nav-btn" onclick="renderTutorial(${index - 1})" ${prevDisabled}>← 上一项</button>
+                ${data.demo ? `<button class="nav-btn demo-btn" onclick="replayDemo('${key}')">🔄 重播演示</button>` : ''}
                 <button class="nav-btn ${index === total - 1 ? 'active' : ''}" onclick="${index === total - 1 ? 'closeTutorial()' : 'renderTutorial(' + (index + 1) + ')'}" ${nextDisabled}>
                     ${index === total - 1 ? '✅ 完成' : '下一项 →'}
                 </button>
                 <button class="nav-btn close-tutorial" onclick="closeTutorial()">✕ 关闭</button>
             </div>
         `;
+    }
+
+    function replayDemo(key) {
+        var data = generateTutorialContent(key);
+        if (!data || !data.demo) return;
+        var demoArea = document.querySelector('.tutorial-demo-area');
+        if (demoArea) {
+            demoArea.innerHTML = data.demo();
+            // 重新触发动画
+            var content = demoArea.querySelector('.demo-content');
+            if (content) {
+                content.style.animation = 'none';
+                setTimeout(function() { content.style.animation = ''; }, 10);
+            }
+            SoundFX.play('start');
+        }
     }
 
     // ============================================================
@@ -898,12 +1387,10 @@
         var container = dom.gameContent;
         container.innerHTML = '';
 
-        // 创建横向排列的视图容器
         var viewContainer = document.createElement('div');
         viewContainer.className = 'view-container';
         viewContainer.style.cssText = 'display:flex;justify-content:center;gap:1.5rem;flex-wrap:wrap;padding:0.5rem 0;';
 
-        // 添加俯视图
         if (challenge.topView) {
             var topItem = document.createElement('div');
             topItem.className = 'view-item';
@@ -912,7 +1399,6 @@
             viewContainer.appendChild(topItem);
         }
 
-        // 添加主视图
         if (challenge.frontView) {
             var frontItem = document.createElement('div');
             frontItem.className = 'view-item';
@@ -921,7 +1407,6 @@
             viewContainer.appendChild(frontItem);
         }
 
-        // 添加左视图
         if (challenge.sideView) {
             var sideItem = document.createElement('div');
             sideItem.className = 'view-item';
@@ -932,7 +1417,6 @@
 
         container.appendChild(viewContainer);
 
-        // 渲染选项
         if (challenge.options && challenge.options.length > 0) {
             var optGrid = document.createElement('div');
             optGrid.className = 'options-grid';
