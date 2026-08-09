@@ -34,7 +34,7 @@
         padding: 2rem 2.2rem; box-shadow: 0 40px 120px rgba(0,0,0,0.6);
         animation: modalIn 0.4s cubic-bezier(0.23,1,0.32,1);
     }
-    @keyframes modalIn { from { opacity: 0; transform: scale(0.96) translateY(20px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+    @@keyframes modalIn { from { opacity: 0; transform: scale(0.96) translateY(20px); } to { opacity: 1; transform: scale(1) translateY(0); } }
     .permission-modal::-webkit-scrollbar { width: 4px; }
     .permission-modal::-webkit-scrollbar-thumb { background: rgba(139,92,246,0.15); border-radius: 10px; }
 
@@ -99,7 +99,7 @@
     .indicator.cam.inactive { background: #dc3545; }
     .indicator-label { font-size: 0.55rem; color: rgba(255,255,255,0.1); margin-left: 0.1rem; }
 
-    @keyframes pulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.6; transform: scale(1.1); } }
+    @@keyframes pulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.6; transform: scale(1.1); } }
 
     .progress-bar { width: 100%; height: 3px; background: rgba(255,255,255,0.04); border-radius: 10px; margin-bottom: 0.6rem; overflow: hidden; }
     .progress-bar .fill { height: 100%; border-radius: 10px; background: linear-gradient(135deg, #8B5CF6, #EC4899); transition: width 0.6s ease; width: 0%; }
@@ -232,7 +232,7 @@
     .feedback.correct { background: rgba(40,167,69,0.08); color: #28a745; border: 1px solid rgba(40,167,69,0.06); }
     .feedback.wrong { background: rgba(220,53,69,0.08); color: #dc3545; border: 1px solid rgba(220,53,69,0.06); }
     .feedback .fun-message { font-weight: 400; color: rgba(255,255,255,0.3); font-size: 0.85rem; margin-top: 0.1rem; }
-    @keyframes feedbackIn { from { opacity: 0; transform: translateY(12px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+    @@keyframes feedbackIn { from { opacity: 0; transform: translateY(12px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
 
     /* ============================================================
        计时器
@@ -249,7 +249,7 @@
        ============================================================ */
     .start-screen { text-align: center; padding: 0.5rem 0.5rem 1rem; width: 100%; }
     .start-screen .logo-icon { font-size: 4rem; margin-bottom: 0.2rem; display: block; animation: logoBounce 2.5s ease-in-out infinite; }
-    @keyframes logoBounce { 0%,100% { transform: scale(1) rotate(0deg); } 50% { transform: scale(1.06) rotate(2deg); } }
+    @@keyframes logoBounce { 0%,100% { transform: scale(1) rotate(0deg); } 50% { transform: scale(1.06) rotate(2deg); } }
     .start-screen .title { font-size: 2.4rem; font-weight: 900; background: linear-gradient(135deg, #8B5CF6 0%, #EC4899 45%, #F59E0B 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 0.1rem; }
     .start-screen .desc { color: rgba(255,255,255,0.25); font-size: 0.95rem; margin-bottom: 1.2rem; }
     .start-screen .start-buttons { display: flex; flex-direction: column; gap: 0.5rem; max-width: 280px; margin: 0 auto; }
@@ -268,7 +268,7 @@
        ============================================================ */
     .game-over { text-align: center; padding: 0.8rem 0.3rem; width: 100%; position: relative; z-index: 1; }
     .game-over .big-icon { font-size: 3.5rem; margin-bottom: 0.1rem; animation: gameOverBounce 1.2s ease-in-out infinite; }
-    @keyframes gameOverBounce { 0%,100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+    @@keyframes gameOverBounce { 0%,100% { transform: scale(1); } 50% { transform: scale(1.08); } }
     .game-over .title { color: #fff; font-size: 1.6rem; font-weight: 800; margin-bottom: 0.1rem; }
     .game-over .sub { color: rgba(255,255,255,0.2); font-size: 0.9rem; margin-bottom: 0.2rem; }
     .game-over .final-score { font-size: 2.8rem; font-weight: 900; color: #F59E0B; margin: 0.1rem 0; text-shadow: 0 0 60px rgba(245,158,11,0.05); }
@@ -303,7 +303,7 @@
         animation: cheatPopupIn 0.4s ease;
     }
     .cheat-popup.active { display: flex; }
-    @keyframes cheatPopupIn { from { opacity: 0; transform: scale(0.92) translateY(20px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+    @@keyframes cheatPopupIn { from { opacity: 0; transform: scale(0.92) translateY(20px); } to { opacity: 1; transform: scale(1) translateY(0); } }
     .cheat-popup-content { background: #1a1a2e; border: 1px solid rgba(255,255,255,0.06); border-radius: 28px; padding: 1.8rem 2.2rem; max-width: 460px; width: 90%; text-align: center; box-shadow: 0 40px 120px rgba(0,0,0,0.5); }
     .cheat-popup-content .cheat-icon { font-size: 3.2rem; margin-bottom: 0.2rem; }
     .cheat-popup-content h3 { color: #F59E0B; font-size: 1.3rem; font-weight: 700; margin-bottom: 0.3rem; }
@@ -352,7 +352,7 @@
     .toast-msg.error { background: rgba(220,53,69,0.7); }
     .toast-msg.info { background: rgba(79,172,254,0.7); }
     .toast-msg.warning { background: rgba(245,158,11,0.7); }
-    @keyframes toastIn { from { opacity: 0; transform: translateY(16px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+    @@keyframes toastIn { from { opacity: 0; transform: translateY(16px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
 
     /* ============================================================
        教程弹窗
@@ -379,7 +379,7 @@
 
     .tutorial-demo { background: rgba(255,255,255,0.02); border-radius: 16px; padding: 0.8rem; margin-top: 0.4rem; border: 1px solid rgba(255,255,255,0.04); min-height: 80px; display: none; align-items: center; justify-content: center; flex-direction: column; position: relative; overflow: hidden; }
     .tutorial-demo.active { display: flex; animation: demoFadeIn 0.6s ease; }
-    @keyframes demoFadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    @@keyframes demoFadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     .tutorial-demo .demo-content { color: rgba(255,255,255,0.5); font-size: 0.9rem; text-align: center; line-height: 1.8; width: 100%; }
 
     .tutorial-nav { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: 1rem; justify-content: center; }
