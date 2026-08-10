@@ -4,73 +4,31 @@
 }
 
 <style>
-    /* ============================================================
-       全局重置 + 基础样式
-       ============================================================ */
+    /* ===== 全局重置 ===== */
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { background: #0a0a0f; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #e0e0e0; min-height: 100vh; overflow-x: hidden; }
 
-    .game-container { max-width: 820px; margin: 0 auto; padding: 0.8rem 1.2rem 2rem; min-height: 100vh; position: relative; }
+    .game-container { max-width: 820px; margin: 0 auto; padding: 0.8rem 1.2rem 2rem; min-height: 100vh; }
 
-    /* ============================================================
-       头部
-       ============================================================ */
-    .game-header { text-align: center; padding: 0.3rem 0 0.8rem; position: relative; }
-    .game-header h1 { font-size: 2.4rem; font-weight: 900; background: linear-gradient(135deg, #8B5CF6 0%, #EC4899 40%, #F59E0B 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin: 0; letter-spacing: -0.02em; }
-    .game-header .subtitle { color: rgba(255,255,255,0.18); font-size: 0.9rem; margin-top: 0.05rem; letter-spacing: 0.06em; }
-    .game-header .type-badge-header { display: inline-block; margin-top: 0.2rem; padding: 0.25rem 1.8rem; border-radius: 30px; background: rgba(139,92,246,0.08); color: #A78BFA; font-size: 0.85rem; border: 1px solid rgba(139,92,246,0.06); font-weight: 600; letter-spacing: 0.04em; }
+    /* ===== 头部 ===== */
+    .game-header { text-align: center; padding: 0.3rem 0 0.8rem; }
+    .game-header h1 { font-size: 2.4rem; font-weight: 900; background: linear-gradient(135deg, #8B5CF6 0%, #EC4899 40%, #F59E0B 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin: 0; }
+    .game-header .subtitle { color: rgba(255,255,255,0.18); font-size: 0.9rem; margin-top: 0.05rem; }
+    .game-header .type-badge-header { display: inline-block; margin-top: 0.2rem; padding: 0.25rem 1.8rem; border-radius: 30px; background: rgba(139,92,246,0.08); color: #A78BFA; font-size: 0.85rem; border: 1px solid rgba(139,92,246,0.06); font-weight: 600; }
 
-    /* ============================================================
-       @@keyframes (Razor 中转义)
-       ============================================================ */
-    @@keyframes modalIn {
-        from { opacity: 0; transform: scale(0.96) translateY(20px); }
-        to { opacity: 1; transform: scale(1) translateY(0); }
-    }
+    /* ===== 动画 ===== */
+    @@keyframes modalIn { from { opacity: 0; transform: scale(0.96) translateY(20px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+    @@keyframes pulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(1.2); } }
+    @@keyframes logoBounce { 0%,100% { transform: scale(1) rotate(0deg); } 50% { transform: scale(1.06) rotate(2deg); } }
+    @@keyframes gameOverBounce { 0%,100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+    @@keyframes feedbackIn { from { opacity: 0; transform: translateY(12px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+    @@keyframes toastIn { from { opacity: 0; transform: translateY(16px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+    @@keyframes slideDown { from { opacity: 0; transform: translateY(-20px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+    @@keyframes demoPulse { 0%,100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.05); opacity: 0.7; } }
+    @@keyframes typingCursor { 0%,100% { opacity: 1; } 50% { opacity: 0; } }
+    @@keyframes optionHighlight { 0% { border-color: rgba(139,92,246,0.2); } 50% { border-color: rgba(139,92,246,0.6); } 100% { border-color: rgba(139,92,246,0.2); } }
 
-    @@keyframes pulse {
-        0%, 100% { opacity: 1; transform: scale(1); }
-        50% { opacity: 0.5; transform: scale(1.2); }
-    }
-
-    @@keyframes logoBounce {
-        0%, 100% { transform: scale(1) rotate(0deg); }
-        50% { transform: scale(1.06) rotate(2deg); }
-    }
-
-    @@keyframes gameOverBounce {
-        0%, 100% { transform: scale(1); }
-        50% { transform: scale(1.08); }
-    }
-
-    @@keyframes feedbackIn {
-        from { opacity: 0; transform: translateY(12px) scale(0.95); }
-        to { opacity: 1; transform: translateY(0) scale(1); }
-    }
-
-    @@keyframes toastIn {
-        from { opacity: 0; transform: translateY(16px) scale(0.95); }
-        to { opacity: 1; transform: translateY(0) scale(1); }
-    }
-
-    @@keyframes cheatPopupIn {
-        from { opacity: 0; transform: scale(0.92) translateY(20px); }
-        to { opacity: 1; transform: scale(1) translateY(0); }
-    }
-
-    @@keyframes testPulse {
-        0%, 100% { opacity: 1; transform: scale(1); }
-        50% { opacity: 0.4; transform: scale(0.95); }
-    }
-
-    @@keyframes slideDown {
-        from { opacity: 0; transform: translateY(-20px) scale(0.95); }
-        to { opacity: 1; transform: translateY(0) scale(1); }
-    }
-
-    /* ============================================================
-       权限弹窗（含硬件测试 + 完整免责声明）
-       ============================================================ */
+    /* ===== 权限弹窗 ===== */
     .permission-overlay {
         position: fixed; inset: 0; background: rgba(0,0,0,0.96); backdrop-filter: blur(30px);
         z-index: 10000; display: none; align-items: center; justify-content: center; padding: 1.5rem;
@@ -93,90 +51,47 @@
     .permission-modal h3 { color: #fff; font-size: 1.5rem; font-weight: 700; text-align: center; margin-bottom: 0.05rem; }
     .permission-modal .modal-sub { color: rgba(255,255,255,0.2); font-size: 0.9rem; text-align: center; margin-bottom: 0.8rem; }
 
-    /* 权限开关行 */
     .perm-section { background: rgba(255,255,255,0.02); border-radius: 14px; padding: 0.6rem 1rem; margin-bottom: 0.5rem; border: 1px solid rgba(255,255,255,0.03); }
     .perm-section .perm-row { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; flex-wrap: wrap; }
     .perm-section .perm-row .perm-label { display: flex; align-items: center; gap: 0.4rem; color: rgba(255,255,255,0.4); font-size: 0.85rem; font-weight: 500; }
     .perm-section .perm-row .perm-label .icon { font-size: 1.2rem; }
     .perm-section .perm-row .perm-desc { color: rgba(255,255,255,0.12); font-size: 0.65rem; }
-    .perm-section .perm-row .perm-toggle { display: flex; align-items: center; gap: 0.5rem; }
+
+    /* 开关 */
+    .switch { position: relative; display: inline-block; width: 44px; height: 24px; flex-shrink: 0; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .switch .slider { position: absolute; cursor: pointer; inset: 0; background: rgba(255,255,255,0.06); transition: .3s; border-radius: 24px; }
+    .switch .slider::before { content: ""; position: absolute; height: 18px; width: 18px; left: 3px; bottom: 3px; background: #fff; transition: .3s; border-radius: 50%; }
+    .switch input:checked + .slider { background: linear-gradient(135deg, #8B5CF6, #EC4899); }
+    .switch input:checked + .slider::before { transform: translateX(20px); }
 
     /* 硬件测试 */
-    .hardware-test {
-        background: rgba(255,255,255,0.02); border-radius: 14px; padding: 0.8rem 1rem;
-        margin: 0.6rem 0; border: 1px solid rgba(255,255,255,0.04);
-    }
-    .hardware-test .test-title {
-        color: rgba(255,255,255,0.2); font-size: 0.7rem; font-weight: 600;
-        text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.3rem;
-        display: flex; align-items: center; gap: 0.4rem;
-    }
-    .hardware-test .test-row {
-        display: flex; align-items: center; gap: 0.6rem;
-        padding: 0.25rem 0; border-bottom: 1px solid rgba(255,255,255,0.02);
-    }
+    .hardware-test { background: rgba(255,255,255,0.02); border-radius: 14px; padding: 0.8rem 1rem; margin: 0.6rem 0; border: 1px solid rgba(255,255,255,0.04); }
+    .hardware-test .test-title { color: rgba(255,255,255,0.2); font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.3rem; }
+    .hardware-test .test-row { display: flex; align-items: center; gap: 0.6rem; padding: 0.25rem 0; border-bottom: 1px solid rgba(255,255,255,0.02); }
     .hardware-test .test-row:last-child { border-bottom: none; }
     .hardware-test .test-row .test-icon { font-size: 1rem; }
-    .hardware-test .test-row .test-name {
-        flex: 1; color: rgba(255,255,255,0.3); font-size: 0.75rem;
-    }
-    .hardware-test .test-row .test-status {
-        font-size: 0.6rem; font-weight: 600; padding: 0.05rem 0.7rem;
-        border-radius: 20px; transition: all 0.5s ease; white-space: nowrap;
-    }
-    .hardware-test .test-row .test-status.pending {
-        background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.15);
-    }
-    .hardware-test .test-row .test-status.testing {
-        background: rgba(245,158,11,0.08); color: #F59E0B; animation: testPulse 1s ease-in-out infinite;
-    }
-    .hardware-test .test-row .test-status.pass {
-        background: rgba(40,167,69,0.1); color: #28a745;
-    }
-    .hardware-test .test-row .test-status.fail {
-        background: rgba(220,53,69,0.1); color: #dc3545;
-    }
-    .hardware-test .test-row .test-retry {
-        background: none; border: none; color: rgba(255,255,255,0.06);
-        cursor: pointer; font-size: 0.6rem; transition: color 0.3s ease;
-        font-family: inherit;
-    }
+    .hardware-test .test-row .test-name { flex: 1; color: rgba(255,255,255,0.3); font-size: 0.75rem; }
+    .hardware-test .test-row .test-status { font-size: 0.6rem; font-weight: 600; padding: 0.05rem 0.7rem; border-radius: 20px; transition: all 0.5s ease; white-space: nowrap; }
+    .hardware-test .test-row .test-status.pending { background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.15); }
+    .hardware-test .test-row .test-status.testing { background: rgba(245,158,11,0.08); color: #F59E0B; animation: pulse 1s ease-in-out infinite; }
+    .hardware-test .test-row .test-status.pass { background: rgba(40,167,69,0.1); color: #28a745; }
+    .hardware-test .test-row .test-status.fail { background: rgba(220,53,69,0.1); color: #dc3545; }
+    .hardware-test .test-row .test-retry { background: none; border: none; color: rgba(255,255,255,0.06); cursor: pointer; font-size: 0.6rem; transition: color 0.3s ease; font-family: inherit; }
     .hardware-test .test-row .test-retry:hover { color: rgba(255,255,255,0.15); }
 
-    .hardware-test .test-hint {
-        color: rgba(255,255,255,0.06); font-size: 0.6rem; margin-top: 0.2rem;
-        text-align: center;
-    }
-
-    /* 惩罚信息 - 新公式 */
-    .penalty-info {
-        background: rgba(245,158,11,0.04); border-radius: 12px; padding: 0.5rem 1rem;
-        margin: 0.5rem 0; border: 1px solid rgba(245,158,11,0.06);
-    }
-    .penalty-info .penalty-title {
-        color: rgba(255,255,255,0.15); font-size: 0.6rem; text-transform: uppercase;
-        letter-spacing: 0.06em; margin-bottom: 0.2rem; font-weight: 600;
-    }
+    /* 惩罚信息 */
+    .penalty-info { background: rgba(245,158,11,0.04); border-radius: 12px; padding: 0.5rem 1rem; margin: 0.5rem 0; border: 1px solid rgba(245,158,11,0.06); }
+    .penalty-info .penalty-title { color: rgba(255,255,255,0.15); font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.2rem; font-weight: 600; }
     .penalty-info .penalty-row { display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem; padding: 0.05rem 0; color: rgba(255,255,255,0.25); }
     .penalty-info .penalty-row .val { font-weight: 600; }
     .penalty-info .penalty-row .val.green { color: #28a745; }
     .penalty-info .penalty-row .val.yellow { color: #F59E0B; }
-    .penalty-info .penalty-row .val.orange { color: #F97316; }
 
     /* 免责声明 - 完整版 */
-    .privacy-section {
-        background: rgba(79,172,254,0.03); border-radius: 14px; padding: 0.8rem 1rem;
-        margin: 0.5rem 0; border: 1px solid rgba(79,172,254,0.04);
-    }
-    .privacy-section .privacy-title {
-        color: rgba(255,255,255,0.2); font-size: 0.7rem; font-weight: 600;
-        text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.2rem;
-        display: flex; align-items: center; gap: 0.4rem;
-    }
-    .privacy-section .privacy-item {
-        font-size: 0.65rem; color: rgba(255,255,255,0.12); line-height: 1.6;
-        padding: 0.05rem 0; display: flex; align-items: flex-start; gap: 0.4rem;
-    }
+    .privacy-section { background: rgba(79,172,254,0.03); border-radius: 14px; padding: 0.8rem 1rem; margin: 0.5rem 0; border: 1px solid rgba(79,172,254,0.04); }
+    .privacy-section .privacy-title { color: rgba(255,255,255,0.2); font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.2rem; display: flex; align-items: center; gap: 0.4rem; }
+    .privacy-section .privacy-item { font-size: 0.65rem; color: rgba(255,255,255,0.12); line-height: 1.6; padding: 0.05rem 0; display: flex; align-items: flex-start; gap: 0.4rem; }
     .privacy-section .privacy-item .mark { color: rgba(79,172,254,0.2); font-weight: 700; flex-shrink: 0; }
     .privacy-section .privacy-item strong { color: rgba(255,255,255,0.2); }
 
@@ -188,17 +103,7 @@
     .perm-actions .btn-perm.secondary { background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.3); border: 1px solid rgba(255,255,255,0.04); }
     .perm-actions .btn-perm.secondary:hover { background: rgba(255,255,255,0.08); color: #fff; }
 
-    /* Toggle Switch */
-    .switch { position: relative; display: inline-block; width: 44px; height: 24px; flex-shrink: 0; }
-    .switch input { opacity: 0; width: 0; height: 0; }
-    .switch .slider { position: absolute; cursor: pointer; inset: 0; background: rgba(255,255,255,0.06); transition: .3s; border-radius: 24px; }
-    .switch .slider::before { content: ""; position: absolute; height: 18px; width: 18px; left: 3px; bottom: 3px; background: #fff; transition: .3s; border-radius: 50%; }
-    .switch input:checked + .slider { background: linear-gradient(135deg, #8B5CF6, #EC4899); }
-    .switch input:checked + .slider::before { transform: translateX(20px); }
-
-    /* ============================================================
-       状态栏
-       ============================================================ */
+    /* ===== 状态栏 ===== */
     .status-bar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.2rem 0.6rem; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.04); border-radius: 16px; padding: 0.5rem 1rem; margin-bottom: 0.6rem; backdrop-filter: blur(10px); }
     .status-item { color: rgba(255,255,255,0.3); font-size: 0.8rem; display: flex; align-items: center; gap: 0.2rem; font-weight: 500; }
     .status-item .value { color: #fff; font-weight: 700; font-size: 1.1rem; min-width: 18px; }
@@ -214,84 +119,57 @@
     .indicator.mic { background: rgba(255,255,255,0.06); }
     .indicator.mic.active { background: #28a745; box-shadow: 0 0 20px rgba(40,167,69,0.2); animation: pulse 1.5s ease-in-out infinite; }
     .indicator.mic.inactive { background: #dc3545; }
-    .indicator.cam { background: rgba(255,255,255,0.06); }
-    .indicator.cam.active { background: #28a745; box-shadow: 0 0 20px rgba(40,167,69,0.2); }
-    .indicator.cam.inactive { background: #dc3545; }
-    .indicator-label { font-size: 0.55rem; color: rgba(255,255,255,0.1); margin-left: 0.1rem; }
 
-    .progress-bar { width: 100%; height: 3px; background: rgba(255,255,255,0.04); border-radius: 10px; margin-bottom: 0.6rem; overflow: hidden; }
+    .progress-bar { width: 100%; height: 4px; background: rgba(255,255,255,0.04); border-radius: 10px; margin-bottom: 0.6rem; overflow: hidden; }
     .progress-bar .fill { height: 100%; border-radius: 10px; background: linear-gradient(135deg, #8B5CF6, #EC4899); transition: width 0.6s ease; width: 0%; }
 
-    /* ============================================================
-       挑战卡片
-       ============================================================ */
+    /* ===== 挑战卡片 ===== */
     .challenge-card { background: rgba(255,255,255,0.025); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.04); border-radius: 24px; padding: 1.2rem 1.5rem; min-height: 280px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; position: relative; overflow: hidden; transition: all 0.4s ease; box-shadow: 0 8px 40px rgba(0,0,0,0.2); }
     .challenge-card::before { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(ellipse at 30% 30%, rgba(139,92,246,0.015), transparent 70%); pointer-events: none; }
     .challenge-card .type-badge { position: absolute; top: 0.6rem; right: 0.8rem; font-size: 0.6rem; padding: 0.1rem 0.7rem; border-radius: 20px; background: rgba(139,92,246,0.08); color: #A78BFA; border: 1px solid rgba(139,92,246,0.04); font-weight: 600; z-index: 1; }
     .challenge-card .question-text { color: rgba(255,255,255,0.5); font-size: 1.05rem; text-align: center; line-height: 1.8; margin-bottom: 0.2rem; min-height: 32px; width: 100%; position: relative; z-index: 1; font-weight: 500; }
 
-    /* ============================================================
-       语音状态栏
-       ============================================================ */
+    /* ===== 语音状态栏 ===== */
     .voice-status-bar { display: flex; align-items: center; gap: 0.6rem; padding: 0.3rem 0.8rem; border-radius: 30px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.04); margin-bottom: 0.6rem; width: 100%; flex-wrap: wrap; }
     .voice-status-bar .status-icon { font-size: 1.2rem; }
     .voice-status-bar .status-text { color: rgba(255,255,255,0.15); font-size: 0.75rem; flex: 1; }
-    .voice-status-bar .status-text .highlight { color: #8B5CF6; font-weight: 600; }
-    .voice-status-bar .status-text .highlight.green { color: #28a745; }
-    .voice-status-bar .status-text .highlight.red { color: #dc3545; }
     .voice-status-bar .transcript-display { color: rgba(255,255,255,0.3); font-size: 0.85rem; font-weight: 500; padding: 0.1rem 0.6rem; background: rgba(255,255,255,0.02); border-radius: 20px; border: 1px solid rgba(255,255,255,0.03); min-height: 28px; min-width: 80px; text-align: center; }
     .voice-status-bar .transcript-display.active { border-color: rgba(139,92,246,0.15); color: #fff; }
-    .voice-status-bar .voice-help-btn { background: none; border: none; color: rgba(255,255,255,0.06); cursor: pointer; font-size: 0.8rem; transition: color 0.3s ease; padding: 0.1rem 0.3rem; font-family: inherit; }
-    .voice-status-bar .voice-help-btn:hover { color: rgba(255,255,255,0.2); }
 
-    /* ============================================================
-       选项按钮
-       ============================================================ */
+    /* ===== 选项 ===== */
     .options-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; width: 100%; max-width: 420px; position: relative; z-index: 1; }
-    .options-grid .option-btn { padding: 0.7rem 0.8rem; border: 2px solid rgba(255,255,255,0.06); border-radius: 16px; background: rgba(255,255,255,0.03); color: rgba(255,255,255,0.6); font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease; font-family: inherit; text-align: center; position: relative; overflow: hidden; }
-    .options-grid .option-btn:hover:not(:disabled) { border-color: rgba(139,92,246,0.2); background: rgba(139,92,246,0.06); color: #fff; transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,0,0,0.15); }
+    .options-grid .option-btn { padding: 0.7rem 0.8rem; border: 2px solid rgba(255,255,255,0.06); border-radius: 16px; background: rgba(255,255,255,0.03); color: rgba(255,255,255,0.6); font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease; font-family: inherit; text-align: center; }
+    .options-grid .option-btn:hover:not(:disabled) { border-color: rgba(139,92,246,0.2); background: rgba(139,92,246,0.06); color: #fff; transform: translateY(-2px); }
     .options-grid .option-btn:disabled { cursor: not-allowed; opacity: 0.3; transform: none !important; }
-    .options-grid .option-btn.correct { border-color: #28a745; background: rgba(40,167,69,0.12); color: #28a745; box-shadow: 0 0 30px rgba(40,167,69,0.05); }
-    .options-grid .option-btn.wrong { border-color: #dc3545; background: rgba(220,53,69,0.12); color: #dc3545; box-shadow: 0 0 30px rgba(220,53,69,0.05); }
-    .options-grid .option-btn.highlight { border-color: rgba(139,92,246,0.3); background: rgba(139,92,246,0.08); box-shadow: 0 0 40px rgba(139,92,246,0.05); }
+    .options-grid .option-btn.correct { border-color: #28a745; background: rgba(40,167,69,0.12); color: #28a745; }
+    .options-grid .option-btn.wrong { border-color: #dc3545; background: rgba(220,53,69,0.12); color: #dc3545; }
+    .options-grid .option-btn.highlight { border-color: rgba(139,92,246,0.4); background: rgba(139,92,246,0.08); box-shadow: 0 0 40px rgba(139,92,246,0.05); animation: optionHighlight 1s ease-in-out infinite; }
 
-    /* ============================================================
-       颜色选项
-       ============================================================ */
+    /* ===== 颜色选项 ===== */
     .color-options-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; width: 100%; max-width: 380px; margin: 0 auto; position: relative; z-index: 1; }
     .color-options-grid .color-option { padding: 0.6rem 0.2rem; border: 2px solid rgba(255,255,255,0.04); border-radius: 16px; background: rgba(255,255,255,0.02); cursor: pointer; transition: all 0.35s ease; display: flex; flex-direction: column; align-items: center; gap: 4px; }
-    .color-options-grid .color-option:hover:not(.disabled) { border-color: rgba(139,92,246,0.15); background: rgba(139,92,246,0.04); transform: translateY(-3px); box-shadow: 0 8px 30px rgba(0,0,0,0.12); }
+    .color-options-grid .color-option:hover:not(.disabled) { border-color: rgba(139,92,246,0.15); background: rgba(139,92,246,0.04); transform: translateY(-3px); }
     .color-options-grid .color-option.disabled { cursor: not-allowed; opacity: 0.5; transform: none !important; }
-    .color-options-grid .color-option .color-block { width: 44px; height: 44px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.06); transition: all 0.3s ease; }
-    .color-options-grid .color-option .color-label { color: rgba(255,255,255,0.5); font-size: 0.85rem; font-weight: 600; transition: all 0.3s ease; }
+    .color-options-grid .color-option .color-block { width: 44px; height: 44px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.06); }
+    .color-options-grid .color-option .color-label { color: rgba(255,255,255,0.5); font-size: 0.85rem; font-weight: 600; }
     .color-options-grid .color-option.correct { border-color: #28a745 !important; background: rgba(40,167,69,0.1) !important; }
     .color-options-grid .color-option.correct .color-label { color: #28a745 !important; }
     .color-options-grid .color-option.wrong { border-color: #dc3545 !important; background: rgba(220,53,69,0.1) !important; }
     .color-options-grid .color-option.wrong .color-label { color: #dc3545 !important; }
-    .color-options-grid .color-option.highlight { border-color: rgba(139,92,246,0.3) !important; background: rgba(139,92,246,0.06) !important; }
+    .color-options-grid .color-option.highlight { border-color: rgba(139,92,246,0.4) !important; background: rgba(139,92,246,0.08) !important; animation: optionHighlight 1s ease-in-out infinite; }
 
-    /* ============================================================
-       1A2B 键盘
-       ============================================================ */
+    /* ===== 1A2B ===== */
     .ab-keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; max-width: 240px; margin: 0 auto; }
     .ab-key-btn { padding: 0.6rem 0.3rem; border: 2px solid rgba(255,255,255,0.06); border-radius: 14px; background: rgba(255,255,255,0.03); color: rgba(255,255,255,0.6); font-size: 1.3rem; font-weight: 700; cursor: pointer; transition: all 0.25s ease; font-family: inherit; text-align: center; min-height: 44px; user-select: none; }
     .ab-key-btn:hover:not(:disabled) { background: rgba(139,92,246,0.08); border-color: rgba(139,92,246,0.15); transform: scale(1.04); color: #fff; }
     .ab-key-btn:disabled { opacity: 0.3; cursor: not-allowed; transform: none; }
     .ab-key-btn.key-backspace { background: rgba(236,72,153,0.06); color: #EC4899; border-color: rgba(236,72,153,0.08); }
-    .ab-key-btn.key-backspace:hover:not(:disabled) { background: rgba(236,72,153,0.12); }
     .ab-key-btn.key-submit { background: rgba(40,167,69,0.06); color: #28a745; border-color: rgba(40,167,69,0.08); }
-    .ab-key-btn.key-submit:hover:not(:disabled) { background: rgba(40,167,69,0.12); }
-
     .ab-display { font-size: 2.4rem; font-weight: 700; letter-spacing: 10px; color: #8B5CF6; padding: 0.4rem 0; font-family: monospace; background: rgba(255,255,255,0.02); border-radius: 14px; border: 1px solid rgba(255,255,255,0.04); margin: 0 auto 0.4rem; min-height: 60px; display: flex; align-items: center; justify-content: center; }
     .ab-status { color: rgba(255,255,255,0.25); font-size: 0.85rem; text-align: center; margin-bottom: 0.4rem; font-weight: 500; }
-    .ab-status strong { color: #F59E0B; }
     .ab-history { color: rgba(255,255,255,0.15); font-size: 0.8rem; min-height: 26px; padding: 0.2rem 0.5rem; font-family: monospace; background: rgba(255,255,255,0.02); border-radius: 10px; border: 1px solid rgba(255,255,255,0.03); margin-bottom: 0.6rem; max-height: 80px; overflow-y: auto; text-align: center; line-height: 1.8; }
-    .ab-history .history-item { color: rgba(255,255,255,0.4); }
-    .ab-history .history-item.correct { color: #28a745; }
 
-    /* ============================================================
-       三视图
-       ============================================================ */
+    /* ===== 三视图 ===== */
     .view-container { display: flex; justify-content: center; gap: 1.2rem; flex-wrap: wrap; padding: 0.3rem 0; align-items: flex-end; }
     .view-item { text-align: center; }
     .view-item .view-label { color: rgba(255,255,255,0.2); font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.2rem; display: block; font-weight: 600; }
@@ -300,78 +178,61 @@
     .view-item .view-grid .cell.filled { background: #8B5CF6; box-shadow: 0 0 20px rgba(139,92,246,0.1); }
     .view-item .view-grid .cell.empty { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.02); }
 
-    /* ============================================================
-       华容道
-       ============================================================ */
+    /* ===== 华容道 ===== */
     .puzzle-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; max-width: 190px; margin: 0 auto; background: rgba(255,255,255,0.02); padding: 5px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.04); touch-action: none; user-select: none; }
     .puzzle-grid .puzzle-cell { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; font-weight: 700; border-radius: 10px; cursor: pointer; transition: all 0.2s ease; background: rgba(255,255,255,0.04); color: #fff; user-select: none; touch-action: none; }
     .puzzle-grid .puzzle-cell:hover:not(.empty) { background: rgba(139,92,246,0.08); transform: scale(1.04); }
     .puzzle-grid .puzzle-cell.empty { background: transparent; cursor: default; }
 
-    /* ============================================================
-       数字记忆
-       ============================================================ */
+    /* ===== 数字记忆 ===== */
     .memory-keyboard { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.4rem; max-width: 260px; margin: 0.2rem auto; width: 100%; }
     .memory-keyboard .key-btn { padding: 0.6rem 0.2rem; border: 2px solid rgba(255,255,255,0.04); border-radius: 14px; background: rgba(255,255,255,0.02); color: rgba(255,255,255,0.6); font-size: 1.3rem; font-weight: 700; cursor: pointer; transition: all 0.25s ease; font-family: inherit; text-align: center; }
     .memory-keyboard .key-btn:hover:not(:disabled) { background: rgba(139,92,246,0.06); border-color: rgba(139,92,246,0.12); transform: scale(1.04); color: #fff; }
     .memory-keyboard .key-btn:disabled { opacity: 0.3; cursor: not-allowed; transform: none; }
     .memory-keyboard .key-btn.backspace { color: #EC4899; border-color: rgba(236,72,153,0.08); }
-    .memory-keyboard .key-btn.backspace:hover:not(:disabled) { background: rgba(236,72,153,0.08); }
     .memory-input-display { text-align: center; padding: 0.4rem; min-height: 44px; font-size: 1.8rem; font-weight: 700; color: #8B5CF6; letter-spacing: 8px; font-family: 'Courier New', monospace; background: rgba(255,255,255,0.02); border-radius: 14px; border: 1px solid rgba(255,255,255,0.04); margin: 0.2rem auto; width: 100%; max-width: 260px; }
     .memory-controls { display: flex; gap: 0.4rem; justify-content: center; margin-top: 0.2rem; }
     .memory-controls .btn-memory { padding: 0.4rem 1.5rem; border: none; border-radius: 40px; font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: all 0.3s ease; font-family: inherit; }
     .memory-controls .btn-memory.submit { background: linear-gradient(135deg, #8B5CF6, #EC4899); color: #fff; }
-    .memory-controls .btn-memory.submit:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(108,60,225,0.15); }
     .memory-controls .btn-memory:disabled { opacity: 0.3; cursor: not-allowed; transform: none; }
 
-    /* ============================================================
-       旋转图形
-       ============================================================ */
-    .rotate-compare { display: flex; gap: 1rem; justify-content: center; align-items: center; flex-wrap: wrap; padding: 0.2rem 0; }
-    .rotate-compare .rotate-item { text-align: center; }
-    .rotate-compare .rotate-item .label { color: rgba(255,255,255,0.15); font-size: 0.55rem; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.1rem; display: block; }
-    .rotate-compare .rotate-item svg { border-radius: 10px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.03); max-width: 100px; max-height: 100px; }
-    .rotate-compare .rotate-arrow { color: rgba(255,255,255,0.06); font-size: 1.2rem; }
-    .rotate-angle-text { font-size: 1.1rem; font-weight: 700; color: #8B5CF6; margin-top: 0.1rem; }
-
-    /* ============================================================
-       找不同
-       ============================================================ */
+    /* ===== 找不同 ===== */
     .char-btn { display: inline-block; padding: 0.2rem 0.6rem; margin: 0.1rem; border-radius: 12px; cursor: pointer; font-size: 2.2rem; font-weight: 700; font-family: monospace; transition: all 0.3s ease; user-select: none; color: #ffffff; border: 2px solid transparent; background: transparent; }
     .char-btn:hover:not(.disabled) { transform: scale(1.08); background: rgba(139,92,246,0.06); }
     .char-btn.disabled { cursor: default; opacity: 0.4; background: transparent !important; transform: none !important; }
     .char-btn.correct-answer { border-color: #28a745 !important; background: rgba(40,167,69,0.1) !important; color: #28a745 !important; }
     .char-btn.wrong-answer { border-color: #dc3545 !important; background: rgba(220,53,69,0.1) !important; color: #dc3545 !important; }
-    .char-btn.highlight { border-color: rgba(139,92,246,0.3) !important; background: rgba(139,92,246,0.06) !important; }
+    .char-btn.highlight { border-color: rgba(139,92,246,0.4) !important; background: rgba(139,92,246,0.08) !important; animation: optionHighlight 1s ease-in-out infinite; }
 
-    /* ============================================================
-       反馈
-       ============================================================ */
+    /* ===== 旋转图形 ===== */
+    .rotate-compare { display: flex; gap: 1rem; justify-content: center; align-items: center; flex-wrap: wrap; padding: 0.2rem 0; }
+    .rotate-compare .rotate-item { text-align: center; }
+    .rotate-compare .rotate-item .label { color: rgba(255,255,255,0.15); font-size: 0.55rem; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.1rem; display: block; }
+    .rotate-compare .rotate-item svg { border-radius: 10px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.03); max-width: 100px; max-height: 100px; }
+    .rotate-compare .rotate-arrow { color: rgba(255,255,255,0.06); font-size: 1.2rem; }
+
+    /* ===== 反馈 ===== */
     .feedback { text-align: center; margin-top: 0.5rem; padding: 0.5rem 1rem; border-radius: 14px; font-size: 1rem; font-weight: 700; animation: feedbackIn 0.5s cubic-bezier(0.23,1,0.32,1); width: 100%; display: none; position: relative; z-index: 1; }
     .feedback.show { display: block; }
     .feedback.correct { background: rgba(40,167,69,0.08); color: #28a745; border: 1px solid rgba(40,167,69,0.06); }
     .feedback.wrong { background: rgba(220,53,69,0.08); color: #dc3545; border: 1px solid rgba(220,53,69,0.06); }
     .feedback .fun-message { font-weight: 400; color: rgba(255,255,255,0.3); font-size: 0.85rem; margin-top: 0.1rem; }
 
-    /* ============================================================
-       计时器
-       ============================================================ */
+    /* ===== 计时器（进度条样式） ===== */
     .timer-section { width: 100%; margin-top: 0.6rem; position: relative; z-index: 1; }
-    .timer-bar { width: 100%; height: 3px; background: rgba(255,255,255,0.04); border-radius: 10px; overflow: hidden; }
+    .timer-bar { width: 100%; height: 6px; background: rgba(255,255,255,0.04); border-radius: 10px; overflow: hidden; }
     .timer-bar .timer-fill { height: 100%; border-radius: 10px; background: linear-gradient(135deg, #34D399, #F59E0B); transition: width 0.3s linear; width: 100%; }
     .timer-bar .timer-fill.warning { background: linear-gradient(135deg, #F59E0B, #EC4899); }
     .timer-bar .timer-fill.danger { background: linear-gradient(135deg, #EC4899, #dc3545); }
-    .timer-text { text-align: right; color: rgba(255,255,255,0.1); font-size: 0.8rem; margin-top: 0.1rem; font-weight: 600; letter-spacing: 0.04em; }
+    .timer-text { display: flex; justify-content: space-between; color: rgba(255,255,255,0.08); font-size: 0.7rem; margin-top: 0.15rem; font-weight: 500; letter-spacing: 0.04em; }
 
-    /* ============================================================
-       开始界面
-       ============================================================ */
+    /* ===== 开始界面 ===== */
     .start-screen { text-align: center; padding: 0.5rem 0.5rem 1rem; width: 100%; }
     .start-screen .logo-icon { font-size: 4rem; margin-bottom: 0.2rem; display: block; animation: logoBounce 2.5s ease-in-out infinite; }
     .start-screen .title { font-size: 2.4rem; font-weight: 900; background: linear-gradient(135deg, #8B5CF6 0%, #EC4899 45%, #F59E0B 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 0.1rem; }
     .start-screen .desc { color: rgba(255,255,255,0.25); font-size: 0.95rem; margin-bottom: 1.2rem; }
     .start-screen .start-buttons { display: flex; flex-direction: column; gap: 0.5rem; max-width: 280px; margin: 0 auto; }
-    .start-screen .start-buttons .btn-start { padding: 0.7rem 1.5rem; border: none; border-radius: 60px; font-weight: 700; font-size: 0.95rem; cursor: pointer; transition: all 0.35s cubic-bezier(0.23,1,0.32,1); font-family: inherit; position: relative; overflow: hidden; }
+    .start-screen .start-buttons .btn-start { padding: 0.7rem 1.5rem; border: none; border-radius: 60px; font-weight: 700; font-size: 0.95rem; cursor: pointer; transition: all 0.35s cubic-bezier(0.23,1,0.32,1); font-family: inherit; }
     .start-screen .start-buttons .btn-start.primary { background: linear-gradient(135deg, #8B5CF6, #EC4899); color: #fff; box-shadow: 0 4px 30px rgba(108,60,225,0.2); }
     .start-screen .start-buttons .btn-start.primary:hover { transform: translateY(-3px) scale(1.02); box-shadow: 0 12px 50px rgba(108,60,225,0.3); }
     .start-screen .start-buttons .btn-start.secondary { background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.4); border: 1px solid rgba(255,255,255,0.06); }
@@ -381,10 +242,8 @@
     .start-screen .start-buttons .btn-start.tutorial { background: rgba(245,158,11,0.08); color: #FBBF24; border: 1px solid rgba(245,158,11,0.06); }
     .start-screen .start-buttons .btn-start.tutorial:hover { background: rgba(245,158,11,0.15); transform: translateY(-2px); }
 
-    /* ============================================================
-       游戏结束
-       ============================================================ */
-    .game-over { text-align: center; padding: 0.8rem 0.3rem; width: 100%; position: relative; z-index: 1; }
+    /* ===== 游戏结束 ===== */
+    .game-over { text-align: center; padding: 0.8rem 0.3rem; width: 100%; }
     .game-over .big-icon { font-size: 3.5rem; margin-bottom: 0.1rem; animation: gameOverBounce 1.2s ease-in-out infinite; }
     .game-over .title { color: #fff; font-size: 1.6rem; font-weight: 800; margin-bottom: 0.1rem; }
     .game-over .sub { color: rgba(255,255,255,0.2); font-size: 0.9rem; margin-bottom: 0.2rem; }
@@ -396,12 +255,13 @@
     .game-over .stats-grid .stat-item { background: rgba(255,255,255,0.02); border-radius: 14px; padding: 0.4rem; border: 1px solid rgba(255,255,255,0.03); }
     .game-over .stats-grid .stat-item .stat-value { color: #fff; font-size: 1.1rem; font-weight: 700; }
     .game-over .stats-grid .stat-item .stat-label { color: rgba(255,255,255,0.15); font-size: 0.5rem; text-transform: uppercase; letter-spacing: 0.06em; margin-top: 0.05rem; }
-    .btn-restart { padding: 0.6rem 2.5rem; border: none; border-radius: 60px; background: linear-gradient(135deg, #8B5CF6, #EC4899); color: #fff; font-weight: 700; font-size: 0.9rem; cursor: pointer; transition: all 0.3s ease; font-family: inherit; box-shadow: 0 4px 30px rgba(108,60,225,0.15); }
-    .btn-restart:hover { transform: translateY(-3px); box-shadow: 0 12px 50px rgba(108,60,225,0.25); }
+    .game-over .btn-group { display: flex; gap: 0.8rem; justify-content: center; flex-wrap: wrap; margin-top: 0.5rem; }
+    .game-over .btn-group .btn-restart { padding: 0.6rem 2.5rem; border: none; border-radius: 60px; background: linear-gradient(135deg, #8B5CF6, #EC4899); color: #fff; font-weight: 700; font-size: 0.9rem; cursor: pointer; transition: all 0.3s ease; font-family: inherit; box-shadow: 0 4px 30px rgba(108,60,225,0.15); }
+    .game-over .btn-group .btn-restart:hover { transform: translateY(-3px); box-shadow: 0 12px 50px rgba(108,60,225,0.25); }
+    .game-over .btn-group .btn-home { padding: 0.6rem 2.5rem; border: 1px solid rgba(255,255,255,0.06); border-radius: 60px; background: rgba(255,255,255,0.02); color: rgba(255,255,255,0.3); cursor: pointer; transition: all 0.3s ease; font-family: inherit; font-size: 0.9rem; text-decoration: none; }
+    .game-over .btn-group .btn-home:hover { background: rgba(255,255,255,0.06); color: #fff; }
 
-    /* ============================================================
-       排行榜
-       ============================================================ */
+    /* ===== 排行榜 ===== */
     .rank-section { margin-top: 1rem; padding: 0.8rem 1rem; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.04); border-radius: 16px; }
     .rank-section .rank-title { color: rgba(255,255,255,0.2); font-size: 0.85rem; font-weight: 600; margin-bottom: 0.4rem; display: flex; align-items: center; gap: 0.3rem; }
     .rank-item { display: flex; align-items: center; gap: 0.4rem; padding: 0.3rem 0.4rem; border-bottom: 1px solid rgba(255,255,255,0.02); }
@@ -414,13 +274,11 @@
     .rank-item .rank-score { color: #F59E0B; font-weight: 700; font-size: 0.85rem; }
     .rank-empty { text-align: center; color: rgba(255,255,255,0.08); font-size: 0.8rem; padding: 0.6rem 0; }
 
-    /* ============================================================
-       作弊弹窗
-       ============================================================ */
+    /* ===== 作弊弹窗 ===== */
     .cheat-popup {
         position: fixed; inset: 0; display: none; align-items: center; justify-content: center;
         z-index: 9999; background: rgba(0,0,0,0.7); backdrop-filter: blur(12px);
-        animation: cheatPopupIn 0.4s ease;
+        animation: modalIn 0.4s ease;
     }
     .cheat-popup.active { display: flex; }
     .cheat-popup-content { background: #1a1a2e; border: 1px solid rgba(255,255,255,0.06); border-radius: 28px; padding: 1.8rem 2.2rem; max-width: 460px; width: 90%; text-align: center; box-shadow: 0 40px 120px rgba(0,0,0,0.5); }
@@ -432,38 +290,7 @@
     .cheat-popup-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 40px rgba(108,60,225,0.2); }
     .cheat-popup-timer { margin-top: 0.6rem; color: rgba(255,255,255,0.06); font-size: 0.7rem; }
 
-    /* ============================================================
-       摄像头画中画
-       ============================================================ */
-    .camera-pip {
-        position: fixed; bottom: 20px; left: 20px; z-index: 9000;
-        width: 160px; height: 120px; border-radius: 16px;
-        border: 2px solid rgba(255,255,255,0.06); overflow: hidden;
-        background: rgba(0,0,0,0.6); backdrop-filter: blur(10px);
-        box-shadow: 0 8px 40px rgba(0,0,0,0.4);
-        transition: all 0.3s ease; display: none;
-        cursor: pointer;
-    }
-    .camera-pip.active { display: block; }
-    .camera-pip:hover { transform: scale(1.02); border-color: rgba(139,92,246,0.15); }
-    .camera-pip video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
-    .camera-pip .pip-status {
-        position: absolute; bottom: 6px; left: 8px;
-        display: flex; align-items: center; gap: 4px;
-        font-size: 0.5rem; color: rgba(255,255,255,0.3);
-        background: rgba(0,0,0,0.5); padding: 1px 8px; border-radius: 20px;
-        backdrop-filter: blur(4px);
-    }
-    .camera-pip .pip-status .dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
-    .camera-pip .pip-status .dot.green { background: #28a745; }
-    .camera-pip .pip-status .dot.red { background: #dc3545; }
-    .camera-pip .pip-status .dot.yellow { background: #F59E0B; }
-
-    .camera-pip.expanded { width: 320px; height: 240px; border-radius: 20px; border-color: rgba(139,92,246,0.15); }
-
-    /* ============================================================
-       Toast
-       ============================================================ */
+    /* ===== Toast ===== */
     .toast-container { position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 2000; display: flex; flex-direction: column; gap: 0.3rem; align-items: flex-end; }
     .toast-msg { padding: 0.5rem 1.5rem; border-radius: 40px; color: #fff; font-weight: 600; animation: toastIn 0.4s cubic-bezier(0.23,1,0.32,1); font-size: 0.85rem; backdrop-filter: blur(12px); background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.04); }
     .toast-msg.success { background: rgba(40,167,69,0.7); }
@@ -471,9 +298,7 @@
     .toast-msg.info { background: rgba(79,172,254,0.7); }
     .toast-msg.warning { background: rgba(245,158,11,0.7); }
 
-    /* ============================================================
-       教程弹窗（保姆级）
-       ============================================================ */
+    /* ===== 保姆级教程弹窗 ===== */
     .tutorial-overlay {
         position: fixed; inset: 0; background: rgba(0,0,0,0.95); backdrop-filter: blur(30px);
         z-index: 9999; display: none; align-items: center; justify-content: center; padding: 1rem;
@@ -485,7 +310,7 @@
 
     .tutorial-modal {
         background: rgba(20,20,40,0.98); border: 1px solid rgba(255,255,255,0.04);
-        border-radius: 28px; max-width: 760px; width: 100%; max-height: 94vh; overflow-y: auto;
+        border-radius: 28px; max-width: 780px; width: 100%; max-height: 94vh; overflow-y: auto;
         padding: 1.8rem 2.2rem; box-shadow: 0 40px 120px rgba(0,0,0,0.6);
         position: relative; animation: modalIn 0.4s cubic-bezier(0.23,1,0.32,1);
     }
@@ -546,6 +371,7 @@
         background: rgba(139,92,246,0.03); border-radius: 12px;
         padding: 0.4rem 0.8rem; margin-top: 0.2rem;
         border: 1px solid rgba(139,92,246,0.04);
+        display: flex; align-items: center; gap: 0.8rem; flex-wrap: wrap;
     }
     .tutorial-step .step-example .ex-label {
         color: rgba(255,255,255,0.08); font-size: 0.5rem;
@@ -553,17 +379,33 @@
     }
     .tutorial-step .step-example .ex-content {
         color: rgba(255,255,255,0.4); font-size: 0.85rem; margin-top: 0.05rem;
+        flex: 1;
+    }
+    .tutorial-step .step-example .demo-badge {
+        font-size: 0.65rem; padding: 0.2rem 0.8rem; border-radius: 20px;
+        background: rgba(139,92,246,0.06); color: #8B5CF6;
+        border: 1px solid rgba(139,92,246,0.04);
+        animation: demoPulse 1.5s ease-in-out infinite;
     }
 
-    .tutorial-demo {
+    .tutorial-demo-area {
         background: rgba(255,255,255,0.02); border-radius: 16px; padding: 0.8rem;
         margin-top: 0.4rem; border: 1px solid rgba(255,255,255,0.04);
-        min-height: 60px; display: none; align-items: center; justify-content: center;
+        min-height: 80px; display: none; align-items: center; justify-content: center;
         flex-direction: column; position: relative; overflow: hidden;
     }
-    .tutorial-demo.active { display: flex; animation: demoFadeIn 0.6s ease; }
-    @@keyframes demoFadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-    .tutorial-demo .demo-content { color: rgba(255,255,255,0.5); font-size: 0.9rem; text-align: center; line-height: 1.8; width: 100%; }
+    .tutorial-demo-area.active { display: flex; animation: modalIn 0.6s ease; }
+    .tutorial-demo-area .demo-content {
+        color: rgba(255,255,255,0.5); font-size: 0.9rem; text-align: center; line-height: 1.8; width: 100%;
+    }
+    .tutorial-demo-area .demo-content .highlight-text {
+        color: #8B5CF6; font-weight: 700;
+    }
+    .tutorial-demo-area .demo-content .typing-text::after {
+        content: '|';
+        animation: typingCursor 0.8s step-end infinite;
+        color: #8B5CF6;
+    }
 
     .tutorial-nav {
         display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: 1rem;
@@ -588,33 +430,23 @@
         border-color: rgba(139,92,246,0.06);
     }
     .tutorial-nav .nav-btn:disabled { opacity: 0.15; cursor: not-allowed; }
-    .tutorial-nav .nav-btn.demo-btn {
-        background: rgba(245,158,11,0.06); color: #F59E0B;
-        border-color: rgba(245,158,11,0.06);
-    }
-    .tutorial-nav .nav-btn.demo-btn:hover { background: rgba(245,158,11,0.1); }
     .tutorial-nav .nav-btn.close-tutorial {
         background: rgba(220,53,69,0.04); color: rgba(220,53,69,0.15);
         border-color: rgba(220,53,69,0.04);
     }
     .tutorial-nav .nav-btn.close-tutorial:hover { background: rgba(220,53,69,0.08); color: rgba(220,53,69,0.25); }
 
-    /* ============================================================
-       响应式
-       ============================================================ */
+    /* ===== 响应式 ===== */
     @@media (max-width: 640px) {
         .game-container { padding: 0.3rem 0.6rem 1rem; }
         .game-header h1 { font-size: 1.8rem; }
         .permission-modal { padding: 1.2rem 1.2rem; }
         .permission-modal h3 { font-size: 1.2rem; }
-        .perm-section .perm-row { flex-wrap: wrap; gap: 0.2rem; }
         .challenge-card { padding: 0.8rem 0.8rem; min-height: 240px; }
         .status-bar { padding: 0.3rem 0.6rem; gap: 0.1rem 0.3rem; }
         .status-item { font-size: 0.65rem; }
         .status-item .value { font-size: 0.85rem; }
-        .status-item .value.lives { font-size: 1rem; }
-        .options-grid { gap: 0.3rem; }
-        .options-grid .option-btn { padding: 0.5rem 0.4rem; font-size: 0.85rem; border-radius: 12px; }
+        .options-grid .option-btn { padding: 0.5rem 0.4rem; font-size: 0.85rem; }
         .color-options-grid .color-option .color-block { width: 36px; height: 36px; }
         .color-options-grid .color-option .color-label { font-size: 0.7rem; }
         .ab-display { font-size: 2rem; letter-spacing: 6px; min-height: 48px; }
@@ -626,45 +458,17 @@
         .puzzle-grid { max-width: 150px; }
         .puzzle-grid .puzzle-cell { font-size: 1.1rem; }
         .game-over .final-score { font-size: 2.2rem; }
-        .game-over .big-icon { font-size: 2.8rem; }
         .tutorial-modal { padding: 1rem 1rem; }
         .tutorial-modal .tutorial-title { font-size: 1.2rem; }
-        .tutorial-step .step-desc { font-size: 0.8rem; }
-        .camera-pip { width: 100px; height: 75px; bottom: 10px; left: 10px; }
-        .camera-pip.expanded { width: 200px; height: 150px; }
         .voice-status-bar { padding: 0.2rem 0.5rem; font-size: 0.7rem; }
         .voice-status-bar .transcript-display { font-size: 0.7rem; min-height: 22px; min-width: 60px; }
         .memory-keyboard { max-width: 200px; }
         .memory-keyboard .key-btn { font-size: 1rem; padding: 0.4rem 0.1rem; }
         .memory-input-display { font-size: 1.4rem; letter-spacing: 4px; max-width: 200px; }
         .cheat-popup-content { padding: 1.2rem 1.2rem; }
-        .cheat-popup-content h3 { font-size: 1.1rem; }
-        .tutorial-nav .nav-btn { padding: 0.3rem 0.8rem; font-size: 0.75rem; }
-        .hardware-test .test-row { font-size: 0.7rem; }
         .perm-actions .btn-perm { font-size: 0.8rem; padding: 0.6rem; }
-    }
-
-    @@media (max-width: 400px) {
-        .game-header h1 { font-size: 1.4rem; }
-        .start-screen .title { font-size: 1.8rem; }
-        .start-screen .logo-icon { font-size: 3rem; }
-        .status-item { font-size: 0.55rem; }
-        .status-item .value { font-size: 0.7rem; }
-        .options-grid .option-btn { font-size: 0.7rem; padding: 0.3rem 0.2rem; }
-        .color-options-grid { gap: 0.2rem; }
-        .color-options-grid .color-option .color-block { width: 28px; height: 28px; }
-        .camera-pip { width: 80px; height: 60px; bottom: 6px; left: 6px; }
-        .camera-pip.expanded { width: 150px; height: 110px; }
-        .permission-modal { padding: 0.8rem 0.8rem; }
-        .perm-actions .btn-perm { font-size: 0.7rem; padding: 0.5rem; min-width: 80px; }
-        .tutorial-modal { padding: 0.6rem 0.6rem; }
-        .tutorial-modal .tutorial-title { font-size: 1rem; }
-        .tutorial-modal .tutorial-title .page-counter { font-size: 0.7rem; padding: 0.05rem 0.5rem; }
-        .tutorial-step .step-title { font-size: 0.8rem; }
-        .tutorial-step .step-desc { font-size: 0.7rem; }
-        .tutorial-step .step-example .ex-content { font-size: 0.7rem; }
-        .tutorial-demo .demo-content { font-size: 0.7rem; }
-        .tutorial-nav .nav-btn { padding: 0.2rem 0.6rem; font-size: 0.65rem; }
+        .game-over .btn-group .btn-restart,
+        .game-over .btn-group .btn-home { padding: 0.4rem 1.5rem; font-size: 0.75rem; }
     }
 </style>
 
@@ -686,11 +490,10 @@
         <div class="status-indicators">
             <span class="indicator mic" id="micIndicator"></span>
             <span class="indicator-label">🎤</span>
-            <span class="indicator cam" id="camIndicator"></span>
-            <span class="indicator-label">📷</span>
         </div>
     </div>
 
+    <!-- 进度条 -->
     <div class="progress-bar" id="progressBar" style="display:none;"><div class="fill" id="progressFill"></div></div>
 
     <!-- 挑战卡片 -->
@@ -700,7 +503,10 @@
         <div id="gameContent" style="width:100%;"></div>
         <div class="timer-section" id="timerSection" style="display:none;">
             <div class="timer-bar"><div class="timer-fill" id="timerFill"></div></div>
-            <div class="timer-text" id="timerText">⏱ 15s</div>
+            <div class="timer-text">
+                <span>⏱ 剩余时间</span>
+                <span id="timerText">15s</span>
+            </div>
         </div>
         <div class="feedback" id="feedback"></div>
     </div>
@@ -712,16 +518,13 @@
     </div>
 </div>
 
-<!-- ============================================================
-     📋 权限说明弹窗（含硬件测试 + 完整免责声明）
-     ============================================================ -->
+<!-- ===== 权限弹窗（含硬件测试 + 完整免责声明） ===== -->
 <div class="permission-overlay" id="permissionOverlay">
     <div class="permission-modal">
         <span class="modal-icon">🎙️</span>
         <h3>游戏权限与硬件检测</h3>
-        <p class="modal-sub">请选择开启功能并完成硬件测试</p>
+        <p class="modal-sub">请开启麦克风并完成硬件测试，以获得最佳游戏体验</p>
 
-        <!-- 权限开关 -->
         <div class="perm-section">
             <div class="perm-row">
                 <div class="perm-label">
@@ -737,22 +540,6 @@
             </div>
         </div>
 
-        <div class="perm-section">
-            <div class="perm-row">
-                <div class="perm-label">
-                    <span class="icon">📷</span> 摄像头
-                    <span class="perm-desc">注意力追踪 + 防作弊检测</span>
-                </div>
-                <div class="perm-toggle">
-                    <label class="switch">
-                        <input type="checkbox" id="camToggle" checked onchange="updateHardwareTest()">
-                        <span class="slider"></span>
-                    </label>
-                </div>
-            </div>
-        </div>
-
-        <!-- 硬件测试 -->
         <div class="hardware-test" id="hardwareTest">
             <div class="test-title">🔧 硬件状态检测</div>
             <div class="test-row">
@@ -761,29 +548,18 @@
                 <span class="test-status pending" id="micTestStatus">⏳ 未测试</span>
                 <button class="test-retry" onclick="testMic()">🔄</button>
             </div>
-            <div class="test-row">
-                <span class="test-icon">📷</span>
-                <span class="test-name">摄像头</span>
-                <span class="test-status pending" id="camTestStatus">⏳ 未测试</span>
-                <button class="test-retry" onclick="testCam()">🔄</button>
+            <div class="test-hint" style="color:rgba(255,255,255,0.06);font-size:0.6rem;margin-top:0.2rem;text-align:center;">
+                💡 点击 🔄 测试麦克风是否正常工作
             </div>
-            <div class="test-row">
-                <span class="test-icon">🔊</span>
-                <span class="test-name">扬声器</span>
-                <span class="test-status pending" id="speakerTestStatus">⏳ 未测试</span>
-                <button class="test-retry" onclick="testSpeaker()">🔄</button>
-            </div>
-            <div class="test-hint">💡 点击 🔄 按钮测试硬件是否正常工作</div>
         </div>
 
-        <!-- 惩罚信息 -->
         <div class="penalty-info">
             <div class="penalty-title">📊 分数公式</div>
             <div class="penalty-row">
                 <span>最终得分 = 基础得分 - (作弊次数 × 5) - (通关数 × 4) - (通关数 × 2)</span>
             </div>
             <div class="penalty-row" style="margin-top:0.1rem;font-size:0.65rem;color:rgba(255,255,255,0.1);">
-                <span>麦克风关闭: -4分/关 · 摄像头关闭: -2分/关</span>
+                <span>⚠️ 关闭麦克风: -4分/关</span>
             </div>
         </div>
 
@@ -792,11 +568,11 @@
             <div class="privacy-title">🔒 隐私与免责声明</div>
             <div class="privacy-item"><span class="mark">•</span> 所有音视频数据仅在您的浏览器本地处理，<strong>绝不上传至任何服务器</strong></div>
             <div class="privacy-item"><span class="mark">•</span> 语音识别使用浏览器内置的 <strong>Web Speech API</strong>，无需联网即可工作</div>
-            <div class="privacy-item"><span class="mark">•</span> 摄像头仅用于实时检测面部朝向和人数，<strong>不存储任何图像或视频</strong></div>
             <div class="privacy-item"><span class="mark">•</span> 麦克风仅用于语音识别和音量检测，<strong>不录制或存储任何音频</strong></div>
             <div class="privacy-item"><span class="mark">•</span> 您可随时在浏览器「设置 → 隐私与安全 → 网站权限」中<strong>撤销授权</strong></div>
             <div class="privacy-item"><span class="mark">•</span> 本游戏致力于为所有玩家提供<strong>公平、愉快的游戏体验</strong></div>
-            <div class="privacy-item"><span class="mark">•</span> 如您未满 18 岁，请在监护人指导下进行游戏，建议在<strong>光线充足</strong>的环境下使用摄像头</div>
+            <div class="privacy-item"><span class="mark">•</span> 如您未满 18 岁，请在监护人指导下进行游戏</div>
+            <div class="privacy-item"><span class="mark">•</span> 游戏过程中会进行公平性检测，所有检测数据仅用于维护游戏公平</div>
             <div class="privacy-item"><span class="mark">•</span> 如有任何隐私相关问题，请联系：<strong style="color:rgba(79,172,254,0.3);">2908685235@qq.com</strong></div>
         </div>
 
@@ -809,20 +585,7 @@
     </div>
 </div>
 
-<!-- ============================================================
-     📷 摄像头画中画
-     ============================================================ -->
-<div class="camera-pip" id="cameraPip" onclick="togglePipSize()">
-    <video id="cameraVideo" autoplay playsinline muted></video>
-    <div class="pip-status">
-        <span class="dot green" id="pipStatusDot"></span>
-        <span id="pipStatusText">已连接</span>
-    </div>
-</div>
-
-<!-- ============================================================
-     ⚠️ 作弊弹窗
-     ============================================================ -->
+<!-- ===== 作弊弹窗 ===== -->
 <div class="cheat-popup" id="cheatPopup">
     <div class="cheat-popup-content">
         <div class="cheat-icon">⚠️</div>
@@ -834,9 +597,7 @@
     </div>
 </div>
 
-<!-- ============================================================
-     📖 保姆级教程弹窗
-     ============================================================ -->
+<!-- ===== 保姆级教程弹窗 ===== -->
 <div class="tutorial-overlay" id="tutorialOverlay">
     <div class="tutorial-modal">
         <button class="modal-close" onclick="closeTutorial()">✕</button>
@@ -844,14 +605,10 @@
     </div>
 </div>
 
-<!-- ============================================================
-     💬 Toast 容器
-     ============================================================ -->
+<!-- ===== Toast ===== -->
 <div class="toast-container" id="toastContainer"></div>
 
-<!-- ============================================================
-     ⭐ JavaScript 完整逻辑
-     ============================================================ -->
+
 <script>
     // ============================================================
     // 全局变量
@@ -859,52 +616,37 @@
     var token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
     var userId = @(Context.Session.GetInt32("UserId") ?? 0);
 
-    // 游戏状态
     var gameState = {
         level: 1, score: 0, lives: 3, combo: 0, maxCombo: 0, passed: 0,
         cheatCount: 0, isPlaying: false, isAnswered: false, timer: null, timeLeft: 15,
         totalLevels: 100, currentChallenge: null, isGameOver: false,
-        micEnabled: true, camEnabled: true,
-        // 新分数公式：作弊扣5分，麦克风扣4分/关，摄像头扣2分/关
+        micEnabled: true,
         penaltyCheat: 5, penaltyMic: 4, penaltyCam: 2,
         answerTimes: [], questionStartTime: null
     };
 
-    // 作弊检测状态
     var cheatDetection = {
         tabSwitchCount: 0, maxTabSwitches: 3,
         clickPositions: [], clickCount: 0, lastClickTime: 0,
-        mouseLeaveCount: 0,
-        blurCount: 0,
-        isCheatPopupActive: false,
-        pendingPenalty: 0
+        mouseLeaveCount: 0, blurCount: 0,
+        isCheatPopupActive: false, pendingPenalty: 0,
+        // 答题节奏检测
+        answerIntervals: [],
+        lastAnswerTime: null
     };
 
-    // 硬件测试状态
-    var hardwareTest = {
-        mic: { status: 'pending', ready: false },
-        cam: { status: 'pending', ready: false },
-        speaker: { status: 'pending', ready: false }
-    };
+    var hardwareTest = { mic: { status: 'pending', ready: false } };
 
     // ============================================================
-    // 硬件测试函数
+    // 硬件测试
     // ============================================================
     function updateHardwareTest() {
         var micOn = document.getElementById('micToggle').checked;
-        var camOn = document.getElementById('camToggle').checked;
-
         if (!micOn) {
             hardwareTest.mic.status = 'pending';
             hardwareTest.mic.ready = false;
             document.getElementById('micTestStatus').className = 'test-status pending';
             document.getElementById('micTestStatus').textContent = '⏳ 已关闭';
-        }
-        if (!camOn) {
-            hardwareTest.cam.status = 'pending';
-            hardwareTest.cam.ready = false;
-            document.getElementById('camTestStatus').className = 'test-status pending';
-            document.getElementById('camTestStatus').textContent = '⏳ 已关闭';
         }
         updateStartButton();
     }
@@ -912,26 +654,19 @@
     function updateStartButton() {
         var btn = document.getElementById('startGameBtn');
         var micOk = !document.getElementById('micToggle').checked || hardwareTest.mic.ready;
-        var camOk = !document.getElementById('camToggle').checked || hardwareTest.cam.ready;
-        var speakerOk = true; // 扬声器测试可选
-
-        if (micOk && camOk) {
+        if (micOk) {
             btn.disabled = false;
             btn.textContent = '✅ 开始游戏';
         } else {
             btn.disabled = true;
-            btn.textContent = '⏳ 请完成硬件测试';
+            btn.textContent = '⏳ 请测试麦克风';
         }
     }
 
     function testMic() {
         var statusEl = document.getElementById('micTestStatus');
         var micOn = document.getElementById('micToggle').checked;
-
-        if (!micOn) {
-            showToast('⚠️ 麦克风已关闭，请先开启', 'warning');
-            return;
-        }
+        if (!micOn) { showToast('⚠️ 麦克风已关闭，请先开启', 'warning'); return; }
 
         statusEl.className = 'test-status testing';
         statusEl.textContent = '🔄 测试中...';
@@ -948,7 +683,6 @@
 
         navigator.mediaDevices.getUserMedia({ audio: true })
             .then(function(stream) {
-                // 成功获取音频流
                 var audioContext = new (window.AudioContext || window.webkitAudioContext)();
                 var source = audioContext.createMediaStreamSource(stream);
                 var analyser = audioContext.createAnalyser();
@@ -956,47 +690,40 @@
                 source.connect(analyser);
                 var dataArray = new Uint8Array(analyser.frequencyBinCount);
 
-                // 检测是否有声音输入（简单检测）
                 var checkInterval = setInterval(function() {
                     analyser.getByteFrequencyData(dataArray);
                     var sum = 0;
-                    for (var i = 0; i < dataArray.length; i++) {
-                        sum += dataArray[i];
-                    }
+                    for (var i = 0; i < dataArray.length; i++) { sum += dataArray[i]; }
                     var avg = sum / dataArray.length;
 
                     if (avg > 5) {
                         clearInterval(checkInterval);
                         statusEl.className = 'test-status pass';
-                        statusEl.textContent = '✅ 正常 (有声音)';
+                        statusEl.textContent = '✅ 正常';
                         hardwareTest.mic.status = 'pass';
                         hardwareTest.mic.ready = true;
                         updateStartButton();
                         showToast('🎤 麦克风测试通过！', 'success');
-                        // 清理
                         stream.getTracks().forEach(function(t) { t.stop(); });
                         audioContext.close();
                     }
                 }, 500);
 
-                // 5秒后如果没检测到声音，也算通过（可能环境安静）
                 setTimeout(function() {
                     clearInterval(checkInterval);
                     if (hardwareTest.mic.status !== 'pass') {
                         statusEl.className = 'test-status pass';
-                        statusEl.textContent = '✅ 正常 (无声音)';
+                        statusEl.textContent = '✅ 正常';
                         hardwareTest.mic.status = 'pass';
                         hardwareTest.mic.ready = true;
                         updateStartButton();
-                        showToast('🎤 麦克风测试通过（环境安静）', 'success');
+                        showToast('🎤 麦克风测试通过', 'success');
                         stream.getTracks().forEach(function(t) { t.stop(); });
                         audioContext.close();
                     }
                 }, 5000);
-
             })
             .catch(function(err) {
-                console.warn('麦克风测试失败:', err);
                 statusEl.className = 'test-status fail';
                 statusEl.textContent = '❌ 被拒绝';
                 hardwareTest.mic.status = 'fail';
@@ -1006,109 +733,23 @@
             });
     }
 
-    function testCam() {
-        var statusEl = document.getElementById('camTestStatus');
-        var camOn = document.getElementById('camToggle').checked;
-
-        if (!camOn) {
-            showToast('⚠️ 摄像头已关闭，请先开启', 'warning');
-            return;
-        }
-
-        statusEl.className = 'test-status testing';
-        statusEl.textContent = '🔄 测试中...';
-
-        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-            statusEl.className = 'test-status fail';
-            statusEl.textContent = '❌ 不支持';
-            hardwareTest.cam.status = 'fail';
-            hardwareTest.cam.ready = false;
-            updateStartButton();
-            showToast('❌ 您的浏览器不支持摄像头', 'error');
-            return;
-        }
-
-        navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: 320, height: 240 } })
-            .then(function(stream) {
-                statusEl.className = 'test-status pass';
-                statusEl.textContent = '✅ 正常';
-                hardwareTest.cam.status = 'pass';
-                hardwareTest.cam.ready = true;
-                updateStartButton();
-                showToast('📷 摄像头测试通过！', 'success');
-                // 不关闭流，因为游戏马上要用
-                // 但先关闭，等真正开始游戏再开启
-                stream.getTracks().forEach(function(t) { t.stop(); });
-            })
-            .catch(function(err) {
-                console.warn('摄像头测试失败:', err);
-                statusEl.className = 'test-status fail';
-                statusEl.textContent = '❌ 被拒绝';
-                hardwareTest.cam.status = 'fail';
-                hardwareTest.cam.ready = false;
-                updateStartButton();
-                showToast('❌ 摄像头被拒绝，请在浏览器中允许', 'error');
-            });
-    }
-
-    function testSpeaker() {
-        var statusEl = document.getElementById('speakerTestStatus');
-
-        statusEl.className = 'test-status testing';
-        statusEl.textContent = '🔄 测试中...';
-
-        try {
-            var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            var oscillator = audioCtx.createOscillator();
-            var gain = audioCtx.createGain();
-            oscillator.type = 'sine';
-            oscillator.frequency.value = 1000;
-            gain.gain.value = 0.1;
-            oscillator.connect(gain);
-            gain.connect(audioCtx.destination);
-            oscillator.start();
-
-            statusEl.className = 'test-status pass';
-            statusEl.textContent = '✅ 正常 (播放测试音)';
-            hardwareTest.speaker.status = 'pass';
-            hardwareTest.speaker.ready = true;
-
-            setTimeout(function() {
-                oscillator.stop();
-                audioCtx.close();
-            }, 1000);
-
-            showToast('🔊 扬声器测试通过！', 'success');
-        } catch(e) {
-            console.warn('扬声器测试失败:', e);
-            statusEl.className = 'test-status fail';
-            statusEl.textContent = '❌ 失败';
-            hardwareTest.speaker.status = 'fail';
-            hardwareTest.speaker.ready = false;
-            showToast('❌ 扬声器测试失败，请检查音频设备', 'error');
-        }
-    }
-
     // ============================================================
     // 权限确认
     // ============================================================
     function confirmPermissions() {
         gameState.micEnabled = document.getElementById('micToggle').checked;
-        gameState.camEnabled = document.getElementById('camToggle').checked;
-
-        // 检查硬件测试
         if (gameState.micEnabled && !hardwareTest.mic.ready) {
             showToast('⚠️ 请先测试麦克风', 'warning');
-            return;
-        }
-        if (gameState.camEnabled && !hardwareTest.cam.ready) {
-            showToast('⚠️ 请先测试摄像头', 'warning');
             return;
         }
 
         document.getElementById('permissionOverlay').classList.remove('active');
 
-        // 初始化语音
+        // 显示语音教程（权限确认后弹出）
+        setTimeout(function() {
+            showVoiceTutorial();
+        }, 500);
+
         if (gameState.micEnabled) {
             VoiceService.init();
             VoiceService.setupEvents();
@@ -1116,16 +757,7 @@
             document.getElementById('micIndicator').className = 'indicator mic active';
         } else {
             document.getElementById('micIndicator').className = 'indicator mic inactive';
-            showToast('⚠️ 麦克风已关闭，每关将扣除 ' + gameState.penaltyMic + ' 分', 'warning');
-        }
-
-        // 初始化摄像头
-        if (gameState.camEnabled) {
-            startCamera();
-            document.getElementById('camIndicator').className = 'indicator cam active';
-        } else {
-            document.getElementById('camIndicator').className = 'indicator cam inactive';
-            showToast('⚠️ 摄像头已关闭，每关将扣除 ' + gameState.penaltyCam + ' 分', 'warning');
+            showToast('⚠️ 麦克风已关闭，每关将扣除 4 分', 'warning');
         }
 
         startGameInternal();
@@ -1133,74 +765,98 @@
 
     function skipPermissions() {
         gameState.micEnabled = false;
-        gameState.camEnabled = false;
-
         document.getElementById('permissionOverlay').classList.remove('active');
-
         document.getElementById('micIndicator').className = 'indicator mic inactive';
-        document.getElementById('camIndicator').className = 'indicator cam inactive';
-
-        showToast('⚠️ 已跳过权限，每关将扣除 ' + (gameState.penaltyMic + gameState.penaltyCam) + ' 分', 'warning');
-
+        showToast('⚠️ 已跳过麦克风，每关将扣除 4 分', 'warning');
         startGameInternal();
     }
 
     // ============================================================
-    // 摄像头管理
+    // 语音教程（权限确认后弹出）
     // ============================================================
-    function startCamera() {
-        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-            showToast('⚠️ 您的浏览器不支持摄像头', 'error');
-            return;
-        }
+    function showVoiceTutorial() {
+        var overlay = document.createElement('div');
+        overlay.id = 'voiceTutorialOverlay';
+        overlay.style.cssText = `
+            position: fixed; inset: 0; background: rgba(0,0,0,0.92); backdrop-filter: blur(30px);
+            z-index: 9998; display: flex; align-items: center; justify-content: center; padding: 1.5rem;
+            animation: modalIn 0.4s ease;
+        `;
+        overlay.innerHTML = `
+            <div style="background: rgba(20,20,40,0.98); border: 1px solid rgba(255,255,255,0.04); border-radius: 28px; max-width: 560px; width: 100%; padding: 2rem 2.2rem; box-shadow: 0 40px 120px rgba(0,0,0,0.6); animation: modalIn 0.4s ease; max-height: 90vh; overflow-y: auto;">
+                <div style="text-align:center;font-size:2.8rem;margin-bottom:0.2rem;">🎤</div>
+                <h3 style="color:#fff;font-size:1.3rem;font-weight:700;text-align:center;margin-bottom:0.1rem;">语音控制快速入门</h3>
+                <p style="color:rgba(255,255,255,0.2);font-size:0.85rem;text-align:center;margin-bottom:1rem;">只需说话，无需动手！</p>
 
-        navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: 320, height: 240 } })
-            .then(function(stream) {
-                var video = document.getElementById('cameraVideo');
-                video.srcObject = stream;
-                document.getElementById('cameraPip').classList.add('active');
-                document.getElementById('pipStatusDot').className = 'dot green';
-                document.getElementById('pipStatusText').textContent = '已连接';
-                showToast('📷 摄像头已开启，左下角可预览', 'info');
-            })
-            .catch(function(err) {
-                console.warn('摄像头启动失败:', err);
-                document.getElementById('camIndicator').className = 'indicator cam inactive';
-                document.getElementById('pipStatusDot').className = 'dot red';
-                document.getElementById('pipStatusText').textContent = '不可用';
-                showToast('⚠️ 摄像头启动失败，每关将扣除 ' + gameState.penaltyCam + ' 分', 'warning');
-                gameState.camEnabled = false;
-            });
+                <div style="background:rgba(139,92,246,0.04);border-radius:12px;padding:0.8rem 1rem;margin-bottom:0.6rem;border:1px solid rgba(139,92,246,0.04);">
+                    <div style="display:flex;align-items:center;gap:0.5rem;color:rgba(255,255,255,0.3);font-size:0.75rem;font-weight:600;margin-bottom:0.3rem;">🎯 选择答案</div>
+                    <div style="display:flex;flex-wrap:wrap;gap:0.3rem;">
+                        <span style="background:rgba(139,92,246,0.06);padding:0.15rem 0.6rem;border-radius:12px;font-size:0.7rem;color:#A78BFA;">"选 A"</span>
+                        <span style="background:rgba(139,92,246,0.06);padding:0.15rem 0.6rem;border-radius:12px;font-size:0.7rem;color:#A78BFA;">"选第二个"</span>
+                        <span style="background:rgba(139,92,246,0.06);padding:0.15rem 0.6rem;border-radius:12px;font-size:0.7rem;color:#A78BFA;">"红色"</span>
+                        <span style="background:rgba(139,92,246,0.06);padding:0.15rem 0.6rem;border-radius:12px;font-size:0.7rem;color:#A78BFA;">"就这个"</span>
+                    </div>
+                </div>
+
+                <div style="background:rgba(40,167,69,0.04);border-radius:12px;padding:0.8rem 1rem;margin-bottom:0.6rem;border:1px solid rgba(40,167,69,0.04);">
+                    <div style="display:flex;align-items:center;gap:0.5rem;color:rgba(255,255,255,0.3);font-size:0.75rem;font-weight:600;margin-bottom:0.3rem;">✅ 确认操作</div>
+                    <div style="display:flex;flex-wrap:wrap;gap:0.3rem;">
+                        <span style="background:rgba(40,167,69,0.06);padding:0.15rem 0.6rem;border-radius:12px;font-size:0.7rem;color:#28a745;">"确认"</span>
+                        <span style="background:rgba(40,167,69,0.06);padding:0.15rem 0.6rem;border-radius:12px;font-size:0.7rem;color:#28a745;">"提交"</span>
+                        <span style="background:rgba(40,167,69,0.06);padding:0.15rem 0.6rem;border-radius:12px;font-size:0.7rem;color:#28a745;">"对"</span>
+                        <span style="background:rgba(40,167,69,0.06);padding:0.15rem 0.6rem;border-radius:12px;font-size:0.7rem;color:#28a745;">"好的"</span>
+                    </div>
+                </div>
+
+                <div style="background:rgba(245,158,11,0.04);border-radius:12px;padding:0.8rem 1rem;margin-bottom:0.6rem;border:1px solid rgba(245,158,11,0.04);">
+                    <div style="display:flex;align-items:center;gap:0.5rem;color:rgba(255,255,255,0.3);font-size:0.75rem;font-weight:600;margin-bottom:0.3rem;">⏭️ 导航指令</div>
+                    <div style="display:flex;flex-wrap:wrap;gap:0.3rem;">
+                        <span style="background:rgba(245,158,11,0.06);padding:0.15rem 0.6rem;border-radius:12px;font-size:0.7rem;color:#F59E0B;">"下一题"</span>
+                        <span style="background:rgba(245,158,11,0.06);padding:0.15rem 0.6rem;border-radius:12px;font-size:0.7rem;color:#F59E0B;">"跳过"</span>
+                        <span style="background:rgba(245,158,11,0.06);padding:0.15rem 0.6rem;border-radius:12px;font-size:0.7rem;color:#F59E0B;">"取消"</span>
+                        <span style="background:rgba(245,158,11,0.06);padding:0.15rem 0.6rem;border-radius:12px;font-size:0.7rem;color:#F59E0B;">"删除"</span>
+                    </div>
+                </div>
+
+                <div style="background:rgba(79,172,254,0.04);border-radius:12px;padding:0.6rem 1rem;margin-bottom:1rem;border:1px solid rgba(79,172,254,0.04);">
+                    <div style="display:flex;align-items:center;gap:0.5rem;color:rgba(255,255,255,0.15);font-size:0.65rem;">
+                        <span>💡</span>
+                        <span>你说话时屏幕下方会显示识别文字，看到后说 <strong style="color:#8B5CF6;">"确认"</strong> 提交</span>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:0.5rem;color:rgba(255,255,255,0.15);font-size:0.65rem;margin-top:0.2rem;">
+                        <span>🎯</span>
+                        <span>说 <strong style="color:#F59E0B;">"帮助"</strong> 随时打开完整教程</span>
+                    </div>
+                </div>
+
+                <button onclick="document.getElementById('voiceTutorialOverlay').remove()" style="width:100%;padding:0.8rem;border:none;border-radius:40px;background:linear-gradient(135deg,#8B5CF6,#EC4899);color:#fff;font-weight:700;font-size:0.95rem;cursor:pointer;font-family:inherit;transition:all 0.3s ease;">
+                    ✅ 我知道了，开始游戏
+                </button>
+            </div>
+        `;
+        document.body.appendChild(overlay);
     }
 
-    function togglePipSize() {
-        var pip = document.getElementById('cameraPip');
-        pip.classList.toggle('expanded');
-    }
-
     // ============================================================
-    // ⭐ 语音识别服务
+    // 语音识别服务
     // ============================================================
     var VoiceService = {
         recognition: null,
         isListening: false,
-        isContinuous: true,
         transcript: '',
         interimTranscript: '',
         isProcessing: false,
         restartTimer: null,
-        commandTimeout: 30000,
         lastActivity: Date.now(),
 
         commands: {
-            confirm: ['确认', '确定', '是的', '对', '好', '可以', '提交', '回车', '就这个', '就是它'],
-            cancel: ['取消', '算了', '不要', '不对', '错了', '后退', '返回', '撤销'],
-            next: ['下一题', '下一关', '继续', '下一个', '再来', '下一步', '跳过'],
-            retry: ['重来', '重新', '再来一次', '重新开始', '再来'],
+            confirm: ['确认', '确定', '是的', '对', '好', '可以', '提交', '回车', '就这个', '就是它', '没错'],
+            cancel: ['取消', '算了', '不要', '不对', '错了', '后退', '返回', '撤销', '重选'],
+            next: ['下一题', '下一关', '继续', '下一个', '再来', '下一步', '跳过', '下一题'],
             backspace: ['删除', '退格', '回退', '清除', '擦掉', '去掉'],
             select: ['选', '选择', '这个', '那个', '就这个', '就它', '我要选'],
             help: ['帮助', '怎么玩', '说明', '提示', '救命', '不会'],
-            option: ['选项', '选', '第']
+            restart: ['重来', '重新开始', '再来一次', '重新']
         },
 
         numberMap: {
@@ -1226,7 +882,6 @@
         start: function() {
             if (!this.recognition) { if (!this.init()) return; }
             if (this.isListening) return;
-
             try {
                 this.recognition.start();
                 this.isListening = true;
@@ -1234,25 +889,17 @@
                 this.transcript = '';
                 this.interimTranscript = '';
                 updateVoiceUI('listening', '🎤 正在听...');
-                showToast('🎤 语音识别已开启，请说话', 'info');
-
                 this.restartTimer = setInterval(function() {
-                    if (Date.now() - VoiceService.lastActivity > VoiceService.commandTimeout) {
-                        VoiceService.restart();
-                    }
+                    if (Date.now() - VoiceService.lastActivity > 30000) { VoiceService.restart(); }
                 }, 5000);
             } catch(e) {
-                console.warn('语音启动失败:', e);
                 setTimeout(function() { VoiceService.start(); }, 500);
             }
         },
 
         restart: function() {
             if (!this.isListening) return;
-            try {
-                this.stop();
-                setTimeout(function() { VoiceService.start(); }, 300);
-            } catch(e) { console.warn('重启失败:', e); }
+            try { this.stop(); setTimeout(function() { VoiceService.start(); }, 300); } catch(e) {}
         },
 
         stop: function() {
@@ -1264,22 +911,12 @@
 
         setupEvents: function() {
             var self = this;
-
-            this.recognition.onstart = function() {
-                self.isListening = true;
-                updateVoiceUI('listening', '🎤 正在听...');
-            };
-
+            this.recognition.onstart = function() { self.isListening = true; updateVoiceUI('listening', '🎤 正在听...'); };
             this.recognition.onend = function() {
-                if (self.isListening) {
-                    setTimeout(function() { VoiceService.start(); }, 500);
-                } else {
-                    updateVoiceUI('idle', '🎤 语音已暂停');
-                }
+                if (self.isListening) { setTimeout(function() { VoiceService.start(); }, 500); }
+                else { updateVoiceUI('idle', '🎤 语音已暂停'); }
             };
-
             this.recognition.onerror = function(event) {
-                console.warn('语音识别错误:', event.error);
                 if (event.error === 'not-allowed') {
                     showToast('⚠️ 麦克风权限被拒绝', 'error');
                     updateVoiceUI('error', '🚫 麦克风被拒绝');
@@ -1290,27 +927,19 @@
                     updateVoiceUI('listening', '🎤 继续监听...');
                 }
             };
-
             this.recognition.onresult = function(event) {
                 self.lastActivity = Date.now();
-                var finalText = '';
-                var interimText = '';
-
+                var finalText = '', interimText = '';
                 for (var i = event.resultIndex; i < event.results.length; i++) {
                     var result = event.results[i];
                     var text = result[0].transcript.trim();
-                    if (result.isFinal) {
-                        finalText += text;
-                    } else {
-                        interimText += text;
-                    }
+                    if (result.isFinal) { finalText += text; }
+                    else { interimText += text; }
                 }
-
                 if (interimText) {
                     self.interimTranscript = interimText;
                     updateVoiceUI('listening', '🎤 识别中: ' + interimText, interimText);
                 }
-
                 if (finalText) {
                     self.transcript = finalText;
                     self.interimTranscript = '';
@@ -1324,40 +953,43 @@
             if (this.isProcessing) return;
             this.isProcessing = true;
             this.lastActivity = Date.now();
-
             var normalized = text.replace(/[，。、！？\s]/g, '');
 
-            // 检查控制指令
-            var commandResult = this.matchCommand(normalized);
-            if (commandResult) { this.isProcessing = false; return; }
+            // 1. 检查控制指令
+            if (this.matchCommand(normalized)) { this.isProcessing = false; return; }
 
-            // 检查数字匹配
+            // 2. 检查数字匹配
             var numberResult = this.matchNumber(normalized);
             if (numberResult !== null) { this.isProcessing = false; return; }
 
-            // 检查选项匹配
-            var optionResult = this.matchOption(normalized);
-            if (optionResult !== null) { this.isProcessing = false; return; }
+            // 3. 检查选项匹配
+            if (this.matchOption(normalized)) { this.isProcessing = false; return; }
 
-            // 检查内容匹配
-            var contentResult = this.matchContent(normalized);
-            if (contentResult !== null) { this.isProcessing = false; return; }
+            // 4. 检查内容匹配
+            if (this.matchContent(normalized)) { this.isProcessing = false; return; }
 
             this.isProcessing = false;
         },
 
         matchCommand: function(text) {
-            for (var cmd of this.commands.confirm) { if (text.includes(cmd)) { this.executeCommand('confirm'); return true; } }
-            for (var cmd of this.commands.cancel) { if (text.includes(cmd)) { this.executeCommand('cancel'); return true; } }
-            for (var cmd of this.commands.next) { if (text.includes(cmd)) { this.executeCommand('next'); return true; } }
-            for (var cmd of this.commands.backspace) { if (text.includes(cmd)) { this.executeCommand('backspace'); return true; } }
-            for (var cmd of this.commands.select) { if (text.includes(cmd)) { this.executeCommand('select'); return true; } }
-            for (var cmd of this.commands.help) { if (text.includes(cmd)) { this.executeCommand('help'); return true; } }
+            var cmds = [
+                { list: this.commands.confirm, action: 'confirm' },
+                { list: this.commands.cancel, action: 'cancel' },
+                { list: this.commands.next, action: 'next' },
+                { list: this.commands.backspace, action: 'backspace' },
+                { list: this.commands.select, action: 'select' },
+                { list: this.commands.help, action: 'help' },
+                { list: this.commands.restart, action: 'restart' }
+            ];
+            for (var c of cmds) {
+                for (var cmd of c.list) {
+                    if (text.includes(cmd)) { this.executeCommand(c.action); return true; }
+                }
+            }
             return false;
         },
 
         executeCommand: function(cmd) {
-            console.log('🎯 执行指令:', cmd);
             switch(cmd) {
                 case 'confirm': this.handleConfirm(); break;
                 case 'cancel': this.handleCancel(); break;
@@ -1365,12 +997,13 @@
                 case 'backspace': this.handleBackspace(); break;
                 case 'select': this.handleSelect(); break;
                 case 'help': this.handleHelp(); break;
+                case 'restart': this.handleRestart(); break;
             }
         },
 
         handleConfirm: function() {
             if (gameState.isAnswered || !gameState.isPlaying) return;
-            var highlighted = document.querySelector('.option-btn.highlight, .color-option.highlight');
+            var highlighted = document.querySelector('.option-btn.highlight, .color-option.highlight, .char-btn.highlight');
             if (highlighted) {
                 highlighted.click();
                 showToast('✅ 已确认选择', 'success');
@@ -1412,6 +1045,10 @@
 
         handleHelp: function() { showTutorial(); },
 
+        handleRestart: function() {
+            if (confirm('确定要重新开始吗？当前进度将丢失。')) { restartGame(); }
+        },
+
         matchNumber: function(text) {
             var numbers = text.match(/\d+/g);
             if (numbers && numbers.length > 0) { return numbers[0]; }
@@ -1435,11 +1072,11 @@
                     var index = p.handler.call(this, match);
                     if (index !== null && index >= 0) {
                         this.selectOptionByIndex(index);
-                        return index;
+                        return true;
                     }
                 }
             }
-            return null;
+            return false;
         },
 
         chineseToNumber: function(ch) {
@@ -1466,7 +1103,7 @@
                 if (score > bestScore) { bestScore = score; bestMatch = opt; }
             }
 
-            if (bestMatch && bestScore >= 0.3) {
+            if (bestMatch && bestScore >= 0.25) {
                 bestMatch.classList.add('highlight');
                 showToast('🔍 已匹配: ' + bestMatch.textContent.trim(), 'info');
                 if (bestScore >= 0.7) {
@@ -1474,9 +1111,17 @@
                         if (bestMatch && !bestMatch.disabled) { bestMatch.click(); }
                     }, 800);
                 }
-                return bestMatch;
+                return true;
             }
-            return null;
+
+            // 没匹配到，提示用户
+            showToast('🔊 没找到 "' + text + '"，请再说一次或手动选择', 'warning');
+            // 高亮所有选项引导
+            document.querySelectorAll('.option-btn:not(.disabled), .color-option:not(.disabled)').forEach(function(el) {
+                el.style.borderColor = 'rgba(139,92,246,0.15)';
+                setTimeout(function() { el.style.borderColor = ''; }, 2000);
+            });
+            return false;
         },
 
         fuzzyMatch: function(input, target) {
@@ -1527,7 +1172,6 @@
                 <span class="status-icon" id="voiceIcon">🎤</span>
                 <span class="status-text" id="voiceText">🎤 语音就绪</span>
                 <span class="transcript-display" id="voiceTranscript">等待指令</span>
-                <button class="voice-help-btn" onclick="showTutorial()" title="语音控制教程">📖</button>
             `;
             container.insertBefore(bar, container.firstChild);
             updateVoiceUI(status, text, transcript);
@@ -1560,17 +1204,18 @@
         cheatDetection.isCheatPopupActive = true;
         cheatDetection.pendingPenalty = penalty || 5;
 
-        pauseGameForCheatPopup();
+        // 暂停游戏
+        if (gameState.timer) { clearInterval(gameState.timer); gameState.timer = null; }
+        document.querySelectorAll('.option-btn, .color-option, .ab-key-btn, .puzzle-cell, .char-btn, .key-btn, .btn-memory')
+            .forEach(function(el) { el.dataset._disabled = el.disabled || false; el.disabled = true; el.style.pointerEvents = 'none'; });
 
         document.getElementById('cheatPopupMsg').textContent = message || '为了维护游戏公平性，本局将扣除 ' + (penalty || 5) + ' 分。';
-
         var popup = document.getElementById('cheatPopup');
         popup.classList.add('active');
 
         var countdown = 10;
         var timerEl = document.getElementById('cheatPopupTimer');
         timerEl.textContent = '⏱ ' + countdown + 's 后自动恢复';
-
         var countdownInterval = setInterval(function() {
             countdown--;
             if (countdown <= 0) {
@@ -1581,7 +1226,6 @@
                 timerEl.textContent = '⏱ ' + countdown + 's 后自动恢复';
             }
         }, 1000);
-
         popup._countdownInterval = countdownInterval;
         gameState.cheatCount++;
         updateUI();
@@ -1590,143 +1234,80 @@
     function onCheatPopupConfirm() {
         var popup = document.getElementById('cheatPopup');
         if (popup._countdownInterval) { clearInterval(popup._countdownInterval); }
-
         var penalty = cheatDetection.pendingPenalty || 5;
         gameState.score = Math.max(0, gameState.score - penalty);
         updateUI();
-
         popup.classList.remove('active');
         cheatDetection.isCheatPopupActive = false;
         cheatDetection.pendingPenalty = 0;
 
-        resumeGameAfterCheatPopup();
-        showToast('⚖️ 已扣除 ' + penalty + ' 分', 'warning');
-    }
-
-    function pauseGameForCheatPopup() {
-        if (gameState.timer) { clearInterval(gameState.timer); gameState.timer = null; }
-
+        // 恢复游戏
         document.querySelectorAll('.option-btn, .color-option, .ab-key-btn, .puzzle-cell, .char-btn, .key-btn, .btn-memory')
-            .forEach(function(el) {
-                el.dataset._disabled = el.disabled || false;
-                el.disabled = true;
-                el.style.pointerEvents = 'none';
-            });
-
-        document.querySelectorAll('.danmaku-item, .puzzle-cell, .option-btn, .color-option')
-            .forEach(function(el) { el.style.animationPlayState = 'paused'; });
-    }
-
-    function resumeGameAfterCheatPopup() {
-        document.querySelectorAll('.option-btn, .color-option, .ab-key-btn, .puzzle-cell, .char-btn, .key-btn, .btn-memory')
-            .forEach(function(el) {
-                el.disabled = el.dataset._disabled === 'true' || false;
-                el.style.pointerEvents = '';
-                delete el.dataset._disabled;
-            });
-
-        document.querySelectorAll('.danmaku-item, .puzzle-cell, .option-btn, .color-option')
-            .forEach(function(el) { el.style.animationPlayState = 'running'; });
-
-        if (gameState.timeLeft > 0 && !gameState.isAnswered) {
-            startTimer(gameState.timeLeft);
-        } else if (!gameState.isAnswered && gameState.timeLeft <= 0) {
-            gameState.isAnswered = true;
-            gameState.combo = 0;
-            gameState.lives--;
-            updateUI();
-            showFeedback(false, 0, '⏱ 时间到！');
+            .forEach(function(el) { el.disabled = el.dataset._disabled === 'true' || false; el.style.pointerEvents = ''; delete el.dataset._disabled; });
+        if (gameState.timeLeft > 0 && !gameState.isAnswered) { startTimer(gameState.timeLeft); }
+        else if (!gameState.isAnswered && gameState.timeLeft <= 0) {
+            gameState.isAnswered = true; gameState.combo = 0; gameState.lives--;
+            updateUI(); showFeedback(false, 0, '⏱ 时间到！');
             if (gameState.lives <= 0) { setTimeout(gameOver, 1200); } else { setTimeout(loadChallenge, 1500); }
         }
+        showToast('⚖️ 已扣除 ' + penalty + ' 分', 'warning');
     }
 
     function initCheatDetection() {
         document.addEventListener('visibilitychange', function() {
             if (document.hidden && gameState.isPlaying && !gameState.isAnswered) {
                 cheatDetection.tabSwitchCount++;
-                if (cheatDetection.tabSwitchCount >= 3) {
-                    triggerCheatPenalty('检测到多次切换应用，扣除 5 分', 5);
-                    cheatDetection.tabSwitchCount = 0;
-                }
+                if (cheatDetection.tabSwitchCount >= 3) { triggerCheatPenalty('检测到多次切换应用，扣除 5 分', 5); cheatDetection.tabSwitchCount = 0; }
             }
         });
-
         window.addEventListener('blur', function() {
             if (gameState.isPlaying && !gameState.isAnswered) {
                 cheatDetection.blurCount++;
-                if (cheatDetection.blurCount >= 3) {
-                    triggerCheatPenalty('窗口失去焦点，扣除 5 分', 5);
-                    cheatDetection.blurCount = 0;
-                }
+                if (cheatDetection.blurCount >= 3) { triggerCheatPenalty('窗口失去焦点，扣除 5 分', 5); cheatDetection.blurCount = 0; }
             }
         });
-
         window.addEventListener('focus', function() { cheatDetection.blurCount = 0; });
-
         document.addEventListener('mouseleave', function() {
             if (gameState.isPlaying && !gameState.isAnswered) { cheatDetection.mouseLeaveCount++; }
         });
-
         document.addEventListener('mouseenter', function() {
-            if (cheatDetection.mouseLeaveCount > 5) {
-                triggerCheatPenalty('检测到异常鼠标操作模式，扣除 5 分', 5);
-                cheatDetection.mouseLeaveCount = 0;
-            } else { cheatDetection.mouseLeaveCount = 0; }
+            if (cheatDetection.mouseLeaveCount > 5) { triggerCheatPenalty('检测到异常鼠标操作模式，扣除 5 分', 5); cheatDetection.mouseLeaveCount = 0; }
+            else { cheatDetection.mouseLeaveCount = 0; }
         });
-
         document.addEventListener('click', function(e) {
             if (!gameState.isPlaying || gameState.isAnswered) return;
-
             var now = Date.now();
             var timeSinceLast = now - cheatDetection.lastClickTime;
             cheatDetection.lastClickTime = now;
             cheatDetection.clickCount++;
             cheatDetection.clickPositions.push({ x: e.clientX, y: e.clientY, time: now });
-
             if (cheatDetection.clickCount > 10 && timeSinceLast < 50) {
                 triggerCheatPenalty('检测到异常点击频率，扣除 5 分', 5);
-                cheatDetection.clickCount = 0;
-                return;
+                cheatDetection.clickCount = 0; return;
             }
-
             if (cheatDetection.clickPositions.length > 5) {
                 var recent = cheatDetection.clickPositions.slice(-5);
                 var allSame = recent.every(function(p) { return p.x === recent[0].x && p.y === recent[0].y; });
-                if (allSame) {
-                    triggerCheatPenalty('检测到异常点击模式，扣除 5 分', 5);
-                    cheatDetection.clickPositions = [];
-                    return;
-                }
+                if (allSame) { triggerCheatPenalty('检测到异常点击模式，扣除 5 分', 5); cheatDetection.clickPositions = []; return; }
             }
-
             if (cheatDetection.clickPositions.length > 20) { cheatDetection.clickPositions = cheatDetection.clickPositions.slice(-10); }
         });
-
         document.addEventListener('contextmenu', function(e) {
-            if (gameState.isPlaying && !gameState.isAnswered) {
-                e.preventDefault();
-                triggerCheatPenalty('检测到右键操作，扣除 5 分', 5);
-            }
+            if (gameState.isPlaying && !gameState.isAnswered) { e.preventDefault(); triggerCheatPenalty('检测到右键操作，扣除 5 分', 5); }
         });
-
         document.addEventListener('keydown', function(e) {
             if (!gameState.isPlaying || gameState.isAnswered) return;
             if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J'))) {
-                e.preventDefault();
-                triggerCheatPenalty('检测到开发者工具，扣除 5 分', 5);
+                e.preventDefault(); triggerCheatPenalty('检测到开发者工具，扣除 5 分', 5);
             }
         });
-
         var resizeCount = 0, lastResizeTime = 0;
         window.addEventListener('resize', function() {
             if (!gameState.isPlaying || gameState.isAnswered) return;
             var now = Date.now();
             if (now - lastResizeTime < 500) {
                 resizeCount++;
-                if (resizeCount > 5) {
-                    triggerCheatPenalty('检测到异常窗口操作，扣除 5 分', 5);
-                    resizeCount = 0;
-                }
+                if (resizeCount > 5) { triggerCheatPenalty('检测到异常窗口操作，扣除 5 分', 5); resizeCount = 0; }
             } else { resizeCount = 1; }
             lastResizeTime = now;
         });
@@ -1737,36 +1318,20 @@
     // ============================================================
     function startGame() {
         document.getElementById('permissionOverlay').classList.add('active');
-        // 自动开始硬件测试
         setTimeout(function() { testMic(); }, 300);
-        setTimeout(function() { testCam(); }, 600);
-        setTimeout(function() { testSpeaker(); }, 900);
     }
 
     function startGameInternal() {
         if (gameState.timer) { clearInterval(gameState.timer); gameState.timer = null; }
+        gameState.level = 1; gameState.score = 0; gameState.lives = 3; gameState.combo = 0;
+        gameState.maxCombo = 0; gameState.passed = 0; gameState.cheatCount = 0;
+        gameState.isPlaying = true; gameState.isAnswered = false; gameState.isGameOver = false;
+        gameState.timeLeft = 15; gameState.currentChallenge = null;
+        gameState.answerTimes = []; gameState.questionStartTime = null;
 
-        gameState.level = 1;
-        gameState.score = 0;
-        gameState.lives = 3;
-        gameState.combo = 0;
-        gameState.maxCombo = 0;
-        gameState.passed = 0;
-        gameState.cheatCount = 0;
-        gameState.isPlaying = true;
-        gameState.isAnswered = false;
-        gameState.isGameOver = false;
-        gameState.timeLeft = 15;
-        gameState.currentChallenge = null;
-        gameState.answerTimes = [];
-        gameState.questionStartTime = null;
-
-        cheatDetection.tabSwitchCount = 0;
-        cheatDetection.clickPositions = [];
-        cheatDetection.clickCount = 0;
-        cheatDetection.blurCount = 0;
-        cheatDetection.mouseLeaveCount = 0;
-        cheatDetection.isCheatPopupActive = false;
+        cheatDetection.tabSwitchCount = 0; cheatDetection.clickPositions = [];
+        cheatDetection.clickCount = 0; cheatDetection.blurCount = 0;
+        cheatDetection.mouseLeaveCount = 0; cheatDetection.isCheatPopupActive = false;
 
         document.getElementById('statusBar').style.display = 'flex';
         document.getElementById('progressBar').style.display = 'block';
@@ -1783,7 +1348,6 @@
                 <span class="status-icon" id="voiceIcon">🎤</span>
                 <span class="status-text" id="voiceText">🎤 语音就绪</span>
                 <span class="transcript-display" id="voiceTranscript">等待指令</span>
-                <button class="voice-help-btn" onclick="showTutorial()" title="语音控制教程">📖</button>
             `;
             container.insertBefore(bar, container.firstChild);
         }
@@ -1813,7 +1377,6 @@
                 <span class="status-icon" id="voiceIcon">🎤</span>
                 <span class="status-text" id="voiceText">🎤 语音就绪</span>
                 <span class="transcript-display" id="voiceTranscript">等待指令</span>
-                <button class="voice-help-btn" onclick="showTutorial()" title="语音控制教程">📖</button>
             `;
             container.insertBefore(bar, container.firstChild);
         }
@@ -1838,7 +1401,7 @@
     }
 
     // ============================================================
-    // 渲染挑战（精简版，保留核心逻辑）
+    // 渲染挑战
     // ============================================================
     function renderChallenge(challenge) {
         gameState.currentChallenge = challenge;
@@ -1858,7 +1421,6 @@
                 <span class="status-icon" id="voiceIcon">🎤</span>
                 <span class="status-text" id="voiceText">🎤 语音就绪</span>
                 <span class="transcript-display" id="voiceTranscript">等待指令</span>
-                <button class="voice-help-btn" onclick="showTutorial()" title="语音控制教程">📖</button>
             `;
             container.insertBefore(bar, container.firstChild);
         }
@@ -2676,7 +2238,6 @@
         // 计算惩罚
         var penalty = 0;
         if (!gameState.micEnabled) penalty += gameState.penaltyMic;
-        if (!gameState.camEnabled) penalty += gameState.penaltyCam;
 
         var points = 0;
         if (isCorrect) {
@@ -2739,7 +2300,7 @@
     function updateTimerDisplay(limit) {
         var pct = (gameState.timeLeft / Math.max(1, limit || 15)) * 100;
         document.getElementById('timerFill').style.width = Math.max(0, Math.min(100, pct)) + '%';
-        document.getElementById('timerText').textContent = '⏱ ' + gameState.timeLeft + 's';
+        document.getElementById('timerText').textContent = gameState.timeLeft + 's';
         document.getElementById('timerFill').className = 'timer-fill';
         if (pct < 30) document.getElementById('timerFill').classList.add('danger');
         else if (pct < 50) document.getElementById('timerFill').classList.add('warning');
@@ -2836,18 +2397,15 @@
         gameState.isPlaying = false;
         gameState.isGameOver = true;
         clearInterval(gameState.timer);
-
         if (VoiceService.isListening) VoiceService.stop();
 
         var currentScore = gameState.score;
         document.getElementById('challengeCard').innerHTML = '';
         document.getElementById('gameContent').innerHTML = '';
 
-        // 新分数公式：基础得分 - (作弊次数 × 5) - (通关数 × 4) - (通关数 × 2)
         var finalScore = currentScore
             - (gameState.cheatCount * gameState.penaltyCheat)
-            - (gameState.passed * gameState.penaltyMic)
-            - (gameState.passed * gameState.penaltyCam);
+            - (gameState.passed * gameState.penaltyMic);
         finalScore = Math.max(0, finalScore);
 
         var card = document.getElementById('challengeCard');
@@ -2861,15 +2419,17 @@
                 <div class="penalty-detail">
                     ${gameState.cheatCount > 0 ? '⚖️ 作弊扣分: -' + (gameState.cheatCount * gameState.penaltyCheat) + ' 分' : ''}
                     ${!gameState.micEnabled ? '🔇 麦克风关闭: -' + (gameState.passed * gameState.penaltyMic) + ' 分' : ''}
-                    ${!gameState.camEnabled ? '📷 摄像头关闭: -' + (gameState.passed * gameState.penaltyCam) + ' 分' : ''}
-                    ${gameState.cheatCount === 0 && gameState.micEnabled && gameState.camEnabled ? '✅ 无惩罚，完美表现！' : ''}
+                    ${gameState.cheatCount === 0 && gameState.micEnabled ? '✅ 无惩罚，完美表现！' : ''}
                 </div>
                 <div class="stats-grid">
                     <div class="stat-item"><div class="stat-value">${gameState.passed}</div><div class="stat-label">通关</div></div>
                     <div class="stat-item"><div class="stat-value">${gameState.maxCombo}</div><div class="stat-label">最高连击</div></div>
                     <div class="stat-item"><div class="stat-value">${gameState.level - 1}</div><div class="stat-label">到达关卡</div></div>
                 </div>
-                <button class="btn-restart" onclick="restartGame()">🔄 再来一次</button>
+                <div class="btn-group">
+                    <button class="btn-restart" onclick="restartGame()">🔄 再来一次</button>
+                    <a href="/" class="btn-home">🏠 返回首页</a>
+                </div>
             </div>
         `;
 
@@ -2881,7 +2441,6 @@
         gameState.isPlaying = false;
         gameState.isGameOver = true;
         clearInterval(gameState.timer);
-
         if (VoiceService.isListening) VoiceService.stop();
 
         var currentScore = gameState.score;
@@ -2890,8 +2449,7 @@
 
         var finalScore = currentScore
             - (gameState.cheatCount * gameState.penaltyCheat)
-            - (gameState.passed * gameState.penaltyMic)
-            - (gameState.passed * gameState.penaltyCam);
+            - (gameState.passed * gameState.penaltyMic);
         finalScore = Math.max(0, finalScore);
 
         var card = document.getElementById('challengeCard');
@@ -2905,15 +2463,17 @@
                 <div class="penalty-detail">
                     ${gameState.cheatCount > 0 ? '⚖️ 作弊扣分: -' + (gameState.cheatCount * gameState.penaltyCheat) + ' 分' : ''}
                     ${!gameState.micEnabled ? '🔇 麦克风关闭: -' + (gameState.passed * gameState.penaltyMic) + ' 分' : ''}
-                    ${!gameState.camEnabled ? '📷 摄像头关闭: -' + (gameState.passed * gameState.penaltyCam) + ' 分' : ''}
-                    ${gameState.cheatCount === 0 && gameState.micEnabled && gameState.camEnabled ? '✅ 无惩罚，完美通关！' : ''}
+                    ${gameState.cheatCount === 0 && gameState.micEnabled ? '✅ 无惩罚，完美通关！' : ''}
                 </div>
                 <div class="stats-grid">
                     <div class="stat-item"><div class="stat-value">100</div><div class="stat-label">通关</div></div>
                     <div class="stat-item"><div class="stat-value">${gameState.maxCombo}</div><div class="stat-label">最高连击</div></div>
                     <div class="stat-item"><div class="stat-value">🏆</div><div class="stat-label">传说</div></div>
                 </div>
-                <button class="btn-restart" onclick="restartGame()">🔄 再来一次</button>
+                <div class="btn-group">
+                    <button class="btn-restart" onclick="restartGame()">🔄 再来一次</button>
+                    <a href="/" class="btn-home">🏠 返回首页</a>
+                </div>
             </div>
         `;
 
@@ -2982,48 +2542,140 @@
     }
 
     // ============================================================
-    // 保姆级教程
+    // 保姆级教程（所有20种题型）
     // ============================================================
     var tutorialSteps = [
+        // 第1页 - 欢迎
         {
             title: '🎮 欢迎来到验证大闯关！',
-            desc: '这是一个通过 <strong>20 种不同挑战</strong> 来证明你是人类的游戏。<br><br>总共 <strong>100 个关卡</strong>，难度会逐步提升。<br><br>💡 从第 1 关开始，每关有 <strong>3 条命</strong>，用完则游戏结束。<br>💡 <strong>连击</strong> 越高，得分加成越多！',
-            demo: '🎯 准备好挑战了吗？点击"下一页"学习玩法吧！'
+            desc: '这是一个通过 <strong>20 种不同挑战</strong> 来证明你是人类的游戏。<br><br>总共 <strong>100 个关卡</strong>，难度会逐步提升。<br><br>💡 从第 1 关开始，每关有 <strong>3 条命</strong>，用完则游戏结束。<br>💡 <strong>连击</strong> 越高，得分加成越多！<br>💡 <strong>语音控制</strong> 全程支持，解放双手！',
+            demo: '🎯 准备好挑战了吗？点击"下一页"学习所有玩法！'
         },
+        // 第2页 - 语音控制
         {
-            title: '🎤 语音控制系统（保姆级）',
-            desc: '本游戏支持 <strong>全程语音控制</strong>，你只需要说话就能玩游戏！<br><br>📌 <strong>核心语音指令：</strong><br>• <span class="cmd">选 A</span> <span class="cmd">选第二个</span> — 选择选项（支持字母/数字/中文）<br>• <span class="cmd">确认</span> <span class="cmd">提交</span> — 确认当前选择<br>• <span class="cmd">取消</span> <span class="cmd">不对</span> — 取消当前选择<br>• <span class="cmd">下一题</span> <span class="cmd">跳过</span> — 跳到下一题<br>• <span class="cmd">删除</span> <span class="cmd">退格</span> — 删除输入字符<br>• <span class="cmd">帮助</span> <span class="cmd">怎么玩</span> — 打开教程',
+            title: '🎤 语音控制系统',
+            desc: '本游戏支持 <strong>全程语音控制</strong>，你只需要说话就能玩游戏！<br><br>📌 <strong>核心语音指令：</strong><br>• <span class="cmd">选 A</span> / <span class="cmd">选第二个</span> — 选择选项<br>• <span class="cmd">红色</span> / <span class="cmd">3</span> — 直接说出答案内容<br>• <span class="cmd">确认</span> / <span class="cmd">提交</span> — 确认当前选择<br>• <span class="cmd">下一题</span> / <span class="cmd">跳过</span> — 跳到下一题<br>• <span class="cmd">删除</span> / <span class="cmd">退格</span> — 删除输入<br>• <span class="cmd">帮助</span> — 打开完整教程',
             demo: '🎤 试试说 <span class="cmd">选 A</span> 或 <span class="cmd">确认</span>！'
         },
+        // 第3页 - 题型1：文字识别
         {
-            title: '🎤 语音控制：选择题操作',
-            desc: '当遇到选择题时，你可以用以下方式选择：<br><br>📌 <strong>方法一：说选项内容</strong><br>• 直接说出选项文字，系统会自动匹配<br>• 例如：题目选项有"红色""蓝色"，你说 <span class="cmd">红色</span> 即可<br><br>📌 <strong>方法二：说选项位置</strong><br>• <span class="cmd">选第一个</span> <span class="cmd">选 A</span> <span class="cmd">选 2</span><br>• 系统会高亮对应的选项，然后你说 <span class="cmd">确认</span> 提交<br><br>📌 <strong>方法三：直接说答案</strong><br>• 对于填空题，直接说出答案内容<br>• 系统会自动识别并提交',
-            demo: '💡 示例：看到选项 A.红色 B.蓝色，说 <span class="cmd">选 A</span>'
+            title: '👁️ 题型 1/20：文字识别',
+            desc: '你会看到一张 <strong>扭曲变形的图片</strong>，里面藏着几个字符。<br><br>你的任务就是：<strong>识别出图片中的文字，并选择正确的答案</strong>。<br><br>📌 语音操作：说 <span class="cmd">选 A</span> 或直接说 <span class="cmd">HELLO</span><br>💡 小技巧：眯起眼睛看，字符会更清晰！',
+            demo: '🔍 示例：图片显示 "HELLO" → 选择 "HELLO"'
         },
+        // 第4页 - 题型2：算术计算
         {
-            title: '🎤 语音控制：高级技巧',
-            desc: '📌 <strong>模糊匹配</strong><br>• 系统会智能匹配你说的内容<br>• 例如："三" 匹配 "3"，"珠穆朗玛峰" 匹配 "珠峰"<br><br>📌 <strong>实时反馈</strong><br>• 你说话时，屏幕下方会显示 <strong>实时转译文字</strong><br>• 看到识别结果后可以说 <span class="cmd">确认</span> 或 <span class="cmd">取消</span><br><br>📌 <strong>连续对话</strong><br>• 不需要每次都说唤醒词，直接说指令即可<br>• 系统会持续监听你的语音',
-            demo: '🎤 试试说 <span class="cmd">取消</span> 或 <span class="cmd">下一题</span>'
+            title: '🧮 题型 2/20：算术计算',
+            desc: '快速计算数学表达式，选择正确的答案。<br><br>📌 语音操作：说 <span class="cmd">选 3</span> 或 <span class="cmd">第三</span><br>💡 注意运算顺序：先乘除后加减！',
+            demo: '📐 示例：25 × 4 + 5 = 105'
         },
+        // 第5页 - 题型3：汉字笔画
         {
-            title: '🧩 1A2B 猜数字',
-            desc: '猜一个 <strong>不重复</strong> 的数字组合。<br><br>• <span style="color:#28a745;">A</span> = 数字和位置都正确<br>• <span style="color:#F59E0B;">B</span> = 数字正确但位置不对<br><br>📌 语音操作：<br>• 说 <span class="cmd">1</span> <span class="cmd">2</span> <span class="cmd">3</span> <span class="cmd">4</span> 输入数字<br>• 说 <span class="cmd">确认</span> 提交猜测<br>• 说 <span class="cmd">删除</span> 退格<br><br>💡 例如：密码 1234，你猜 1243 → 2A2B',
-            demo: '🎯 尝试用语音说 <span class="cmd">1</span> 来输入数字！'
+            title: '📝 题型 3/20：汉字笔画',
+            desc: '数出汉字的笔画总数，选择正确的数字。<br><br>📌 语音操作：说 <span class="cmd">选 5</span> 或 <span class="cmd">五</span><br>💡 注意：每个字的笔画数不同！',
+            demo: '✍️ 示例：「人」有 2 画，「大」有 3 画'
         },
+        // 第6页 - 题型4：颜色识别
         {
-            title: '🧠 数字记忆',
-            desc: '屏幕上会显示一串数字，<strong>几秒后会消失</strong>。<br><br>你的任务：<strong>记住数字并准确输入</strong>。<br><br>📌 语音操作：<br>• 说 <span class="cmd">3</span> <span class="cmd">8</span> <span class="cmd">4</span> <span class="cmd">7</span> 输入数字<br>• 说 <span class="cmd">确认</span> 提交<br>• 说 <span class="cmd">删除</span> 退格<br><br>💡 数字越长，难度越大！<br>💡 系统会播放干扰数字，请专注听题！',
-            demo: '🧠 记住：3847 → 输入 3847'
+            title: '🎨 题型 4/20：颜色识别',
+            desc: '注意文字显示的 <strong>颜色</strong>，不是文字内容本身！<br><br>📌 语音操作：说 <span class="cmd">选红色</span> 或 <span class="cmd">蓝色</span><br>💡 例："红"字用蓝色显示 → 答案是 "蓝色"',
+            demo: '🎨 示例：<span style="color:#0000FF;">红</span> → 答案是 "蓝色"'
         },
+        // 第7页 - 题型5：找不同
         {
-            title: '🎯 找不同',
-            desc: '先记住一串字符，然后找出 <strong>被替换的那个字符</strong>。<br><br>📌 语音操作：<br>• 说 <span class="cmd">选 C</span> 或 <span class="cmd">选第三个</span> 选择字符<br>• 说 <span class="cmd">确认</span> 提交<br><br>💡 注意观察每个字符的细微变化！',
+            title: '🔍 题型 5/20：找不同',
+            desc: '先记住一串字符，然后找出 <strong>被替换的那个字符</strong>。<br><br>📌 语音操作：说 <span class="cmd">选 C</span> 或 <span class="cmd">选第三个</span><br>💡 注意观察每个字符的细微变化！',
             demo: '🔍 ABCDE → ABXDE，被替换的是 C'
         },
+        // 第8页 - 题型6：倒序识别
         {
-            title: '🏆 100 关挑战',
-            desc: '从第 1 关到第 100 关，<strong>难度逐步递增</strong>。<br><br>• 每关有 <strong>3 条命</strong>，用完则游戏结束<br>• <strong>连击</strong> 越高，得分加成越多<br>• 通关 100 关即可获得 <strong>🏆 传说</strong> 称号<br><br>📌 难度分级：<br>• 1-20 关：📝 入门<br>• 21-40 关：⚡ 困难<br>• 41-60 关：🔥 噩梦<br>• 61-80 关：💀 地狱<br>• 81-100 关：👑 传说',
-            demo: '💪 准备好了吗？开始你的挑战吧！'
+            title: '🔄 题型 6/20：倒序识别',
+            desc: '文字是 <strong>倒过来</strong> 显示的，需要识别正确内容。<br><br>📌 语音操作：说 <span class="cmd">选 HELLO</span> 或 <span class="cmd">第二个</span><br>💡 尝试倒着看！',
+            demo: '🔄 示例：OLLEH → 答案是 HELLO'
+        },
+        // 第9页 - 题型7：空缺字母
+        {
+            title: '🔤 题型 7/20：空缺字母',
+            desc: '补全英文单词中 <strong>缺失的字母</strong>。<br><br>📌 语音操作：说 <span class="cmd">选 L</span> 或 <span class="cmd">第三个</span><br>💡 根据单词上下文推断！',
+            demo: '🔤 示例：APPLE → 缺 "L" 变成 APPLE'
+        },
+        // 第10页 - 题型8：时间计算
+        {
+            title: '⏰ 题型 8/20：时间计算',
+            desc: '计算两个时间点之间的 <strong>时间差</strong>。<br><br>📌 语音操作：说 <span class="cmd">选 3小时</span> 或 <span class="cmd">第二个</span><br>💡 注意小时和分钟的换算！',
+            demo: '⏰ 示例：08:00 → 12:30 = 4小时30分钟'
+        },
+        // 第11页 - 题型9：成语填空
+        {
+            title: '📖 题型 9/20：成语填空',
+            desc: '补全成语中 <strong>缺失的字</strong>。<br><br>📌 语音操作：说 <span class="cmd">选先</span> 或 <span class="cmd">第一个</span><br>💡 回忆常见的成语！',
+            demo: '📖 示例：一马当_ → "先"'
+        },
+        // 第12页 - 题型10：数字记忆
+        {
+            title: '🧠 题型 10/20：数字记忆',
+            desc: '数字显示后 <strong>会消失</strong>，输入你记住的数字。<br><br>📌 语音操作：说 <span class="cmd">3 8 4 7</span> 输入数字<br>说 <span class="cmd">确认</span> 提交<br>💡 数字越长难度越大！',
+            demo: '🧠 示例：显示 3847 → 输入 3847'
+        },
+        // 第13页 - 题型11：找规律
+        {
+            title: '📐 题型 11/20：找规律',
+            desc: '观察数列的 <strong>规律</strong>，找出缺失的数字。<br><br>📌 语音操作：说 <span class="cmd">选 8</span> 或 <span class="cmd">第三</span><br>💡 注意等差数列、等比数列！',
+            demo: '📐 示例：2,4,6,?,10 → 答案是 8'
+        },
+        // 第14页 - 题型12：颜色混合
+        {
+            title: '🎨 题型 12/20：颜色混合',
+            desc: '多种颜色 <strong>混合</strong> 后是什么颜色？<br><br>📌 语音操作：说 <span class="cmd">选紫色</span> 或 <span class="cmd">第二个</span><br>💡 红+蓝=紫，黄+蓝=绿！',
+            demo: '🎨 示例：红色 + 蓝色 = 紫色'
+        },
+        // 第15页 - 题型13：真假判断
+        {
+            title: '⚖️ 题型 13/20：真假判断',
+            desc: '判断陈述是 <strong>真的</strong> 还是 <strong>假的</strong>。<br><br>📌 语音操作：说 <span class="cmd">选真的</span> 或 <span class="cmd">第一个</span><br>💡 仔细思考再作答！',
+            demo: '⚖️ 示例："地球是平的" → 假的'
+        },
+        // 第16页 - 题型14：华容道
+        {
+            title: '🧩 题型 14/20：数字华容道',
+            desc: '点击数字 <strong>移动</strong>，按 1-8 顺序排列。<br><br>📌 语音操作：说 <span class="cmd">选 3</span> 移动数字<br>💡 空位是 0，点击相邻数字移动！',
+            demo: '🧩 示例：将 1-8 按顺序排好'
+        },
+        // 第17页 - 题型15：三视图
+        {
+            title: '📐 题型 15/20：立体三视图',
+            desc: '根据 <strong>三视图</strong>（俯视、主视、左视）推断正方体数量。<br><br>📌 语音操作：说 <span class="cmd">选 7</span> 或 <span class="cmd">第三</span><br>💡 注意每个视图代表的方向！',
+            demo: '📐 示例：三个视图 → 7 个正方体'
+        },
+        // 第18页 - 题型16：图形计数
+        {
+            title: '🔢 题型 16/20：图形计数',
+            desc: '统计特定图形出现的 <strong>次数</strong>。<br><br>📌 语音操作：说 <span class="cmd">选 3</span> 或 <span class="cmd">第三个</span><br>💡 仔细数，不要漏掉！',
+            demo: '🔢 示例：● ■ ● ▲ ● → ● 出现 3 次'
+        },
+        // 第19页 - 题型17：日期推理
+        {
+            title: '📅 题型 17/20：日期推理',
+            desc: '根据已知日期 <strong>推算</strong> 星期几。<br><br>📌 语音操作：说 <span class="cmd">选星期六</span> 或 <span class="cmd">第三</span><br>💡 记住：一周有 7 天！',
+            demo: '📅 示例：8月7日周五 → 8月15日周六'
+        },
+        // 第20页 - 题型18：图形旋转
+        {
+            title: '🔄 题型 18/20：图形旋转',
+            desc: '观察图形 <strong>旋转</strong> 了多少度。<br><br>📌 语音操作：说 <span class="cmd">选 90°</span> 或 <span class="cmd">第三个</span><br>💡 注意旋转方向和角度！',
+            demo: '🔄 示例：图形旋转了 90°'
+        },
+        // 第21页 - 题型19：1A2B猜数字
+        {
+            title: '🎯 题型 19/20：1A2B猜数字',
+            desc: '猜一个 <strong>不重复</strong> 的数字组合。<br><br>• <span style="color:#28a745;">A</span> = 数字和位置都正确<br>• <span style="color:#F59E0B;">B</span> = 数字正确位置不对<br><br>📌 语音操作：说 <span class="cmd">1 2 3 4</span> 输入数字<br>说 <span class="cmd">确认</span> 提交<br>💡 例如：1234 → 1243 = 2A2B',
+            demo: '🎯 示例：密码 1234，猜 1243 → 2A2B'
+        },
+        // 第22页 - 题型20：颜色三重干扰 + 结束
+        {
+            title: '🎯 题型 20/20：颜色三重干扰',
+            desc: '在 <strong>三重干扰</strong> 中找到正确答案！<br><br>• 文字颜色 <br>• 背景颜色 <br>• 文字含义 <br><br>📌 语音操作：说 <span class="cmd">选蓝色</span> 或 <span class="cmd">第二个</span><br>💡 这是最后一种题型，通关后即可获得 🏆 传说称号！',
+            demo: '🎯 示例：红字蓝底 → 文字颜色是蓝色'
         }
     ];
     var currentTutorialIndex = 0;
@@ -3056,7 +2708,7 @@
                 <span class="page-counter">${index + 1}/${total}</span>
             </div>
             <div class="tutorial-sub">${step.desc}</div>
-            <div class="tutorial-demo active">
+            <div class="tutorial-demo-area active">
                 <div class="demo-content">${step.demo || '💡 准备开始挑战吧！'}</div>
             </div>
             <div class="tutorial-nav">
@@ -3152,7 +2804,6 @@
         VoiceService.init();
         VoiceService.setupEvents();
 
-        // 预加载语音合成 voices
         if (window.speechSynthesis) {
             window.speechSynthesis.getVoices();
             window.speechSynthesis.onvoiceschanged = function() {
@@ -3162,7 +2813,7 @@
         console.log('🧩 验证大闯关已加载');
     });
 
-    // 暴露全局函数
+    // 暴露全局
     window.startGame = startGame;
     window.startGameInternal = startGameInternal;
     window.loadChallenge = loadChallenge;
@@ -3175,7 +2826,6 @@
     window.confirmPermissions = confirmPermissions;
     window.skipPermissions = skipPermissions;
     window.onCheatPopupConfirm = onCheatPopupConfirm;
-    window.togglePipSize = togglePipSize;
     window.selectChar = selectChar;
     window.submitMemoryAnswer = submitMemoryAnswer;
     window.memoryKeyPress = memoryKeyPress;
@@ -3183,6 +2833,5 @@
     window.handleABKeyPress = handleABKeyPress;
     window.updateHardwareTest = updateHardwareTest;
     window.testMic = testMic;
-    window.testCam = testCam;
-    window.testSpeaker = testSpeaker;
+    window.showVoiceTutorial = showVoiceTutorial;
 </script>
