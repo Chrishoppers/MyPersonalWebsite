@@ -46,7 +46,7 @@ namespace MyPersonalWebsite.Controllers
             if (game != null)
             {
                 ViewBag.PlayerCount = game.PlayerCount;
-                ViewBag.SelectedRoles = game.Players.Where(p => p.IsGod).Select(p => p.RoleDisplay).Distinct().ToList();
+                ViewBag.SelectedRoles = game.Players.Where(p => p.IsGod).Select(p => p.Role).Distinct().ToList();
             }
             return View();
         }
