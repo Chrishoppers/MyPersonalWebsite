@@ -692,37 +692,67 @@
         }
 
         /* ============================================================
-           响应式
+           响应式 - 移动端优先
            ============================================================ */
         @@media (max-width: 480px) {
             body { padding: 8px; }
             .holo-card { padding: 16px 14px 20px; border-radius: 24px; }
             .holo-card .corner { width: 12px; height: 12px; }
+            .holo-card .corner.tl { top: 8px; left: 8px; }
+            .holo-card .corner.tr { top: 8px; right: 8px; }
+            .holo-card .corner.bl { bottom: 8px; left: 8px; }
+            .holo-card .corner.br { bottom: 8px; right: 8px; }
             .player-header .icon-wrap { font-size: 2rem; }
             .player-header h1 { font-size: 1.2rem; }
+            .player-header .sub { font-size: 0.55rem; }
+            .room-info { padding: 8px 12px; margin-bottom: 12px; }
             .room-info .code { font-size: 1.4rem; letter-spacing: 3px; }
+            .room-info .host-name { font-size: 0.6rem; }
+            .form-group { margin-bottom: 10px; }
+            .form-group label { font-size: 0.55rem; }
+            .form-group input { padding: 10px 14px; font-size: 0.9rem; border-radius: 14px; }
             .avatar-select { grid-template-columns: repeat(5, 1fr); gap: 4px; }
             .avatar-option { font-size: 1.1rem; min-height: 36px; }
-            .btn-join { padding: 12px; font-size: 0.9rem; }
+            .avatar-option .check-mark { font-size: 0.4rem; bottom: -1px; right: -1px; }
+            .btn-join { padding: 12px; font-size: 0.9rem; border-radius: 32px; }
             .joined-status .big-icon { font-size: 2.5rem; }
             .joined-status h2 { font-size: 1rem; }
-            .waiting-ring { width: 40px; height: 40px; }
+            .joined-status .waiting-text { font-size: 0.7rem; }
+            .waiting-ring { width: 40px; height: 40px; margin: 8px auto; }
+            .mini-player-list { gap: 4px; }
             .mini-player-list .mini-item .mini-avatar { width: 28px; height: 28px; font-size: 0.8rem; }
-            .joined-actions .btn-action { padding: 8px 10px; font-size: 0.7rem; }
+            .mini-player-list .mini-item .mini-name { font-size: 0.35rem; max-width: 36px; }
+            .mini-players-section .mini-label { font-size: 0.45rem; }
+            .joined-actions { gap: 6px; margin-top: 10px; }
+            .joined-actions .btn-action { padding: 8px 10px; font-size: 0.7rem; border-radius: 32px; }
+            .toast-container { bottom: 12px; right: 12px; }
+            .toast-msg { padding: 6px 14px; font-size: 0.7rem; }
         }
 
         @@media (max-width: 380px) {
             body { padding: 4px; }
             .holo-card { padding: 12px 10px 16px; border-radius: 20px; }
             .player-header h1 { font-size: 1rem; }
+            .player-header .icon-wrap { font-size: 1.6rem; }
             .room-info .code { font-size: 1.1rem; letter-spacing: 2px; }
-            .avatar-option { font-size: 0.9rem; min-height: 30px; }
+            .avatar-select { grid-template-columns: repeat(5, 1fr); gap: 3px; }
+            .avatar-option { font-size: 0.9rem; min-height: 30px; border-width: 1.5px; }
             .btn-join { padding: 10px; font-size: 0.8rem; }
+            .joined-status .big-icon { font-size: 2rem; }
+            .joined-status h2 { font-size: 0.9rem; }
             .mini-player-list .mini-item .mini-avatar { width: 24px; height: 24px; font-size: 0.65rem; }
+            .mini-player-list .mini-item .mini-name { font-size: 0.3rem; max-width: 30px; }
+            .joined-actions .btn-action { padding: 6px 8px; font-size: 0.6rem; }
             .waiting-ring { width: 32px; height: 32px; }
         }
 
-        /* 横屏 */
+        @@media (min-width: 481px) and (max-width: 768px) {
+            .holo-card { padding: 20px 18px 24px; }
+            .avatar-select { grid-template-columns: repeat(5, 1fr); gap: 5px; }
+            .avatar-option { min-height: 40px; font-size: 1.2rem; }
+            .mini-player-list .mini-item .mini-avatar { width: 32px; height: 32px; }
+        }
+
         @@media (max-height: 500px) and (orientation: landscape) {
             .holo-card { padding: 12px 16px 16px; border-radius: 20px; }
             .player-header { margin-bottom: 8px; }
@@ -737,7 +767,10 @@
             .avatar-option { min-height: 28px; font-size: 0.8rem; }
             .btn-join { padding: 8px; font-size: 0.8rem; }
             .joined-status .big-icon { font-size: 1.8rem; }
+            .joined-status h2 { font-size: 0.9rem; }
+            .joined-status .waiting-text { font-size: 0.6rem; }
             .waiting-ring { width: 30px; height: 30px; margin: 4px auto; }
+            .mini-players-section { margin-top: 6px; padding-top: 6px; }
             .mini-player-list .mini-item .mini-avatar { width: 22px; height: 22px; font-size: 0.6rem; }
             .mini-player-list .mini-item .mini-name { display: none; }
             .joined-actions { margin-top: 6px; }
@@ -894,4 +927,369 @@
 
             function resize() {
                 canvas.width = window.innerWidth;
-                canvas.height = window
+                canvas.height = window.innerHeight;
+            }
+            window.addEventListener('resize', resize);
+            resize();
+
+            for (var i = 0; i < count; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    vx: (Math.random() - 0.5) * 0.15,
+                    vy: (Math.random() - 0.5) * 0.15,
+                    r: Math.random() * 1.2 + 0.3,
+                    o: Math.random() * 0.15 + 0.02
+                });
+            }
+
+            function draw() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                for (var p of particles) {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+                    if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(0, 240, 255, ' + p.o + ')';
+                    ctx.fill();
+                }
+                requestAnimationFrame(draw);
+            }
+            draw();
+        })();
+
+        (function initParticles2() {
+            var canvas = document.getElementById('particleCanvas2');
+            if (!canvas) return;
+            var ctx = canvas.getContext('2d');
+            var particles = [];
+            var count = Math.min(30, Math.floor(window.innerWidth / 12));
+
+            function resize() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+            window.addEventListener('resize', resize);
+            resize();
+
+            for (var i = 0; i < count; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    vx: (Math.random() - 0.5) * 0.04,
+                    vy: (Math.random() - 0.5) * 0.04,
+                    r: Math.random() * 3 + 1,
+                    o: Math.random() * 0.04 + 0.01
+                });
+            }
+
+            function draw() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                for (var p of particles) {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+                    if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(123, 97, 255, ' + p.o + ')';
+                    ctx.fill();
+                }
+                requestAnimationFrame(draw);
+            }
+            draw();
+        })();
+
+        // ============================================================
+        // Toast
+        // ============================================================
+        function showToast(message, type) {
+            type = type || 'info';
+            var container = document.getElementById('toastContainer');
+            var toast = document.createElement('div');
+            toast.className = 'toast-msg ' + type;
+            toast.textContent = message;
+            container.appendChild(toast);
+            setTimeout(function() {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(20px)';
+                setTimeout(function() { toast.remove(); }, 300);
+            }, 3500);
+        }
+
+        // ============================================================
+        // 游戏状态
+        // ============================================================
+        var state = {
+            roomId: '@roomId',
+            playerId: null,
+            nickname: '',
+            avatar: '🧑',
+            isJoined: false,
+            isReady: false
+        };
+
+        // ============================================================
+        // 头像选择
+        // ============================================================
+        document.querySelectorAll('.avatar-option').forEach(function(el) {
+            el.addEventListener('click', function() {
+                document.querySelectorAll('.avatar-option').forEach(function(e) { e.classList.remove(
+                    'selected'); });
+                this.classList.add('selected');
+                state.avatar = this.dataset.emoji;
+            });
+        });
+
+        // ============================================================
+        // SignalR
+        // ============================================================
+        var connection = null;
+
+        function connectSignalR() {
+            try {
+                connection = new signalR.HubConnectionBuilder()
+                    .withUrl('/partyHub')
+                    .configureLogging(signalR.LogLevel.Information)
+                    .build();
+
+                connection.on('JoinedRoom', function(data) {
+                    if (data.success) {
+                        state.playerId = data.player.playerId;
+                        state.isJoined = true;
+                        document.getElementById('joinForm').style.display = 'none';
+                        document.getElementById('joinedStatus').style.display = 'block';
+                        document.getElementById('hostNameDisplay').textContent = '👑 ' + data.room.hostName;
+                        showToast('✅ 登机成功！', 'success');
+                        updateMiniList(data.room.players);
+                        updateReadyButton();
+                    }
+                });
+
+                connection.on('PlayerJoined', function(player) {
+                    showToast('🟢 ' + player.nickname + ' 加入了派对', 'info');
+                    updateMiniListFromEvent();
+                });
+
+                connection.on('PlayerLeft', function() {
+                    updateMiniListFromEvent();
+                });
+
+                connection.on('PlayerReadyToggled', function(player) {
+                    if (player.playerId === state.playerId) {
+                        state.isReady = player.isReady;
+                        updateReadyButton();
+                    }
+                    updateMiniListFromEvent();
+                });
+
+                connection.on('RoomUpdated', function(room) {
+                    updateMiniList(room.players);
+                });
+
+                connection.on('GameStarted', function(room) {
+                    showToast('🚀 派对开始！', 'success');
+                    document.querySelector('#joinedStatus .waiting-text').innerHTML = '🎮 游戏进行中...';
+                    document.querySelector('.waiting-ring').style.display = 'none';
+                    document.querySelector('#joinedStatus h2').textContent = '🎮 游戏中';
+                    document.getElementById('readyBtn').style.display = 'none';
+                });
+
+                connection.on('Kicked', function(message) {
+                    showToast('⚠️ ' + message, 'warning');
+                    setTimeout(function() { window.location.href = '/'; }, 2000);
+                });
+
+                connection.on('GameStartFailed', function(message) {
+                    showToast('❌ ' + message, 'error');
+                });
+
+                connection.start()
+                    .then(function() {
+                        console.log('✅ SignalR 已连接');
+                        validateRoom();
+                    })
+                    .catch(function(err) {
+                        console.error('❌ SignalR 连接失败:', err);
+                        showToast('⚠️ 连接失败，正在重试...', 'warning');
+                        setTimeout(function() { connectSignalR(); }, 3000);
+                    });
+
+            } catch (e) {
+                console.error('SignalR 初始化失败:', e);
+                showToast('⚠️ 连接失败，请刷新重试', 'error');
+            }
+        }
+
+        // ============================================================
+        // 验证房间
+        // ============================================================
+        function validateRoom() {
+            if (!state.roomId || state.roomId === '------') {
+                document.getElementById('hostNameDisplay').textContent = '❌ 无效房间码';
+                showToast('❌ 无效的房间码', 'error');
+                document.getElementById('joinBtn').disabled = true;
+                return;
+            }
+
+            fetch('/Party/ValidateRoom?roomId=' + state.roomId)
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (data.success) {
+                        document.getElementById('hostNameDisplay').textContent = '👑 ' + data.roomName;
+                    } else {
+                        document.getElementById('hostNameDisplay').textContent = '❌ ' + data.message;
+                        showToast('❌ ' + data.message, 'error');
+                        document.getElementById('joinBtn').disabled = true;
+                    }
+                })
+                .catch(function() {
+                    document.getElementById('hostNameDisplay').textContent = '⚠️ 连接失败';
+                });
+        }
+
+        // ============================================================
+        // 加入房间
+        // ============================================================
+        function joinRoom() {
+            var nickname = document.getElementById('nicknameInput').value.trim();
+            if (!nickname) {
+                showToast('⚠️ 请输入你的代号', 'error');
+                document.getElementById('nicknameInput').focus();
+                return;
+            }
+            if (nickname.length < 2) {
+                showToast('⚠️ 代号至少 2 个字符', 'error');
+                return;
+            }
+
+            state.nickname = nickname;
+
+            if (!connection || connection.state !== signalR.HubConnectionState.Connected) {
+                showToast('⏳ 正在连接...', 'info');
+                setTimeout(function() { joinRoom(); }, 500);
+                return;
+            }
+
+            var btn = document.getElementById('joinBtn');
+            btn.disabled = true;
+            btn.textContent = '⏳ 登机中...';
+
+            connection.invoke('JoinRoom', state.roomId, nickname, state.avatar)
+                .then(function(result) {
+                    if (result && result.success) {
+                        // 由 JoinedRoom 事件处理
+                    } else if (result && !result.success) {
+                        showToast('❌ ' + result.message, 'error');
+                        btn.disabled = false;
+                        btn.textContent = '🚀 进入派对';
+                    }
+                })
+                .catch(function(err) {
+                    console.error('加入房间失败:', err);
+                    showToast('❌ 加入失败: ' + err, 'error');
+                    btn.disabled = false;
+                    btn.textContent = '🚀 进入派对';
+                });
+        }
+
+        // ============================================================
+        // 准备/取消准备
+        // ============================================================
+        function toggleReady() {
+            if (!connection || !state.roomId || !state.playerId) {
+                showToast('⚠️ 未加入房间', 'warning');
+                return;
+            }
+
+            connection.invoke('ToggleReady', state.roomId, state.playerId)
+                .catch(function(err) {
+                    console.error('切换准备状态失败:', err);
+                    showToast('操作失败', 'error');
+                });
+        }
+
+        function updateReadyButton() {
+            var btn = document.getElementById('readyBtn');
+            if (state.isReady) {
+                btn.textContent = '✅ 已准备';
+                btn.classList.add('is-ready');
+            } else {
+                btn.textContent = '⏳ 准备';
+                btn.classList.remove('is-ready');
+            }
+        }
+
+        // ============================================================
+        // 更新迷你玩家列表
+        // ============================================================
+        function updateMiniList(players) {
+            var container = document.getElementById('miniPlayerList');
+            var countEl = document.getElementById('miniCount');
+            if (!container) return;
+
+            countEl.textContent = players ? players.length : 0;
+
+            if (!players || players.length === 0) {
+                container.innerHTML = '<span class="mini-empty">等待队友加入</span>';
+                return;
+            }
+
+            var html = '';
+            players.forEach(function(p) {
+                var isReady = p.isReady || false;
+                var isHost = p.isHost || false;
+                var isSelf = p.playerId === state.playerId;
+                var avatarEmoji = p.avatarEmoji || '🧑';
+                var name = p.nickname || '玩家';
+                html += `
+                    <div class="mini-item">
+                        <div class="mini-avatar ${isReady ? 'ready' : ''} ${isHost ? 'host' : ''} ${isSelf ? 'self' : ''}">
+                            ${avatarEmoji}
+                        </div>
+                        <div class="mini-name ${isReady ? 'active' : ''}">${name}${isSelf ? ' (你)' : ''}</div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        function updateMiniListFromEvent() {
+            if (!connection || !state.roomId) return;
+            connection.invoke('GetRoomInfo', state.roomId)
+                .then(function(room) {
+                    if (room) { updateMiniList(room.players || []); }
+                })
+                .catch(function() {});
+        }
+
+        // ============================================================
+        // 离开房间
+        // ============================================================
+        function leaveRoom() {
+            if (!confirm('确定要离开房间吗？')) return;
+            if (connection) { connection.stop(); }
+            window.location.reload();
+        }
+
+        // ============================================================
+        // 回车键提交
+        // ============================================================
+        document.getElementById('nicknameInput').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') joinRoom();
+        });
+
+        // ============================================================
+        // 初始化
+        // ============================================================
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 全息登机舱启动...');
+            connectSignalR();
+        });
+    </script>
+
+</body>
+</html>
