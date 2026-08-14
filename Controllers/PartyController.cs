@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using MyPersonalWebsite.Hubs;
+using System;
+using System.Linq;
 
 namespace MyPersonalWebsite.Controllers
 {
@@ -14,15 +16,50 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // 主控端页面（仅 admin 可访问 - 使用 Session 检查）
+        // 主控端页面 - 仅 admin 可访问
         // ============================================================
         public IActionResult Host()
         {
-            // ⭐ 使用 Session 检查是否为 admin
-            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+            // 检查 Session 中的 IsAdmin
+            var isAdmin = HttpContext.Session.GetInt32("IsAdmin");
+            
+            // 如果 Session 中没有 IsAdmin，检查用户是否在数据库中为 admin
+            if (!isAdmin.HasValue)
+            {
+                var userId = HttpContext.Session.GetInt32("UserId");
+                if (userId.HasValue)
+                {
+                    // 从数据库检查用户是否是 admin
+                    try
+                    {
+                        using var scope = HttpContext.RequestServices.CreateScope();
+                        var dataSync = scope.ServiceProvider.GetRequiredService<MyPersonalWebsite.Services.DataSyncService>();
+                        var user = dataSync.GetUserByIdAsync(userId.Value).GetAwaiter().GetResult();
+                        if (user != null && user.IsAdmin)
+                        {
+                            HttpContext.Session.SetInt32("IsAdmin", 1);
+                            isAdmin = 1;
+                        }
+                        else
+                        {
+                            HttpContext.Session.SetInt32("IsAdmin", 0);
+                            isAdmin = 0;
+                        }
+                    }
+                    catch
+                    {
+                        isAdmin = 0;
+                    }
+                }
+                else
+                {
+                    isAdmin = 0;
+                }
+            }
+
             if (isAdmin != 1)
             {
-                // 未登录或不是 admin，跳转到登录页
+                // 不是管理员，跳转到登录页
                 return RedirectToAction("Login", "Auth");
             }
 
@@ -32,7 +69,7 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // 玩家端页面（任何人可访问，包括未登录）
+        // 玩家端页面（任何人可访问）
         // ============================================================
         public IActionResult Player(string? roomId)
         {
@@ -58,6 +95,23 @@ namespace MyPersonalWebsite.Controllers
                     return Json(new { success = false, message = "房间已关闭" });
                 }
                 return Json(new { success = true, roomName = room.HostName, playerCount = room.Players.Count });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        // ============================================================
+        // API: 获取所有房间
+        // ============================================================
+        [HttpGet]
+        public IActionResult GetAllRooms()
+        {
+            try
+            {
+                var rooms = PartyHub.GetAllRooms();
+                return Json(new { success = true, rooms });
             }
             catch (Exception ex)
             {
