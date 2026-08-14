@@ -80,7 +80,7 @@ builder.Services.AddScoped<TrainService>();
 builder.Services.AddScoped<ReCaptchaService>();
 builder.Services.AddHttpClient<ReCaptchaService>();
 // 检查是否有这行
-builder.Services.AddSignalR();
+
 
 // 检查是否有这行（在 app.Run() 之前）
 app.MapHub<PartyHub>("/partyHub");
