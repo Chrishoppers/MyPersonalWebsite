@@ -79,6 +79,11 @@ builder.Services.AddHttpClient<TrainService>();
 builder.Services.AddScoped<TrainService>();
 builder.Services.AddScoped<ReCaptchaService>();
 builder.Services.AddHttpClient<ReCaptchaService>();
+// 检查是否有这行
+builder.Services.AddSignalR();
+
+// 检查是否有这行（在 app.Run() 之前）
+app.MapHub<PartyHub>("/partyHub");
 
 // 注册后台定时服务
 builder.Services.AddHostedService<DailyQuestionScheduler>();
