@@ -7,6 +7,7 @@
         Context.Response.Redirect("/Auth/Login");
         return;
     }
+    var roomId = ViewBag.RoomId as string ?? Context.Request.Query["roomId"].ToString() ?? "";
 }
 
 <!DOCTYPE html>
@@ -55,8 +56,6 @@
             gap: 10px;
         }
 
-        .header .logo span { font-size: 1.8rem; -webkit-text-fill-color: initial; }
-
         .header .status {
             font-size: 0.8rem;
             color: rgba(255,255,255,0.2);
@@ -67,7 +66,6 @@
 
         .header .status .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
         .header .status .dot.online { background: #00FF88; animation: pulse 2s infinite; }
-        .header .status .dot.waiting { background: #F59E0B; animation: pulse 2s infinite; }
 
         @@keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(1.2); } }
 
@@ -190,23 +188,6 @@
         @@keyframes sheriffGlow { 0%, 100% { box-shadow: 0 0 20px rgba(245,158,11,0.02); } 50% { box-shadow: 0 0 60px rgba(245,158,11,0.08); } }
         .seat.sheriff .seat-number { color: #F59E0B; }
 
-        .card-fly {
-            position: fixed;
-            width: 70px;
-            height: 98px;
-            border-radius: 12px;
-            background: transparent;
-            z-index: 999;
-            pointer-events: none;
-            transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
-            opacity: 0;
-            transform: scale(0.3) rotate(180deg);
-            box-shadow: 0 0 60px rgba(139,92,246,0.05);
-        }
-
-        .card-fly.show { opacity: 1; transform: scale(1) rotate(0deg); }
-        .card-fly img { width: 100%; height: 100%; border-radius: 12px; object-fit: cover; box-shadow: 0 0 60px rgba(139,92,246,0.05); }
-
         .side-panel { display: flex; flex-direction: column; gap: 16px; }
 
         .panel-card {
@@ -309,6 +290,7 @@
             border-top: 1px solid rgba(255,255,255,0.02);
         }
 
+        /* ===== 发牌遮罩 ===== */
         .dealing-overlay {
             position: fixed;
             inset: 0;
@@ -319,6 +301,7 @@
             align-items: center;
             justify-content: center;
             flex-direction: column;
+            overflow: hidden;
         }
 
         .dealing-overlay.active { display: flex; }
@@ -332,16 +315,39 @@
             background-clip: text;
             margin-bottom: 8px;
             animation: titlePulse 2s ease-in-out infinite;
+            z-index: 10;
         }
 
         @@keyframes titlePulse { 0%, 100% { opacity: 0.6; transform: scale(1); } 50% { opacity: 1; transform: scale(1.02); } }
 
-        .dealing-overlay .sub { font-size: 0.9rem; color: rgba(255,255,255,0.1); letter-spacing: 0.2em; }
-        .dealing-overlay .progress-ring { margin-top: 30px; width: 60px; height: 60px; border: 3px solid rgba(255,255,255,0.02); border-top-color: #8B5CF6; border-radius: 50%; animation: spin 1s linear infinite; }
+        .dealing-overlay .sub {
+            font-size: 0.9rem;
+            color: rgba(255,255,255,0.1);
+            letter-spacing: 0.2em;
+            z-index: 10;
+        }
+
+        .dealing-overlay .progress-ring {
+            margin-top: 30px;
+            width: 60px;
+            height: 60px;
+            border: 3px solid rgba(255,255,255,0.02);
+            border-top-color: #8B5CF6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            z-index: 10;
+        }
+
         @@keyframes spin { to { transform: rotate(360deg); } }
 
-        .dealing-overlay .deal-progress-text { margin-top: 20px; font-size: 0.7rem; color: rgba(255,255,255,0.04); }
+        .dealing-overlay .deal-progress-text {
+            margin-top: 20px;
+            font-size: 0.7rem;
+            color: rgba(255,255,255,0.04);
+            z-index: 10;
+        }
 
+        /* ===== Toast ===== */
         .toast-container {
             position: fixed;
             bottom: 20px;
@@ -374,18 +380,14 @@
         @@media (max-width: 768px) {
             body { padding: 10px; }
             .header .logo { font-size: 1.2rem; }
-            .header .status { font-size: 0.6rem; }
-            .seating-area { padding: 14px; min-height: 300px; }
             .seat { width: 40px; height: 40px; }
             .seat .seat-number { font-size: 0.65rem; }
             .seat .seat-name { font-size: 0.35rem; max-width: 30px; }
-            .table-container { max-width: 100%; }
-            .dealing-overlay .title { font-size: 1.4rem; }
             .config-grid { grid-template-columns: 1fr; }
             .role-grid { grid-template-columns: repeat(2, 1fr); }
             .panel-card { padding: 12px 14px; }
             .action-buttons { flex-direction: column; }
-            .card-fly { width: 50px; height: 70px; }
+            .dealing-overlay .title { font-size: 1.4rem; }
         }
 
         @@media (max-width: 480px) {
@@ -393,9 +395,8 @@
             .seat .seat-number { font-size: 0.5rem; }
             .seat .seat-name { display: none; }
             .seat .seat-emoji { display: block; font-size: 0.8rem; }
-            .seating-area { padding: 10px; min-height: 250px; }
-            .table-center .icon { font-size: 1.4rem; }
-            .card-fly { width: 40px; height: 56px; }
+            .seating-area { padding: 14px; min-height: 300px; }
+            .dealing-overlay .title { font-size: 1.4rem; }
         }
     </style>
 </head>
@@ -409,6 +410,7 @@
                 <span id="playerCountDisplay">0/0 人</span>
                 <span style="color:rgba(255,255,255,0.04);">|</span>
                 <span id="phaseDisplay" style="color:rgba(255,255,255,0.08);">⚙️ 设置中</span>
+                <span style="color:rgba(255,255,255,0.04);font-size:0.6rem;">房间: <span id="roomIdDisplay">@roomId</span></span>
             </div>
         </div>
 
@@ -509,8 +511,10 @@
             seats: [],
             isDealing: false,
             isGameStarted: false,
-            roomId: null
+            roomId: '@roomId'
         };
+
+        console.log('📌 房间ID:', config.roomId);
 
         // ============================================================
         // 座位图生成
@@ -576,8 +580,7 @@
                 btn.classList.toggle('active', parseInt(btn.dataset.count) === count);
             });
 
-            var defaultRoles = { 8: ['预言家', '女巫', '猎人'], 10: ['预言家', '女巫', '守卫'], 12: ['预言家', '女巫', '守卫',
-                    '猎人'] };
+            var defaultRoles = { 8: ['预言家', '女巫', '猎人'], 10: ['预言家', '女巫', '守卫'], 12: ['预言家', '女巫', '守卫', '猎人'] };
             var roles = defaultRoles[count] || ['预言家', '女巫', '守卫'];
             document.querySelectorAll('#roleSelector .role-option').forEach(function(el) {
                 el.classList.toggle('selected', roles.indexOf(el.dataset.role) !== -1);
@@ -610,18 +613,11 @@
             occupied.forEach(function(seat) {
                 var player = seat.player;
                 var isReady = player && player.isReady;
-                var isDead = seat.isDead;
-                var isSheriff = seat.isSheriff;
-                html += '<div style="display:flex;align-items:center;gap:6px;padding:2px 0;border-bottom:1px solid rgba(255,255,255,0.02);' +
-                    (isDead ? 'opacity:0.3;' : '') + '">';
+                html += '<div style="display:flex;align-items:center;gap:6px;padding:2px 0;border-bottom:1px solid rgba(255,255,255,0.02);">';
                 html += '<span style="font-size:0.6rem;color:rgba(255,255,255,0.05);">#' + seat.number + '</span>';
                 html += '<span style="font-size:0.8rem;">' + (player && player.avatar ? player.avatar : '🧑') + '</span>';
-                html += '<span style="flex:1;color:rgba(255,255,255,0.3);font-size:0.7rem;">' + (player && player.name ? player
-                    .name : '玩家') + '</span>';
-                if (isSheriff) { html += '<span style="font-size:0.5rem;color:#F59E0B;">👑</span>'; }
-                if (isDead) { html += '<span style="font-size:0.5rem;color:#dc3545;">💀</span>'; } else if (isReady) { html +=
-                        '<span style="font-size:0.5rem;color:#00FF88;">✅</span>'; } else { html +=
-                        '<span style="font-size:0.5rem;color:rgba(255,255,255,0.06);">⏳</span>'; }
+                html += '<span style="flex:1;color:rgba(255,255,255,0.3);font-size:0.7rem;">' + (player && player.name ? player.name : '玩家') + '</span>';
+                if (isReady) { html += '<span style="font-size:0.5rem;color:#00FF88;">✅</span>'; } else { html += '<span style="font-size:0.5rem;color:rgba(255,255,255,0.06);">⏳</span>'; }
                 html += '</div>';
             });
             container.innerHTML = html;
@@ -650,75 +646,291 @@
         }
 
         // ============================================================
-        // ⭐ 开始游戏（修复版）
+        // ⭐ 超级炫酷洗牌动画
         // ============================================================
-        function startGame() {
-            console.log('🃏 点击开始游戏');
-
-            // 1. 检查是否正在发牌
-            if (config.isDealing) {
-                showToast('⏳ 正在发牌中...', 'warning');
-                return;
-            }
-
-            // 2. 检查房间ID
-            if (!config.roomId) {
-                console.error('❌ 没有房间ID');
-                showToast('⚠️ 房间未创建，请刷新页面重试', 'error');
-                return;
-            }
-
-            // 3. 检查SignalR连接
-            if (!connection || connection.state !== signalR.HubConnectionState.Connected) {
-                showToast('⚠️ 连接已断开，请刷新页面', 'error');
-                return;
-            }
-
-            // 4. 检查座位是否占满
-            var occupied = config.seats.filter(function(s) { return s.occupied; });
-            if (occupied.length < config.playerCount) {
-                showToast('⚠️ 还有 ' + (config.playerCount - occupied.length) + ' 个座位未占', 'warning');
-                return;
-            }
-
-            // 5. 检查玩家是否都已准备
-            var notReady = config.seats.filter(function(s) {
-                return s.occupied && s.player && !s.player.isReady;
-            });
-            if (notReady.length > 0) {
-                showToast('⚠️ 还有 ' + notReady.length + ' 位玩家未准备', 'warning');
-                return;
-            }
-
-            // 6. 开始发牌
-            config.isDealing = true;
-            document.getElementById('startGameBtn').disabled = true;
-            document.getElementById('startGameBtn').innerHTML = '⏳ 发牌中...';
-
+        function playShuffleAnimation(callback) {
             var overlay = document.getElementById('dealingOverlay');
-            overlay.classList.add('active');
+            var title = overlay.querySelector('.title');
+            var progressText = document.getElementById('dealProgressText');
 
-            console.log('📤 发送发牌请求到后端，roomId:', config.roomId);
+            title.textContent = '🃏 洗牌中...';
+            progressText.textContent = '🔄 牌堆飞舞...';
 
-            connection.invoke('StartDealing', config.roomId)
-                .then(function() {
-                    console.log('✅ 发牌请求已发送');
-                })
-                .catch(function(err) {
-                    console.error('❌ 发牌请求失败:', err);
-                    showToast('❌ 发牌失败: ' + err, 'error');
-                    config.isDealing = false;
-                    document.getElementById('startGameBtn').disabled = false;
-                    document.getElementById('startGameBtn').innerHTML = '🃏 洗牌发牌';
-                    document.getElementById('dealingOverlay').classList.remove('active');
+            var cardCount = 40;
+            var cards = [];
+            var container = overlay;
+
+            for (var i = 0; i < cardCount; i++) {
+                var card = document.createElement('div');
+                var size = 25 + Math.random() * 20;
+                var x = Math.random() * window.innerWidth;
+                var y = Math.random() * window.innerHeight;
+                var rot = Math.random() * 360;
+                var delay = Math.random() * 2;
+                var duration = 1.5 + Math.random() * 2;
+                var colors = ['#8B5CF6', '#EC4899', '#F59E0B', '#00F0FF', '#7B61FF', '#FF006E', '#34D399', '#4facfe'];
+                var color = colors[Math.floor(Math.random() * colors.length)];
+
+                card.style.cssText = `
+                    position: fixed;
+                    width: ${size}px;
+                    height: ${size * 1.4}px;
+                    background: linear-gradient(135deg, ${color}, ${color}66);
+                    border-radius: 4px;
+                    border: 1px solid rgba(255,255,255,0.04);
+                    box-shadow: 0 0 40px ${color}22;
+                    left: ${x}px;
+                    top: ${y}px;
+                    transform: rotate(${rot}deg) scale(0);
+                    opacity: 0;
+                    z-index: 9999;
+                    pointer-events: none;
+                    transition: all ${duration}s cubic-bezier(0.34, 1.56, 0.64, 1);
+                    transition-delay: ${delay}s;
+                `;
+                container.appendChild(card);
+                cards.push(card);
+
+                setTimeout(function() {
+                    card.style.opacity = '0.7';
+                    card.style.transform = `rotate(${rot + 360 * (0.5 + Math.random())}deg) scale(1) translate(${(Math.random() - 0.5) * 200}px, ${(Math.random() - 0.5) * 200}px)`;
+                    card.style.boxShadow = `0 0 80px ${color}44`;
+                }, 50 + delay * 300);
+            }
+
+            // 4秒后清理并回调
+            setTimeout(function() {
+                cards.forEach(function(card) {
+                    card.style.opacity = '0';
+                    card.style.transform = 'scale(0) rotate(720deg)';
                 });
+                setTimeout(function() {
+                    cards.forEach(function(card) { card.remove(); });
+                    if (callback) callback();
+                }, 800);
+            }, 4000);
         }
 
-        // 模拟发牌动画（后端会触发，但保留作为备选）
-        function simulateDealing() {
+        // ============================================================
+        // ⭐ 超级炫酷发牌动画（带粒子拖尾+光效）
+        // ============================================================
+        function createFlyingCard(seat, role, callback) {
+            var card = document.createElement('div');
+            var startX = window.innerWidth / 2 - 45;
+            var startY = window.innerHeight / 2 - 63;
+
+            var seatEl = seat.element;
+            var rect = seatEl.getBoundingClientRect();
+            var targetX = rect.left + rect.width / 2 - 45;
+            var targetY = rect.top + rect.height / 2 - 63;
+
+            // ===== 主卡片 =====
+            card.className = 'card-fly';
+            card.innerHTML = '<img src="' + cardBackImage + '" style="width:100%;height:100%;border-radius:12px;object-fit:cover;" />';
+            card.style.cssText = `
+                position: fixed;
+                width: 90px;
+                height: 126px;
+                border-radius: 12px;
+                background: transparent;
+                z-index: 9999;
+                pointer-events: none;
+                left: ${startX}px;
+                top: ${startY}px;
+                opacity: 1;
+                transform: scale(0.3) rotate(180deg);
+                transition: all 1s cubic-bezier(0.34, 1.56, 0.64, 1);
+                box-shadow: 0 0 80px rgba(139,92,246,0.05);
+            `;
+            document.body.appendChild(card);
+
+            // ===== 粒子拖尾（20个） =====
+            var particles = [];
+            var pColors = ['#8B5CF6', '#EC4899', '#00F0FF', '#F59E0B', '#7B61FF', '#FF006E'];
+            for (var i = 0; i < 25; i++) {
+                var p = document.createElement('div');
+                var color = pColors[Math.floor(Math.random() * pColors.length)];
+                var size = 2 + Math.random() * 8;
+                p.style.cssText = `
+                    position: fixed;
+                    width: ${size}px;
+                    height: ${size}px;
+                    border-radius: 50%;
+                    background: ${color};
+                    box-shadow: 0 0 20px ${color}44;
+                    left: ${startX + 45 + (Math.random() - 0.5) * 50}px;
+                    top: ${startY + 63 + (Math.random() - 0.5) * 50}px;
+                    opacity: 0;
+                    z-index: 9998;
+                    pointer-events: none;
+                    transition: all 1.2s cubic-bezier(0.23, 1, 0.32, 1);
+                    transition-delay: ${Math.random() * 0.3}s;
+                `;
+                document.body.appendChild(p);
+                particles.push(p);
+            }
+
+            // ===== 光柱 =====
+            var beam = document.createElement('div');
+            beam.style.cssText = `
+                position: fixed;
+                width: 4px;
+                height: 0px;
+                background: linear-gradient(180deg, rgba(139,92,246,0.4), transparent);
+                left: ${startX + 45}px;
+                top: ${startY + 63}px;
+                z-index: 9997;
+                pointer-events: none;
+                transition: all 0.8s ease;
+                opacity: 0;
+                border-radius: 4px;
+                box-shadow: 0 0 40px rgba(139,92,246,0.05);
+            `;
+            document.body.appendChild(beam);
+
+            // ===== 光晕圆环 =====
+            var ring = document.createElement('div');
+            ring.style.cssText = `
+                position: fixed;
+                width: 0px;
+                height: 0px;
+                border-radius: 50%;
+                border: 2px solid rgba(139,92,246,0.15);
+                left: ${startX + 45}px;
+                top: ${startY + 63}px;
+                z-index: 9996;
+                pointer-events: none;
+                transition: all 0.8s ease;
+                opacity: 0;
+                box-shadow: 0 0 80px rgba(139,92,246,0.02);
+            `;
+            document.body.appendChild(ring);
+
+            // ===== 触发动画 =====
+            requestAnimationFrame(function() {
+                // 卡片飞向目标
+                card.style.left = targetX + 'px';
+                card.style.top = targetY + 'px';
+                card.style.transform = 'scale(1.1) rotate(0deg)';
+                card.style.boxShadow = '0 0 120px rgba(139,92,246,0.15)';
+
+                // 粒子跟随
+                var step = 0;
+                var particleInterval = setInterval(function() {
+                    step++;
+                    particles.forEach(function(p, idx) {
+                        var progress = (step + idx * 0.04) / 25;
+                        if (progress < 1) {
+                            var px = targetX + 45 + (Math.random() - 0.5) * 120 * (1 - progress);
+                            var py = targetY + 63 + (Math.random() - 0.5) * 120 * (1 - progress);
+                            p.style.left = px + 'px';
+                            p.style.top = py + 'px';
+                            p.style.opacity = 0.8 * (1 - progress);
+                            p.style.transform = `scale(${1 + progress * 3})`;
+                        }
+                    });
+                    if (step > 30) {
+                        clearInterval(particleInterval);
+                    }
+                }, 40);
+
+                // 光柱
+                beam.style.height = '350px';
+                beam.style.opacity = '0.8';
+                beam.style.top = (targetY + 63 - 175) + 'px';
+                beam.style.left = (targetX + 45) + 'px';
+
+                // 光晕圆环
+                ring.style.width = '200px';
+                ring.style.height = '200px';
+                ring.style.opacity = '0.5';
+                ring.style.left = (targetX + 45 - 100) + 'px';
+                ring.style.top = (targetY + 63 - 100) + 'px';
+                ring.style.borderColor = 'rgba(139,92,246,0.08)';
+            });
+
+            // ===== 到达后翻转显示身份 =====
+            setTimeout(function() {
+                // 清除粒子
+                particles.forEach(function(p) {
+                    p.style.opacity = '0';
+                    p.style.transform = 'scale(0)';
+                });
+
+                var roleImage = roleImages[role] || '/images/werewolf/cards/平民.jpg';
+                card.innerHTML = '<img src="' + roleImage + '" style="width:100%;height:100%;border-radius:12px;object-fit:cover;border:2px solid rgba(139,92,246,0.08);" />';
+                card.style.boxShadow = '0 0 150px rgba(139,92,246,0.2)';
+                card.style.transition = 'transform 0.6s cubic-bezier(0.23, 1, 0.32, 1), box-shadow 0.6s ease';
+
+                // 翻转效果
+                card.style.transform = 'rotateY(180deg)';
+                setTimeout(function() {
+                    card.style.transform = 'rotateY(0deg) scale(1)';
+                }, 100);
+
+                // 爆炸粒子效果（到达时）
+                for (var i = 0; i < 15; i++) {
+                    var burst = document.createElement('div');
+                    var bColor = ['#8B5CF6', '#EC4899', '#00F0FF', '#F59E0B', '#7B61FF'][Math.floor(Math.random() * 5)];
+                    var angle = Math.random() * 2 * Math.PI;
+                    var dist = 50 + Math.random() * 100;
+                    var dx = Math.cos(angle) * dist;
+                    var dy = Math.sin(angle) * dist;
+                    burst.style.cssText = `
+                        position: fixed;
+                        width: ${4 + Math.random() * 6}px;
+                        height: ${4 + Math.random() * 6}px;
+                        border-radius: 50%;
+                        background: ${bColor};
+                        box-shadow: 0 0 30px ${bColor}44;
+                        left: ${targetX + 45}px;
+                        top: ${targetY + 63}px;
+                        z-index: 9998;
+                        pointer-events: none;
+                        transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+                        opacity: 1;
+                        transform: scale(1);
+                    `;
+                    document.body.appendChild(burst);
+                    requestAnimationFrame(function() {
+                        burst.style.left = (targetX + 45 + dx) + 'px';
+                        burst.style.top = (targetY + 63 + dy) + 'px';
+                        burst.style.opacity = '0';
+                        burst.style.transform = 'scale(0)';
+                    });
+                    setTimeout(function() { burst.remove(); }, 1000);
+                }
+
+                // 移除光柱和圆环
+                beam.style.opacity = '0';
+                beam.style.height = '0px';
+                ring.style.opacity = '0';
+                ring.style.width = '0px';
+                ring.style.height = '0px';
+
+                // 1.5秒后卡片消失
+                setTimeout(function() {
+                    card.style.opacity = '0';
+                    card.style.transform = 'scale(0.8) rotate(10deg)';
+                    setTimeout(function() {
+                        card.remove();
+                        beam.remove();
+                        ring.remove();
+                        if (callback) callback();
+                    }, 400);
+                }, 1500);
+
+            }, 1200);
+        }
+
+        // ============================================================
+        // ⭐ 发牌主流程
+        // ============================================================
+        function startDealing() {
             var players = config.seats.filter(function(s) { return s.occupied; });
             var total = players.length;
             var current = 0;
+
             var roles = generateRoles();
             var shuffledRoles = shuffleArray(roles);
 
@@ -730,6 +942,12 @@
             var title = document.getElementById('dealingOverlay').querySelector('.title');
             var progressText = document.getElementById('dealProgressText');
             title.textContent = '🃏 发牌中...';
+
+            // 先播放洗牌动画
+            playShuffleAnimation(function() {
+                title.textContent = '📤 发牌中...';
+                dealNext();
+            });
 
             function dealNext() {
                 if (current >= total) {
@@ -744,7 +962,8 @@
                         document.getElementById('startGameBtn').disabled = false;
                         document.getElementById('gameStatusText').textContent = '🎮 所有玩家已收到身份';
                         showToast('🎉 发牌完成！', 'success');
-                    }, 2000);
+                        notifyPlayersToReveal();
+                    }, 1500);
                     return;
                 }
 
@@ -754,58 +973,14 @@
 
                 createFlyingCard(seat, role, function() {
                     current++;
-                    setTimeout(dealNext, 350);
+                    setTimeout(dealNext, 500);
                 });
             }
-            setTimeout(dealNext, 500);
         }
 
-        function createFlyingCard(seat, role, callback) {
-            var card = document.createElement('div');
-            card.className = 'card-fly show';
-            card.innerHTML = '<img src="' + cardBackImage +
-                '" style="width:100%;height:100%;border-radius:12px;object-fit:cover;" />';
-
-            var startX = window.innerWidth / 2 - 35;
-            var startY = window.innerHeight / 2 - 49;
-            var seatEl = seat.element;
-            var rect = seatEl.getBoundingClientRect();
-            var targetX = rect.left + rect.width / 2 - 35;
-            var targetY = rect.top + rect.height / 2 - 49;
-
-            card.style.left = startX + 'px';
-            card.style.top = startY + 'px';
-            card.style.opacity = '1';
-            card.style.transform = 'scale(0.3) rotate(180deg)';
-            card.style.width = '70px';
-            card.style.height = '98px';
-            card.style.borderRadius = '12px';
-            card.style.boxShadow = '0 0 60px rgba(139,92,246,0.05)';
-            document.body.appendChild(card);
-
-            requestAnimationFrame(function() {
-                card.style.left = targetX + 'px';
-                card.style.top = targetY + 'px';
-                card.style.transform = 'scale(1) rotate(0deg)';
-                card.style.boxShadow = '0 0 100px rgba(139,92,246,0.1)';
-            });
-
-            setTimeout(function() {
-                var roleImage = roleImages[role] || '/images/werewolf/cards/平民.jpg';
-                card.innerHTML = '<img src="' + roleImage +
-                    '" style="width:100%;height:100%;border-radius:12px;object-fit:cover;border:2px solid rgba(139,92,246,0.08);" />';
-                card.style.boxShadow = '0 0 120px rgba(139,92,246,0.15)';
-                card.style.transition = 'transform 0.6s cubic-bezier(0.23, 1, 0.32, 1)';
-                card.style.transform = 'rotateY(180deg)';
-                setTimeout(function() { card.style.transform = 'rotateY(0deg)'; }, 100);
-                setTimeout(function() {
-                    card.style.opacity = '0';
-                    card.style.transform = 'scale(0.8)';
-                    setTimeout(function() { card.remove(); if (callback) callback(); }, 300);
-                }, 1500);
-            }, 700);
-        }
-
+        // ============================================================
+        // 生成角色分配
+        // ============================================================
         function generateRoles() {
             var count = config.playerCount;
             var roles = [];
@@ -831,10 +1006,18 @@
             return arr;
         }
 
+        // ============================================================
+        // 通知玩家查看身份
+        // ============================================================
         function notifyPlayersToReveal() {
             var playerData = config.seats.filter(function(s) { return s.occupied && s.player; }).map(function(s) {
-                return { seatNumber: s.number, playerId: s.player.playerId || 'player_' + s.number, role: s.player.role ||
-                        '平民', nickname: s.player.name || '玩家' + s.number, avatar: s.player.avatar || '🧑' };
+                return {
+                    seatNumber: s.number,
+                    playerId: s.player.playerId || 'player_' + s.number,
+                    role: s.player.role || '平民',
+                    nickname: s.player.name || '玩家' + s.number,
+                    avatar: s.player.avatar || '🧑'
+                };
             });
             if (connection && connection.state === signalR.HubConnectionState.Connected) {
                 connection.invoke('SendPlayerRoles', playerData).catch(function(err) { console.error('❌ 发送身份失败:',
@@ -843,6 +1026,9 @@
             window._playerRoles = playerData;
         }
 
+        // ============================================================
+        // Toast
+        // ============================================================
         function showToast(message, type) {
             type = type || 'info';
             var container = document.getElementById('toastContainer');
@@ -855,6 +1041,64 @@
                 toast.style.transform = 'translateX(20px)';
                 setTimeout(function() { toast.remove(); }, 300);
             }, 3500);
+        }
+
+        // ============================================================
+        // 开始游戏
+        // ============================================================
+        function startGame() {
+            console.log('🃏 点击开始游戏');
+
+            if (config.isDealing) { showToast('⏳ 正在发牌中...', 'warning'); return; }
+
+            if (!config.roomId) {
+                console.error('❌ 没有房间ID');
+                showToast('⚠️ 房间未创建，请从派对大厅进入', 'error');
+                return;
+            }
+
+            if (!connection || connection.state !== signalR.HubConnectionState.Connected) {
+                showToast('⚠️ 连接已断开，请刷新页面', 'error');
+                return;
+            }
+
+            var occupied = config.seats.filter(function(s) { return s.occupied; });
+            if (occupied.length < config.playerCount) {
+                showToast('⚠️ 还有 ' + (config.playerCount - occupied.length) + ' 个座位未占', 'warning');
+                return;
+            }
+
+            var notReady = config.seats.filter(function(s) {
+                return s.occupied && s.player && !s.player.isReady;
+            });
+            if (notReady.length > 0) {
+                showToast('⚠️ 还有 ' + notReady.length + ' 位玩家未准备', 'warning');
+                return;
+            }
+
+            config.isDealing = true;
+            document.getElementById('startGameBtn').disabled = true;
+            document.getElementById('startGameBtn').innerHTML = '⏳ 发牌中...';
+
+            var overlay = document.getElementById('dealingOverlay');
+            overlay.classList.add('active');
+
+            console.log('📤 发送发牌请求到后端，roomId:', config.roomId);
+
+            connection.invoke('StartDealing', config.roomId)
+                .then(function() {
+                    console.log('✅ 发牌请求已发送');
+                    // 开始本地发牌动画
+                    startDealing();
+                })
+                .catch(function(err) {
+                    console.error('❌ 发牌请求失败:', err);
+                    showToast('❌ 发牌失败: ' + err, 'error');
+                    config.isDealing = false;
+                    document.getElementById('startGameBtn').disabled = false;
+                    document.getElementById('startGameBtn').innerHTML = '🃏 洗牌发牌';
+                    document.getElementById('dealingOverlay').classList.remove('active');
+                });
         }
 
         // ============================================================
@@ -873,6 +1117,7 @@
                     if (data.success) {
                         config.roomId = data.roomId;
                         console.log('✅ 房间已创建，ID:', config.roomId);
+                        document.getElementById('roomIdDisplay').textContent = config.roomId;
                         showToast('✅ 房间已创建！', 'success');
                         document.getElementById('phaseDisplay').textContent = '🪑 等待玩家';
                     }
@@ -882,8 +1127,12 @@
                     var seat = config.seats.find(function(s) { return s.number === player.seatNumber; });
                     if (seat) {
                         seat.occupied = true;
-                        seat.player = { playerId: player.playerId, name: player.nickname, avatar: player.avatar || '🧑',
-                            isReady: false };
+                        seat.player = {
+                            playerId: player.playerId,
+                            name: player.nickname,
+                            avatar: player.avatar || '🧑',
+                            isReady: false
+                        };
                         seat.element.className = 'seat occupied';
                         seat.element.querySelector('.seat-name').textContent = player.nickname;
                         seat.element.querySelector('.seat-emoji').textContent = player.avatar || '🧑';
@@ -971,17 +1220,28 @@
                 connection.start()
                     .then(function() {
                         console.log('✅ SignalR 已连接');
-                        // 自动创建房间
-                        connection.invoke('CreateRoom', 'admin', config.playerCount, config.selectedRoles)
-                            .then(function(data) {
-                                if (data && data.success) {
-                                    config.roomId = data.roomId;
-                                    console.log('✅ 房间已自动创建，ID:', config.roomId);
-                                }
-                            })
-                            .catch(function(err) {
-                                console.error('❌ 创建房间失败:', err);
-                            });
+                        // 如果有 roomId，加入已有房间
+                        if (config.roomId) {
+                            connection.invoke('JoinGame', config.roomId, '主控', '👑')
+                                .then(function(result) {
+                                    console.log('✅ 已加入房间:', result);
+                                })
+                                .catch(function(err) {
+                                    console.error('❌ 加入房间失败:', err);
+                                });
+                        } else {
+                            // 否则创建新房间
+                            connection.invoke('CreateRoom', 'admin', config.playerCount, config.selectedRoles)
+                                .then(function(data) {
+                                    if (data && data.success) {
+                                        config.roomId = data.roomId;
+                                        console.log('✅ 房间已创建:', config.roomId);
+                                    }
+                                })
+                                .catch(function(err) {
+                                    console.error('❌ 创建房间失败:', err);
+                                });
+                        }
                     })
                     .catch(function(err) {
                         console.error('❌ SignalR 连接失败:', err);
