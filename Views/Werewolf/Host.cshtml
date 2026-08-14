@@ -20,9 +20,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
     <style>
-        /* ============================================================
-           全局
-           ============================================================ */
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
@@ -36,9 +33,6 @@
 
         .container { max-width: 1400px; margin: 0 auto; }
 
-        /* ============================================================
-           顶部
-           ============================================================ */
         .header {
             display: flex;
             justify-content: space-between;
@@ -71,23 +65,12 @@
             gap: 12px;
         }
 
-        .header .status .dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            display: inline-block;
-        }
+        .header .status .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
         .header .status .dot.online { background: #00FF88; animation: pulse 2s infinite; }
         .header .status .dot.waiting { background: #F59E0B; animation: pulse 2s infinite; }
 
-        @@keyframes pulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.4; transform: scale(1.2); }
-        }
+        @@keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(1.2); } }
 
-        /* ============================================================
-           主体
-           ============================================================ */
         .main-content {
             display: grid;
             grid-template-columns: 1fr 360px;
@@ -95,13 +78,8 @@
             margin-top: 20px;
         }
 
-        @@media (max-width: 1100px) {
-            .main-content { grid-template-columns: 1fr; }
-        }
+        @@media (max-width: 1100px) { .main-content { grid-template-columns: 1fr; } }
 
-        /* ============================================================
-           座位图
-           ============================================================ */
         .seating-area {
             background: rgba(255,255,255,0.02);
             backdrop-filter: blur(20px);
@@ -125,13 +103,8 @@
             gap: 8px;
         }
 
-        .seating-area .area-title .count {
-            color: #00F0FF;
-            font-weight: 700;
-            font-size: 0.8rem;
-        }
+        .seating-area .area-title .count { color: #00F0FF; font-weight: 700; font-size: 0.8rem; }
 
-        /* ===== 桌子 ===== */
         .table-container {
             position: relative;
             width: 100%;
@@ -144,9 +117,9 @@
             position: absolute;
             inset: 0;
             border-radius: 50%;
-            background: radial-gradient(ellipse at center, rgba(30, 20, 60, 0.3), rgba(10, 10, 30, 0.6));
-            border: 2px solid rgba(139, 92, 246, 0.04);
-            box-shadow: 0 0 80px rgba(139, 92, 246, 0.02), inset 0 0 80px rgba(0, 0, 0, 0.3);
+            background: radial-gradient(ellipse at center, rgba(30,20,60,0.3), rgba(10,10,30,0.6));
+            border: 2px solid rgba(139,92,246,0.04);
+            box-shadow: 0 0 80px rgba(139,92,246,0.02), inset 0 0 80px rgba(0,0,0,0.3);
         }
 
         .table-bg::after {
@@ -154,15 +127,14 @@
             position: absolute;
             inset: 10%;
             border-radius: 50%;
-            background: radial-gradient(ellipse at 40% 40%, rgba(139, 92, 246, 0.02), transparent 70%);
+            background: radial-gradient(ellipse at 40% 40%, rgba(139,92,246,0.02), transparent 70%);
         }
 
         .table-pattern {
             position: absolute;
             inset: 15%;
             border-radius: 50%;
-            background-image: 
-                repeating-conic-gradient(from 0deg at 50% 50%, transparent 0deg, rgba(255,255,255,0.005) 5deg, transparent 10deg);
+            background-image: repeating-conic-gradient(from 0deg at 50% 50%, transparent 0deg, rgba(255,255,255,0.005) 5deg, transparent 10deg);
             opacity: 0.3;
             pointer-events: none;
         }
@@ -180,7 +152,6 @@
         .table-center .icon { font-size: 2.4rem; opacity: 0.1; display: block; }
         .table-center .label { font-size: 0.5rem; color: rgba(255,255,255,0.02); text-transform: uppercase; letter-spacing: 0.2em; margin-top: 4px; }
 
-        /* ===== 座位 ===== */
         .seat {
             position: absolute;
             width: 60px;
@@ -201,69 +172,24 @@
             transform: translate(-50%, -50%);
         }
 
-        .seat .seat-number {
-            font-size: 0.9rem;
-            font-weight: 700;
-            font-family: 'Courier New', monospace;
-            color: rgba(255,255,255,0.1);
-            transition: all 0.3s ease;
-        }
-
-        .seat .seat-name {
-            font-size: 0.45rem;
-            font-weight: 500;
-            color: rgba(255,255,255,0.04);
-            max-width: 44px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            transition: all 0.3s ease;
-        }
-
+        .seat .seat-number { font-size: 0.9rem; font-weight: 700; font-family: 'Courier New', monospace; color: rgba(255,255,255,0.1); }
+        .seat .seat-name { font-size: 0.45rem; font-weight: 500; color: rgba(255,255,255,0.04); max-width: 44px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .seat .seat-emoji { font-size: 0.6rem; display: none; }
 
-        .seat.occupied {
-            border-color: rgba(0, 240, 255, 0.12);
-            background: rgba(0, 240, 255, 0.03);
-        }
-
-        .seat.occupied .seat-number { color: rgba(0, 240, 255, 0.3); }
+        .seat.occupied { border-color: rgba(0,240,255,0.12); background: rgba(0,240,255,0.03); }
+        .seat.occupied .seat-number { color: rgba(0,240,255,0.3); }
         .seat.occupied .seat-name { color: rgba(255,255,255,0.15); }
 
-        .seat.ready {
-            border-color: rgba(0, 255, 136, 0.15);
-            background: rgba(0, 255, 136, 0.03);
-            box-shadow: 0 0 40px rgba(0, 255, 136, 0.02);
-        }
-
+        .seat.ready { border-color: rgba(0,255,136,0.15); background: rgba(0,255,136,0.03); box-shadow: 0 0 40px rgba(0,255,136,0.02); }
         .seat.ready .seat-number { color: #00FF88; }
 
-        .seat.empty:hover {
-            border-color: rgba(139, 92, 246, 0.15);
-            background: rgba(139, 92, 246, 0.04);
-            transform: translate(-50%, -50%) scale(1.08);
-        }
+        .seat.empty:hover { border-color: rgba(139,92,246,0.15); background: rgba(139,92,246,0.04); transform: translate(-50%, -50%) scale(1.08); }
 
-        .seat.dead {
-            border-color: rgba(220, 53, 69, 0.08);
-            background: rgba(220, 53, 69, 0.02);
-            opacity: 0.3;
-        }
-
-        .seat.sheriff {
-            border-color: #F59E0B;
-            box-shadow: 0 0 40px rgba(245, 158, 11, 0.05);
-            animation: sheriffGlow 2s ease-in-out infinite;
-        }
-
-        @@keyframes sheriffGlow {
-            0%, 100% { box-shadow: 0 0 20px rgba(245, 158, 11, 0.02); }
-            50% { box-shadow: 0 0 60px rgba(245, 158, 11, 0.08); }
-        }
-
+        .seat.dead { border-color: rgba(220,53,69,0.08); background: rgba(220,53,69,0.02); opacity: 0.3; }
+        .seat.sheriff { border-color: #F59E0B; box-shadow: 0 0 40px rgba(245,158,11,0.05); animation: sheriffGlow 2s ease-in-out infinite; }
+        @@keyframes sheriffGlow { 0%, 100% { box-shadow: 0 0 20px rgba(245,158,11,0.02); } 50% { box-shadow: 0 0 60px rgba(245,158,11,0.08); } }
         .seat.sheriff .seat-number { color: #F59E0B; }
 
-        /* ===== 发牌动画卡片 ===== */
         .card-fly {
             position: fixed;
             width: 70px;
@@ -275,30 +201,13 @@
             transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
             opacity: 0;
             transform: scale(0.3) rotate(180deg);
-            box-shadow: 0 0 60px rgba(139, 92, 246, 0.05);
+            box-shadow: 0 0 60px rgba(139,92,246,0.05);
         }
 
-        .card-fly.show {
-            opacity: 1;
-            transform: scale(1) rotate(0deg);
-        }
+        .card-fly.show { opacity: 1; transform: scale(1) rotate(0deg); }
+        .card-fly img { width: 100%; height: 100%; border-radius: 12px; object-fit: cover; box-shadow: 0 0 60px rgba(139,92,246,0.05); }
 
-        .card-fly img {
-            width: 100%;
-            height: 100%;
-            border-radius: 12px;
-            object-fit: cover;
-            box-shadow: 0 0 60px rgba(139, 92, 246, 0.05);
-        }
-
-        /* ============================================================
-           右侧面板
-           ============================================================ */
-        .side-panel {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
+        .side-panel { display: flex; flex-direction: column; gap: 16px; }
 
         .panel-card {
             background: rgba(255,255,255,0.02);
@@ -323,17 +232,9 @@
             gap: 8px;
         }
 
-        .panel-card .card-title .accent {
-            flex: 1;
-            height: 1px;
-            background: linear-gradient(90deg, rgba(255,255,255,0.04), transparent);
-        }
+        .panel-card .card-title .accent { flex: 1; height: 1px; background: linear-gradient(90deg, rgba(255,255,255,0.04), transparent); }
 
-        .config-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-        }
+        .config-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 
         .config-btn {
             padding: 8px 6px;
@@ -349,30 +250,11 @@
             text-align: center;
         }
 
-        .config-btn:hover {
-            border-color: rgba(139,92,246,0.12);
-            background: rgba(139,92,246,0.03);
-        }
+        .config-btn:hover { border-color: rgba(139,92,246,0.12); background: rgba(139,92,246,0.03); }
+        .config-btn.active { border-color: #8B5CF6; background: rgba(139,92,246,0.06); color: #8B5CF6; }
+        .config-btn .sub { display: block; font-size: 0.5rem; font-weight: 400; color: rgba(255,255,255,0.06); margin-top: 2px; }
 
-        .config-btn.active {
-            border-color: #8B5CF6;
-            background: rgba(139,92,246,0.06);
-            color: #8B5CF6;
-        }
-
-        .config-btn .sub {
-            display: block;
-            font-size: 0.5rem;
-            font-weight: 400;
-            color: rgba(255,255,255,0.06);
-            margin-top: 2px;
-        }
-
-        .role-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 6px;
-        }
+        .role-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
 
         .role-option {
             padding: 8px 4px;
@@ -387,26 +269,13 @@
             font-size: 0.65rem;
         }
 
-        .role-option:hover {
-            border-color: rgba(139,92,246,0.1);
-            background: rgba(139,92,246,0.03);
-        }
-
-        .role-option.selected {
-            border-color: #8B5CF6;
-            background: rgba(139,92,246,0.06);
-            color: #8B5CF6;
-        }
-
+        .role-option:hover { border-color: rgba(139,92,246,0.1); background: rgba(139,92,246,0.03); }
+        .role-option.selected { border-color: #8B5CF6; background: rgba(139,92,246,0.06); color: #8B5CF6; }
         .role-option .icon { font-size: 1.2rem; display: block; }
         .role-option .name { font-weight: 600; }
         .role-option .desc { font-size: 0.45rem; color: rgba(255,255,255,0.06); display: block; margin-top: 2px; }
 
-        .action-buttons {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
+        .action-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
 
         .btn-action {
             flex: 1;
@@ -425,52 +294,11 @@
             gap: 6px;
         }
 
-        .btn-action.primary {
-            background: linear-gradient(135deg, #8B5CF6, #EC4899);
-            color: #fff;
-        }
-
-        .btn-action.primary:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 40px rgba(139, 92, 246, 0.15);
-        }
-
-        .btn-action.primary:disabled {
-            opacity: 0.3;
-            cursor: not-allowed;
-            transform: none !important;
-        }
-
-        .btn-action.secondary {
-            background: rgba(255,255,255,0.02);
-            border: 1px solid rgba(255,255,255,0.04);
-            color: rgba(255,255,255,0.2);
-        }
-
-        .btn-action.secondary:hover:not(:disabled) {
-            background: rgba(255,255,255,0.04);
-            color: #fff;
-        }
-
-        .btn-action.success {
-            background: linear-gradient(135deg, #00FF88, #00F0FF);
-            color: #05050F;
-        }
-
-        .btn-action.success:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 40px rgba(0, 255, 136, 0.1);
-        }
-
-        .btn-action.danger {
-            background: rgba(255, 0, 110, 0.08);
-            border: 1px solid rgba(255, 0, 110, 0.04);
-            color: rgba(255, 0, 110, 0.3);
-        }
-
-        .btn-action.danger:hover:not(:disabled) {
-            background: rgba(255, 0, 110, 0.12);
-        }
+        .btn-action.primary { background: linear-gradient(135deg, #8B5CF6, #EC4899); color: #fff; }
+        .btn-action.primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 40px rgba(139,92,246,0.15); }
+        .btn-action.primary:disabled { opacity: 0.3; cursor: not-allowed; transform: none !important; }
+        .btn-action.secondary { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.04); color: rgba(255,255,255,0.2); }
+        .btn-action.secondary:hover:not(:disabled) { background: rgba(255,255,255,0.04); color: #fff; }
 
         .status-info {
             font-size: 0.75rem;
@@ -481,9 +309,6 @@
             border-top: 1px solid rgba(255,255,255,0.02);
         }
 
-        /* ============================================================
-           发牌遮罩
-           ============================================================ */
         .dealing-overlay {
             position: fixed;
             inset: 0;
@@ -509,40 +334,14 @@
             animation: titlePulse 2s ease-in-out infinite;
         }
 
-        @@keyframes titlePulse {
-            0%, 100% { opacity: 0.6; transform: scale(1); }
-            50% { opacity: 1; transform: scale(1.02); }
-        }
+        @@keyframes titlePulse { 0%, 100% { opacity: 0.6; transform: scale(1); } 50% { opacity: 1; transform: scale(1.02); } }
 
-        .dealing-overlay .sub {
-            font-size: 0.9rem;
-            color: rgba(255,255,255,0.1);
-            letter-spacing: 0.2em;
-        }
+        .dealing-overlay .sub { font-size: 0.9rem; color: rgba(255,255,255,0.1); letter-spacing: 0.2em; }
+        .dealing-overlay .progress-ring { margin-top: 30px; width: 60px; height: 60px; border: 3px solid rgba(255,255,255,0.02); border-top-color: #8B5CF6; border-radius: 50%; animation: spin 1s linear infinite; }
+        @@keyframes spin { to { transform: rotate(360deg); } }
 
-        .dealing-overlay .progress-ring {
-            margin-top: 30px;
-            width: 60px;
-            height: 60px;
-            border: 3px solid rgba(255,255,255,0.02);
-            border-top-color: #8B5CF6;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
+        .dealing-overlay .deal-progress-text { margin-top: 20px; font-size: 0.7rem; color: rgba(255,255,255,0.04); }
 
-        @@keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        .dealing-overlay .deal-progress-text {
-            margin-top: 20px;
-            font-size: 0.7rem;
-            color: rgba(255,255,255,0.04);
-        }
-
-        /* ============================================================
-           Toast
-           ============================================================ */
         .toast-container {
             position: fixed;
             bottom: 20px;
@@ -562,22 +361,16 @@
             animation: toastIn 0.4s ease;
             font-size: 0.8rem;
             backdrop-filter: blur(20px);
-            background: rgba(10, 10, 30, 0.8);
+            background: rgba(10,10,30,0.8);
             border: 1px solid rgba(255,255,255,0.04);
         }
 
-        .toast-msg.success { background: rgba(0, 255, 136, 0.08); border-color: rgba(0, 255, 136, 0.04); color: #00FF88; }
-        .toast-msg.error { background: rgba(255, 0, 110, 0.08); border-color: rgba(255, 0, 110, 0.04); color: #FF006E; }
-        .toast-msg.info { background: rgba(0, 240, 255, 0.06); border-color: rgba(0, 240, 255, 0.04); color: #00F0FF; }
+        .toast-msg.success { background: rgba(0,255,136,0.08); border-color: rgba(0,255,136,0.04); color: #00FF88; }
+        .toast-msg.error { background: rgba(255,0,110,0.08); border-color: rgba(255,0,110,0.04); color: #FF006E; }
+        .toast-msg.info { background: rgba(0,240,255,0.06); border-color: rgba(0,240,255,0.04); color: #00F0FF; }
 
-        @@keyframes toastIn {
-            from { opacity: 0; transform: translateY(20px) scale(0.95); }
-            to { opacity: 1; transform: translateY(0) scale(1); }
-        }
+        @@keyframes toastIn { from { opacity: 0; transform: translateY(20px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
 
-        /* ============================================================
-           响应式
-           ============================================================ */
         @@media (max-width: 768px) {
             body { padding: 10px; }
             .header .logo { font-size: 1.2rem; }
@@ -609,11 +402,8 @@
 <body>
 
     <div class="container">
-        <!-- 顶部 -->
         <div class="header">
-            <div class="logo">
-                <span>🐺</span> 狼人杀 · 主控台
-            </div>
+            <div class="logo"><span>🐺</span> 狼人杀 · 主控台</div>
             <div class="status">
                 <span class="dot online"></span> 在线
                 <span id="playerCountDisplay">0/0 人</span>
@@ -622,122 +412,57 @@
             </div>
         </div>
 
-        <!-- 主体 -->
         <div class="main-content">
-
             <!-- 座位图 -->
             <div class="seating-area" id="seatingArea">
-                <div class="area-title">
-                    🪑 座位图
-                    <span class="count" id="seatCount">0/0 已占</span>
-                </div>
-
+                <div class="area-title">🪑 座位图 <span class="count" id="seatCount">0/0 已占</span></div>
                 <div class="table-container" id="tableContainer">
                     <div class="table-bg"></div>
                     <div class="table-pattern"></div>
-                    <div class="table-center">
-                        <span class="icon">🐺</span>
-                        <span class="label">狼人杀</span>
-                    </div>
+                    <div class="table-center"><span class="icon">🐺</span><span class="label">狼人杀</span></div>
                     <div id="seatsContainer"></div>
                 </div>
             </div>
 
             <!-- 右侧面板 -->
             <div class="side-panel">
-
-                <!-- 游戏设置 -->
                 <div class="panel-card">
-                    <div class="card-title">
-                        ⚙️ 游戏设置
-                        <span class="accent"></span>
-                    </div>
-
+                    <div class="card-title">⚙️ 游戏设置 <span class="accent"></span></div>
                     <div style="margin-bottom:10px;">
                         <div style="font-size:0.6rem;color:rgba(255,255,255,0.08);margin-bottom:4px;">👥 玩家人数</div>
                         <div class="config-grid" id="playerCountSelector">
-                            <button class="config-btn" data-count="8" onclick="selectPlayerCount(8)">
-                                8人
-                                <span class="sub">2狼·3神·3民</span>
-                            </button>
-                            <button class="config-btn active" data-count="10" onclick="selectPlayerCount(10)">
-                                10人
-                                <span class="sub">3狼·3神·4民</span>
-                            </button>
-                            <button class="config-btn" data-count="12" onclick="selectPlayerCount(12)">
-                                12人
-                                <span class="sub">4狼·4神·4民</span>
-                            </button>
+                            <button class="config-btn" data-count="8" onclick="selectPlayerCount(8)">8人<span class="sub">2狼·3神·3民</span></button>
+                            <button class="config-btn active" data-count="10" onclick="selectPlayerCount(10)">10人<span class="sub">3狼·3神·4民</span></button>
+                            <button class="config-btn" data-count="12" onclick="selectPlayerCount(12)">12人<span class="sub">4狼·4神·4民</span></button>
                         </div>
                     </div>
-
                     <div>
                         <div style="font-size:0.6rem;color:rgba(255,255,255,0.08);margin-bottom:4px;">🃏 神职配置</div>
                         <div class="role-grid" id="roleSelector">
-                            <div class="role-option selected" data-role="预言家" onclick="toggleRole(this)">
-                                <span class="icon">🔮</span>
-                                <span class="name">预言家</span>
-                            </div>
-                            <div class="role-option selected" data-role="女巫" onclick="toggleRole(this)">
-                                <span class="icon">🧪</span>
-                                <span class="name">女巫</span>
-                            </div>
-                            <div class="role-option selected" data-role="守卫" onclick="toggleRole(this)">
-                                <span class="icon">🛡️</span>
-                                <span class="name">守卫</span>
-                            </div>
-                            <div class="role-option" data-role="猎人" onclick="toggleRole(this)">
-                                <span class="icon">🔫</span>
-                                <span class="name">猎人</span>
-                            </div>
-                            <div class="role-option" data-role="白痴" onclick="toggleRole(this)">
-                                <span class="icon">🤡</span>
-                                <span class="name">白痴</span>
-                            </div>
-                            <div class="role-option" data-role="骑士" onclick="toggleRole(this)">
-                                <span class="icon">⚔️</span>
-                                <span class="name">骑士</span>
-                            </div>
+                            <div class="role-option selected" data-role="预言家" onclick="toggleRole(this)"><span class="icon">🔮</span><span class="name">预言家</span></div>
+                            <div class="role-option selected" data-role="女巫" onclick="toggleRole(this)"><span class="icon">🧪</span><span class="name">女巫</span></div>
+                            <div class="role-option selected" data-role="守卫" onclick="toggleRole(this)"><span class="icon">🛡️</span><span class="name">守卫</span></div>
+                            <div class="role-option" data-role="猎人" onclick="toggleRole(this)"><span class="icon">🔫</span><span class="name">猎人</span></div>
+                            <div class="role-option" data-role="白痴" onclick="toggleRole(this)"><span class="icon">🤡</span><span class="name">白痴</span></div>
+                            <div class="role-option" data-role="骑士" onclick="toggleRole(this)"><span class="icon">⚔️</span><span class="name">骑士</span></div>
                         </div>
-                        <div style="font-size:0.45rem;color:rgba(255,255,255,0.04);margin-top:4px;text-align:center;">
-                            💡 选择本局使用的神职角色
-                        </div>
+                        <div style="font-size:0.45rem;color:rgba(255,255,255,0.04);margin-top:4px;text-align:center;">💡 选择本局使用的神职角色</div>
                     </div>
                 </div>
 
-                <!-- 操作 -->
                 <div class="panel-card">
-                    <div class="card-title">
-                        🎮 控制
-                        <span class="accent"></span>
-                    </div>
-
+                    <div class="card-title">🎮 控制 <span class="accent"></span></div>
                     <div class="action-buttons">
-                        <button class="btn-action primary" id="startGameBtn" onclick="startGame()">
-                            🃏 洗牌发牌
-                        </button>
-                        <button class="btn-action secondary" onclick="resetSeats()">
-                            🔄 重置
-                        </button>
+                        <button class="btn-action primary" id="startGameBtn" onclick="startGame()">🃏 洗牌发牌</button>
+                        <button class="btn-action secondary" onclick="resetSeats()">🔄 重置</button>
                     </div>
-
-                    <div class="status-info" id="gameStatusText">
-                        📌 请选择人数和角色配置，然后点击"洗牌发牌"
-                    </div>
+                    <div class="status-info" id="gameStatusText">📌 请选择人数和角色配置，然后点击"洗牌发牌"</div>
                 </div>
 
-                <!-- 玩家列表 -->
                 <div class="panel-card">
-                    <div class="card-title">
-                        👥 玩家列表
-                        <span class="accent"></span>
-                        <span style="font-size:0.6rem;color:rgba(255,255,255,0.06);font-weight:400;" id="playerListCount">0</span>
-                    </div>
-                    <div id="playerList" style="max-height:120px;overflow-y:auto;font-size:0.75rem;color:rgba(255,255,255,0.1);line-height:2;">
-                        <span style="color:rgba(255,255,255,0.04);">暂无玩家</span>
-                    </div>
+                    <div class="card-title">👥 玩家列表 <span class="accent"></span><span style="font-size:0.6rem;color:rgba(255,255,255,0.06);font-weight:400;" id="playerListCount">0</span></div>
+                    <div id="playerList" style="max-height:120px;overflow-y:auto;font-size:0.75rem;color:rgba(255,255,255,0.1);line-height:2;"><span style="color:rgba(255,255,255,0.04);">暂无玩家</span></div>
                 </div>
-
             </div>
         </div>
     </div>
@@ -753,7 +478,6 @@
     <!-- Toast -->
     <div class="toast-container" id="toastContainer"></div>
 
-    <!-- Scripts -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js">
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js">
@@ -773,7 +497,6 @@
             '骑士': '/images/werewolf/cards/骑士.jpg',
             '平民': '/images/werewolf/cards/平民.jpg'
         };
-
         var cardBackImage = '/images/werewolf/cards/card_back.jpg';
 
         // ============================================================
@@ -796,7 +519,6 @@
             var container = document.getElementById('seatsContainer');
             var count = config.playerCount;
             container.innerHTML = '';
-
             config.seats = [];
             var radius = 38;
 
@@ -838,7 +560,6 @@
                     isSheriff: false
                 });
             }
-
             updateSeatCount();
         }
 
@@ -848,110 +569,67 @@
             document.getElementById('playerCountDisplay').textContent = occupied + '/' + config.seats.length;
         }
 
-        // ============================================================
-        // 玩家选择人数
-        // ============================================================
         function selectPlayerCount(count) {
-            if (config.isGameStarted) {
-                showToast('⚠️ 游戏已开始，无法更改人数', 'error');
-                return;
-            }
-
+            if (config.isGameStarted) { showToast('⚠️ 游戏已开始，无法更改人数', 'error'); return; }
             config.playerCount = count;
-
             document.querySelectorAll('#playerCountSelector .config-btn').forEach(function(btn) {
                 btn.classList.toggle('active', parseInt(btn.dataset.count) === count);
             });
 
-            var defaultRoles = {
-                8: ['预言家', '女巫', '猎人'],
-                10: ['预言家', '女巫', '守卫'],
-                12: ['预言家', '女巫', '守卫', '猎人']
-            };
-
+            var defaultRoles = { 8: ['预言家', '女巫', '猎人'], 10: ['预言家', '女巫', '守卫'], 12: ['预言家', '女巫', '守卫',
+                    '猎人'] };
             var roles = defaultRoles[count] || ['预言家', '女巫', '守卫'];
-
             document.querySelectorAll('#roleSelector .role-option').forEach(function(el) {
-                var isSelected = roles.indexOf(el.dataset.role) !== -1;
-                el.classList.toggle('selected', isSelected);
+                el.classList.toggle('selected', roles.indexOf(el.dataset.role) !== -1);
             });
-
             config.selectedRoles = roles;
             generateSeats();
             updatePlayerList();
             showToast('✅ 已切换至 ' + count + ' 人局', 'success');
         }
 
-        // ============================================================
-        // 角色切换
-        // ============================================================
         function toggleRole(element) {
-            if (config.isGameStarted) {
-                showToast('⚠️ 游戏已开始，无法更改配置', 'error');
-                return;
-            }
-
+            if (config.isGameStarted) { showToast('⚠️ 游戏已开始，无法更改配置', 'error'); return; }
             element.classList.toggle('selected');
-
             config.selectedRoles = [];
             document.querySelectorAll('#roleSelector .role-option.selected').forEach(function(el) {
                 config.selectedRoles.push(el.dataset.role);
             });
-
             showToast('✅ 已更新角色配置', 'info');
         }
 
-        // ============================================================
-        // 更新玩家列表
-        // ============================================================
         function updatePlayerList() {
             var container = document.getElementById('playerList');
             var occupied = config.seats.filter(function(s) { return s.occupied; });
-
             if (occupied.length === 0) {
                 container.innerHTML = '<span style="color:rgba(255,255,255,0.04);">暂无玩家</span>';
                 document.getElementById('playerListCount').textContent = '0';
                 return;
             }
-
             var html = '';
             occupied.forEach(function(seat) {
                 var player = seat.player;
                 var isReady = player && player.isReady;
                 var isDead = seat.isDead;
                 var isSheriff = seat.isSheriff;
-
                 html += '<div style="display:flex;align-items:center;gap:6px;padding:2px 0;border-bottom:1px solid rgba(255,255,255,0.02);' +
                     (isDead ? 'opacity:0.3;' : '') + '">';
                 html += '<span style="font-size:0.6rem;color:rgba(255,255,255,0.05);">#' + seat.number + '</span>';
                 html += '<span style="font-size:0.8rem;">' + (player && player.avatar ? player.avatar : '🧑') + '</span>';
                 html += '<span style="flex:1;color:rgba(255,255,255,0.3);font-size:0.7rem;">' + (player && player.name ? player
                     .name : '玩家') + '</span>';
-                if (isSheriff) {
-                    html += '<span style="font-size:0.5rem;color:#F59E0B;">👑</span>';
-                }
-                if (isDead) {
-                    html += '<span style="font-size:0.5rem;color:#dc3545;">💀</span>';
-                } else if (isReady) {
-                    html += '<span style="font-size:0.5rem;color:#00FF88;">✅</span>';
-                } else {
-                    html += '<span style="font-size:0.5rem;color:rgba(255,255,255,0.06);">⏳</span>';
-                }
+                if (isSheriff) { html += '<span style="font-size:0.5rem;color:#F59E0B;">👑</span>'; }
+                if (isDead) { html += '<span style="font-size:0.5rem;color:#dc3545;">💀</span>'; } else if (isReady) { html +=
+                        '<span style="font-size:0.5rem;color:#00FF88;">✅</span>'; } else { html +=
+                        '<span style="font-size:0.5rem;color:rgba(255,255,255,0.06);">⏳</span>'; }
                 html += '</div>';
             });
-
             container.innerHTML = html;
             document.getElementById('playerListCount').textContent = occupied.length;
         }
 
-        // ============================================================
-        // 重置
-        // ============================================================
         function resetSeats() {
-            if (config.isGameStarted) {
-                if (!confirm('游戏已开始，重置将清除所有进度，确定吗？')) return;
-            }
-
+            if (config.isGameStarted) { if (!confirm('游戏已开始，重置将清除所有进度，确定吗？')) return; }
             config.isGameStarted = false;
             config.seats.forEach(function(seat) {
                 seat.occupied = false;
@@ -962,38 +640,57 @@
                 seat.element.querySelector('.seat-name').textContent = '空位';
                 seat.element.querySelector('.seat-emoji').textContent = '🪑';
             });
-
             document.getElementById('gameStatusText').textContent = '📌 已重置，请重新配置';
             document.getElementById('phaseDisplay').textContent = '⚙️ 设置中';
             document.getElementById('startGameBtn').disabled = false;
             document.getElementById('startGameBtn').innerHTML = '🃏 洗牌发牌';
-
             updateSeatCount();
             updatePlayerList();
             showToast('🔄 已重置', 'info');
         }
 
         // ============================================================
-        // 开始游戏（洗牌发牌）
+        // ⭐ 开始游戏（修复版）
         // ============================================================
         function startGame() {
-            if (config.isDealing) return;
+            console.log('🃏 点击开始游戏');
 
-            var occupied = config.seats.filter(function(s) { return s.occupied; });
-            if (occupied.length < config.playerCount) {
-                showToast('⚠️ 还有 ' + (config.playerCount - occupied.length) + ' 个座位未占，请等待所有玩家就坐', 'warning');
+            // 1. 检查是否正在发牌
+            if (config.isDealing) {
+                showToast('⏳ 正在发牌中...', 'warning');
                 return;
             }
 
+            // 2. 检查房间ID
+            if (!config.roomId) {
+                console.error('❌ 没有房间ID');
+                showToast('⚠️ 房间未创建，请刷新页面重试', 'error');
+                return;
+            }
+
+            // 3. 检查SignalR连接
+            if (!connection || connection.state !== signalR.HubConnectionState.Connected) {
+                showToast('⚠️ 连接已断开，请刷新页面', 'error');
+                return;
+            }
+
+            // 4. 检查座位是否占满
+            var occupied = config.seats.filter(function(s) { return s.occupied; });
+            if (occupied.length < config.playerCount) {
+                showToast('⚠️ 还有 ' + (config.playerCount - occupied.length) + ' 个座位未占', 'warning');
+                return;
+            }
+
+            // 5. 检查玩家是否都已准备
             var notReady = config.seats.filter(function(s) {
                 return s.occupied && s.player && !s.player.isReady;
             });
-
             if (notReady.length > 0) {
                 showToast('⚠️ 还有 ' + notReady.length + ' 位玩家未准备', 'warning');
                 return;
             }
 
+            // 6. 开始发牌
             config.isDealing = true;
             document.getElementById('startGameBtn').disabled = true;
             document.getElementById('startGameBtn').innerHTML = '⏳ 发牌中...';
@@ -1001,17 +698,27 @@
             var overlay = document.getElementById('dealingOverlay');
             overlay.classList.add('active');
 
-            simulateDealing();
+            console.log('📤 发送发牌请求到后端，roomId:', config.roomId);
+
+            connection.invoke('StartDealing', config.roomId)
+                .then(function() {
+                    console.log('✅ 发牌请求已发送');
+                })
+                .catch(function(err) {
+                    console.error('❌ 发牌请求失败:', err);
+                    showToast('❌ 发牌失败: ' + err, 'error');
+                    config.isDealing = false;
+                    document.getElementById('startGameBtn').disabled = false;
+                    document.getElementById('startGameBtn').innerHTML = '🃏 洗牌发牌';
+                    document.getElementById('dealingOverlay').classList.remove('active');
+                });
         }
 
-        // ============================================================
-        // 模拟发牌动画
-        // ============================================================
+        // 模拟发牌动画（后端会触发，但保留作为备选）
         function simulateDealing() {
             var players = config.seats.filter(function(s) { return s.occupied; });
             var total = players.length;
             var current = 0;
-
             var roles = generateRoles();
             var shuffledRoles = shuffleArray(roles);
 
@@ -1022,34 +729,27 @@
 
             var title = document.getElementById('dealingOverlay').querySelector('.title');
             var progressText = document.getElementById('dealProgressText');
-
             title.textContent = '🃏 发牌中...';
 
             function dealNext() {
                 if (current >= total) {
                     progressText.textContent = '✅ 发牌完成！请查看你的身份';
                     title.textContent = '🎉 发牌完成！';
-
                     setTimeout(function() {
                         document.getElementById('dealingOverlay').classList.remove('active');
                         config.isDealing = false;
                         config.isGameStarted = true;
-
                         document.getElementById('phaseDisplay').textContent = '🃏 发牌完成';
                         document.getElementById('startGameBtn').innerHTML = '📋 查看身份';
                         document.getElementById('startGameBtn').disabled = false;
                         document.getElementById('gameStatusText').textContent = '🎮 所有玩家已收到身份';
-
                         showToast('🎉 发牌完成！', 'success');
-                        notifyPlayersToReveal();
-
                     }, 2000);
                     return;
                 }
 
                 var seat = players[current];
                 var role = seat.player.role;
-
                 progressText.textContent = '📤 发给 ' + seat.number + ' 号... (' + (current + 1) + '/' + total + ')';
 
                 createFlyingCard(seat, role, function() {
@@ -1057,21 +757,17 @@
                     setTimeout(dealNext, 350);
                 });
             }
-
             setTimeout(dealNext, 500);
         }
 
-        // ============================================================
-        // 飞牌动画
-        // ============================================================
         function createFlyingCard(seat, role, callback) {
             var card = document.createElement('div');
             card.className = 'card-fly show';
-            card.innerHTML = '<img src="' + cardBackImage + '" style="width:100%;height:100%;border-radius:12px;object-fit:cover;" />';
+            card.innerHTML = '<img src="' + cardBackImage +
+                '" style="width:100%;height:100%;border-radius:12px;object-fit:cover;" />';
 
             var startX = window.innerWidth / 2 - 35;
             var startY = window.innerHeight / 2 - 49;
-
             var seatEl = seat.element;
             var rect = seatEl.getBoundingClientRect();
             var targetX = rect.left + rect.width / 2 - 35;
@@ -1101,104 +797,52 @@
                 card.style.boxShadow = '0 0 120px rgba(139,92,246,0.15)';
                 card.style.transition = 'transform 0.6s cubic-bezier(0.23, 1, 0.32, 1)';
                 card.style.transform = 'rotateY(180deg)';
-
-                setTimeout(function() {
-                    card.style.transform = 'rotateY(0deg)';
-                }, 100);
-
+                setTimeout(function() { card.style.transform = 'rotateY(0deg)'; }, 100);
                 setTimeout(function() {
                     card.style.opacity = '0';
                     card.style.transform = 'scale(0.8)';
-                    setTimeout(function() {
-                        card.remove();
-                        if (callback) callback();
-                    }, 300);
+                    setTimeout(function() { card.remove(); if (callback) callback(); }, 300);
                 }, 1500);
-
             }, 700);
         }
 
-        // ============================================================
-        // 生成角色分配
-        // ============================================================
         function generateRoles() {
             var count = config.playerCount;
             var roles = [];
-
             var wolfCount = count === 8 ? 2 : (count === 10 ? 3 : 4);
-            for (var i = 0; i < wolfCount; i++) {
-                roles.push('狼人');
-            }
-
+            for (var i = 0; i < wolfCount; i++) roles.push('狼人');
             var selectedRoles = config.selectedRoles.slice();
             while (selectedRoles.length < 3) {
                 var defaultRoles = ['预言家', '女巫', '守卫', '猎人', '白痴', '骑士'];
-                for (var d of defaultRoles) {
-                    if (selectedRoles.indexOf(d) === -1) {
-                        selectedRoles.push(d);
-                        break;
-                    }
-                }
+                for (var d of defaultRoles) { if (selectedRoles.indexOf(d) === -1) { selectedRoles.push(d); break; } }
             }
-
             var maxGods = count === 8 ? 3 : (count === 10 ? 4 : 5);
-            while (selectedRoles.length > maxGods) {
-                selectedRoles.pop();
-            }
-
-            for (var r of selectedRoles) {
-                roles.push(r);
-            }
-
-            while (roles.length < count) {
-                roles.push('平民');
-            }
-
+            while (selectedRoles.length > maxGods) selectedRoles.pop();
+            for (var r of selectedRoles) roles.push(r);
+            while (roles.length < count) roles.push('平民');
             return roles;
         }
 
-        // ============================================================
-        // 工具函数
-        // ============================================================
         function shuffleArray(array) {
             var arr = array.slice();
-            for (var i = arr.length - 1; i > 0; i--) {
-                var j = Math.floor(Math.random() * (i + 1));
-                var temp = arr[i];
+            for (var i = arr.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var temp = arr[i];
                 arr[i] = arr[j];
-                arr[j] = temp;
-            }
+                arr[j] = temp; }
             return arr;
         }
 
-        // ============================================================
-        // 通知玩家查看身份
-        // ============================================================
         function notifyPlayersToReveal() {
-            var playerData = config.seats
-                .filter(function(s) { return s.occupied && s.player; })
-                .map(function(s) {
-                    return {
-                        seatNumber: s.number,
-                        playerId: s.player.playerId || 'player_' + s.number,
-                        role: s.player.role || '平民',
-                        nickname: s.player.name || '玩家' + s.number,
-                        avatar: s.player.avatar || '🧑'
-                    };
-                });
-
+            var playerData = config.seats.filter(function(s) { return s.occupied && s.player; }).map(function(s) {
+                return { seatNumber: s.number, playerId: s.player.playerId || 'player_' + s.number, role: s.player.role ||
+                        '平民', nickname: s.player.name || '玩家' + s.number, avatar: s.player.avatar || '🧑' };
+            });
             if (connection && connection.state === signalR.HubConnectionState.Connected) {
-                connection.invoke('SendPlayerRoles', playerData).catch(function(err) {
-                    console.error('❌ 发送身份失败:', err);
-                });
+                connection.invoke('SendPlayerRoles', playerData).catch(function(err) { console.error('❌ 发送身份失败:',
+                    err); });
             }
-
             window._playerRoles = playerData;
         }
 
-        // ============================================================
-        // Toast
-        // ============================================================
         function showToast(message, type) {
             type = type || 'info';
             var container = document.getElementById('toastContainer');
@@ -1225,16 +869,21 @@
                     .configureLogging(signalR.LogLevel.Information)
                     .build();
 
+                connection.on('RoomCreated', function(data) {
+                    if (data.success) {
+                        config.roomId = data.roomId;
+                        console.log('✅ 房间已创建，ID:', config.roomId);
+                        showToast('✅ 房间已创建！', 'success');
+                        document.getElementById('phaseDisplay').textContent = '🪑 等待玩家';
+                    }
+                });
+
                 connection.on('PlayerJoined', function(player) {
                     var seat = config.seats.find(function(s) { return s.number === player.seatNumber; });
                     if (seat) {
                         seat.occupied = true;
-                        seat.player = {
-                            playerId: player.playerId,
-                            name: player.nickname,
-                            avatar: player.avatar || '🧑',
-                            isReady: false
-                        };
+                        seat.player = { playerId: player.playerId, name: player.nickname, avatar: player.avatar || '🧑',
+                            isReady: false };
                         seat.element.className = 'seat occupied';
                         seat.element.querySelector('.seat-name').textContent = player.nickname;
                         seat.element.querySelector('.seat-emoji').textContent = player.avatar || '🧑';
@@ -1322,10 +971,21 @@
                 connection.start()
                     .then(function() {
                         console.log('✅ SignalR 已连接');
-                        connection.invoke('HostReady');
+                        // 自动创建房间
+                        connection.invoke('CreateRoom', 'admin', config.playerCount, config.selectedRoles)
+                            .then(function(data) {
+                                if (data && data.success) {
+                                    config.roomId = data.roomId;
+                                    console.log('✅ 房间已自动创建，ID:', config.roomId);
+                                }
+                            })
+                            .catch(function(err) {
+                                console.error('❌ 创建房间失败:', err);
+                            });
                     })
                     .catch(function(err) {
                         console.error('❌ SignalR 连接失败:', err);
+                        showToast('⚠️ 连接失败，正在重试...', 'warning');
                         setTimeout(connectSignalR, 3000);
                     });
 
@@ -1337,7 +997,6 @@
         function checkAllReady() {
             var occupied = config.seats.filter(function(s) { return s.occupied; });
             var allReady = occupied.every(function(s) { return s.player && s.player.isReady; });
-
             if (allReady && occupied.length === config.playerCount) {
                 document.getElementById('gameStatusText').textContent = '✅ 所有玩家已准备！点击"洗牌发牌"';
                 document.getElementById('startGameBtn').disabled = false;
