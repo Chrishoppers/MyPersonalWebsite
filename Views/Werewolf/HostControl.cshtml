@@ -31,14 +31,14 @@
         .container { max-width: 420px; width: 100%; }
 
         .holo-card {
-            background: rgba(8, 8, 28, 0.88);
+            background: rgba(8,8,28,0.88);
             backdrop-filter: blur(40px);
-            border: 1px solid rgba(0, 240, 255, 0.08);
+            border: 1px solid rgba(0,240,255,0.08);
             border-radius: 28px;
             padding: 20px 16px 18px;
             position: relative;
             overflow: hidden;
-            box-shadow: 0 0 80px rgba(0, 240, 255, 0.02);
+            box-shadow: 0 0 80px rgba(0,240,255,0.02);
         }
 
         .holo-card .border-glow {
@@ -47,14 +47,11 @@
             left: 20%;
             right: 20%;
             height: 2px;
-            background: linear-gradient(90deg, transparent, rgba(0, 240, 255, 0.15), rgba(123, 97, 255, 0.15), transparent);
+            background: linear-gradient(90deg, transparent, rgba(0,240,255,0.15), rgba(123,97,255,0.15), transparent);
             animation: borderGlow 3s ease-in-out infinite;
         }
 
-        @@keyframes borderGlow {
-            0%, 100% { opacity: 0.3; transform: scaleX(1); }
-            50% { opacity: 1; transform: scaleX(1.2); }
-        }
+        @@keyframes borderGlow { 0%, 100% { opacity: 0.3; transform: scaleX(1); } 50% { opacity: 1; transform: scaleX(1.2); } }
 
         .header {
             display: flex;
@@ -88,11 +85,7 @@
             margin: 12px 0 8px;
         }
 
-        .control-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 6px;
-        }
+        .control-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
 
         .btn-control {
             padding: 10px 6px;
@@ -108,12 +101,7 @@
             text-align: center;
         }
 
-        .btn-control:hover {
-            border-color: rgba(139,92,246,0.12);
-            background: rgba(139,92,246,0.03);
-            color: #fff;
-        }
-
+        .btn-control:hover { border-color: rgba(139,92,246,0.12); background: rgba(139,92,246,0.03); color: #fff; }
         .btn-control .icon { font-size: 1.4rem; display: block; margin-bottom: 2px; }
         .btn-control .sub { font-size: 0.5rem; color: rgba(255,255,255,0.04); display: block; margin-top: 2px; }
 
@@ -142,13 +130,7 @@
             line-height: 2;
         }
 
-        .player-list .item {
-            display: flex;
-            justify-content: space-between;
-            padding: 2px 0;
-            border-bottom: 1px solid rgba(255,255,255,0.01);
-        }
-
+        .player-list .item { display: flex; justify-content: space-between; padding: 2px 0; border-bottom: 1px solid rgba(255,255,255,0.01); }
         .player-list .item .name { color: rgba(255,255,255,0.2); }
         .player-list .item .role { color: rgba(255,255,255,0.04); font-size: 0.55rem; }
 
@@ -180,10 +162,7 @@
         .toast-msg.error { background: rgba(255,0,110,0.08); border-color: rgba(255,0,110,0.04); color: #FF006E; }
         .toast-msg.info { background: rgba(0,240,255,0.06); border-color: rgba(0,240,255,0.04); color: #00F0FF; }
 
-        @@keyframes toastIn {
-            from { opacity: 0; transform: translateY(16px) scale(0.95); }
-            to { opacity: 1; transform: translateY(0) scale(1); }
-        }
+        @@keyframes toastIn { from { opacity: 0; transform: translateY(16px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
 
         @@media (max-width: 480px) {
             .holo-card { padding: 14px 12px 14px; border-radius: 24px; }
@@ -209,47 +188,38 @@
                 <span>⏱ <span class="timer" id="timerDisplay">--</span></span>
             </div>
 
-            <!-- 快捷控制 -->
             <div class="section-title">🎮 快捷控制</div>
             <div class="control-grid">
                 <button class="btn-control primary full-width" id="pauseBtn" onclick="togglePause()">
-                    <span class="icon">⏸️</span>
-                    暂停 / 继续
+                    <span class="icon">⏸️</span> 暂停 / 继续
                     <span class="sub">AI 自动流程暂停</span>
                 </button>
                 <button class="btn-control warning" onclick="speedUp()">
-                    <span class="icon">⏩</span>
-                    加速
+                    <span class="icon">⏩</span> 加速
                     <span class="sub">减少等待时间</span>
                 </button>
                 <button class="btn-control" onclick="speedDown()">
-                    <span class="icon">⏪</span>
-                    减速
+                    <span class="icon">⏪</span> 减速
                     <span class="sub">增加等待时间</span>
                 </button>
                 <button class="btn-control success" onclick="skipPhase()">
-                    <span class="icon">⏭️</span>
-                    跳过阶段
+                    <span class="icon">⏭️</span> 跳过阶段
                     <span class="sub">强制进入下一阶段</span>
                 </button>
                 <button class="btn-control danger full-width" onclick="endGame()">
-                    <span class="icon">🏁</span>
-                    结束游戏
+                    <span class="icon">🏁</span> 结束游戏
                     <span class="sub">强制结束本局</span>
                 </button>
             </div>
 
-            <!-- 查看身份 -->
             <div class="section-title">🃏 裁判视角</div>
             <div class="control-grid">
                 <button class="btn-control primary full-width" onclick="viewAllRoles()">
-                    <span class="icon">👁️</span>
-                    查看所有身份
+                    <span class="icon">👁️</span> 查看所有身份
                     <span class="sub">仅房主可见</span>
                 </button>
             </div>
 
-            <!-- 玩家列表 -->
             <div class="section-title">👥 玩家列表</div>
             <div class="player-list" id="playerList">
                 <span style="color:rgba(255,255,255,0.02);font-size:0.6rem;">加载中...</span>
@@ -299,21 +269,9 @@
                     document.getElementById('phaseDisplay').textContent = phaseNames[phase] || phase;
                 });
 
-                connection.on('DisplayMessage', function(message) {
-                    // 显示在状态栏
-                });
-
-                connection.on('VoiceAnnounce', function(message) {
-                    // 显示在状态栏
-                });
-
-                connection.on('PlayerListUpdate', function(players) {
-                    updatePlayerList(players);
-                });
-
-                connection.on('GameOver', function(winner) {
-                    showToast('🏆 游戏结束！' + (winner === '好人' ? '好人胜利！' : '狼人胜利！'), 'success');
-                });
+                connection.on('PlayerListUpdate', function(players) { updatePlayerList(players); });
+                connection.on('GameOver', function(winner) { showToast('🏆 游戏结束！' + (winner === '好人' ? '好人胜利！' :
+                    '狼人胜利！'), 'success'); });
 
                 connection.start()
                     .then(function() {
@@ -325,9 +283,7 @@
                         setTimeout(connectSignalR, 3000);
                     });
 
-            } catch (e) {
-                console.error('SignalR 初始化失败:', e);
-            }
+            } catch (e) { console.error('SignalR 初始化失败:', e); }
         }
 
         function updatePlayerList(players) {
@@ -336,16 +292,12 @@
                 container.innerHTML = '<span style="color:rgba(255,255,255,0.02);font-size:0.6rem;">暂无玩家</span>';
                 return;
             }
-
             var html = '';
             players.forEach(function(p) {
                 if (p.isSpectator) return;
                 var status = p.isAlive ? '🟢' : '💀';
-                var roleDisplay = p.role || '?';
-                html += '<div class="item">' +
-                    '<span class="name">' + status + ' ' + p.seatNumber + '号 ' + p.nickname + '</span>' +
-                    '<span class="role">' + roleDisplay + '</span>' +
-                    '</div>';
+                html += '<div class="item"><span class="name">' + status + ' ' + p.seatNumber + '号 ' + p.nickname +
+                    '</span><span class="role">' + (p.role || '?') + '</span></div>';
             });
             container.innerHTML = html;
         }
@@ -400,14 +352,10 @@
             connection.invoke('GetAllRoles', roomId)
                 .then(function(data) {
                     var msg = '📋 所有玩家身份：\n\n';
-                    data.forEach(function(p) {
-                        msg += p.seatNumber + '号 ' + p.nickname + ' → ' + p.role + '\n';
-                    });
+                    data.forEach(function(p) { msg += p.seatNumber + '号 ' + p.nickname + ' → ' + p.role + '\n'; });
                     alert(msg);
                 })
-                .catch(function(err) {
-                    showToast('❌ 获取失败: ' + err, 'error');
-                });
+                .catch(function(err) { showToast('❌ 获取失败: ' + err, 'error'); });
         }
 
         function showToast(message, type) {
@@ -424,9 +372,7 @@
             }, 3500);
         }
 
-        document.addEventListener('DOMContentLoaded', function() {
-            connectSignalR();
-        });
+        document.addEventListener('DOMContentLoaded', function() { connectSignalR(); });
     </script>
 
 </body>
