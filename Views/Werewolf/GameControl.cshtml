@@ -34,7 +34,6 @@
 
         .container { max-width: 1400px; margin: 0 auto; }
 
-        /* ===== 顶部 ===== */
         .header {
             display: flex;
             justify-content: space-between;
@@ -62,15 +61,14 @@
             border-radius: 40px;
             font-size: 0.8rem;
             font-weight: 600;
-            background: rgba(0, 240, 255, 0.04);
-            border: 1px solid rgba(0, 240, 255, 0.04);
+            background: rgba(0,240,255,0.04);
+            border: 1px solid rgba(0,240,255,0.04);
             color: rgba(255,255,255,0.15);
         }
 
         .header .phase-badge .night { color: #4facfe; }
         .header .phase-badge .day { color: #F59E0B; }
 
-        /* ===== 主网格 ===== */
         .main-grid {
             display: grid;
             grid-template-columns: 1fr 320px;
@@ -78,11 +76,8 @@
             margin-top: 20px;
         }
 
-        @@media (max-width: 1100px) {
-            .main-grid { grid-template-columns: 1fr; }
-        }
+        @@media (max-width: 1100px) { .main-grid { grid-template-columns: 1fr; } }
 
-        /* ===== 卡片 ===== */
         .card {
             background: rgba(255,255,255,0.02);
             backdrop-filter: blur(20px);
@@ -104,15 +99,10 @@
             align-items: center;
             gap: 8px;
         }
+
         .card .card-title .accent { flex: 1; height: 1px; background: linear-gradient(90deg, rgba(255,255,255,0.04), transparent); }
 
-        /* ===== 大屏显示 ===== */
-        .main-display {
-            min-height: 400px;
-            display: flex;
-            flex-direction: column;
-        }
-
+        .main-display { min-height: 400px; display: flex; flex-direction: column; }
         .main-display .display-content {
             flex: 1;
             display: flex;
@@ -132,6 +122,7 @@
         .main-display .display-content .big-text.death { color: #dc3545; }
         .main-display .display-content .big-text.sheriff { color: #F59E0B; }
         .main-display .display-content .sub-text { font-size: 1rem; color: rgba(255,255,255,0.15); letter-spacing: 0.06em; }
+        .main-display .display-content .timer-text { font-size: 1.2rem; color: #F59E0B; font-weight: 700; font-family: 'Courier New', monospace; margin-top: 4px; }
 
         .main-display .display-content .death-list {
             margin-top: 12px;
@@ -144,59 +135,22 @@
         .main-display .display-content .death-list .death-item {
             padding: 8px 16px;
             border-radius: 40px;
-            background: rgba(220, 53, 69, 0.06);
-            border: 1px solid rgba(220, 53, 69, 0.06);
+            background: rgba(220,53,69,0.06);
+            border: 1px solid rgba(220,53,69,0.06);
             color: #dc3545;
             font-weight: 600;
             font-size: 0.9rem;
             animation: deathPulse 1.5s ease-in-out infinite;
         }
 
-        @@keyframes deathPulse {
-            0%, 100% { opacity: 0.6; transform: scale(1); }
-            50% { opacity: 1; transform: scale(1.05); }
-        }
+        @@keyframes deathPulse { 0%, 100% { opacity: 0.6; transform: scale(1); } 50% { opacity: 1; transform: scale(1.05); } }
 
-        /* ===== 暗夜/白天过渡特效 ===== */
-        .phase-transition {
-            position: fixed;
-            inset: 0;
-            z-index: 9997;
-            pointer-events: none;
-            display: none;
-        }
-
-        .phase-transition.active { display: block; animation: phaseFlash 1.2s ease-out; }
-
-        @@keyframes phaseFlash {
-            0% { background: rgba(0,0,0,0); }
-            30% { background: rgba(0,0,0,0.8); }
-            70% { background: rgba(0,0,0,0.8); }
-            100% { background: rgba(0,0,0,0); }
-        }
-
-        .phase-transition.night { background: rgba(0,0,20,0.95); animation: nightFall 1.5s ease; }
-        .phase-transition.day { background: rgba(255,255,200,0.2); animation: dayRise 1.5s ease; }
-
-        @@keyframes nightFall {
-            0% { opacity: 0; }
-            50% { opacity: 1; }
-            100% { opacity: 0.8; }
-        }
-
-        @@keyframes dayRise {
-            0% { opacity: 0.8; background: rgba(0,0,0,0.9); }
-            50% { opacity: 0.5; background: rgba(255,255,200,0.15); }
-            100% { opacity: 0; }
-        }
-
-        /* ===== 警长选举 ===== */
         .sheriff-display {
             margin-top: 12px;
             padding: 12px 16px;
             border-radius: 14px;
-            background: rgba(245, 158, 11, 0.04);
-            border: 1px solid rgba(245, 158, 11, 0.04);
+            background: rgba(245,158,11,0.04);
+            border: 1px solid rgba(245,158,11,0.04);
             text-align: center;
             display: none;
         }
@@ -204,12 +158,8 @@
         .sheriff-display.show { display: block; animation: fadeIn 0.5s ease; }
         .sheriff-display .sheriff-name { color: #F59E0B; font-weight: 700; font-size: 1.1rem; }
 
-        @@keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        @@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* ===== 玩家状态 ===== */
         .player-status-list {
             max-height: 300px;
             overflow-y: auto;
@@ -217,6 +167,7 @@
             flex-direction: column;
             gap: 4px;
         }
+
         .player-status-list::-webkit-scrollbar { width: 3px; }
         .player-status-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.04); border-radius: 10px; }
 
@@ -239,48 +190,7 @@
         .player-status-item .status-dot.alive { background: #00FF88; }
         .player-status-item .status-dot.dead { background: #dc3545; }
         .player-status-item .status-dot.sheriff { background: #F59E0B; box-shadow: 0 0 20px rgba(245,158,11,0.1); }
-
         .player-status-item.dead { opacity: 0.3; }
-
-        /* ===== 控制按钮 ===== */
-        .control-buttons {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            margin-top: 12px;
-        }
-
-        .btn-control {
-            flex: 1;
-            padding: 10px 14px;
-            border: none;
-            border-radius: 40px;
-            font-weight: 700;
-            font-size: 0.85rem;
-            cursor: pointer;
-            transition: all 0.4s ease;
-            font-family: inherit;
-            min-width: 80px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-        }
-
-        .btn-control.primary { background: linear-gradient(135deg, #8B5CF6, #EC4899); color: #fff; }
-        .btn-control.primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 40px rgba(139,92,246,0.15); }
-        .btn-control.primary:disabled { opacity: 0.3; cursor: not-allowed; transform: none !important; }
-
-        .btn-control.success { background: linear-gradient(135deg, #00FF88, #00F0FF); color: #05050F; }
-        .btn-control.success:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 40px rgba(0,255,136,0.1); }
-
-        .btn-control.danger { background: rgba(255,0,110,0.08); border: 1px solid rgba(255,0,110,0.04); color: rgba(255,0,110,0.3); }
-        .btn-control.danger:hover:not(:disabled) { background: rgba(255,0,110,0.12); }
-
-        .btn-control.secondary { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.04); color: rgba(255,255,255,0.2); }
-        .btn-control.secondary:hover:not(:disabled) { background: rgba(255,255,255,0.04); color: #fff; }
-
-        .btn-control:disabled { opacity: 0.3; cursor: not-allowed; transform: none !important; }
 
         .info-row {
             display: flex;
@@ -290,6 +200,7 @@
             font-size: 0.75rem;
             color: rgba(255,255,255,0.1);
         }
+
         .info-row .label { color: rgba(255,255,255,0.04); }
         .info-row .value { color: rgba(255,255,255,0.15); font-weight: 600; }
 
@@ -300,7 +211,6 @@
             margin-top: 8px;
         }
 
-        /* ===== Toast ===== */
         .toast-container {
             position: fixed;
             bottom: 20px;
@@ -328,10 +238,7 @@
         .toast-msg.error { background: rgba(255,0,110,0.08); border-color: rgba(255,0,110,0.04); color: #FF006E; }
         .toast-msg.info { background: rgba(0,240,255,0.06); border-color: rgba(0,240,255,0.04); color: #00F0FF; }
 
-        @@keyframes toastIn {
-            from { opacity: 0; transform: translateY(20px) scale(0.95); }
-            to { opacity: 1; transform: translateY(0) scale(1); }
-        }
+        @@keyframes toastIn { from { opacity: 0; transform: translateY(20px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
 
         @@media (max-width: 768px) {
             body { padding: 10px; }
@@ -340,8 +247,6 @@
             .main-display .display-content .big-icon { font-size: 2.8rem; }
             .main-display .display-content .sub-text { font-size: 0.8rem; }
             .card { padding: 14px; }
-            .control-buttons { flex-direction: column; }
-            .btn-control { padding: 8px 12px; font-size: 0.75rem; }
         }
 
         @@media (max-width: 480px) {
@@ -353,35 +258,25 @@
 <body>
 
     <div class="container">
-        <!-- 顶部 -->
         <div class="header">
-            <div class="logo">
-                <span>🐺</span> 游戏控制中心
-            </div>
+            <div class="logo"><span>🐺</span> 游戏控制中心</div>
             <div>
                 <span class="phase-badge" id="phaseBadge">⏳ 等待开始</span>
                 <span class="phase-badge" style="margin-left:8px;" id="roundBadge">第 0 天</span>
             </div>
         </div>
 
-        <!-- 主网格 -->
         <div class="main-grid">
-
             <!-- 大屏显示 -->
             <div class="card main-display">
-                <div class="card-title">
-                    📺 主屏幕
-                    <span class="accent"></span>
-                    <span style="font-size:0.6rem;color:rgba(255,255,255,0.04);" id="statusTime">--:--</span>
-                </div>
+                <div class="card-title">📺 主屏幕 <span class="accent"></span></div>
 
                 <div class="display-content" id="displayContent">
                     <span class="big-icon">🐺</span>
                     <div class="big-text" style="color:rgba(255,255,255,0.05);">等待开始</div>
-                    <div class="sub-text">✦ 所有玩家准备后自动开始 ✦</div>
+                    <div class="sub-text">✦ AI 自动推进游戏流程 ✦</div>
                 </div>
 
-                <!-- 警长显示 -->
                 <div class="sheriff-display" id="sheriffDisplay">
                     👑 警长：<span class="sheriff-name" id="sheriffName">-</span>
                 </div>
@@ -390,12 +285,8 @@
             <!-- 右侧面板 -->
             <div class="side-panel" style="display:flex;flex-direction:column;gap:16px;">
 
-                <!-- 游戏信息 -->
                 <div class="card">
-                    <div class="card-title">
-                        📊 游戏信息
-                        <span class="accent"></span>
-                    </div>
+                    <div class="card-title">📊 游戏信息 <span class="accent"></span></div>
                     <div class="info-row"><span class="label">存活</span><span class="value" id="aliveCount">0</span></div>
                     <div class="info-row"><span class="label">狼人</span><span class="value" id="wolfCount">0</span></div>
                     <div class="info-row"><span class="label">神职</span><span class="value" id="godCount">0</span></div>
@@ -403,29 +294,8 @@
                     <div class="info-row" style="border-bottom:none;"><span class="label">状态</span><span class="value" id="gameStatusText" style="color:#00F0FF;">⚙️ 设置中</span></div>
                 </div>
 
-                <!-- 控制按钮 -->
                 <div class="card">
-                    <div class="card-title">
-                        🎮 控制
-                        <span class="accent"></span>
-                    </div>
-
-                    <div class="control-buttons">
-                        <button class="btn-control primary" id="btnNextPhase" onclick="nextPhase()">▶️ 下一步</button>
-                        <button class="btn-control secondary" onclick="skipPhase()">⏭️ 跳过</button>
-                        <button class="btn-control danger" onclick="endGame()">🏁 结束</button>
-                    </div>
-
-                    <div class="phase-hint" id="phaseHint">💡 点击"下一步"推进游戏流程</div>
-                </div>
-
-                <!-- 玩家状态 -->
-                <div class="card">
-                    <div class="card-title">
-                        👥 玩家状态
-                        <span class="accent"></span>
-                        <span style="font-size:0.6rem;color:rgba(255,255,255,0.04);" id="playerCountDisplay">0</span>
-                    </div>
+                    <div class="card-title">👥 玩家状态 <span class="accent"></span><span style="font-size:0.6rem;color:rgba(255,255,255,0.04);" id="playerCountDisplay">0</span></div>
                     <div class="player-status-list" id="playerStatusList">
                         <span style="color:rgba(255,255,255,0.04);font-size:0.7rem;">暂无玩家</span>
                     </div>
@@ -435,13 +305,10 @@
         </div>
     </div>
 
-    <!-- 暗夜/白天过渡 -->
-    <div class="phase-transition" id="phaseTransition"></div>
-
-    <!-- Toast -->
     <div class="toast-container" id="toastContainer"></div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js">
+    </script>
 
     <script>
         var roomId = '@roomId';
@@ -502,12 +369,12 @@
                     updateDisplay(phase);
                 });
 
-                connection.on('VoiceAnnounce', function(message) {
+                connection.on('DisplayMessage', function(message) {
                     showDisplayMessage(message);
                 });
 
-                connection.on('DisplayMessage', function(message) {
-                    showDisplayMessage(message);
+                connection.on('VoiceAnnounce', function(message) {
+                    showDisplayMessage('🔊 ' + message);
                 });
 
                 connection.on('DeathAnnounce', function(data) {
@@ -524,7 +391,6 @@
                     document.getElementById('sheriffDisplay').classList.add('show');
                     document.getElementById('sheriffName').textContent = data.seatNumber + '号 ' + data.nickname;
                     showDisplayMessage('👑 ' + data.seatNumber + '号当选警长！');
-                    showToast('👑 ' + data.seatNumber + '号当选警长！', 'success');
                 });
 
                 connection.on('SheriffCandidateUpdate', function(candidates) {
@@ -537,16 +403,11 @@
                     showDisplayMessage('🏆 ' + msg);
                     document.getElementById('phaseBadge').textContent = '🏁 ' + msg;
                     document.getElementById('gameStatusText').textContent = '🏁 ' + msg;
-                    document.getElementById('btnNextPhase').disabled = true;
-                    showToast('🏆 ' + msg, 'success');
-
-                    // 胜利特效
-                    showVictoryEffect(winner);
                 });
 
                 connection.on('PlayerDeath', function(data) {
                     showDisplayMessage('💀 ' + data.seatNumber + '号 ' + data.nickname + ' 死亡');
-                    showDeathEffect(data.seatNumber);
+                    showDeathEffect();
                 });
 
                 connection.start()
@@ -669,7 +530,7 @@
                 case 'setup':
                 case 'seating':
                     content.innerHTML =
-                        `<span class="big-icon">🐺</span><div class="big-text" style="color:rgba(255,255,255,0.05);">等待开始</div><div class="sub-text">✦ 所有玩家准备后自动开始 ✦</div>`;
+                        `<span class="big-icon">🐺</span><div class="big-text" style="color:rgba(255,255,255,0.05);">等待开始</div><div class="sub-text">✦ AI 自动推进游戏流程 ✦</div>`;
                     break;
 
                 case 'dealing':
@@ -689,22 +550,22 @@
 
                 case 'night_guard':
                     content.innerHTML =
-                        `<span class="big-icon">🛡️</span><div class="big-text night">守卫请行动</div><div class="sub-text">✦ 守卫请在手机上选择守护目标 ✦</div>`;
+                        `<span class="big-icon">🛡️</span><div class="big-text night">守卫请行动</div><div class="sub-text">✦ 守卫请在手机上选择守护目标 ✦</div><div class="timer-text" id="timerDisplay">⏱ 20s</div>`;
                     break;
 
                 case 'night_seer':
                     content.innerHTML =
-                        `<span class="big-icon">🔮</span><div class="big-text night">预言家请行动</div><div class="sub-text">✦ 预言家请在手机上选择查验目标 ✦</div>`;
+                        `<span class="big-icon">🔮</span><div class="big-text night">预言家请行动</div><div class="sub-text">✦ 预言家请在手机上选择查验目标 ✦</div><div class="timer-text" id="timerDisplay">⏱ 20s</div>`;
                     break;
 
                 case 'night_werewolf':
                     content.innerHTML =
-                        `<span class="big-icon">🐺</span><div class="big-text night">狼人请行动</div><div class="sub-text">✦ 所有狼人请在手机上统一选择杀害目标 ✦</div>`;
+                        `<span class="big-icon">🐺</span><div class="big-text night">狼人请行动</div><div class="sub-text">✦ 所有狼人请在手机上统一选择杀害目标 ✦</div><div class="timer-text" id="timerDisplay">⏱ 30s</div>`;
                     break;
 
                 case 'night_witch':
                     content.innerHTML =
-                        `<span class="big-icon">🧪</span><div class="big-text night">女巫请行动</div><div class="sub-text">✦ 女巫请在手机上选择解药或毒药 ✦</div>`;
+                        `<span class="big-icon">🧪</span><div class="big-text night">女巫请行动</div><div class="sub-text">✦ 女巫请在手机上选择解药或毒药 ✦</div><div class="timer-text" id="timerDisplay">⏱ 20s</div>`;
                     break;
 
                 case 'night_resolve':
@@ -724,7 +585,7 @@
 
                 case 'day_voting':
                     content.innerHTML =
-                        `<span class="big-icon">🗳️</span><div class="big-text day">投票阶段</div><div class="sub-text">✦ 请在手机上投票放逐 ✦</div>`;
+                        `<span class="big-icon">🗳️</span><div class="big-text day">投票阶段</div><div class="sub-text">✦ 请在手机上投票放逐 ✦</div><div class="timer-text" id="timerDisplay">⏱ 45s</div>`;
                     break;
 
                 case 'day_pk':
@@ -739,7 +600,7 @@
 
                 case 'hunter_shoot':
                     content.innerHTML =
-                        `<span class="big-icon">🔫</span><div class="big-text" style="color:#F59E0B;">猎人开枪</div><div class="sub-text">✦ 猎人选择开枪目标 ✦</div>`;
+                        `<span class="big-icon">🔫</span><div class="big-text" style="color:#F59E0B;">猎人开枪</div><div class="sub-text">✦ 猎人选择开枪目标 ✦</div><div class="timer-text" id="timerDisplay">⏱ 20s</div>`;
                     break;
 
                 case 'gameover':
@@ -756,18 +617,14 @@
             var list = document.getElementById('deathList');
 
             if (!list) {
-                // 如果还没有死亡列表，重建内容
                 var html =
                     `<span class="big-icon">📢</span><div class="big-text day">天亮了</div><div class="sub-text">${message}</div><div class="death-list" id="deathList">`;
-                deaths.forEach(function(d) {
-                    html += `<span class="death-item">💀 ${d}</span>`;
-                });
+                deaths.forEach(function(d) { html += `<span class="death-item">💀 ${d}</span>`; });
                 html += `</div>`;
                 content.innerHTML = html;
                 return;
             }
 
-            // 更新现有列表
             list.innerHTML = '';
             deaths.forEach(function(d) {
                 var item = document.createElement('span');
@@ -790,7 +647,6 @@
             msgDiv.style.cssText = 'margin-top:4px;color:#8B5CF6;font-weight:600;animation:fadeIn 0.5s ease;';
             msgDiv.textContent = '🔊 ' + message;
 
-            // 如果内容中已有 sub-text，在它后面插入
             var subText = content.querySelector('.sub-text:last-child');
             if (subText && subText !== msgDiv) {
                 content.appendChild(msgDiv);
@@ -798,60 +654,15 @@
                 content.appendChild(msgDiv);
             }
 
-            setTimeout(function() {
-                if (msgDiv.parentNode) msgDiv.remove();
-            }, 8000);
+            setTimeout(function() { if (msgDiv.parentNode) msgDiv.remove(); }, 8000);
         }
 
-        function showDeathEffect(seatNumber) {
-            // 简单红色闪光
+        function showDeathEffect() {
             var flash = document.createElement('div');
             flash.style.cssText =
                 'position:fixed;inset:0;z-index:9996;background:rgba(220,53,69,0.05);pointer-events:none;animation:deathFlash 0.8s ease-out;';
             document.body.appendChild(flash);
             setTimeout(function() { flash.remove(); }, 800);
-        }
-
-        function showVictoryEffect(winner) {
-            var color = winner === '好人' ? '#F59E0B' : '#dc3545';
-            for (var i = 0; i < 20; i++) {
-                setTimeout(function() {
-                    var particle = document.createElement('div');
-                    var size = Math.random() * 10 + 5;
-                    var x = Math.random() * window.innerWidth;
-                    var y = Math.random() * window.innerHeight;
-                    particle.style.cssText =
-                        `position:fixed;z-index:9998;pointer-events:none;width:${size}px;height:${size}px;border-radius:50%;background:${color};left:${x}px;top:${y}px;animation:particleRise ${2 + Math.random() * 2}s ease-out forwards;opacity:0.8;`;
-                    document.body.appendChild(particle);
-                    setTimeout(function() { particle.remove(); }, 4000);
-                }, i * 100);
-            }
-        }
-
-        // ===== 控制按钮 =====
-        function nextPhase() {
-            if (config.isGameOver) { showToast('⚠️ 游戏已结束', 'warning'); return; }
-            if (!connection) { showToast('⚠️ 未连接', 'error'); return; }
-            connection.invoke('NextPhase', roomId).catch(function(err) {
-                showToast('操作失败: ' + err, 'error');
-            });
-        }
-
-        function skipPhase() {
-            if (config.isGameOver) { showToast('⚠️ 游戏已结束', 'warning'); return; }
-            if (!connection) { showToast('⚠️ 未连接', 'error'); return; }
-            if (!confirm('确定要跳过当前阶段吗？')) return;
-            connection.invoke('SkipPhase', roomId).catch(function(err) {
-                showToast('操作失败: ' + err, 'error');
-            });
-        }
-
-        function endGame() {
-            if (!confirm('确定要结束本局游戏吗？')) return;
-            if (!connection) { showToast('⚠️ 未连接', 'error'); return; }
-            connection.invoke('EndGame', roomId).catch(function(err) {
-                showToast('操作失败: ' + err, 'error');
-            });
         }
 
         function showToast(message, type) {
@@ -868,7 +679,6 @@
             }, 3500);
         }
 
-        // ===== 初始化 =====
         document.addEventListener('DOMContentLoaded', function() {
             console.log('🎮 游戏控制中心启动...');
             connectSignalR();
