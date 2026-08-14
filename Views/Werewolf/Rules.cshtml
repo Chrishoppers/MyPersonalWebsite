@@ -1,9 +1,9 @@
 @{
     Layout = null;
-    var playerCount = ViewBag.PlayerCount ?? 12;
-    var selectedRoles = ViewBag.SelectedRoles as List<string> ?? new List<string> { "预言家", "女巫", "守卫", "猎人", "狼人", "狼人", "狼人", "狼人", "平民", "平民", "平民", "平民" };
-    var rulePages = MyPersonalWebsite.Utilities.WerewolfRules.GetRulePages(playerCount, selectedRoles);
-    var roleDetails = MyPersonalWebsite.Utilities.WerewolfRules.GetRoleDetails();
+    ViewData["Title"] = "📜 狼人杀 · 规则";
+    var roomId = ViewBag.RoomId as string ?? Context.Request.Query["roomId"].ToString();
+    var playerCount = ViewBag.PlayerCount as int? ?? 0;
+    var selectedRoles = ViewBag.SelectedRoles as List<string> ?? new List<string>();
 }
 
 <!DOCTYPE html>
@@ -11,15 +11,12 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>📜 狼人杀 · 游戏规则</title>
+    <title>📜 狼人杀 · 规则</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
     <style>
-        /* ============================================================
-           全局
-           ============================================================ */
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
@@ -31,12 +28,8 @@
             align-items: center;
             justify-content: center;
             padding: 16px;
-            overflow: hidden;
         }
 
-        /* ============================================================
-           粒子背景
-           ============================================================ */
         #particleCanvas {
             position: fixed;
             top: 0;
@@ -47,9 +40,6 @@
             pointer-events: none;
         }
 
-        /* ============================================================
-           主容器
-           ============================================================ */
         .rules-container {
             position: relative;
             z-index: 1;
@@ -58,24 +48,18 @@
             animation: containerIn 0.8s cubic-bezier(0.23, 1, 0.32, 1);
         }
 
-        @@keyframes containerIn {
-            from { opacity: 0; transform: scale(0.92) translateY(30px); }
-            to { opacity: 1; transform: scale(1) translateY(0); }
-        }
+        @@keyframes containerIn { from { opacity: 0; transform: scale(0.92) translateY(30px); } to { opacity: 1; transform: scale(1) translateY(0); } }
 
-        /* ============================================================
-           全息卡片
-           ============================================================ */
         .holo-card {
-            background: rgba(8, 8, 28, 0.85);
+            background: rgba(8,8,28,0.85);
             backdrop-filter: blur(40px);
             -webkit-backdrop-filter: blur(40px);
-            border: 1px solid rgba(0, 240, 255, 0.08);
-            border-radius: 32px;
-            padding: 24px 20px 20px;
+            border: 1px solid rgba(0,240,255,0.08);
+            border-radius: 28px;
+            padding: 20px 18px 18px;
             position: relative;
             overflow: hidden;
-            box-shadow: 0 0 80px rgba(0, 240, 255, 0.02);
+            box-shadow: 0 0 80px rgba(0,240,255,0.02);
             max-height: 94vh;
             display: flex;
             flex-direction: column;
@@ -88,7 +72,7 @@
             left: -50%;
             width: 200%;
             height: 200%;
-            background: radial-gradient(ellipse at 30% 30%, rgba(0, 240, 255, 0.02), transparent 60%);
+            background: radial-gradient(ellipse at 30% 30%, rgba(0,240,255,0.02), transparent 60%);
             pointer-events: none;
         }
 
@@ -98,286 +82,143 @@
             left: 20%;
             right: 20%;
             height: 2px;
-            background: linear-gradient(90deg, transparent, rgba(0, 240, 255, 0.15), rgba(123, 97, 255, 0.15), transparent);
+            background: linear-gradient(90deg, transparent, rgba(0,240,255,0.15), rgba(123,97,255,0.15), transparent);
             animation: borderGlow 3s ease-in-out infinite;
         }
 
-        @@keyframes borderGlow {
-            0%, 100% { opacity: 0.3; transform: scaleX(1); }
-            50% { opacity: 1; transform: scaleX(1.2); }
-        }
+        @@keyframes borderGlow { 0%, 100% { opacity: 0.3; transform: scaleX(1); } 50% { opacity: 1; transform: scaleX(1.2); } }
 
         .holo-card .corner {
             position: absolute;
-            width: 16px;
-            height: 16px;
-            border-color: rgba(0, 240, 255, 0.06);
+            width: 14px;
+            height: 14px;
+            border-color: rgba(0,240,255,0.06);
             border-style: solid;
             border-width: 0;
             transition: all 0.6s ease;
         }
-        .holo-card .corner.tl { top: 10px; left: 10px; border-top-width: 2px; border-left-width: 2px; border-radius: 4px 0 0 0; }
-        .holo-card .corner.tr { top: 10px; right: 10px; border-top-width: 2px; border-right-width: 2px; border-radius: 0 4px 0 0; }
-        .holo-card .corner.bl { bottom: 10px; left: 10px; border-bottom-width: 2px; border-left-width: 2px; border-radius: 0 0 0 4px; }
-        .holo-card .corner.br { bottom: 10px; right: 10px; border-bottom-width: 2px; border-right-width: 2px; border-radius: 0 0 4px 0; }
+        .holo-card .corner.tl { top: 8px; left: 8px; border-top-width: 2px; border-left-width: 2px; border-radius: 4px 0 0 0; }
+        .holo-card .corner.tr { top: 8px; right: 8px; border-top-width: 2px; border-right-width: 2px; border-radius: 0 4px 0 0; }
+        .holo-card .corner.bl { bottom: 8px; left: 8px; border-bottom-width: 2px; border-left-width: 2px; border-radius: 0 0 0 4px; }
+        .holo-card .corner.br { bottom: 8px; right: 8px; border-bottom-width: 2px; border-right-width: 2px; border-radius: 0 0 4px 0; }
 
-        /* ============================================================
-           头部
-           ============================================================ */
         .rules-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding-bottom: 12px;
+            padding-bottom: 10px;
             border-bottom: 1px solid rgba(255,255,255,0.04);
             flex-shrink: 0;
         }
 
-        .rules-header .left {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
+        .rules-header .left { display: flex; align-items: center; gap: 10px; }
+        .rules-header .icon { font-size: 1.6rem; }
+        .rules-header h2 { font-size: 1.1rem; font-weight: 700; background: linear-gradient(135deg, #00F0FF, #7B61FF); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .rules-header .page-counter { font-size: 0.65rem; color: rgba(255,255,255,0.06); font-weight: 600; font-family: 'Courier New', monospace; }
 
-        .rules-header .icon {
-            font-size: 1.6rem;
-        }
-
-        .rules-header h2 {
-            font-size: 1.1rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, #00F0FF, #7B61FF);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .rules-header .page-counter {
-            font-size: 0.7rem;
-            color: rgba(255,255,255,0.08);
-            font-weight: 600;
-            font-family: 'Courier New', monospace;
-        }
-
-        .rules-header .page-counter .current { color: rgba(255,255,255,0.3); }
-
-        /* ============================================================
-           内容
-           ============================================================ */
         .rules-content {
             flex: 1;
             overflow-y: auto;
-            padding: 16px 0 12px;
+            padding: 12px 0 10px;
             min-height: 300px;
             max-height: 420px;
         }
 
         .rules-content::-webkit-scrollbar { width: 3px; }
         .rules-content::-webkit-scrollbar-track { background: rgba(255,255,255,0.01); border-radius: 10px; }
-        .rules-content::-webkit-scrollbar-thumb { background: rgba(0, 240, 255, 0.08); border-radius: 10px; }
+        .rules-content::-webkit-scrollbar-thumb { background: rgba(0,240,255,0.08); border-radius: 10px; }
 
-        /* ===== 规则页面 ===== */
-        .rule-page {
-            display: none;
-            animation: pageIn 0.5s cubic-bezier(0.23, 1, 0.32, 1);
-        }
-
+        .rule-page { display: none; animation: pageIn 0.5s cubic-bezier(0.23, 1, 0.32, 1); }
         .rule-page.active { display: block; }
 
-        @@keyframes pageIn {
-            from { opacity: 0; transform: translateX(30px); }
-            to { opacity: 1; transform: translateX(0); }
-        }
+        @@keyframes pageIn { from { opacity: 0; transform: translateX(30px); } to { opacity: 1; transform: translateX(0); } }
 
-        .rule-page .page-title {
-            font-size: 1.1rem;
-            font-weight: 700;
-            color: #fff;
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .rule-page .page-title .icon { font-size: 1.3rem; }
+        .rule-page .page-title { font-size: 1rem; font-weight: 700; color: #fff; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+        .rule-page .page-title .icon { font-size: 1.2rem; }
 
         .rule-page .rule-item {
-            padding: 6px 0 6px 16px;
-            border-left: 2px solid rgba(0, 240, 255, 0.06);
-            margin-bottom: 4px;
-            font-size: 0.82rem;
-            color: rgba(255,255,255,0.5);
+            padding: 4px 0 4px 14px;
+            border-left: 2px solid rgba(0,240,255,0.04);
+            margin-bottom: 3px;
+            font-size: 0.78rem;
+            color: rgba(255,255,255,0.4);
             line-height: 1.7;
             transition: all 0.3s ease;
         }
 
-        .rule-page .rule-item:hover {
-            border-left-color: rgba(0, 240, 255, 0.12);
-            color: rgba(255,255,255,0.6);
-        }
+        .rule-page .rule-item:hover { border-left-color: rgba(0,240,255,0.1); color: rgba(255,255,255,0.5); }
 
-        .rule-page .rule-item .highlight {
-            color: #00F0FF;
-            font-weight: 600;
-        }
-
-        .rule-page .rule-item .highlight-gold {
-            color: #F59E0B;
-            font-weight: 600;
-        }
-
-        .rule-page .rule-item .highlight-pink {
-            color: #EC4899;
-            font-weight: 600;
-        }
-
-        .rule-page .rule-item .highlight-green {
-            color: #00FF88;
-            font-weight: 600;
-        }
-
-        .rule-page .rule-item .indent {
-            padding-left: 20px;
-            display: block;
-            color: rgba(255,255,255,0.2);
-            font-size: 0.75rem;
-        }
-
-        .rule-page .rule-item .citation {
-            font-size: 0.55rem;
-            color: rgba(255,255,255,0.06);
-            margin-left: 4px;
-        }
+        .rule-page .rule-item .highlight { color: #00F0FF; font-weight: 600; }
+        .rule-page .rule-item .highlight-gold { color: #F59E0B; font-weight: 600; }
+        .rule-page .rule-item .highlight-pink { color: #EC4899; font-weight: 600; }
+        .rule-page .rule-item .highlight-green { color: #00FF88; font-weight: 600; }
+        .rule-page .rule-item .indent { padding-left: 18px; display: block; color: rgba(255,255,255,0.15); font-size: 0.7rem; }
 
         .rule-page .additional-info {
-            margin-top: 10px;
-            padding: 8px 14px;
-            border-radius: 12px;
-            background: rgba(0, 240, 255, 0.02);
-            border: 1px solid rgba(0, 240, 255, 0.04);
-            font-size: 0.7rem;
-            color: rgba(255,255,255,0.12);
+            margin-top: 8px;
+            padding: 6px 12px;
+            border-radius: 10px;
+            background: rgba(0,240,255,0.02);
+            border: 1px solid rgba(0,240,255,0.03);
+            font-size: 0.65rem;
+            color: rgba(255,255,255,0.1);
         }
 
-        /* ===== 角色卡片 ===== */
-        .role-card {
-            display: inline-block;
-            padding: 4px 12px 4px 8px;
-            border-radius: 20px;
-            background: rgba(255,255,255,0.02);
-            border: 1px solid rgba(255,255,255,0.04);
-            font-size: 0.75rem;
-            color: rgba(255,255,255,0.4);
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin: 2px 4px 2px 0;
-        }
-
-        .role-card:hover {
-            background: rgba(0, 240, 255, 0.04);
-            border-color: rgba(0, 240, 255, 0.08);
-            color: #fff;
-            transform: scale(1.05);
-        }
-
-        .role-card .emoji { margin-right: 2px; }
-
-        /* ============================================================
-           底部导航
-           ============================================================ */
         .rules-footer {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding-top: 12px;
+            padding-top: 10px;
             border-top: 1px solid rgba(255,255,255,0.04);
             flex-shrink: 0;
             flex-wrap: wrap;
-            gap: 8px;
+            gap: 6px;
         }
 
         .btn-nav {
-            padding: 8px 18px;
+            padding: 6px 16px;
             border: 1px solid rgba(255,255,255,0.04);
             border-radius: 40px;
             background: rgba(255,255,255,0.02);
-            color: rgba(255,255,255,0.2);
+            color: rgba(255,255,255,0.15);
             font-weight: 500;
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             cursor: pointer;
             transition: all 0.3s ease;
             font-family: inherit;
         }
 
-        .btn-nav:hover:not(:disabled) {
-            background: rgba(255,255,255,0.04);
-            color: #fff;
-            border-color: rgba(255,255,255,0.06);
-        }
+        .btn-nav:hover:not(:disabled) { background: rgba(255,255,255,0.04); color: #fff; border-color: rgba(255,255,255,0.06); }
+        .btn-nav:disabled { opacity: 0.15; cursor: not-allowed; }
 
-        .btn-nav:disabled {
-            opacity: 0.2;
-            cursor: not-allowed;
-        }
+        .btn-nav.primary { background: linear-gradient(135deg, #00F0FF, #7B61FF); border: none; color: #fff; }
+        .btn-nav.primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 40px rgba(0,240,255,0.05); }
 
-        .btn-nav.primary {
-            background: linear-gradient(135deg, #00F0FF, #7B61FF);
-            border: none;
-            color: #fff;
-        }
-
-        .btn-nav.primary:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 40px rgba(0, 240, 255, 0.08);
-        }
-
-        /* ===== 进度点 ===== */
-        .progress-dots {
-            display: flex;
-            gap: 6px;
-            align-items: center;
-        }
+        .progress-dots { display: flex; gap: 5px; align-items: center; }
 
         .progress-dots .dot {
-            width: 8px;
-            height: 8px;
+            width: 7px;
+            height: 7px;
             border-radius: 50%;
-            background: rgba(255,255,255,0.04);
+            background: rgba(255,255,255,0.02);
             transition: all 0.4s ease;
             cursor: pointer;
         }
 
-        .progress-dots .dot.active {
-            background: #00F0FF;
-            box-shadow: 0 0 20px rgba(0, 240, 255, 0.1);
-            width: 20px;
-            border-radius: 10px;
-        }
+        .progress-dots .dot.active { background: #00F0FF; box-shadow: 0 0 20px rgba(0,240,255,0.05); width: 18px; border-radius: 8px; }
+        .progress-dots .dot.done { background: rgba(0,240,255,0.1); }
 
-        .progress-dots .dot.done {
-            background: rgba(0, 240, 255, 0.2);
-        }
-
-        /* ============================================================
-           确认按钮
-           ============================================================ */
-        .rules-confirm {
-            margin-top: 12px;
-            padding-top: 12px;
-            border-top: 1px solid rgba(255,255,255,0.04);
-            text-align: center;
-            flex-shrink: 0;
-        }
+        .rules-confirm { margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.04); text-align: center; flex-shrink: 0; }
 
         .btn-confirm {
             width: 100%;
-            padding: 14px;
+            padding: 12px;
             border: none;
             border-radius: 40px;
             background: linear-gradient(135deg, #00FF88, #00F0FF);
             color: #05050F;
             font-weight: 700;
-            font-size: 1rem;
+            font-size: 0.9rem;
             cursor: pointer;
             transition: all 0.4s ease;
             font-family: inherit;
@@ -387,135 +228,58 @@
 
         .btn-confirm.show { display: block; }
 
-        .btn-confirm:hover {
-            transform: translateY(-2px) scale(1.01);
-            box-shadow: 0 8px 60px rgba(0, 255, 136, 0.1);
-        }
+        .btn-confirm:hover { transform: translateY(-2px) scale(1.01); box-shadow: 0 8px 60px rgba(0,255,136,0.08); }
 
-        .btn-confirm .sub {
-            display: block;
-            font-size: 0.6rem;
-            font-weight: 400;
-            opacity: 0.5;
-            margin-top: 2px;
-        }
+        .btn-confirm .sub { display: block; font-size: 0.55rem; font-weight: 400; opacity: 0.4; margin-top: 2px; }
 
-        /* ============================================================
-           角色详情弹窗
-           ============================================================ */
-        .role-detail-overlay {
+        .toast-container {
             position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.92);
-            backdrop-filter: blur(30px);
+            bottom: 16px;
+            right: 16px;
             z-index: 9999;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            padding: 24px;
-            animation: overlayIn 0.4s ease;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            align-items: flex-end;
+            max-width: 90%;
         }
 
-        .role-detail-overlay.active { display: flex; }
-
-        @@keyframes overlayIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        .role-detail-modal {
-            background: rgba(20,20,40,0.98);
+        .toast-msg {
+            padding: 6px 16px;
+            border-radius: 40px;
+            color: #fff;
+            font-weight: 500;
+            animation: toastIn 0.4s ease;
+            font-size: 0.75rem;
+            backdrop-filter: blur(20px);
+            background: rgba(10,10,30,0.8);
             border: 1px solid rgba(255,255,255,0.04);
-            border-radius: 28px;
-            max-width: 420px;
-            width: 100%;
-            padding: 28px 24px 24px;
-            animation: modalIn 0.4s cubic-bezier(0.23, 1, 0.32, 1);
-            max-height: 90vh;
-            overflow-y: auto;
+            max-width: 100%;
+            word-break: break-word;
         }
 
-        @@keyframes modalIn {
-            from { opacity: 0; transform: scale(0.92) translateY(20px); }
-            to { opacity: 1; transform: scale(1) translateY(0); }
-        }
+        .toast-msg.success { background: rgba(0,255,136,0.08); border-color: rgba(0,255,136,0.04); color: #00FF88; }
+        .toast-msg.error { background: rgba(255,0,110,0.08); border-color: rgba(255,0,110,0.04); color: #FF006E; }
+        .toast-msg.info { background: rgba(0,240,255,0.06); border-color: rgba(0,240,255,0.04); color: #00F0FF; }
 
-        .role-detail-modal .close-btn {
-            float: right;
-            background: none;
-            border: none;
-            color: rgba(255,255,255,0.08);
-            font-size: 1.4rem;
-            cursor: pointer;
-            transition: color 0.3s ease;
-        }
+        @@keyframes toastIn { from { opacity: 0; transform: translateY(16px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
 
-        .role-detail-modal .close-btn:hover { color: rgba(255,255,255,0.2); }
-
-        .role-detail-modal .role-name {
-            font-size: 1.5rem;
-            font-weight: 800;
-            margin-bottom: 4px;
-        }
-
-        .role-detail-modal .role-desc {
-            font-size: 0.9rem;
-            color: rgba(255,255,255,0.3);
-            margin-bottom: 12px;
-        }
-
-        .role-detail-modal .role-detail {
-            font-size: 0.85rem;
-            color: rgba(255,255,255,0.4);
-            line-height: 1.8;
-            white-space: pre-wrap;
-            background: rgba(255,255,255,0.02);
-            padding: 12px 16px;
-            border-radius: 14px;
-            border: 1px solid rgba(255,255,255,0.02);
-        }
-
-        .role-detail-modal .role-tips {
-            margin-top: 12px;
-            padding: 10px 14px;
-            border-radius: 14px;
-            background: rgba(245, 158, 11, 0.04);
-            border: 1px solid rgba(245, 158, 11, 0.04);
-            font-size: 0.8rem;
-            color: #F59E0B;
-        }
-
-        /* ============================================================
-           响应式
-           ============================================================ */
         @@media (max-width: 480px) {
-            .holo-card { padding: 16px 14px 16px; border-radius: 24px; }
+            .holo-card { padding: 14px 12px 14px; border-radius: 24px; }
             .holo-card .corner { width: 10px; height: 10px; }
             .rules-header h2 { font-size: 0.95rem; }
-            .rules-header .icon { font-size: 1.2rem; }
-            .rules-content { min-height: 220px; max-height: 320px; }
-            .rule-page .rule-item { font-size: 0.75rem; padding: 4px 0 4px 12px; }
-            .rule-page .page-title { font-size: 0.95rem; }
-            .btn-nav { padding: 6px 12px; font-size: 0.65rem; }
-            .btn-confirm { padding: 12px; font-size: 0.9rem; }
-            .role-detail-modal { padding: 20px 16px; }
-            .role-detail-modal .role-name { font-size: 1.2rem; }
-        }
-
-        @@media (max-width: 380px) {
-            .rules-content { min-height: 180px; max-height: 260px; }
-            .rule-page .rule-item { font-size: 0.7rem; }
+            .rules-content { min-height: 240px; max-height: 320px; }
+            .rule-page .rule-item { font-size: 0.7rem; padding: 3px 0 3px 10px; }
+            .rule-page .page-title { font-size: 0.85rem; }
+            .btn-nav { padding: 4px 12px; font-size: 0.6rem; }
+            .btn-confirm { padding: 10px; font-size: 0.8rem; }
         }
     </style>
 </head>
 <body>
 
-    <!-- 粒子背景 -->
     <canvas id="particleCanvas"></canvas>
 
-    <!-- ============================================================
-         主容器
-         ============================================================ -->
     <div class="rules-container">
         <div class="holo-card">
             <div class="border-glow"></div>
@@ -524,106 +288,113 @@
             <div class="corner bl"></div>
             <div class="corner br"></div>
 
-            <!-- 头部 -->
             <div class="rules-header">
-                <div class="left">
-                    <span class="icon">📜</span>
-                    <h2>游戏规则</h2>
-                </div>
-                <div class="page-counter">
-                    <span class="current" id="currentPageDisplay">1</span>/<span id="totalPages">@rulePages.Count</span>
-                </div>
+                <div class="left"><span class="icon">📜</span><h2>游戏规则</h2></div>
+                <div class="page-counter"><span id="currentPageDisplay">1</span>/<span id="totalPages">6</span></div>
             </div>
 
-            <!-- 内容 -->
             <div class="rules-content" id="rulesContent">
-                @for (int i = 0; i < rulePages.Count; i++)
-                {
-                    var page = rulePages[i];
-                    <div class="rule-page @(i == 0 ? "active" : "")" data-page="@i">
-                        <div class="page-title">
-                            <span class="icon">@page.Icon</span>
-                            @page.Title
-                        </div>
-
-                        @foreach (var item in page.Content)
-                        {
-                            if (string.IsNullOrEmpty(item))
-                            {
-                                <div style="height:4px;"></div>
-                            }
-                            else if (item.StartsWith("  •"))
-                            {
-                                <div class="rule-item" style="border-left-color: rgba(0, 240, 255, 0.03);">
-                                    @Html.Raw(item.Replace("  •", "▸").Trim())
-                                </div>
-                            }
-                            else if (item.StartsWith("  "))
-                            {
-                                <div class="rule-item" style="border-left-color: rgba(255,255,255,0.02); padding-left: 28px; font-size: 0.75rem; color: rgba(255,255,255,0.15);">
-                                    @Html.Raw(item.Trim())
-                                </div>
-                            }
-                            else if (item.Contains("："))
-                            {
-                                var parts = item.Split('：');
-                                <div class="rule-item">
-                                    <span style="color: rgba(255,255,255,0.6);">@parts[0]</span>：<span style="color: rgba(255,255,255,0.3);">@parts[1]</span>
-                                </div>
-                            }
-                            else if (item.Contains("📱") || item.Contains("💡"))
-                            {
-                                <div class="rule-item" style="border-left-color: rgba(245, 158, 11, 0.06);">
-                                    @Html.Raw(item)
-                                </div>
-                            }
-                            else if (item.StartsWith("🃏"))
-                            {
-                                <div class="rule-item" style="border-left-color: rgba(139, 92, 246, 0.06); font-weight: 600; color: rgba(255,255,255,0.3);">
-                                    @Html.Raw(item)
-                                </div>
-                            }
-                            else if (item.Contains("角色名称"))
-                            {
-                                <div class="rule-item" style="border-left-color: rgba(139, 92, 246, 0.03); font-size: 0.7rem; color: rgba(255,255,255,0.08);">
-                                    @Html.Raw(item)
-                                </div>
-                            }
-                            else
-                            {
-                                <div class="rule-item">
-                                    @Html.Raw(item)
-                                </div>
-                            }
-                        }
-
-                        @if (!string.IsNullOrEmpty(page.AdditionalInfo))
-                        {
-                            <div class="additional-info">
-                                💡 @page.AdditionalInfo
-                            </div>
-                        }
-                    </div>
-                }
-            </div>
-
-            <!-- 底部导航 -->
-            <div class="rules-footer">
-                <button class="btn-nav" id="prevBtn" onclick="changePage(-1)" disabled>
-                    ← 上一页
-                </button>
-                <div class="progress-dots" id="progressDots">
-                    @for (int i = 0; i < rulePages.Count; i++)
-                    {
-                        <span class="dot @(i == 0 ? "active" : "")" data-page="@i" onclick="goToPage(@i)"></span>
-                    }
+                <!-- 第1页 -->
+                <div class="rule-page active" data-page="0">
+                    <div class="page-title"><span class="icon">🏆</span> 胜利条件</div>
+                    <div class="rule-item"><span class="highlight-green">⭐ 好人阵营胜利：</span>所有狼人出局</div>
+                    <div class="rule-item"><span class="highlight-pink">🐺 狼人阵营胜利（屠边）：</span>所有神职出局 或 所有平民出局</div>
+                    <div class="rule-item"><span class="highlight">📊 当前配置：</span>@playerCount 人局</div>
+                    <div class="additional-info">⚡ 特殊板子可能存在额外胜利条件（如人狼情侣屠城）</div>
                 </div>
-                <button class="btn-nav" id="nextBtn" onclick="changePage(1)">
-                    下一页 →
-                </button>
+
+                <!-- 第2页 -->
+                <div class="rule-page" data-page="1">
+                    <div class="page-title"><span class="icon">👥</span> 阵营与角色</div>
+                    <div class="rule-item"><span class="highlight-green">🌟 好人阵营（神职 + 平民）</span></div>
+                    <div class="rule-item"><span class="indent">胜利条件：所有狼人出局</span></div>
+                    <div class="rule-item"><span class="highlight-pink">🐺 狼人阵营</span></div>
+                    <div class="rule-item"><span class="indent">胜利条件：屠边（杀光所有神职或所有平民）</span></div>
+                    <div class="rule-item"><span class="highlight">💡 神职包括：</span>预言家、女巫、守卫、猎人等</div>
+                    <div class="rule-item"><span class="highlight">💡 平民</span>无特殊技能</div>
+                    <div class="additional-info">📱 本局角色：@string.Join("、", selectedRoles)</div>
+                </div>
+
+                <!-- 第3页 -->
+                <div class="rule-page" data-page="2">
+                    <div class="page-title"><span class="icon">🌙</span> 昼夜流程</div>
+                    <div class="rule-item"><span class="highlight">🌙 夜晚阶段</span></div>
+                    <div class="rule-item"><span class="indent">1. 守卫 → 守护一名玩家</span></div>
+                    <div class="rule-item"><span class="indent">2. 预言家 → 查验一名玩家</span></div>
+                    <div class="rule-item"><span class="indent">3. 狼人 → 统一意见杀害一名玩家</span></div>
+                    <div class="rule-item"><span class="indent">4. 女巫 → 解药救人 / 毒药杀人</span></div>
+                    <div class="rule-item"><span class="indent">5. 天亮</span></div>
+                    <div class="rule-item" style="margin-top:4px;"><span class="highlight-gold">☀️ 白天阶段</span></div>
+                    <div class="rule-item"><span class="indent">1. 公布死讯</span></div>
+                    <div class="rule-item"><span class="indent">2. 发言阶段</span></div>
+                    <div class="rule-item"><span class="indent">3. 投票阶段</span></div>
+                    <div class="rule-item"><span class="indent">4. 公布放逐结果</span></div>
+                    <div class="rule-item"><span class="indent">5. 天黑</span></div>
+                    <div class="additional-info">💡 首夜女巫可自救 ｜ 守卫第一天可守护自己</div>
+                </div>
+
+                <!-- 第4页 -->
+                <div class="rule-page" data-page="3">
+                    <div class="page-title"><span class="icon">📢</span> 发言与投票</div>
+                    <div class="rule-item"><span class="highlight">📢 发言规则</span></div>
+                    <div class="rule-item"><span class="indent">• 每人发言时间：60秒</span></div>
+                    <div class="rule-item"><span class="indent">• 从死者左手边开始顺序发言</span></div>
+                    <div class="rule-item"><span class="indent">• 10人以上开启警长竞选</span></div>
+                    <div class="rule-item"><span class="indent">• 警长拥有归票权，投票算1.5票</span></div>
+                    <div class="rule-item" style="margin-top:4px;"><span class="highlight-gold">🗳️ 投票规则</span></div>
+                    <div class="rule-item"><span class="indent">• 每人一票</span></div>
+                    <div class="rule-item"><span class="indent">• 平票则PK发言</span></div>
+                    <div class="rule-item"><span class="indent">• PK后再平票则平安日</span></div>
+                    <div class="rule-item"><span class="highlight-pink">💀 遗言规则</span></div>
+                    <div class="rule-item"><span class="indent">• 第一天死亡有遗言</span></div>
+                    <div class="rule-item"><span class="indent">• 之后死亡无遗言</span></div>
+                </div>
+
+                <!-- 第5页 -->
+                <div class="rule-page" data-page="4">
+                    <div class="page-title"><span class="icon">🃏</span> 角色技能速查</div>
+                    <div class="rule-item"><span class="highlight-pink">🐺 狼人：</span>每晚共同杀害一名玩家</div>
+                    <div class="rule-item"><span class="highlight">🔮 预言家：</span>每晚查验一名玩家身份</div>
+                    <div class="rule-item"><span class="highlight">🧪 女巫：</span>解药救人，毒药杀人</div>
+                    <div class="rule-item"><span class="highlight">🛡️ 守卫：</span>每晚守护一人免遭袭击</div>
+                    <div class="rule-item"><span class="highlight-gold">🔫 猎人：</span>死亡时开枪带走一人</div>
+                    <div class="rule-item"><span class="highlight-gold">🤡 白痴：</span>被放逐时翻牌免死一次</div>
+                    <div class="rule-item"><span class="highlight-gold">⚔️ 骑士：</span>白天挑战一名玩家</div>
+                    <div class="rule-item"><span class="highlight-green">👤 平民：</span>无特殊技能</div>
+                    <div class="additional-info">📱 点击角色名称查看详细技能说明</div>
+                </div>
+
+                <!-- 第6页 -->
+                <div class="rule-page" data-page="5">
+                    <div class="page-title"><span class="icon">⚡</span> 特殊规则</div>
+                    <div class="rule-item"><span class="highlight-pink">🛡️ 同守同救（奶穿）</span></div>
+                    <div class="rule-item"><span class="indent">同一晚被守护 + 女巫解救 = 死亡</span></div>
+                    <div class="rule-item" style="margin-top:4px;"><span class="highlight-gold">🔫 猎人</span></div>
+                    <div class="rule-item"><span class="indent">死亡时可开枪带走一人</span></div>
+                    <div class="rule-item"><span class="indent">被女巫毒杀不能开枪</span></div>
+                    <div class="rule-item" style="margin-top:4px;"><span class="highlight">🤡 白痴</span></div>
+                    <div class="rule-item"><span class="indent">被投票放逐时可翻牌免死一次</span></div>
+                    <div class="rule-item"><span class="indent">翻牌后失去投票权，但仍可发言</span></div>
+                    <div class="rule-item" style="margin-top:4px;"><span class="highlight-pink">🐺 狼人自爆</span></div>
+                    <div class="rule-item"><span class="indent">白天可自爆，立即进入黑夜</span></div>
+                    <div class="rule-item"><span class="indent">警长竞选阶段自爆会"吞警徽"</span></div>
+                    <div class="additional-info">📖 详细规则可在游戏中查看</div>
+                </div>
             </div>
 
-            <!-- 确认按钮 -->
+            <div class="rules-footer">
+                <button class="btn-nav" id="prevBtn" onclick="changePage(-1)" disabled>← 上一页</button>
+                <div class="progress-dots" id="progressDots">
+                    <span class="dot active" data-page="0" onclick="goToPage(0)"></span>
+                    <span class="dot" data-page="1" onclick="goToPage(1)"></span>
+                    <span class="dot" data-page="2" onclick="goToPage(2)"></span>
+                    <span class="dot" data-page="3" onclick="goToPage(3)"></span>
+                    <span class="dot" data-page="4" onclick="goToPage(4)"></span>
+                    <span class="dot" data-page="5" onclick="goToPage(5)"></span>
+                </div>
+                <button class="btn-nav" id="nextBtn" onclick="changePage(1)">下一页 →</button>
+            </div>
+
             <div class="rules-confirm">
                 <button class="btn-confirm" id="confirmBtn" onclick="confirmRules()">
                     ✅ 我已阅读并确认
@@ -634,32 +405,16 @@
         </div>
     </div>
 
-    <!-- ============================================================
-         角色详情弹窗
-         ============================================================ -->
-    <div class="role-detail-overlay" id="roleDetailOverlay">
-        <div class="role-detail-modal">
-            <button class="close-btn" onclick="closeRoleDetail()">✕</button>
-            <div class="role-name" id="detailName">角色名</div>
-            <div class="role-desc" id="detailDesc">角色描述</div>
-            <div class="role-detail" id="detailContent">详细技能</div>
-            <div class="role-tips" id="detailTips">💡 提示</div>
-        </div>
-    </div>
+    <div class="toast-container" id="toastContainer"></div>
 
-    <!-- ============================================================
-         Scripts
-         ============================================================ -->
     <script>
-        // ============================================================
         // 粒子背景
-        // ============================================================
         (function initParticles() {
             var canvas = document.getElementById('particleCanvas');
             if (!canvas) return;
             var ctx = canvas.getContext('2d');
             var particles = [];
-            var count = Math.min(60, Math.floor(window.innerWidth / 8));
+            var count = Math.min(50, Math.floor(window.innerWidth / 10));
 
             function resize() {
                 canvas.width = window.innerWidth;
@@ -672,10 +427,10 @@
                 particles.push({
                     x: Math.random() * canvas.width,
                     y: Math.random() * canvas.height,
-                    vx: (Math.random() - 0.5) * 0.12,
-                    vy: (Math.random() - 0.5) * 0.12,
-                    r: Math.random() * 1.2 + 0.3,
-                    o: Math.random() * 0.12 + 0.02
+                    vx: (Math.random() - 0.5) * 0.1,
+                    vy: (Math.random() - 0.5) * 0.1,
+                    r: Math.random() * 1 + 0.3,
+                    o: Math.random() * 0.1 + 0.02
                 });
             }
 
@@ -696,11 +451,8 @@
             draw();
         })();
 
-        // ============================================================
-        // 分页控制
-        // ============================================================
         var currentPage = 0;
-        var totalPages = @rulePages.Count;
+        var totalPages = 6;
 
         function changePage(delta) {
             var newPage = currentPage + delta;
@@ -711,92 +463,40 @@
         function goToPage(index) {
             if (index < 0 || index >= totalPages) return;
 
-            // 切换页面
-            document.querySelectorAll('.rule-page').forEach(function(el) {
-                el.classList.remove('active');
-            });
-            document.getElementById('rulesContent').querySelector('.rule-page[data-page="' + index + '"]').classList.add('active');
+            document.querySelectorAll('.rule-page').forEach(function(el) { el.classList.remove('active'); });
+            document.querySelector('.rule-page[data-page="' + index + '"]').classList.add('active');
 
-            // 更新页码
             document.getElementById('currentPageDisplay').textContent = index + 1;
 
-            // 更新进度点
             document.querySelectorAll('.progress-dots .dot').forEach(function(el, i) {
                 el.classList.remove('active', 'done');
                 if (i === index) el.classList.add('active');
                 else if (i < index) el.classList.add('done');
             });
 
-            // 更新按钮
             document.getElementById('prevBtn').disabled = index === 0;
             document.getElementById('nextBtn').disabled = index === totalPages - 1;
 
-            // 最后一页显示确认按钮
             var confirmBtn = document.getElementById('confirmBtn');
-            if (index === totalPages - 1) {
-                confirmBtn.classList.add('show');
-            } else {
-                confirmBtn.classList.remove('show');
-            }
+            if (index === totalPages - 1) { confirmBtn.classList.add('show'); } else { confirmBtn.classList.remove(
+                'show'); }
 
             currentPage = index;
         }
 
-        // ============================================================
-        // 角色详情
-        // ============================================================
-        var roleDetails = @Html.Raw(Json.Serialize(roleDetails));
-
-        function showRoleDetail(roleName) {
-            var detail = roleDetails[roleName];
-            if (!detail) return;
-
-            document.getElementById('detailName').textContent = detail.name;
-            document.getElementById('detailDesc').textContent = detail.description;
-            document.getElementById('detailContent').textContent = detail.detail.trim();
-            document.getElementById('detailTips').textContent = detail.tips || '💡 善用你的技能帮助阵营获胜！';
-
-            document.getElementById('roleDetailOverlay').classList.add('active');
-        }
-
-        function closeRoleDetail() {
-            document.getElementById('roleDetailOverlay').classList.remove('active');
-        }
-
-        // 点击背景关闭
-        document.getElementById('roleDetailOverlay').addEventListener('click', function(e) {
-            if (e.target === this) closeRoleDetail();
-        });
-
-        // ============================================================
-        // 确认规则
-        // ============================================================
         function confirmRules() {
-            // 触发确认事件
-            if (window.parent && window.parent.postMessage) {
-                window.parent.postMessage({ type: 'rulesConfirmed' }, '*');
-            }
-
-            // 或者调用父窗口的函数
-            if (window.opener && window.opener.onRulesConfirmed) {
-                window.opener.onRulesConfirmed();
-            }
-
-            // 显示确认成功
             var btn = document.getElementById('confirmBtn');
             btn.textContent = '✅ 已确认，游戏即将开始...';
             btn.disabled = true;
             btn.style.opacity = '0.6';
 
-            // 3秒后自动关闭
-            setTimeout(function() {
-                window.close();
-            }, 3000);
+            if (window.parent && window.parent.postMessage) {
+                window.parent.postMessage({ type: 'rulesConfirmed' }, '*');
+            }
+
+            setTimeout(function() { window.close(); }, 2000);
         }
 
-        // ============================================================
-        // 键盘快捷键
-        // ============================================================
         document.addEventListener('keydown', function(e) {
             if (e.key === 'ArrowLeft') changePage(-1);
             if (e.key === 'ArrowRight') changePage(1);
@@ -804,31 +504,19 @@
                 var confirmBtn = document.getElementById('confirmBtn');
                 if (confirmBtn.classList.contains('show')) confirmRules();
             }
-            if (e.key === 'Escape') closeRoleDetail();
         });
 
-        // ============================================================
-        // 触摸滑动
-        // ============================================================
         var touchStartX = 0;
-        document.addEventListener('touchstart', function(e) {
-            touchStartX = e.touches[0].clientX;
-        });
-
+        document.addEventListener('touchstart', function(e) { touchStartX = e.touches[0].clientX; });
         document.addEventListener('touchend', function(e) {
             var diff = touchStartX - e.changedTouches[0].clientX;
-            if (Math.abs(diff) > 50) {
+            if (Math.abs(diff) > 40) {
                 if (diff > 0) changePage(1);
                 else changePage(-1);
             }
         });
 
-        // ============================================================
-        // 初始化
-        // ============================================================
-        document.addEventListener('DOMContentLoaded', function() {
-            goToPage(0);
-        });
+        document.addEventListener('DOMContentLoaded', function() { goToPage(0); });
     </script>
 
 </body>
