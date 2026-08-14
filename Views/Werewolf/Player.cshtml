@@ -732,6 +732,59 @@
                         `<div style="grid-column:1/-1;text-align:center;padding:8px;color:rgba(255,255,255,0.1);font-size:0.8rem;">📢 你是PK玩家，请发言</div>`;
                     document.getElementById('actionConfirmBtn').style.display = 'none';
                 });
+// 找到 connection.on 相关代码，添加以下内容：
+
+// ⭐ 公共语音播报（所有玩家听到）
+connection.on('VoiceAnnounce', function(message, type) {
+    console.log('🔊 语音播报:', message);
+    speak(message, type === 'important');
+});
+
+// ⭐ 神职专属语音（仅自己听到，不公开）
+connection.on('VoiceWhisper', function(message) {
+    console.log('🔇 私密语音:', message);
+    speak(message, false);
+});
+
+// ⭐ 语音合成函数
+function speak(text, isImportant) {
+    try {
+        if (!window.speechSynthesis) {
+            console.log('⚠️ 浏览器不支持语音合成');
+            return;
+        }
+        
+        // 取消之前的语音
+        window.speechSynthesis.cancel();
+        
+        var utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'zh-CN';
+        utterance.rate = isImportant ? 0.85 : 0.9;
+        utterance.pitch = isImportant ? 0.9 : 1.0;
+        utterance.volume = 1;
+        
+        // 选择中文女声
+        var voices = window.speechSynthesis.getVoices();
+        var zhVoice = voices.find(function(v) { return v.lang && v.lang.startsWith('zh'); });
+        if (zhVoice) {
+            utterance.voice = zhVoice;
+        }
+        
+        window.speechSynthesis.speak(utterance);
+    } catch(e) {
+        console.log('语音播报失败:', e);
+    }
+}
+
+// 页面加载时预加载语音
+document.addEventListener('DOMContentLoaded', function() {
+    if (window.speechSynthesis) {
+        window.speechSynthesis.getVoices();
+        window.speechSynthesis.onvoiceschanged = function() {
+            window.speechSynthesis.getVoices();
+        };
+    }
+});
 
                 connection.start()
                     .then(function() { console.log('✅ SignalR 已连接');
