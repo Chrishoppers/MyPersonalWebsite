@@ -177,19 +177,8 @@
             z-index: 2;
         }
 
-        .table-center .icon {
-            font-size: 2.4rem;
-            opacity: 0.1;
-            display: block;
-        }
-
-        .table-center .label {
-            font-size: 0.5rem;
-            color: rgba(255,255,255,0.02);
-            text-transform: uppercase;
-            letter-spacing: 0.2em;
-            margin-top: 4px;
-        }
+        .table-center .icon { font-size: 2.4rem; opacity: 0.1; display: block; }
+        .table-center .label { font-size: 0.5rem; color: rgba(255,255,255,0.02); text-transform: uppercase; letter-spacing: 0.2em; margin-top: 4px; }
 
         /* ===== 座位 ===== */
         .seat {
@@ -231,10 +220,7 @@
             transition: all 0.3s ease;
         }
 
-        .seat .seat-emoji {
-            font-size: 0.6rem;
-            display: none;
-        }
+        .seat .seat-emoji { font-size: 0.6rem; display: none; }
 
         .seat.occupied {
             border-color: rgba(0, 240, 255, 0.12);
@@ -257,6 +243,25 @@
             background: rgba(139, 92, 246, 0.04);
             transform: translate(-50%, -50%) scale(1.08);
         }
+
+        .seat.dead {
+            border-color: rgba(220, 53, 69, 0.08);
+            background: rgba(220, 53, 69, 0.02);
+            opacity: 0.3;
+        }
+
+        .seat.sheriff {
+            border-color: #F59E0B;
+            box-shadow: 0 0 40px rgba(245, 158, 11, 0.05);
+            animation: sheriffGlow 2s ease-in-out infinite;
+        }
+
+        @@keyframes sheriffGlow {
+            0%, 100% { box-shadow: 0 0 20px rgba(245, 158, 11, 0.02); }
+            50% { box-shadow: 0 0 60px rgba(245, 158, 11, 0.08); }
+        }
+
+        .seat.sheriff .seat-number { color: #F59E0B; }
 
         /* ===== 发牌动画卡片 ===== */
         .card-fly {
@@ -457,13 +462,24 @@
             box-shadow: 0 8px 40px rgba(0, 255, 136, 0.1);
         }
 
+        .btn-action.danger {
+            background: rgba(255, 0, 110, 0.08);
+            border: 1px solid rgba(255, 0, 110, 0.04);
+            color: rgba(255, 0, 110, 0.3);
+        }
+
+        .btn-action.danger:hover:not(:disabled) {
+            background: rgba(255, 0, 110, 0.12);
+        }
+
         .status-info {
             font-size: 0.75rem;
             color: rgba(255,255,255,0.08);
             line-height: 1.8;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255,255,255,0.02);
         }
-
-        .status-info .highlight { color: rgba(255,255,255,0.2); }
 
         /* ============================================================
            发牌遮罩
@@ -516,6 +532,12 @@
 
         @@keyframes spin {
             to { transform: rotate(360deg); }
+        }
+
+        .dealing-overlay .deal-progress-text {
+            margin-top: 20px;
+            font-size: 0.7rem;
+            color: rgba(255,255,255,0.04);
         }
 
         /* ============================================================
@@ -586,10 +608,8 @@
 </head>
 <body>
 
-    <!-- ============================================================
-         顶部
-         ============================================================ -->
     <div class="container">
+        <!-- 顶部 -->
         <div class="header">
             <div class="logo">
                 <span>🐺</span> 狼人杀 · 主控台
@@ -602,12 +622,10 @@
             </div>
         </div>
 
-        <!-- ============================================================
-             主体
-             ============================================================ -->
+        <!-- 主体 -->
         <div class="main-content">
 
-            <!-- ===== 座位图 ===== -->
+            <!-- 座位图 -->
             <div class="seating-area" id="seatingArea">
                 <div class="area-title">
                     🪑 座位图
@@ -625,7 +643,7 @@
                 </div>
             </div>
 
-            <!-- ===== 右侧面板 ===== -->
+            <!-- 右侧面板 -->
             <div class="side-panel">
 
                 <!-- 游戏设置 -->
@@ -703,8 +721,8 @@
                         </button>
                     </div>
 
-                    <div class="status-info" style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.02);">
-                        <span id="gameStatusText">📌 请选择人数和角色配置，然后点击"洗牌发牌"</span>
+                    <div class="status-info" id="gameStatusText">
+                        📌 请选择人数和角色配置，然后点击"洗牌发牌"
                     </div>
                 </div>
 
@@ -724,26 +742,23 @@
         </div>
     </div>
 
-    <!-- ============================================================
-         发牌遮罩
-         ============================================================ -->
+    <!-- 发牌遮罩 -->
     <div class="dealing-overlay" id="dealingOverlay">
         <div class="title">🃏 洗牌中...</div>
         <div class="sub">✦ 请稍候 ✦</div>
         <div class="progress-ring"></div>
-        <div style="margin-top:20px;font-size:0.7rem;color:rgba(255,255,255,0.04);" id="dealProgressText">准备发牌...</div>
+        <div class="deal-progress-text" id="dealProgressText">准备发牌...</div>
     </div>
 
-    <!-- ============================================================
-         Toast
-         ============================================================ -->
+    <!-- Toast -->
     <div class="toast-container" id="toastContainer"></div>
 
-    <!-- ============================================================
-         Scripts
-         ============================================================ -->
+    <!-- Scripts -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js">
     </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js">
+    </script>
+
     <script>
         // ============================================================
         // 角色图片映射
@@ -756,10 +771,7 @@
             '猎人': '/images/werewolf/cards/猎人.jpg',
             '白痴': '/images/werewolf/cards/白痴.jpg',
             '骑士': '/images/werewolf/cards/骑士.jpg',
-            '平民': '/images/werewolf/cards/平民.jpg',
-            '狼王': '/images/werewolf/cards/狼王.jpg',
-            '丘比特': '/images/werewolf/cards/丘比特.jpg',
-            '长老': '/images/werewolf/cards/长老.jpg'
+            '平民': '/images/werewolf/cards/平民.jpg'
         };
 
         var cardBackImage = '/images/werewolf/cards/card_back.jpg';
@@ -773,19 +785,8 @@
             players: [],
             seats: [],
             isDealing: false,
-            isGameStarted: false
-        };
-
-        // 角色映射
-        var roleIcons = {
-            '狼人': '🐺',
-            '预言家': '🔮',
-            '女巫': '🧪',
-            '守卫': '🛡️',
-            '猎人': '🔫',
-            '白痴': '🤡',
-            '骑士': '⚔️',
-            '平民': '👤'
+            isGameStarted: false,
+            roomId: null
         };
 
         // ============================================================
@@ -832,7 +833,9 @@
                     number: i + 1,
                     element: seat,
                     occupied: false,
-                    player: null
+                    player: null,
+                    isDead: false,
+                    isSheriff: false
                 });
             }
 
@@ -915,15 +918,24 @@
             occupied.forEach(function(seat) {
                 var player = seat.player;
                 var isReady = player && player.isReady;
-                html += '<div style="display:flex;align-items:center;gap:6px;padding:2px 0;border-bottom:1px solid rgba(255,255,255,0.02);">';
+                var isDead = seat.isDead;
+                var isSheriff = seat.isSheriff;
+
+                html += '<div style="display:flex;align-items:center;gap:6px;padding:2px 0;border-bottom:1px solid rgba(255,255,255,0.02);' +
+                    (isDead ? 'opacity:0.3;' : '') + '">';
                 html += '<span style="font-size:0.6rem;color:rgba(255,255,255,0.05);">#' + seat.number + '</span>';
                 html += '<span style="font-size:0.8rem;">' + (player && player.avatar ? player.avatar : '🧑') + '</span>';
                 html += '<span style="flex:1;color:rgba(255,255,255,0.3);font-size:0.7rem;">' + (player && player.name ? player
                     .name : '玩家') + '</span>';
-                if (isReady) {
-                    html += '<span style="font-size:0.5rem;color:#00FF88;">✅ 已准备</span>';
+                if (isSheriff) {
+                    html += '<span style="font-size:0.5rem;color:#F59E0B;">👑</span>';
+                }
+                if (isDead) {
+                    html += '<span style="font-size:0.5rem;color:#dc3545;">💀</span>';
+                } else if (isReady) {
+                    html += '<span style="font-size:0.5rem;color:#00FF88;">✅</span>';
                 } else {
-                    html += '<span style="font-size:0.5rem;color:rgba(255,255,255,0.06);">⏳ 等待</span>';
+                    html += '<span style="font-size:0.5rem;color:rgba(255,255,255,0.06);">⏳</span>';
                 }
                 html += '</div>';
             });
@@ -944,6 +956,8 @@
             config.seats.forEach(function(seat) {
                 seat.occupied = false;
                 seat.player = null;
+                seat.isDead = false;
+                seat.isSheriff = false;
                 seat.element.className = 'seat empty';
                 seat.element.querySelector('.seat-name').textContent = '空位';
                 seat.element.querySelector('.seat-emoji').textContent = '🪑';
@@ -967,7 +981,7 @@
 
             var occupied = config.seats.filter(function(s) { return s.occupied; });
             if (occupied.length < config.playerCount) {
-                showToast('⚠️ 还有 ' + (config.playerCount - occupied.length) + ' 个座位未占', 'warning');
+                showToast('⚠️ 还有 ' + (config.playerCount - occupied.length) + ' 个座位未占，请等待所有玩家就坐', 'warning');
                 return;
             }
 
@@ -1048,13 +1062,11 @@
         }
 
         // ============================================================
-        // 飞牌动画（使用真实图片）
+        // 飞牌动画
         // ============================================================
         function createFlyingCard(seat, role, callback) {
             var card = document.createElement('div');
             card.className = 'card-fly show';
-
-            // 先显示卡背
             card.innerHTML = '<img src="' + cardBackImage + '" style="width:100%;height:100%;border-radius:12px;object-fit:cover;" />';
 
             var startX = window.innerWidth / 2 - 35;
@@ -1084,9 +1096,9 @@
 
             setTimeout(function() {
                 var roleImage = roleImages[role] || '/images/werewolf/cards/平民.jpg';
-                card.innerHTML = '<img src="' + roleImage + '" style="width:100%;height:100%;border-radius:12px;object-fit:cover;border:2px solid rgba(139,92,246,0.08);" />';
+                card.innerHTML = '<img src="' + roleImage +
+                    '" style="width:100%;height:100%;border-radius:12px;object-fit:cover;border:2px solid rgba(139,92,246,0.08);" />';
                 card.style.boxShadow = '0 0 120px rgba(139,92,246,0.15)';
-
                 card.style.transition = 'transform 0.6s cubic-bezier(0.23, 1, 0.32, 1)';
                 card.style.transform = 'rotateY(180deg)';
 
@@ -1198,11 +1210,11 @@
                 toast.style.opacity = '0';
                 toast.style.transform = 'translateX(20px)';
                 setTimeout(function() { toast.remove(); }, 300);
-            }, 3000);
+            }, 3500);
         }
 
         // ============================================================
-        // SignalR 连接
+        // SignalR
         // ============================================================
         var connection = null;
 
@@ -1255,6 +1267,58 @@
                     }
                 });
 
+                connection.on('PhaseUpdate', function(phase) {
+                    var phaseNames = {
+                        'setup': '⚙️ 设置中',
+                        'seating': '🪑 就坐中',
+                        'dealing': '🃏 发牌中',
+                        'revealing': '📩 查看身份',
+                        'sheriff_election': '👑 警长竞选',
+                        'night_guard': '🌙 守卫行动',
+                        'night_seer': '🌙 预言家行动',
+                        'night_werewolf': '🌙 狼人行动',
+                        'night_witch': '🌙 女巫行动',
+                        'night_resolve': '🌙 结算中',
+                        'day_announce': '☀️ 公布死讯',
+                        'day_speech': '☀️ 发言阶段',
+                        'day_voting': '☀️ 投票阶段',
+                        'day_pk': '☀️ PK发言',
+                        'day_resolve': '☀️ 公布结果',
+                        'hunter_shoot': '🔫 猎人开枪',
+                        'gameover': '🏁 游戏结束'
+                    };
+                    document.getElementById('phaseDisplay').textContent = phaseNames[phase] || phase;
+                });
+
+                connection.on('PlayerDeath', function(data) {
+                    var seat = config.seats.find(function(s) { return s.number === data.seatNumber; });
+                    if (seat) {
+                        seat.isDead = true;
+                        seat.element.classList.add('dead');
+                        seat.element.querySelector('.seat-name').textContent = '💀 ' + data.nickname;
+                        updatePlayerList();
+                        showToast('💀 ' + data.seatNumber + '号 ' + data.nickname + ' 死亡', 'error');
+                    }
+                });
+
+                connection.on('SheriffElected', function(data) {
+                    var seat = config.seats.find(function(s) { return s.number === data.seatNumber; });
+                    if (seat) {
+                        seat.isSheriff = true;
+                        seat.element.classList.add('sheriff');
+                        seat.element.querySelector('.seat-name').textContent = '👑 ' + data.nickname;
+                        updatePlayerList();
+                        showToast('👑 ' + data.seatNumber + '号当选警长！', 'success');
+                    }
+                });
+
+                connection.on('GameOver', function(winner) {
+                    var msg = winner === '好人' ? '⭐ 好人阵营胜利！' : '🐺 狼人阵营胜利！';
+                    document.getElementById('phaseDisplay').textContent = '🏁 ' + msg;
+                    showToast('🏆 ' + msg, 'success');
+                    document.getElementById('startGameBtn').disabled = true;
+                });
+
                 connection.start()
                     .then(function() {
                         console.log('✅ SignalR 已连接');
@@ -1275,10 +1339,9 @@
             var allReady = occupied.every(function(s) { return s.player && s.player.isReady; });
 
             if (allReady && occupied.length === config.playerCount) {
-                document.getElementById('gameStatusText').textContent = '✅ 所有玩家已准备！点击"开始游戏"发牌';
-                document.getElementById('phaseDisplay').textContent = '✅ 准备就绪';
+                document.getElementById('gameStatusText').textContent = '✅ 所有玩家已准备！点击"洗牌发牌"';
                 document.getElementById('startGameBtn').disabled = false;
-                document.getElementById('startGameBtn').innerHTML = '🎯 开始游戏';
+                document.getElementById('startGameBtn').innerHTML = '🃏 洗牌发牌';
             }
         }
 
@@ -1289,7 +1352,7 @@
             selectPlayerCount(10);
             connectSignalR();
 
-            // 模拟玩家加入（测试用 - 实际通过 SignalR 接收）
+            // 模拟玩家（实际通过SignalR）
             setTimeout(function() {
                 var demoPlayers = ['Alice', 'Bob', 'Carol', 'David', 'Eve', 'Frank', 'Grace', 'Henry', 'Ivy', 'Jack'];
                 demoPlayers.forEach(function(name, index) {
