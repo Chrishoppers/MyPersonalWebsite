@@ -20,6 +20,9 @@ namespace MyPersonalWebsite.Hubs
         private static readonly ConcurrentDictionary<string, Dictionary<int, int>> _dayVotes = new();
         private static readonly ConcurrentDictionary<string, Dictionary<int, int>> _sheriffVotes = new();
         private static readonly ConcurrentDictionary<string, bool> _wolfExplode = new();
+        
+        // ✅ 新增：狼人投票结果存储（修复编译错误）
+        private static readonly ConcurrentDictionary<string, int> _wolfVoteResult = new();
 
         // ============================================================
         // AI 自动计时控制
@@ -366,6 +369,7 @@ namespace MyPersonalWebsite.Hubs
 
             game.Night++;
             _wolfVotes[roomId] = new Dictionary<int, int>();
+            _wolfVoteResult[roomId] = 0;  // ✅ 修复：重置狼人投票结果
             _wolfExplode[roomId] = false;
             _guardActions[roomId] = false;
             _seerActions[roomId] = false;
@@ -729,7 +733,7 @@ namespace MyPersonalWebsite.Hubs
                 var targets = voteCounts.Where(v => v.Value == maxVotes).Select(v => v.Key).ToList();
 
                 int selectedTarget = targets.Count == 1 ? targets.First() : targets[new Random().Next(targets.Count)];
-                _wolfVotes[roomId]["_result"] = selectedTarget;
+                _wolfVoteResult[roomId] = selectedTarget;  // ✅ 修复：使用独立字段存储结果
 
                 await Clients.Group(roomId).SendAsync("DisplayMessage", $"狼人选择了 {selectedTarget} 号");
                 
@@ -886,6 +890,7 @@ namespace MyPersonalWebsite.Hubs
             }
 
             _wolfVotes.Remove(roomId, out _);
+            _wolfVoteResult.Remove(roomId, out _);  // ✅ 修复：清理狼人投票结果
             _guardActions.Remove(roomId, out _);
             _seerActions.Remove(roomId, out _);
             _witchActions.Remove(roomId, out _);
@@ -1278,15 +1283,16 @@ namespace MyPersonalWebsite.Hubs
             
             // 清理数据
             _games.TryRemove(roomId, out _);
-            _wolfVotes.Remove(roomId, out _);
-            _dayVotes.Remove(roomId, out _);
-            _sheriffVotes.Remove(roomId, out _);
-            _wolfExplode.Remove(roomId, out _);
-            _isPaused.Remove(roomId, out _);
-            _speedMultiplier.Remove(roomId, out _);
-            _guardActions.Remove(roomId, out _);
-            _seerActions.Remove(roomId, out _);
-            _witchActions.Remove(roomId, out _);
+            _wolfVotes.TryRemove(roomId, out _);
+            _wolfVoteResult.TryRemove(roomId, out _);  // ✅ 修复：清理狼人投票结果
+            _dayVotes.TryRemove(roomId, out _);
+            _sheriffVotes.TryRemove(roomId, out _);
+            _wolfExplode.TryRemove(roomId, out _);
+            _isPaused.TryRemove(roomId, out _);
+            _speedMultiplier.TryRemove(roomId, out _);
+            _guardActions.TryRemove(roomId, out _);
+            _seerActions.TryRemove(roomId, out _);
+            _witchActions.TryRemove(roomId, out _);
         }
 
         // ============================================================
@@ -1330,12 +1336,10 @@ namespace MyPersonalWebsite.Hubs
 
         private List<int> GetWerewolfTargets(string roomId)
         {
-            if (_wolfVotes.TryGetValue(roomId, out var votes))
+            // ✅ 修复：使用独立的 _wolfVoteResult 存储结果
+            if (_wolfVoteResult.TryGetValue(roomId, out var target))
             {
-                if (votes.TryGetValue("_result", out var target))
-                {
-                    return new List<int> { target };
-                }
+                return new List<int> { target };
             }
             return new List<int>();
         }
