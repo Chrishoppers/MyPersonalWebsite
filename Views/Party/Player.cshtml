@@ -1,0 +1,720 @@
+@{
+    ViewData["Title"] = "✦ 加入派对 ✦";
+    var roomId = ViewBag.RoomId as string ?? Context.Request.Query["roomId"].ToString();
+}
+
+<style>
+    /* ============================================================
+       玩家端样式（精简但同样高级）
+       ============================================================ */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+        background: #05050F;
+        font-family: 'Inter', 'Segoe UI', sans-serif;
+        color: #e0e0e0;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+    }
+
+    /* 粒子背景 */
+    #particleCanvas {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 0;
+        pointer-events: none;
+    }
+
+    /* 主容器 */
+    .player-container {
+        position: relative;
+        z-index: 1;
+        max-width: 480px;
+        width: 100%;
+        padding: 1.5rem;
+    }
+
+    /* 全息卡片 */
+    .holo-card {
+        background: rgba(10, 10, 30, 0.7);
+        backdrop-filter: blur(40px);
+        border: 1px solid rgba(0, 240, 255, 0.06);
+        border-radius: 32px;
+        padding: 2rem 2rem 2.2rem;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 0 80px rgba(0, 240, 255, 0.02);
+        animation: modalIn 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+    }
+
+    @@keyframes modalIn {
+        from { opacity: 0; transform: scale(0.95) translateY(30px); }
+        to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    .holo-card::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(ellipse at 30% 30%, rgba(0, 240, 255, 0.015), transparent 70%);
+        pointer-events: none;
+    }
+
+    .holo-card .top-line {
+        height: 2px;
+        margin-bottom: 1.5rem;
+        background: linear-gradient(90deg, transparent, rgba(0, 240, 255, 0.08), transparent);
+    }
+
+    /* 头部 */
+    .player-header {
+        text-align: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .player-header .icon {
+        font-size: 3rem;
+        display: block;
+        margin-bottom: 0.2rem;
+        animation: logoGlow 2s ease-in-out infinite;
+    }
+
+    @@keyframes logoGlow {
+        0%, 100% { filter: drop-shadow(0 0 10px rgba(0, 240, 255, 0.1)); }
+        50% { filter: drop-shadow(0 0 30px rgba(0, 240, 255, 0.2)); }
+    }
+
+    .player-header h1 {
+        font-size: 1.6rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, #00F0FF, #7B61FF);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        letter-spacing: 0.04em;
+    }
+
+    .player-header .sub {
+        font-size: 0.75rem;
+        color: rgba(255,255,255,0.1);
+        letter-spacing: 0.12em;
+        margin-top: 0.1rem;
+    }
+
+    /* 房间信息 */
+    .room-info {
+        background: rgba(0, 240, 255, 0.02);
+        border-radius: 16px;
+        padding: 0.8rem 1rem;
+        margin-bottom: 1.5rem;
+        border: 1px solid rgba(0, 240, 255, 0.04);
+        text-align: center;
+    }
+
+    .room-info .label {
+        font-size: 0.55rem;
+        color: rgba(255,255,255,0.08);
+        text-transform: uppercase;
+        letter-spacing: 0.15em;
+    }
+
+    .room-info .code {
+        font-family: 'Courier New', monospace;
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #00F0FF;
+        letter-spacing: 4px;
+        text-shadow: 0 0 40px rgba(0, 240, 255, 0.05);
+    }
+
+    .room-info .host-name {
+        font-size: 0.75rem;
+        color: rgba(255,255,255,0.15);
+        margin-top: 0.1rem;
+    }
+
+    /* 表单 */
+    .form-group {
+        margin-bottom: 1rem;
+    }
+
+    .form-group label {
+        display: block;
+        font-size: 0.7rem;
+        font-weight: 500;
+        color: rgba(255,255,255,0.2);
+        margin-bottom: 0.3rem;
+        letter-spacing: 0.06em;
+    }
+
+    .form-group input {
+        width: 100%;
+        padding: 0.8rem 1rem;
+        border-radius: 16px;
+        border: 1px solid rgba(255,255,255,0.04);
+        background: rgba(255,255,255,0.02);
+        color: #fff;
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+        outline: none;
+        font-family: inherit;
+    }
+
+    .form-group input:focus {
+        border-color: rgba(0, 240, 255, 0.12);
+        background: rgba(255,255,255,0.04);
+        box-shadow: 0 0 0 4px rgba(0, 240, 255, 0.02);
+    }
+
+    .form-group input::placeholder {
+        color: rgba(255,255,255,0.06);
+    }
+
+    /* 头像选择 */
+    .avatar-select {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        padding: 0.2rem 0;
+    }
+
+    .avatar-option {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        border: 2px solid rgba(255,255,255,0.04);
+        background: rgba(255,255,255,0.02);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.4rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .avatar-option:hover {
+        border-color: rgba(0, 240, 255, 0.1);
+        background: rgba(0, 240, 255, 0.02);
+    }
+
+    .avatar-option.selected {
+        border-color: #00F0FF;
+        background: rgba(0, 240, 255, 0.04);
+        box-shadow: 0 0 30px rgba(0, 240, 255, 0.03);
+    }
+
+    /* 按钮 */
+    .btn-join {
+        width: 100%;
+        padding: 0.9rem;
+        border: none;
+        border-radius: 40px;
+        background: linear-gradient(135deg, #00F0FF, #7B61FF);
+        color: #fff;
+        font-weight: 700;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-family: inherit;
+        box-shadow: 0 0 40px rgba(0, 240, 255, 0.05);
+        margin-top: 0.5rem;
+    }
+
+    .btn-join:hover:not(:disabled) {
+        transform: translateY(-2px) scale(1.01);
+        box-shadow: 0 0 60px rgba(0, 240, 255, 0.08);
+    }
+
+    .btn-join:disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    /* 已加入状态 */
+    .joined-status {
+        text-align: center;
+        padding: 1rem 0;
+    }
+
+    .joined-status .big-icon {
+        font-size: 3.5rem;
+        display: block;
+        margin-bottom: 0.3rem;
+    }
+
+    .joined-status h2 {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #00FF88;
+    }
+
+    .joined-status p {
+        font-size: 0.85rem;
+        color: rgba(255,255,255,0.15);
+        margin-top: 0.2rem;
+    }
+
+    .joined-status .waiting-animation {
+        margin: 1rem auto;
+        width: 40px;
+        height: 40px;
+        border: 2px solid rgba(0, 240, 255, 0.04);
+        border-top-color: #00F0FF;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    @@keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    .joined-status .player-list-mini {
+        margin-top: 1rem;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0.3rem;
+    }
+
+    .joined-status .player-list-mini .mini-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.02);
+        border: 1px solid rgba(255,255,255,0.04);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+    }
+
+    .joined-status .player-list-mini .mini-avatar.ready {
+        border-color: rgba(123, 97, 255, 0.15);
+        box-shadow: 0 0 20px rgba(123, 97, 255, 0.02);
+    }
+
+    /* Toast */
+    .toast-container {
+        position: fixed;
+        bottom: 2rem;
+        right: 2rem;
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+        align-items: flex-end;
+    }
+
+    .toast-msg {
+        padding: 0.6rem 1.5rem;
+        border-radius: 40px;
+        color: #fff;
+        font-weight: 500;
+        animation: toastIn 0.4s ease;
+        font-size: 0.85rem;
+        backdrop-filter: blur(20px);
+        background: rgba(10, 10, 30, 0.8);
+        border: 1px solid rgba(255,255,255,0.04);
+    }
+
+    .toast-msg.success { background: rgba(0, 255, 136, 0.1); border-color: rgba(0, 255, 136, 0.06); color: #00FF88; }
+    .toast-msg.error { background: rgba(255, 0, 110, 0.1); border-color: rgba(255, 0, 110, 0.06); color: #FF006E; }
+    .toast-msg.info { background: rgba(0, 240, 255, 0.06); border-color: rgba(0, 240, 255, 0.04); color: #00F0FF; }
+
+    @@keyframes toastIn {
+        from { opacity: 0; transform: translateY(20px) scale(0.95); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    /* 响应式 */
+    @@media (max-width: 480px) {
+        .player-container { padding: 0.8rem; }
+        .holo-card { padding: 1.5rem 1.2rem; }
+        .player-header h1 { font-size: 1.3rem; }
+        .room-info .code { font-size: 1.4rem; letter-spacing: 2px; }
+        .avatar-option { width: 36px; height: 36px; font-size: 1.1rem; }
+        .joined-status .big-icon { font-size: 2.8rem; }
+    }
+</style>
+
+<!-- ============================================================
+     粒子背景
+     ============================================================ -->
+<canvas id="particleCanvas"></canvas>
+
+<!-- ============================================================
+     主容器
+     ============================================================ -->
+<div class="player-container">
+
+    <div class="holo-card" id="mainCard">
+        <div class="top-line"></div>
+
+        <!-- 头部 -->
+        <div class="player-header">
+            <span class="icon">✦</span>
+            <h1>全息登记舱</h1>
+            <div class="sub">✦ 扫码加入派对 ✦</div>
+        </div>
+
+        <!-- 房间信息 -->
+        <div class="room-info">
+            <div class="label">✦ 派对房间 ✦</div>
+            <div class="code" id="roomCodeDisplay">@(string.IsNullOrEmpty(roomId) ? "------" : roomId)</div>
+            <div class="host-name" id="hostNameDisplay">🔄 连接中...</div>
+        </div>
+
+        <!-- ===== 未加入状态 ===== -->
+        <div id="joinForm">
+            <div class="form-group">
+                <label>👤 你的名称</label>
+                <input type="text" id="nicknameInput" placeholder="输入你的昵称..." maxlength="20" />
+            </div>
+
+            <div class="form-group">
+                <label>🎨 选择头像</label>
+                <div class="avatar-select" id="avatarSelect">
+                    <div class="avatar-option selected" data-emoji="🧑">🧑</div>
+                    <div class="avatar-option" data-emoji="👩">👩</div>
+                    <div class="avatar-option" data-emoji="👨">👨</div>
+                    <div class="avatar-option" data-emoji="🦸">🦸</div>
+                    <div class="avatar-option" data-emoji="🧙">🧙</div>
+                    <div class="avatar-option" data-emoji="🧚">🧚</div>
+                    <div class="avatar-option" data-emoji="🤖">🤖</div>
+                    <div class="avatar-option" data-emoji="👾">👾</div>
+                </div>
+            </div>
+
+            <button class="btn-join" id="joinBtn" onclick="joinRoom()">
+                🚀 进入派对
+            </button>
+        </div>
+
+        <!-- ===== 已加入状态 ===== -->
+        <div id="joinedStatus" style="display:none;">
+            <div class="joined-status">
+                <span class="big-icon">✅</span>
+                <h2>已加入派对！</h2>
+                <p>等待主控开始游戏...</p>
+                <div class="waiting-animation"></div>
+                <div class="player-list-mini" id="miniPlayerList"></div>
+                <button class="btn-join" style="margin-top:1rem;background:rgba(255,0,110,0.06);color:rgba(255,0,110,0.3);box-shadow:none;" onclick="leaveRoom()">
+                    ❌ 离开房间
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<!-- ============================================================
+     Toast 容器
+     ============================================================ -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- ============================================================
+     Scripts
+     ============================================================ -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js">
+</script>
+
+<script>
+    // ============================================================
+    // 粒子背景（精简版）
+    // ============================================================
+    (function() {
+        var canvas = document.getElementById('particleCanvas');
+        var ctx = canvas.getContext('2d');
+        var particles = [];
+
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        for (var i = 0; i < 80; i++) {
+            particles.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                vx: (Math.random() - 0.5) * 0.2,
+                vy: (Math.random() - 0.5) * 0.2,
+                r: Math.random() * 1 + 0.3,
+                o: Math.random() * 0.2 + 0.03
+            });
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (var p of particles) {
+                p.x += p.vx;
+                p.y += p.vy;
+                if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+                if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(0, 240, 255, ' + p.o + ')';
+                ctx.fill();
+            }
+            requestAnimationFrame(draw);
+        }
+        draw();
+    })();
+
+    // ============================================================
+    // Toast
+    // ============================================================
+    function showToast(message, type) {
+        type = type || 'info';
+        var container = document.getElementById('toastContainer');
+        var toast = document.createElement('div');
+        toast.className = 'toast-msg ' + type;
+        toast.textContent = message;
+        container.appendChild(toast);
+        setTimeout(function() {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateX(20px)';
+            setTimeout(function() { toast.remove(); }, 300);
+        }, 3500);
+    }
+
+    // ============================================================
+    // 游戏状态
+    // ============================================================
+    var state = {
+        roomId: '@roomId',
+        playerId: null,
+        nickname: '',
+        avatar: '🧑',
+        isJoined: false,
+        isReady: false
+    };
+
+    // ============================================================
+    // 头像选择
+    // ============================================================
+    document.querySelectorAll('.avatar-option').forEach(function(el) {
+        el.addEventListener('click', function() {
+            document.querySelectorAll('.avatar-option').forEach(function(e) { e.classList.remove(
+                'selected'); });
+            this.classList.add('selected');
+            state.avatar = this.dataset.emoji;
+        });
+    });
+
+    // ============================================================
+    // SignalR
+    // ============================================================
+    var connection = null;
+
+    function connectSignalR() {
+        try {
+            connection = new signalR.HubConnectionBuilder()
+                .withUrl('/partyHub')
+                .configureLogging(signalR.LogLevel.Information)
+                .build();
+
+            // ---- 事件 ----
+            connection.on('JoinedRoom', function(data) {
+                if (data.success) {
+                    state.playerId = data.player.playerId;
+                    state.isJoined = true;
+                    document.getElementById('joinForm').style.display = 'none';
+                    document.getElementById('joinedStatus').style.display = 'block';
+                    document.getElementById('hostNameDisplay').textContent = '👑 ' + data.room.hostName;
+                    showToast('✅ 已加入派对！', 'success');
+                    updateMiniList(data.room.players);
+                }
+            });
+
+            connection.on('PlayerJoined', function(player) {
+                showToast('🟢 ' + player.nickname + ' 加入了派对', 'info');
+                updateMiniListFromEvent();
+            });
+
+            connection.on('PlayerLeft', function() {
+                updateMiniListFromEvent();
+            });
+
+            connection.on('PlayerReadyToggled', function(player) {
+                updateMiniListFromEvent();
+            });
+
+            connection.on('RoomUpdated', function(room) {
+                updateMiniList(room.players);
+            });
+
+            connection.on('GameStarted', function(room) {
+                showToast('🚀 派对开始！', 'success');
+                document.querySelector('#joinedStatus .waiting-animation').style.display = 'none';
+                document.querySelector('#joinedStatus h2').textContent = '🎮 游戏进行中！';
+                document.querySelector('#joinedStatus p').textContent = '跟随主控进入游戏...';
+                // 可以在这里跳转或触发游戏
+            });
+
+            connection.on('Kicked', function(message) {
+                showToast('⚠️ ' + message, 'warning');
+                setTimeout(function() {
+                    window.location.href = '/';
+                }, 2000);
+            });
+
+            connection.on('GameStartFailed', function(message) {
+                showToast('❌ ' + message, 'error');
+            });
+
+            // ---- 连接 ----
+            connection.start()
+                .then(function() {
+                    console.log('✅ SignalR 已连接');
+                    // 验证房间
+                    validateRoom();
+                })
+                .catch(function(err) {
+                    console.error('❌ SignalR 连接失败:', err);
+                    showToast('⚠️ 连接失败，请刷新重试', 'error');
+                    setTimeout(function() { connectSignalR(); }, 3000);
+                });
+
+        } catch (e) {
+            console.error('SignalR 初始化失败:', e);
+        }
+    }
+
+    // ============================================================
+    // 验证房间
+    // ============================================================
+    function validateRoom() {
+        if (!state.roomId || state.roomId === '------') {
+            document.getElementById('hostNameDisplay').textContent = '❌ 无效房间码';
+            showToast('❌ 无效的房间码', 'error');
+            return;
+        }
+
+        fetch('/Party/ValidateRoom?roomId=' + state.roomId)
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    document.getElementById('hostNameDisplay').textContent = '👑 ' + data.roomName;
+                } else {
+                    document.getElementById('hostNameDisplay').textContent = '❌ ' + data.message;
+                    showToast('❌ ' + data.message, 'error');
+                    document.getElementById('joinBtn').disabled = true;
+                }
+            })
+            .catch(function() {
+                document.getElementById('hostNameDisplay').textContent = '⚠️ 连接失败';
+            });
+    }
+
+    // ============================================================
+    // 加入房间
+    // ============================================================
+    function joinRoom() {
+        var nickname = document.getElementById('nicknameInput').value.trim();
+        if (!nickname) {
+            showToast('⚠️ 请输入你的昵称', 'error');
+            document.getElementById('nicknameInput').focus();
+            return;
+        }
+        if (nickname.length < 2) {
+            showToast('⚠️ 昵称至少 2 个字符', 'error');
+            return;
+        }
+
+        state.nickname = nickname;
+
+        if (!connection || connection.state !== signalR.HubConnectionState.Connected) {
+            showToast('⏳ 正在连接...', 'info');
+            setTimeout(function() { joinRoom(); }, 500);
+            return;
+        }
+
+        var btn = document.getElementById('joinBtn');
+        btn.disabled = true;
+        btn.textContent = '⏳ 加入中...';
+
+        connection.invoke('JoinRoom', state.roomId, nickname, state.avatar)
+            .then(function(result) {
+                if (result && result.success) {
+                    // 由 JoinedRoom 事件处理
+                } else if (result && !result.success) {
+                    showToast('❌ ' + result.message, 'error');
+                    btn.disabled = false;
+                    btn.textContent = '🚀 进入派对';
+                }
+            })
+            .catch(function(err) {
+                console.error('加入房间失败:', err);
+                showToast('❌ 加入失败: ' + err, 'error');
+                btn.disabled = false;
+                btn.textContent = '🚀 进入派对';
+            });
+    }
+
+    // ============================================================
+    // 更新迷你玩家列表
+    // ============================================================
+    function updateMiniList(players) {
+        var container = document.getElementById('miniPlayerList');
+        if (!container) return;
+        container.innerHTML = '';
+
+        players.forEach(function(p) {
+            var div = document.createElement('div');
+            div.className = 'mini-avatar' + (p.isReady ? ' ready' : '');
+            div.textContent = p.avatarEmoji || '🧑';
+            div.title = p.nickname + (p.isReady ? ' ✅' : ' ⏳');
+            container.appendChild(div);
+        });
+    }
+
+    function updateMiniListFromEvent() {
+        if (!connection || !state.roomId) return;
+        connection.invoke('GetRoomInfo', state.roomId)
+            .then(function(room) {
+                if (room) {
+                    updateMiniList(room.players || []);
+                }
+            })
+            .catch(function() {});
+    }
+
+    // ============================================================
+    // 离开房间
+    // ============================================================
+    function leaveRoom() {
+        if (!confirm('确定要离开房间吗？')) return;
+        if (connection) {
+            connection.stop();
+        }
+        window.location.reload();
+    }
+
+    // ============================================================
+    // 回车键提交
+    // ============================================================
+    document.getElementById('nicknameInput').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') joinRoom();
+    });
+
+    // ============================================================
+    // 初始化
+    // ============================================================
+    document.addEventListener('DOMContentLoaded', function() {
+        connectSignalR();
+    });
+</script>
