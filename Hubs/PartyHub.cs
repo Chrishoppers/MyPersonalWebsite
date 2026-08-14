@@ -11,17 +11,10 @@ namespace MyPersonalWebsite.Hubs
         private static readonly ConcurrentDictionary<string, string> _connectionToPlayer = new();
 
         // ============================================================
-        // 1. 创建房间（仅 admin）
+        // 创建房间
         // ============================================================
         public async Task<object> CreateRoom(string hostName, int maxPlayers = 20, string? password = null)
         {
-            // 检查是否 admin（内测限制）
-            var isAdmin = Context.User?.IsInRole("Admin") ?? false;
-            if (!isAdmin)
-            {
-                return new { success = false, message = "内测阶段，仅管理员可创建房间" };
-            }
-
             var roomId = GenerateRoomCode();
             var playerId = $"host_{Guid.NewGuid():N}";
 
@@ -64,7 +57,7 @@ namespace MyPersonalWebsite.Hubs
         }
 
         // ============================================================
-        // 2. 加入房间（玩家扫码）
+        // 加入房间（玩家扫码）
         // ============================================================
         public async Task<object> JoinRoom(string roomId, string nickname, string avatarEmoji = "🧑")
         {
@@ -77,7 +70,6 @@ namespace MyPersonalWebsite.Hubs
             if (room.Players.Count >= room.MaxPlayers)
                 return new { success = false, message = "房间已满" };
 
-            // 检查昵称是否重复
             if (room.Players.Any(p => p.Nickname == nickname))
                 return new { success = false, message = "昵称已被使用" };
 
@@ -105,25 +97,22 @@ namespace MyPersonalWebsite.Hubs
 
             await Groups.AddToGroupAsync(Context.ConnectionId, roomId);
 
-            // 广播给所有玩家
             await Clients.Group(roomId).SendAsync("PlayerJoined", player);
             await Clients.Caller.SendAsync("JoinedRoom", new { success = true, room, player });
-
-            // 更新房间信息给主控
             await Clients.Group(roomId).SendAsync("RoomUpdated", room);
 
             return new { success = true, room, player };
         }
 
         // ============================================================
-        // 3. 准备/取消准备
+        // 准备/取消准备
         // ============================================================
         public async Task ToggleReady(string roomId, string playerId)
         {
             if (!_rooms.TryGetValue(roomId, out var room)) return;
 
             var player = room.Players.FirstOrDefault(p => p.PlayerId == playerId);
-            if (player == null || player.IsHost) return; // 主控不需要准备
+            if (player == null || player.IsHost) return;
 
             player.IsReady = !player.IsReady;
             await Clients.Group(roomId).SendAsync("PlayerReadyToggled", player);
@@ -131,7 +120,7 @@ namespace MyPersonalWebsite.Hubs
         }
 
         // ============================================================
-        // 4. 开始游戏（仅主控）
+        // 开始游戏（仅主控）
         // ============================================================
         public async Task StartGame(string roomId, string hostId)
         {
@@ -140,7 +129,6 @@ namespace MyPersonalWebsite.Hubs
             var host = room.Players.FirstOrDefault(p => p.PlayerId == hostId);
             if (host == null || !host.IsHost) return;
 
-            // 检查准备状态
             var notReady = room.Players.Where(p => !p.IsReady && !p.IsHost).ToList();
             if (notReady.Any())
             {
@@ -163,7 +151,7 @@ namespace MyPersonalWebsite.Hubs
         }
 
         // ============================================================
-        // 5. 踢出玩家（仅管理员）
+        // 踢出玩家（仅管理员）
         // ============================================================
         public async Task KickPlayer(string roomId, string adminId, string targetPlayerId)
         {
@@ -177,7 +165,7 @@ namespace MyPersonalWebsite.Hubs
 
             room.Players.Remove(target);
             _playerToRoom.TryRemove(targetPlayerId, out _);
-            _connectionToPlayer.TryRemove(target.ConnectionId, out _);
+            _connectionToPlayer.TryRemove(target.ConnectionId!, out _);
 
             await Clients.Client(target.ConnectionId).SendAsync("Kicked", "您已被管理员移出房间");
             await Clients.Group(roomId).SendAsync("PlayerLeft", targetPlayerId);
@@ -185,7 +173,7 @@ namespace MyPersonalWebsite.Hubs
         }
 
         // ============================================================
-        // 6. 设置管理员（仅主控）
+        // 设置管理员（仅主控）
         // ============================================================
         public async Task ToggleAdmin(string roomId, string hostId, string targetPlayerId)
         {
@@ -213,7 +201,27 @@ namespace MyPersonalWebsite.Hubs
         }
 
         // ============================================================
-        // 7. 断开连接
+        // 刷新房间
+        // ============================================================
+        public async Task RefreshRoom(string roomId)
+        {
+            if (_rooms.TryGetValue(roomId, out var room))
+            {
+                await Clients.Caller.SendAsync("RoomUpdated", room);
+            }
+        }
+
+        // ============================================================
+        // 获取房间信息
+        // ============================================================
+        public async Task<PartyRoom?> GetRoomInfo(string roomId)
+        {
+            _rooms.TryGetValue(roomId, out var room);
+            return room;
+        }
+
+        // ============================================================
+        // 断开连接
         // ============================================================
         public override async Task OnDisconnectedAsync(Exception? exception)
         {
@@ -231,7 +239,6 @@ namespace MyPersonalWebsite.Hubs
                             await Clients.Group(roomId).SendAsync("RoomUpdated", room);
                         }
 
-                        // 房间为空则销毁
                         if (!room.Players.Any())
                         {
                             _rooms.TryRemove(roomId, out _);
@@ -244,7 +251,21 @@ namespace MyPersonalWebsite.Hubs
         }
 
         // ============================================================
-        // 8. 辅助方法
+        // 获取房间（供 Controller 调用）
+        // ============================================================
+        public static PartyRoom? GetRoom(string roomId)
+        {
+            _rooms.TryGetValue(roomId, out var room);
+            return room;
+        }
+
+        public static List<PartyRoom> GetAllRooms()
+        {
+            return _rooms.Values.ToList();
+        }
+
+        // ============================================================
+        // 生成房间码
         // ============================================================
         private string GenerateRoomCode()
         {
@@ -261,20 +282,6 @@ namespace MyPersonalWebsite.Hubs
                 parts[i] = new string(part);
             }
             return $"{parts[0]}-{parts[1]}";
-        }
-
-        // ============================================================
-        // 9. 获取房间信息（供 Controller 调用）
-        // ============================================================
-        public static PartyRoom? GetRoom(string roomId)
-        {
-            _rooms.TryGetValue(roomId, out var room);
-            return room;
-        }
-
-        public static List<PartyRoom> GetAllRooms()
-        {
-            return _rooms.Values.ToList();
         }
     }
 }
