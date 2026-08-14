@@ -19,10 +19,11 @@
         justify-content: center;
         overflow: hidden;
         margin: 0;
+        padding: 12px;
     }
 
     /* ============================================================
-       粒子背景（3层）
+       粒子背景（2层）
        ============================================================ */
     #particleCanvas {
         position: fixed;
@@ -57,7 +58,7 @@
             linear-gradient(rgba(0, 240, 255, 0.01) 1px, transparent 1px),
             linear-gradient(90deg, rgba(0, 240, 255, 0.01) 1px, transparent 1px);
         background-size: 60px 60px;
-        opacity: 0.3;
+        opacity: 0.2;
     }
 
     /* ============================================================
@@ -68,7 +69,7 @@
         z-index: 1;
         max-width: 440px;
         width: 100%;
-        padding: 1.2rem;
+        padding: 0;
         animation: containerIn 0.8s cubic-bezier(0.23, 1, 0.32, 1);
     }
 
@@ -81,12 +82,12 @@
        全息卡片
        ============================================================ */
     .holo-card {
-        background: rgba(8, 8, 28, 0.75);
+        background: rgba(8, 8, 28, 0.8);
         backdrop-filter: blur(40px);
         -webkit-backdrop-filter: blur(40px);
         border: 1px solid rgba(0, 240, 255, 0.08);
-        border-radius: 32px;
-        padding: 2.2rem 2rem 2.5rem;
+        border-radius: 28px;
+        padding: 24px 22px 28px;
         position: relative;
         overflow: hidden;
         box-shadow: 
@@ -106,7 +107,6 @@
         pointer-events: none;
     }
 
-    /* 顶部光晕边框 */
     .holo-card .border-glow {
         position: absolute;
         top: -1px;
@@ -122,39 +122,34 @@
         50% { opacity: 1; transform: scaleX(1.2); }
     }
 
-    /* 角落装饰 */
     .holo-card .corner {
         position: absolute;
-        width: 20px;
-        height: 20px;
+        width: 16px;
+        height: 16px;
         border-color: rgba(0, 240, 255, 0.06);
         border-style: solid;
         border-width: 0;
         transition: all 0.6s ease;
     }
-    .holo-card .corner.tl { top: 12px; left: 12px; border-top-width: 2px; border-left-width: 2px; border-radius: 4px 0 0 0; }
-    .holo-card .corner.tr { top: 12px; right: 12px; border-top-width: 2px; border-right-width: 2px; border-radius: 0 4px 0 0; }
-    .holo-card .corner.bl { bottom: 12px; left: 12px; border-bottom-width: 2px; border-left-width: 2px; border-radius: 0 0 0 4px; }
-    .holo-card .corner.br { bottom: 12px; right: 12px; border-bottom-width: 2px; border-right-width: 2px; border-radius: 0 0 4px 0; }
-
-    .holo-card:hover .corner {
-        border-color: rgba(0, 240, 255, 0.12);
-    }
+    .holo-card .corner.tl { top: 10px; left: 10px; border-top-width: 2px; border-left-width: 2px; border-radius: 4px 0 0 0; }
+    .holo-card .corner.tr { top: 10px; right: 10px; border-top-width: 2px; border-right-width: 2px; border-radius: 0 4px 0 0; }
+    .holo-card .corner.bl { bottom: 10px; left: 10px; border-bottom-width: 2px; border-left-width: 2px; border-radius: 0 0 0 4px; }
+    .holo-card .corner.br { bottom: 10px; right: 10px; border-bottom-width: 2px; border-right-width: 2px; border-radius: 0 0 4px 0; }
 
     /* ============================================================
        头部
        ============================================================ */
     .player-header {
         text-align: center;
-        margin-bottom: 1.8rem;
+        margin-bottom: 16px;
         position: relative;
         z-index: 1;
     }
 
     .player-header .icon-wrap {
         display: inline-block;
-        font-size: 2.8rem;
-        margin-bottom: 0.2rem;
+        font-size: 2.4rem;
+        margin-bottom: 2px;
         animation: iconFloat 3s ease-in-out infinite;
         filter: drop-shadow(0 0 30px rgba(0, 240, 255, 0.05));
     }
@@ -165,7 +160,7 @@
     }
 
     .player-header h1 {
-        font-size: 1.5rem;
+        font-size: 1.4rem;
         font-weight: 800;
         background: linear-gradient(135deg, #00F0FF, #7B61FF, #EC4899);
         -webkit-background-clip: text;
@@ -176,31 +171,25 @@
     }
 
     .player-header .sub {
-        font-size: 0.7rem;
+        font-size: 0.65rem;
         color: rgba(255,255,255,0.08);
         letter-spacing: 0.2em;
         text-transform: uppercase;
-        margin-top: 0.05rem;
+        margin-top: 2px;
     }
 
     /* ============================================================
-       房间信息（全息风格）
+       房间信息
        ============================================================ */
     .room-info {
         background: rgba(0, 240, 255, 0.02);
-        border-radius: 18px;
-        padding: 0.8rem 1.2rem;
-        margin-bottom: 1.5rem;
+        border-radius: 16px;
+        padding: 10px 14px;
+        margin-bottom: 16px;
         border: 1px solid rgba(0, 240, 255, 0.04);
         text-align: center;
         position: relative;
         z-index: 1;
-        transition: all 0.4s ease;
-    }
-
-    .room-info:hover {
-        border-color: rgba(0, 240, 255, 0.08);
-        background: rgba(0, 240, 255, 0.03);
     }
 
     .room-info .label {
@@ -213,22 +202,22 @@
 
     .room-info .code {
         font-family: 'Courier New', monospace;
-        font-size: 2rem;
+        font-size: 1.8rem;
         font-weight: 800;
         color: #00F0FF;
-        letter-spacing: 6px;
+        letter-spacing: 4px;
         text-shadow: 0 0 40px rgba(0, 240, 255, 0.05);
-        margin-top: 0.05rem;
+        margin-top: 2px;
     }
 
     .room-info .host-name {
-        font-size: 0.75rem;
+        font-size: 0.7rem;
         color: rgba(255,255,255,0.15);
-        margin-top: 0.1rem;
+        margin-top: 4px;
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 0.3rem;
+        gap: 6px;
     }
 
     .room-info .host-name .dot {
@@ -244,25 +233,25 @@
        表单
        ============================================================ */
     .form-group {
-        margin-bottom: 1rem;
+        margin-bottom: 12px;
         position: relative;
         z-index: 1;
     }
 
     .form-group label {
         display: block;
-        font-size: 0.7rem;
+        font-size: 0.65rem;
         font-weight: 600;
         color: rgba(255,255,255,0.15);
-        margin-bottom: 0.3rem;
+        margin-bottom: 4px;
         letter-spacing: 0.06em;
         text-transform: uppercase;
     }
 
     .form-group input {
         width: 100%;
-        padding: 0.85rem 1.2rem;
-        border-radius: 18px;
+        padding: 12px 16px;
+        border-radius: 16px;
         border: 1px solid rgba(255,255,255,0.04);
         background: rgba(255,255,255,0.02);
         color: #fff;
@@ -284,28 +273,29 @@
     }
 
     /* ============================================================
-       头像选择（精致版）
+       头像选择（自适应网格）
        ============================================================ */
     .avatar-select {
-        display: flex;
-        gap: 0.5rem;
-        flex-wrap: wrap;
-        padding: 0.2rem 0;
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 6px;
+        padding: 2px 0;
     }
 
     .avatar-option {
-        width: 48px;
-        height: 48px;
+        width: 100%;
+        aspect-ratio: 1;
         border-radius: 50%;
         border: 2px solid rgba(255,255,255,0.04);
         background: rgba(255,255,255,0.02);
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.5rem;
+        font-size: 1.4rem;
         cursor: pointer;
         transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
         position: relative;
+        min-height: 44px;
     }
 
     .avatar-option::after {
@@ -337,8 +327,8 @@
 
     .avatar-option .check-mark {
         position: absolute;
-        bottom: -4px;
-        right: -4px;
+        bottom: -2px;
+        right: -2px;
         font-size: 0.5rem;
         color: #00F0FF;
         opacity: 0;
@@ -356,7 +346,7 @@
        ============================================================ */
     .btn-join {
         width: 100%;
-        padding: 0.95rem;
+        padding: 14px;
         border: none;
         border-radius: 40px;
         background: linear-gradient(135deg, #00F0FF, #7B61FF);
@@ -367,7 +357,7 @@
         transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
         font-family: inherit;
         box-shadow: 0 0 40px rgba(0, 240, 255, 0.02);
-        margin-top: 0.3rem;
+        margin-top: 4px;
         position: relative;
         z-index: 1;
         overflow: hidden;
@@ -406,33 +396,33 @@
        ============================================================ */
     .joined-status {
         text-align: center;
-        padding: 0.5rem 0;
+        padding: 4px 0;
         position: relative;
         z-index: 1;
     }
 
     .joined-status .big-icon {
-        font-size: 3.5rem;
+        font-size: 3rem;
         display: block;
-        margin-bottom: 0.2rem;
+        margin-bottom: 4px;
         animation: iconFloat 3s ease-in-out infinite;
     }
 
     .joined-status h2 {
-        font-size: 1.3rem;
+        font-size: 1.2rem;
         font-weight: 700;
         color: #00FF88;
         text-shadow: 0 0 40px rgba(0, 255, 136, 0.02);
     }
 
     .joined-status .waiting-text {
-        font-size: 0.85rem;
+        font-size: 0.8rem;
         color: rgba(255,255,255,0.15);
-        margin-top: 0.1rem;
+        margin-top: 2px;
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 0.5rem;
+        gap: 8px;
     }
 
     .joined-status .waiting-text .pulse-dot {
@@ -444,11 +434,10 @@
         animation: pulse 1.5s ease-in-out infinite;
     }
 
-    /* 等待动画 - 3D 旋转环 */
     .waiting-ring {
-        margin: 1.2rem auto;
-        width: 56px;
-        height: 56px;
+        margin: 12px auto;
+        width: 50px;
+        height: 50px;
         position: relative;
     }
 
@@ -487,23 +476,24 @@
     }
 
     /* ============================================================
-       迷你玩家列表（精致版）
+       迷你玩家列表
        ============================================================ */
     .mini-players-section {
-        margin-top: 1rem;
-        padding-top: 0.8rem;
+        margin-top: 12px;
+        padding-top: 10px;
         border-top: 1px solid rgba(255,255,255,0.02);
     }
 
     .mini-players-section .mini-label {
-        font-size: 0.55rem;
+        font-size: 0.5rem;
         color: rgba(255,255,255,0.06);
         text-transform: uppercase;
         letter-spacing: 0.12em;
-        margin-bottom: 0.4rem;
+        margin-bottom: 6px;
         display: flex;
         align-items: center;
-        gap: 0.4rem;
+        gap: 6px;
+        justify-content: center;
     }
 
     .mini-players-section .mini-label .count {
@@ -511,16 +501,16 @@
         font-weight: 700;
         font-size: 0.6rem;
         background: rgba(255,255,255,0.02);
-        padding: 0.02rem 0.4rem;
+        padding: 1px 8px;
         border-radius: 20px;
     }
 
     .mini-player-list {
         display: flex;
         flex-wrap: wrap;
-        gap: 0.4rem;
+        gap: 6px;
         justify-content: center;
-        min-height: 32px;
+        min-height: 30px;
         align-items: center;
     }
 
@@ -530,18 +520,19 @@
         align-items: center;
         gap: 2px;
         animation: playerEntry 0.5s ease;
+        max-width: 50px;
     }
 
     .mini-player-list .mini-item .mini-avatar {
-        width: 36px;
-        height: 36px;
+        width: 34px;
+        height: 34px;
         border-radius: 50%;
         background: rgba(255,255,255,0.02);
         border: 2px solid rgba(255,255,255,0.04);
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.1rem;
+        font-size: 1rem;
         transition: all 0.4s ease;
         position: relative;
     }
@@ -556,30 +547,35 @@
         position: absolute;
         bottom: -4px;
         right: -4px;
-        font-size: 0.4rem;
+        font-size: 0.35rem;
     }
 
     .mini-player-list .mini-item .mini-avatar.host {
         border-color: rgba(255, 0, 110, 0.15);
     }
 
+    .mini-player-list .mini-item .mini-avatar.self {
+        border-color: rgba(0, 240, 255, 0.15);
+        box-shadow: 0 0 20px rgba(0, 240, 255, 0.03);
+    }
+
     .mini-player-list .mini-item .mini-name {
-        font-size: 0.45rem;
+        font-size: 0.4rem;
         color: rgba(255,255,255,0.08);
-        max-width: 40px;
+        max-width: 44px;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+        text-align: center;
     }
 
     .mini-player-list .mini-item .mini-name.active {
         color: rgba(255,255,255,0.2);
     }
 
-    /* 空状态 */
     .mini-empty {
         color: rgba(255,255,255,0.02);
-        font-size: 0.7rem;
+        font-size: 0.65rem;
         letter-spacing: 0.06em;
     }
 
@@ -587,23 +583,24 @@
        底部操作
        ============================================================ */
     .joined-actions {
-        margin-top: 1.2rem;
+        margin-top: 14px;
         display: flex;
-        gap: 0.6rem;
+        gap: 8px;
         flex-wrap: wrap;
     }
 
     .joined-actions .btn-action {
         flex: 1;
-        padding: 0.7rem 1rem;
+        padding: 10px 12px;
         border: none;
         border-radius: 40px;
         font-weight: 600;
-        font-size: 0.85rem;
+        font-size: 0.8rem;
         cursor: pointer;
         transition: all 0.3s ease;
         font-family: inherit;
-        min-width: 80px;
+        min-width: 60px;
+        text-align: center;
     }
 
     .joined-actions .btn-action.ready-btn {
@@ -627,6 +624,7 @@
         background: rgba(255, 0, 110, 0.02);
         color: rgba(255, 0, 110, 0.15);
         border: 1px solid rgba(255, 0, 110, 0.02);
+        flex: 0.5;
     }
 
     .joined-actions .btn-action.leave-btn:hover {
@@ -639,25 +637,28 @@
        ============================================================ */
     .toast-container {
         position: fixed;
-        bottom: 2rem;
-        right: 2rem;
+        bottom: 20px;
+        right: 20px;
         z-index: 9999;
         display: flex;
         flex-direction: column;
-        gap: 0.4rem;
+        gap: 4px;
         align-items: flex-end;
+        max-width: 90%;
     }
 
     .toast-msg {
-        padding: 0.6rem 1.5rem;
+        padding: 8px 18px;
         border-radius: 40px;
         color: #fff;
         font-weight: 500;
         animation: toastIn 0.4s ease;
-        font-size: 0.85rem;
+        font-size: 0.8rem;
         backdrop-filter: blur(20px);
         background: rgba(10, 10, 30, 0.8);
         border: 1px solid rgba(255,255,255,0.04);
+        max-width: 100%;
+        word-break: break-word;
     }
 
     .toast-msg.success { background: rgba(0, 255, 136, 0.08); border-color: rgba(0, 255, 136, 0.04); color: #00FF88; }
@@ -670,28 +671,142 @@
     }
 
     /* ============================================================
-       响应式
+       ⭐ 响应式 - 移动端优先
        ============================================================ */
+
+    /* 小屏手机 (320px - 480px) */
     @@media (max-width: 480px) {
-        .player-container { padding: 0.8rem; }
-        .holo-card { padding: 1.5rem 1.2rem 1.8rem; border-radius: 24px; }
+        body { padding: 8px; }
+        .holo-card { 
+            padding: 16px 14px 20px; 
+            border-radius: 24px;
+        }
+        .holo-card .corner { width: 12px; height: 12px; }
+        .holo-card .corner.tl { top: 8px; left: 8px; }
+        .holo-card .corner.tr { top: 8px; right: 8px; }
+        .holo-card .corner.bl { bottom: 8px; left: 8px; }
+        .holo-card .corner.br { bottom: 8px; right: 8px; }
+
+        .player-header .icon-wrap { font-size: 2rem; }
         .player-header h1 { font-size: 1.2rem; }
-        .player-header .icon-wrap { font-size: 2.2rem; }
-        .room-info .code { font-size: 1.5rem; letter-spacing: 4px; }
-        .avatar-option { width: 40px; height: 40px; font-size: 1.2rem; }
-        .joined-status .big-icon { font-size: 2.8rem; }
-        .joined-status h2 { font-size: 1.1rem; }
-        .waiting-ring { width: 44px; height: 44px; }
-        .mini-player-list .mini-item .mini-avatar { width: 30px; height: 30px; font-size: 0.9rem; }
-        .holo-card .corner { width: 14px; height: 14px; }
-        .joined-actions .btn-action { font-size: 0.75rem; padding: 0.6rem 0.8rem; }
+        .player-header .sub { font-size: 0.55rem; }
+
+        .room-info { padding: 8px 12px; margin-bottom: 12px; }
+        .room-info .code { font-size: 1.4rem; letter-spacing: 3px; }
+        .room-info .host-name { font-size: 0.6rem; }
+
+        .form-group { margin-bottom: 10px; }
+        .form-group label { font-size: 0.55rem; }
+        .form-group input { 
+            padding: 10px 14px; 
+            font-size: 0.9rem; 
+            border-radius: 14px;
+        }
+
+        .avatar-select {
+            grid-template-columns: repeat(5, 1fr);
+            gap: 4px;
+        }
+        .avatar-option { 
+            font-size: 1.1rem; 
+            min-height: 36px;
+        }
+        .avatar-option .check-mark { font-size: 0.4rem; bottom: -1px; right: -1px; }
+
+        .btn-join { 
+            padding: 12px; 
+            font-size: 0.9rem; 
+            border-radius: 32px;
+        }
+
+        .joined-status .big-icon { font-size: 2.5rem; }
+        .joined-status h2 { font-size: 1rem; }
+        .joined-status .waiting-text { font-size: 0.7rem; }
+
+        .waiting-ring { width: 40px; height: 40px; margin: 8px auto; }
+
+        .mini-player-list { gap: 4px; }
+        .mini-player-list .mini-item .mini-avatar { width: 28px; height: 28px; font-size: 0.8rem; }
+        .mini-player-list .mini-item .mini-name { font-size: 0.35rem; max-width: 36px; }
+        .mini-players-section .mini-label { font-size: 0.45rem; }
+
+        .joined-actions { gap: 6px; margin-top: 10px; }
+        .joined-actions .btn-action { 
+            padding: 8px 10px; 
+            font-size: 0.7rem; 
+            border-radius: 32px;
+        }
+
+        .toast-container { bottom: 12px; right: 12px; }
+        .toast-msg { padding: 6px 14px; font-size: 0.7rem; }
     }
 
+    /* 超小屏 (320px 以下) */
     @@media (max-width: 380px) {
-        .holo-card { padding: 1rem 0.8rem 1.2rem; border-radius: 20px; }
-        .room-info .code { font-size: 1.2rem; letter-spacing: 2px; }
-        .form-group input { padding: 0.6rem 0.8rem; font-size: 0.85rem; }
-        .btn-join { padding: 0.7rem; font-size: 0.85rem; }
+        body { padding: 4px; }
+        .holo-card { 
+            padding: 12px 10px 16px; 
+            border-radius: 20px;
+        }
+        .player-header h1 { font-size: 1rem; }
+        .player-header .icon-wrap { font-size: 1.6rem; }
+
+        .room-info .code { font-size: 1.1rem; letter-spacing: 2px; }
+
+        .avatar-select {
+            grid-template-columns: repeat(5, 1fr);
+            gap: 3px;
+        }
+        .avatar-option { 
+            font-size: 0.9rem; 
+            min-height: 30px;
+            border-width: 1.5px;
+        }
+
+        .btn-join { padding: 10px; font-size: 0.8rem; }
+
+        .joined-status .big-icon { font-size: 2rem; }
+        .joined-status h2 { font-size: 0.9rem; }
+
+        .mini-player-list .mini-item .mini-avatar { width: 24px; height: 24px; font-size: 0.65rem; }
+        .mini-player-list .mini-item .mini-name { font-size: 0.3rem; max-width: 30px; }
+
+        .joined-actions .btn-action { padding: 6px 8px; font-size: 0.6rem; }
+        .waiting-ring { width: 32px; height: 32px; }
+    }
+
+    /* 平板/大屏手机 (481px - 768px) */
+    @@media (min-width: 481px) and (max-width: 768px) {
+        .holo-card { padding: 20px 18px 24px; }
+        .avatar-select { grid-template-columns: repeat(5, 1fr); gap: 5px; }
+        .avatar-option { min-height: 40px; font-size: 1.2rem; }
+        .mini-player-list .mini-item .mini-avatar { width: 32px; height: 32px; }
+    }
+
+    /* 横屏手机警告 */
+    @@media (max-height: 500px) and (orientation: landscape) {
+        .holo-card { padding: 12px 16px 16px; border-radius: 20px; }
+        .player-header { margin-bottom: 8px; }
+        .player-header .icon-wrap { font-size: 1.4rem; }
+        .player-header h1 { font-size: 1rem; }
+        .player-header .sub { display: none; }
+        .room-info { padding: 6px 10px; margin-bottom: 8px; }
+        .room-info .code { font-size: 1.2rem; }
+        .form-group { margin-bottom: 6px; }
+        .form-group input { padding: 6px 10px; font-size: 0.8rem; }
+        .avatar-select { grid-template-columns: repeat(10, 1fr); gap: 3px; }
+        .avatar-option { min-height: 28px; font-size: 0.8rem; }
+        .btn-join { padding: 8px; font-size: 0.8rem; }
+        .joined-status .big-icon { font-size: 1.8rem; }
+        .joined-status h2 { font-size: 0.9rem; }
+        .joined-status .waiting-text { font-size: 0.6rem; }
+        .waiting-ring { width: 30px; height: 30px; margin: 4px auto; }
+        .mini-players-section { margin-top: 6px; padding-top: 6px; }
+        .mini-player-list .mini-item .mini-avatar { width: 22px; height: 22px; font-size: 0.6rem; }
+        .mini-player-list .mini-item .mini-name { display: none; }
+        .joined-actions { margin-top: 6px; }
+        .joined-actions .btn-action { padding: 4px 8px; font-size: 0.6rem; }
+        .holo-card .corner { display: none; }
     }
 </style>
 
@@ -814,13 +929,14 @@
 
 <script>
     // ============================================================
-    // 粒子背景（2层）
+    // 粒子背景（2层）- 精简版
     // ============================================================
     (function initParticles() {
         var canvas = document.getElementById('particleCanvas');
+        if (!canvas) return;
         var ctx = canvas.getContext('2d');
         var particles = [];
-        var count = 80;
+        var count = Math.min(80, Math.floor(window.innerWidth / 6));
 
         function resize() {
             canvas.width = window.innerWidth;
@@ -860,9 +976,10 @@
     // 第二层粒子（更淡、更大）
     (function initParticles2() {
         var canvas = document.getElementById('particleCanvas2');
+        if (!canvas) return;
         var ctx = canvas.getContext('2d');
         var particles = [];
-        var count = 30;
+        var count = Math.min(30, Math.floor(window.innerWidth / 12));
 
         function resize() {
             canvas.width = window.innerWidth;
@@ -1129,7 +1246,7 @@
         var countEl = document.getElementById('miniCount');
         if (!container) return;
 
-        countEl.textContent = players.length;
+        countEl.textContent = players ? players.length : 0;
 
         if (!players || players.length === 0) {
             container.innerHTML = '<span class="mini-empty">✦ 等待队友加入 ✦</span>';
@@ -1138,15 +1255,17 @@
 
         var html = '';
         players.forEach(function(p) {
-            var isReady = p.isReady;
+            var isReady = p.isReady || false;
             var isHost = p.isHost || false;
             var isSelf = p.playerId === state.playerId;
+            var avatarEmoji = p.avatarEmoji || '🧑';
+            var name = p.nickname || '玩家';
             html += `
                 <div class="mini-item">
                     <div class="mini-avatar ${isReady ? 'ready' : ''} ${isHost ? 'host' : ''} ${isSelf ? 'self' : ''}">
-                        ${p.avatarEmoji || '🧑'}
+                        ${avatarEmoji}
                     </div>
-                    <div class="mini-name ${isReady ? 'active' : ''}">${p.nickname}${isSelf ? ' (你)' : ''}</div>
+                    <div class="mini-name ${isReady ? 'active' : ''}">${name}${isSelf ? ' (你)' : ''}</div>
                 </div>
             `;
         });
