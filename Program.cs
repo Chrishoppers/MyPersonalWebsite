@@ -10,14 +10,13 @@ using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ⭐ 添加这行：禁用文件监控
+// ⭐ 禁用文件监控
 builder.Host.UseDefaultServiceProvider((context, options) =>
 {
     options.ValidateScopes = false;
     options.ValidateOnBuild = false;
 });
 
-// ⭐ 添加这行：设置文件监控为 false
 Environment.SetEnvironmentVariable("DOTNET_USE_POLLING_FILE_WATCHER", "1");
 
 // ============================================================
@@ -64,10 +63,25 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
 });
 
+// ============================================================
+// HttpClient
+// ============================================================
 builder.Services.AddHttpClient();
-builder.Services.AddHttpContextAccessor();
-builder.Services.AddHostedService<StreakEmailService>();
 
+// ============================================================
+// HttpContextAccessor
+// ============================================================
+builder.Services.AddHttpContextAccessor();
+
+// ============================================================
+// ⭐ 后台服务
+// ============================================================
+builder.Services.AddHostedService<StreakEmailService>();
+builder.Services.AddHostedService<DailyQuestionScheduler>();
+
+// ============================================================
+// ⭐ Scoped Services
+// ============================================================
 builder.Services.AddScoped<BrevoEmailService>();
 builder.Services.AddScoped<SvgCaptchaService>();
 builder.Services.AddScoped<RateLimitService>();
@@ -75,21 +89,19 @@ builder.Services.AddScoped<DataSyncService>();
 builder.Services.AddScoped<TursoService>();
 builder.Services.AddScoped<DailyQuestionService>();
 builder.Services.AddScoped<GameSuggestionService>();
-builder.Services.AddHttpClient<TrainService>();
 builder.Services.AddScoped<TrainService>();
 builder.Services.AddScoped<ReCaptchaService>();
+builder.Services.AddHttpClient<TrainService>();
 builder.Services.AddHttpClient<ReCaptchaService>();
-// 检查是否有这行
 
-
-// 检查是否有这行（在 app.Run() 之前）
-app.MapHub<PartyHub>("/partyHub");
-
-// 注册后台定时服务
-builder.Services.AddHostedService<DailyQuestionScheduler>();
-
+// ============================================================
+// ⭐ SignalR
+// ============================================================
 builder.Services.AddSignalR();
 
+// ============================================================
+// 构建应用
+// ============================================================
 var app = builder.Build();
 
 // ============================================================
@@ -110,6 +122,9 @@ using (var scope = app.Services.CreateScope())
     Console.WriteLine("✅ 每日一问题库已就绪");
 }
 
+// ============================================================
+// 中间件管道
+// ============================================================
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
@@ -122,25 +137,37 @@ app.UseRouting();
 app.UseSession();
 app.UseAuthorization();
 
+// ============================================================
+// ⭐ 路由映射（Controller + Hub）
+// ============================================================
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}");
+    pattern: "{controller=Home}/{action=Index}/{id?}"
+);
 
+// ⭐ SignalR Hub 映射
 app.MapHub<MessageHub>("/messageHub");
-// 在 app.Run() 之前添加
-app.Lifetime.ApplicationStarted.Register(() => 
+app.MapHub<PartyHub>("/partyHub");
+
+// ============================================================
+// 应用生命周期事件
+// ============================================================
+app.Lifetime.ApplicationStarted.Register(() =>
 {
     Console.WriteLine("✅ 应用已启动！");
 });
-app.Lifetime.ApplicationStopping.Register(() => 
+app.Lifetime.ApplicationStopping.Register(() =>
 {
     Console.WriteLine("⏹️ 应用正在停止...");
 });
 
+// ============================================================
+// 运行应用
+// ============================================================
 app.Run();
 
 // ============================================================
-// ⭐ 确保所有 Turso 表存在
+// ⭐ 辅助方法（确保 Turso 表存在）
 // ============================================================
 async Task EnsureTursoTablesAsync(DataSyncService dataSync)
 {
@@ -479,7 +506,7 @@ async Task EnsureAboutMeDataAsync(DataSyncService dataSync)
 }
 
 // ============================================================
-// 📦 初始化题库（空，由 DailyQuestionService 自动填充）
+// 📦 初始化题库
 // ============================================================
 async Task SeedDailyQuestionBankAsync(DataSyncService dataSync)
 {
@@ -491,7 +518,6 @@ async Task SeedDailyQuestionBankAsync(DataSyncService dataSync)
     }
 
     Console.WriteLine("📦 题库为空，将由 DailyQuestionService 自动填充");
-    // 不需要预置数据，DailyQuestionService 会自动生成
 }
 
 // ============================================================
