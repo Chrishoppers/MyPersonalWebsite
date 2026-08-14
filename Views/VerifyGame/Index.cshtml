@@ -2394,21 +2394,33 @@
     // 游戏结束
     // ============================================================
     function gameOver() {
-        gameState.isPlaying = false;
-        gameState.isGameOver = true;
-        clearInterval(gameState.timer);
-        if (VoiceService.isListening) VoiceService.stop();
-
-        var currentScore = gameState.score;
-        document.getElementById('challengeCard').innerHTML = '';
-        document.getElementById('gameContent').innerHTML = '';
-
-        var finalScore = currentScore
-            - (gameState.cheatCount * gameState.penaltyCheat)
-            - (gameState.passed * gameState.penaltyMic);
-        finalScore = Math.max(0, finalScore);
-
-        var card = document.getElementById('challengeCard');
+    // 1. 停止所有游戏活动
+    gameState.isPlaying = false;
+    gameState.isGameOver = true;
+    clearInterval(gameState.timer);
+    if (VoiceService.isListening) VoiceService.stop();
+    
+    // 2. 清理所有交互
+    disableAllInteractions();
+    
+    // 3. 清空卡片内容（确保没有残留）
+    var card = document.getElementById('challengeCard');
+    var content = document.getElementById('gameContent');
+    if (card) card.innerHTML = '';
+    if (content) content.innerHTML = '';
+    
+    // 4. 计算最终得分
+    var currentScore = gameState.score;
+    var finalScore = currentScore
+        - (gameState.cheatCount * gameState.penaltyCheat)
+        - (gameState.passed * gameState.penaltyMic);
+    finalScore = Math.max(0, finalScore);
+    
+    // 5. 保存分数
+    saveScore(finalScore);
+    
+    // 6. 渲染结束页面
+    if (card) {
         card.innerHTML = `
             <div class="game-over" style="width:100%;">
                 <div class="big-icon">${finalScore > 50 ? '🏆' : '💪'}</div>
@@ -2417,8 +2429,8 @@
                 <div style="font-size:0.8rem;color:rgba(255,255,255,0.1);margin-bottom:0.1rem;">本局得分</div>
                 <div class="final-score" id="finalScoreDisplay">${finalScore}</div>
                 <div class="penalty-detail">
-                    ${gameState.cheatCount > 0 ? '⚖️ 作弊扣分: -' + (gameState.cheatCount * gameState.penaltyCheat) + ' 分' : ''}
-                    ${!gameState.micEnabled ? '🔇 麦克风关闭: -' + (gameState.passed * gameState.penaltyMic) + ' 分' : ''}
+                    ${gameState.cheatCount > 0 ? '⚖️ 作弊扣分: -' + (gameState.cheatCount * gameState.penaltyCheat) + ' 分<br>' : ''}
+                    ${!gameState.micEnabled ? '🔇 麦克风关闭: -' + (gameState.passed * gameState.penaltyMic) + ' 分<br>' : ''}
                     ${gameState.cheatCount === 0 && gameState.micEnabled ? '✅ 无惩罚，完美表现！' : ''}
                 </div>
                 <div class="stats-grid">
@@ -2432,27 +2444,40 @@
                 </div>
             </div>
         `;
-
-        saveScore(finalScore);
-        loadRanking();
     }
+    
+    // 7. 加载排行榜（不阻塞）
+    loadRanking();
+}
 
-    function gameWin() {
-        gameState.isPlaying = false;
-        gameState.isGameOver = true;
-        clearInterval(gameState.timer);
-        if (VoiceService.isListening) VoiceService.stop();
-
-        var currentScore = gameState.score;
-        document.getElementById('challengeCard').innerHTML = '';
-        document.getElementById('gameContent').innerHTML = '';
-
-        var finalScore = currentScore
-            - (gameState.cheatCount * gameState.penaltyCheat)
-            - (gameState.passed * gameState.penaltyMic);
-        finalScore = Math.max(0, finalScore);
-
-        var card = document.getElementById('challengeCard');
+   function gameWin() {
+    // 1. 停止所有游戏活动
+    gameState.isPlaying = false;
+    gameState.isGameOver = true;
+    clearInterval(gameState.timer);
+    if (VoiceService.isListening) VoiceService.stop();
+    
+    // 2. 清理所有交互
+    disableAllInteractions();
+    
+    // 3. 清空卡片内容
+    var card = document.getElementById('challengeCard');
+    var content = document.getElementById('gameContent');
+    if (card) card.innerHTML = '';
+    if (content) content.innerHTML = '';
+    
+    // 4. 计算最终得分
+    var currentScore = gameState.score;
+    var finalScore = currentScore
+        - (gameState.cheatCount * gameState.penaltyCheat)
+        - (gameState.passed * gameState.penaltyMic);
+    finalScore = Math.max(0, finalScore);
+    
+    // 5. 保存分数
+    saveScore(finalScore);
+    
+    // 6. 渲染通关页面
+    if (card) {
         card.innerHTML = `
             <div class="game-over" style="width:100%;">
                 <div class="big-icon">👑</div>
@@ -2461,8 +2486,8 @@
                 <div style="font-size:0.8rem;color:rgba(255,255,255,0.1);margin-bottom:0.1rem;">最终得分</div>
                 <div class="final-score" id="finalScoreDisplay">${finalScore}</div>
                 <div class="penalty-detail">
-                    ${gameState.cheatCount > 0 ? '⚖️ 作弊扣分: -' + (gameState.cheatCount * gameState.penaltyCheat) + ' 分' : ''}
-                    ${!gameState.micEnabled ? '🔇 麦克风关闭: -' + (gameState.passed * gameState.penaltyMic) + ' 分' : ''}
+                    ${gameState.cheatCount > 0 ? '⚖️ 作弊扣分: -' + (gameState.cheatCount * gameState.penaltyCheat) + ' 分<br>' : ''}
+                    ${!gameState.micEnabled ? '🔇 麦克风关闭: -' + (gameState.passed * gameState.penaltyMic) + ' 分<br>' : ''}
                     ${gameState.cheatCount === 0 && gameState.micEnabled ? '✅ 无惩罚，完美通关！' : ''}
                 </div>
                 <div class="stats-grid">
@@ -2476,10 +2501,11 @@
                 </div>
             </div>
         `;
-
-        saveScore(finalScore);
-        loadRanking();
     }
+    
+    // 7. 加载排行榜
+    loadRanking();
+}
 
     function saveScore(score) {
         fetch('/VerifyGame/SaveScore', {
