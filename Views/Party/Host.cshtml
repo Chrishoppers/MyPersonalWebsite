@@ -344,6 +344,7 @@
         border-radius: 16px;
         border: 1px solid rgba(0, 240, 255, 0.04);
         position: relative;
+        min-height: 180px;
     }
 
     .qr-container .qr-frame {
@@ -375,6 +376,13 @@
         color: rgba(255,255,255,0.04);
         letter-spacing: 0.1em;
         text-transform: uppercase;
+    }
+
+    .qr-container .qr-loading {
+        color: rgba(255,255,255,0.06);
+        font-size: 0.8rem;
+        text-align: center;
+        padding: 1rem;
     }
 
     /* ============================================================
@@ -812,7 +820,9 @@
             <!-- 二维码 -->
             <div class="qr-container">
                 <div class="qr-frame"></div>
-                <div id="qrcode" style="padding:0.5rem;"></div>
+                <div id="qrcode">
+                    <div class="qr-loading">⏳ 生成中...</div>
+                </div>
                 <div class="qr-hint">📱 扫码加入派对</div>
             </div>
 
@@ -935,7 +945,6 @@
                 if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
                 if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
 
-                // 鼠标吸引
                 if (mouse.x !== null) {
                     var dx = mouse.x - p.x;
                     var dy = mouse.y - p.y;
@@ -944,7 +953,6 @@
                         var force = 0.002;
                         p.vx += dx * force;
                         p.vy += dy * force;
-                        // 限制速度
                         var speed = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
                         if (speed > 0.5) {
                             p.vx = (p.vx / speed) * 0.5;
@@ -959,7 +967,6 @@
                 ctx.fill();
             }
 
-            // 连线
             for (var i = 0; i < particles.length; i++) {
                 for (var j = i + 1; j < particles.length; j++) {
                     var dx = particles[i].x - particles[j].x;
@@ -1003,7 +1010,10 @@
     // ============================================================
     function copyRoomCode() {
         var code = document.getElementById('roomCodeDisplay').textContent;
-        if (!code || code === '------') return;
+        if (!code || code === '------') {
+            showToast('⚠️ 暂无房间码', 'warning');
+            return;
+        }
         navigator.clipboard.writeText(code).then(function() {
             showToast('✅ 房间码已复制', 'success');
         }).catch(function() {
@@ -1027,7 +1037,8 @@
         isAdmin: true,
         players: [],
         isGameStarted: false,
-        isConnected: false
+        isConnected: false,
+        isRoomCreated: false
     };
 
     // ============================================================
@@ -1045,34 +1056,54 @@
 
             // ---- 事件监听 ----
             connection.on('RoomCreated', function(data) {
-                if (data.success) {
-                    gameState.roomId = data.roomId;
-                    gameState.playerId = data.playerId;
-                    document.getElementById('roomCodeDisplay').textContent = data.roomId;
-                    generateQRCode(data.roomId);
-                    showToast('✅ 房间已创建！', 'success');
+                console.log('🔍 RoomCreated 收到数据:', JSON.stringify(data));
+                
+                // 兼容两种数据格式
+                var roomId = data?.roomId || data?.room?.roomId;
+                var playerId = data?.playerId || data?.room?.hostUserId;
+                
+                if (roomId) {
+                    gameState.roomId = roomId;
+                    gameState.playerId = playerId;
+                    gameState.isRoomCreated = true;
+                    
+                    document.getElementById('roomCodeDisplay').textContent = roomId;
+                    generateQRCode(roomId);
+                    
+                    // 更新界面
+                    showToast('✅ 房间已创建！房间码: ' + roomId, 'success');
                     updateRoomStatus('waiting');
                     document.getElementById('actionStatusText').textContent = '● 等待玩家加入';
+                    
+                    // 启用刷新按钮
+                    document.querySelector('.btn-secondary-glow').disabled = false;
+                } else {
+                    console.error('❌ 创建房间失败：未获取到房间码', data);
+                    showToast('❌ 创建房间失败，请刷新重试', 'error');
                 }
             });
 
             connection.on('PlayerJoined', function(player) {
+                console.log('👤 玩家加入:', player);
                 showToast('🟢 ' + player.nickname + ' 加入了派对', 'info');
                 addPlayerToList(player);
                 updateStats();
             });
 
             connection.on('PlayerLeft', function(playerId) {
+                console.log('👤 玩家离开:', playerId);
                 removePlayerFromList(playerId);
                 updateStats();
             });
 
             connection.on('PlayerReadyToggled', function(player) {
+                console.log('🔄 玩家准备状态:', player);
                 updatePlayerReady(player);
                 updateStats();
             });
 
             connection.on('RoomUpdated', function(room) {
+                console.log('📡 房间更新:', room);
                 syncRoomData(room);
             });
 
@@ -1090,13 +1121,13 @@
 
             connection.on('Kicked', function(message) {
                 showToast('⚠️ ' + message, 'warning');
-                // 被踢出，回到首页
                 setTimeout(function() {
                     window.location.href = '/';
                 }, 2000);
             });
 
             connection.on('AdminUpdated', function(player) {
+                console.log('⚡ 管理员更新:', player);
                 updatePlayerAdmin(player);
             });
 
@@ -1105,13 +1136,15 @@
                 .then(function() {
                     gameState.isConnected = true;
                     console.log('✅ SignalR 已连接');
-
+                    
                     // 自动创建房间
-                    createRoom();
+                    setTimeout(function() {
+                        createRoom();
+                    }, 500);
                 })
                 .catch(function(err) {
                     console.error('❌ SignalR 连接失败:', err);
-                    showToast('⚠️ 连接失败，请刷新重试', 'error');
+                    showToast('⚠️ 连接失败，正在重试...', 'warning');
                     setTimeout(function() { connectSignalR(); }, 3000);
                 });
 
@@ -1127,21 +1160,35 @@
     function createRoom() {
         if (!connection || connection.state !== signalR.HubConnectionState.Connected) {
             showToast('⏳ 正在连接...', 'info');
+            setTimeout(function() { createRoom(); }, 1000);
             return;
         }
 
         var hostName = '@username' || 'admin';
+        console.log('📡 正在创建房间，主控:', hostName);
 
         connection.invoke('CreateRoom', hostName, 20, null)
             .then(function(result) {
+                console.log('📡 CreateRoom 返回:', result);
                 if (result && result.success) {
-                    // 已由 RoomCreated 事件处理
+                    // 如果返回结果中有 roomId，直接使用
+                    if (result.roomId && !gameState.roomId) {
+                        gameState.roomId = result.roomId;
+                        gameState.playerId = result.playerId;
+                        gameState.isRoomCreated = true;
+                        
+                        document.getElementById('roomCodeDisplay').textContent = result.roomId;
+                        generateQRCode(result.roomId);
+                        showToast('✅ 房间已创建！房间码: ' + result.roomId, 'success');
+                        updateRoomStatus('waiting');
+                        document.getElementById('actionStatusText').textContent = '● 等待玩家加入';
+                    }
                 } else if (result && !result.success) {
                     showToast('❌ ' + result.message, 'error');
                 }
             })
             .catch(function(err) {
-                console.error('创建房间失败:', err);
+                console.error('❌ 创建房间失败:', err);
                 showToast('❌ 创建房间失败: ' + err, 'error');
             });
     }
@@ -1155,6 +1202,11 @@
         var container = document.getElementById('qrcode');
         container.innerHTML = '';
 
+        if (!roomId || roomId === '------') {
+            container.innerHTML = '<div class="qr-loading">⏳ 等待房间码...</div>';
+            return;
+        }
+
         var url = window.location.origin + '/Party/Player?roomId=' + roomId;
 
         try {
@@ -1166,11 +1218,10 @@
                 colorLight: 'transparent',
                 correctLevel: QRCode.CorrectLevel.H
             });
+            console.log('✅ 二维码已生成:', url);
         } catch (e) {
-            // 降级
-            container.innerHTML =
-                '<div style="padding:1rem;text-align:center;color:rgba(255,255,255,0.1);font-size:0.7rem;">📱 扫码加入<br><span style="font-size:0.5rem;color:rgba(255,255,255,0.04);">' +
-                url + '</span></div>';
+            console.error('❌ 二维码生成失败:', e);
+            container.innerHTML = '<div style="padding:1rem;text-align:center;color:rgba(255,255,255,0.1);font-size:0.7rem;">📱 扫码加入<br><span style="font-size:0.5rem;color:rgba(255,255,255,0.04);">' + url + '</span></div>';
         }
     }
 
@@ -1182,7 +1233,6 @@
         var empty = list.querySelector('.empty-players');
         if (empty) empty.remove();
 
-        // 检查是否已存在
         var existing = document.querySelector('.player-item[data-id="' + player.playerId + '"]');
         if (existing) return;
 
@@ -1250,7 +1300,6 @@
             dot.className = 'ready-dot ' + (player.isReady ? 'ready' : 'waiting');
         }
 
-        // 更新自己的准备按钮
         if (player.playerId === gameState.playerId) {
             var selfBtn = item.querySelector('.btn-icon');
             if (selfBtn) {
@@ -1267,7 +1316,6 @@
         if (!item) return;
 
         var nameDiv = item.querySelector('.name');
-        // 移除旧的标签
         var oldTags = nameDiv.querySelectorAll('.admin-tag, .host-tag');
         oldTags.forEach(function(t) { t.remove(); });
 
@@ -1286,7 +1334,8 @@
     }
 
     function syncRoomData(room) {
-        // 同步玩家列表
+        if (!room || !room.players) return;
+        
         var currentIds = new Set();
         document.querySelectorAll('.player-item').forEach(function(el) {
             currentIds.add(el.dataset.id);
@@ -1298,13 +1347,11 @@
             if (!currentIds.has(p.playerId)) {
                 addPlayerToList(p);
             } else {
-                // 更新已有玩家
                 updatePlayerReady(p);
                 updatePlayerAdmin(p);
             }
         });
 
-        // 移除已离开的玩家
         currentIds.forEach(function(id) {
             if (!newIds.has(id)) {
                 removePlayerFromList(id);
@@ -1313,7 +1360,6 @@
 
         updateStats();
 
-        // 更新房间状态
         if (room.status === 'playing') {
             gameState.isGameStarted = true;
             updateRoomStatus('playing');
@@ -1321,8 +1367,7 @@
             document.getElementById('startGameBtn').disabled = true;
         }
 
-        // 更新最大人数
-        document.getElementById('maxCount').textContent = room.maxPlayers;
+        document.getElementById('maxCount').textContent = room.maxPlayers || 20;
     }
 
     // ============================================================
@@ -1347,9 +1392,8 @@
         document.getElementById('statWaiting').textContent = total - ready;
         document.getElementById('playerCountBadge').textContent = total + ' 人';
 
-        // 开始按钮
         var btn = document.getElementById('startGameBtn');
-        if (total >= 2 && ready === total) {
+        if (total >= 2 && ready === total && ready > 0) {
             btn.disabled = false;
         } else {
             btn.disabled = true;
@@ -1374,7 +1418,10 @@
     // 玩家操作
     // ============================================================
     function toggleReady() {
-        if (!connection || !gameState.roomId || !gameState.playerId) return;
+        if (!connection || !gameState.roomId || !gameState.playerId) {
+            showToast('⚠️ 房间未创建', 'warning');
+            return;
+        }
         connection.invoke('ToggleReady', gameState.roomId, gameState.playerId)
             .catch(function(err) {
                 console.error('切换准备状态失败:', err);
@@ -1421,7 +1468,10 @@
     }
 
     function refreshRoom() {
-        if (!connection || !gameState.roomId) return;
+        if (!connection || !gameState.roomId) {
+            showToast('⚠️ 暂无房间', 'warning');
+            return;
+        }
         showToast('🔄 刷新中...', 'info');
         connection.invoke('RefreshRoom', gameState.roomId)
             .catch(function() {});
@@ -1430,7 +1480,6 @@
     function closeRoom() {
         if (!confirm('确定要解散房间吗？所有玩家将被移出。')) return;
         showToast('🗑️ 房间已解散', 'warning');
-        // 这里可以调用后端解散接口，或直接断开连接
         if (connection) {
             connection.stop();
         }
@@ -1443,6 +1492,7 @@
     // 初始化
     // ============================================================
     document.addEventListener('DOMContentLoaded', function() {
+        console.log('🚀 派对控制中心启动...');
         connectSignalR();
     });
 </script>
