@@ -107,6 +107,7 @@ builder.Services.AddScoped<GameAntiCheatService>();
 
 builder.Services.AddHttpClient<TrainService>();
 builder.Services.AddHttpClient<ReCaptchaService>();
+builder.Services.AddScoped<WerewolfVoiceService>();
 
 // ============================================================
 // ⭐ SignalR（核心）
