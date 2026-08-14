@@ -3,9 +3,6 @@ using System.Collections.Generic;
 
 namespace MyPersonalWebsite.Models.Werewolf
 {
-    // ============================================================
-    // 游戏状态
-    // ============================================================
     public class WerewolfGameState
     {
         public string RoomId { get; set; } = string.Empty;
@@ -18,13 +15,13 @@ namespace MyPersonalWebsite.Models.Werewolf
         public string Winner { get; set; } = string.Empty;
         public DateTime StartedAt { get; set; }
         public DateTime? EndedAt { get; set; }
+        public bool IsPaused { get; set; } = false;
+        public double SpeedMultiplier { get; set; } = 1.0;
         public List<WerewolfPlayer> Players { get; set; } = new();
         public List<NightActionLog> NightActions { get; set; } = new();
-        public List<SpeechLog> SpeechLogs { get; set; } = new();
         public List<VoteRecord> VoteRecords { get; set; } = new();
         public List<GameLog> GameLogs { get; set; } = new();
 
-        // 快捷属性
         public List<WerewolfPlayer> AlivePlayers => Players.FindAll(p => p.IsAlive && !p.IsSpectator);
         public List<WerewolfPlayer> DeadPlayers => Players.FindAll(p => !p.IsAlive && !p.IsSpectator);
         public List<WerewolfPlayer> Werewolves => Players.FindAll(p => p.Role == RoleType.Werewolf && p.IsAlive && !p.IsSpectator);
@@ -32,52 +29,22 @@ namespace MyPersonalWebsite.Models.Werewolf
         public List<WerewolfPlayer> Gods => Players.FindAll(p => p.IsGod && p.IsAlive && !p.IsSpectator);
         public List<WerewolfPlayer> Villagers => Players.FindAll(p => p.Role == RoleType.Villager && p.IsAlive && !p.IsSpectator);
         public WerewolfPlayer? GetPlayer(int seatNumber) => Players.Find(p => p.SeatNumber == seatNumber);
-        public bool IsSheriffAlive => SheriffId > 0 && GetPlayer(SheriffId)?.IsAlive == true;
         public int PlayerCount => Players.Count(p => !p.IsSpectator);
     }
 
-    // ============================================================
-    // 游戏阶段
-    // ============================================================
     public enum GamePhase
     {
-        Setup,           // 设置
-        Seating,         // 就坐
-        Dealing,         // 发牌
-        Revealing,       // 查看身份
-        SheriffElection, // 警长竞选
-        NightGuard,      // 守卫行动
-        NightSeer,       // 预言家行动
-        NightWerewolf,   // 狼人行动
-        NightWitch,      // 女巫行动
-        NightResolve,    // 结算死亡
-        DayAnnounce,     // 公布死讯
-        DaySpeech,       // 发言
-        DayVoting,       // 投票
-        DayPK,           // PK发言
-        DayResolve,      // 公布放逐
-        HunterShoot,     // 猎人开枪
-        GameOver         // 游戏结束
+        Setup, Seating, Dealing, Revealing, SheriffElection,
+        NightGuard, NightSeer, NightWerewolf, NightWitch, NightResolve,
+        DayAnnounce, DaySpeech, DayVoting, DayPK, DayResolve,
+        HunterShoot, GameOver
     }
 
-    // ============================================================
-    // 角色类型
-    // ============================================================
     public enum RoleType
     {
-        Villager,    // 平民
-        Werewolf,    // 狼人
-        Seer,        // 预言家
-        Witch,       // 女巫
-        Guard,       // 守卫
-        Hunter,      // 猎人
-        Fool,        // 白痴
-        Knight       // 骑士
+        Villager, Werewolf, Seer, Witch, Guard, Hunter, Fool, Knight
     }
 
-    // ============================================================
-    // 玩家
-    // ============================================================
     public class WerewolfPlayer
     {
         public int SeatNumber { get; set; }
@@ -102,10 +69,7 @@ namespace MyPersonalWebsite.Models.Werewolf
         public bool IsFoolSkillUsed { get; set; } = false;
         public bool HasVoted { get; set; } = false;
         public int VoteTarget { get; set; } = -1;
-        public bool HasSpoken { get; set; } = false;
-        public bool IsWolfLeader { get; set; } = false;
 
-        // 快捷属性
         public bool IsGood => Role != RoleType.Werewolf;
         public bool IsWerewolf => Role == RoleType.Werewolf;
         public bool IsGod => Role != RoleType.Werewolf && Role != RoleType.Villager;
@@ -129,9 +93,6 @@ namespace MyPersonalWebsite.Models.Werewolf
         }
     }
 
-    // ============================================================
-    // 日志记录
-    // ============================================================
     public class NightActionLog
     {
         public int NightNumber { get; set; }
@@ -140,14 +101,6 @@ namespace MyPersonalWebsite.Models.Werewolf
         public int TargetSeat { get; set; }
         public string Result { get; set; } = string.Empty;
         public DateTime ActionTime { get; set; }
-    }
-
-    public class SpeechLog
-    {
-        public int SeatNumber { get; set; }
-        public string Content { get; set; } = string.Empty;
-        public DateTime SpeechTime { get; set; }
-        public int DurationSeconds { get; set; }
     }
 
     public class VoteRecord
@@ -164,18 +117,5 @@ namespace MyPersonalWebsite.Models.Werewolf
         public DateTime Time { get; set; }
         public string Event { get; set; } = string.Empty;
         public string Detail { get; set; } = string.Empty;
-    }
-
-    // ============================================================
-    // 配置
-    // ============================================================
-    public class GameConfig
-    {
-        public int PlayerCount { get; set; } = 10;
-        public List<string> SelectedRoles { get; set; } = new();
-        public int SpeakTime { get; set; } = 60;
-        public int SheriffSpeakTime { get; set; } = 90;
-        public bool EnableSheriff { get; set; } = true;
-        public bool EnableFirstNightSave { get; set; } = true;
     }
 }
