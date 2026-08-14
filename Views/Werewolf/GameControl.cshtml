@@ -7,6 +7,7 @@
         Context.Response.Redirect("/Auth/Login");
         return;
     }
+    var roomId = ViewBag.RoomId as string ?? Context.Request.Query["roomId"].ToString();
 }
 
 <!DOCTYPE html>
@@ -20,9 +21,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
     <style>
-        /* ============================================================
-           全局
-           ============================================================ */
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
@@ -36,9 +34,7 @@
 
         .container { max-width: 1400px; margin: 0 auto; }
 
-        /* ============================================================
-           顶部
-           ============================================================ */
+        /* ===== 顶部 ===== */
         .header {
             display: flex;
             justify-content: space-between;
@@ -71,18 +67,10 @@
             color: rgba(255,255,255,0.15);
         }
 
-        .header .phase-badge.active {
-            background: rgba(0, 240, 255, 0.08);
-            border-color: rgba(0, 240, 255, 0.08);
-            color: #00F0FF;
-        }
-
-        .header .phase-badge .day { color: #F59E0B; }
         .header .phase-badge .night { color: #4facfe; }
+        .header .phase-badge .day { color: #F59E0B; }
 
-        /* ============================================================
-           主网格
-           ============================================================ */
+        /* ===== 主网格 ===== */
         .main-grid {
             display: grid;
             grid-template-columns: 1fr 320px;
@@ -94,9 +82,7 @@
             .main-grid { grid-template-columns: 1fr; }
         }
 
-        /* ============================================================
-           卡片
-           ============================================================ */
+        /* ===== 卡片 ===== */
         .card {
             background: rgba(255,255,255,0.02);
             backdrop-filter: blur(20px);
@@ -107,7 +93,6 @@
         }
 
         .card:hover { border-color: rgba(255,255,255,0.06); }
-
         .card .card-title {
             font-size: 0.7rem;
             font-weight: 600;
@@ -119,16 +104,9 @@
             align-items: center;
             gap: 8px;
         }
+        .card .card-title .accent { flex: 1; height: 1px; background: linear-gradient(90deg, rgba(255,255,255,0.04), transparent); }
 
-        .card .card-title .accent {
-            flex: 1;
-            height: 1px;
-            background: linear-gradient(90deg, rgba(255,255,255,0.04), transparent);
-        }
-
-        /* ============================================================
-           大屏信息
-           ============================================================ */
+        /* ===== 大屏显示 ===== */
         .main-display {
             min-height: 400px;
             display: flex;
@@ -143,29 +121,17 @@
             justify-content: center;
             padding: 20px 0;
             text-align: center;
+            min-height: 350px;
+            transition: all 0.5s ease;
         }
 
-        .main-display .display-content .big-icon {
-            font-size: 4rem;
-            margin-bottom: 8px;
-            opacity: 0.3;
-        }
-
-        .main-display .display-content .big-text {
-            font-size: 2.4rem;
-            font-weight: 800;
-            margin-bottom: 4px;
-        }
-
+        .main-display .display-content .big-icon { font-size: 4rem; margin-bottom: 8px; opacity: 0.3; }
+        .main-display .display-content .big-text { font-size: 2.4rem; font-weight: 800; margin-bottom: 4px; }
         .main-display .display-content .big-text.night { color: #4facfe; }
         .main-display .display-content .big-text.day { color: #F59E0B; }
         .main-display .display-content .big-text.death { color: #dc3545; }
-
-        .main-display .display-content .sub-text {
-            font-size: 1rem;
-            color: rgba(255,255,255,0.15);
-            letter-spacing: 0.06em;
-        }
+        .main-display .display-content .big-text.sheriff { color: #F59E0B; }
+        .main-display .display-content .sub-text { font-size: 1rem; color: rgba(255,255,255,0.15); letter-spacing: 0.06em; }
 
         .main-display .display-content .death-list {
             margin-top: 12px;
@@ -183,29 +149,67 @@
             color: #dc3545;
             font-weight: 600;
             font-size: 0.9rem;
+            animation: deathPulse 1.5s ease-in-out infinite;
         }
 
-        /* ============================================================
-           当前发言人
-           ============================================================ */
-        .speaker-display {
+        @@keyframes deathPulse {
+            0%, 100% { opacity: 0.6; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.05); }
+        }
+
+        /* ===== 暗夜/白天过渡特效 ===== */
+        .phase-transition {
+            position: fixed;
+            inset: 0;
+            z-index: 9997;
+            pointer-events: none;
+            display: none;
+        }
+
+        .phase-transition.active { display: block; animation: phaseFlash 1.2s ease-out; }
+
+        @@keyframes phaseFlash {
+            0% { background: rgba(0,0,0,0); }
+            30% { background: rgba(0,0,0,0.8); }
+            70% { background: rgba(0,0,0,0.8); }
+            100% { background: rgba(0,0,0,0); }
+        }
+
+        .phase-transition.night { background: rgba(0,0,20,0.95); animation: nightFall 1.5s ease; }
+        .phase-transition.day { background: rgba(255,255,200,0.2); animation: dayRise 1.5s ease; }
+
+        @@keyframes nightFall {
+            0% { opacity: 0; }
+            50% { opacity: 1; }
+            100% { opacity: 0.8; }
+        }
+
+        @@keyframes dayRise {
+            0% { opacity: 0.8; background: rgba(0,0,0,0.9); }
+            50% { opacity: 0.5; background: rgba(255,255,200,0.15); }
+            100% { opacity: 0; }
+        }
+
+        /* ===== 警长选举 ===== */
+        .sheriff-display {
             margin-top: 12px;
             padding: 12px 16px;
             border-radius: 14px;
-            background: rgba(139, 92, 246, 0.04);
-            border: 1px solid rgba(139, 92, 246, 0.04);
+            background: rgba(245, 158, 11, 0.04);
+            border: 1px solid rgba(245, 158, 11, 0.04);
             text-align: center;
             display: none;
         }
 
-        .speaker-display.show { display: block; }
-        .speaker-display .speaker-name { color: #8B5CF6; font-weight: 700; font-size: 1.1rem; }
-        .speaker-display .speaker-timer { color: rgba(255,255,255,0.06); font-size: 0.7rem; margin-top: 2px; }
-        .speaker-display .speaker-timer .time { color: #F59E0B; font-weight: 700; font-family: 'Courier New', monospace; }
+        .sheriff-display.show { display: block; animation: fadeIn 0.5s ease; }
+        .sheriff-display .sheriff-name { color: #F59E0B; font-weight: 700; font-size: 1.1rem; }
 
-        /* ============================================================
-           玩家状态列表
-           ============================================================ */
+        @@keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ===== 玩家状态 ===== */
         .player-status-list {
             max-height: 300px;
             overflow-y: auto;
@@ -213,7 +217,6 @@
             flex-direction: column;
             gap: 4px;
         }
-
         .player-status-list::-webkit-scrollbar { width: 3px; }
         .player-status-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.04); border-radius: 10px; }
 
@@ -228,24 +231,18 @@
             font-size: 0.75rem;
         }
 
-        .player-status-item:hover { background: rgba(255,255,255,0.02); }
-
         .player-status-item .seat { color: rgba(255,255,255,0.05); font-weight: 700; min-width: 20px; }
         .player-status-item .avatar { font-size: 0.9rem; }
         .player-status-item .name { flex: 1; color: rgba(255,255,255,0.3); }
-        .player-status-item .role { font-size: 0.6rem; padding: 0 6px; border-radius: 10px; opacity: 0.3; }
+        .player-status-item .role { font-size: 0.6rem; padding: 0 6px; border-radius: 10px; opacity: 0.2; }
         .player-status-item .status-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
         .player-status-item .status-dot.alive { background: #00FF88; }
         .player-status-item .status-dot.dead { background: #dc3545; }
         .player-status-item .status-dot.sheriff { background: #F59E0B; box-shadow: 0 0 20px rgba(245,158,11,0.1); }
 
-        .player-status-item.werewolf { border-color: rgba(220,53,69,0.04); }
-        .player-status-item.werewolf .role { color: #dc3545; opacity: 0.3; }
         .player-status-item.dead { opacity: 0.3; }
 
-        /* ============================================================
-           控制按钮
-           ============================================================ */
+        /* ===== 控制按钮 ===== */
         .control-buttons {
             display: flex;
             gap: 8px;
@@ -270,63 +267,22 @@
             gap: 6px;
         }
 
-        .btn-control.primary {
-            background: linear-gradient(135deg, #8B5CF6, #EC4899);
-            color: #fff;
-        }
+        .btn-control.primary { background: linear-gradient(135deg, #8B5CF6, #EC4899); color: #fff; }
+        .btn-control.primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 40px rgba(139,92,246,0.15); }
+        .btn-control.primary:disabled { opacity: 0.3; cursor: not-allowed; transform: none !important; }
 
-        .btn-control.primary:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 40px rgba(139, 92, 246, 0.15);
-        }
+        .btn-control.success { background: linear-gradient(135deg, #00FF88, #00F0FF); color: #05050F; }
+        .btn-control.success:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 40px rgba(0,255,136,0.1); }
 
-        .btn-control.success {
-            background: linear-gradient(135deg, #00FF88, #00F0FF);
-            color: #05050F;
-        }
+        .btn-control.danger { background: rgba(255,0,110,0.08); border: 1px solid rgba(255,0,110,0.04); color: rgba(255,0,110,0.3); }
+        .btn-control.danger:hover:not(:disabled) { background: rgba(255,0,110,0.12); }
 
-        .btn-control.success:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 40px rgba(0, 255, 136, 0.1);
-        }
+        .btn-control.secondary { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.04); color: rgba(255,255,255,0.2); }
+        .btn-control.secondary:hover:not(:disabled) { background: rgba(255,255,255,0.04); color: #fff; }
 
-        .btn-control.danger {
-            background: rgba(255, 0, 110, 0.08);
-            border: 1px solid rgba(255, 0, 110, 0.04);
-            color: rgba(255, 0, 110, 0.3);
-        }
+        .btn-control:disabled { opacity: 0.3; cursor: not-allowed; transform: none !important; }
 
-        .btn-control.danger:hover:not(:disabled) {
-            background: rgba(255, 0, 110, 0.12);
-        }
-
-        .btn-control.secondary {
-            background: rgba(255,255,255,0.02);
-            border: 1px solid rgba(255,255,255,0.04);
-            color: rgba(255,255,255,0.2);
-        }
-
-        .btn-control.secondary:hover:not(:disabled) {
-            background: rgba(255,255,255,0.04);
-            color: #fff;
-        }
-
-        .btn-control:disabled {
-            opacity: 0.3;
-            cursor: not-allowed;
-            transform: none !important;
-        }
-
-        /* ============================================================
-           右侧面板
-           ============================================================ */
-        .side-panel {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
-
-        .side-panel .info-row {
+        .info-row {
             display: flex;
             justify-content: space-between;
             padding: 4px 0;
@@ -334,13 +290,17 @@
             font-size: 0.75rem;
             color: rgba(255,255,255,0.1);
         }
+        .info-row .label { color: rgba(255,255,255,0.04); }
+        .info-row .value { color: rgba(255,255,255,0.15); font-weight: 600; }
 
-        .side-panel .info-row .label { color: rgba(255,255,255,0.04); }
-        .side-panel .info-row .value { color: rgba(255,255,255,0.15); font-weight: 600; }
+        .phase-hint {
+            font-size: 0.55rem;
+            color: rgba(255,255,255,0.04);
+            text-align: center;
+            margin-top: 8px;
+        }
 
-        /* ============================================================
-           Toast
-           ============================================================ */
+        /* ===== Toast ===== */
         .toast-container {
             position: fixed;
             bottom: 20px;
@@ -360,22 +320,19 @@
             animation: toastIn 0.4s ease;
             font-size: 0.8rem;
             backdrop-filter: blur(20px);
-            background: rgba(10, 10, 30, 0.8);
+            background: rgba(10,10,30,0.8);
             border: 1px solid rgba(255,255,255,0.04);
         }
 
-        .toast-msg.success { background: rgba(0, 255, 136, 0.08); border-color: rgba(0, 255, 136, 0.04); color: #00FF88; }
-        .toast-msg.error { background: rgba(255, 0, 110, 0.08); border-color: rgba(255, 0, 110, 0.04); color: #FF006E; }
-        .toast-msg.info { background: rgba(0, 240, 255, 0.06); border-color: rgba(0, 240, 255, 0.04); color: #00F0FF; }
+        .toast-msg.success { background: rgba(0,255,136,0.08); border-color: rgba(0,255,136,0.04); color: #00FF88; }
+        .toast-msg.error { background: rgba(255,0,110,0.08); border-color: rgba(255,0,110,0.04); color: #FF006E; }
+        .toast-msg.info { background: rgba(0,240,255,0.06); border-color: rgba(0,240,255,0.04); color: #00F0FF; }
 
         @@keyframes toastIn {
             from { opacity: 0; transform: translateY(20px) scale(0.95); }
             to { opacity: 1; transform: translateY(0) scale(1); }
         }
 
-        /* ============================================================
-           响应式
-           ============================================================ */
         @@media (max-width: 768px) {
             body { padding: 10px; }
             .header .logo { font-size: 1.2rem; }
@@ -395,30 +352,22 @@
 </head>
 <body>
 
-    <!-- ============================================================
-         顶部
-         ============================================================ -->
     <div class="container">
+        <!-- 顶部 -->
         <div class="header">
             <div class="logo">
                 <span>🐺</span> 游戏控制中心
             </div>
             <div>
-                <span class="phase-badge" id="phaseBadge">
-                    ⏳ 等待开始
-                </span>
-                <span class="phase-badge" id="roundBadge" style="margin-left:8px;">
-                    第 0 天
-                </span>
+                <span class="phase-badge" id="phaseBadge">⏳ 等待开始</span>
+                <span class="phase-badge" style="margin-left:8px;" id="roundBadge">第 0 天</span>
             </div>
         </div>
 
-        <!-- ============================================================
-             主网格
-             ============================================================ -->
+        <!-- 主网格 -->
         <div class="main-grid">
 
-            <!-- ===== 大屏显示 ===== -->
+            <!-- 大屏显示 -->
             <div class="card main-display">
                 <div class="card-title">
                     📺 主屏幕
@@ -432,15 +381,14 @@
                     <div class="sub-text">✦ 所有玩家准备后自动开始 ✦</div>
                 </div>
 
-                <!-- 发言人显示 -->
-                <div class="speaker-display" id="speakerDisplay">
-                    <div class="speaker-name" id="speakerName">1 号玩家</div>
-                    <div class="speaker-timer">⏱ 剩余 <span class="time" id="speakerTimer">60</span> 秒</div>
+                <!-- 警长显示 -->
+                <div class="sheriff-display" id="sheriffDisplay">
+                    👑 警长：<span class="sheriff-name" id="sheriffName">-</span>
                 </div>
             </div>
 
-            <!-- ===== 右侧面板 ===== -->
-            <div class="side-panel">
+            <!-- 右侧面板 -->
+            <div class="side-panel" style="display:flex;flex-direction:column;gap:16px;">
 
                 <!-- 游戏信息 -->
                 <div class="card">
@@ -448,26 +396,11 @@
                         📊 游戏信息
                         <span class="accent"></span>
                     </div>
-                    <div class="info-row">
-                        <span class="label">存活</span>
-                        <span class="value" id="aliveCount">0</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="label">狼人</span>
-                        <span class="value" id="wolfCount">0</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="label">神职</span>
-                        <span class="value" id="godCount">0</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="label">平民</span>
-                        <span class="value" id="villagerCount">0</span>
-                    </div>
-                    <div class="info-row" style="border-bottom:none;">
-                        <span class="label">状态</span>
-                        <span class="value" id="gameStatusText" style="color:#00F0FF;">⚙️ 设置中</span>
-                    </div>
+                    <div class="info-row"><span class="label">存活</span><span class="value" id="aliveCount">0</span></div>
+                    <div class="info-row"><span class="label">狼人</span><span class="value" id="wolfCount">0</span></div>
+                    <div class="info-row"><span class="label">神职</span><span class="value" id="godCount">0</span></div>
+                    <div class="info-row"><span class="label">平民</span><span class="value" id="villagerCount">0</span></div>
+                    <div class="info-row" style="border-bottom:none;"><span class="label">状态</span><span class="value" id="gameStatusText" style="color:#00F0FF;">⚙️ 设置中</span></div>
                 </div>
 
                 <!-- 控制按钮 -->
@@ -477,21 +410,13 @@
                         <span class="accent"></span>
                     </div>
 
-                    <div class="control-buttons" id="controlButtons">
-                        <button class="btn-control primary" id="btnNextPhase" onclick="nextPhase()">
-                            ▶️ 下一步
-                        </button>
-                        <button class="btn-control secondary" onclick="skipPhase()">
-                            ⏭️ 跳过
-                        </button>
-                        <button class="btn-control danger" onclick="endGame()">
-                            🏁 结束游戏
-                        </button>
+                    <div class="control-buttons">
+                        <button class="btn-control primary" id="btnNextPhase" onclick="nextPhase()">▶️ 下一步</button>
+                        <button class="btn-control secondary" onclick="skipPhase()">⏭️ 跳过</button>
+                        <button class="btn-control danger" onclick="endGame()">🏁 结束</button>
                     </div>
 
-                    <div style="margin-top:8px;font-size:0.55rem;color:rgba(255,255,255,0.04);text-align:center;" id="phaseHint">
-                        💡 点击"下一步"推进游戏流程
-                    </div>
+                    <div class="phase-hint" id="phaseHint">💡 点击"下一步"推进游戏流程</div>
                 </div>
 
                 <!-- 玩家状态 -->
@@ -510,23 +435,17 @@
         </div>
     </div>
 
-    <!-- ============================================================
-         Toast
-         ============================================================ -->
+    <!-- 暗夜/白天过渡 -->
+    <div class="phase-transition" id="phaseTransition"></div>
+
+    <!-- Toast -->
     <div class="toast-container" id="toastContainer"></div>
 
-    <!-- ============================================================
-         Scripts
-         ============================================================ -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js">
-    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
 
     <script>
-        // ============================================================
-        // 配置
-        // ============================================================
+        var roomId = '@roomId';
         var config = {
-            roomId: '@Context.Request.Query["roomId"]',
             phase: 'waiting',
             day: 0,
             night: 0,
@@ -536,16 +455,16 @@
             godCount: 0,
             villagerCount: 0,
             isGameOver: false,
-            speakerTimer: null,
-            speechTimeLeft: 60
+            isSheriff: false,
+            sheriffId: -1
         };
 
-        // 阶段映射
         var phaseMap = {
             'setup': { label: '⚙️ 设置中', icon: '⚙️' },
             'seating': { label: '🪑 就坐中', icon: '🪑' },
             'dealing': { label: '🃏 发牌中', icon: '🃏' },
             'revealing': { label: '📩 查看身份', icon: '📩' },
+            'sheriff_election': { label: '👑 警长竞选', icon: '👑' },
             'night_guard': { label: '🌙 守卫行动', icon: '🛡️' },
             'night_seer': { label: '🌙 预言家行动', icon: '🔮' },
             'night_werewolf': { label: '🌙 狼人行动', icon: '🐺' },
@@ -554,13 +473,12 @@
             'day_announce': { label: '☀️ 公布死讯', icon: '📢' },
             'day_speech': { label: '☀️ 发言阶段', icon: '📢' },
             'day_voting': { label: '☀️ 投票阶段', icon: '🗳️' },
+            'day_pk': { label: '☀️ PK发言', icon: '⚖️' },
             'day_resolve': { label: '☀️ 公布结果', icon: '⚖️' },
+            'hunter_shoot': { label: '🔫 猎人开枪', icon: '🔫' },
             'gameover': { label: '🏁 游戏结束', icon: '🏁' }
         };
 
-        // ============================================================
-        // SignalR 连接
-        // ============================================================
         var connection = null;
 
         function connectSignalR() {
@@ -570,44 +488,71 @@
                     .configureLogging(signalR.LogLevel.Information)
                     .build();
 
-                // ===== 玩家列表更新 =====
                 connection.on('PlayerListUpdate', function(players) {
                     config.players = players;
                     updatePlayerList(players);
                     updateStats(players);
                 });
 
-                // ===== 阶段更新 =====
                 connection.on('PhaseUpdate', function(phase, day, night) {
                     config.phase = phase;
-                    config.day = day;
-                    config.night = night;
+                    config.day = day || 0;
+                    config.night = night || 0;
                     updatePhaseDisplay(phase, day, night);
                     updateDisplay(phase);
                 });
 
-                // ===== 发言人更新 =====
-                connection.on('SpeakerUpdate', function(seatNumber, nickname) {
-                    startSpeakerTimer(seatNumber, nickname);
+                connection.on('VoiceAnnounce', function(message) {
+                    showDisplayMessage(message);
                 });
 
-                // ===== 游戏结束 =====
+                connection.on('DisplayMessage', function(message) {
+                    showDisplayMessage(message);
+                });
+
+                connection.on('DeathAnnounce', function(data) {
+                    if (data.deaths && data.deaths.length > 0) {
+                        showDeathAnnounce(data.deaths, data.message);
+                    } else {
+                        showDisplayMessage('🕊️ ' + data.message);
+                    }
+                });
+
+                connection.on('SheriffElected', function(data) {
+                    config.isSheriff = true;
+                    config.sheriffId = data.seatNumber;
+                    document.getElementById('sheriffDisplay').classList.add('show');
+                    document.getElementById('sheriffName').textContent = data.seatNumber + '号 ' + data.nickname;
+                    showDisplayMessage('👑 ' + data.seatNumber + '号当选警长！');
+                    showToast('👑 ' + data.seatNumber + '号当选警长！', 'success');
+                });
+
+                connection.on('SheriffCandidateUpdate', function(candidates) {
+                    showDisplayMessage('👑 参与竞选：' + candidates.join('、') + ' 号');
+                });
+
                 connection.on('GameOver', function(winner) {
                     config.isGameOver = true;
-                    showGameOver(winner);
+                    var msg = winner === '好人' ? '⭐ 好人阵营胜利！' : '🐺 狼人阵营胜利！';
+                    showDisplayMessage('🏆 ' + msg);
+                    document.getElementById('phaseBadge').textContent = '🏁 ' + msg;
+                    document.getElementById('gameStatusText').textContent = '🏁 ' + msg;
+                    document.getElementById('btnNextPhase').disabled = true;
+                    showToast('🏆 ' + msg, 'success');
+
+                    // 胜利特效
+                    showVictoryEffect(winner);
                 });
 
-                // ===== 语音播报 =====
-                connection.on('VoiceAnnounce', function(message, importance) {
-                    // 显示在大屏上
-                    showAnnouncement(message);
+                connection.on('PlayerDeath', function(data) {
+                    showDisplayMessage('💀 ' + data.seatNumber + '号 ' + data.nickname + ' 死亡');
+                    showDeathEffect(data.seatNumber);
                 });
 
                 connection.start()
                     .then(function() {
                         console.log('✅ SignalR 已连接');
-                        // 加入控制中心
-                        connection.invoke('JoinControlCenter', config.roomId);
+                        connection.invoke('JoinControlCenter', roomId);
                     })
                     .catch(function(err) {
                         console.error('❌ SignalR 连接失败:', err);
@@ -619,9 +564,6 @@
             }
         }
 
-        // ============================================================
-        // 更新玩家列表
-        // ============================================================
         function updatePlayerList(players) {
             var container = document.getElementById('playerStatusList');
             if (!players || players.length === 0) {
@@ -634,45 +576,32 @@
             var sorted = players.sort(function(a, b) { return a.seatNumber - b.seatNumber; });
 
             sorted.forEach(function(p) {
+                if (p.isSpectator) return;
                 var isAlive = p.isAlive;
                 var isSheriff = p.isSheriff;
-                var isWerewolf = p.role === 'Werewolf';
-                var roleDisplay = p.roleDisplay || '平民';
 
-                html += '<div class="player-status-item ' + (!isAlive ? 'dead' : '') + (isWerewolf ? ' werewolf' : '') + '">';
+                html += '<div class="player-status-item ' + (!isAlive ? 'dead' : '') + '">';
                 html += '<span class="seat">#' + p.seatNumber + '</span>';
                 html += '<span class="avatar">' + (p.avatarEmoji || '🧑') + '</span>';
                 html += '<span class="name">' + p.nickname + '</span>';
-
-                if (isSheriff) {
-                    html += '<span class="status-dot sheriff"></span>';
-                }
-
-                if (!isAlive) {
-                    html += '<span style="font-size:0.5rem;color:#dc3545;">💀</span>';
-                } else {
-                    html += '<span class="status-dot alive"></span>';
-                }
-
-                html += '<span class="role">' + roleDisplay + '</span>';
+                if (isSheriff) { html += '<span class="status-dot sheriff"></span>'; }
+                html += '<span class="status-dot ' + (isAlive ? 'alive' : 'dead') + '"></span>';
+                html += '<span class="role">' + (p.role || '') + '</span>';
                 html += '</div>';
             });
 
             container.innerHTML = html;
-            document.getElementById('playerCountDisplay').textContent = sorted.length;
+            document.getElementById('playerCountDisplay').textContent = sorted.filter(p => !p.isSpectator).length;
         }
 
-        // ============================================================
-        // 更新统计
-        // ============================================================
         function updateStats(players) {
-            var alive = players.filter(function(p) { return p.isAlive; });
-            var wolves = players.filter(function(p) { return p.role === 'Werewolf' && p.isAlive; });
+            var alive = players.filter(function(p) { return p.isAlive && !p.isSpectator; });
+            var wolves = players.filter(function(p) { return p.role === 'Werewolf' && p.isAlive && !p.isSpectator; });
             var gods = players.filter(function(p) {
                 var role = p.role;
-                return role !== 'Werewolf' && role !== 'Villager' && p.isAlive;
+                return role !== 'Werewolf' && role !== 'Villager' && p.isAlive && !p.isSpectator;
             });
-            var villagers = players.filter(function(p) { return p.role === 'Villager' && p.isAlive; });
+            var villagers = players.filter(function(p) { return p.role === 'Villager' && p.isAlive && !p.isSpectator; });
 
             config.aliveCount = alive.length;
             config.wolfCount = wolves.length;
@@ -685,34 +614,37 @@
             document.getElementById('villagerCount').textContent = villagers.length;
         }
 
-        // ============================================================
-        // 更新阶段显示
-        // ============================================================
         function updatePhaseDisplay(phase, day, night) {
             var badge = document.getElementById('phaseBadge');
             var roundBadge = document.getElementById('roundBadge');
-            var statusText = document.getElementById('gameStatusText');
 
             var info = phaseMap[phase] || { label: phase, icon: '❓' };
             badge.textContent = info.icon + ' ' + info.label;
 
-            if (phase === 'day_speech' || phase === 'day_voting' || phase === 'day_announce' || phase === 'day_resolve') {
-                roundBadge.textContent = '☀️ 第 ' + day + ' 天';
+            if (phase === 'sheriff_election') {
+                roundBadge.textContent = '👑 警长竞选';
+                badge.style.color = '#F59E0B';
+            } else if (phase === 'day_announce' || phase === 'day_speech' || phase === 'day_voting' || phase === 'day_pk' ||
+                phase === 'day_resolve' || phase === 'hunter_shoot') {
+                roundBadge.textContent = '☀️ 第 ' + (day || 0) + ' 天';
                 badge.style.color = '#F59E0B';
             } else if (phase.startsWith('night') || phase === 'night_resolve') {
-                roundBadge.textContent = '🌙 第 ' + night + ' 夜';
+                roundBadge.textContent = '🌙 第 ' + (night || 0) + ' 夜';
                 badge.style.color = '#4facfe';
+            } else if (phase === 'gameover') {
+                roundBadge.textContent = '🏁 游戏结束';
+                badge.style.color = '#EC4899';
             } else {
                 roundBadge.textContent = '⏳ 准备中';
                 badge.style.color = 'rgba(255,255,255,0.15)';
             }
 
-            // 状态文本
             var statusMap = {
                 'setup': '⚙️ 设置中',
                 'seating': '🪑 等待玩家就坐',
                 'dealing': '🃏 发牌中',
                 'revealing': '📩 玩家查看身份',
+                'sheriff_election': '👑 警长竞选',
                 'night_guard': '🛡️ 守卫行动中...',
                 'night_seer': '🔮 预言家查验中...',
                 'night_werewolf': '🐺 狼人行动中...',
@@ -721,288 +653,207 @@
                 'day_announce': '📢 公布死讯',
                 'day_speech': '📢 发言阶段',
                 'day_voting': '🗳️ 投票阶段',
+                'day_pk': '⚖️ PK发言',
                 'day_resolve': '⚖️ 公布结果',
+                'hunter_shoot': '🔫 猎人开枪',
                 'gameover': '🏁 游戏结束'
             };
 
-            statusText.textContent = statusMap[phase] || phase;
+            document.getElementById('gameStatusText').textContent = statusMap[phase] || phase;
         }
 
-        // ============================================================
-        // 更新大屏显示
-        // ============================================================
         function updateDisplay(phase) {
             var content = document.getElementById('displayContent');
-            var speakerDisplay = document.getElementById('speakerDisplay');
-
-            // 隐藏发言人显示
-            speakerDisplay.classList.remove('show');
 
             switch (phase) {
                 case 'setup':
                 case 'seating':
-                    content.innerHTML = `
-                        <span class="big-icon">🐺</span>
-                        <div class="big-text" style="color:rgba(255,255,255,0.05);">等待开始</div>
-                        <div class="sub-text">✦ 所有玩家准备后自动开始 ✦</div>
-                    `;
+                    content.innerHTML =
+                        `<span class="big-icon">🐺</span><div class="big-text" style="color:rgba(255,255,255,0.05);">等待开始</div><div class="sub-text">✦ 所有玩家准备后自动开始 ✦</div>`;
                     break;
 
                 case 'dealing':
-                    content.innerHTML = `
-                        <span class="big-icon">🃏</span>
-                        <div class="big-text" style="color:#8B5CF6;">洗牌发牌中...</div>
-                        <div class="sub-text">✦ 请稍候 ✦</div>
-                    `;
+                    content.innerHTML =
+                        `<span class="big-icon">🃏</span><div class="big-text" style="color:#8B5CF6;">洗牌发牌中...</div><div class="sub-text">✦ 请稍候 ✦</div>`;
                     break;
 
                 case 'revealing':
-                    content.innerHTML = `
-                        <span class="big-icon">📩</span>
-                        <div class="big-text" style="color:#8B5CF6;">查看你的身份</div>
-                        <div class="sub-text">✦ 请在手机上查看身份牌 ✦</div>
-                    `;
+                    content.innerHTML =
+                        `<span class="big-icon">📩</span><div class="big-text" style="color:#8B5CF6;">查看你的身份</div><div class="sub-text">✦ 请在手机上查看身份牌 ✦</div>`;
+                    break;
+
+                case 'sheriff_election':
+                    content.innerHTML =
+                        `<span class="big-icon">👑</span><div class="big-text sheriff">警长竞选</div><div class="sub-text">✦ 请参与竞选的玩家发言 ✦</div>`;
                     break;
 
                 case 'night_guard':
-                    content.innerHTML = `
-                        <span class="big-icon">🛡️</span>
-                        <div class="big-text night">守卫请行动</div>
-                        <div class="sub-text">✦ 守卫请在手机上选择守护目标 ✦</div>
-                    `;
+                    content.innerHTML =
+                        `<span class="big-icon">🛡️</span><div class="big-text night">守卫请行动</div><div class="sub-text">✦ 守卫请在手机上选择守护目标 ✦</div>`;
                     break;
 
                 case 'night_seer':
-                    content.innerHTML = `
-                        <span class="big-icon">🔮</span>
-                        <div class="big-text night">预言家请行动</div>
-                        <div class="sub-text">✦ 预言家请在手机上选择查验目标 ✦</div>
-                    `;
+                    content.innerHTML =
+                        `<span class="big-icon">🔮</span><div class="big-text night">预言家请行动</div><div class="sub-text">✦ 预言家请在手机上选择查验目标 ✦</div>`;
                     break;
 
                 case 'night_werewolf':
-                    content.innerHTML = `
-                        <span class="big-icon">🐺</span>
-                        <div class="big-text night">狼人请行动</div>
-                        <div class="sub-text">✦ 所有狼人请在手机上统一选择杀害目标 ✦</div>
-                    `;
+                    content.innerHTML =
+                        `<span class="big-icon">🐺</span><div class="big-text night">狼人请行动</div><div class="sub-text">✦ 所有狼人请在手机上统一选择杀害目标 ✦</div>`;
                     break;
 
                 case 'night_witch':
-                    content.innerHTML = `
-                        <span class="big-icon">🧪</span>
-                        <div class="big-text night">女巫请行动</div>
-                        <div class="sub-text">✦ 女巫请在手机上选择解药或毒药 ✦</div>
-                    `;
+                    content.innerHTML =
+                        `<span class="big-icon">🧪</span><div class="big-text night">女巫请行动</div><div class="sub-text">✦ 女巫请在手机上选择解药或毒药 ✦</div>`;
                     break;
 
                 case 'night_resolve':
-                    content.innerHTML = `
-                        <span class="big-icon">⚖️</span>
-                        <div class="big-text night">结算中...</div>
-                        <div class="sub-text">✦ 正在计算今晚结果 ✦</div>
-                    `;
+                    content.innerHTML =
+                        `<span class="big-icon">⚖️</span><div class="big-text night">结算中...</div><div class="sub-text">✦ 正在计算今晚结果 ✦</div>`;
                     break;
 
                 case 'day_announce':
-                    content.innerHTML = `
-                        <span class="big-icon">📢</span>
-                        <div class="big-text day">天亮了</div>
-                        <div class="sub-text" id="deathAnnounce">✦ 昨晚是平安夜 ✦</div>
-                        <div class="death-list" id="deathList"></div>
-                    `;
-                    // 等待后端推送死亡信息
+                    content.innerHTML =
+                        `<span class="big-icon">📢</span><div class="big-text day">天亮了</div><div class="sub-text" id="deathAnnounce">✦ 昨晚是平安夜 ✦</div><div class="death-list" id="deathList"></div>`;
                     break;
 
                 case 'day_speech':
-                    content.innerHTML = `
-                        <span class="big-icon">📢</span>
-                        <div class="big-text day">发言阶段</div>
-                        <div class="sub-text">✦ 请按顺序发言 ✦</div>
-                    `;
-                    // 发言人由 SpeakerUpdate 控制
+                    content.innerHTML =
+                        `<span class="big-icon">📢</span><div class="big-text day">发言阶段</div><div class="sub-text">✦ 请按顺序发言 ✦</div>`;
                     break;
 
                 case 'day_voting':
-                    content.innerHTML = `
-                        <span class="big-icon">🗳️</span>
-                        <div class="big-text day">投票阶段</div>
-                        <div class="sub-text">✦ 请在手机上投票放逐 ✦</div>
-                    `;
+                    content.innerHTML =
+                        `<span class="big-icon">🗳️</span><div class="big-text day">投票阶段</div><div class="sub-text">✦ 请在手机上投票放逐 ✦</div>`;
+                    break;
+
+                case 'day_pk':
+                    content.innerHTML =
+                        `<span class="big-icon">⚖️</span><div class="big-text day">PK发言</div><div class="sub-text">✦ 平票，PK玩家发言 ✦</div>`;
                     break;
 
                 case 'day_resolve':
-                    content.innerHTML = `
-                        <span class="big-icon">⚖️</span>
-                        <div class="big-text day">公布结果</div>
-                        <div class="sub-text" id="voteResult">✦ 等待投票结果 ✦</div>
-                    `;
+                    content.innerHTML =
+                        `<span class="big-icon">⚖️</span><div class="big-text day">公布结果</div><div class="sub-text" id="voteResult">✦ 等待投票结果 ✦</div>`;
+                    break;
+
+                case 'hunter_shoot':
+                    content.innerHTML =
+                        `<span class="big-icon">🔫</span><div class="big-text" style="color:#F59E0B;">猎人开枪</div><div class="sub-text">✦ 猎人选择开枪目标 ✦</div>`;
                     break;
 
                 case 'gameover':
-                    // 由 gameOver 处理
                     break;
 
                 default:
-                    content.innerHTML = `
-                        <span class="big-icon">🐺</span>
-                        <div class="big-text" style="color:rgba(255,255,255,0.05);">游戏中</div>
-                        <div class="sub-text">✦ 等待下一阶段 ✦</div>
-                    `;
+                    content.innerHTML =
+                        `<span class="big-icon">🐺</span><div class="big-text" style="color:rgba(255,255,255,0.05);">游戏中</div><div class="sub-text">✦ 等待下一阶段 ✦</div>`;
             }
         }
 
-        // ============================================================
-        // 发言人计时器
-        // ============================================================
-        function startSpeakerTimer(seatNumber, nickname) {
-            var speakerDisplay = document.getElementById('speakerDisplay');
-            var speakerName = document.getElementById('speakerName');
-            var speakerTimer = document.getElementById('speakerTimer');
-
-            speakerName.textContent = seatNumber + ' 号 ' + nickname;
-            speakerTimer.textContent = '60';
-            speakerDisplay.classList.add('show');
-
-            // 更新大屏内容
+        function showDeathAnnounce(deaths, message) {
             var content = document.getElementById('displayContent');
-            content.innerHTML = `
-                <span class="big-icon">📢</span>
-                <div class="big-text day">正在发言</div>
-                <div class="sub-text">✦ ${seatNumber} 号 ${nickname} ✦</div>
-            `;
+            var list = document.getElementById('deathList');
 
-            // 倒计时
-            var timeLeft = 60;
-            if (config.speakerTimer) {
-                clearInterval(config.speakerTimer);
+            if (!list) {
+                // 如果还没有死亡列表，重建内容
+                var html =
+                    `<span class="big-icon">📢</span><div class="big-text day">天亮了</div><div class="sub-text">${message}</div><div class="death-list" id="deathList">`;
+                deaths.forEach(function(d) {
+                    html += `<span class="death-item">💀 ${d}</span>`;
+                });
+                html += `</div>`;
+                content.innerHTML = html;
+                return;
             }
 
-            config.speakerTimer = setInterval(function() {
-                timeLeft--;
-                speakerTimer.textContent = timeLeft;
+            // 更新现有列表
+            list.innerHTML = '';
+            deaths.forEach(function(d) {
+                var item = document.createElement('span');
+                item.className = 'death-item';
+                item.textContent = '💀 ' + d;
+                list.appendChild(item);
+            });
 
-                if (timeLeft <= 10) {
-                    speakerTimer.style.color = '#dc3545';
-                } else {
-                    speakerTimer.style.color = '#F59E0B';
-                }
-
-                if (timeLeft <= 0) {
-                    clearInterval(config.speakerTimer);
-                    speakerTimer.textContent = '0';
-                    // 自动下一步
-                    document.getElementById('btnNextPhase').click();
-                }
-            }, 1000);
+            var subText = content.querySelector('.sub-text');
+            if (subText) subText.textContent = message;
         }
 
-        // ============================================================
-        // 显示公告
-        // ============================================================
-        function showAnnouncement(message) {
+        function showDisplayMessage(message) {
             var content = document.getElementById('displayContent');
+            var existing = content.querySelector('.display-message');
+            if (existing) existing.remove();
 
-            // 临时显示公告
-            var announceDiv = document.createElement('div');
-            announceDiv.className = 'sub-text';
-            announceDiv.style.cssText = 'margin-top:4px;color:#8B5CF6;font-weight:600;animation:fadeIn 0.5s ease;';
-            announceDiv.textContent = '🔊 ' + message;
+            var msgDiv = document.createElement('div');
+            msgDiv.className = 'sub-text display-message';
+            msgDiv.style.cssText = 'margin-top:4px;color:#8B5CF6;font-weight:600;animation:fadeIn 0.5s ease;';
+            msgDiv.textContent = '🔊 ' + message;
 
-            // 如果内容中已有 sub-text，替换
-            var existing = content.querySelector('.sub-text:last-child');
-            if (existing && existing.textContent.includes('✦')) {
-                // 保留最后一个
+            // 如果内容中已有 sub-text，在它后面插入
+            var subText = content.querySelector('.sub-text:last-child');
+            if (subText && subText !== msgDiv) {
+                content.appendChild(msgDiv);
+            } else {
+                content.appendChild(msgDiv);
             }
-
-            // 添加公告
-            content.appendChild(announceDiv);
 
             setTimeout(function() {
-                announceDiv.remove();
-            }, 5000);
+                if (msgDiv.parentNode) msgDiv.remove();
+            }, 8000);
         }
 
-        // ============================================================
-        // 游戏结束
-        // ============================================================
-        function showGameOver(winner) {
-            var content = document.getElementById('displayContent');
-            var isWerewolfWin = winner === 'werewolf';
-
-            content.innerHTML = `
-                <span class="big-icon">${isWerewolfWin ? '🐺' : '🏆'}</span>
-                <div class="big-text" style="color:${isWerewolfWin ? '#dc3545' : '#F59E0B'};">
-                    ${isWerewolfWin ? '🐺 狼人胜利！' : '⭐ 好人胜利！'}
-                </div>
-                <div class="sub-text">✦ 游戏结束 ✦</div>
-            `;
-
-            document.getElementById('phaseBadge').textContent = '🏁 游戏结束';
-            document.getElementById('gameStatusText').textContent = '🏁 游戏结束';
-            document.getElementById('btnNextPhase').disabled = true;
-            document.getElementById('phaseHint').textContent = '🏁 游戏已结束，点击"结束游戏"重新开始';
+        function showDeathEffect(seatNumber) {
+            // 简单红色闪光
+            var flash = document.createElement('div');
+            flash.style.cssText =
+                'position:fixed;inset:0;z-index:9996;background:rgba(220,53,69,0.05);pointer-events:none;animation:deathFlash 0.8s ease-out;';
+            document.body.appendChild(flash);
+            setTimeout(function() { flash.remove(); }, 800);
         }
 
-        // ============================================================
-        // 控制按钮
-        // ============================================================
+        function showVictoryEffect(winner) {
+            var color = winner === '好人' ? '#F59E0B' : '#dc3545';
+            for (var i = 0; i < 20; i++) {
+                setTimeout(function() {
+                    var particle = document.createElement('div');
+                    var size = Math.random() * 10 + 5;
+                    var x = Math.random() * window.innerWidth;
+                    var y = Math.random() * window.innerHeight;
+                    particle.style.cssText =
+                        `position:fixed;z-index:9998;pointer-events:none;width:${size}px;height:${size}px;border-radius:50%;background:${color};left:${x}px;top:${y}px;animation:particleRise ${2 + Math.random() * 2}s ease-out forwards;opacity:0.8;`;
+                    document.body.appendChild(particle);
+                    setTimeout(function() { particle.remove(); }, 4000);
+                }, i * 100);
+            }
+        }
+
+        // ===== 控制按钮 =====
         function nextPhase() {
-            if (config.isGameOver) {
-                showToast('⚠️ 游戏已结束，请重新开始', 'warning');
-                return;
-            }
-
-            if (!connection) {
-                showToast('⚠️ 未连接', 'error');
-                return;
-            }
-
-            connection.invoke('NextPhase', config.roomId)
-                .catch(function(err) {
-                    console.error('下一步失败:', err);
-                    showToast('操作失败: ' + err, 'error');
-                });
+            if (config.isGameOver) { showToast('⚠️ 游戏已结束', 'warning'); return; }
+            if (!connection) { showToast('⚠️ 未连接', 'error'); return; }
+            connection.invoke('NextPhase', roomId).catch(function(err) {
+                showToast('操作失败: ' + err, 'error');
+            });
         }
 
         function skipPhase() {
-            if (config.isGameOver) {
-                showToast('⚠️ 游戏已结束', 'warning');
-                return;
-            }
-
-            if (!connection) {
-                showToast('⚠️ 未连接', 'error');
-                return;
-            }
-
+            if (config.isGameOver) { showToast('⚠️ 游戏已结束', 'warning'); return; }
+            if (!connection) { showToast('⚠️ 未连接', 'error'); return; }
             if (!confirm('确定要跳过当前阶段吗？')) return;
-
-            connection.invoke('SkipPhase', config.roomId)
-                .catch(function(err) {
-                    console.error('跳过失败:', err);
-                    showToast('操作失败: ' + err, 'error');
-                });
+            connection.invoke('SkipPhase', roomId).catch(function(err) {
+                showToast('操作失败: ' + err, 'error');
+            });
         }
 
         function endGame() {
             if (!confirm('确定要结束本局游戏吗？')) return;
-
-            if (!connection) {
-                showToast('⚠️ 未连接', 'error');
-                return;
-            }
-
-            connection.invoke('EndGame', config.roomId)
-                .catch(function(err) {
-                    console.error('结束游戏失败:', err);
-                    showToast('操作失败: ' + err, 'error');
-                });
+            if (!connection) { showToast('⚠️ 未连接', 'error'); return; }
+            connection.invoke('EndGame', roomId).catch(function(err) {
+                showToast('操作失败: ' + err, 'error');
+            });
         }
 
-        // ============================================================
-        // Toast
-        // ============================================================
         function showToast(message, type) {
             type = type || 'info';
             var container = document.getElementById('toastContainer');
@@ -1017,9 +868,7 @@
             }, 3500);
         }
 
-        // ============================================================
-        // 初始化
-        // ============================================================
+        // ===== 初始化 =====
         document.addEventListener('DOMContentLoaded', function() {
             console.log('🎮 游戏控制中心启动...');
             connectSignalR();
