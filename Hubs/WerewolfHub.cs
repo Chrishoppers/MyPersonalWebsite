@@ -124,7 +124,8 @@ namespace MyPersonalWebsite.Hubs
                 IsAlive = true,
                 IsSpectator = false,
                 IsReady = false,
-                Role = RoleType.Villager
+                Role = RoleType.Villager,
+                IsHunterCanShoot = true
             };
 
             game.Players.Add(player);
@@ -186,6 +187,7 @@ namespace MyPersonalWebsite.Hubs
             {
                 players[i].Role = shuffledRoles[i];
                 players[i].HasRevealed = false;
+                players[i].IsHunterCanShoot = true;
             }
 
             foreach (var p in players)
@@ -235,6 +237,9 @@ namespace MyPersonalWebsite.Hubs
         {
             if (!_games.TryGetValue(roomId, out var game)) return;
             if (game.PlayerCount < 10 || game.Day > 0 || game.IsSheriffElection) return;
+
+            // 清理旧的竞选数据
+            _sheriffVotes.Remove(roomId, out _);
 
             game.IsSheriffElection = true;
             game.Phase = GamePhase.SheriffElection;
@@ -315,6 +320,7 @@ namespace MyPersonalWebsite.Hubs
             {
                 await PlayVoiceAnnounce(roomId, "无人竞选警长，本局无警长");
                 game.IsSheriffElection = false;
+                _sheriffVotes.Remove(roomId, out _);
                 await StartNight(roomId);
                 return;
             }
@@ -355,12 +361,23 @@ namespace MyPersonalWebsite.Hubs
         {
             if (!_games.TryGetValue(roomId, out var game)) return;
 
+            // 取消旧的定时器
+            CancelAutoTimer(roomId);
+
             game.Night++;
             _wolfVotes[roomId] = new Dictionary<int, int>();
             _wolfExplode[roomId] = false;
             _guardActions[roomId] = false;
             _seerActions[roomId] = false;
             _witchActions[roomId] = false;
+
+            // 重置玩家夜晚状态
+            foreach (var p in game.Players)
+            {
+                p.IsGuardProtected = false;
+                p.IsWitchSaved = false;
+                p.IsPoisoned = false;
+            }
 
             // 守卫行动
             game.Phase = GamePhase.NightGuard;
@@ -392,6 +409,10 @@ namespace MyPersonalWebsite.Hubs
             if (!_games.TryGetValue(roomId, out var game)) return;
             if (game.Phase == GamePhase.GameOver) return;
 
+            // 创建取消令牌
+            var cts = new CancellationTokenSource();
+            _autoTimers[roomId] = cts;
+
             // 获取速度倍数
             var speed = _speedMultiplier.TryGetValue(roomId, out var s) ? s : 1.0;
             var actualSeconds = (int)(seconds / speed);
@@ -400,6 +421,8 @@ namespace MyPersonalWebsite.Hubs
 
             for (int i = actualSeconds; i > 0; i--)
             {
+                if (cts.Token.IsCancellationRequested) return;
+
                 if (i <= 5)
                 {
                     await Clients.Group(roomId).SendAsync("DisplayMessage", $"⏱ {i}");
@@ -408,6 +431,7 @@ namespace MyPersonalWebsite.Hubs
                 // 检查暂停
                 while (_isPaused.TryGetValue(roomId, out var paused) && paused)
                 {
+                    if (cts.Token.IsCancellationRequested) return;
                     await Task.Delay(500);
                 }
 
@@ -419,12 +443,21 @@ namespace MyPersonalWebsite.Hubs
                     return;
                 }
 
-                await Task.Delay(1000);
+                await Task.Delay(1000, cts.Token);
             }
 
             // 超时自动推进
             await Clients.Group(roomId).SendAsync("DisplayMessage", "⏱ 时间到");
             await NextPhase(roomId);
+        }
+
+        private void CancelAutoTimer(string roomId)
+        {
+            if (_autoTimers.TryRemove(roomId, out var cts))
+            {
+                cts.Cancel();
+                cts.Dispose();
+            }
         }
 
         private bool CheckAllPlayersActed(string roomId)
@@ -439,16 +472,26 @@ namespace MyPersonalWebsite.Hubs
                 case GamePhase.NightGuard:
                     var guard = alivePlayers.FirstOrDefault(p => p.Role == RoleType.Guard);
                     return guard == null || _guardActions.ContainsKey(roomId);
+                    
                 case GamePhase.NightSeer:
                     var seer = alivePlayers.FirstOrDefault(p => p.Role == RoleType.Seer);
                     return seer == null || _seerActions.ContainsKey(roomId);
+                    
                 case GamePhase.NightWerewolf:
                     var wolves = alivePlayers.Where(p => p.Role == RoleType.Werewolf).ToList();
                     if (!wolves.Any()) return true;
-                    return _wolfVotes.ContainsKey(roomId) && _wolfVotes[roomId].Keys.Count >= wolves.Count;
+                    
+                    // 检查所有存活的狼人是否都已投票（排除已自爆的）
+                    var votedSeats = _wolfVotes.TryGetValue(roomId, out var votes) 
+                        ? votes.Keys.ToHashSet() 
+                        : new HashSet<int>();
+                    
+                    return wolves.All(w => votedSeats.Contains(w.SeatNumber));
+                    
                 case GamePhase.NightWitch:
                     var witch = alivePlayers.FirstOrDefault(p => p.Role == RoleType.Witch);
                     return witch == null || _witchActions.ContainsKey(roomId);
+                    
                 default:
                     return false;
             }
@@ -460,6 +503,12 @@ namespace MyPersonalWebsite.Hubs
         public async Task NextPhase(string roomId)
         {
             if (!_games.TryGetValue(roomId, out var game)) return;
+            
+            // 取消旧的定时器
+            CancelAutoTimer(roomId);
+            
+            // 检查游戏是否已结束
+            if (game.Phase == GamePhase.GameOver) return;
 
             switch (game.Phase)
             {
@@ -582,12 +631,13 @@ namespace MyPersonalWebsite.Hubs
             if (!_games.TryGetValue(roomId, out var game)) return;
 
             var player = game.Players.FirstOrDefault(p => p.PlayerId == playerId);
-            if (player == null || player.Role != RoleType.Guard) return;
+            if (player == null || player.Role != RoleType.Guard || !player.IsAlive) return;
 
             var target = game.Players.FirstOrDefault(p => p.SeatNumber == targetSeat);
             if (target == null || !target.IsAlive) return;
 
-            if (target.GuardProtectedNight == game.Night - 1)
+            // 检查连续守护（修复：增加 GuardProtectedNight > 0 判断）
+            if (target.GuardProtectedNight > 0 && target.GuardProtectedNight == game.Night - 1)
             {
                 await Clients.Caller.SendAsync("GuardResult", new { success = false, message = "不能连续守护同一个人" });
                 return;
@@ -605,6 +655,12 @@ namespace MyPersonalWebsite.Hubs
 
             await Clients.Group(roomId).SendAsync("DisplayMessage", $"{targetSeat}号已被守卫守护");
             await Clients.Caller.SendAsync("GuardResult", new { success = true, targetSeat });
+            
+            // 检查是否所有人都已行动
+            if (CheckAllPlayersActed(roomId))
+            {
+                await NextPhase(roomId);
+            }
         }
 
         // ============================================================
@@ -616,7 +672,7 @@ namespace MyPersonalWebsite.Hubs
             if (!_games.TryGetValue(roomId, out var game)) return;
 
             var player = game.Players.FirstOrDefault(p => p.PlayerId == playerId);
-            if (player == null || player.Role != RoleType.Seer) return;
+            if (player == null || player.Role != RoleType.Seer || !player.IsAlive) return;
 
             var target = game.Players.FirstOrDefault(p => p.SeatNumber == targetSeat);
             if (target == null || !target.IsAlive) return;
@@ -630,6 +686,12 @@ namespace MyPersonalWebsite.Hubs
                 isWerewolf = isWerewolf,
                 result = isWerewolf ? "🐺 狼人" : "⭐ 好人"
             });
+            
+            // 检查是否所有人都已行动
+            if (CheckAllPlayersActed(roomId))
+            {
+                await NextPhase(roomId);
+            }
         }
 
         // ============================================================
@@ -656,8 +718,10 @@ namespace MyPersonalWebsite.Hubs
                 await Clients.Client(w.ConnectionId).SendAsync("WolfVoteStatus", new { voted, total = wolves.Count });
             }
 
-            if (voted >= wolves.Count)
+            // 检查是否所有狼人都已投票
+            if (CheckAllPlayersActed(roomId))
             {
+                // 结算狼人投票结果
                 var voteCounts = _wolfVotes[roomId].Values.GroupBy(v => v)
                     .ToDictionary(g => g.Key, g => g.Count());
 
@@ -668,6 +732,8 @@ namespace MyPersonalWebsite.Hubs
                 _wolfVotes[roomId]["_result"] = selectedTarget;
 
                 await Clients.Group(roomId).SendAsync("DisplayMessage", $"狼人选择了 {selectedTarget} 号");
+                
+                await NextPhase(roomId);
             }
         }
 
@@ -680,7 +746,7 @@ namespace MyPersonalWebsite.Hubs
             if (!_games.TryGetValue(roomId, out var game)) return;
 
             var player = game.Players.FirstOrDefault(p => p.PlayerId == playerId);
-            if (player == null || player.Role != RoleType.Witch) return;
+            if (player == null || player.Role != RoleType.Witch || !player.IsAlive) return;
 
             _witchActions[roomId] = true;
 
@@ -707,6 +773,12 @@ namespace MyPersonalWebsite.Hubs
             }
 
             await Clients.Caller.SendAsync("WitchResult", new { success = true });
+            
+            // 检查是否所有人都已行动
+            if (CheckAllPlayersActed(roomId))
+            {
+                await NextPhase(roomId);
+            }
         }
 
         // ============================================================
@@ -817,6 +889,7 @@ namespace MyPersonalWebsite.Hubs
             _guardActions.Remove(roomId, out _);
             _seerActions.Remove(roomId, out _);
             _witchActions.Remove(roomId, out _);
+            _wolfExplode.Remove(roomId, out _);
 
             await Clients.Group(roomId).SendAsync("PlayerListUpdate", game.Players);
 
@@ -853,6 +926,7 @@ namespace MyPersonalWebsite.Hubs
             if (!_dayVotes.ContainsKey(roomId) || _dayVotes[roomId].Count == 0)
             {
                 await PlayVoiceAnnounce(roomId, "没有人投票，平安日");
+                _dayVotes.Remove(roomId, out _);
                 game.Phase = GamePhase.DayResolve;
                 await Clients.Group(roomId).SendAsync("PhaseUpdate", "day_resolve", game.Day, game.Night);
 
@@ -895,6 +969,7 @@ namespace MyPersonalWebsite.Hubs
                     // 检查猎人
                     if (player.Role == RoleType.Hunter && player.IsHunterCanShoot)
                     {
+                        player.IsHunterCanShoot = false; // 防止多次开枪
                         game.Phase = GamePhase.HunterShoot;
                         await Clients.Group(roomId).SendAsync("PhaseUpdate", "hunter_shoot", game.Day, game.Night);
                         await PlayVoiceAnnounce(roomId, "猎人发动技能，请选择开枪目标");
@@ -938,6 +1013,8 @@ namespace MyPersonalWebsite.Hubs
         {
             if (!_games.TryGetValue(roomId, out var game)) return;
 
+            // 清理旧数据
+            _dayVotes.Remove(roomId, out _);
             _dayVotes[roomId] = new Dictionary<int, int>();
 
             foreach (var p in game.AlivePlayers)
@@ -988,10 +1065,36 @@ namespace MyPersonalWebsite.Hubs
                 var player = game.Players.FirstOrDefault(p => p.SeatNumber == eliminated);
                 if (player != null && player.IsAlive)
                 {
+                    // 检查白痴
+                    if (player.Role == RoleType.Fool && !player.IsFoolSkillUsed)
+                    {
+                        await Clients.Group(roomId).SendAsync("DisplayMessage", $"{eliminated}号白痴发动技能，翻牌免死");
+                        player.IsFoolSkillUsed = true;
+                        await Clients.Group(roomId).SendAsync("PlayerListUpdate", game.Players);
+
+                        if (await CheckGameOver(roomId)) return;
+                        _ = Task.Delay(3000).ContinueWith(async _ => { await StartNight(roomId); });
+                        return;
+                    }
+
                     player.IsAlive = false;
                     await Clients.Group(roomId).SendAsync("DisplayMessage", $"{eliminated}号被放逐出局");
                     await Clients.Group(roomId).SendAsync("PlayerDeath", new { seatNumber = eliminated, nickname = player.Nickname });
                     await Clients.Group(roomId).SendAsync("PlayerListUpdate", game.Players);
+
+                    // 检查猎人
+                    if (player.Role == RoleType.Hunter && player.IsHunterCanShoot)
+                    {
+                        player.IsHunterCanShoot = false;
+                        game.Phase = GamePhase.HunterShoot;
+                        await Clients.Group(roomId).SendAsync("PhaseUpdate", "hunter_shoot", game.Day, game.Night);
+                        await PlayVoiceAnnounce(roomId, "猎人发动技能，请选择开枪目标");
+
+                        var targets2 = game.AlivePlayers.Select(p => p.SeatNumber).ToList();
+                        await Clients.Client(player.ConnectionId).SendAsync("HunterShootAction", new { targets = targets2 });
+                        _ = StartAutoTimer(roomId, 20, "猎人开枪");
+                        return;
+                    }
 
                     if (await CheckGameOver(roomId)) return;
                     _ = Task.Delay(3000).ContinueWith(async _ => { await StartNight(roomId); });
@@ -1027,6 +1130,9 @@ namespace MyPersonalWebsite.Hubs
             await Clients.Group(roomId).SendAsync("PlayerDeath", new { seatNumber = targetSeat, nickname = target.Nickname });
             await Clients.Group(roomId).SendAsync("PlayerListUpdate", game.Players);
 
+            // 取消猎人开枪计时器
+            CancelAutoTimer(roomId);
+
             if (await CheckGameOver(roomId)) return;
 
             _ = Task.Delay(3000).ContinueWith(async _ =>
@@ -1038,6 +1144,10 @@ namespace MyPersonalWebsite.Hubs
         private async Task ResolveHunterShoot(string roomId)
         {
             if (!_games.TryGetValue(roomId, out var game)) return;
+            
+            // 超时未开枪，默认不开枪
+            await Clients.Group(roomId).SendAsync("DisplayMessage", "猎人未在时间内开枪，跳过");
+            
             game.Phase = GamePhase.DayResolve;
 
             if (await CheckGameOver(roomId)) return;
@@ -1053,6 +1163,9 @@ namespace MyPersonalWebsite.Hubs
         private async Task<bool> CheckGameOver(string roomId)
         {
             if (!_games.TryGetValue(roomId, out var game)) return true;
+
+            // 取消正在运行的定时器
+            CancelAutoTimer(roomId);
 
             var alivePlayers = game.AlivePlayers;
             var wolves = game.Werewolves;
@@ -1155,12 +1268,25 @@ namespace MyPersonalWebsite.Hubs
         {
             if (!_games.TryGetValue(roomId, out var game)) return;
 
+            CancelAutoTimer(roomId);
+            
             game.Phase = GamePhase.GameOver;
             game.IsGameOver = true;
             await Clients.Group(roomId).SendAsync("GameOver", "游戏已结束");
             await Clients.Group(roomId).SendAsync("PhaseUpdate", "gameover", game.Day, game.Night);
             await PlayVoiceAnnounce(roomId, "游戏已结束");
+            
+            // 清理数据
             _games.TryRemove(roomId, out _);
+            _wolfVotes.Remove(roomId, out _);
+            _dayVotes.Remove(roomId, out _);
+            _sheriffVotes.Remove(roomId, out _);
+            _wolfExplode.Remove(roomId, out _);
+            _isPaused.Remove(roomId, out _);
+            _speedMultiplier.Remove(roomId, out _);
+            _guardActions.Remove(roomId, out _);
+            _seerActions.Remove(roomId, out _);
+            _witchActions.Remove(roomId, out _);
         }
 
         // ============================================================
@@ -1179,6 +1305,12 @@ namespace MyPersonalWebsite.Hubs
                         {
                             player.IsOnline = false;
                             await Clients.Group(roomId).SendAsync("PlayerListUpdate", game.Players);
+                            
+                            // 如果游戏未开始且玩家数太少，自动清理房间
+                            if (game.Phase == GamePhase.Setup && game.PlayerCount == 0)
+                            {
+                                _games.TryRemove(roomId, out _);
+                            }
                         }
                     }
                 }
@@ -1218,7 +1350,6 @@ namespace MyPersonalWebsite.Hubs
             var godRoles = new List<RoleType> { RoleType.Seer, RoleType.Witch, RoleType.Guard };
             if (playerCount >= 10) godRoles.Add(RoleType.Hunter);
             if (playerCount >= 12) godRoles.Add(RoleType.Fool);
-            if (playerCount >= 12) godRoles.Add(RoleType.Knight);
 
             foreach (var r in godRoles) roles.Add(r);
 
