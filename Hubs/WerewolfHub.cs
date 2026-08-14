@@ -6,22 +6,31 @@ namespace MyPersonalWebsite.Hubs
 {
     public class WerewolfHub : Hub
     {
+        // ============================================================
+        // 存储所有房间
+        // ============================================================
         private static readonly ConcurrentDictionary<string, WerewolfGameState> _games = new();
         private static readonly ConcurrentDictionary<string, string> _playerToRoom = new();
         private static readonly ConcurrentDictionary<string, string> _connectionToPlayer = new();
 
+        // ============================================================
         // 投票存储
+        // ============================================================
         private static readonly ConcurrentDictionary<string, Dictionary<int, int>> _wolfVotes = new();
         private static readonly ConcurrentDictionary<string, Dictionary<int, int>> _dayVotes = new();
         private static readonly ConcurrentDictionary<string, Dictionary<int, int>> _sheriffVotes = new();
         private static readonly ConcurrentDictionary<string, bool> _wolfExplode = new();
 
-        // AI 自动计时
+        // ============================================================
+        // AI 自动计时控制
+        // ============================================================
         private static readonly ConcurrentDictionary<string, CancellationTokenSource> _autoTimers = new();
         private static readonly ConcurrentDictionary<string, bool> _isPaused = new();
         private static readonly ConcurrentDictionary<string, double> _speedMultiplier = new();
 
+        // ============================================================
         // 行动记录
+        // ============================================================
         private static readonly ConcurrentDictionary<string, bool> _guardActions = new();
         private static readonly ConcurrentDictionary<string, bool> _seerActions = new();
         private static readonly ConcurrentDictionary<string, bool> _witchActions = new();
@@ -274,7 +283,7 @@ namespace MyPersonalWebsite.Hubs
             if (!_playerToRoom.TryGetValue(playerId, out var roomId)) return;
             if (!_games.TryGetValue(roomId, out var game)) return;
 
-            var player = game.GetPlayer(int.Parse(playerId.Replace("player_", "")));
+            var player = game.Players.FirstOrDefault(p => p.PlayerId == playerId);
             if (player == null || !player.IsAlive || player.IsSpectator) return;
 
             if (!_sheriffVotes.ContainsKey(roomId)) _sheriffVotes[roomId] = new Dictionary<int, int>();
@@ -290,7 +299,7 @@ namespace MyPersonalWebsite.Hubs
             if (!_playerToRoom.TryGetValue(playerId, out var roomId)) return;
             if (!_games.TryGetValue(roomId, out var game)) return;
 
-            var voter = game.GetPlayer(int.Parse(playerId.Replace("player_", "")));
+            var voter = game.Players.FirstOrDefault(p => p.PlayerId == playerId);
             if (voter == null || !voter.IsAlive || voter.IsSpectator) return;
             if (voter.SeatNumber == targetSeat) return;
             if (!_sheriffVotes.ContainsKey(roomId) || !_sheriffVotes[roomId].ContainsKey(targetSeat)) return;
@@ -316,7 +325,7 @@ namespace MyPersonalWebsite.Hubs
 
             if (winners.Count == 1)
             {
-                var sheriff = game.GetPlayer(winners.First());
+                var sheriff = game.Players.FirstOrDefault(p => p.SeatNumber == winners.First());
                 if (sheriff != null)
                 {
                     sheriff.IsSheriff = true;
@@ -572,10 +581,10 @@ namespace MyPersonalWebsite.Hubs
             if (!_playerToRoom.TryGetValue(playerId, out var roomId)) return;
             if (!_games.TryGetValue(roomId, out var game)) return;
 
-            var player = game.GetPlayer(int.Parse(playerId.Replace("player_", "")));
+            var player = game.Players.FirstOrDefault(p => p.PlayerId == playerId);
             if (player == null || player.Role != RoleType.Guard) return;
 
-            var target = game.GetPlayer(targetSeat);
+            var target = game.Players.FirstOrDefault(p => p.SeatNumber == targetSeat);
             if (target == null || !target.IsAlive) return;
 
             if (target.GuardProtectedNight == game.Night - 1)
@@ -606,10 +615,10 @@ namespace MyPersonalWebsite.Hubs
             if (!_playerToRoom.TryGetValue(playerId, out var roomId)) return;
             if (!_games.TryGetValue(roomId, out var game)) return;
 
-            var player = game.GetPlayer(int.Parse(playerId.Replace("player_", "")));
+            var player = game.Players.FirstOrDefault(p => p.PlayerId == playerId);
             if (player == null || player.Role != RoleType.Seer) return;
 
-            var target = game.GetPlayer(targetSeat);
+            var target = game.Players.FirstOrDefault(p => p.SeatNumber == targetSeat);
             if (target == null || !target.IsAlive) return;
 
             _seerActions[roomId] = true;
@@ -631,7 +640,7 @@ namespace MyPersonalWebsite.Hubs
             if (!_playerToRoom.TryGetValue(playerId, out var roomId)) return;
             if (!_games.TryGetValue(roomId, out var game)) return;
 
-            var player = game.GetPlayer(int.Parse(playerId.Replace("player_", "")));
+            var player = game.Players.FirstOrDefault(p => p.PlayerId == playerId);
             if (player == null || player.Role != RoleType.Werewolf || !player.IsAlive) return;
 
             if (_wolfExplode.TryGetValue(roomId, out var exploded) && exploded) return;
@@ -670,7 +679,7 @@ namespace MyPersonalWebsite.Hubs
             if (!_playerToRoom.TryGetValue(playerId, out var roomId)) return;
             if (!_games.TryGetValue(roomId, out var game)) return;
 
-            var player = game.GetPlayer(int.Parse(playerId.Replace("player_", "")));
+            var player = game.Players.FirstOrDefault(p => p.PlayerId == playerId);
             if (player == null || player.Role != RoleType.Witch) return;
 
             _witchActions[roomId] = true;
@@ -679,7 +688,7 @@ namespace MyPersonalWebsite.Hubs
 
             if (useAntidote && wolfTargets.Any())
             {
-                var saved = game.GetPlayer(wolfTargets.First());
+                var saved = game.Players.FirstOrDefault(p => p.SeatNumber == wolfTargets.First());
                 if (saved != null && saved.IsAlive)
                 {
                     saved.IsWitchSaved = true;
@@ -689,7 +698,7 @@ namespace MyPersonalWebsite.Hubs
 
             if (usePoison && targetSeat > 0)
             {
-                var poisoned = game.GetPlayer(targetSeat);
+                var poisoned = game.Players.FirstOrDefault(p => p.SeatNumber == targetSeat);
                 if (poisoned != null && poisoned.IsAlive)
                 {
                     poisoned.IsPoisoned = true;
@@ -708,7 +717,7 @@ namespace MyPersonalWebsite.Hubs
             if (!_playerToRoom.TryGetValue(playerId, out var roomId)) return;
             if (!_games.TryGetValue(roomId, out var game)) return;
 
-            var player = game.GetPlayer(int.Parse(playerId.Replace("player_", "")));
+            var player = game.Players.FirstOrDefault(p => p.PlayerId == playerId);
             if (player == null || player.Role != RoleType.Werewolf || !player.IsAlive) return;
 
             _wolfExplode[roomId] = true;
@@ -744,7 +753,7 @@ namespace MyPersonalWebsite.Hubs
             if (!_playerToRoom.TryGetValue(playerId, out var roomId)) return;
             if (!_games.TryGetValue(roomId, out var game)) return;
 
-            var player = game.GetPlayer(int.Parse(playerId.Replace("player_", "")));
+            var player = game.Players.FirstOrDefault(p => p.PlayerId == playerId);
             if (player == null || !player.IsAlive || player.IsSpectator) return;
 
             if (!_dayVotes.ContainsKey(roomId)) _dayVotes[roomId] = new Dictionary<int, int>();
@@ -766,7 +775,7 @@ namespace MyPersonalWebsite.Hubs
 
             foreach (var targetSeat in wolfTargets)
             {
-                var target = game.GetPlayer(targetSeat);
+                var target = game.Players.FirstOrDefault(p => p.SeatNumber == targetSeat);
                 if (target != null && target.IsAlive)
                 {
                     if (target.IsGuardProtected && target.GuardProtectedNight == game.Night) continue;
@@ -788,7 +797,7 @@ namespace MyPersonalWebsite.Hubs
             var deathList = new List<string>();
             foreach (var seat in deaths)
             {
-                var player = game.GetPlayer(seat);
+                var player = game.Players.FirstOrDefault(p => p.SeatNumber == seat);
                 if (player != null && player.IsAlive)
                 {
                     player.IsAlive = false;
@@ -863,10 +872,11 @@ namespace MyPersonalWebsite.Hubs
             if (targets.Count == 1)
             {
                 var eliminated = targets.First();
-                var player = game.GetPlayer(eliminated);
+                var player = game.Players.FirstOrDefault(p => p.SeatNumber == eliminated);
 
                 if (player != null && player.IsAlive)
                 {
+                    // 检查白痴
                     if (player.Role == RoleType.Fool && !player.IsFoolSkillUsed)
                     {
                         await Clients.Group(roomId).SendAsync("DisplayMessage", $"{eliminated}号白痴发动技能，翻牌免死");
@@ -882,6 +892,7 @@ namespace MyPersonalWebsite.Hubs
                     await Clients.Group(roomId).SendAsync("DisplayMessage", $"{eliminated}号被放逐出局");
                     await Clients.Group(roomId).SendAsync("PlayerDeath", new { seatNumber = eliminated, nickname = player.Nickname });
 
+                    // 检查猎人
                     if (player.Role == RoleType.Hunter && player.IsHunterCanShoot)
                     {
                         game.Phase = GamePhase.HunterShoot;
@@ -909,7 +920,7 @@ namespace MyPersonalWebsite.Hubs
 
                 foreach (var seat in targets)
                 {
-                    var p = game.GetPlayer(seat);
+                    var p = game.Players.FirstOrDefault(p => p.SeatNumber == seat);
                     if (p != null)
                     {
                         await Clients.Client(p.ConnectionId).SendAsync("PKAction", new { seatNumber = seat });
@@ -974,7 +985,7 @@ namespace MyPersonalWebsite.Hubs
             if (targets.Count == 1)
             {
                 var eliminated = targets.First();
-                var player = game.GetPlayer(eliminated);
+                var player = game.Players.FirstOrDefault(p => p.SeatNumber == eliminated);
                 if (player != null && player.IsAlive)
                 {
                     player.IsAlive = false;
@@ -1005,10 +1016,10 @@ namespace MyPersonalWebsite.Hubs
             if (!_playerToRoom.TryGetValue(playerId, out var roomId)) return;
             if (!_games.TryGetValue(roomId, out var game)) return;
 
-            var player = game.GetPlayer(int.Parse(playerId.Replace("player_", "")));
+            var player = game.Players.FirstOrDefault(p => p.PlayerId == playerId);
             if (player == null || player.Role != RoleType.Hunter) return;
 
-            var target = game.GetPlayer(targetSeat);
+            var target = game.Players.FirstOrDefault(p => p.SeatNumber == targetSeat);
             if (target == null || !target.IsAlive) return;
 
             target.IsAlive = false;
@@ -1046,6 +1057,7 @@ namespace MyPersonalWebsite.Hubs
             var alivePlayers = game.AlivePlayers;
             var wolves = game.Werewolves;
 
+            // 狼人全部出局
             if (!wolves.Any())
             {
                 game.Phase = GamePhase.GameOver;
@@ -1057,6 +1069,7 @@ namespace MyPersonalWebsite.Hubs
                 return true;
             }
 
+            // 好人全部出局
             if (!game.GoodPlayers.Any())
             {
                 game.Phase = GamePhase.GameOver;
@@ -1068,6 +1081,7 @@ namespace MyPersonalWebsite.Hubs
                 return true;
             }
 
+            // 神职全灭（屠神）
             if (!game.Gods.Any())
             {
                 game.Phase = GamePhase.GameOver;
@@ -1079,6 +1093,7 @@ namespace MyPersonalWebsite.Hubs
                 return true;
             }
 
+            // 平民全灭（屠民）
             if (!game.Villagers.Any())
             {
                 game.Phase = GamePhase.GameOver;
