@@ -121,6 +121,7 @@ builder.Services.AddScoped<GameAntiCheatService>();
 
 builder.Services.AddHttpClient<TrainService>();
 builder.Services.AddHttpClient<ReCaptchaService>();
+app.MapHub<WerewolfHub>("/werewolfHub");
 
 // ============================================================
 // ⭐ SignalR
