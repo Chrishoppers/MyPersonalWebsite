@@ -47,21 +47,18 @@
             animation: containerIn 0.8s cubic-bezier(0.23, 1, 0.32, 1);
         }
 
-        @@keyframes containerIn {
-            from { opacity: 0; transform: scale(0.92) translateY(30px); }
-            to { opacity: 1; transform: scale(1) translateY(0); }
-        }
+        @@keyframes containerIn { from { opacity: 0; transform: scale(0.92) translateY(30px); } to { opacity: 1; transform: scale(1) translateY(0); } }
 
         .holo-card {
-            background: rgba(8, 8, 28, 0.88);
+            background: rgba(8,8,28,0.88);
             backdrop-filter: blur(40px);
             -webkit-backdrop-filter: blur(40px);
-            border: 1px solid rgba(0, 240, 255, 0.08);
+            border: 1px solid rgba(0,240,255,0.08);
             border-radius: 28px;
             padding: 16px 14px 18px;
             position: relative;
             overflow: hidden;
-            box-shadow: 0 0 80px rgba(0, 240, 255, 0.02);
+            box-shadow: 0 0 80px rgba(0,240,255,0.02);
             min-height: 420px;
             display: flex;
             flex-direction: column;
@@ -74,7 +71,7 @@
             left: -50%;
             width: 200%;
             height: 200%;
-            background: radial-gradient(ellipse at 30% 30%, rgba(0, 240, 255, 0.02), transparent 60%);
+            background: radial-gradient(ellipse at 30% 30%, rgba(0,240,255,0.02), transparent 60%);
             pointer-events: none;
         }
 
@@ -84,20 +81,17 @@
             left: 20%;
             right: 20%;
             height: 2px;
-            background: linear-gradient(90deg, transparent, rgba(0, 240, 255, 0.15), rgba(123, 97, 255, 0.15), transparent);
+            background: linear-gradient(90deg, transparent, rgba(0,240,255,0.15), rgba(123,97,255,0.15), transparent);
             animation: borderGlow 3s ease-in-out infinite;
         }
 
-        @@keyframes borderGlow {
-            0%, 100% { opacity: 0.3; transform: scaleX(1); }
-            50% { opacity: 1; transform: scaleX(1.2); }
-        }
+        @@keyframes borderGlow { 0%, 100% { opacity: 0.3; transform: scaleX(1); } 50% { opacity: 1; transform: scaleX(1.2); } }
 
         .holo-card .corner {
             position: absolute;
             width: 14px;
             height: 14px;
-            border-color: rgba(0, 240, 255, 0.06);
+            border-color: rgba(0,240,255,0.06);
             border-style: solid;
             border-width: 0;
             transition: all 0.6s ease;
@@ -119,8 +113,8 @@
         }
 
         .top-bar .room-code { font-size: 0.5rem; color: rgba(255,255,255,0.06); font-family: 'Courier New', monospace; letter-spacing: 2px; }
-        .top-bar .seat-number { font-size: 0.7rem; font-weight: 700; color: rgba(0, 240, 255, 0.3); font-family: 'Courier New', monospace; }
-        .top-bar .phase-badge { font-size: 0.45rem; padding: 2px 10px; border-radius: 20px; background: rgba(0, 240, 255, 0.04); border: 1px solid rgba(0, 240, 255, 0.04); color: rgba(255,255,255,0.15); text-transform: uppercase; letter-spacing: 0.1em; }
+        .top-bar .seat-number { font-size: 0.7rem; font-weight: 700; color: rgba(0,240,255,0.3); font-family: 'Courier New', monospace; }
+        .top-bar .phase-badge { font-size: 0.45rem; padding: 2px 10px; border-radius: 20px; background: rgba(0,240,255,0.04); border: 1px solid rgba(0,240,255,0.04); color: rgba(255,255,255,0.15); text-transform: uppercase; letter-spacing: 0.1em; }
 
         .game-status {
             text-align: center;
@@ -170,7 +164,7 @@
             backface-visibility: hidden;
             border-radius: 14px;
             overflow: hidden;
-            box-shadow: 0 0 60px rgba(139, 92, 246, 0.05);
+            box-shadow: 0 0 60px rgba(139,92,246,0.05);
         }
 
         .identity-card .card-container .card-face img { width: 100%; height: 100%; object-fit: cover; }
@@ -205,10 +199,7 @@
 
         .role-info.show { display: block; }
 
-        @@keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        @@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
         .role-info .role-name { font-size: 1rem; font-weight: 700; color: #fff; margin-bottom: 2px; }
         .role-info .role-desc { font-size: 0.7rem; color: rgba(255,255,255,0.2); line-height: 1.6; }
@@ -258,12 +249,7 @@
             text-align: center;
         }
 
-        .target-btn:hover:not(:disabled) {
-            border-color: rgba(139,92,246,0.12);
-            background: rgba(139,92,246,0.04);
-            color: #fff;
-        }
-
+        .target-btn:hover:not(:disabled) { border-color: rgba(139,92,246,0.12); background: rgba(139,92,246,0.04); color: #fff; }
         .target-btn:disabled { opacity: 0.2; cursor: not-allowed; }
 
         .target-btn .sub { display: block; font-size: 0.45rem; font-weight: 400; color: rgba(255,255,255,0.04); margin-top: 2px; }
@@ -434,10 +420,7 @@
         .toast-msg.error { background: rgba(255,0,110,0.08); border-color: rgba(255,0,110,0.04); color: #FF006E; }
         .toast-msg.info { background: rgba(0,240,255,0.06); border-color: rgba(0,240,255,0.04); color: #00F0FF; }
 
-        @@keyframes toastIn {
-            from { opacity: 0; transform: translateY(16px) scale(0.95); }
-            to { opacity: 1; transform: translateY(0) scale(1); }
-        }
+        @@keyframes toastIn { from { opacity: 0; transform: translateY(16px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
 
         @@media (max-width: 480px) {
             .holo-card { padding: 12px 10px 14px; border-radius: 24px; min-height: 360px; }
@@ -546,54 +529,22 @@
         // 角色数据
         // ============================================================
         var roleData = {
-            '狼人': {
-                icon: '🐺',
-                image: '/images/werewolf/cards/狼人.jpg',
-                desc: '每晚可以共同杀害一名玩家',
-                detail: '【技能】每晚可共同杀害一名玩家。\n【规则】所有狼人需投票统一意见。\n【自爆】白天可自爆，立即进入黑夜。'
-            },
-            '预言家': {
-                icon: '🔮',
-                image: '/images/werewolf/cards/预言家.jpg',
-                desc: '每晚可以查验一名玩家的阵营',
-                detail: '【技能】每晚可查验一名玩家身份（好人/狼人）。\n【规则】查验结果仅自己可见。'
-            },
-            '女巫': {
-                icon: '🧪',
-                image: '/images/werewolf/cards/女巫.jpg',
-                desc: '拥有解药和毒药各一瓶',
-                detail: '【技能】拥有解药和毒药各一瓶。\n【规则】解药可救人（首夜可自救），毒药可杀人。'
-            },
-            '守卫': {
-                icon: '🛡️',
-                image: '/images/werewolf/cards/守卫.jpg',
-                desc: '每晚守护一名玩家免遭狼人袭击',
-                detail: '【技能】每晚可守护一名玩家免受狼人袭击。\n【规则】不能连续两晚守护同一个人。\n【特殊】第一天可以守护自己。'
-            },
-            '猎人': {
-                icon: '🔫',
-                image: '/images/werewolf/cards/猎人.jpg',
-                desc: '死亡时可以开枪带走一名玩家',
-                detail: '【技能】死亡时可开枪带走一名玩家。\n【规则】被毒杀不能开枪。'
-            },
-            '白痴': {
-                icon: '🤡',
-                image: '/images/werewolf/cards/白痴.jpg',
-                desc: '被放逐时可翻牌免死一次',
-                detail: '【技能】被投票放逐时可翻牌免死一次。\n【规则】翻牌后失去投票权，但仍可发言。'
-            },
-            '骑士': {
-                icon: '⚔️',
-                image: '/images/werewolf/cards/骑士.jpg',
-                desc: '白天可挑战一名玩家',
-                detail: '【技能】白天可挑战一名玩家。\n【规则】若挑战目标为狼人，目标直接死亡。'
-            },
-            '平民': {
-                icon: '👤',
-                image: '/images/werewolf/cards/平民.jpg',
-                desc: '无特殊技能，通过发言投票找出狼人',
-                detail: '【技能】无特殊技能。\n【规则】通过发言和投票帮助好人阵营获胜。'
-            }
+            '狼人': { icon: '🐺', image: '/images/werewolf/cards/狼人.jpg', desc: '每晚可以共同杀害一名玩家',
+            detail: '【技能】每晚可共同杀害一名玩家。\n【规则】所有狼人需投票统一意见。\n【自爆】白天可自爆，立即进入黑夜。' },
+            '预言家': { icon: '🔮', image: '/images/werewolf/cards/预言家.jpg', desc: '每晚可以查验一名玩家的阵营',
+            detail: '【技能】每晚可查验一名玩家身份（好人/狼人）。\n【规则】查验结果仅自己可见。' },
+            '女巫': { icon: '🧪', image: '/images/werewolf/cards/女巫.jpg', desc: '拥有解药和毒药各一瓶',
+            detail: '【技能】拥有解药和毒药各一瓶。\n【规则】解药可救人（首夜可自救），毒药可杀人。' },
+            '守卫': { icon: '🛡️', image: '/images/werewolf/cards/守卫.jpg', desc: '每晚守护一名玩家免遭狼人袭击',
+            detail: '【技能】每晚可守护一名玩家免受狼人袭击。\n【规则】不能连续两晚守护同一个人。\n【特殊】第一天可以守护自己。' },
+            '猎人': { icon: '🔫', image: '/images/werewolf/cards/猎人.jpg', desc: '死亡时可以开枪带走一名玩家',
+            detail: '【技能】死亡时可开枪带走一名玩家。\n【规则】被毒杀不能开枪。' },
+            '白痴': { icon: '🤡', image: '/images/werewolf/cards/白痴.jpg', desc: '被放逐时可翻牌免死一次',
+            detail: '【技能】被投票放逐时可翻牌免死一次。\n【规则】翻牌后失去投票权，但仍可发言。' },
+            '骑士': { icon: '⚔️', image: '/images/werewolf/cards/骑士.jpg', desc: '白天可挑战一名玩家',
+            detail: '【技能】白天可挑战一名玩家。\n【规则】若挑战目标为狼人，目标直接死亡。' },
+            '平民': { icon: '👤', image: '/images/werewolf/cards/平民.jpg', desc: '无特殊技能，通过发言投票找出狼人',
+            detail: '【技能】无特殊技能。\n【规则】通过发言和投票帮助好人阵营获胜。' }
         };
 
         var cardBackImage = '/images/werewolf/cards/card_back.jpg';
@@ -636,9 +587,7 @@
                     .configureLogging(signalR.LogLevel.Information)
                     .build();
 
-                // ===== 收到身份 =====
                 connection.on('ReceiveRole', function(data) {
-                    console.log('📩 收到身份:', data);
                     state.role = data.role;
                     state.seatNumber = data.seatNumber;
                     state.isSpectator = data.isSpectator || false;
@@ -663,7 +612,6 @@
                         document.getElementById('roleLabel').textContent = data.role;
                     }
 
-                    // 标记角色类型
                     state.isWolf = data.role === '狼人';
                     state.isSeer = data.role === '预言家';
                     state.isWitch = data.role === '女巫';
@@ -679,20 +627,15 @@
                     document.getElementById('phaseBadge').textContent = '🎮 游戏中';
                     showToast('📩 你抽到了 ' + data.role, 'info');
 
-                    // 如果是狼人，显示自爆按钮
-                    if (state.isWolf) {
-                        document.getElementById('wolfExplodeBtn').classList.add('show');
-                    }
+                    if (state.isWolf) { document.getElementById('wolfExplodeBtn').classList.add('show'); }
                 });
 
-                // ===== 阶段更新 =====
                 connection.on('PhaseUpdate', function(phase, day, night) {
                     state.phase = phase;
                     updatePhaseDisplay(phase, day, night);
                     handleActionPanel(phase);
                 });
 
-                // ===== 守卫行动 =====
                 connection.on('GuardAction', function(data) {
                     showActionPanel('🛡️ 守卫行动', '请选择要守护的玩家');
                     renderTargetGrid(data.targets, data.canProtectSelf, data.lastProtected);
@@ -700,7 +643,6 @@
                     document.getElementById('actionConfirmBtn').dataset.action = 'guard';
                 });
 
-                // ===== 预言家行动 =====
                 connection.on('SeerAction', function(data) {
                     showActionPanel('🔮 预言家查验', '请选择要查验的玩家');
                     renderTargetGrid(data.targets, true, null);
@@ -715,7 +657,6 @@
                     setTimeout(function() { result.className = 'check-result'; }, 5000);
                 });
 
-                // ===== 狼人行动 =====
                 connection.on('WerewolfAction', function(data) {
                     showActionPanel('🐺 狼人行动', '请选择要杀害的玩家');
                     renderTargetGrid(data.targets, false, null);
@@ -733,14 +674,12 @@
                     }
                 });
 
-                // ===== 女巫行动 =====
                 connection.on('WitchAction', function(data) {
                     showActionPanel('🧪 女巫行动', '请选择解药或毒药');
                     renderWitchPanel(data.deathSeats, data.canSaveFirstNight);
                     document.getElementById('actionConfirmBtn').dataset.action = 'witch';
                 });
 
-                // ===== 投票行动 =====
                 connection.on('VotingAction', function(data) {
                     var title = data.isPK ? '⚖️ PK投票' : '🗳️ 投票放逐';
                     showActionPanel(title, '请选择要放逐的玩家');
@@ -750,20 +689,11 @@
                     document.getElementById('actionConfirmBtn').textContent = data.isPK ? '🗳️ PK投票' : '🗳️ 投票';
                 });
 
-                // ===== 警长竞选 =====
                 connection.on('SheriffElectionStart', function(data) {
                     showActionPanel('👑 警长竞选', '你是否参与竞选？');
                     var grid = document.getElementById('targetGrid');
-                    grid.innerHTML = `
-                        <button class="target-btn" onclick="joinSheriffElection()" style="grid-column:1/3;border-color:rgba(245,158,11,0.06);color:#F59E0B;">
-                            ✅ 参与竞选
-                            <span class="sub">发言争取支持</span>
-                        </button>
-                        <button class="target-btn" onclick="skipSheriffElection()" style="grid-column:3/5;border-color:rgba(255,255,255,0.02);color:rgba(255,255,255,0.1);">
-                            ⏭️ 不参与
-                            <span class="sub">警下投票</span>
-                        </button>
-                    `;
+                    grid.innerHTML =
+                        `<button class="target-btn" onclick="joinSheriffElection()" style="grid-column:1/3;border-color:rgba(245,158,11,0.06);color:#F59E0B;">✅ 参与竞选<span class="sub">发言争取支持</span></button><button class="target-btn" onclick="skipSheriffElection()" style="grid-column:3/5;border-color:rgba(255,255,255,0.02);color:rgba(255,255,255,0.1);">⏭️ 不参与<span class="sub">警下投票</span></button>`;
                     document.getElementById('actionConfirmBtn').style.display = 'none';
                     document.getElementById('actionConfirmBtn').dataset.action = 'sheriff';
                 });
@@ -776,7 +706,6 @@
                     document.getElementById('actionConfirmBtn').textContent = '🗳️ 投票';
                 });
 
-                // ===== 猎人开枪 =====
                 connection.on('HunterShootAction', function(data) {
                     showActionPanel('🔫 猎人开枪', '请选择要带走的玩家');
                     renderTargetGrid(data.targets, false, null);
@@ -785,7 +714,6 @@
                     document.getElementById('actionConfirmBtn').textContent = '🔫 开枪';
                 });
 
-                // ===== 游戏结束 =====
                 connection.on('GameOver', function(winner) {
                     var msg = winner === '好人' ? '⭐ 好人阵营胜利！' : '🐺 狼人阵营胜利！';
                     showToast('🏆 ' + msg, 'success');
@@ -797,7 +725,6 @@
                     document.getElementById('wolfExplodeBtn').classList.remove('show');
                 });
 
-                // ===== PK行动 =====
                 connection.on('PKAction', function(data) {
                     showActionPanel('⚖️ PK发言', '请发言争取支持');
                     var grid = document.getElementById('targetGrid');
@@ -806,31 +733,20 @@
                     document.getElementById('actionConfirmBtn').style.display = 'none';
                 });
 
-                // ===== 连接 =====
                 connection.start()
-                    .then(function() {
-                        console.log('✅ SignalR 已连接');
-                        joinRoom();
-                    })
+                    .then(function() { console.log('✅ SignalR 已连接');
+                        joinRoom(); })
                     .catch(function(err) {
                         console.error('❌ SignalR 连接失败:', err);
                         showToast('⚠️ 连接失败，正在重试...', 'warning');
                         setTimeout(connectSignalR, 3000);
                     });
 
-            } catch (e) {
-                console.error('SignalR 初始化失败:', e);
-            }
+            } catch (e) { console.error('SignalR 初始化失败:', e); }
         }
 
-        // ============================================================
-        // 加入房间
-        // ============================================================
         function joinRoom() {
-            if (!state.roomId || state.roomId === '------') {
-                showToast('❌ 无效的房间码', 'error');
-                return;
-            }
+            if (!state.roomId || state.roomId === '------') { showToast('❌ 无效的房间码', 'error'); return; }
 
             var nickname = prompt('请输入你的昵称：', '玩家' + Math.floor(Math.random() * 100));
             if (!nickname || nickname.trim() === '') { nickname = '玩家' + Math.floor(Math.random() * 100); }
@@ -858,15 +774,10 @@
                         showToast('❌ ' + result.message, 'error');
                     }
                 })
-                .catch(function(err) {
-                    console.error('加入房间失败:', err);
-                    showToast('❌ 加入失败: ' + err, 'error');
-                });
+                .catch(function(err) { console.error('加入房间失败:', err);
+                    showToast('❌ 加入失败: ' + err, 'error'); });
         }
 
-        // ============================================================
-        // 行动面板
-        // ============================================================
         function showActionPanel(title, subtitle) {
             var panel = document.getElementById('actionPanel');
             var titleEl = document.getElementById('actionTitle');
@@ -881,22 +792,14 @@
             confirmBtn.textContent = '✅ 确认';
             confirmBtn.disabled = false;
             document.getElementById('wolfExplodeBtn').classList.remove('show');
-            if (state.isWolf) {
-                document.getElementById('wolfExplodeBtn').classList.add('show');
-            }
+            if (state.isWolf) { document.getElementById('wolfExplodeBtn').classList.add('show'); }
         }
 
-        function hideActionPanel() {
-            document.getElementById('actionPanel').classList.remove('show');
-        }
+        function hideActionPanel() { document.getElementById('actionPanel').classList.remove('show'); }
 
-        // ============================================================
-        // 渲染目标网格
-        // ============================================================
         function renderTargetGrid(targets, canSelectSelf, lastProtected) {
             var grid = document.getElementById('targetGrid');
             grid.innerHTML = '';
-
             if (!targets || targets.length === 0) {
                 grid.innerHTML =
                     '<div style="text-align:center;color:rgba(255,255,255,0.04);font-size:0.7rem;grid-column:1/-1;padding:8px 0;">暂无可用目标</div>';
@@ -907,40 +810,27 @@
                 var btn = document.createElement('button');
                 btn.className = 'target-btn';
                 btn.dataset.seat = seat;
-
                 var isSelf = state.seatNumber === seat;
                 var isDisabled = false;
-
-                if (isSelf && !canSelectSelf) {
-                    isDisabled = true;
-                    btn.innerHTML = seat + ' 号 <span class="sub">自己</span>';
-                } else if (lastProtected && lastProtected === seat) {
-                    isDisabled = true;
-                    btn.innerHTML = seat + ' 号 <span class="sub">已守护</span>';
-                } else {
-                    btn.innerHTML = seat + ' 号 <span class="status-dot alive"></span>';
-                }
-
+                if (isSelf && !canSelectSelf) { isDisabled = true;
+                    btn.innerHTML = seat + ' 号 <span class="sub">自己</span>'; } else if (lastProtected && lastProtected ===
+                    seat) { isDisabled = true;
+                    btn.innerHTML = seat + ' 号 <span class="sub">已守护</span>'; } else { btn.innerHTML =
+                        seat + ' 号 <span class="status-dot alive"></span>'; }
                 if (isDisabled) { btn.disabled = true; }
-
                 btn.addEventListener('click', function() {
                     if (this.disabled) return;
                     document.querySelectorAll('.target-btn').forEach(function(b) { b.classList.remove('selected'); });
                     this.classList.add('selected');
                     state.selectedTarget = parseInt(this.dataset.seat);
                 });
-
                 grid.appendChild(btn);
             });
         }
 
-        // ============================================================
-        // 女巫面板
-        // ============================================================
         function renderWitchPanel(deaths, canSaveFirstNight) {
             var grid = document.getElementById('targetGrid');
             grid.innerHTML = '';
-
             var hasDeath = deaths && deaths.length > 0;
             var canSave = hasDeath && (canSaveFirstNight || deaths.indexOf(state.seatNumber) === -1 || canSaveFirstNight);
 
@@ -951,10 +841,8 @@
                 '<span style="font-size:1.2rem;">💚</span><br><span style="font-size:0.7rem;color:rgba(255,255,255,0.15);">解药</span><br><span style="font-size:0.55rem;color:rgba(255,255,255,0.04);">' +
                 (hasDeath ? '救活 ' + deaths.join(',') + ' 号' : '无人可救') + '</span>';
             antidoteDiv.dataset.action = 'antidote';
-            if (!hasDeath || !canSave) {
-                antidoteDiv.style.opacity = '0.3';
-                antidoteDiv.style.cursor = 'not-allowed';
-            }
+            if (!hasDeath || !canSave) { antidoteDiv.style.opacity = '0.3';
+                antidoteDiv.style.cursor = 'not-allowed'; }
             antidoteDiv.addEventListener('click', function() {
                 if (this.style.opacity === '0.3') return;
                 document.querySelectorAll('.target-btn').forEach(function(b) { b.classList.remove('selected'); });
@@ -985,7 +873,6 @@
         function showPoisonTargets() {
             var grid = document.getElementById('targetGrid');
             grid.innerHTML = '';
-
             for (var i = 1; i <= 12; i++) {
                 if (i === state.seatNumber) continue;
                 var btn = document.createElement('button');
@@ -1001,9 +888,6 @@
             }
         }
 
-        // ============================================================
-        // 确认行动
-        // ============================================================
         function confirmAction() {
             var action = document.getElementById('actionConfirmBtn').dataset.action;
             var btn = document.getElementById('actionConfirmBtn');
@@ -1019,7 +903,6 @@
                         .catch(function(err) { showToast('❌ 操作失败: ' + err, 'error');
                             btn.disabled = false; });
                     break;
-
                 case 'seer':
                     if (state.selectedTarget < 0) { showToast('⚠️ 请选择要查验的玩家', 'warning');
                         btn.disabled = false; return; }
@@ -1029,7 +912,6 @@
                         .catch(function(err) { showToast('❌ 操作失败: ' + err, 'error');
                             btn.disabled = false; });
                     break;
-
                 case 'werewolf':
                     if (state.selectedTarget < 0) { showToast('⚠️ 请选择要杀害的玩家', 'warning');
                         btn.disabled = false; return; }
@@ -1043,7 +925,6 @@
                         .catch(function(err) { showToast('❌ 操作失败: ' + err, 'error');
                             btn.disabled = false; });
                     break;
-
                 case 'witch':
                     if (state.selectedTarget < 0) { showToast('⚠️ 请选择毒药目标', 'warning');
                         btn.disabled = false; return; }
@@ -1053,7 +934,6 @@
                         .catch(function(err) { showToast('❌ 操作失败: ' + err, 'error');
                             btn.disabled = false; });
                     break;
-
                 case 'antidote':
                     connection.invoke('WitchAction', state.playerId, true, false, -1)
                         .then(function() { showToast('💚 已使用解药', 'success');
@@ -1061,7 +941,6 @@
                         .catch(function(err) { showToast('❌ 操作失败: ' + err, 'error');
                             btn.disabled = false; });
                     break;
-
                 case 'vote':
                     if (state.selectedTarget < 0) { showToast('⚠️ 请选择要放逐的玩家', 'warning');
                         btn.disabled = false; return; }
@@ -1071,7 +950,6 @@
                         .catch(function(err) { showToast('❌ 操作失败: ' + err, 'error');
                             btn.disabled = false; });
                     break;
-
                 case 'sheriff_vote':
                     if (state.selectedTarget < 0) { showToast('⚠️ 请选择要投票的候选人', 'warning');
                         btn.disabled = false; return; }
@@ -1081,7 +959,6 @@
                         .catch(function(err) { showToast('❌ 操作失败: ' + err, 'error');
                             btn.disabled = false; });
                     break;
-
                 case 'hunter':
                     if (state.selectedTarget < 0) { showToast('⚠️ 请选择要带走的目标', 'warning');
                         btn.disabled = false; return; }
@@ -1091,48 +968,32 @@
                         .catch(function(err) { showToast('❌ 操作失败: ' + err, 'error');
                             btn.disabled = false; });
                     break;
-
                 default:
                     showToast('⚠️ 未知操作', 'warning');
                     btn.disabled = false;
             }
         }
 
-        // ============================================================
-        // 警长竞选
-        // ============================================================
         function joinSheriffElection() {
             connection.invoke('JoinSheriffElection', state.playerId)
-                .then(function() {
-                    showToast('✅ 已参与警长竞选', 'success');
-                    hideActionPanel();
-                })
+                .then(function() { showToast('✅ 已参与警长竞选', 'success');
+                    hideActionPanel(); })
                 .catch(function(err) { showToast('❌ 操作失败: ' + err, 'error'); });
         }
 
-        function skipSheriffElection() {
-            showToast('⏭️ 已跳过竞选', 'info');
-            hideActionPanel();
-        }
+        function skipSheriffElection() { showToast('⏭️ 已跳过竞选', 'info');
+            hideActionPanel(); }
 
-        // ============================================================
-        // 狼人自爆
-        // ============================================================
         function wolfExplode() {
             if (!state.isWolf) return;
             if (!confirm('确定要自爆吗？自爆后立即进入黑夜！')) return;
             connection.invoke('WerewolfExplode', state.playerId)
-                .then(function() {
-                    showToast('💥 狼人自爆！', 'error');
+                .then(function() { showToast('💥 狼人自爆！', 'error');
                     hideActionPanel();
-                    document.getElementById('wolfExplodeBtn').classList.remove('show');
-                })
+                    document.getElementById('wolfExplodeBtn').classList.remove('show'); })
                 .catch(function(err) { showToast('❌ 操作失败: ' + err, 'error'); });
         }
 
-        // ============================================================
-        // 取消行动
-        // ============================================================
         function cancelAction() {
             state.selectedTarget = -1;
             document.querySelectorAll('.target-btn').forEach(function(b) { b.classList.remove('selected'); });
@@ -1140,9 +1001,6 @@
             showToast('✕ 已取消', 'info');
         }
 
-        // ============================================================
-        // 翻牌
-        // ============================================================
         function toggleReveal() {
             var inner = document.getElementById('cardInner');
             var hint = document.getElementById('flipHint');
@@ -1179,15 +1037,10 @@
             }
         }
 
-        // ============================================================
-        // 准备
-        // ============================================================
         function toggleReady() {
             if (!connection || !state.playerId) { showToast('⚠️ 未加入房间', 'warning'); return; }
-
             state.isReady = !state.isReady;
             var btn = document.getElementById('readyBtn');
-
             if (state.isReady) {
                 btn.textContent = '✅ 已准备';
                 btn.style.color = '#00FF88';
@@ -1197,18 +1050,12 @@
                 btn.style.color = '';
                 showToast('⏳ 已取消准备', 'info');
             }
-
             connection.invoke('ToggleReady', state.playerId, state.isReady)
-                .catch(function(err) {
-                    console.error('切换准备状态失败:', err);
+                .catch(function(err) { console.error('切换准备状态失败:', err);
                     showToast('操作失败', 'error');
-                    state.isReady = !state.isReady;
-                });
+                    state.isReady = !state.isReady; });
         }
 
-        // ============================================================
-        // 阶段更新
-        // ============================================================
         function updatePhaseDisplay(phase, day, night) {
             var badge = document.getElementById('phaseBadge');
             var status = document.getElementById('gameStatus');
@@ -1256,7 +1103,6 @@
                 'hunter_shoot': '🔫 猎人开枪',
                 'gameover': '🏁 游戏结束'
             };
-
             status.textContent = statusMap[phase] || phase;
             status.className = 'game-status';
             if (phase.startsWith('night')) status.classList.add('night');
@@ -1269,21 +1115,11 @@
             var noActionPhases = ['setup', 'seating', 'dealing', 'revealing', 'night_resolve', 'day_announce', 'day_speech',
                 'day_resolve', 'gameover'
             ];
-            if (noActionPhases.indexOf(phase) !== -1) {
-                hideActionPanel();
-            }
+            if (noActionPhases.indexOf(phase) !== -1) { hideActionPanel(); }
         }
 
-        // ============================================================
-        // 显示规则
-        // ============================================================
-        function showRules() {
-            window.open('/Werewolf/Rules?roomId=' + state.roomId, '_blank', 'width=480,height=700');
-        }
+        function showRules() { window.open('/Werewolf/Rules?roomId=' + state.roomId, '_blank', 'width=480,height=700'); }
 
-        // ============================================================
-        // Toast
-        // ============================================================
         function showToast(message, type) {
             type = type || 'info';
             var container = document.getElementById('toastContainer');
@@ -1298,9 +1134,7 @@
             }, 3500);
         }
 
-        // ============================================================
         // 粒子背景
-        // ============================================================
         (function initParticles() {
             var canvas = document.getElementById('particleCanvas');
             if (!canvas) return;
@@ -1343,9 +1177,6 @@
             draw();
         })();
 
-        // ============================================================
-        // 初始化
-        // ============================================================
         document.addEventListener('DOMContentLoaded', function() {
             console.log('🐺 狼人杀玩家端启动...');
             connectSignalR();
