@@ -22,6 +22,7 @@ namespace MyPersonalWebsite.Controllers
             var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
             if (isAdmin != 1)
             {
+                // 未登录或不是 admin，跳转到登录页
                 return RedirectToAction("Login", "Auth");
             }
 
