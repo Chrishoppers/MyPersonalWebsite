@@ -45,12 +45,36 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 );
 
 // ============================================================
-// DataProtection 使用文件存储（每次部署不会丢失 Session）
+// ⭐ DataProtection 使用文件存储（修复 Session 密钥丢失问题）
 // ============================================================
-builder.Services.AddDataProtection()
-    .PersistKeysToFileSystem(new DirectoryInfo("/app/keys"))
-    .SetApplicationName("MyPersonalWebsite")
-    .SetDefaultKeyLifetime(TimeSpan.FromDays(30));
+var keysDirectory = "/app/keys";
+if (!Directory.Exists(keysDirectory))
+{
+    try
+    {
+        Directory.CreateDirectory(keysDirectory);
+        Console.WriteLine($"✅ 创建密钥目录: {keysDirectory}");
+    }
+    catch
+    {
+        Console.WriteLine($"⚠️ 无法创建密钥目录: {keysDirectory}，将使用临时密钥");
+    }
+}
+
+try
+{
+    builder.Services.AddDataProtection()
+        .PersistKeysToFileSystem(new DirectoryInfo(keysDirectory))
+        .SetApplicationName("MyPersonalWebsite")
+        .SetDefaultKeyLifetime(TimeSpan.FromDays(90));
+    Console.WriteLine("✅ DataProtection 已配置持久化密钥");
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"⚠️ DataProtection 配置失败: {ex.Message}，将使用默认配置");
+    builder.Services.AddDataProtection()
+        .SetApplicationName("MyPersonalWebsite");
+}
 
 // ============================================================
 // Session
@@ -61,6 +85,7 @@ builder.Services.AddSession(options =>
     options.IdleTimeout = TimeSpan.FromMinutes(30);
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
+    options.Cookie.SameSite = SameSiteMode.Lax;
 });
 
 // ============================================================
@@ -91,13 +116,20 @@ builder.Services.AddScoped<DailyQuestionService>();
 builder.Services.AddScoped<GameSuggestionService>();
 builder.Services.AddScoped<TrainService>();
 builder.Services.AddScoped<ReCaptchaService>();
+builder.Services.AddScoped<EmailRateLimitService>();
+builder.Services.AddScoped<GameAntiCheatService>();
+
 builder.Services.AddHttpClient<TrainService>();
 builder.Services.AddHttpClient<ReCaptchaService>();
 
 // ============================================================
 // ⭐ SignalR
 // ============================================================
-builder.Services.AddSignalR();
+builder.Services.AddSignalR(options =>
+{
+    options.EnableDetailedErrors = true;
+    options.MaximumReceiveMessageSize = 102400;
+});
 
 // ============================================================
 // 构建应用
@@ -109,17 +141,24 @@ var app = builder.Build();
 // ============================================================
 using (var scope = app.Services.CreateScope())
 {
-    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    var dataSync = scope.ServiceProvider.GetRequiredService<DataSyncService>();
+    try
+    {
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var dataSync = scope.ServiceProvider.GetRequiredService<DataSyncService>();
 
-    db.Database.EnsureCreated();
-    Console.WriteLine("✅ 本地 SQLite 缓存已就绪");
+        db.Database.EnsureCreated();
+        Console.WriteLine("✅ 本地 SQLite 缓存已就绪");
 
-    await EnsureTursoTablesAsync(dataSync);
-    await dataSync.EnsureAdminExistsAsync();
-    await EnsureAboutMeDataAsync(dataSync);
-    await SeedDailyQuestionBankAsync(dataSync);
-    Console.WriteLine("✅ 每日一问题库已就绪");
+        await EnsureTursoTablesAsync(dataSync);
+        await dataSync.EnsureAdminExistsAsync();
+        await EnsureAboutMeDataAsync(dataSync);
+        await SeedDailyQuestionBankAsync(dataSync);
+        Console.WriteLine("✅ 每日一问题库已就绪");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"⚠️ 数据库初始化失败: {ex.Message}");
+    }
 }
 
 // ============================================================
@@ -167,8 +206,9 @@ app.Lifetime.ApplicationStopping.Register(() =>
 app.Run();
 
 // ============================================================
-// ⭐ 辅助方法（确保 Turso 表存在）
+// ⭐ 辅助方法
 // ============================================================
+
 async Task EnsureTursoTablesAsync(DataSyncService dataSync)
 {
     Console.WriteLine("📦 检查 Turso 数据表...");
@@ -388,6 +428,55 @@ async Task EnsureTursoTablesAsync(DataSyncService dataSync)
                 GamesPlayed INTEGER DEFAULT 0,
                 UpdatedAt TEXT
             )"
+        },
+        { "GameSessions", @"
+            CREATE TABLE IF NOT EXISTS GameSessions (
+                Id INTEGER PRIMARY KEY,
+                UserId INTEGER NOT NULL,
+                SessionId TEXT NOT NULL UNIQUE,
+                StartTime TEXT NOT NULL,
+                EndTime TEXT,
+                TotalScore INTEGER DEFAULT 0,
+                FinalScore INTEGER DEFAULT 0,
+                PassedCount INTEGER DEFAULT 0,
+                MaxCombo INTEGER DEFAULT 0,
+                CheatCount INTEGER DEFAULT 0,
+                MicEnabled INTEGER DEFAULT 1,
+                CamEnabled INTEGER DEFAULT 1,
+                PenaltyMic INTEGER DEFAULT 8,
+                PenaltyCam INTEGER DEFAULT 5,
+                IsCompleted INTEGER DEFAULT 0,
+                Status TEXT DEFAULT 'playing'
+            )"
+        },
+        { "GameAnswerLogs", @"
+            CREATE TABLE IF NOT EXISTS GameAnswerLogs (
+                Id INTEGER PRIMARY KEY,
+                SessionId TEXT NOT NULL,
+                UserId INTEGER NOT NULL,
+                Level INTEGER NOT NULL,
+                QuestionType TEXT NOT NULL,
+                StartTime TEXT NOT NULL,
+                SubmitTime TEXT NOT NULL,
+                ElapsedSeconds REAL NOT NULL,
+                IsCorrect INTEGER DEFAULT 0,
+                IsTimeout INTEGER DEFAULT 0,
+                CheatDetected INTEGER DEFAULT 0,
+                CheatReason TEXT,
+                PointsEarned INTEGER DEFAULT 0,
+                PenaltyApplied INTEGER DEFAULT 0
+            )"
+        },
+        { "CheatEvents", @"
+            CREATE TABLE IF NOT EXISTS CheatEvents (
+                Id INTEGER PRIMARY KEY,
+                SessionId TEXT NOT NULL,
+                UserId INTEGER NOT NULL,
+                EventType TEXT NOT NULL,
+                EventDetail TEXT,
+                DetectedAt TEXT NOT NULL,
+                PenaltyAmount INTEGER DEFAULT 5
+            )"
         }
     };
 
@@ -428,9 +517,6 @@ async Task EnsureTursoTablesAsync(DataSyncService dataSync)
     Console.WriteLine($"📊 Turso 表检查完成: 成功 {successCount}, 失败 {failCount}");
 }
 
-// ============================================================
-// ⭐ 确保 AboutMe 数据存在
-// ============================================================
 async Task EnsureAboutMeDataAsync(DataSyncService dataSync)
 {
     Console.WriteLine("📦 检查 AboutMe 数据...");
@@ -505,9 +591,6 @@ async Task EnsureAboutMeDataAsync(DataSyncService dataSync)
     }
 }
 
-// ============================================================
-// 📦 初始化题库
-// ============================================================
 async Task SeedDailyQuestionBankAsync(DataSyncService dataSync)
 {
     var checkResult = await dataSync.QueryAsync("SELECT COUNT(*) as Count FROM DailyQuestionBank");
@@ -520,9 +603,6 @@ async Task SeedDailyQuestionBankAsync(DataSyncService dataSync)
     Console.WriteLine("📦 题库为空，将由 DailyQuestionService 自动填充");
 }
 
-// ============================================================
-// 🛠️ 辅助方法
-// ============================================================
 string EscapeSql(string value)
 {
     if (string.IsNullOrEmpty(value)) return "";
