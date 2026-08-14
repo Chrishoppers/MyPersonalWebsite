@@ -1,0 +1,433 @@
+@{
+    Layout = null;
+    ViewData["Title"] = "👑 房主控制";
+    var roomId = ViewBag.RoomId as string ?? "";
+}
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>👑 房主控制</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: #05050F;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            color: #e0e0e0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px;
+        }
+
+        .container { max-width: 420px; width: 100%; }
+
+        .holo-card {
+            background: rgba(8, 8, 28, 0.88);
+            backdrop-filter: blur(40px);
+            border: 1px solid rgba(0, 240, 255, 0.08);
+            border-radius: 28px;
+            padding: 20px 16px 18px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 0 80px rgba(0, 240, 255, 0.02);
+        }
+
+        .holo-card .border-glow {
+            position: absolute;
+            top: -1px;
+            left: 20%;
+            right: 20%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(0, 240, 255, 0.15), rgba(123, 97, 255, 0.15), transparent);
+            animation: borderGlow 3s ease-in-out infinite;
+        }
+
+        @@keyframes borderGlow {
+            0%, 100% { opacity: 0.3; transform: scaleX(1); }
+            50% { opacity: 1; transform: scaleX(1.2); }
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+        }
+
+        .header .title { font-size: 1.1rem; font-weight: 700; color: #fff; }
+        .header .room-code { font-size: 0.6rem; color: rgba(255,255,255,0.06); font-family: 'Courier New', monospace; }
+
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            font-size: 0.7rem;
+            color: rgba(255,255,255,0.08);
+            border-bottom: 1px solid rgba(255,255,255,0.02);
+        }
+
+        .status-bar .phase { color: #00F0FF; font-weight: 600; }
+        .status-bar .timer { color: #F59E0B; font-family: 'Courier New', monospace; }
+
+        .section-title {
+            font-size: 0.6rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: rgba(255,255,255,0.08);
+            margin: 12px 0 8px;
+        }
+
+        .control-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+        }
+
+        .btn-control {
+            padding: 10px 6px;
+            border: 2px solid rgba(255,255,255,0.04);
+            border-radius: 14px;
+            background: rgba(255,255,255,0.02);
+            color: rgba(255,255,255,0.15);
+            font-weight: 600;
+            font-size: 0.7rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: inherit;
+            text-align: center;
+        }
+
+        .btn-control:hover {
+            border-color: rgba(139,92,246,0.12);
+            background: rgba(139,92,246,0.03);
+            color: #fff;
+        }
+
+        .btn-control .icon { font-size: 1.4rem; display: block; margin-bottom: 2px; }
+        .btn-control .sub { font-size: 0.5rem; color: rgba(255,255,255,0.04); display: block; margin-top: 2px; }
+
+        .btn-control.primary { border-color: rgba(139,92,246,0.1); color: #8B5CF6; }
+        .btn-control.primary:hover { border-color: #8B5CF6; background: rgba(139,92,246,0.04); }
+
+        .btn-control.danger { border-color: rgba(220,53,69,0.06); color: rgba(220,53,69,0.3); }
+        .btn-control.danger:hover { border-color: rgba(220,53,69,0.15); color: #dc3545; }
+
+        .btn-control.success { border-color: rgba(0,255,136,0.04); color: rgba(0,255,136,0.2); }
+        .btn-control.success:hover { border-color: rgba(0,255,136,0.08); color: #00FF88; }
+
+        .btn-control.warning { border-color: rgba(245,158,11,0.04); color: rgba(245,158,11,0.2); }
+        .btn-control.warning:hover { border-color: rgba(245,158,11,0.08); color: #F59E0B; }
+
+        .btn-control:disabled { opacity: 0.2; cursor: not-allowed; transform: none !important; }
+
+        .full-width { grid-column: 1 / -1; }
+
+        .player-list {
+            margin-top: 8px;
+            max-height: 140px;
+            overflow-y: auto;
+            font-size: 0.7rem;
+            color: rgba(255,255,255,0.08);
+            line-height: 2;
+        }
+
+        .player-list .item {
+            display: flex;
+            justify-content: space-between;
+            padding: 2px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.01);
+        }
+
+        .player-list .item .name { color: rgba(255,255,255,0.2); }
+        .player-list .item .role { color: rgba(255,255,255,0.04); font-size: 0.55rem; }
+
+        .toast-container {
+            position: fixed;
+            bottom: 16px;
+            right: 16px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            align-items: flex-end;
+            max-width: 90%;
+        }
+
+        .toast-msg {
+            padding: 6px 16px;
+            border-radius: 40px;
+            color: #fff;
+            font-weight: 500;
+            animation: toastIn 0.4s ease;
+            font-size: 0.75rem;
+            backdrop-filter: blur(20px);
+            background: rgba(10,10,30,0.8);
+            border: 1px solid rgba(255,255,255,0.04);
+        }
+
+        .toast-msg.success { background: rgba(0,255,136,0.08); border-color: rgba(0,255,136,0.04); color: #00FF88; }
+        .toast-msg.error { background: rgba(255,0,110,0.08); border-color: rgba(255,0,110,0.04); color: #FF006E; }
+        .toast-msg.info { background: rgba(0,240,255,0.06); border-color: rgba(0,240,255,0.04); color: #00F0FF; }
+
+        @@keyframes toastIn {
+            from { opacity: 0; transform: translateY(16px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        @@media (max-width: 480px) {
+            .holo-card { padding: 14px 12px 14px; border-radius: 24px; }
+            .control-grid { gap: 4px; }
+            .btn-control { padding: 8px 4px; font-size: 0.6rem; }
+            .btn-control .icon { font-size: 1.1rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="holo-card">
+            <div class="border-glow"></div>
+
+            <div class="header">
+                <span class="title">👑 房主控制</span>
+                <span class="room-code">✦ <span id="roomDisplay">@roomId</span></span>
+            </div>
+
+            <div class="status-bar">
+                <span>📡 阶段：<span class="phase" id="phaseDisplay">等待开始</span></span>
+                <span>⏱ <span class="timer" id="timerDisplay">--</span></span>
+            </div>
+
+            <!-- 快捷控制 -->
+            <div class="section-title">🎮 快捷控制</div>
+            <div class="control-grid">
+                <button class="btn-control primary full-width" id="pauseBtn" onclick="togglePause()">
+                    <span class="icon">⏸️</span>
+                    暂停 / 继续
+                    <span class="sub">AI 自动流程暂停</span>
+                </button>
+                <button class="btn-control warning" onclick="speedUp()">
+                    <span class="icon">⏩</span>
+                    加速
+                    <span class="sub">减少等待时间</span>
+                </button>
+                <button class="btn-control" onclick="speedDown()">
+                    <span class="icon">⏪</span>
+                    减速
+                    <span class="sub">增加等待时间</span>
+                </button>
+                <button class="btn-control success" onclick="skipPhase()">
+                    <span class="icon">⏭️</span>
+                    跳过阶段
+                    <span class="sub">强制进入下一阶段</span>
+                </button>
+                <button class="btn-control danger full-width" onclick="endGame()">
+                    <span class="icon">🏁</span>
+                    结束游戏
+                    <span class="sub">强制结束本局</span>
+                </button>
+            </div>
+
+            <!-- 查看身份 -->
+            <div class="section-title">🃏 裁判视角</div>
+            <div class="control-grid">
+                <button class="btn-control primary full-width" onclick="viewAllRoles()">
+                    <span class="icon">👁️</span>
+                    查看所有身份
+                    <span class="sub">仅房主可见</span>
+                </button>
+            </div>
+
+            <!-- 玩家列表 -->
+            <div class="section-title">👥 玩家列表</div>
+            <div class="player-list" id="playerList">
+                <span style="color:rgba(255,255,255,0.02);font-size:0.6rem;">加载中...</span>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js">
+    </script>
+
+    <script>
+        var roomId = '@roomId';
+        var isPaused = false;
+        var speedMultiplier = 1;
+        var connection = null;
+
+        function connectSignalR() {
+            try {
+                connection = new signalR.HubConnectionBuilder()
+                    .withUrl('/werewolfHub')
+                    .configureLogging(signalR.LogLevel.Information)
+                    .build();
+
+                connection.on('PhaseUpdate', function(phase, day, night) {
+                    var phaseNames = {
+                        'setup': '⚙️ 设置中',
+                        'seating': '🪑 就坐中',
+                        'dealing': '🃏 发牌中',
+                        'revealing': '📩 查看身份',
+                        'sheriff_election': '👑 警长竞选',
+                        'night_guard': '🌙 守卫行动',
+                        'night_seer': '🌙 预言家行动',
+                        'night_werewolf': '🌙 狼人行动',
+                        'night_witch': '🌙 女巫行动',
+                        'night_resolve': '🌙 结算中',
+                        'day_announce': '☀️ 公布死讯',
+                        'day_speech': '☀️ 发言阶段',
+                        'day_voting': '☀️ 投票阶段',
+                        'day_pk': '☀️ PK发言',
+                        'day_resolve': '☀️ 公布结果',
+                        'hunter_shoot': '🔫 猎人开枪',
+                        'gameover': '🏁 游戏结束'
+                    };
+                    document.getElementById('phaseDisplay').textContent = phaseNames[phase] || phase;
+                });
+
+                connection.on('DisplayMessage', function(message) {
+                    // 显示在状态栏
+                });
+
+                connection.on('VoiceAnnounce', function(message) {
+                    // 显示在状态栏
+                });
+
+                connection.on('PlayerListUpdate', function(players) {
+                    updatePlayerList(players);
+                });
+
+                connection.on('GameOver', function(winner) {
+                    showToast('🏆 游戏结束！' + (winner === '好人' ? '好人胜利！' : '狼人胜利！'), 'success');
+                });
+
+                connection.start()
+                    .then(function() {
+                        console.log('✅ SignalR 已连接');
+                        connection.invoke('JoinHostControl', roomId);
+                    })
+                    .catch(function(err) {
+                        console.error('❌ SignalR 连接失败:', err);
+                        setTimeout(connectSignalR, 3000);
+                    });
+
+            } catch (e) {
+                console.error('SignalR 初始化失败:', e);
+            }
+        }
+
+        function updatePlayerList(players) {
+            var container = document.getElementById('playerList');
+            if (!players || players.length === 0) {
+                container.innerHTML = '<span style="color:rgba(255,255,255,0.02);font-size:0.6rem;">暂无玩家</span>';
+                return;
+            }
+
+            var html = '';
+            players.forEach(function(p) {
+                if (p.isSpectator) return;
+                var status = p.isAlive ? '🟢' : '💀';
+                var roleDisplay = p.role || '?';
+                html += '<div class="item">' +
+                    '<span class="name">' + status + ' ' + p.seatNumber + '号 ' + p.nickname + '</span>' +
+                    '<span class="role">' + roleDisplay + '</span>' +
+                    '</div>';
+            });
+            container.innerHTML = html;
+        }
+
+        function togglePause() {
+            isPaused = !isPaused;
+            var btn = document.getElementById('pauseBtn');
+            if (isPaused) {
+                btn.innerHTML =
+                    '<span class="icon">▶️</span> 继续<span class="sub">AI 流程已暂停</span>';
+                btn.style.borderColor = 'rgba(245,158,11,0.15)';
+                btn.style.color = '#F59E0B';
+                showToast('⏸️ 游戏已暂停', 'info');
+                connection.invoke('PauseGame', roomId);
+            } else {
+                btn.innerHTML =
+                    '<span class="icon">⏸️</span> 暂停<span class="sub">AI 自动流程暂停</span>';
+                btn.style.borderColor = '';
+                btn.style.color = '';
+                showToast('▶️ 游戏继续', 'info');
+                connection.invoke('ResumeGame', roomId);
+            }
+        }
+
+        function speedUp() {
+            if (speedMultiplier >= 3) return;
+            speedMultiplier += 0.5;
+            connection.invoke('SetSpeed', roomId, speedMultiplier);
+            showToast('⏩ 速度 x' + speedMultiplier, 'info');
+        }
+
+        function speedDown() {
+            if (speedMultiplier <= 0.5) return;
+            speedMultiplier -= 0.5;
+            connection.invoke('SetSpeed', roomId, speedMultiplier);
+            showToast('⏪ 速度 x' + speedMultiplier, 'info');
+        }
+
+        function skipPhase() {
+            if (!confirm('确定要跳过当前阶段吗？')) return;
+            connection.invoke('SkipPhase', roomId);
+            showToast('⏭️ 已跳过', 'info');
+        }
+
+        function endGame() {
+            if (!confirm('确定要结束本局游戏吗？')) return;
+            connection.invoke('EndGame', roomId);
+            showToast('🏁 游戏已结束', 'warning');
+        }
+
+        function viewAllRoles() {
+            connection.invoke('GetAllRoles', roomId)
+                .then(function(data) {
+                    var msg = '📋 所有玩家身份：\n\n';
+                    data.forEach(function(p) {
+                        msg += p.seatNumber + '号 ' + p.nickname + ' → ' + p.role + '\n';
+                    });
+                    alert(msg);
+                })
+                .catch(function(err) {
+                    showToast('❌ 获取失败: ' + err, 'error');
+                });
+        }
+
+        function showToast(message, type) {
+            type = type || 'info';
+            var container = document.getElementById('toastContainer');
+            var toast = document.createElement('div');
+            toast.className = 'toast-msg ' + type;
+            toast.textContent = message;
+            container.appendChild(toast);
+            setTimeout(function() {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(20px)';
+                setTimeout(function() { toast.remove(); }, 300);
+            }, 3500);
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            connectSignalR();
+        });
+    </script>
+
+</body>
+</html>
