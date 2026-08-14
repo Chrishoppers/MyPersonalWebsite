@@ -1,8 +1,8 @@
+// Controllers/PartyController.cs
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using MyPersonalWebsite.Hubs;
 using System;
-using System.Linq;
 
 namespace MyPersonalWebsite.Controllers
 {
@@ -16,60 +16,54 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // 主控端页面 - 仅 admin 可访问
+        // 派对主界面（入口）
         // ============================================================
         public IActionResult Host()
         {
-            // 检查 Session 中的 IsAdmin
-            var isAdmin = HttpContext.Session.GetInt32("IsAdmin");
-            
-            // 如果 Session 中没有 IsAdmin，检查用户是否在数据库中为 admin
-            if (!isAdmin.HasValue)
-            {
-                var userId = HttpContext.Session.GetInt32("UserId");
-                if (userId.HasValue)
-                {
-                    // 从数据库检查用户是否是 admin
-                    try
-                    {
-                        using var scope = HttpContext.RequestServices.CreateScope();
-                        var dataSync = scope.ServiceProvider.GetRequiredService<MyPersonalWebsite.Services.DataSyncService>();
-                        var user = dataSync.GetUserByIdAsync(userId.Value).GetAwaiter().GetResult();
-                        if (user != null && user.IsAdmin)
-                        {
-                            HttpContext.Session.SetInt32("IsAdmin", 1);
-                            isAdmin = 1;
-                        }
-                        else
-                        {
-                            HttpContext.Session.SetInt32("IsAdmin", 0);
-                            isAdmin = 0;
-                        }
-                    }
-                    catch
-                    {
-                        isAdmin = 0;
-                    }
-                }
-                else
-                {
-                    isAdmin = 0;
-                }
-            }
-
+            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
             if (isAdmin != 1)
             {
-                // 不是管理员，跳转到登录页
                 return RedirectToAction("Login", "Auth");
             }
-
-            var username = HttpContext.Session.GetString("Username") ?? "admin";
-            ViewBag.Username = username;
             return View();
         }
 
         // ============================================================
-        // 玩家端页面（任何人可访问）
+        // 创建房间 - 成功后跳转到狼人杀主控端
+        // ============================================================
+        [HttpPost]
+        public async Task<IActionResult> CreateRoom(string roomName, int maxPlayers = 12)
+        {
+            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+            if (isAdmin != 1)
+            {
+                return Json(new { success = false, message = "权限不足" });
+            }
+
+            try
+            {
+                // 生成房间码
+                var roomId = GenerateRoomCode();
+                
+                // 可以在这里保存房间信息到数据库或内存
+                // 暂时用 TempData 传递
+                TempData["RoomId"] = roomId;
+                TempData["RoomName"] = roomName;
+
+                return Json(new { 
+                    success = true, 
+                    roomId = roomId,
+                    redirectUrl = $"/Werewolf/Host?roomId={roomId}"
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        // ============================================================
+        // 玩家加入派对
         // ============================================================
         public IActionResult Player(string? roomId)
         {
@@ -78,45 +72,31 @@ namespace MyPersonalWebsite.Controllers
         }
 
         // ============================================================
-        // API: 验证房间是否存在
+        // 验证房间
         // ============================================================
         [HttpGet]
         public IActionResult ValidateRoom(string roomId)
         {
-            try
-            {
-                var room = PartyHub.GetRoom(roomId);
-                if (room == null)
-                {
-                    return Json(new { success = false, message = "房间不存在" });
-                }
-                if (room.Status == "playing" || room.Status == "ended")
-                {
-                    return Json(new { success = false, message = "房间已关闭" });
-                }
-                return Json(new { success = true, roomName = room.HostName, playerCount = room.Players.Count });
-            }
-            catch (Exception ex)
-            {
-                return Json(new { success = false, message = ex.Message });
-            }
+            // 这里可以验证房间是否存在
+            // 暂时返回成功
+            return Json(new { success = true, roomName = "狼人杀派对" });
         }
 
-        // ============================================================
-        // API: 获取所有房间
-        // ============================================================
-        [HttpGet]
-        public IActionResult GetAllRooms()
+        private string GenerateRoomCode()
         {
-            try
+            const string chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+            var random = new Random();
+            var parts = new string[2];
+            for (int i = 0; i < 2; i++)
             {
-                var rooms = PartyHub.GetAllRooms();
-                return Json(new { success = true, rooms });
+                char[] part = new char[4];
+                for (int j = 0; j < 4; j++)
+                {
+                    part[j] = chars[random.Next(chars.Length)];
+                }
+                parts[i] = new string(part);
             }
-            catch (Exception ex)
-            {
-                return Json(new { success = false, message = ex.Message });
-            }
+            return $"{parts[0]}-{parts[1]}";
         }
     }
 }
