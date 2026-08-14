@@ -45,20 +45,12 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 );
 
 // ============================================================
-// ⭐ DataProtection 使用文件存储（修复 Session 密钥丢失问题）
+// DataProtection 使用文件存储（每次部署不会丢失 Session）
 // ============================================================
 var keysDirectory = "/app/keys";
 if (!Directory.Exists(keysDirectory))
 {
-    try
-    {
-        Directory.CreateDirectory(keysDirectory);
-        Console.WriteLine($"✅ 创建密钥目录: {keysDirectory}");
-    }
-    catch
-    {
-        Console.WriteLine($"⚠️ 无法创建密钥目录: {keysDirectory}，将使用临时密钥");
-    }
+    try { Directory.CreateDirectory(keysDirectory); } catch { }
 }
 
 try
@@ -69,11 +61,9 @@ try
         .SetDefaultKeyLifetime(TimeSpan.FromDays(90));
     Console.WriteLine("✅ DataProtection 已配置持久化密钥");
 }
-catch (Exception ex)
+catch
 {
-    Console.WriteLine($"⚠️ DataProtection 配置失败: {ex.Message}，将使用默认配置");
-    builder.Services.AddDataProtection()
-        .SetApplicationName("MyPersonalWebsite");
+    builder.Services.AddDataProtection().SetApplicationName("MyPersonalWebsite");
 }
 
 // ============================================================
@@ -92,10 +82,6 @@ builder.Services.AddSession(options =>
 // HttpClient
 // ============================================================
 builder.Services.AddHttpClient();
-
-// ============================================================
-// HttpContextAccessor
-// ============================================================
 builder.Services.AddHttpContextAccessor();
 
 // ============================================================
@@ -121,10 +107,9 @@ builder.Services.AddScoped<GameAntiCheatService>();
 
 builder.Services.AddHttpClient<TrainService>();
 builder.Services.AddHttpClient<ReCaptchaService>();
-app.MapHub<WerewolfHub>("/werewolfHub");
 
 // ============================================================
-// ⭐ SignalR
+// ⭐ SignalR（核心）
 // ============================================================
 builder.Services.AddSignalR(options =>
 {
@@ -188,6 +173,7 @@ app.MapControllerRoute(
 // ⭐ SignalR Hub 映射
 app.MapHub<MessageHub>("/messageHub");
 app.MapHub<PartyHub>("/partyHub");
+app.MapHub<WerewolfHub>("/werewolfHub");  // ⭐ 新增
 
 // ============================================================
 // 应用生命周期事件
@@ -209,387 +195,67 @@ app.Run();
 // ============================================================
 // ⭐ 辅助方法
 // ============================================================
-
 async Task EnsureTursoTablesAsync(DataSyncService dataSync)
 {
     Console.WriteLine("📦 检查 Turso 数据表...");
-
     var tables = new Dictionary<string, string>
     {
-        { "GameSuggestions", @"
-            CREATE TABLE IF NOT EXISTS GameSuggestions (
-                Id INTEGER PRIMARY KEY,
-                UserId INTEGER NOT NULL,
-                GameName TEXT NOT NULL,
-                Description TEXT,
-                Votes INTEGER DEFAULT 0,
-                Status TEXT DEFAULT 'pending',
-                CreatedAt TEXT,
-                UpdatedAt TEXT
-            )"
-        },
-        { "GameSuggestionVotes", @"
-            CREATE TABLE IF NOT EXISTS GameSuggestionVotes (
-                Id INTEGER PRIMARY KEY,
-                SuggestionId INTEGER NOT NULL,
-                UserId INTEGER NOT NULL,
-                VotedAt TEXT,
-                UNIQUE(SuggestionId, UserId)
-            )"
-        },
-        { "Users", @"
-            CREATE TABLE IF NOT EXISTS Users (
-                Id INTEGER PRIMARY KEY,
-                Username TEXT NOT NULL,
-                Email TEXT NOT NULL,
-                PasswordHash TEXT NOT NULL,
-                IsEmailVerified INTEGER DEFAULT 0,
-                IsAdmin INTEGER DEFAULT 0,
-                CreatedAt TEXT,
-                LastLoginAt TEXT,
-                IsBanned INTEGER DEFAULT 0,
-                BanExpiry TEXT,
-                BanReason TEXT,
-                IsDeleted INTEGER DEFAULT 0,
-                DeletedAt TEXT,
-                DeleteReason TEXT,
-                DeleteNote TEXT,
-                AvatarUrl TEXT,
-                IsAvatarApproved INTEGER DEFAULT 0,
-                AvatarSubmittedAt TEXT,
-                PendingEmail TEXT,
-                PendingUsername TEXT,
-                IsEmailChangeApproved INTEGER DEFAULT 0,
-                IsUsernameChangeApproved INTEGER DEFAULT 0,
-                VerificationCode TEXT,
-                VerificationCodeExpiry TEXT,
-                IsApproved INTEGER DEFAULT 0,
-                LoginToken TEXT,
-                LoginTokenExpiry TEXT
-            )"
-        },
-        { "Blogs", @"
-            CREATE TABLE IF NOT EXISTS Blogs (
-                Id INTEGER PRIMARY KEY,
-                Title TEXT NOT NULL,
-                Content TEXT NOT NULL,
-                Summary TEXT,
-                PublishDate TEXT,
-                CoverImageUrl TEXT,
-                LikeCount INTEGER DEFAULT 0
-            )"
-        },
-        { "Messages", @"
-            CREATE TABLE IF NOT EXISTS Messages (
-                Id INTEGER PRIMARY KEY,
-                UserId INTEGER,
-                VisitorName TEXT,
-                Email TEXT,
-                Content TEXT,
-                CreateTime TEXT,
-                IsApproved INTEGER DEFAULT 0,
-                LikeCount INTEGER DEFAULT 0,
-                AdminReply TEXT,
-                AdminReplyTime TEXT,
-                ReportCount INTEGER DEFAULT 0,
-                IsReported INTEGER DEFAULT 0
-            )"
-        },
-        { "Projects", @"
-            CREATE TABLE IF NOT EXISTS Projects (
-                Id INTEGER PRIMARY KEY,
-                Name TEXT,
-                Description TEXT,
-                ImageUrl TEXT,
-                ProjectUrl TEXT,
-                TechStack TEXT
-            )"
-        },
-        { "ContactRequests", @"
-            CREATE TABLE IF NOT EXISTS ContactRequests (
-                Id INTEGER PRIMARY KEY,
-                Platform TEXT,
-                AuthorizationCode TEXT,
-                HowKnowMe TEXT,
-                Identity TEXT,
-                Relationship TEXT,
-                Remarks TEXT,
-                UserId INTEGER,
-                Username TEXT,
-                UserEmail TEXT,
-                RequestTime TEXT,
-                IsApproved INTEGER DEFAULT 0,
-                ViewTime TEXT,
-                IsUsed INTEGER DEFAULT 0,
-                UsedTime TEXT,
-                UsedBy TEXT
-            )"
-        },
-        { "AboutMeContents", @"
-            CREATE TABLE IF NOT EXISTS AboutMeContents (
-                Id INTEGER PRIMARY KEY,
-                SectionKey TEXT,
-                Title TEXT,
-                Content TEXT,
-                Icon TEXT,
-                SortOrder INTEGER DEFAULT 0,
-                UpdatedAt TEXT
-            )"
-        },
-        { "PasswordResets", @"
-            CREATE TABLE IF NOT EXISTS PasswordResets (
-                Id INTEGER PRIMARY KEY,
-                UserId INTEGER,
-                Token TEXT,
-                Email TEXT,
-                CreatedAt TEXT,
-                ExpiresAt TEXT,
-                IsUsed INTEGER DEFAULT 0
-            )"
-        },
-        { "BlogLikes", @"
-            CREATE TABLE IF NOT EXISTS BlogLikes (
-                Id INTEGER PRIMARY KEY,
-                BlogId INTEGER,
-                UserId INTEGER,
-                CreateTime TEXT
-            )"
-        },
-        { "MessageLikes", @"
-            CREATE TABLE IF NOT EXISTS MessageLikes (
-                Id INTEGER PRIMARY KEY,
-                MessageId INTEGER NOT NULL,
-                UserId INTEGER NOT NULL,
-                CreateTime TEXT
-            )"
-        },
-        { "EmailLogs", @"
-            CREATE TABLE IF NOT EXISTS EmailLogs (
-                Id INTEGER PRIMARY KEY,
-                UserId INTEGER,
-                Email TEXT,
-                Type TEXT,
-                SentAt TEXT,
-                IsSuccess INTEGER DEFAULT 0,
-                ErrorMessage TEXT
-            )"
-        },
-        { "Notifications", @"
-            CREATE TABLE IF NOT EXISTS Notifications (
-                Id INTEGER PRIMARY KEY,
-                UserId INTEGER NOT NULL,
-                Title TEXT NOT NULL,
-                Message TEXT NOT NULL,
-                Type TEXT DEFAULT 'info',
-                IsRead INTEGER DEFAULT 0,
-                CreatedAt TEXT
-            )"
-        },
-        { "DailyQuestionBank", @"
-            CREATE TABLE IF NOT EXISTS DailyQuestionBank (
-                Id INTEGER PRIMARY KEY,
-                Question TEXT NOT NULL,
-                Answer TEXT NOT NULL,
-                Pinyin TEXT NOT NULL,
-                Hint TEXT,
-                Difficulty INTEGER DEFAULT 1,
-                Category TEXT DEFAULT '综合',
-                IsActive INTEGER DEFAULT 1,
-                CreatedAt TEXT,
-                UsedAt TEXT,
-                UseCount INTEGER DEFAULT 0
-            )"
-        },
-        { "DailyQuestions", @"
-            CREATE TABLE IF NOT EXISTS DailyQuestions (
-                Id INTEGER PRIMARY KEY,
-                QuestionId INTEGER NOT NULL,
-                Date TEXT UNIQUE NOT NULL,
-                CreatedAt TEXT
-            )"
-        },
-        { "UserDailyAnswers", @"
-            CREATE TABLE IF NOT EXISTS UserDailyAnswers (
-                Id INTEGER PRIMARY KEY,
-                UserId INTEGER NOT NULL,
-                QuestionId INTEGER NOT NULL,
-                Answer TEXT,
-                IsCorrect INTEGER DEFAULT 0,
-                AnswerDate TEXT NOT NULL,
-                UNIQUE(UserId, AnswerDate)
-            )"
-        },
-        { "UserGameStats", @"
-            CREATE TABLE IF NOT EXISTS UserGameStats (
-                Id INTEGER PRIMARY KEY AUTOINCREMENT,
-                UserId INTEGER NOT NULL UNIQUE,
-                TotalPoints INTEGER DEFAULT 0,
-                MaxCombo INTEGER DEFAULT 0,
-                MaxLevel INTEGER DEFAULT 0,
-                GamesPlayed INTEGER DEFAULT 0,
-                UpdatedAt TEXT
-            )"
-        },
-        { "GameSessions", @"
-            CREATE TABLE IF NOT EXISTS GameSessions (
-                Id INTEGER PRIMARY KEY,
-                UserId INTEGER NOT NULL,
-                SessionId TEXT NOT NULL UNIQUE,
-                StartTime TEXT NOT NULL,
-                EndTime TEXT,
-                TotalScore INTEGER DEFAULT 0,
-                FinalScore INTEGER DEFAULT 0,
-                PassedCount INTEGER DEFAULT 0,
-                MaxCombo INTEGER DEFAULT 0,
-                CheatCount INTEGER DEFAULT 0,
-                MicEnabled INTEGER DEFAULT 1,
-                CamEnabled INTEGER DEFAULT 1,
-                PenaltyMic INTEGER DEFAULT 8,
-                PenaltyCam INTEGER DEFAULT 5,
-                IsCompleted INTEGER DEFAULT 0,
-                Status TEXT DEFAULT 'playing'
-            )"
-        },
-        { "GameAnswerLogs", @"
-            CREATE TABLE IF NOT EXISTS GameAnswerLogs (
-                Id INTEGER PRIMARY KEY,
-                SessionId TEXT NOT NULL,
-                UserId INTEGER NOT NULL,
-                Level INTEGER NOT NULL,
-                QuestionType TEXT NOT NULL,
-                StartTime TEXT NOT NULL,
-                SubmitTime TEXT NOT NULL,
-                ElapsedSeconds REAL NOT NULL,
-                IsCorrect INTEGER DEFAULT 0,
-                IsTimeout INTEGER DEFAULT 0,
-                CheatDetected INTEGER DEFAULT 0,
-                CheatReason TEXT,
-                PointsEarned INTEGER DEFAULT 0,
-                PenaltyApplied INTEGER DEFAULT 0
-            )"
-        },
-        { "CheatEvents", @"
-            CREATE TABLE IF NOT EXISTS CheatEvents (
-                Id INTEGER PRIMARY KEY,
-                SessionId TEXT NOT NULL,
-                UserId INTEGER NOT NULL,
-                EventType TEXT NOT NULL,
-                EventDetail TEXT,
-                DetectedAt TEXT NOT NULL,
-                PenaltyAmount INTEGER DEFAULT 5
-            )"
-        }
+        { "GameSuggestions", @"CREATE TABLE IF NOT EXISTS GameSuggestions (Id INTEGER PRIMARY KEY, UserId INTEGER NOT NULL, GameName TEXT NOT NULL, Description TEXT, Votes INTEGER DEFAULT 0, Status TEXT DEFAULT 'pending', CreatedAt TEXT, UpdatedAt TEXT)" },
+        { "GameSuggestionVotes", @"CREATE TABLE IF NOT EXISTS GameSuggestionVotes (Id INTEGER PRIMARY KEY, SuggestionId INTEGER NOT NULL, UserId INTEGER NOT NULL, VotedAt TEXT, UNIQUE(SuggestionId, UserId))" },
+        { "Users", @"CREATE TABLE IF NOT EXISTS Users (Id INTEGER PRIMARY KEY, Username TEXT NOT NULL, Email TEXT NOT NULL, PasswordHash TEXT NOT NULL, IsEmailVerified INTEGER DEFAULT 0, IsAdmin INTEGER DEFAULT 0, CreatedAt TEXT, LastLoginAt TEXT, IsBanned INTEGER DEFAULT 0, BanExpiry TEXT, BanReason TEXT, IsDeleted INTEGER DEFAULT 0, DeletedAt TEXT, DeleteReason TEXT, DeleteNote TEXT, AvatarUrl TEXT, IsAvatarApproved INTEGER DEFAULT 0, AvatarSubmittedAt TEXT, PendingEmail TEXT, PendingUsername TEXT, IsEmailChangeApproved INTEGER DEFAULT 0, IsUsernameChangeApproved INTEGER DEFAULT 0, VerificationCode TEXT, VerificationCodeExpiry TEXT, IsApproved INTEGER DEFAULT 0, LoginToken TEXT, LoginTokenExpiry TEXT)" },
+        { "Blogs", @"CREATE TABLE IF NOT EXISTS Blogs (Id INTEGER PRIMARY KEY, Title TEXT NOT NULL, Content TEXT NOT NULL, Summary TEXT, PublishDate TEXT, CoverImageUrl TEXT, LikeCount INTEGER DEFAULT 0)" },
+        { "Messages", @"CREATE TABLE IF NOT EXISTS Messages (Id INTEGER PRIMARY KEY, UserId INTEGER, VisitorName TEXT, Email TEXT, Content TEXT, CreateTime TEXT, IsApproved INTEGER DEFAULT 0, LikeCount INTEGER DEFAULT 0, AdminReply TEXT, AdminReplyTime TEXT, ReportCount INTEGER DEFAULT 0, IsReported INTEGER DEFAULT 0)" },
+        { "Projects", @"CREATE TABLE IF NOT EXISTS Projects (Id INTEGER PRIMARY KEY, Name TEXT, Description TEXT, ImageUrl TEXT, ProjectUrl TEXT, TechStack TEXT)" },
+        { "ContactRequests", @"CREATE TABLE IF NOT EXISTS ContactRequests (Id INTEGER PRIMARY KEY, Platform TEXT, AuthorizationCode TEXT, HowKnowMe TEXT, Identity TEXT, Relationship TEXT, Remarks TEXT, UserId INTEGER, Username TEXT, UserEmail TEXT, RequestTime TEXT, IsApproved INTEGER DEFAULT 0, ViewTime TEXT, IsUsed INTEGER DEFAULT 0, UsedTime TEXT, UsedBy TEXT)" },
+        { "AboutMeContents", @"CREATE TABLE IF NOT EXISTS AboutMeContents (Id INTEGER PRIMARY KEY, SectionKey TEXT, Title TEXT, Content TEXT, Icon TEXT, SortOrder INTEGER DEFAULT 0, UpdatedAt TEXT)" },
+        { "PasswordResets", @"CREATE TABLE IF NOT EXISTS PasswordResets (Id INTEGER PRIMARY KEY, UserId INTEGER, Token TEXT, Email TEXT, CreatedAt TEXT, ExpiresAt TEXT, IsUsed INTEGER DEFAULT 0)" },
+        { "BlogLikes", @"CREATE TABLE IF NOT EXISTS BlogLikes (Id INTEGER PRIMARY KEY, BlogId INTEGER, UserId INTEGER, CreateTime TEXT)" },
+        { "MessageLikes", @"CREATE TABLE IF NOT EXISTS MessageLikes (Id INTEGER PRIMARY KEY, MessageId INTEGER NOT NULL, UserId INTEGER NOT NULL, CreateTime TEXT)" },
+        { "EmailLogs", @"CREATE TABLE IF NOT EXISTS EmailLogs (Id INTEGER PRIMARY KEY, UserId INTEGER, Email TEXT, Type TEXT, SentAt TEXT, IsSuccess INTEGER DEFAULT 0, ErrorMessage TEXT)" },
+        { "Notifications", @"CREATE TABLE IF NOT EXISTS Notifications (Id INTEGER PRIMARY KEY, UserId INTEGER NOT NULL, Title TEXT NOT NULL, Message TEXT NOT NULL, Type TEXT DEFAULT 'info', IsRead INTEGER DEFAULT 0, CreatedAt TEXT)" },
+        { "DailyQuestionBank", @"CREATE TABLE IF NOT EXISTS DailyQuestionBank (Id INTEGER PRIMARY KEY, Question TEXT NOT NULL, Answer TEXT NOT NULL, Pinyin TEXT NOT NULL, Hint TEXT, Difficulty INTEGER DEFAULT 1, Category TEXT DEFAULT '综合', IsActive INTEGER DEFAULT 1, CreatedAt TEXT, UsedAt TEXT, UseCount INTEGER DEFAULT 0)" },
+        { "DailyQuestions", @"CREATE TABLE IF NOT EXISTS DailyQuestions (Id INTEGER PRIMARY KEY, QuestionId INTEGER NOT NULL, Date TEXT UNIQUE NOT NULL, CreatedAt TEXT)" },
+        { "UserDailyAnswers", @"CREATE TABLE IF NOT EXISTS UserDailyAnswers (Id INTEGER PRIMARY KEY, UserId INTEGER NOT NULL, QuestionId INTEGER NOT NULL, Answer TEXT, IsCorrect INTEGER DEFAULT 0, AnswerDate TEXT NOT NULL, UNIQUE(UserId, AnswerDate))" },
+        { "UserGameStats", @"CREATE TABLE IF NOT EXISTS UserGameStats (Id INTEGER PRIMARY KEY AUTOINCREMENT, UserId INTEGER NOT NULL UNIQUE, TotalPoints INTEGER DEFAULT 0, MaxCombo INTEGER DEFAULT 0, MaxLevel INTEGER DEFAULT 0, GamesPlayed INTEGER DEFAULT 0, UpdatedAt TEXT)" },
+        { "GameSessions", @"CREATE TABLE IF NOT EXISTS GameSessions (Id INTEGER PRIMARY KEY, UserId INTEGER NOT NULL, SessionId TEXT NOT NULL UNIQUE, StartTime TEXT NOT NULL, EndTime TEXT, TotalScore INTEGER DEFAULT 0, FinalScore INTEGER DEFAULT 0, PassedCount INTEGER DEFAULT 0, MaxCombo INTEGER DEFAULT 0, CheatCount INTEGER DEFAULT 0, MicEnabled INTEGER DEFAULT 1, CamEnabled INTEGER DEFAULT 1, PenaltyMic INTEGER DEFAULT 8, PenaltyCam INTEGER DEFAULT 5, IsCompleted INTEGER DEFAULT 0, Status TEXT DEFAULT 'playing')" },
+        { "GameAnswerLogs", @"CREATE TABLE IF NOT EXISTS GameAnswerLogs (Id INTEGER PRIMARY KEY, SessionId TEXT NOT NULL, UserId INTEGER NOT NULL, Level INTEGER NOT NULL, QuestionType TEXT NOT NULL, StartTime TEXT NOT NULL, SubmitTime TEXT NOT NULL, ElapsedSeconds REAL NOT NULL, IsCorrect INTEGER DEFAULT 0, IsTimeout INTEGER DEFAULT 0, CheatDetected INTEGER DEFAULT 0, CheatReason TEXT, PointsEarned INTEGER DEFAULT 0, PenaltyApplied INTEGER DEFAULT 0)" },
+        { "CheatEvents", @"CREATE TABLE IF NOT EXISTS CheatEvents (Id INTEGER PRIMARY KEY, SessionId TEXT NOT NULL, UserId INTEGER NOT NULL, EventType TEXT NOT NULL, EventDetail TEXT, DetectedAt TEXT NOT NULL, PenaltyAmount INTEGER DEFAULT 5)" }
     };
 
     int successCount = 0;
-    int failCount = 0;
-
     foreach (var table in tables)
     {
         try
         {
             var checkResult = await dataSync.QueryAsync($"SELECT name FROM sqlite_master WHERE type='table' AND name='{table.Key}'");
-            if (checkResult.Contains($"\"{table.Key}\""))
-            {
-                Console.WriteLine($"✅ 表 {table.Key} 已存在，跳过创建");
-                successCount++;
-                continue;
-            }
-
+            if (checkResult.Contains($"\"{table.Key}\"")) { successCount++; continue; }
             var result = await dataSync.ExecuteSqlAsync(table.Value);
-            if (result)
-            {
-                successCount++;
-                Console.WriteLine($"✅ 表 {table.Key} 创建成功");
-            }
-            else
-            {
-                failCount++;
-                Console.WriteLine($"⚠️ 表 {table.Key} 创建失败");
-            }
+            if (result) successCount++;
         }
-        catch (Exception ex)
-        {
-            failCount++;
-            Console.WriteLine($"⚠️ 表 {table.Key} 创建异常: {ex.Message}");
-        }
+        catch { }
     }
-
-    Console.WriteLine($"📊 Turso 表检查完成: 成功 {successCount}, 失败 {failCount}");
+    Console.WriteLine($"📊 Turso 表检查完成: 成功 {successCount}");
 }
 
 async Task EnsureAboutMeDataAsync(DataSyncService dataSync)
 {
-    Console.WriteLine("📦 检查 AboutMe 数据...");
-
     try
     {
         var sections = await dataSync.GetAboutMeAsync();
-
         if (sections == null || !sections.Any())
         {
-            Console.WriteLine("📝 AboutMe 数据为空，正在插入默认数据...");
-
             var defaultSections = new[]
             {
-                new AboutMe
-                {
-                    Id = 1,
-                    SectionKey = "bio",
-                    Title = "🧑‍💻 关于我",
-                    Content = "你好！我是 Chris hopper，一个热爱技术的全栈开发者。\n目前专注于 ASP.NET Core 和现代 Web 开发。",
-                    Icon = "🧑‍💻",
-                    SortOrder = 1,
-                    UpdatedAt = DateTime.Now
-                },
-                new AboutMe
-                {
-                    Id = 2,
-                    SectionKey = "journey",
-                    Title = "🚀 学习之路",
-                    Content = "从高中开始接触编程，在技术的道路上不断探索和成长。\n我相信持续学习是保持竞争力的关键。",
-                    Icon = "🚀",
-                    SortOrder = 2,
-                    UpdatedAt = DateTime.Now
-                },
-                new AboutMe
-                {
-                    Id = 3,
-                    SectionKey = "goal",
-                    Title = "🎯 愿景",
-                    Content = "用技术解决问题，创造有价值的工具和内容。\n希望我的作品能对他人有所帮助。",
-                    Icon = "🎯",
-                    SortOrder = 3,
-                    UpdatedAt = DateTime.Now
-                },
-                new AboutMe
-                {
-                    Id = 4,
-                    SectionKey = "social",
-                    Title = "🔗 社交链接",
-                    Content = "github:https://github.com|twitter:https://twitter.com|linkedin:https://linkedin.com",
-                    Icon = "🔗",
-                    SortOrder = 4,
-                    UpdatedAt = DateTime.Now
-                }
+                new AboutMe { Id = 1, SectionKey = "bio", Title = "🧑‍💻 关于我", Content = "你好！我是 Chris hopper，一个热爱技术的全栈开发者。\n目前专注于 ASP.NET Core 和现代 Web 开发。", Icon = "🧑‍💻", SortOrder = 1, UpdatedAt = DateTime.Now },
+                new AboutMe { Id = 2, SectionKey = "journey", Title = "🚀 学习之路", Content = "从高中开始接触编程，在技术的道路上不断探索和成长。\n我相信持续学习是保持竞争力的关键。", Icon = "🚀", SortOrder = 2, UpdatedAt = DateTime.Now },
+                new AboutMe { Id = 3, SectionKey = "goal", Title = "🎯 愿景", Content = "用技术解决问题，创造有价值的工具和内容。\n希望我的作品能对他人有所帮助。", Icon = "🎯", SortOrder = 3, UpdatedAt = DateTime.Now },
+                new AboutMe { Id = 4, SectionKey = "social", Title = "🔗 社交链接", Content = "github:https://github.com|twitter:https://twitter.com|linkedin:https://linkedin.com", Icon = "🔗", SortOrder = 4, UpdatedAt = DateTime.Now }
             };
-
-            foreach (var section in defaultSections)
-            {
-                await dataSync.AddAboutMeAsync(section);
-            }
-
+            foreach (var section in defaultSections) { await dataSync.AddAboutMeAsync(section); }
             Console.WriteLine("✅ AboutMe 默认数据已插入 Turso");
         }
-        else
-        {
-            Console.WriteLine($"✅ AboutMe 数据已存在 ({sections.Count} 条)");
-        }
     }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"⚠️ AboutMe 数据检查失败: {ex.Message}");
-    }
+    catch (Exception ex) { Console.WriteLine($"⚠️ AboutMe 数据检查失败: {ex.Message}"); }
 }
 
 async Task SeedDailyQuestionBankAsync(DataSyncService dataSync)
@@ -600,7 +266,6 @@ async Task SeedDailyQuestionBankAsync(DataSyncService dataSync)
         Console.WriteLine("✅ 题库已存在，跳过初始化");
         return;
     }
-
     Console.WriteLine("📦 题库为空，将由 DailyQuestionService 自动填充");
 }
 
