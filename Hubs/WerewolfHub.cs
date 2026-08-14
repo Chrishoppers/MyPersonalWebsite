@@ -1347,5 +1347,63 @@ namespace MyPersonalWebsite.Hubs
         {
             return _games.Values.ToList();
         }
+        // Hubs/WerewolfHub.cs - 新增AI自动推进
+
+private async Task StartAutoTimer(string roomId, int seconds, string phaseName)
+{
+    if (!_games.TryGetValue(roomId, out var game)) return;
+
+    await Clients.Group(roomId).SendAsync("VoiceAnnounce", $"{phaseName}，请行动", "high");
+    await Clients.Group(roomId).SendAsync("DisplayMessage", $"{phaseName} - 倒计时 {seconds} 秒");
+
+    // 自动倒计时
+    for (int i = seconds; i > 0; i--)
+    {
+        if (i <= 5)
+        {
+            await Clients.Group(roomId).SendAsync("DisplayMessage", $"⏱ {i} 秒");
+        }
+        await Task.Delay(1000);
+
+        // 检查是否所有人都已完成操作
+        if (CheckAllPlayersActed(roomId))
+        {
+            await Clients.Group(roomId).SendAsync("VoiceAnnounce", "所有人已行动，提前进入下一阶段", "normal");
+            await NextPhase(roomId);
+            return;
+        }
+    }
+
+    // 超时自动推进
+    await Clients.Group(roomId).SendAsync("VoiceAnnounce", $"{phaseName}时间到", "normal");
+    await NextPhase(roomId);
+}
+
+private bool CheckAllPlayersActed(string roomId)
+{
+    if (!_games.TryGetValue(roomId, out var game)) return false;
+
+    var phase = game.Phase;
+    var alivePlayers = game.AlivePlayers;
+
+    switch (phase)
+    {
+        case GamePhase.NightGuard:
+            var guard = alivePlayers.FirstOrDefault(p => p.Role == RoleType.Guard);
+            return guard == null || _guardActions.ContainsKey(roomId);
+        case GamePhase.NightSeer:
+            var seer = alivePlayers.FirstOrDefault(p => p.Role == RoleType.Seer);
+            return seer == null || _seerActions.ContainsKey(roomId);
+        case GamePhase.NightWerewolf:
+            var wolves = alivePlayers.Where(p => p.Role == RoleType.Werewolf).ToList();
+            if (!wolves.Any()) return true;
+            return _wolfVotes.ContainsKey(roomId) && _wolfVotes[roomId].Keys.Count >= wolves.Count;
+        case GamePhase.NightWitch:
+            var witch = alivePlayers.FirstOrDefault(p => p.Role == RoleType.Witch);
+            return witch == null || _witchActions.ContainsKey(roomId);
+        default:
+            return false;
+    }
+}
     }
 }
