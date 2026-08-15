@@ -1303,31 +1303,8 @@ document.addEventListener('DOMContentLoaded', function() {
             selectPlayerCount(10);
             connectSignalR();
 
-            // 模拟玩家（实际通过SignalR）
-            setTimeout(function() {
-                var demoPlayers = ['Alice', 'Bob', 'Carol', 'David', 'Eve', 'Frank', 'Grace', 'Henry', 'Ivy', 'Jack'];
-                demoPlayers.forEach(function(name, index) {
-                    if (index < 10) {
-                        var seatNumber = index + 1;
-                        var seat = config.seats.find(function(s) { return s.number === seatNumber; });
-                        if (seat) {
-                            seat.occupied = true;
-                            seat.player = {
-                                playerId: 'demo_' + seatNumber,
-                                name: name,
-                                avatar: ['🧑', '👩', '👨', '🦸', '🧙', '🧚', '🤖', '👾', '🦊', '🐺'][index],
-                                isReady: index % 2 === 0
-                            };
-                            seat.element.className = 'seat occupied';
-                            seat.element.querySelector('.seat-name').textContent = name;
-                            seat.element.querySelector('.seat-emoji').textContent = seat.player.avatar;
-                        }
-                    }
-                });
-                updateSeatCount();
-                updatePlayerList();
-                checkAllReady();
-            }, 1000);
+            
+               
         });
     </script>
 
