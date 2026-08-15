@@ -1942,5 +1942,84 @@ public async Task<object> JoinGame(string roomId, string nickname, string avatar
         {
             return _games.Values.ToList();
         }
+        // ============================================================
+// ⭐ AI陪玩 - 添加AI玩家
+// ============================================================
+public async Task<object> AddAI(string roomId)
+{
+    if (!_games.TryGetValue(roomId, out var game))
+        return new { success = false, message = "房间不存在" };
+
+    if (game.Phase != GamePhase.Setup && game.Phase != GamePhase.Seating)
+        return new { success = false, message = "游戏已开始，无法添加AI" };
+
+    var playerCount = game.PlayerCount;
+    if (playerCount >= 12)
+        return new { success = false, message = "座位已满" };
+
+    var usedSeats = game.Players.Where(p => !p.IsSpectator).Select(p => p.SeatNumber).ToHashSet();
+    var seatNumber = 1;
+    while (usedSeats.Contains(seatNumber) && seatNumber <= 12) seatNumber++;
+    if (seatNumber > 12) return new { success = false, message = "座位已满" };
+
+    var aiNames = new[] { "🤖 AI小蓝", "🤖 AI小紫", "🤖 AI小粉", "🤖 AI小绿", "🤖 AI小橙" };
+    var aiAvatars = new[] { "🤖", "🧠", "⚡", "🌟", "💎" };
+
+    var index = game.Players.Count(p => p.IsAI);
+    var aiName = aiNames[index % aiNames.Length];
+    var aiAvatar = aiAvatars[index % aiAvatars.Length];
+
+    var aiId = $"ai_{Guid.NewGuid():N}";
+    var aiPlayer = new WerewolfPlayer
+    {
+        SeatNumber = seatNumber,
+        PlayerId = aiId,
+        Nickname = aiName,
+        AvatarEmoji = aiAvatar,
+        ConnectionId = null,
+        IsAlive = true,
+        IsSpectator = false,
+        IsReady = true,
+        IsOnline = true,
+        IsHost = false,
+        IsAI = true,
+        Role = RoleType.Villager,
+        IsHunterCanShoot = true,
+        CheatCount = 0
+    };
+
+    game.Players.Add(aiPlayer);
+    _playerToRoom[aiId] = roomId;
+
+    await Clients.Group(roomId).SendAsync("SeatTaken", seatNumber, new
+    {
+        playerId = aiPlayer.PlayerId,
+        nickname = aiPlayer.Nickname,
+        avatarEmoji = aiPlayer.AvatarEmoji,
+        isReady = aiPlayer.IsReady,
+        isHost = false,
+        isAI = true
+    });
+    await Clients.Group(roomId).SendAsync("PlayerListUpdate", game.Players);
+    await Clients.Group(roomId).SendAsync("DisplayMessage", $"🤖 {aiName} 加入了房间（AI陪玩）");
+
+    return new { success = true, playerId = aiId, message = $"{aiName} 已加入" };
+}
+
+// ============================================================
+// ⭐ AI发言
+// ============================================================
+public async Task AISpeak(string roomId, string aiPlayerId, string message)
+{
+    if (!_games.TryGetValue(roomId, out var game))
+        return;
+
+    var aiPlayer = game.Players.FirstOrDefault(p => p.PlayerId == aiPlayerId);
+    if (aiPlayer == null || !aiPlayer.IsAI)
+        return;
+
+    await Clients.Group(roomId).SendAsync("AISpeak", aiPlayerId, aiPlayer.Nickname, message);
+    await Clients.Group(roomId).SendAsync("DisplayMessage", $"🤖 {aiPlayer.Nickname}: {message}");
+}
     }
 }
