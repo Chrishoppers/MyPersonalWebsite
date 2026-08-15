@@ -120,11 +120,11 @@ public async Task<object> JoinGame(string roomId, string nickname, string avatar
     // 如果是主控端，只加入群组，不分配座位
     if (isHost)
     {
-        var joiningPlayerId = $"host_{Guid.NewGuid():N}";
-        var joiningPlayer = new WerewolfPlayer
+        var hostJoiningId = $"host_{Guid.NewGuid():N}";
+        var hostJoiningPlayer = new WerewolfPlayer
         {
             SeatNumber = 0,
-            PlayerId = joiningPlayerId,
+            PlayerId = hostJoiningId,
             Nickname = nickname + " (主控)",
             AvatarEmoji = "👑",
             ConnectionId = Context.ConnectionId,
@@ -134,13 +134,13 @@ public async Task<object> JoinGame(string roomId, string nickname, string avatar
             IsHost = true,
             Role = RoleType.Villager
         };
-        game.Players.Add(joiningPlayer);
-        _playerToRoom[joiningPlayerId] = roomId;
-        _connectionToPlayer[Context.ConnectionId] = joiningPlayerId;
+        game.Players.Add(hostJoiningPlayer);
+        _playerToRoom[hostJoiningId] = roomId;
+        _connectionToPlayer[Context.ConnectionId] = hostJoiningId;
         await Groups.AddToGroupAsync(Context.ConnectionId, roomId);
 
         await Clients.Group(roomId).SendAsync("PlayerListUpdate", game.Players);
-        return new { success = true, isSpectator = true, playerId = joiningPlayerId };
+        return new { success = true, isSpectator = true, playerId = hostJoiningId };
     }
 
     // 普通玩家：分配座位
@@ -173,11 +173,11 @@ public async Task<object> JoinGame(string roomId, string nickname, string avatar
     while (usedSeats.Contains(seatNumber) && seatNumber <= 12) seatNumber++;
     if (seatNumber > 12) return new { success = false, message = "座位已满" };
 
-    var joiningPlayerId = $"player_{Guid.NewGuid():N}";
-    var joiningPlayer = new WerewolfPlayer
+    var playerJoiningId = $"player_{Guid.NewGuid():N}";
+    var playerJoiningPlayer = new WerewolfPlayer
     {
         SeatNumber = seatNumber,
-        PlayerId = joiningPlayerId,
+        PlayerId = playerJoiningId,
         Nickname = nickname,
         AvatarEmoji = avatarEmoji,
         ConnectionId = Context.ConnectionId,
@@ -191,13 +191,13 @@ public async Task<object> JoinGame(string roomId, string nickname, string avatar
         CheatCount = 0
     };
 
-    game.Players.Add(joiningPlayer);
-    _playerToRoom[joiningPlayerId] = roomId;
-    _connectionToPlayer[Context.ConnectionId] = joiningPlayerId;
+    game.Players.Add(playerJoiningPlayer);
+    _playerToRoom[playerJoiningId] = roomId;
+    _connectionToPlayer[Context.ConnectionId] = playerJoiningId;
 
     await Groups.AddToGroupAsync(Context.ConnectionId, roomId);
     await Clients.Group(roomId).SendAsync("PlayerListUpdate", game.Players);
-    await Clients.Caller.SendAsync("JoinedGame", new { success = true, seatNumber, playerId = joiningPlayerId });
+    await Clients.Caller.SendAsync("JoinedGame", new { success = true, seatNumber, playerId = playerJoiningId });
 
     if (game.PlayerCount >= GetTotalSeats(game))
     {
@@ -206,7 +206,7 @@ public async Task<object> JoinGame(string roomId, string nickname, string avatar
         await _voiceService.AnnounceAsync(roomId, "所有玩家已就坐，准备发牌");
     }
 
-    return new { success = true, seatNumber, playerId = joiningPlayerId };
+    return new { success = true, seatNumber, playerId = playerJoiningId };
 }
 
         // ============================================================
