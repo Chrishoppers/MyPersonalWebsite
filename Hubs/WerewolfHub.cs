@@ -107,7 +107,7 @@ namespace MyPersonalWebsite.Hubs
         }
 
         // ============================================================
-// 2. 加入游戏（修复变量名冲突）
+// 2. 加入游戏
 // ============================================================
 public async Task<object> JoinGame(string roomId, string nickname, string avatarEmoji = "🧑", bool isHost = false)
 {
@@ -120,11 +120,11 @@ public async Task<object> JoinGame(string roomId, string nickname, string avatar
     // 如果是主控端，只加入群组，不分配座位
     if (isHost)
     {
-        var newJoinPlayerId = $"host_{Guid.NewGuid():N}";
-        var newJoinPlayer = new WerewolfPlayer
+        var joiningPlayerId = $"host_{Guid.NewGuid():N}";
+        var joiningPlayer = new WerewolfPlayer
         {
             SeatNumber = 0,
-            PlayerId = newJoinPlayerId,
+            PlayerId = joiningPlayerId,
             Nickname = nickname + " (主控)",
             AvatarEmoji = "👑",
             ConnectionId = Context.ConnectionId,
@@ -134,13 +134,13 @@ public async Task<object> JoinGame(string roomId, string nickname, string avatar
             IsHost = true,
             Role = RoleType.Villager
         };
-        game.Players.Add(newJoinPlayer);
-        _playerToRoom[newJoinPlayerId] = roomId;
-        _connectionToPlayer[Context.ConnectionId] = newJoinPlayerId;
+        game.Players.Add(joiningPlayer);
+        _playerToRoom[joiningPlayerId] = roomId;
+        _connectionToPlayer[Context.ConnectionId] = joiningPlayerId;
         await Groups.AddToGroupAsync(Context.ConnectionId, roomId);
 
         await Clients.Group(roomId).SendAsync("PlayerListUpdate", game.Players);
-        return new { success = true, isSpectator = true, playerId = newJoinPlayerId };
+        return new { success = true, isSpectator = true, playerId = joiningPlayerId };
     }
 
     // 普通玩家：分配座位
@@ -173,11 +173,11 @@ public async Task<object> JoinGame(string roomId, string nickname, string avatar
     while (usedSeats.Contains(seatNumber) && seatNumber <= 12) seatNumber++;
     if (seatNumber > 12) return new { success = false, message = "座位已满" };
 
-    var newJoinPlayerId = $"player_{Guid.NewGuid():N}";
-    var newJoinPlayer = new WerewolfPlayer
+    var joiningPlayerId = $"player_{Guid.NewGuid():N}";
+    var joiningPlayer = new WerewolfPlayer
     {
         SeatNumber = seatNumber,
-        PlayerId = newJoinPlayerId,
+        PlayerId = joiningPlayerId,
         Nickname = nickname,
         AvatarEmoji = avatarEmoji,
         ConnectionId = Context.ConnectionId,
@@ -191,13 +191,13 @@ public async Task<object> JoinGame(string roomId, string nickname, string avatar
         CheatCount = 0
     };
 
-    game.Players.Add(newJoinPlayer);
-    _playerToRoom[newJoinPlayerId] = roomId;
-    _connectionToPlayer[Context.ConnectionId] = newJoinPlayerId;
+    game.Players.Add(joiningPlayer);
+    _playerToRoom[joiningPlayerId] = roomId;
+    _connectionToPlayer[Context.ConnectionId] = joiningPlayerId;
 
     await Groups.AddToGroupAsync(Context.ConnectionId, roomId);
     await Clients.Group(roomId).SendAsync("PlayerListUpdate", game.Players);
-    await Clients.Caller.SendAsync("JoinedGame", new { success = true, seatNumber, playerId = newJoinPlayerId });
+    await Clients.Caller.SendAsync("JoinedGame", new { success = true, seatNumber, playerId = joiningPlayerId });
 
     if (game.PlayerCount >= GetTotalSeats(game))
     {
@@ -206,7 +206,7 @@ public async Task<object> JoinGame(string roomId, string nickname, string avatar
         await _voiceService.AnnounceAsync(roomId, "所有玩家已就坐，准备发牌");
     }
 
-    return new { success = true, seatNumber, playerId = newJoinPlayerId };
+    return new { success = true, seatNumber, playerId = joiningPlayerId };
 }
 
         // ============================================================
@@ -717,7 +717,7 @@ public async Task<object> JoinGame(string roomId, string nickname, string avatar
             return new { success = true, seatNumber, botName };
         }
 
-       public async Task<object> AddBots(string roomId, int count = 10)
+      public async Task<object> AddBots(string roomId, int count = 10)
 {
     if (!_games.TryGetValue(roomId, out var game))
         return new { success = false, message = "房间不存在" };
@@ -728,9 +728,7 @@ public async Task<object> JoinGame(string roomId, string nickname, string avatar
     for (int i = 0; i < count && game.PlayerCount + added < maxSeats; i++)
     {
         var result = await AddBot(roomId);
-        // 使用 dynamic 简化
-        dynamic? botResult = result;
-        if (botResult != null && botResult.success == true)
+        if (result is { success: true })
         {
             added++;
         }
@@ -742,7 +740,6 @@ public async Task<object> JoinGame(string roomId, string nickname, string avatar
 
     return new { success = true, added, message = $"✅ 已添加 {added} 个机器人" };
 }
-
         // ============================================================
         // 17. 开始发牌
         // ============================================================
