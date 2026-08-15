@@ -1,7 +1,14 @@
 @{
     Layout = null;
-    ViewData["Title"] = "🐺 狼人杀";
-    var roomId = ViewBag.RoomId as string ?? Context.Request.Query["roomId"].ToString();
+    ViewData["Title"] = "🐺 狼人杀 · 座位图";
+    var isAdmin = Context.Session.GetInt32("IsAdmin") ?? 0;
+    if (isAdmin != 1)
+    {
+        Context.Response.Redirect("/Auth/Login");
+        return;
+    }
+    var roomId = ViewBag.RoomId as string ?? Context.Request.Query["roomId"].ToString() ?? "";
+    var username = Context.Session.GetString("Username") ?? "管理员";
 }
 
 <!DOCTYPE html>
@@ -9,51 +16,20 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>🐺 狼人杀</title>
+    <title>🐺 狼人杀 · 座位图</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-<!-- 在 <head> 中添加 -->
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-<!-- 横屏锁定 -->
-<style>
-    /* 强制横屏 */
-    @@media (orientation: portrait) {
-        body::before {
-            content: '📱 请将设备旋转至横屏模式';
-            position: fixed;
-            inset: 0;
-            background: #05050F;
-            z-index: 99999;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-            color: rgba(255,255,255,0.3);
-            font-weight: 600;
-            letter-spacing: 0.06em;
-            padding: 2rem;
-            text-align: center;
-        }
-        body * {
-            display: none !important;
-        }
-    }
-</style>
 
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-
         body {
             background: #05050F;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: 'Inter', sans-serif;
             color: #e0e0e0;
             min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 12px;
             overflow: hidden;
+            padding: 16px;
         }
 
         #particleCanvas {
@@ -66,29 +42,292 @@
             pointer-events: none;
         }
 
-        .player-container {
+        .container {
             position: relative;
             z-index: 1;
-            max-width: 440px;
-            width: 100%;
-            animation: containerIn 0.8s cubic-bezier(0.23, 1, 0.32, 1);
-        }
-
-        @@keyframes containerIn { from { opacity: 0; transform: scale(0.92) translateY(30px); } to { opacity: 1; transform: scale(1) translateY(0); } }
-
-        .holo-card {
-            background: rgba(8, 8, 28, 0.88);
-            backdrop-filter: blur(40px);
-            -webkit-backdrop-filter: blur(40px);
-            border: 1px solid rgba(0, 240, 255, 0.08);
-            border-radius: 28px;
-            padding: 16px 14px 18px;
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 0 80px rgba(0, 240, 255, 0.02);
-            min-height: 420px;
+            max-width: 1400px;
+            margin: 0 auto;
+            height: 100vh;
             display: flex;
             flex-direction: column;
+            padding: 1rem 1.5rem 1.5rem;
+        }
+
+        /* ===== 3D粒子 ===== */
+        #particleCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* 头部 */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.8rem 1.5rem;
+            border-radius: 20px;
+            background: rgba(10, 10, 30, 0.4);
+            backdrop-filter: blur(30px);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            flex-shrink: 0;
+            flex-wrap: wrap;
+            gap: 0.8rem;
+            box-shadow: 0 8px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .header .brand { display: flex; align-items: center; gap: 12px; }
+        .header .brand .icon { font-size: 2rem; animation: wolfPulse 2s ease-in-out infinite; }
+        @@keyframes wolfPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+        .header .brand h1 {
+            font-size: 1.4rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #8B5CF6, #EC4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header .brand .sub { font-size: 0.5rem; color: rgba(255,255,255,0.06); letter-spacing: 0.15em; text-transform: uppercase; display: block; margin-top: -2px; }
+
+        .header .status-group { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+        .header .room-badge {
+            padding: 4px 16px;
+            border-radius: 40px;
+            background: rgba(0, 240, 255, 0.03);
+            border: 1px solid rgba(0, 240, 255, 0.04);
+            font-size: 0.7rem;
+            color: rgba(255,255,255, 0.2);
+            font-family: 'Courier New', monospace;
+            letter-spacing: 2px;
+        }
+
+        .header .user-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px 4px 8px;
+            border-radius: 40px;
+            background: rgba(139, 92, 246, 0.04);
+            border: 1px solid rgba(139, 92, 246, 0.04);
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.3);
+        }
+
+        .header .user-badge .avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #8B5CF6, #EC4899);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.55rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .header .status-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #00FF88;
+            animation: pulse 2s infinite;
+            margin-right: 4px;
+        }
+
+        /* 主布局 */
+        .main-grid {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr 340px;
+            gap: 20px;
+            padding: 1rem 0;
+            min-height: 0;
+        }
+
+        @@media (max-width: 1024px) { .main-grid { grid-template-columns: 1fr; gap: 16px; } }
+
+        /* 座位图区域 */
+        .seating-area {
+            background: rgba(255,255,255,0.015);
+            backdrop-filter: blur(30px);
+            border: 1px solid rgba(255,255,255,0.04);
+            border-radius: 24px;
+            padding: 1.5rem;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .seating-area .area-title {
+            font-size: 0.65rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: rgba(255,255,255,0.08);
+            margin-bottom: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .seating-area .area-title .count {
+            color: #00F0FF;
+            font-weight: 700;
+            font-size: 0.8rem;
+        }
+
+        .table-container {
+            position: relative;
+            width: 100%;
+            max-width: 700px;
+            margin: 0 auto;
+            flex: 1;
+            aspect-ratio: 1 / 0.9;
+        }
+
+        .table-bg {
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            background: radial-gradient(ellipse at center, rgba(30,20,60,0.2), rgba(10,10,30,0.4));
+            border: 2px solid rgba(139, 92, 246, 0.03);
+            box-shadow: 0 0 80px rgba(139, 92, 246, 0.02), inset 0 0 80px rgba(0,0,0,0.2);
+        }
+
+        .table-pattern {
+            position: absolute;
+            inset: 15%;
+            border-radius: 50%;
+            background-image: repeating-conic-gradient(from 0deg at 50% 50%, transparent 0deg, rgba(255,255,255,0.005) 5deg, transparent 10deg);
+            opacity: 0.3;
+            pointer-events: none;
+        }
+
+        .table-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        .table-center .icon { font-size: 2rem; opacity: 0.08; display: block; }
+        .table-center .label { font-size: 0.45rem; color: rgba(255,255,255,0.01); text-transform: uppercase; letter-spacing: 0.2em; }
+
+        /* 座位 */
+        .seat {
+            position: absolute;
+            width: clamp(44px, 5.5vw, 64px);
+            height: clamp(44px, 5.5vw, 64px);
+            border-radius: 50%;
+            background: rgba(255,255,255,0.02);
+            border: 2px solid rgba(255,255,255,0.04);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+            z-index: 3;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 20px rgba(0,0,0,0.2);
+            user-select: none;
+        }
+
+        .seat .seat-number {
+            font-size: clamp(0.6rem, 0.7vw, 0.9rem);
+            font-weight: 700;
+            font-family: 'Courier New', monospace;
+            color: rgba(255,255,255,0.06);
+            transition: all 0.3s ease;
+        }
+
+        .seat .seat-name {
+            font-size: clamp(0.3rem, 0.4vw, 0.5rem);
+            font-weight: 500;
+            color: rgba(255,255,255,0.03);
+            max-width: 44px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            transition: all 0.3s ease;
+        }
+
+        .seat .seat-emoji { font-size: clamp(0.7rem, 0.9vw, 1.1rem); display: none; }
+
+        .seat.empty { border-color: rgba(255,255,255,0.03); background: rgba(255,255,255,0.01); }
+        .seat.empty:hover {
+            border-color: rgba(0, 240, 255, 0.15);
+            background: rgba(0, 240, 255, 0.03);
+            transform: translate(-50%, -50%) scale(1.1);
+            box-shadow: 0 0 40px rgba(0, 240, 255, 0.03);
+        }
+
+        .seat.occupied { border-color: rgba(0, 240, 255, 0.08); background: rgba(0, 240, 255, 0.02); }
+        .seat.occupied .seat-number { color: rgba(0, 240, 255, 0.15); }
+        .seat.occupied .seat-name { color: rgba(255,255,255,0.08); }
+
+        .seat.occupied:hover {
+            border-color: rgba(245, 158, 11, 0.15);
+            background: rgba(245, 158, 11, 0.02);
+            transform: translate(-50%, -50%) scale(1.08);
+            box-shadow: 0 0 40px rgba(245, 158, 11, 0.02);
+        }
+
+        .seat.self {
+            border-color: rgba(0, 240, 255, 0.15);
+            background: rgba(0, 240, 255, 0.04);
+            box-shadow: 0 0 50px rgba(0, 240, 255, 0.03);
+        }
+        .seat.self .seat-number { color: #00F0FF; }
+        .seat.self .seat-name { color: rgba(255,255,255,0.15); }
+
+        .seat.ready { border-color: rgba(0, 255, 136, 0.12); background: rgba(0, 255, 136, 0.02); box-shadow: 0 0 40px rgba(0, 255, 136, 0.02); }
+        .seat.ready .seat-number { color: #00FF88; }
+
+        .seat.swap-request { border-color: #F59E0B; animation: swapPulse 1s ease-in-out infinite; box-shadow: 0 0 60px rgba(245, 158, 11, 0.05); }
+        @@keyframes swapPulse { 0%, 100% { border-color: #F59E0B; box-shadow: 0 0 20px rgba(245, 158, 11, 0.02); } 50% { border-color: #F59E0B; box-shadow: 0 0 60px rgba(245, 158, 11, 0.08); } }
+
+        .seat.host { border-color: rgba(139, 92, 246, 0.12); }
+        .seat.host .seat-number { color: #8B5CF6; }
+
+        .seat.ai { border-color: rgba(0, 240, 255, 0.08); background: rgba(0, 240, 255, 0.02); animation: aiSeatPulse 2s ease-in-out infinite; }
+        @@keyframes aiSeatPulse { 0%, 100% { box-shadow: 0 0 20px rgba(0, 240, 255, 0.02); } 50% { box-shadow: 0 0 40px rgba(0, 240, 255, 0.05); } }
+
+        @@media (max-width: 640px) {
+            .seat { width: 32px; height: 32px; }
+            .seat .seat-number { font-size: 0.4rem; }
+            .seat .seat-name { display: none; }
+            .seat .seat-emoji { display: block; font-size: 0.7rem; }
+        }
+
+        @@media (max-width: 480px) {
+            .seat { width: 26px; height: 26px; border-width: 1.5px; }
+            .seat .seat-number { font-size: 0.35rem; }
+            .seat .seat-emoji { font-size: 0.6rem; }
+            .seating-area { padding: 0.8rem; }
+        }
+
+        /* 右侧面板 */
+        .holo-card {
+            background: rgba(255,255,255,0.015);
+            backdrop-filter: blur(30px);
+            border: 1px solid rgba(255,255,255,0.04);
+            border-radius: 24px;
+            padding: 1.5rem;
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
         }
 
         .holo-card::before {
@@ -98,454 +337,370 @@
             left: -50%;
             width: 200%;
             height: 200%;
-            background: radial-gradient(ellipse at 30% 30%, rgba(0, 240, 255, 0.02), transparent 60%);
+            background: radial-gradient(ellipse at 30% 30%, rgba(139, 92, 246, 0.01), transparent 70%);
             pointer-events: none;
         }
 
-        .holo-card .border-glow {
-            position: absolute;
-            top: -1px;
-            left: 20%;
-            right: 20%;
-            height: 2px;
-            background: linear-gradient(90deg, transparent, rgba(0, 240, 255, 0.15), rgba(123, 97, 255, 0.15), transparent);
-            animation: borderGlow 3s ease-in-out infinite;
-        }
-
-        @@keyframes borderGlow { 0%, 100% { opacity: 0.3; transform: scaleX(1); } 50% { opacity: 1; transform: scaleX(1.2); } }
-
-        .holo-card .corner {
-            position: absolute;
-            width: 14px;
-            height: 14px;
-            border-color: rgba(0, 240, 255, 0.06);
-            border-style: solid;
-            border-width: 0;
-            transition: all 0.6s ease;
-        }
-        .holo-card .corner.tl { top: 8px; left: 8px; border-top-width: 2px; border-left-width: 2px; border-radius: 4px 0 0 0; }
-        .holo-card .corner.tr { top: 8px; right: 8px; border-top-width: 2px; border-right-width: 2px; border-radius: 0 4px 0 0; }
-        .holo-card .corner.bl { bottom: 8px; left: 8px; border-bottom-width: 2px; border-left-width: 2px; border-radius: 0 0 0 4px; }
-        .holo-card .corner.br { bottom: 8px; right: 8px; border-bottom-width: 2px; border-right-width: 2px; border-radius: 0 0 4px 0; }
-
-        .top-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding-bottom: 8px;
-            border-bottom: 1px solid rgba(255,255,255,0.04);
-            flex-shrink: 0;
-            flex-wrap: wrap;
-            gap: 4px;
-        }
-
-        .top-bar .room-code { font-size: 0.5rem; color: rgba(255,255,255,0.06); font-family: 'Courier New', monospace; letter-spacing: 2px; }
-        .top-bar .seat-number { font-size: 0.7rem; font-weight: 700; color: rgba(0, 240, 255, 0.3); font-family: 'Courier New', monospace; }
-        .top-bar .phase-badge { font-size: 0.45rem; padding: 2px 10px; border-radius: 20px; background: rgba(0, 240, 255, 0.04); border: 1px solid rgba(0, 240, 255, 0.04); color: rgba(255,255,255,0.15); text-transform: uppercase; letter-spacing: 0.1em; }
-
-        .game-status {
-            text-align: center;
-            padding: 4px 0 6px;
-            font-size: 0.65rem;
-            color: rgba(255,255,255,0.06);
-            letter-spacing: 0.06em;
-            flex-shrink: 0;
-        }
-
-        .game-status .night { color: #4facfe; }
-        .game-status .day { color: #F59E0B; }
-        .game-status .action { color: #8B5CF6; }
-
-        .identity-card {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 8px 0;
-            position: relative;
-        }
-
-        .identity-card .card-container {
-            width: 140px;
-            height: 196px;
-            perspective: 800px;
-            cursor: pointer;
-            position: relative;
-        }
-
-        .identity-card .card-container .card-inner {
-            width: 100%;
-            height: 100%;
-            position: relative;
-            transition: transform 0.8s cubic-bezier(0.23, 1, 0.32, 1);
-            transform-style: preserve-3d;
-        }
-
-        .identity-card .card-container .card-inner.flipped { transform: rotateY(180deg); }
-
-        .identity-card .card-container .card-face {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            backface-visibility: hidden;
-            border-radius: 14px;
-            overflow: hidden;
-            box-shadow: 0 0 60px rgba(139, 92, 246, 0.05);
-        }
-
-        .identity-card .card-container .card-face img { width: 100%; height: 100%; object-fit: cover; }
-        .identity-card .card-container .card-face .card-label {
-            position: absolute;
-            bottom: 8px;
-            left: 0;
-            right: 0;
-            text-align: center;
-            font-size: 0.5rem;
-            color: rgba(255,255,255,0.05);
-            letter-spacing: 0.15em;
+        .holo-card .card-title {
+            font-size: 0.6rem;
+            font-weight: 600;
             text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: rgba(255,255,255,0.08);
+            margin-bottom: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
-        .identity-card .card-container .card-face.back { transform: rotateY(180deg); }
-        .identity-card .flip-hint { margin-top: 8px; font-size: 0.6rem; color: rgba(255,255,255,0.06); animation: pulse 2s ease-in-out infinite; letter-spacing: 0.06em; }
+        .holo-card .card-title .accent { flex: 1; height: 1px; background: linear-gradient(90deg, rgba(255,255,255,0.03), transparent); }
 
-        @@keyframes pulse { 0%, 100% { opacity: 0.6; } 50% { opacity: 1; } }
+        .player-list {
+            overflow-y: auto;
+            max-height: 280px;
+            padding-right: 4px;
+        }
 
-        .role-info {
-            margin-top: 8px;
-            padding: 10px 14px;
-            background: rgba(255,255,255,0.02);
+        .player-list::-webkit-scrollbar { width: 3px; }
+        .player-list::-webkit-scrollbar-track { background: rgba(255,255,255,0.01); border-radius: 10px; }
+        .player-list::-webkit-scrollbar-thumb { background: rgba(139, 92, 246, 0.08); border-radius: 10px; }
+
+        .player-item {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 0.4rem 0.6rem;
             border-radius: 12px;
-            border: 1px solid rgba(255,255,255,0.03);
-            text-align: center;
-            display: none;
-            animation: fadeIn 0.5s ease;
-            width: 100%;
+            border: 1px solid rgba(255,255,255,0.02);
+            transition: all 0.3s ease;
+            margin-bottom: 4px;
         }
 
-        .role-info.show { display: block; }
+        .player-item:hover { background: rgba(255,255,255,0.02); border-color: rgba(255,255,255,0.04); }
 
-        @@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        .role-info .role-name { font-size: 1rem; font-weight: 700; color: #fff; margin-bottom: 2px; }
-        .role-info .role-desc { font-size: 0.7rem; color: rgba(255,255,255,0.2); line-height: 1.6; }
-        .role-info .role-detail { font-size: 0.65rem; color: rgba(255,255,255,0.12); margin-top: 4px; line-height: 1.6; white-space: pre-wrap; text-align: left; padding: 6px 10px; background: rgba(255,255,255,0.02); border-radius: 8px; }
-
-        .spectator-mode { text-align: center; padding: 30px 0; }
-        .spectator-mode .icon { font-size: 3rem; display: block; margin-bottom: 8px; opacity: 0.3; }
-        .spectator-mode h2 { font-size: 1.1rem; font-weight: 700; color: rgba(255,255,255,0.15); }
-        .spectator-mode p { font-size: 0.75rem; color: rgba(255,255,255,0.06); margin-top: 4px; }
-
-        .action-panel {
-            display: none;
-            width: 100%;
-            margin-top: 4px;
-            animation: fadeIn 0.5s ease;
+        .player-item .avatar { font-size: 1rem; width: 28px; text-align: center; flex-shrink: 0; }
+        .player-item .info { flex: 1; min-width: 0; }
+        .player-item .info .name {
+            color: rgba(255,255,255,0.3);
+            font-size: 0.75rem;
+            font-weight: 500;
         }
-
-        .action-panel.show { display: block; }
-
-        .action-panel .action-title {
-            font-size: 0.7rem;
+        .player-item .info .name .ai-tag {
+            font-size: 0.4rem;
+            padding: 0.05rem 0.4rem;
+            border-radius: 20px;
+            background: rgba(0, 240, 255, 0.04);
+            color: #00F0FF;
+            border: 1px solid rgba(0, 240, 255, 0.02);
             font-weight: 600;
-            color: rgba(255,255,255,0.15);
+            animation: aiGlow 2s ease-in-out infinite;
+        }
+        @@keyframes aiGlow { 0%, 100% { opacity: 0.6; } 50% { opacity: 1; box-shadow: 0 0 20px rgba(0, 240, 255, 0.02); } }
+        .player-item .info .name .me { color: rgba(139, 92, 246, 0.3); font-size: 0.45rem; margin-left: 4px; }
+        .player-item .info .name .seat-tag { color: rgba(0, 240, 255, 0.2); font-size: 0.5rem; font-family: 'Courier New', monospace; margin-left: 4px; }
+
+        .player-item .status {
+            font-size: 0.45rem;
+            font-weight: 600;
+            padding: 1px 10px;
+            border-radius: 20px;
+            white-space: nowrap;
+        }
+
+        .player-item .status.ready { background: rgba(0,255,136,0.06); color: #00FF88; border: 1px solid rgba(0,255,136,0.03); }
+        .player-item .status.waiting { background: rgba(255,255,255,0.02); color: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.02); }
+        .player-item .status.host { background: rgba(139, 92, 246, 0.06); color: #8B5CF6; border: 1px solid rgba(139, 92, 246, 0.03); }
+        .player-item .status.ai { background: rgba(0, 240, 255, 0.04); color: #00F0FF; border: 1px solid rgba(0, 240, 255, 0.02); }
+
+        .player-empty {
+            color: rgba(255,255,255,0.02);
+            font-size: 0.7rem;
             text-align: center;
-            margin-bottom: 6px;
+            padding: 1rem 0;
             letter-spacing: 0.06em;
         }
 
-        .target-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 6px;
-            margin: 4px 0 8px;
+        .host-actions {
+            display: flex;
+            gap: 0.8rem;
+            flex-wrap: wrap;
+            align-items: center;
+            padding-top: 0.8rem;
+            border-top: 1px solid rgba(255,255,255,0.02);
         }
 
-        .target-btn {
-            padding: 8px 4px;
-            border: 2px solid rgba(255,255,255,0.04);
-            border-radius: 12px;
-            background: rgba(255,255,255,0.02);
-            color: rgba(255,255,255,0.2);
-            font-weight: 600;
-            font-size: 0.8rem;
+        .btn-primary {
+            padding: 0.6rem 2rem;
+            border: none;
+            border-radius: 40px;
+            background: linear-gradient(135deg, #8B5CF6, #EC4899);
+            color: #fff;
+            font-weight: 700;
+            font-size: 0.85rem;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.4s ease;
             font-family: inherit;
-            text-align: center;
-        }
-
-        .target-btn:hover:not(:disabled) { border-color: rgba(139, 92, 246, 0.12); background: rgba(139, 92, 246, 0.04); color: #fff; }
-        .target-btn:disabled { opacity: 0.2; cursor: not-allowed; }
-
-        .target-btn .sub { display: block; font-size: 0.45rem; font-weight: 400; color: rgba(255,255,255,0.04); margin-top: 2px; }
-
-        .target-btn.selected {
-            border-color: #8B5CF6;
-            background: rgba(139, 92, 246, 0.06);
-            color: #8B5CF6;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
             box-shadow: 0 0 40px rgba(139, 92, 246, 0.02);
         }
 
-        .target-btn .status-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-left: 2px; }
-        .target-btn .status-dot.alive { background: #00FF88; }
-        .target-btn .status-dot.dead { background: #dc3545; }
+        .btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 60px rgba(139, 92, 246, 0.1); }
+        .btn-primary:disabled { opacity: 0.2; cursor: not-allowed; transform: none !important; }
 
-        .action-btns {
-            display: flex;
-            gap: 6px;
-            flex-wrap: wrap;
-            margin-top: 6px;
-        }
-
-        .action-btns .btn-action {
-            flex: 1;
-            padding: 8px 10px;
-            border: none;
-            border-radius: 30px;
-            font-weight: 600;
-            font-size: 0.75rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-family: inherit;
-            min-width: 60px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 4px;
-        }
-
-        .action-btns .btn-action.primary { background: linear-gradient(135deg, #8B5CF6, #EC4899); color: #fff; }
-        .action-btns .btn-action.primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 40px rgba(139, 92, 246, 0.1); }
-        .action-btns .btn-action.secondary { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.04); color: rgba(255,255,255,0.2); }
-        .action-btns .btn-action.secondary:hover:not(:disabled) { background: rgba(255,255,255,0.04); color: #fff; }
-        .action-btns .btn-action:disabled { opacity: 0.3; cursor: not-allowed; transform: none !important; }
-        .action-btns .btn-action.success { background: linear-gradient(135deg, #00FF88, #00F0FF); color: #05050F; }
-        .action-btns .btn-action.danger { background: rgba(255, 0, 110, 0.08); border: 1px solid rgba(255, 0, 110, 0.04); color: rgba(255, 0, 110, 0.3); }
-        .action-btns .btn-action.danger:hover:not(:disabled) { background: rgba(255, 0, 110, 0.12); }
-
-        .check-result {
-            margin: 6px 0;
-            padding: 8px 14px;
-            border-radius: 12px;
-            text-align: center;
-            font-weight: 600;
-            font-size: 0.85rem;
-            display: none;
-            animation: fadeIn 0.5s ease;
-        }
-
-        .check-result.show { display: block; }
-        .check-result.werewolf { background: rgba(220, 53, 69, 0.08); border: 1px solid rgba(220, 53, 69, 0.06); color: #dc3545; }
-        .check-result.good { background: rgba(0, 255, 136, 0.08); border: 1px solid rgba(0, 255, 136, 0.06); color: #00FF88; }
-
-        .vote-result {
-            margin: 6px 0;
-            padding: 8px 14px;
-            border-radius: 12px;
-            text-align: center;
-            font-size: 0.8rem;
-            background: rgba(255,255,255,0.02);
+        .btn-secondary {
+            padding: 0.6rem 1.5rem;
             border: 1px solid rgba(255,255,255,0.04);
+            border-radius: 40px;
+            background: rgba(255,255,255,0.02);
             color: rgba(255,255,255,0.15);
-            display: none;
-            animation: fadeIn 0.5s ease;
-        }
-
-        .vote-result.show { display: block; }
-
-        .wolf-vote-status {
-            text-align: center;
-            font-size: 0.65rem;
-            color: rgba(255,255,255,0.06);
-            margin: 4px 0;
-            display: none;
-        }
-
-        .wolf-vote-status .progress { color: #dc3545; font-weight: 600; }
-
-        .wolf-explode-btn {
-            display: none;
-            width: 100%;
-            padding: 6px;
-            border: 2px solid rgba(220, 53, 69, 0.06);
-            border-radius: 12px;
-            background: rgba(220, 53, 69, 0.02);
-            color: rgba(220, 53, 69, 0.3);
-            font-weight: 600;
-            font-size: 0.7rem;
+            font-weight: 500;
+            font-size: 0.8rem;
             cursor: pointer;
             transition: all 0.3s ease;
             font-family: inherit;
-            text-align: center;
-            margin-top: 4px;
         }
 
-        .wolf-explode-btn:hover { background: rgba(220, 53, 69, 0.04); color: #dc3545; }
-        .wolf-explode-btn.show { display: block; }
+        .btn-secondary:hover { background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.3); }
 
-        .bottom-actions {
-            display: flex;
-            gap: 6px;
-            margin-top: 8px;
-            flex-shrink: 0;
-            flex-wrap: wrap;
-        }
-
-        .bottom-actions .btn-bottom {
-            flex: 1;
-            padding: 8px 10px;
-            border: none;
-            border-radius: 30px;
-            font-weight: 600;
-            font-size: 0.7rem;
+        .btn-bot {
+            padding: 0.6rem 1.5rem;
+            border: 1px solid rgba(245,158,11,0.04);
+            border-radius: 40px;
+            background: rgba(245,158,11,0.02);
+            color: rgba(245,158,11,0.15);
+            font-weight: 500;
+            font-size: 0.8rem;
             cursor: pointer;
             transition: all 0.3s ease;
             font-family: inherit;
-            min-width: 60px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 4px;
         }
 
-        .bottom-actions .btn-bottom.primary { background: linear-gradient(135deg, #8B5CF6, #EC4899); color: #fff; }
-        .bottom-actions .btn-bottom.primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 40px rgba(139, 92, 246, 0.1); }
-        .bottom-actions .btn-bottom.secondary { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.04); color: rgba(255,255,255,0.2); }
-        .bottom-actions .btn-bottom.secondary:hover:not(:disabled) { background: rgba(255,255,255,0.04); color: #fff; }
-        .bottom-actions .btn-bottom:disabled { opacity: 0.3; cursor: not-allowed; transform: none !important; }
-        .bottom-actions .btn-bottom.success { background: linear-gradient(135deg, #00FF88, #00F0FF); color: #05050F; }
+        .btn-bot:hover { background: rgba(245,158,11,0.04); color: #F59E0B; }
+
+        .host-actions .status-text {
+            font-size: 0.6rem;
+            color: rgba(255,255,255,0.04);
+            margin-left: auto;
+        }
 
         .toast-container {
             position: fixed;
-            bottom: 16px;
-            right: 16px;
+            bottom: 20px;
+            right: 20px;
             z-index: 9999;
             display: flex;
             flex-direction: column;
             gap: 4px;
             align-items: flex-end;
-            max-width: 90%;
         }
 
         .toast-msg {
-            padding: 6px 16px;
+            padding: 6px 18px;
             border-radius: 40px;
             color: #fff;
             font-weight: 500;
             animation: toastIn 0.4s ease;
             font-size: 0.75rem;
             backdrop-filter: blur(20px);
-            background: rgba(10, 10, 30, 0.8);
+            background: rgba(10,10,30,0.8);
             border: 1px solid rgba(255,255,255,0.04);
-            max-width: 100%;
-            word-break: break-word;
         }
 
-        .toast-msg.success { background: rgba(0, 255, 136, 0.08); border-color: rgba(0, 255, 136, 0.04); color: #00FF88; }
-        .toast-msg.error { background: rgba(255, 0, 110, 0.08); border-color: rgba(255, 0, 110, 0.04); color: #FF006E; }
-        .toast-msg.info { background: rgba(0, 240, 255, 0.06); border-color: rgba(0, 240, 255, 0.04); color: #00F0FF; }
+        .toast-msg.success { background: rgba(0,255,136,0.08); border-color: rgba(0,255,136,0.04); color: #00FF88; }
+        .toast-msg.error { background: rgba(255,0,110,0.08); border-color: rgba(255,0,110,0.04); color: #FF006E; }
+        .toast-msg.info { background: rgba(0,240,255,0.06); border-color: rgba(0,240,255,0.04); color: #00F0FF; }
 
         @@keyframes toastIn { from { opacity: 0; transform: translateY(16px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
 
-        @@media (max-width: 480px) {
-            .holo-card { padding: 12px 10px 14px; border-radius: 24px; min-height: 360px; }
-            .holo-card .corner { width: 10px; height: 10px; }
-            .identity-card .card-container { width: 120px; height: 168px; }
-            .top-bar .seat-number { font-size: 0.65rem; }
-            .target-grid { grid-template-columns: repeat(4, 1fr); gap: 4px; }
-            .target-btn { font-size: 0.7rem; padding: 6px 2px; }
-            .action-btns .btn-action { font-size: 0.65rem; padding: 6px 8px; }
-            .bottom-actions .btn-bottom { font-size: 0.65rem; padding: 6px 8px; }
-            .role-info .role-name { font-size: 0.85rem; }
-            .role-info .role-desc { font-size: 0.6rem; }
+        /* 换座弹窗 */
+        .swap-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(20px);
+            z-index: 9999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+            animation: modalFadeIn 0.3s ease;
+        }
+        .swap-modal-overlay.active { display: flex; }
+        @@keyframes modalFadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+
+        .swap-modal {
+            background: rgba(16, 16, 30, 0.98);
+            border: 1px solid rgba(255,255,255,0.04);
+            border-radius: 24px;
+            max-width: 420px;
+            width: 100%;
+            padding: 2rem;
+            box-shadow: 0 32px 120px rgba(0, 0, 0, 0.5);
+            text-align: center;
         }
 
-        @@media (max-width: 380px) {
-            .identity-card .card-container { width: 100px; height: 140px; }
-            .holo-card { padding: 8px 6px 10px; border-radius: 20px; min-height: 320px; }
-            .target-grid { grid-template-columns: repeat(4, 1fr); gap: 3px; }
-            .target-btn { font-size: 0.6rem; padding: 4px 2px; border-radius: 8px; }
+        .swap-modal .modal-icon { font-size: 3rem; margin-bottom: 0.3rem; }
+        .swap-modal h3 { color: #F59E0B; font-size: 1.2rem; font-weight: 700; margin-bottom: 0.3rem; }
+        .swap-modal p { color: rgba(255,255,255,0.3); font-size: 0.9rem; margin-bottom: 1.2rem; line-height: 1.6; }
+        .swap-modal .player-info {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.8rem;
+            padding: 0.8rem;
+            background: rgba(255,255,255,0.02);
+            border-radius: 12px;
+            margin-bottom: 1.2rem;
+        }
+        .swap-modal .player-info .avatar { font-size: 1.8rem; }
+        .swap-modal .player-info .name { color: #fff; font-weight: 600; font-size: 1rem; }
+        .swap-modal .player-info .seat { color: rgba(0,240,255,0.3); font-size: 0.8rem; font-family: 'Courier New', monospace; }
+
+        .swap-modal .btn-group { display: flex; gap: 0.8rem; flex-wrap: wrap; }
+        .swap-modal .btn-group .btn-swap {
+            flex: 1;
+            padding: 0.6rem 1.5rem;
+            border: none;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: inherit;
+            min-width: 80px;
+        }
+        .swap-modal .btn-group .btn-swap.accept { background: linear-gradient(135deg, #00FF88, #00F0FF); color: #05050F; }
+        .swap-modal .btn-group .btn-swap.accept:hover { transform: translateY(-2px); box-shadow: 0 8px 40px rgba(0,255,136,0.1); }
+        .swap-modal .btn-group .btn-swap.reject { background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.2); }
+        .swap-modal .btn-group .btn-swap.reject:hover { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.4); }
+
+        @@media (max-width: 768px) {
+            .container { padding: 0.5rem 0.8rem 1rem; }
+            .header .brand h1 { font-size: 1rem; }
+            .header .room-badge { font-size: 0.55rem; padding: 2px 10px; }
+            .holo-card { padding: 1rem; }
+            .host-actions { flex-direction: column; align-items: stretch; }
+            .host-actions .status-text { text-align: center; margin-left: 0; }
+            .btn-primary, .btn-secondary, .btn-bot { justify-content: center; }
+            .swap-modal { padding: 1.2rem; }
+        }
+
+        @@media (max-width: 480px) {
+            .header .brand .icon { font-size: 1.4rem; }
+            .header .brand h1 { font-size: 0.85rem; }
+            .swap-modal .player-info .avatar { font-size: 1.4rem; }
+            .swap-modal h3 { font-size: 1rem; }
         }
     </style>
 </head>
 <body>
 
+    <!-- 粒子背景 -->
     <canvas id="particleCanvas"></canvas>
 
-    <div class="player-container">
+    <div class="container">
 
-        <div class="holo-card" id="mainCard">
-            <div class="border-glow"></div>
-            <div class="corner tl"></div>
-            <div class="corner tr"></div>
-            <div class="corner bl"></div>
-            <div class="corner br"></div>
+        <!-- 头部 -->
+        <div class="header">
+            <div class="brand">
+                <span class="icon">🐺</span>
+                <div>
+                    <h1>狼人杀 · 座位图</h1>
+                    <span class="sub">✦ 点击空位坐下 · 点击玩家换座 ✦</span>
+                </div>
+            </div>
+            <div class="status-group">
+                <span class="room-badge">✦ 房间 <span id="roomDisplay">@roomId</span></span>
+                <span class="user-badge">
+                    <span class="avatar">@(username?.FirstOrDefault().ToString().ToUpper() ?? "A")</span>
+                    <span>@username</span>
+                </span>
+                <span style="font-size:0.6rem;color:rgba(255,255,255,0.04);">
+                    <span class="status-dot"></span> 在线
+                </span>
+            </div>
+        </div>
 
-            <div class="top-bar">
-                <span class="room-code">✦ <span id="roomDisplay">@(string.IsNullOrEmpty(roomId) ? "------" : roomId)</span></span>
-                <span class="seat-number" id="seatDisplay">🪑 等待中</span>
-                <span class="phase-badge" id="phaseBadge">⚙️ 准备</span>
+        <!-- 主网格 -->
+        <div class="main-grid">
+
+            <!-- 座位图 -->
+            <div class="seating-area">
+                <div class="area-title">
+                    🪑 座位图
+                    <span class="count" id="seatCount">0/12 已占</span>
+                    <span class="hint" style="font-size:0.5rem;color:rgba(255,255,255,0.04);margin-left:auto;letter-spacing:0.06em;">👆 点击交互</span>
+                </div>
+                <div class="table-container" id="tableContainer">
+                    <div class="table-bg"></div>
+                    <div class="table-pattern"></div>
+                    <div class="table-center">
+                        <span class="icon">🐺</span>
+                        <span class="label">狼人杀</span>
+                    </div>
+                    <div id="seatsContainer"></div>
+                </div>
             </div>
 
-            <div class="game-status" id="gameStatus"><span>✦ 等待游戏开始 ✦</span></div>
+            <!-- 右侧面板 -->
+            <div class="side-panel" style="display:flex;flex-direction:column;gap:16px;height:100%;">
 
-            <!-- 身份卡片 -->
-            <div class="identity-card" id="identityCard">
-                <div class="card-container" id="cardContainer">
-                    <div class="card-inner" id="cardInner">
-                        <div class="card-face front">
-                            <img src="/images/werewolf/cards/card_back.jpg" alt="卡背" id="cardBackImg" />
-                            <div class="card-label">✦ 点击翻牌 ✦</div>
-                        </div>
-                        <div class="card-face back">
-                            <img src="" alt="身份" id="roleCardImg" />
-                            <div class="card-label" id="roleLabel">角色名称</div>
-                        </div>
+                <!-- 玩家列表 -->
+                <div class="holo-card" style="flex:1;min-height:0;">
+                    <div class="card-title">
+                        👥 玩家列表
+                        <span class="accent"></span>
+                        <span class="badge-count" style="font-size:0.5rem;padding:0.1rem 0.6rem;border-radius:20px;background:rgba(139,92,246,0.04);color:rgba(255,255,255,0.1);border:1px solid rgba(139,92,246,0.02);" id="playerCountBadge">0 人</span>
+                    </div>
+
+                    <div class="player-list" id="playerList">
+                        <div class="player-empty">✦ 等待玩家接入 ✦</div>
                     </div>
                 </div>
-                <div class="flip-hint" id="flipHint">👆 点击卡片查看身份</div>
 
-                <div class="role-info" id="roleInfo">
-                    <div class="role-name" id="roleName">角色名</div>
-                    <div class="role-desc" id="roleDesc">角色描述</div>
-                    <div class="role-detail" id="roleDetail">详细技能</div>
+                <!-- 控制栏 -->
+                <div class="holo-card" style="flex:0.6;">
+                    <div class="card-title">
+                        🎮 控制
+                        <span class="accent"></span>
+                    </div>
+
+                    <div class="host-actions">
+                        <button class="btn-primary" id="startBtn" onclick="startGame()" disabled>
+                            🃏 洗牌发牌
+                        </button>
+                        <button class="btn-secondary" onclick="refreshRoom()">🔄 刷新</button>
+                        <button class="btn-bot" onclick="addBots(3)">🤖 +3机器人</button>
+                        <span class="status-text" id="actionStatus">● 等待玩家就坐</span>
+                    </div>
                 </div>
-            </div>
 
-            <!-- 观战模式 -->
-            <div class="spectator-mode" id="spectatorMode" style="display:none;">
-                <span class="icon">👁️</span>
-                <h2>观战模式</h2>
-                <p>你正在观看本局游戏</p>
             </div>
-
-            <!-- 行动面板 -->
-            <div class="action-panel" id="actionPanel">
-                <div class="action-title" id="actionTitle">⏳ 等待行动...</div>
-                <div class="target-grid" id="targetGrid"></div>
-                <div class="check-result" id="checkResult"></div>
-                <div class="vote-result" id="voteResult"></div>
-                <div class="wolf-vote-status" id="wolfVoteStatus"><span class="progress" id="wolfVotedCount">0</span>/<span id="wolfTotalCount">0</span> 已投票</div>
-                <button class="wolf-explode-btn" id="wolfExplodeBtn" onclick="wolfExplode()">💥 自爆</button>
-                <div class="action-btns" id="actionBtns">
-                    <button class="btn-action primary" id="actionConfirmBtn" onclick="confirmAction()">✅ 确认</button>
-                    <button class="btn-action secondary" onclick="cancelAction()">✕ 取消</button>
-                </div>
-            </div>
-
-            <!-- 底部按钮 -->
-            <div class="bottom-actions" id="bottomActions">
-                <button class="btn-bottom primary" id="revealBtn" onclick="toggleReveal()">🃏 查看身份</button>
-                <button class="btn-bottom secondary" id="readyBtn" onclick="toggleReady()" disabled>⏳ 准备</button>
-                <button class="btn-bottom secondary" onclick="showRules()" style="flex:0.5;">📖 规则</button>
-            </div>
-
         </div>
 
     </div>
 
+    <!-- 换座弹窗 -->
+    <div class="swap-modal-overlay" id="swapModal">
+        <div class="swap-modal">
+            <div class="modal-icon">🔄</div>
+            <h3 id="swapModalTitle">换座请求</h3>
+            <p id="swapModalDesc">玩家想和你交换座位</p>
+            <div class="player-info" id="swapPlayerInfo">
+                <span class="avatar" id="swapAvatar">🧑</span>
+                <span class="name" id="swapName">玩家</span>
+                <span class="seat" id="swapSeat">#0</span>
+            </div>
+            <div class="btn-group">
+                <button class="btn-swap accept" onclick="acceptSwap()">✅ 接受</button>
+                <button class="btn-swap reject" onclick="rejectSwap()">✕ 拒绝</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
     <div class="toast-container" id="toastContainer"></div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js">
@@ -553,638 +708,56 @@
 
     <script>
         // ============================================================
-        // 角色数据
+        // 粒子背景
         // ============================================================
-        var roleData = {
-            '狼人': { icon: '🐺', image: '/images/werewolf/cards/狼人.jpg', desc: '每晚可以共同杀害一名玩家',
-            detail: '【技能】每晚可共同杀害一名玩家。\n【规则】所有狼人需投票统一意见。\n【自爆】白天可自爆，立即进入黑夜。' },
-            '预言家': { icon: '🔮', image: '/images/werewolf/cards/预言家.jpg', desc: '每晚可以查验一名玩家的阵营',
-            detail: '【技能】每晚可查验一名玩家身份（好人/狼人）。\n【规则】查验结果仅自己可见。' },
-            '女巫': { icon: '🧪', image: '/images/werewolf/cards/女巫.jpg', desc: '拥有解药和毒药各一瓶',
-            detail: '【技能】拥有解药和毒药各一瓶。\n【规则】解药可救人（首夜可自救），毒药可杀人。' },
-            '守卫': { icon: '🛡️', image: '/images/werewolf/cards/守卫.jpg', desc: '每晚守护一名玩家免遭狼人袭击',
-            detail: '【技能】每晚可守护一名玩家免受狼人袭击。\n【规则】不能连续两晚守护同一个人。\n【特殊】第一天可以守护自己。' },
-            '猎人': { icon: '🔫', image: '/images/werewolf/cards/猎人.jpg', desc: '死亡时可以开枪带走一名玩家',
-            detail: '【技能】死亡时可开枪带走一名玩家。\n【规则】被毒杀不能开枪。' },
-            '白痴': { icon: '🤡', image: '/images/werewolf/cards/白痴.jpg', desc: '被放逐时可翻牌免死一次',
-            detail: '【技能】被投票放逐时可翻牌免死一次。\n【规则】翻牌后失去投票权，但仍可发言。' },
-            '骑士': { icon: '⚔️', image: '/images/werewolf/cards/骑士.jpg', desc: '白天可挑战一名玩家',
-            detail: '【技能】白天可挑战一名玩家。\n【规则】若挑战目标为狼人，目标直接死亡。' },
-            '平民': { icon: '👤', image: '/images/werewolf/cards/平民.jpg', desc: '无特殊技能，通过发言投票找出狼人',
-            detail: '【技能】无特殊技能。\n【规则】通过发言和投票帮助好人阵营获胜。' }
-        };
+        (function initParticles() {
+            var canvas = document.getElementById('particleCanvas');
+            if (!canvas) return;
+            var ctx = canvas.getContext('2d');
+            var particles = [];
+            var count = Math.min(80, Math.floor(window.innerWidth / 8));
 
-        var cardBackImage = '/images/werewolf/cards/card_back.jpg';
-
-        // ============================================================
-        // 状态
-        // ============================================================
-        var state = {
-            roomId: '@roomId',
-            seatNumber: 0,
-            playerId: null,
-            nickname: '',
-            avatar: '🧑',
-            isReady: false,
-            isRevealed: false,
-            role: null,
-            isSpectator: false,
-            isGameStarted: false,
-            phase: 'waiting',
-            selectedTarget: -1,
-            isWolf: false,
-            isSeer: false,
-            isWitch: false,
-            isGuard: false,
-            isHunter: false,
-            isFool: false,
-            isKnight: false,
-            canExplode: false
-        };
-
-        // ============================================================
-        // SignalR
-        // ============================================================
-        var connection = null;
-
-        function connectSignalR() {
-            try {
-                connection = new signalR.HubConnectionBuilder()
-                    .withUrl('/werewolfHub')
-                    .configureLogging(signalR.LogLevel.Information)
-                    .build();
-
-                connection.on('ReceiveRole', function(data) {
-                    state.role = data.role;
-                    state.seatNumber = data.seatNumber;
-                    state.isSpectator = data.isSpectator || false;
-
-                    document.getElementById('seatDisplay').textContent = '🪑 ' + data.seatNumber + ' 号';
-
-                    if (state.isSpectator) {
-                        document.getElementById('identityCard').style.display = 'none';
-                        document.getElementById('spectatorMode').style.display = 'block';
-                        document.getElementById('readyBtn').disabled = true;
-                        document.getElementById('revealBtn').disabled = true;
-                        showToast('👁️ 你已进入观战模式', 'info');
-                        return;
-                    }
-
-                    var info = roleData[data.role];
-                    if (info) {
-                        document.getElementById('roleCardImg').src = info.image;
-                        document.getElementById('roleLabel').textContent = data.role + ' ' + info.icon;
-                    } else {
-                        document.getElementById('roleCardImg').src = '/images/werewolf/cards/平民.jpg';
-                        document.getElementById('roleLabel').textContent = data.role;
-                    }
-
-                    state.isWolf = data.role === '狼人';
-                    state.isSeer = data.role === '预言家';
-                    state.isWitch = data.role === '女巫';
-                    state.isGuard = data.role === '守卫';
-                    state.isHunter = data.role === '猎人';
-                    state.isFool = data.role === '白痴';
-                    state.isKnight = data.role === '骑士';
-                    state.canExplode = state.isWolf;
-
-                    document.getElementById('readyBtn').disabled = false;
-                    document.getElementById('readyBtn').textContent = '⏳ 准备';
-                    state.isGameStarted = true;
-                    document.getElementById('phaseBadge').textContent = '🎮 游戏中';
-                    showToast('📩 你抽到了 ' + data.role, 'info');
-
-                    if (state.isWolf) { document.getElementById('wolfExplodeBtn').classList.add('show'); }
-                });
-
-                connection.on('PhaseUpdate', function(phase, day, night) {
-                    state.phase = phase;
-                    updatePhaseDisplay(phase, day, night);
-                    handleActionPanel(phase);
-                });
-
-                connection.on('GuardAction', function(data) {
-                    showActionPanel('🛡️ 守卫行动', '请选择要守护的玩家');
-                    renderTargetGrid(data.targets, data.canProtectSelf, data.lastProtected);
-                    state.selectedTarget = -1;
-                    document.getElementById('actionConfirmBtn').dataset.action = 'guard';
-                });
-
-                connection.on('SeerAction', function(data) {
-                    showActionPanel('🔮 预言家查验', '请选择要查验的玩家');
-                    renderTargetGrid(data.targets, true, null);
-                    state.selectedTarget = -1;
-                    document.getElementById('actionConfirmBtn').dataset.action = 'seer';
-                });
-
-                connection.on('SeerResult', function(data) {
-                    var result = document.getElementById('checkResult');
-                    result.className = 'check-result show ' + (data.isWerewolf ? 'werewolf' : 'good');
-                    result.textContent = data.result + ' (' + data.targetSeat + '号)';
-                    setTimeout(function() { result.className = 'check-result'; }, 5000);
-                });
-
-                connection.on('WerewolfAction', function(data) {
-                    showActionPanel('🐺 狼人行动', '请选择要杀害的玩家');
-                    renderTargetGrid(data.targets, false, null);
-                    state.selectedTarget = -1;
-                    document.getElementById('actionConfirmBtn').dataset.action = 'werewolf';
-                    document.getElementById('wolfVoteStatus').style.display = 'block';
-                    document.getElementById('wolfTotalCount').textContent = data.wolfSeats.length;
-                    document.getElementById('wolfVotedCount').textContent = '0';
-                });
-
-                connection.on('WolfVoteStatus', function(data) {
-                    document.getElementById('wolfVotedCount').textContent = data.voted;
-                    if (data.voted === data.total) {
-                        document.getElementById('wolfVoteStatus').innerHTML = '✅ 所有狼人已投票';
-                    }
-                });
-
-                connection.on('WitchAction', function(data) {
-                    showActionPanel('🧪 女巫行动', '请选择解药或毒药');
-                    renderWitchPanel(data.deathSeats, data.canSaveFirstNight);
-                    document.getElementById('actionConfirmBtn').dataset.action = 'witch';
-                });
-
-                connection.on('VotingAction', function(data) {
-                    var title = data.isPK ? '⚖️ PK投票' : '🗳️ 投票放逐';
-                    showActionPanel(title, '请选择要放逐的玩家');
-                    renderTargetGrid(data.targets, false, null);
-                    state.selectedTarget = -1;
-                    document.getElementById('actionConfirmBtn').dataset.action = 'vote';
-                    document.getElementById('actionConfirmBtn').textContent = data.isPK ? '🗳️ PK投票' : '🗳️ 投票';
-                });
-
-                connection.on('SheriffElectionStart', function(data) {
-                    showActionPanel('👑 警长竞选', '你是否参与竞选？');
-                    var grid = document.getElementById('targetGrid');
-                    grid.innerHTML =
-                        `<button class="target-btn" onclick="joinSheriffElection()" style="grid-column:1/3;border-color:rgba(245,158,11,0.06);color:#F59E0B;">✅ 参与竞选<span class="sub">发言争取支持</span></button><button class="target-btn" onclick="skipSheriffElection()" style="grid-column:3/5;border-color:rgba(255,255,255,0.02);color:rgba(255,255,255,0.1);">⏭️ 不参与<span class="sub">警下投票</span></button>`;
-                    document.getElementById('actionConfirmBtn').style.display = 'none';
-                    document.getElementById('actionConfirmBtn').dataset.action = 'sheriff';
-                });
-
-                connection.on('SheriffVote', function(data) {
-                    showActionPanel('👑 警长投票', '请选择你要投票的候选人');
-                    renderTargetGrid(data.candidates, false, null);
-                    state.selectedTarget = -1;
-                    document.getElementById('actionConfirmBtn').dataset.action = 'sheriff_vote';
-                    document.getElementById('actionConfirmBtn').textContent = '🗳️ 投票';
-                });
-
-                connection.on('HunterShootAction', function(data) {
-                    showActionPanel('🔫 猎人开枪', '请选择要带走的玩家');
-                    renderTargetGrid(data.targets, false, null);
-                    state.selectedTarget = -1;
-                    document.getElementById('actionConfirmBtn').dataset.action = 'hunter';
-                    document.getElementById('actionConfirmBtn').textContent = '🔫 开枪';
-                });
-
-                connection.on('GameOver', function(winner) {
-                    var msg = winner === '好人' ? '⭐ 好人阵营胜利！' : '🐺 狼人阵营胜利！';
-                    showToast('🏆 ' + msg, 'success');
-                    document.getElementById('gameStatus').innerHTML = '<span style="color:#F59E0B;">🏆 ' + msg + '</span>';
-                    document.getElementById('phaseBadge').textContent = '🏁 游戏结束';
-                    document.getElementById('actionPanel').classList.remove('show');
-                    document.getElementById('revealBtn').disabled = true;
-                    document.getElementById('readyBtn').disabled = true;
-                    document.getElementById('wolfExplodeBtn').classList.remove('show');
-                });
-
-                connection.on('PKAction', function(data) {
-                    showActionPanel('⚖️ PK发言', '请发言争取支持');
-                    var grid = document.getElementById('targetGrid');
-                    grid.innerHTML =
-                        `<div style="grid-column:1/-1;text-align:center;padding:8px;color:rgba(255,255,255,0.1);font-size:0.8rem;">📢 你是PK玩家，请发言</div>`;
-                    document.getElementById('actionConfirmBtn').style.display = 'none';
-                });
-
-                // ⭐ 掉线倒计时更新
-                connection.on('DisbandTimerUpdate', function(data) {
-                    if (data) {
-                        document.getElementById('gameStatus').innerHTML = '<span style="color:#F59E0B;">⏱ 倒计时：' + data
-                            .display + '</span>';
-                    } else {
-                        document.getElementById('gameStatus').innerHTML = '<span>✦ 所有玩家在线 ✦</span>';
-                    }
-                });
-
-                connection.on('RoomDisbanded', function(message) {
-                    showToast('🏁 ' + message, 'warning');
-                    setTimeout(function() { window.location.href = '/Game'; }, 2000);
-                });
-
-                // ⭐ 换座请求监听
-                connection.on('SwapRequest', function(fromPlayer, targetSeat) {
-                    showSwapRequest(fromPlayer, targetSeat);
-                });
-
-                connection.start()
-                    .then(function() {
-                        console.log('✅ SignalR 已连接');
-                        // ⭐ 如果有roomId，直接加入
-                        if (state.roomId && state.roomId !== '------') {
-                            joinRoom();
-                        }
-                    })
-                    .catch(function(err) {
-                        console.error('❌ SignalR 连接失败:', err);
-                        showToast('⚠️ 连接失败，正在重试...', 'warning');
-                        setTimeout(connectSignalR, 3000);
-                    });
-
-                // ⭐ 启动心跳（每10秒发送一次）
-                setInterval(function() {
-                    if (connection && connection.state === signalR.HubConnectionState.Connected && state.playerId) {
-                        connection.invoke('Heartbeat', state.playerId).catch(function() {});
-                    }
-                }, 10000);
-
-            } catch (e) {
-                console.error('SignalR 初始化失败:', e);
-                showToast('⚠️ 连接失败，请刷新重试', 'error');
+            function resize() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
             }
-        }
+            window.addEventListener('resize', resize);
+            resize();
 
-        function joinRoom() {
-            var nickname = prompt('请输入你的昵称：', '玩家' + Math.floor(Math.random() * 100));
-            if (!nickname || nickname.trim() === '') { nickname = '玩家' + Math.floor(Math.random() * 100); }
-            state.nickname = nickname.trim();
-
-            var avatars = ['🧑', '👩', '👨', '🦸', '🧙', '🧚', '🤖', '👾', '🦊', '🐺'];
-            state.avatar = avatars[Math.floor(Math.random() * avatars.length)];
-
-            connection.invoke('JoinGame', state.roomId, state.nickname, state.avatar, false)
-                .then(function(result) {
-                    if (result && result.success) {
-                        state.playerId = result.playerId;
-                        state.seatNumber = result.seatNumber;
-                        document.getElementById('seatDisplay').textContent = '🪑 ' + result.seatNumber + ' 号';
-                        document.getElementById('roomDisplay').textContent = state.roomId;
-                        showToast('✅ 已加入房间，你是 ' + result.seatNumber + ' 号', 'success');
-                        document.getElementById('readyBtn').disabled = false;
-                    } else if (result && result.isSpectator) {
-                        state.isSpectator = true;
-                        document.getElementById('identityCard').style.display = 'none';
-                        document.getElementById('spectatorMode').style.display = 'block';
-                        document.getElementById('readyBtn').disabled = true;
-                        document.getElementById('revealBtn').disabled = true;
-                        showToast('👁️ 座位已满，你进入观战模式', 'info');
-                    } else if (result && !result.success) {
-                        showToast('❌ ' + result.message, 'error');
-                    }
-                })
-                .catch(function(err) {
-                    console.error('加入房间失败:', err);
-                    showToast('❌ 加入失败: ' + err, 'error');
+            var colors = ['rgba(139,92,246,', 'rgba(236,72,153,', 'rgba(245,158,11,', 'rgba(0,240,255,'];
+            for (var i = 0; i < count; i++) {
+                var color = colors[Math.floor(Math.random() * colors.length)];
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    vx: (Math.random() - 0.5) * 0.06,
+                    vy: (Math.random() - 0.5) * 0.06,
+                    r: Math.random() * 1.2 + 0.3,
+                    o: Math.random() * 0.08 + 0.01,
+                    color: color
                 });
-        }
-
-        function showActionPanel(title, subtitle) {
-            var panel = document.getElementById('actionPanel');
-            var titleEl = document.getElementById('actionTitle');
-            panel.classList.add('show');
-            titleEl.innerHTML = title + ' <span style="color:rgba(255,255,255,0.1);font-size:0.6rem;font-weight:400;">' + subtitle +
-                '</span>';
-            document.getElementById('checkResult').className = 'check-result';
-            document.getElementById('voteResult').className = 'vote-result';
-            document.getElementById('wolfVoteStatus').style.display = 'none';
-            var confirmBtn = document.getElementById('actionConfirmBtn');
-            confirmBtn.style.display = 'flex';
-            confirmBtn.textContent = '✅ 确认';
-            confirmBtn.disabled = false;
-            document.getElementById('wolfExplodeBtn').classList.remove('show');
-            if (state.isWolf) { document.getElementById('wolfExplodeBtn').classList.add('show'); }
-        }
-
-        function hideActionPanel() { document.getElementById('actionPanel').classList.remove('show'); }
-
-        function renderTargetGrid(targets, canSelectSelf, lastProtected) {
-            var grid = document.getElementById('targetGrid');
-            grid.innerHTML = '';
-            if (!targets || targets.length === 0) {
-                grid.innerHTML =
-                    '<div style="text-align:center;color:rgba(255,255,255,0.04);font-size:0.7rem;grid-column:1/-1;padding:8px 0;">暂无可用目标</div>';
-                return;
             }
 
-            targets.forEach(function(seat) {
-                var btn = document.createElement('button');
-                btn.className = 'target-btn';
-                btn.dataset.seat = seat;
-                var isSelf = state.seatNumber === seat;
-                var isDisabled = false;
-                if (isSelf && !canSelectSelf) { isDisabled = true;
-                    btn.innerHTML = seat + ' 号 <span class="sub">自己</span>'; } else if (lastProtected && lastProtected ===
-                    seat) { isDisabled = true;
-                    btn.innerHTML = seat + ' 号 <span class="sub">已守护</span>'; } else { btn.innerHTML =
-                        seat + ' 号 <span class="status-dot alive"></span>'; }
-                if (isDisabled) { btn.disabled = true; }
-                btn.addEventListener('click', function() {
-                    if (this.disabled) return;
-                    document.querySelectorAll('.target-btn').forEach(function(b) { b.classList.remove('selected'); });
-                    this.classList.add('selected');
-                    state.selectedTarget = parseInt(this.dataset.seat);
-                });
-                grid.appendChild(btn);
-            });
-        }
-
-        function renderWitchPanel(deaths, canSaveFirstNight) {
-            var grid = document.getElementById('targetGrid');
-            grid.innerHTML = '';
-            var hasDeath = deaths && deaths.length > 0;
-            var canSave = hasDeath && (canSaveFirstNight || deaths.indexOf(state.seatNumber) === -1 || canSaveFirstNight);
-
-            var antidoteDiv = document.createElement('div');
-            antidoteDiv.style.cssText =
-                'grid-column:1/3;padding:8px;border:2px solid rgba(0,255,136,0.04);border-radius:12px;cursor:pointer;text-align:center;transition:all 0.3s ease;background:rgba(255,255,255,0.01);';
-            antidoteDiv.innerHTML =
-                '<span style="font-size:1.2rem;">💚</span><br><span style="font-size:0.7rem;color:rgba(255,255,255,0.15);">解药</span><br><span style="font-size:0.55rem;color:rgba(255,255,255,0.04);">' +
-                (hasDeath ? '救活 ' + deaths.join(',') + ' 号' : '无人可救') + '</span>';
-            antidoteDiv.dataset.action = 'antidote';
-            if (!hasDeath || !canSave) { antidoteDiv.style.opacity = '0.3';
-                antidoteDiv.style.cursor = 'not-allowed'; }
-            antidoteDiv.addEventListener('click', function() {
-                if (this.style.opacity === '0.3') return;
-                document.querySelectorAll('.target-btn').forEach(function(b) { b.classList.remove('selected'); });
-                this.classList.add('selected');
-                state.selectedTarget = -1;
-                document.getElementById('actionConfirmBtn').dataset.action = 'antidote';
-                document.getElementById('actionConfirmBtn').textContent = '💚 使用解药';
-            });
-            grid.appendChild(antidoteDiv);
-
-            var poisonDiv = document.createElement('div');
-            poisonDiv.style.cssText =
-                'grid-column:3/5;padding:8px;border:2px solid rgba(220,53,69,0.04);border-radius:12px;cursor:pointer;text-align:center;transition:all 0.3s ease;background:rgba(255,255,255,0.01);';
-            poisonDiv.innerHTML =
-                '<span style="font-size:1.2rem;">☠️</span><br><span style="font-size:0.7rem;color:rgba(255,255,255,0.15);">毒药</span><br><span style="font-size:0.55rem;color:rgba(255,255,255,0.04);">选择目标</span>';
-            poisonDiv.dataset.action = 'poison';
-            poisonDiv.addEventListener('click', function() {
-                document.querySelectorAll('.target-btn').forEach(function(b) { b.classList.remove('selected'); });
-                this.classList.add('selected');
-                state.selectedTarget = -1;
-                document.getElementById('actionConfirmBtn').dataset.action = 'poison';
-                document.getElementById('actionConfirmBtn').textContent = '☠️ 使用毒药';
-                showPoisonTargets();
-            });
-            grid.appendChild(poisonDiv);
-        }
-
-        function showPoisonTargets() {
-            var grid = document.getElementById('targetGrid');
-            grid.innerHTML = '';
-            for (var i = 1; i <= 12; i++) {
-                if (i === state.seatNumber) continue;
-                var btn = document.createElement('button');
-                btn.className = 'target-btn';
-                btn.dataset.seat = i;
-                btn.innerHTML = i + ' 号 <span class="status-dot alive"></span>';
-                btn.addEventListener('click', function() {
-                    document.querySelectorAll('.target-btn').forEach(function(b) { b.classList.remove('selected'); });
-                    this.classList.add('selected');
-                    state.selectedTarget = parseInt(this.dataset.seat);
-                });
-                grid.appendChild(btn);
-            }
-        }
-
-        function confirmAction() {
-            var action = document.getElementById('actionConfirmBtn').dataset.action;
-            var btn = document.getElementById('actionConfirmBtn');
-            btn.disabled = true;
-
-            switch (action) {
-                case 'guard':
-                    if (state.selectedTarget < 0) { showToast('⚠️ 请选择要守护的玩家', 'warning');
-                        btn.disabled = false; return; }
-                    connection.invoke('GuardProtect', state.playerId, state.selectedTarget)
-                        .then(function() { showToast('✅ 已守护 ' + state.selectedTarget + ' 号', 'success');
-                            hideActionPanel(); })
-                        .catch(function(err) { showToast('❌ 操作失败: ' + err, 'error');
-                            btn.disabled = false; });
-                    break;
-                case 'seer':
-                    if (state.selectedTarget < 0) { showToast('⚠️ 请选择要查验的玩家', 'warning');
-                        btn.disabled = false; return; }
-                    connection.invoke('SeerCheck', state.playerId, state.selectedTarget)
-                        .then(function() { showToast('🔮 正在查验 ' + state.selectedTarget + ' 号...', 'info');
-                            hideActionPanel(); })
-                        .catch(function(err) { showToast('❌ 操作失败: ' + err, 'error');
-                            btn.disabled = false; });
-                    break;
-                case 'werewolf':
-                    if (state.selectedTarget < 0) { showToast('⚠️ 请选择要杀害的玩家', 'warning');
-                        btn.disabled = false; return; }
-                    connection.invoke('WerewolfVote', state.playerId, state.selectedTarget)
-                        .then(function() {
-                            showToast('🐺 已投票 ' + state.selectedTarget + ' 号', 'success');
-                            document.getElementById('wolfVotedCount').textContent = parseInt(document.getElementById(
-                                'wolfVotedCount').textContent) + 1;
-                            hideActionPanel();
-                        })
-                        .catch(function(err) { showToast('❌ 操作失败: ' + err, 'error');
-                            btn.disabled = false; });
-                    break;
-                case 'witch':
-                    if (state.selectedTarget < 0) { showToast('⚠️ 请选择毒药目标', 'warning');
-                        btn.disabled = false; return; }
-                    connection.invoke('WitchAction', state.playerId, false, true, state.selectedTarget)
-                        .then(function() { showToast('☠️ 已毒杀 ' + state.selectedTarget + ' 号', 'success');
-                            hideActionPanel(); })
-                        .catch(function(err) { showToast('❌ 操作失败: ' + err, 'error');
-                            btn.disabled = false; });
-                    break;
-                case 'antidote':
-                    connection.invoke('WitchAction', state.playerId, true, false, -1)
-                        .then(function() { showToast('💚 已使用解药', 'success');
-                            hideActionPanel(); })
-                        .catch(function(err) { showToast('❌ 操作失败: ' + err, 'error');
-                            btn.disabled = false; });
-                    break;
-                case 'vote':
-                    if (state.selectedTarget < 0) { showToast('⚠️ 请选择要放逐的玩家', 'warning');
-                        btn.disabled = false; return; }
-                    connection.invoke('DayVote', state.playerId, state.selectedTarget)
-                        .then(function() { showToast('🗳️ 已投票 ' + state.selectedTarget + ' 号', 'success');
-                            hideActionPanel(); })
-                        .catch(function(err) { showToast('❌ 操作失败: ' + err, 'error');
-                            btn.disabled = false; });
-                    break;
-                case 'sheriff_vote':
-                    if (state.selectedTarget < 0) { showToast('⚠️ 请选择要投票的候选人', 'warning');
-                        btn.disabled = false; return; }
-                    connection.invoke('SheriffVote', state.playerId, state.selectedTarget)
-                        .then(function() { showToast('🗳️ 已投票给 ' + state.selectedTarget + ' 号', 'success');
-                            hideActionPanel(); })
-                        .catch(function(err) { showToast('❌ 操作失败: ' + err, 'error');
-                            btn.disabled = false; });
-                    break;
-                case 'hunter':
-                    if (state.selectedTarget < 0) { showToast('⚠️ 请选择要带走的目标', 'warning');
-                        btn.disabled = false; return; }
-                    connection.invoke('HunterShoot', state.playerId, state.selectedTarget)
-                        .then(function() { showToast('🔫 已开枪带走 ' + state.selectedTarget + ' 号', 'success');
-                            hideActionPanel(); })
-                        .catch(function(err) { showToast('❌ 操作失败: ' + err, 'error');
-                            btn.disabled = false; });
-                    break;
-                default:
-                    showToast('⚠️ 未知操作', 'warning');
-                    btn.disabled = false;
-            }
-        }
-
-        function joinSheriffElection() {
-            connection.invoke('JoinSheriffElection', state.playerId)
-                .then(function() { showToast('✅ 已参与警长竞选', 'success');
-                    hideActionPanel(); })
-                .catch(function(err) { showToast('❌ 操作失败: ' + err, 'error'); });
-        }
-
-        function skipSheriffElection() { showToast('⏭️ 已跳过竞选', 'info');
-            hideActionPanel(); }
-
-        function wolfExplode() {
-            if (!state.isWolf) return;
-            if (!confirm('确定要自爆吗？自爆后立即进入黑夜！')) return;
-            connection.invoke('WerewolfExplode', state.playerId)
-                .then(function() { showToast('💥 狼人自爆！', 'error');
-                    hideActionPanel();
-                    document.getElementById('wolfExplodeBtn').classList.remove('show'); })
-                .catch(function(err) { showToast('❌ 操作失败: ' + err, 'error'); });
-        }
-
-        function cancelAction() {
-            state.selectedTarget = -1;
-            document.querySelectorAll('.target-btn').forEach(function(b) { b.classList.remove('selected'); });
-            document.getElementById('actionPanel').classList.remove('show');
-            showToast('✕ 已取消', 'info');
-        }
-
-        function toggleReveal() {
-            var inner = document.getElementById('cardInner');
-            var hint = document.getElementById('flipHint');
-            var btn = document.getElementById('revealBtn');
-
-            state.isRevealed = !state.isRevealed;
-
-            if (state.isRevealed) {
-                inner.classList.add('flipped');
-                hint.textContent = '🔄 点击翻回卡背';
-                btn.textContent = '🔒 隐藏身份';
-
-                var info = document.getElementById('roleInfo');
-                var name = document.getElementById('roleName');
-                var desc = document.getElementById('roleDesc');
-                var detail = document.getElementById('roleDetail');
-
-                var data = roleData[state.role];
-                if (data) {
-                    name.textContent = data.icon + ' ' + state.role;
-                    desc.textContent = data.desc;
-                    detail.textContent = data.detail;
-                } else {
-                    name.textContent = state.role;
-                    desc.textContent = '查看身份';
-                    detail.textContent = '暂无详细说明';
+            function draw() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                for (var p of particles) {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+                    if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                    ctx.fillStyle = p.color + p.o + ')';
+                    ctx.fill();
                 }
-                info.classList.add('show');
-            } else {
-                inner.classList.remove('flipped');
-                hint.textContent = '👆 点击卡片查看身份';
-                btn.textContent = '🃏 查看身份';
-                document.getElementById('roleInfo').classList.remove('show');
+                requestAnimationFrame(draw);
             }
-        }
+            draw();
+        })();
 
-        function toggleReady() {
-            if (!connection || !state.playerId) { showToast('⚠️ 未加入房间', 'warning'); return; }
-            state.isReady = !state.isReady;
-            var btn = document.getElementById('readyBtn');
-            if (state.isReady) {
-                btn.textContent = '✅ 已准备';
-                btn.style.color = '#00FF88';
-                showToast('✅ 已准备，等待其他玩家...', 'success');
-            } else {
-                btn.textContent = '⏳ 准备';
-                btn.style.color = '';
-                showToast('⏳ 已取消准备', 'info');
-            }
-            connection.invoke('ToggleReady', state.playerId, state.isReady)
-                .catch(function(err) {
-                    console.error('切换准备状态失败:', err);
-                    showToast('操作失败', 'error');
-                    state.isReady = !state.isReady;
-                });
-        }
-
-        function updatePhaseDisplay(phase, day, night) {
-            var badge = document.getElementById('phaseBadge');
-            var status = document.getElementById('gameStatus');
-
-            var phaseMap = {
-                'setup': { label: '⚙️ 设置', color: 'rgba(255,255,255,0.15)' },
-                'seating': { label: '🪑 就坐', color: 'rgba(255,255,255,0.15)' },
-                'dealing': { label: '🃏 发牌', color: '#8B5CF6' },
-                'revealing': { label: '📩 查看身份', color: '#8B5CF6' },
-                'sheriff_election': { label: '👑 竞选', color: '#F59E0B' },
-                'night_guard': { label: '🌙 守卫', color: '#4facfe' },
-                'night_seer': { label: '🌙 预言家', color: '#4facfe' },
-                'night_werewolf': { label: '🌙 狼人', color: '#4facfe' },
-                'night_witch': { label: '🌙 女巫', color: '#4facfe' },
-                'night_resolve': { label: '🌙 结算', color: '#4facfe' },
-                'day_announce': { label: '☀️ 天亮了', color: '#F59E0B' },
-                'day_speech': { label: '☀️ 发言', color: '#F59E0B' },
-                'day_voting': { label: '☀️ 投票', color: '#F59E0B' },
-                'day_pk': { label: '☀️ PK', color: '#F59E0B' },
-                'day_resolve': { label: '☀️ 结果', color: '#F59E0B' },
-                'hunter_shoot': { label: '🔫 猎人', color: '#F59E0B' },
-                'gameover': { label: '🏁 结束', color: '#EC4899' }
-            };
-
-            var info = phaseMap[phase] || { label: phase, color: 'rgba(255,255,255,0.15)' };
-            badge.textContent = info.label;
-            badge.style.color = info.color;
-
-            var statusMap = {
-                'setup': '✦ 等待开始 ✦',
-                'seating': '🪑 等待玩家就坐',
-                'dealing': '🃏 发牌中...',
-                'revealing': '📩 请查看身份',
-                'sheriff_election': '👑 警长竞选',
-                'night_guard': '🌙 守卫行动中...',
-                'night_seer': '🌙 预言家查验中...',
-                'night_werewolf': '🌙 狼人行动中...',
-                'night_witch': '🌙 女巫行动中...',
-                'night_resolve': '⚖️ 结算中...',
-                'day_announce': '☀️ 公布死讯',
-                'day_speech': '📢 发言阶段',
-                'day_voting': '🗳️ 投票阶段',
-                'day_pk': '⚖️ PK发言',
-                'day_resolve': '⚖️ 公布结果',
-                'hunter_shoot': '🔫 猎人开枪',
-                'gameover': '🏁 游戏结束'
-            };
-            status.textContent = statusMap[phase] || phase;
-            status.className = 'game-status';
-            if (phase.startsWith('night')) status.classList.add('night');
-            else if (phase.startsWith('day')) status.classList.add('day');
-            else if (phase === 'revealing' || phase === 'dealing' || phase === 'sheriff_election') status.classList.add(
-            'action');
-        }
-
-        function handleActionPanel(phase) {
-            var noActionPhases = ['setup', 'seating', 'dealing', 'revealing', 'night_resolve', 'day_announce', 'day_speech',
-                'day_resolve', 'gameover'
-            ];
-            if (noActionPhases.indexOf(phase) !== -1) { hideActionPanel(); }
-        }
-
-        function showRules() { window.open('/Werewolf/Rules?roomId=' + state.roomId, '_blank', 'width=480,height=700'); }
-
+        // ============================================================
+        // Toast
+        // ============================================================
         function showToast(message, type) {
             type = type || 'info';
             var container = document.getElementById('toastContainer');
@@ -1200,231 +773,470 @@
         }
 
         // ============================================================
-        // ⭐ 换座请求弹窗
+        // 游戏状态
         // ============================================================
-        function showSwapRequest(fromPlayer, targetSeat) {
-            var overlay = document.createElement('div');
-            overlay.id = 'swapRequestOverlay';
-            overlay.style.cssText = `
-                position: fixed;
-                inset: 0;
-                background: rgba(0, 0, 0, 0.7);
-                backdrop-filter: blur(20px);
-                z-index: 9999;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                padding: 1.5rem;
-                animation: modalFadeIn 0.3s ease;
-            `;
+        var state = {
+            roomId: '@roomId',
+            playerId: null,
+            seatNumber: 0,
+            isHost: true,
+            isReady: false,
+            players: [],
+            seats: [],
+            mySeat: null,
+            swapTarget: null
+        };
 
-            overlay.innerHTML = `
-                <div style="background: rgba(16,16,30,0.98); border: 1px solid rgba(255,255,255,0.04); border-radius: 24px; max-width: 420px; width: 100%; padding: 2rem; box-shadow: 0 32px 120px rgba(0,0,0,0.5); text-align: center;">
-                    <div style="font-size: 3rem; margin-bottom: 0.3rem;">🔄</div>
-                    <h3 style="color: #F59E0B; font-size: 1.2rem; font-weight: 700; margin-bottom: 0.3rem;">换座请求</h3>
-                    <p style="color: rgba(255,255,255,0.3); font-size: 0.9rem; margin-bottom: 1.2rem; line-height: 1.6;">
-                        <strong style="color:#fff;">${fromPlayer.nickname}</strong> 想和你交换座位
-                    </p>
-                    <div style="display: flex; align-items: center; justify-content: center; gap: 0.8rem; padding: 0.8rem; background: rgba(255,255,255,0.02); border-radius: 12px; margin-bottom: 1.2rem;">
-                        <span style="font-size: 1.8rem;">${fromPlayer.avatarEmoji || '🧑'}</span>
-                        <span style="color: #fff; font-weight: 600; font-size: 1rem;">${fromPlayer.nickname}</span>
-                        <span style="color: rgba(0,240,255,0.3); font-size: 0.8rem; font-family: 'Courier New', monospace;">#${targetSeat}</span>
-                    </div>
-                    <div style="display: flex; gap: 0.8rem; flex-wrap: wrap;">
-                        <button onclick="acceptSwap('${fromPlayer.playerId}')" style="flex: 1; padding: 0.6rem 1.5rem; border: none; border-radius: 40px; font-weight: 600; font-size: 0.9rem; cursor: pointer; transition: all 0.3s ease; font-family: inherit; background: linear-gradient(135deg, #00FF88, #00F0FF); color: #05050F;">✅ 接受</button>
-                        <button onclick="rejectSwap('${fromPlayer.playerId}')" style="flex: 1; padding: 0.6rem 1.5rem; border: none; border-radius: 40px; font-weight: 600; font-size: 0.9rem; cursor: pointer; transition: all 0.3s ease; font-family: inherit; background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.2);">✕ 拒绝</button>
-                    </div>
-                </div>
-            `;
+        var connection = null;
+        var swapRequestId = null;
 
-            document.body.appendChild(overlay);
+        // ============================================================
+        // SignalR
+        // ============================================================
+        function connectSignalR() {
+            try {
+                connection = new signalR.HubConnectionBuilder()
+                    .withUrl('/werewolfHub')
+                    .configureLogging(signalR.LogLevel.Information)
+                    .build();
+
+                // 事件监听
+                connection.on('JoinedGame', function(data) {
+                    if (data && data.success) {
+                        state.playerId = data.playerId;
+                        state.seatNumber = data.seatNumber || 0;
+                        state.isHost = state.seatNumber === 0 || data.isHost === true;
+                        showToast('✅ 已加入房间，你是 ' + (state.isHost ? '房主' : state.seatNumber + ' 号'), 'success');
+                        updateUI();
+                    }
+                });
+
+                connection.on('PlayerListUpdate', function(players) {
+                    state.players = players || [];
+                    updateUI();
+                });
+
+                connection.on('SeatUpdate', function(seatNumber, player) {
+                    updateSeat(seatNumber, player);
+                    updateUI();
+                    updateSeatCount();
+                });
+
+                connection.on('SeatTaken', function(seatNumber, player) {
+                    showToast('🪑 ' + player.nickname + ' 坐到了 ' + seatNumber + ' 号', 'success');
+                    updateSeat(seatNumber, player);
+                    updateUI();
+                    updateSeatCount();
+                });
+
+                connection.on('SeatReleased', function(seatNumber) {
+                    updateSeat(seatNumber, null);
+                    updateUI();
+                    updateSeatCount();
+                });
+
+                connection.on('SwapRequest', function(fromPlayer, targetSeat) {
+                    var from = state.players.find(function(p) { return p.playerId === fromPlayer.playerId; });
+                    if (!from) return;
+
+                    swapRequestId = fromPlayer.playerId;
+                    document.getElementById('swapAvatar').textContent = from.avatarEmoji || '🧑';
+                    document.getElementById('swapName').textContent = from.nickname;
+                    document.getElementById('swapSeat').textContent = '#' + targetSeat;
+                    document.getElementById('swapModalTitle').textContent = '🔄 换座请求';
+                    document.getElementById('swapModalDesc').textContent = from.nickname + ' 想和你交换座位';
+                    document.getElementById('swapModal').classList.add('active');
+                });
+
+                connection.on('SwapAccepted', function(seat1, seat2, player1, player2) {
+                    showToast('✅ ' + player1.nickname + ' 和 ' + player2.nickname + ' 交换了座位', 'success');
+                    updateSeat(seat1, player2);
+                    updateSeat(seat2, player1);
+                    updateUI();
+                    updateSeatCount();
+                    document.getElementById('swapModal').classList.remove('active');
+                });
+
+                connection.on('SwapRejected', function(fromPlayer) {
+                    showToast('❌ ' + fromPlayer.nickname + ' 拒绝了换座请求', 'error');
+                    document.getElementById('swapModal').classList.remove('active');
+                });
+
+                connection.on('PhaseUpdate', function(phase) {
+                    if (phase === 'dealing' || phase === 'revealing') {
+                        document.getElementById('actionStatus').textContent = '● 发牌中...';
+                        document.getElementById('startBtn').disabled = true;
+                        setTimeout(function() {
+                            window.location.href = '/Werewolf/Player?roomId=' + state.roomId;
+                        }, 2000);
+                    }
+                    if (phase === 'gameover') {
+                        document.getElementById('actionStatus').textContent = '● 游戏已结束';
+                        document.getElementById('startBtn').disabled = true;
+                    }
+                });
+
+                connection.on('DisplayMessage', function(message) {
+                    showToast('📢 ' + message, 'info');
+                });
+
+                connection.start()
+                    .then(function() {
+                        console.log('✅ SignalR 已连接');
+                        joinRoom();
+
+                        // 心跳
+                        setInterval(function() {
+                            if (connection && connection.state === signalR.HubConnectionState.Connected && state
+                                .playerId) {
+                                connection.invoke('Heartbeat', state.playerId).catch(function() {});
+                            }
+                        }, 10000);
+                    })
+                    .catch(function(err) {
+                        console.error('❌ 连接失败:', err);
+                        showToast('⚠️ 连接失败，正在重试...', 'warning');
+                        setTimeout(connectSignalR, 3000);
+                    });
+
+            } catch (e) {
+                console.error('SignalR 初始化失败:', e);
+                showToast('⚠️ 连接失败，请刷新重试', 'error');
+            }
         }
 
-        function acceptSwap(fromPlayerId) {
-            var overlay = document.getElementById('swapRequestOverlay');
-            if (overlay) overlay.remove();
-
-            if (!connection || !state.playerId) {
-                showToast('⚠️ 未连接', 'error');
+        // ============================================================
+        // 加入房间（4个参数）
+        // ============================================================
+        function joinRoom() {
+            if (!state.roomId || state.roomId === '') {
+                showToast('⚠️ 房间号无效', 'error');
                 return;
             }
 
-            connection.invoke('AcceptSwapSeat', state.playerId, fromPlayerId, true)
+            var nickname = '@username' || '管理员';
+            var avatar = '👑';
+
+            connection.invoke('JoinGame', state.roomId, nickname, avatar, true)
                 .then(function(result) {
                     if (result && result.success) {
-                        showToast('✅ 换座成功', 'success');
-                    } else {
-                        showToast('❌ ' + (result?.message || '换座失败'), 'error');
+                        state.playerId = result.playerId;
+                        state.isHost = true;
+                        state.seatNumber = 0;
+                        document.getElementById('actionStatus').textContent = '● 你是房主，等待玩家就坐';
+                        showToast('✅ 已加入房间，你是房主', 'success');
+                    } else if (result && !result.success) {
+                        showToast('❌ ' + result.message, 'error');
                     }
                 })
                 .catch(function(err) {
-                    showToast('❌ 操作失败: ' + err, 'error');
-                });
-        }
-
-        function rejectSwap(fromPlayerId) {
-            var overlay = document.getElementById('swapRequestOverlay');
-            if (overlay) overlay.remove();
-
-            if (!connection || !state.playerId) return;
-
-            connection.invoke('AcceptSwapSeat', state.playerId, fromPlayerId, false)
-                .catch(function(err) {
-                    console.error('拒绝换座失败:', err);
+                    console.error('加入房间失败:', err);
+                    showToast('❌ 加入失败: ' + err, 'error');
                 });
         }
 
         // ============================================================
-        // ⭐ 作弊检测系统
+        // 生成座位
         // ============================================================
-        var cheatDetection = {
-            tabSwitchCount: 0,
-            maxTabSwitches: 3,
-            blurCount: 0,
-            maxBlur: 3,
-            clickCount: 0,
-            lastClickTime: 0,
-            mouseLeaveCount: 0,
-            isCheating: false,
-            answerTimes: [],
-            lastAnswerTime: null
-        };
-
-        document.addEventListener('visibilitychange', function() {
-            if (document.hidden && !cheatDetection.isCheating && state.isGameStarted) {
-                cheatDetection.tabSwitchCount++;
-                if (cheatDetection.tabSwitchCount >= cheatDetection.maxTabSwitches) {
-                    reportCheat('检测到多次切换应用');
-                }
-            }
-        });
-
-        window.addEventListener('blur', function() {
-            if (!cheatDetection.isCheating && state.isGameStarted) {
-                cheatDetection.blurCount++;
-                if (cheatDetection.blurCount >= cheatDetection.maxBlur) {
-                    reportCheat('检测到窗口失去焦点');
-                }
-            }
-        });
-
-        window.addEventListener('focus', function() {
-            cheatDetection.blurCount = 0;
-        });
-
-        document.addEventListener('contextmenu', function(e) {
-            if (state.isGameStarted) {
-                e.preventDefault();
-                reportCheat('检测到右键操作');
-            }
-        });
-
-        document.addEventListener('keydown', function(e) {
-            if (state.isGameStarted) {
-                if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J'))) {
-                    e.preventDefault();
-                    reportCheat('检测到开发者工具');
-                }
-            }
-        });
-
-        function reportCheat(reason) {
-            if (cheatDetection.isCheating) return;
-            cheatDetection.isCheating = true;
-
-            console.warn('⚠️ 作弊检测:', reason);
-            showToast('⚠️ ' + reason + '，将扣除5分', 'error');
-
-            if (connection && connection.state === signalR.HubConnectionState.Connected) {
-                connection.invoke('ReportCheat', state.playerId, reason).catch(function() {});
-            }
-
-            setTimeout(function() {
-                cheatDetection.isCheating = false;
-            }, 3000);
-        }
-
-        // 在提交答案时调用（如果有答题功能）
-        function checkAnswerTime(elapsedSeconds, isCorrect) {
-            if (isCorrect && elapsedSeconds < 1.0) {
-                reportCheat('检测到异常快速答题 (秒答)');
-                return true;
-            }
-
-            cheatDetection.answerTimes.push(elapsedSeconds);
-            if (cheatDetection.answerTimes.length >= 5) {
-                var avg = cheatDetection.answerTimes.reduce(function(a, b) { return a + b; }, 0) / cheatDetection.answerTimes
-                    .length;
-                if (elapsedSeconds > avg * 3 && elapsedSeconds > 15) {
-                    reportCheat('检测到异常缓慢答题');
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        // 暴露给全局
-        window.checkAnswerTime = checkAnswerTime;
-
-        // ============================================================
-        // 粒子背景
-        // ============================================================
-        (function initParticles() {
-            var canvas = document.getElementById('particleCanvas');
-            if (!canvas) return;
-            var ctx = canvas.getContext('2d');
-            var particles = [];
-            var count = Math.min(50, Math.floor(window.innerWidth / 10));
-
-            function resize() {
-                canvas.width = window.innerWidth;
-                canvas.height = window.innerHeight;
-            }
-            window.addEventListener('resize', resize);
-            resize();
+        function generateSeats() {
+            var container = document.getElementById('seatsContainer');
+            var count = 12;
+            container.innerHTML = '';
+            state.seats = [];
+            var radius = 38;
 
             for (var i = 0; i < count; i++) {
-                particles.push({
-                    x: Math.random() * canvas.width,
-                    y: Math.random() * canvas.height,
-                    vx: (Math.random() - 0.5) * 0.1,
-                    vy: (Math.random() - 0.5) * 0.1,
-                    r: Math.random() * 1 + 0.3,
-                    o: Math.random() * 0.1 + 0.02
+                var angle = (i / count) * 360 - 90;
+                var rad = angle * Math.PI / 180;
+                var x = 50 + radius * Math.cos(rad);
+                var y = 50 + radius * Math.sin(rad);
+
+                var seat = document.createElement('div');
+                seat.className = 'seat empty';
+                seat.dataset.seat = i + 1;
+                seat.style.left = x + '%';
+                seat.style.top = y + '%';
+                seat.onclick = function() {
+                    var seatNum = parseInt(this.dataset.seat);
+                    onSeatClick(seatNum);
+                };
+
+                var numberSpan = document.createElement('span');
+                numberSpan.className = 'seat-number';
+                numberSpan.textContent = i + 1;
+                seat.appendChild(numberSpan);
+
+                var nameSpan = document.createElement('span');
+                nameSpan.className = 'seat-name';
+                nameSpan.textContent = '空位';
+                seat.appendChild(nameSpan);
+
+                var emojiSpan = document.createElement('span');
+                emojiSpan.className = 'seat-emoji';
+                emojiSpan.textContent = '🪑';
+                seat.appendChild(emojiSpan);
+
+                container.appendChild(seat);
+
+                state.seats.push({
+                    number: i + 1,
+                    element: seat,
+                    occupied: false,
+                    player: null,
+                    isReady: false,
+                    isAI: false
                 });
             }
+            updateSeatCount();
+        }
 
-            function draw() {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                for (var p of particles) {
-                    p.x += p.vx;
-                    p.y += p.vy;
-                    if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
-                    if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
-                    ctx.beginPath();
-                    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-                    ctx.fillStyle = 'rgba(0, 240, 255, ' + p.o + ')';
-                    ctx.fill();
+        // ============================================================
+        // 更新座位
+        // ============================================================
+        function updateSeat(seatNumber, player) {
+            var seat = state.seats.find(function(s) { return s.number === seatNumber; });
+            if (!seat) return;
+
+            if (player) {
+                seat.occupied = true;
+                seat.player = player;
+                seat.isReady = player.isReady || false;
+                seat.isAI = player.isAI || false;
+                seat.element.className = 'seat occupied';
+                if (player.playerId === state.playerId) {
+                    seat.element.classList.add('self');
+                    state.mySeat = seatNumber;
                 }
-                requestAnimationFrame(draw);
-            }
-            draw();
-        })();
-
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('🐺 狼人杀玩家端启动...');
-            // 如果有roomId，直接连接
-            if ('@roomId' && '@roomId' !== '') {
-                connectSignalR();
+                if (player.isReady) {
+                    seat.element.classList.add('ready');
+                }
+                if (player.isHost) {
+                    seat.element.classList.add('host');
+                }
+                if (player.isAI) {
+                    seat.element.classList.add('ai');
+                }
+                seat.element.querySelector('.seat-name').textContent = player.nickname;
+                seat.element.querySelector('.seat-emoji').textContent = player.avatarEmoji || '🧑';
             } else {
-                // 等待用户输入房间码
-                var inputRoomId = prompt('请输入房间码：');
-                if (inputRoomId) {
-                    state.roomId = inputRoomId;
-                    document.getElementById('roomDisplay').textContent = inputRoomId;
-                    connectSignalR();
+                seat.occupied = false;
+                seat.player = null;
+                seat.isReady = false;
+                seat.isAI = false;
+                seat.element.className = 'seat empty';
+                if (state.mySeat === seatNumber) {
+                    state.mySeat = null;
+                }
+                seat.element.querySelector('.seat-name').textContent = '空位';
+                seat.element.querySelector('.seat-emoji').textContent = '🪑';
+            }
+        }
+
+        // ============================================================
+        // 座位点击处理
+        // ============================================================
+        function onSeatClick(seatNumber) {
+            var seat = state.seats.find(function(s) { return s.number === seatNumber; });
+            if (!seat) return;
+
+            if (seat.occupied && seat.player && seat.player.playerId === state.playerId) {
+                showToast('💡 这是你的座位', 'info');
+                return;
+            }
+
+            // 空位 → 坐下
+            if (!seat.occupied) {
+                connection.invoke('TakeSeat', state.playerId, seatNumber)
+                    .then(function(result) {
+                        if (result && result.success) {
+                            showToast('🪑 你坐到了 ' + seatNumber + ' 号', 'success');
+                        } else if (result && !result.success) {
+                            showToast('❌ ' + result.message, 'error');
+                        }
+                    })
+                    .catch(function(err) {
+                        showToast('❌ 坐下失败: ' + err, 'error');
+                    });
+                return;
+            }
+
+            // 已占座位 → 请求换座
+            if (seat.occupied && seat.player && seat.player.playerId !== state.playerId) {
+                if (confirm('要请求 ' + seat.player.nickname + ' 和你换座位吗？')) {
+                    connection.invoke('RequestSwapSeat', state.playerId, seatNumber)
+                        .then(function(result) {
+                            if (result && result.success) {
+                                showToast('📨 已发送换座请求给 ' + seat.player.nickname, 'info');
+                            } else if (result && !result.success) {
+                                showToast('❌ ' + result.message, 'error');
+                            }
+                        })
+                        .catch(function(err) {
+                            showToast('❌ 请求失败: ' + err, 'error');
+                        });
                 }
             }
+        }
+
+        // ============================================================
+        // 接受/拒绝换座
+        // ============================================================
+        function acceptSwap() {
+            if (!swapRequestId) return;
+            connection.invoke('AcceptSwapSeat', state.playerId, swapRequestId, true)
+                .catch(function(err) { showToast('❌ 接受失败: ' + err, 'error'); });
+            document.getElementById('swapModal').classList.remove('active');
+            swapRequestId = null;
+        }
+
+        function rejectSwap() {
+            if (!swapRequestId) return;
+            connection.invoke('AcceptSwapSeat', state.playerId, swapRequestId, false)
+                .catch(function(err) { showToast('❌ 拒绝失败: ' + err, 'error'); });
+            document.getElementById('swapModal').classList.remove('active');
+            swapRequestId = null;
+        }
+
+        // ============================================================
+        // 添加机器人
+        // ============================================================
+        function addBots(count) {
+            if (!connection || !state.roomId) {
+                showToast('⚠️ 房间未创建', 'warning');
+                return;
+            }
+
+            if (!confirm('确定要添加 ' + count + ' 个机器人吗？（仅测试用）')) return;
+
+            connection.invoke('AddBots', state.roomId, count)
+                .then(function(result) {
+                    if (result && result.success) {
+                        showToast('✅ ' + result.message, 'success');
+                    } else {
+                        showToast('❌ ' + (result?.message || '添加失败'), 'error');
+                    }
+                })
+                .catch(function(err) {
+                    showToast('❌ 添加失败: ' + err, 'error');
+                });
+        }
+
+        // ============================================================
+        // 更新UI
+        // ============================================================
+        function updateUI() {
+            var players = state.players || [];
+            var total = players.filter(function(p) { return !p.isSpectator; }).length;
+            var ready = players.filter(function(p) { return p.isReady && !p.isSpectator; }).length;
+
+            document.getElementById('playerCountBadge').textContent = total + ' 人';
+            updatePlayerList(players);
+
+            var seated = players.filter(function(p) { return p.seatNumber > 0 && !p.isSpectator; });
+            seated.forEach(function(p) {
+                updateSeat(p.seatNumber, p);
+            });
+
+            var occupied = state.seats.filter(function(s) { return s.occupied; }).length;
+            var allReady = state.seats.filter(function(s) { return s.occupied && !s.isReady; }).length === 0;
+
+            var btn = document.getElementById('startBtn');
+            if (occupied >= 2 && allReady) {
+                btn.disabled = false;
+                document.getElementById('actionStatus').textContent = '● ' + occupied + '/' + state.seats.length + ' 已就坐，可以发牌';
+            } else {
+                btn.disabled = true;
+                var msg = occupied < 2 ? '需要至少2人就坐' : '等待所有玩家准备';
+                document.getElementById('actionStatus').textContent = '● ' + msg;
+            }
+        }
+
+        function updatePlayerList(players) {
+            var container = document.getElementById('playerList');
+
+            if (!players || players.length === 0) {
+                container.innerHTML = '<div class="player-empty">✦ 等待玩家接入 ✦</div>';
+                return;
+            }
+
+            var sorted = players.filter(function(p) { return !p.isSpectator; }).sort(function(a, b) {
+                return (a.seatNumber || 99) - (b.seatNumber || 99);
+            });
+
+            if (sorted.length === 0) {
+                container.innerHTML = '<div class="player-empty">✦ 等待玩家接入 ✦</div>';
+                return;
+            }
+
+            var html = '';
+            sorted.forEach(function(p) {
+                var isReady = p.isReady || false;
+                var isSelf = p.playerId === state.playerId;
+                var isHost = p.isHost || false;
+                var isAI = p.isAI || false;
+                var seatDisplay = p.seatNumber > 0 ? '#' + p.seatNumber : '💺';
+
+                html += '<div class="player-item">';
+                html += '<span class="avatar">' + (p.avatarEmoji || '🧑') + '</span>';
+                html += '<div class="info">';
+                html += '<span class="name">' + p.nickname + (isSelf ? ' <span class="me">(你)</span>' : '');
+                if (isAI) { html += ' <span class="ai-tag">🤖 AI</span>'; }
+                html += '<span class="seat-tag">' + seatDisplay + '</span>';
+                html += '</span></div>';
+                var statusClass = isHost ? 'host' : (isAI ? 'ai' : (isReady ? 'ready' : 'waiting'));
+                var statusText = isHost ? '👑 房主' : (isAI ? '🤖 AI' : (isReady ? '✅ 已准备' : '⏳ 等待'));
+                html += '<span class="status ' + statusClass + '">' + statusText + '</span>';
+                html += '</div>';
+            });
+
+            container.innerHTML = html;
+        }
+
+        function updateSeatCount() {
+            var occupied = state.seats.filter(function(s) { return s.occupied; }).length;
+            document.getElementById('seatCount').textContent = occupied + '/' + state.seats.length + ' 已占';
+        }
+
+        // ============================================================
+        // 开始游戏
+        // ============================================================
+        function startGame() {
+            if (!connection || !state.roomId) {
+                showToast('⚠️ 房间未创建', 'warning');
+                return;
+            }
+
+            var btn = document.getElementById('startBtn');
+            btn.disabled = true;
+            btn.textContent = '⏳ 发牌中...';
+
+            connection.invoke('StartDealing', state.roomId)
+                .catch(function(err) {
+                    console.error('开始游戏失败:', err);
+                    showToast('❌ 开始失败: ' + err, 'error');
+                    btn.disabled = false;
+                    btn.textContent = '🃏 洗牌发牌';
+                });
+        }
+
+        // ============================================================
+        // 刷新
+        // ============================================================
+        function refreshRoom() {
+            showToast('🔄 刷新中...', 'info');
+            if (connection && state.roomId) {
+                connection.invoke('JoinGame', state.roomId, '@username', '👑', true)
+                    .catch(function() {});
+            }
+        }
+
+        // ============================================================
+        // 初始化
+        // ============================================================
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🐺 狼人杀座位图启动...');
+            generateSeats();
+            connectSignalR();
         });
     </script>
 
