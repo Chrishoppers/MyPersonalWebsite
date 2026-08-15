@@ -21,6 +21,24 @@ namespace MyPersonalWebsite.Controllers
             return View();
         }
 
+        // ⭐ 等待大厅（新增）
+        public IActionResult Waiting(string roomId)
+        {
+            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+            if (isAdmin != 1)
+            {
+                return RedirectToAction("Login", "Auth");
+            }
+
+            if (string.IsNullOrEmpty(roomId))
+            {
+                return RedirectToAction("Host");
+            }
+
+            ViewBag.RoomId = roomId;
+            return View();
+        }
+
         public IActionResult GameControl(string roomId)
         {
             var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
@@ -38,25 +56,6 @@ namespace MyPersonalWebsite.Controllers
             ViewBag.RoomId = roomId;
             return View();
         }
-        // ============================================================
-// ⭐ 等待大厅
-// ============================================================
-public IActionResult Waiting(string roomId)
-{
-    var isAdmin = Context.Session.GetInt32("IsAdmin") ?? 0;
-    if (isAdmin != 1)
-    {
-        return RedirectToAction("Login", "Auth");
-    }
-
-    if (string.IsNullOrEmpty(roomId))
-    {
-        return RedirectToAction("Host");
-    }
-
-    ViewBag.RoomId = roomId;
-    return View();
-}
 
         public IActionResult Rules(string roomId)
         {
@@ -65,7 +64,7 @@ public IActionResult Waiting(string roomId)
             if (game != null)
             {
                 ViewBag.PlayerCount = game.PlayerCount;
-                ViewBag.SelectedRoles = game.Players.Where(p => p.IsGod).Select(p => p.Role).Distinct().ToList();
+                ViewBag.SelectedRoles = game.Players.Where(p => p.IsGod).Select(p => p.Role.ToString()).Distinct().ToList();
             }
             return View();
         }
