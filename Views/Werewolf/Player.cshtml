@@ -1234,6 +1234,12 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('🐺 狼人杀玩家端启动...');
             connectSignalR();
         });
+// ⭐ 启动心跳（每10秒发送一次）
+setInterval(function() {
+    if (connection && connection.state === signalR.HubConnectionState.Connected && state.playerId) {
+        connection.invoke('Heartbeat', state.playerId).catch(function() {});
+    }
+}, 10000);
     </script>
 
 </body>
