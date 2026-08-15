@@ -717,7 +717,7 @@ public async Task<object> JoinGame(string roomId, string nickname, string avatar
             return new { success = true, seatNumber, botName };
         }
 
-      public async Task<object> AddBots(string roomId, int count = 10)
+     public async Task<object> AddBots(string roomId, int count = 10)
 {
     if (!_games.TryGetValue(roomId, out var game))
         return new { success = false, message = "房间不存在" };
@@ -728,7 +728,10 @@ public async Task<object> JoinGame(string roomId, string nickname, string avatar
     for (int i = 0; i < count && game.PlayerCount + added < maxSeats; i++)
     {
         var result = await AddBot(roomId);
-        if (result is { success: true })
+        // 使用反射检查 success 属性
+        var resultType = result.GetType();
+        var successProp = resultType.GetProperty("success");
+        if (successProp != null && (bool)successProp.GetValue(result) == true)
         {
             added++;
         }
