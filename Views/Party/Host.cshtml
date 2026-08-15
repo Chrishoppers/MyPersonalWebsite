@@ -1,6 +1,7 @@
 @{
     Layout = null;
     ViewData["Title"] = "✦ 全息派对中枢 ✦";
+    var username = Context.Session.GetString("Username") ?? "admin";
     var isAdmin = Context.Session.GetInt32("IsAdmin") ?? 0;
     if (isAdmin != 1)
     {
@@ -24,18 +25,14 @@
            全局重置
            ============================================================ */
         * { margin: 0; padding: 0; box-sizing: border-box; }
-
-        body {
-            background: #05050F;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        
+        body { 
+            background: #05050F; 
+            font-family: 'Inter', 'Segoe UI', sans-serif;
             color: #e0e0e0;
             min-height: 100vh;
             overflow: hidden;
-            padding: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            user-select: none;
+            margin: 0;
         }
 
         /* ===== 粒子背景 ===== */
@@ -49,205 +46,199 @@
             pointer-events: none;
         }
 
-        #particleCanvas2 {
+        /* ===== 顶部光带 ===== */
+        .top-light-bar {
             position: fixed;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 0;
-            pointer-events: none;
-            opacity: 0.3;
+            right: 0;
+            height: 2px;
+            z-index: 100;
+            background: linear-gradient(90deg, 
+                transparent 0%, 
+                #00F0FF 15%, 
+                #7B61FF 30%, 
+                #FF006E 50%, 
+                #7B61FF 70%, 
+                #00F0FF 85%, 
+                transparent 100%
+            );
+            animation: lightBarPulse 3s ease-in-out infinite;
+            box-shadow: 0 0 40px rgba(0, 240, 255, 0.15);
         }
 
-        /* ===== 网格背景 ===== */
-        .grid-overlay {
+        @@keyframes lightBarPulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+
+        .bottom-light-bar {
             position: fixed;
-            top: 0;
+            bottom: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 0;
-            pointer-events: none;
-            background-image:
-                linear-gradient(rgba(0, 240, 255, 0.008) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0, 240, 255, 0.008) 1px, transparent 1px);
-            background-size: 60px 60px;
-            opacity: 0.5;
+            right: 0;
+            height: 1px;
+            z-index: 100;
+            background: linear-gradient(90deg, 
+                transparent 0%, 
+                rgba(123, 97, 255, 0.2) 25%, 
+                rgba(0, 240, 255, 0.1) 50%, 
+                rgba(255, 0, 110, 0.2) 75%, 
+                transparent 100%
+            );
         }
 
         /* ============================================================
            主容器
            ============================================================ */
-        .container {
+        .host-container {
             position: relative;
             z-index: 1;
-            width: 100vw;
-            height: 100vh;
-            max-width: 100%;
-            max-height: 100%;
-            padding: 1.5vh 2vw;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 1.5rem 2rem 2rem;
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
         }
 
         /* ============================================================
-           头部 - 全息风格
+           头部
            ============================================================ */
-        .header {
+        .host-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 0.5vh 0 1vh;
-            border-bottom: 1px solid rgba(0, 240, 255, 0.04);
-            flex-shrink: 0;
+            padding: 0.5rem 0 1.5rem;
+            border-bottom: 1px solid rgba(0, 240, 255, 0.06);
             flex-wrap: wrap;
-            gap: 8px;
+            gap: 1rem;
         }
 
-        .header .brand {
+        .host-header .left {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 1.2rem;
         }
 
-        .header .brand .logo-icon {
-            font-size: clamp(1.5rem, 2.5vw, 3rem);
-            animation: logoFloat 4s ease-in-out infinite;
+        .host-header .logo-icon {
+            font-size: 2rem;
+            animation: logoGlow 2s ease-in-out infinite;
         }
 
-        @@keyframes logoFloat {
-            0%, 100% { transform: rotate(-3deg) scale(1); }
-            50% { transform: rotate(3deg) scale(1.05); }
+        @@keyframes logoGlow {
+            0%, 100% { filter: drop-shadow(0 0 10px rgba(0, 240, 255, 0.1)); }
+            50% { filter: drop-shadow(0 0 30px rgba(0, 240, 255, 0.3)); }
         }
 
-        .header .brand h1 {
-            font-size: clamp(1.2rem, 2vw, 2.4rem);
-            font-weight: 900;
-            background: linear-gradient(135deg, #00F0FF, #7B61FF, #EC4899);
+        .host-header .title {
+            font-size: 1.6rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #00F0FF, #7B61FF, #FF006E);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
-            letter-spacing: 0.02em;
+            letter-spacing: 0.06em;
         }
 
-        .header .brand .sub {
-            font-size: clamp(0.4rem, 0.5vw, 0.6rem);
-            color: rgba(0, 240, 255, 0.06);
+        .host-header .title .sub {
+            font-size: 0.7rem;
+            font-weight: 400;
+            -webkit-text-fill-color: rgba(255,255,255,0.1);
             letter-spacing: 0.2em;
-            text-transform: uppercase;
             display: block;
-            margin-top: -2px;
+            margin-top: -0.1rem;
         }
 
-        .header .status-group {
+        .host-header .right {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 1rem;
             flex-wrap: wrap;
         }
 
-        .header .status-badge {
+        .host-header .user-badge {
             display: flex;
             align-items: center;
-            gap: 6px;
-            padding: 4px 14px;
+            gap: 0.5rem;
+            padding: 0.4rem 1.2rem 0.4rem 0.8rem;
             border-radius: 40px;
-            font-size: clamp(0.5rem, 0.7vw, 0.8rem);
-            font-weight: 500;
-            background: rgba(0, 240, 255, 0.03);
-            border: 1px solid rgba(0, 240, 255, 0.04);
-            color: rgba(255,255,255,0.15);
+            background: rgba(0, 240, 255, 0.04);
+            border: 1px solid rgba(0, 240, 255, 0.06);
+            font-size: 0.8rem;
+            color: rgba(255,255,255,0.4);
         }
 
-        .header .status-badge .dot {
+        .host-header .user-badge .avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #00F0FF, #7B61FF);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .host-header .user-badge .role {
+            color: #FF006E;
+            font-size: 0.55rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            padding: 0.05rem 0.6rem;
+            border-radius: 20px;
+            background: rgba(255, 0, 110, 0.08);
+            border: 1px solid rgba(255, 0, 110, 0.06);
+        }
+
+        .host-header .status-dot {
+            display: inline-block;
             width: 8px;
             height: 8px;
             border-radius: 50%;
-            display: inline-block;
-            animation: pulse 2s infinite;
+            background: #00FF88;
+            animation: pulse 2s ease-in-out infinite;
+            margin-right: 0.2rem;
         }
-
-        .header .status-badge .dot.online { background: #00FF88; }
-        .header .status-badge .dot.waiting { background: #F59E0B; }
 
         @@keyframes pulse {
             0%, 100% { opacity: 1; transform: scale(1); }
             50% { opacity: 0.4; transform: scale(1.2); }
         }
 
-        .header .room-code-display {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 4px 16px 4px 12px;
-            border-radius: 40px;
-            background: rgba(0, 240, 255, 0.02);
-            border: 1px solid rgba(0, 240, 255, 0.04);
-        }
-
-        .header .room-code-display .label {
-            font-size: clamp(0.35rem, 0.4vw, 0.5rem);
-            color: rgba(255,255,255,0.06);
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-        }
-
-        .header .room-code-display .code {
-            font-family: 'Courier New', monospace;
-            font-size: clamp(0.8rem, 1.2vw, 1.4rem);
-            font-weight: 800;
-            background: linear-gradient(135deg, #00F0FF, #7B61FF);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            letter-spacing: 3px;
-        }
-
-        .header .admin-badge {
-            padding: 3px 14px;
-            border-radius: 40px;
-            font-size: clamp(0.4rem, 0.5vw, 0.6rem);
-            font-weight: 600;
-            background: rgba(139,92,246,0.06);
-            border: 1px solid rgba(139,92,246,0.04);
-            color: #8B5CF6;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-        }
-
         /* ============================================================
-           主布局
+           主网格
            ============================================================ */
-        .main-grid {
-            flex: 1;
+        .host-grid {
             display: grid;
-            grid-template-columns: 1fr 380px;
-            gap: 20px;
-            padding: 1vh 0;
-            min-height: 0;
+            grid-template-columns: 340px 1fr;
+            gap: 1.5rem;
+            margin-top: 1rem;
+            flex: 1;
         }
 
         @@media (max-width: 1100px) {
-            .main-grid {
+            .host-grid {
                 grid-template-columns: 1fr;
-                gap: 12px;
+                gap: 1.2rem;
             }
         }
 
         /* ============================================================
-           全息房间卡
+           全息卡片
            ============================================================ */
         .holo-card {
-            background: rgba(255,255,255,0.015);
-            backdrop-filter: blur(40px);
-            -webkit-backdrop-filter: blur(40px);
-            border: 1px solid rgba(0, 240, 255, 0.04);
+            background: rgba(10, 10, 30, 0.6);
+            backdrop-filter: blur(30px);
+            border: 1px solid rgba(0, 240, 255, 0.06);
             border-radius: 24px;
-            padding: 1.2rem 1.5rem;
+            padding: 1.5rem 1.8rem;
             position: relative;
             overflow: hidden;
-            transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
         }
 
         .holo-card::before {
@@ -257,190 +248,285 @@
             left: -50%;
             width: 200%;
             height: 200%;
-            background: radial-gradient(ellipse at 30% 30%, rgba(0,240,255,0.01), transparent 70%);
+            background: radial-gradient(ellipse at 30% 30%, rgba(0, 240, 255, 0.015), transparent 70%);
             pointer-events: none;
         }
 
-        .holo-card .card-glow {
-            position: absolute;
-            top: -1px;
-            left: 20%;
-            right: 20%;
-            height: 2px;
-            background: linear-gradient(90deg, transparent, rgba(0,240,255,0.08), rgba(123,97,255,0.08), transparent);
-            animation: glowPulse 3s ease-in-out infinite;
+        .holo-card:hover {
+            border-color: rgba(0, 240, 255, 0.12);
+            box-shadow: 0 0 60px rgba(0, 240, 255, 0.02);
         }
-
-        @@keyframes glowPulse {
-            0%, 100% { opacity: 0.3; transform: scaleX(1); }
-            50% { opacity: 1; transform: scaleX(1.2); }
-        }
-
-        .holo-card .corner {
-            position: absolute;
-            width: 14px;
-            height: 14px;
-            border-color: rgba(0, 240, 255, 0.04);
-            border-style: solid;
-            border-width: 0;
-            transition: all 0.6s ease;
-        }
-
-        .holo-card .corner.tl { top: 10px; left: 10px; border-top-width: 2px; border-left-width: 2px; border-radius: 4px 0 0 0; }
-        .holo-card .corner.tr { top: 10px; right: 10px; border-top-width: 2px; border-right-width: 2px; border-radius: 0 4px 0 0; }
-        .holo-card .corner.bl { bottom: 10px; left: 10px; border-bottom-width: 2px; border-left-width: 2px; border-radius: 0 0 0 4px; }
-        .holo-card .corner.br { bottom: 10px; right: 10px; border-bottom-width: 2px; border-right-width: 2px; border-radius: 0 0 4px 0; }
 
         .holo-card .card-title {
-            font-size: clamp(0.5rem, 0.6vw, 0.7rem);
+            font-size: 0.7rem;
             font-weight: 600;
             text-transform: uppercase;
-            letter-spacing: 0.15em;
-            color: rgba(255,255,255,0.06);
-            margin-bottom: 1rem;
+            letter-spacing: 0.12em;
+            color: rgba(0, 240, 255, 0.3);
+            margin-bottom: 0.8rem;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 0.5rem;
         }
 
-        .holo-card .card-title .accent {
+        .holo-card .card-title .accent-line {
             flex: 1;
             height: 1px;
-            background: linear-gradient(90deg, rgba(255,255,255,0.03), transparent);
+            background: linear-gradient(90deg, rgba(0, 240, 255, 0.1), transparent);
+        }
+
+        .holo-card .card-title .badge-count {
+            font-size: 0.6rem;
+            padding: 0.1rem 0.6rem;
+            border-radius: 20px;
+            background: rgba(0, 240, 255, 0.04);
+            border: 1px solid rgba(0, 240, 255, 0.04);
+            color: rgba(255,255,255,0.2);
         }
 
         /* ============================================================
-           中间 - 全息二维码 + 房间信息
+           左侧：房间信息
            ============================================================ */
-        .center-section {
+        .room-info-card {
             display: flex;
             flex-direction: column;
-            gap: 1vh;
+            gap: 1rem;
+        }
+
+        .room-code-display {
+            text-align: center;
+            padding: 1.2rem 0.5rem;
+            background: rgba(0, 240, 255, 0.02);
+            border-radius: 16px;
+            border: 1px solid rgba(0, 240, 255, 0.04);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .room-code-display::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
             height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 240, 255, 0.02), transparent);
+            animation: scanLine 4s ease-in-out infinite;
         }
 
-        .qr-section {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 200px;
+        @@keyframes scanLine {
+            0% { left: -100%; }
+            100% { left: 200%; }
         }
 
-        .qr-section #qrcode {
+        .room-code-display .label {
+            font-size: 0.6rem;
+            color: rgba(255,255,255,0.08);
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
             position: relative;
             z-index: 1;
-            padding: 8px;
-            background: rgba(0,240,255,0.01);
-            border-radius: 20px;
-            border: 1px solid rgba(0,240,255,0.02);
         }
 
-        .qr-section #qrcode canvas {
-            display: block;
-            border-radius: 12px;
-        }
-
-        .qr-section .qr-hint {
-            font-size: clamp(0.4rem, 0.5vw, 0.6rem);
-            color: rgba(255,255,255,0.03);
-            letter-spacing: 0.2em;
-            text-transform: uppercase;
-            margin-top: 0.5rem;
-        }
-
-        .qr-section .qr-url {
-            font-size: clamp(0.3rem, 0.35vw, 0.4rem);
-            color: rgba(255,255,255,0.02);
+        .room-code-display .code {
             font-family: 'Courier New', monospace;
+            font-size: 2.8rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #00F0FF, #7B61FF);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: 6px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .room-code-display .copy-btn {
+            position: relative;
+            z-index: 1;
+            background: none;
+            border: none;
+            color: rgba(255,255,255,0.08);
+            cursor: pointer;
+            font-size: 0.7rem;
+            transition: color 0.3s ease;
             margin-top: 0.2rem;
-            max-width: 80%;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
+            font-family: inherit;
+        }
+        .room-code-display .copy-btn:hover { color: rgba(255,255,255,0.2); }
+
+        /* ============================================================
+           二维码
+           ============================================================ */
+        .qr-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0.8rem;
+            background: rgba(255,255,255,0.01);
+            border-radius: 16px;
+            border: 1px solid rgba(0, 240, 255, 0.04);
+            position: relative;
+            min-height: 180px;
+        }
+
+        .qr-container .qr-frame {
+            position: absolute;
+            inset: -1px;
+            border-radius: 16px;
+            padding: 2px;
+            background: linear-gradient(135deg, rgba(0, 240, 255, 0.05), transparent, rgba(123, 97, 255, 0.05));
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
+        }
+
+        .qr-container #qrcode { position: relative; z-index: 1; }
+        .qr-container #qrcode img { border-radius: 8px; }
+        .qr-container .qr-hint {
+            position: absolute;
+            bottom: 0.8rem;
+            font-size: 0.5rem;
+            color: rgba(255,255,255,0.04);
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+        .qr-container .qr-loading {
+            color: rgba(255,255,255,0.06);
+            font-size: 0.8rem;
+            text-align: center;
+            padding: 1rem;
         }
 
         /* ============================================================
-           右侧面板
+           游戏选择
            ============================================================ */
-        .side-panel {
+        .game-select-btn {
+            padding: 0.4rem 1.2rem;
+            border-radius: 30px;
+            border: 2px solid rgba(255,255,255,0.04);
+            background: rgba(255,255,255,0.02);
+            color: rgba(255,255,255,0.1);
+            font-weight: 600;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .game-select-btn:hover {
+            border-color: rgba(0, 240, 255, 0.06);
+            background: rgba(0, 240, 255, 0.02);
+            color: rgba(255,255,255,0.2);
+        }
+
+        .game-select-btn.active {
+            border-color: rgba(0, 240, 255, 0.06);
+            background: rgba(0, 240, 255, 0.03);
+            color: rgba(255,255,255,0.3);
+        }
+
+        .game-select-btn.coming {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+        .game-select-btn.coming:hover {
+            border-color: rgba(255,255,255,0.04);
+            background: rgba(255,255,255,0.02);
+            color: rgba(255,255,255,0.1);
+        }
+
+        /* ============================================================
+           玩家列表
+           ============================================================ */
+        .players-card {
             display: flex;
             flex-direction: column;
-            gap: 1vh;
-            height: 100%;
+            min-height: 400px;
         }
 
-        .side-panel .panel-card {
-            flex: 1;
-            min-height: 0;
+        .players-card .player-stats {
+            display: flex;
+            gap: 1.2rem;
+            padding: 0.6rem 0 1rem;
+            flex-wrap: wrap;
+            border-bottom: 1px solid rgba(255,255,255,0.02);
+            margin-bottom: 1rem;
         }
 
-        .side-panel .panel-card:last-child {
-            flex: 0.6;
+        .players-card .player-stats .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.2);
         }
 
-        /* ===== 玩家列表 - 全息风格 ===== */
+        .players-card .player-stats .stat-item .num {
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: #fff;
+            font-family: 'Courier New', monospace;
+        }
+
+        .players-card .player-stats .stat-item .num.online { color: #00FF88; }
+        .players-card .player-stats .stat-item .num.ready { color: #7B61FF; }
+        .players-card .player-stats .stat-item .num.waiting { color: #FFB800; }
+
+        /* ============================================================
+           玩家列表
+           ============================================================ */
         .player-list {
+            flex: 1;
             overflow-y: auto;
-            max-height: 100%;
-            padding-right: 4px;
+            max-height: 420px;
+            padding-right: 0.3rem;
         }
 
-        .player-list::-webkit-scrollbar {
-            width: 3px;
-        }
-
-        .player-list::-webkit-scrollbar-track {
-            background: rgba(255,255,255,0.01);
-            border-radius: 10px;
-        }
-
-        .player-list::-webkit-scrollbar-thumb {
-            background: rgba(0,240,255,0.06);
-            border-radius: 10px;
-        }
+        .player-list::-webkit-scrollbar { width: 3px; }
+        .player-list::-webkit-scrollbar-track { background: rgba(255,255,255,0.01); border-radius: 10px; }
+        .player-list::-webkit-scrollbar-thumb { background: rgba(0, 240, 255, 0.08); border-radius: 10px; }
 
         .player-item {
             display: flex;
             align-items: center;
-            gap: 0.6rem;
-            padding: 0.4rem 0.6rem;
-            border-radius: 12px;
-            border: 1px solid rgba(255,255,255,0.02);
-            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
-            margin-bottom: 4px;
-            position: relative;
-            overflow: hidden;
+            gap: 0.8rem;
+            padding: 0.6rem 0.8rem;
+            border-radius: 14px;
+            margin-bottom: 0.3rem;
+            transition: all 0.3s ease;
+            border: 1px solid transparent;
+            animation: playerEntry 0.5s ease;
         }
 
-        .player-item::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            bottom: 0;
-            width: 2px;
-            background: linear-gradient(180deg, #00F0FF, #7B61FF);
-            opacity: 0;
-            transition: opacity 0.4s ease;
-        }
-
-        .player-item:hover::before {
-            opacity: 0.3;
+        @@keyframes playerEntry {
+            from { opacity: 0; transform: translateX(-20px) scale(0.95); }
+            to { opacity: 1; transform: translateX(0) scale(1); }
         }
 
         .player-item:hover {
             background: rgba(255,255,255,0.02);
-            border-color: rgba(0,240,255,0.04);
+            border-color: rgba(255,255,255,0.02);
         }
 
         .player-item .avatar {
-            font-size: clamp(1rem, 1.2vw, 1.5rem);
-            width: 32px;
-            text-align: center;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
             flex-shrink: 0;
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.04);
+            transition: all 0.3s ease;
         }
+
+        .player-item .avatar.online { border-color: rgba(0, 255, 136, 0.1); }
+        .player-item .avatar.ready { border-color: rgba(123, 97, 255, 0.15); box-shadow: 0 0 30px rgba(123, 97, 255, 0.03); }
 
         .player-item .info {
             flex: 1;
@@ -448,308 +534,180 @@
         }
 
         .player-item .info .name {
-            color: rgba(255,255,255,0.3);
-            font-size: clamp(0.65rem, 0.7vw, 0.85rem);
+            font-size: 0.85rem;
             font-weight: 500;
+            color: rgba(255,255,255,0.7);
             display: flex;
             align-items: center;
-            gap: 4px;
+            gap: 0.3rem;
             flex-wrap: wrap;
         }
 
         .player-item .info .name .host-tag {
-            font-size: 0.4rem;
-            padding: 0.05rem 0.5rem;
+            font-size: 0.5rem;
+            padding: 0.02rem 0.5rem;
             border-radius: 20px;
-            background: rgba(139,92,246,0.06);
-            color: #8B5CF6;
-            border: 1px solid rgba(139,92,246,0.04);
+            background: rgba(255, 0, 110, 0.08);
+            color: #FF006E;
+            border: 1px solid rgba(255, 0, 110, 0.04);
             font-weight: 600;
+            letter-spacing: 0.04em;
         }
 
         .player-item .info .name .admin-tag {
-            font-size: 0.4rem;
-            padding: 0.05rem 0.5rem;
+            font-size: 0.5rem;
+            padding: 0.02rem 0.5rem;
             border-radius: 20px;
-            background: rgba(0,240,255,0.04);
+            background: rgba(0, 240, 255, 0.06);
             color: #00F0FF;
-            border: 1px solid rgba(0,240,255,0.02);
+            border: 1px solid rgba(0, 240, 255, 0.04);
             font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
         }
 
-        .player-item .info .name .admin-tag:hover {
-            background: rgba(0,240,255,0.08);
-            color: #00F0FF;
+        .player-item .info .status-text {
+            font-size: 0.6rem;
+            color: rgba(255,255,255,0.1);
         }
 
-        .player-item .status {
-            font-size: clamp(0.4rem, 0.5vw, 0.55rem);
-            font-weight: 600;
-            padding: 2px 10px;
-            border-radius: 20px;
-            white-space: nowrap;
-            flex-shrink: 0;
-        }
-
-        .player-item .status.ready {
-            background: rgba(0,255,136,0.06);
-            color: #00FF88;
-            border: 1px solid rgba(0,255,136,0.03);
-        }
-
-        .player-item .status.waiting {
-            background: rgba(255,255,255,0.02);
-            color: rgba(255,255,255,0.06);
-            border: 1px solid rgba(255,255,255,0.02);
-        }
-
-        .player-item .status.host {
-            background: rgba(139,92,246,0.06);
-            color: #8B5CF6;
-            border: 1px solid rgba(139,92,246,0.03);
-        }
-
-        .player-item .status.admin {
-            background: rgba(0,240,255,0.04);
-            color: #00F0FF;
-            border: 1px solid rgba(0,240,255,0.02);
-        }
+        .player-item .info .status-text.ready { color: #7B61FF; }
+        .player-item .info .status-text.online { color: #00FF88; }
+        .player-item .info .status-text.waiting { color: #FFB800; }
 
         .player-item .actions {
             display: flex;
-            gap: 4px;
+            gap: 0.2rem;
             flex-shrink: 0;
         }
 
-        .player-item .actions .btn-mini {
-            padding: 2px 8px;
+        .player-item .actions .btn-icon {
+            width: 28px;
+            height: 28px;
             border: none;
-            border-radius: 20px;
-            font-size: 0.5rem;
-            font-weight: 600;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.02);
+            color: rgba(255,255,255,0.08);
             cursor: pointer;
             transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.6rem;
             font-family: inherit;
-            background: rgba(255,255,255,0.02);
-            color: rgba(255,255,255,0.06);
         }
-
-        .player-item .actions .btn-mini:hover {
+        .player-item .actions .btn-icon:hover {
             background: rgba(255,255,255,0.04);
-            color: rgba(255,255,255,0.15);
+            color: rgba(255,255,255,0.2);
         }
-
-        .player-item .actions .btn-mini.promote {
-            background: rgba(0,240,255,0.03);
-            color: rgba(0,240,255,0.1);
+        .player-item .actions .btn-icon.kick:hover {
+            background: rgba(255, 0, 110, 0.08);
+            color: #FF006E;
         }
-
-        .player-item .actions .btn-mini.promote:hover {
-            background: rgba(0,240,255,0.06);
+        .player-item .actions .btn-icon.admin-toggle:hover {
+            background: rgba(0, 240, 255, 0.06);
             color: #00F0FF;
         }
 
-        .player-item .actions .btn-mini.kick {
-            background: rgba(220,53,69,0.02);
-            color: rgba(220,53,69,0.06);
-        }
-
-        .player-item .actions .btn-mini.kick:hover {
-            background: rgba(220,53,69,0.04);
-            color: #dc3545;
-        }
-
-        .player-item .actions .btn-mini:disabled {
-            opacity: 0.2;
-            cursor: not-allowed;
-        }
-
-        .player-empty {
-            color: rgba(255,255,255,0.02);
-            font-size: clamp(0.5rem, 0.6vw, 0.7rem);
-            text-align: center;
-            padding: 1rem 0;
-            letter-spacing: 0.1em;
-        }
-
-        /* ============================================================
-           统计行
-           ============================================================ */
-        .stats-row {
-            display: flex;
-            gap: 1.5rem;
-            padding: 0.5rem 0;
-            flex-wrap: wrap;
-        }
-
-        .stats-row .stat-item {
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
-            font-size: clamp(0.5rem, 0.6vw, 0.7rem);
-            color: rgba(255,255,255,0.06);
-        }
-
-        .stats-row .stat-item .num {
-            font-weight: 700;
-            font-size: clamp(0.8rem, 1vw, 1.2rem);
-            color: rgba(255,255,255,0.2);
-            font-family: 'Courier New', monospace;
-        }
-
-        .stats-row .stat-item .num.green { color: #00FF88; }
-        .stats-row .stat-item .num.cyan { color: #00F0FF; }
-        .stats-row .stat-item .num.gold { color: #F59E0B; }
-
-        /* ============================================================
-           ⭐ 转移管理员按钮
-           ============================================================ */
-        .transfer-section {
-            display: flex;
-            gap: 0.5rem;
-            margin-top: 0.3rem;
-            flex-wrap: wrap;
-        }
-
-        .transfer-section select {
-            flex: 1;
-            padding: 0.4rem 0.8rem;
-            border-radius: 30px;
-            border: 1px solid rgba(255,255,255,0.04);
-            background: rgba(255,255,255,0.02);
-            color: rgba(255,255,255,0.2);
-            font-size: 0.6rem;
-            outline: none;
-            font-family: inherit;
-            min-width: 100px;
-        }
-
-        .transfer-section select option {
-            background: #1a1a2e;
-            color: rgba(255,255,255,0.4);
-        }
-
-        .transfer-section select:focus {
-            border-color: rgba(0,240,255,0.08);
-        }
-
-        .transfer-section .btn-transfer {
-            padding: 0.4rem 1.2rem;
-            border: none;
-            border-radius: 30px;
-            background: linear-gradient(135deg, #00F0FF, #7B61FF);
-            color: #fff;
-            font-weight: 600;
-            font-size: 0.6rem;
-            cursor: pointer;
-            transition: all 0.4s ease;
-            font-family: inherit;
-            white-space: nowrap;
-        }
-
-        .transfer-section .btn-transfer:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 40px rgba(0,240,255,0.05);
-        }
-
-        .transfer-section .btn-transfer:disabled {
-            opacity: 0.2;
-            cursor: not-allowed;
-        }
-
-        /* ============================================================
-           底部 - 开始按钮（超级炫酷）
-           ============================================================ */
-        .action-bar {
+        .player-item .ready-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            display: inline-block;
             flex-shrink: 0;
-            padding: 0.5vh 0;
+        }
+        .player-item .ready-dot.ready { background: #7B61FF; box-shadow: 0 0 20px rgba(123, 97, 255, 0.1); }
+        .player-item .ready-dot.waiting { background: rgba(255,255,255,0.04); }
+
+        .empty-players {
+            text-align: center;
+            padding: 2.5rem 0;
+            color: rgba(255,255,255,0.04);
+            font-size: 0.85rem;
+        }
+
+        /* ============================================================
+           底部操作栏
+           ============================================================ */
+        .host-actions {
             display: flex;
             gap: 0.8rem;
-            align-items: center;
             flex-wrap: wrap;
+            margin-top: 1.5rem;
+            padding-top: 1.2rem;
+            border-top: 1px solid rgba(255,255,255,0.02);
+            align-items: center;
         }
 
-        .btn-start-game {
-            flex: 1;
-            min-width: 200px;
-            padding: 0.8rem 1.5rem;
+        .btn-primary-glow {
+            padding: 0.7rem 2.2rem;
             border: none;
-            border-radius: 60px;
-            background: linear-gradient(135deg, #00F0FF, #7B61FF, #EC4899);
-            background-size: 300% 300%;
+            border-radius: 40px;
+            background: linear-gradient(135deg, #00F0FF, #7B61FF);
             color: #fff;
-            font-weight: 800;
-            font-size: clamp(0.8rem, 1vw, 1.1rem);
+            font-weight: 700;
+            font-size: 0.9rem;
             cursor: pointer;
-            transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+            transition: all 0.3s ease;
             font-family: inherit;
-            box-shadow: 0 4px 60px rgba(0,240,255,0.02);
-            position: relative;
-            overflow: hidden;
-            animation: gradientMove 4s ease-in-out infinite;
+            box-shadow: 0 0 40px rgba(0, 240, 255, 0.05);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
 
-        @@keyframes gradientMove {
-            0%, 100% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
+        .btn-primary-glow:hover:not(:disabled) {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 0 60px rgba(0, 240, 255, 0.1);
         }
 
-        .btn-start-game::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(ellipse at center, rgba(255,255,255,0.04), transparent 60%);
-            opacity: 0;
-            transition: opacity 0.6s ease;
-            pointer-events: none;
-        }
-
-        .btn-start-game:hover:not(:disabled)::before {
-            opacity: 1;
-        }
-
-        .btn-start-game:hover:not(:disabled) {
-            transform: translateY(-3px) scale(1.01);
-            box-shadow: 0 8px 80px rgba(0,240,255,0.08);
-        }
-
-        .btn-start-game:disabled {
-            opacity: 0.2;
+        .btn-primary-glow:disabled {
+            opacity: 0.3;
             cursor: not-allowed;
-            transform: none !important;
-            animation: none;
+            transform: none;
         }
 
-        .btn-start-game .sub {
-            display: block;
-            font-size: clamp(0.4rem, 0.5vw, 0.6rem);
-            font-weight: 400;
-            opacity: 0.4;
-            margin-top: 2px;
-        }
+        .btn-primary-glow .icon { font-size: 1.1rem; }
 
-        .btn-reset {
-            padding: 0.8rem 1.5rem;
+        .btn-secondary-glow {
+            padding: 0.7rem 2rem;
             border: 1px solid rgba(255,255,255,0.04);
-            border-radius: 60px;
+            border-radius: 40px;
             background: rgba(255,255,255,0.02);
-            color: rgba(255,255,255,0.1);
-            font-weight: 600;
-            font-size: clamp(0.6rem, 0.7vw, 0.8rem);
+            color: rgba(255,255,255,0.3);
+            font-weight: 500;
+            font-size: 0.85rem;
             cursor: pointer;
-            transition: all 0.4s ease;
+            transition: all 0.3s ease;
             font-family: inherit;
-            white-space: nowrap;
         }
 
-        .btn-reset:hover {
+        .btn-secondary-glow:hover {
             background: rgba(255,255,255,0.04);
-            color: rgba(255,255,255,0.2);
+            color: #fff;
+            border-color: rgba(255,255,255,0.06);
+        }
+
+        .btn-danger-glow {
+            padding: 0.7rem 2rem;
+            border: 1px solid rgba(255, 0, 110, 0.04);
+            border-radius: 40px;
+            background: rgba(255, 0, 110, 0.02);
+            color: rgba(255, 0, 110, 0.3);
+            font-weight: 500;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .btn-danger-glow:hover {
+            background: rgba(255, 0, 110, 0.04);
+            color: #FF006E;
+        }
+
+        .host-actions .status-text {
+            font-size: 0.7rem;
+            color: rgba(255,255,255,0.06);
+            margin-left: auto;
         }
 
         /* ============================================================
@@ -757,34 +715,34 @@
            ============================================================ */
         .toast-container {
             position: fixed;
-            bottom: 20px;
-            right: 20px;
+            bottom: 2rem;
+            right: 2rem;
             z-index: 9999;
             display: flex;
             flex-direction: column;
-            gap: 4px;
+            gap: 0.4rem;
             align-items: flex-end;
         }
 
         .toast-msg {
-            padding: 6px 18px;
+            padding: 0.6rem 1.5rem;
             border-radius: 40px;
             color: #fff;
             font-weight: 500;
             animation: toastIn 0.4s ease;
-            font-size: 0.75rem;
+            font-size: 0.85rem;
             backdrop-filter: blur(20px);
-            background: rgba(10,10,30,0.8);
+            background: rgba(10, 10, 30, 0.8);
             border: 1px solid rgba(255,255,255,0.04);
         }
 
-        .toast-msg.success { background: rgba(0,255,136,0.08); border-color: rgba(0,255,136,0.04); color: #00FF88; }
-        .toast-msg.error { background: rgba(255,0,110,0.08); border-color: rgba(255,0,110,0.04); color: #FF006E; }
-        .toast-msg.info { background: rgba(0,240,255,0.06); border-color: rgba(0,240,255,0.04); color: #00F0FF; }
-        .toast-msg.warning { background: rgba(245,158,11,0.06); border-color: rgba(245,158,11,0.04); color: #F59E0B; }
+        .toast-msg.success { background: rgba(0, 255, 136, 0.1); border-color: rgba(0, 255, 136, 0.06); color: #00FF88; }
+        .toast-msg.error { background: rgba(255, 0, 110, 0.1); border-color: rgba(255, 0, 110, 0.06); color: #FF006E; }
+        .toast-msg.info { background: rgba(0, 240, 255, 0.06); border-color: rgba(0, 240, 255, 0.04); color: #00F0FF; }
+        .toast-msg.warning { background: rgba(255, 184, 0, 0.06); border-color: rgba(255, 184, 0, 0.04); color: #FFB800; }
 
         @@keyframes toastIn {
-            from { opacity: 0; transform: translateY(16px) scale(0.95); }
+            from { opacity: 0; transform: translateY(20px) scale(0.95); }
             to { opacity: 1; transform: translateY(0) scale(1); }
         }
 
@@ -792,168 +750,223 @@
            响应式
            ============================================================ */
         @@media (max-width: 768px) {
-            .container { padding: 1vh 1.5vw; }
-            .header .brand h1 { font-size: 1rem; }
-            .header .status-badge { padding: 2px 10px; font-size: 0.5rem; }
-            .header .room-code-display .code { font-size: 0.8rem; letter-spacing: 2px; }
-            .holo-card { padding: 0.8rem 1rem; }
-            .holo-card .corner { display: none; }
-            .main-grid { gap: 8px; }
-            .player-item { padding: 0.3rem 0.4rem; }
-            .player-item .avatar { font-size: 0.8rem; width: 24px; }
-            .btn-start-game { min-width: 140px; padding: 0.6rem 1rem; font-size: 0.8rem; }
-            .transfer-section { flex-direction: column; }
-            .transfer-section select { min-width: 100%; }
+            .host-container { padding: 0.8rem 0.8rem 1.5rem; }
+            .host-header .title { font-size: 1.1rem; }
+            .host-header .right { gap: 0.5rem; }
+            .room-code-display .code { font-size: 1.8rem; letter-spacing: 3px; }
+            .host-grid { grid-template-columns: 1fr; gap: 1rem; }
+            .holo-card { padding: 1rem 1rem; }
+            .player-item { padding: 0.4rem 0.5rem; }
+            .host-actions { flex-direction: column; align-items: stretch; }
+            .host-actions .status-text { text-align: center; margin-left: 0; }
+            .btn-primary-glow, .btn-secondary-glow, .btn-danger-glow { justify-content: center; }
         }
 
         @@media (max-width: 480px) {
-            .container { padding: 0.5vh 1vw; }
-            .header .brand .logo-icon { font-size: 1.2rem; }
-            .header .brand h1 { font-size: 0.8rem; }
-            .header .status-badge { display: none; }
-            .header .room-code-display .code { font-size: 0.7rem; }
-            .holo-card { padding: 0.5rem 0.6rem; border-radius: 16px; }
-            .holo-card .card-title { font-size: 0.4rem; margin-bottom: 0.5rem; }
-            .player-item .info .name { font-size: 0.6rem; }
-            .player-item .status { font-size: 0.35rem; padding: 1px 6px; }
-            .player-item .actions .btn-mini { font-size: 0.4rem; padding: 1px 5px; }
-            .btn-start-game { min-width: 100px; padding: 0.5rem 0.8rem; font-size: 0.7rem; }
-            .btn-start-game .sub { font-size: 0.35rem; }
-            .btn-reset { padding: 0.5rem 0.8rem; font-size: 0.6rem; }
-            .stats-row .stat-item .num { font-size: 0.7rem; }
+            .room-code-display .code { font-size: 1.4rem; letter-spacing: 2px; }
+            .host-header .title { font-size: 0.95rem; }
+            .host-header .logo-icon { font-size: 1.4rem; }
+            .host-header .user-badge { font-size: 0.65rem; padding: 0.2rem 0.8rem 0.2rem 0.5rem; }
+            .host-header .user-badge .avatar { width: 22px; height: 22px; font-size: 0.55rem; }
+            .holo-card { padding: 0.8rem 0.8rem; border-radius: 18px; }
+            .player-item .avatar { width: 28px; height: 28px; font-size: 0.9rem; }
+            .player-item .info .name { font-size: 0.75rem; }
+            .game-select-btn { font-size: 0.6rem; padding: 0.3rem 0.8rem; }
+            .qr-container #qrcode img { width: 120px !important; height: 120px !important; }
+            .btn-primary-glow { font-size: 0.75rem; padding: 0.5rem 1.2rem; }
+            .btn-secondary-glow, .btn-danger-glow { font-size: 0.7rem; padding: 0.5rem 1.2rem; }
         }
     </style>
 </head>
 <body>
 
-    <!-- ===== 粒子背景 ===== -->
+    <!-- 粒子背景 -->
     <canvas id="particleCanvas"></canvas>
-    <canvas id="particleCanvas2"></canvas>
-    <div class="grid-overlay"></div>
+
+    <!-- 光带 -->
+    <div class="top-light-bar"></div>
+    <div class="bottom-light-bar"></div>
 
     <!-- ============================================================
     ⭐ 主容器
     ============================================================ -->
-    <div class="container">
+    <div class="host-container">
 
         <!-- ===== 头部 ===== -->
-        <div class="header">
-            <div class="brand">
+        <div class="host-header">
+            <div class="left">
                 <span class="logo-icon">✦</span>
                 <div>
-                    <h1>全息派对中枢</h1>
-                    <span class="sub">✦ 量子纠缠 · 实时同步 ✦</span>
+                    <div class="title">
+                        全息派对中枢
+                        <span class="sub">✦ 量子管理终端 ✦</span>
+                    </div>
                 </div>
             </div>
-            <div class="status-group">
-                <span class="status-badge">
-                    <span class="dot online"></span>
-                    <span id="onlineStatus">在线</span>
-                </span>
-                <span class="status-badge" style="border-color:rgba(0,240,255,0.02);">
-                    🎮 <span id="phaseDisplay" style="color:rgba(255,255,255,0.1);">等待中</span>
-                </span>
-                <div class="room-code-display">
-                    <span class="label">✦ 房间</span>
-                    <span class="code" id="roomCodeDisplay">------</span>
+            <div class="right">
+                <div class="user-badge">
+                    <div class="avatar">@(username?.FirstOrDefault().ToString().ToUpper() ?? "A")</div>
+                    <span>@username</span>
+                    <span class="role">👑 主控</span>
                 </div>
-                <span class="admin-badge" id="adminBadge">👑 管理员</span>
+                <span style="font-size:0.6rem;color:rgba(255,255,255,0.04);">
+                    <span class="status-dot"></span> 在线
+                </span>
             </div>
         </div>
 
         <!-- ===== 主网格 ===== -->
-        <div class="main-grid">
+        <div class="host-grid">
 
-            <!-- ===== 左侧 - 全息二维码 ===== -->
-            <div class="holo-card center-section">
-                <div class="card-glow"></div>
-                <div class="corner tl"></div>
-                <div class="corner tr"></div>
-                <div class="corner bl"></div>
-                <div class="corner br"></div>
+            <!-- ===== 左侧面板 ===== -->
+            <div style="display:flex;flex-direction:column;gap:1rem;">
 
-                <div class="card-title">📡 全息接入 <span class="accent"></span></div>
-
-                <div class="qr-section">
-                    <div id="qrcode">
-                        <span style="color:rgba(255,255,255,0.04);font-size:0.7rem;">⏳ 生成中...</span>
+                <!-- 房间信息 -->
+                <div class="holo-card room-info-card">
+                    <div class="card-title">
+                        📡 房间信息
+                        <span class="accent-line"></span>
+                        <span class="badge-count" id="roomStatusBadge">● 等待中</span>
                     </div>
-                    <div class="qr-hint">✦ 扫码加入派对 ✦</div>
-                    <div class="qr-url" id="qrUrlDisplay">--</div>
+
+                    <div class="room-code-display">
+                        <div class="label">✦ 房间识别码 ✦</div>
+                        <div class="code" id="roomCodeDisplay">------</div>
+                        <button class="copy-btn" onclick="copyRoomCode()">📋 复制</button>
+                    </div>
+
+                    <div class="qr-container">
+                        <div class="qr-frame"></div>
+                        <div id="qrcode">
+                            <div class="qr-loading">⏳ 生成中...</div>
+                        </div>
+                        <div class="qr-hint">📱 扫码加入派对</div>
+                    </div>
+
+                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.3rem;text-align:center;padding-top:0.5rem;border-top:1px solid rgba(255,255,255,0.02);">
+                        <div>
+                            <div style="font-size:0.5rem;color:rgba(255,255,255,0.06);text-transform:uppercase;letter-spacing:0.06em;">在线</div>
+                            <div style="font-size:1.2rem;font-weight:700;color:#00FF88;font-family:'Courier New',monospace;" id="onlineCount">0</div>
+                        </div>
+                        <div>
+                            <div style="font-size:0.5rem;color:rgba(255,255,255,0.06);text-transform:uppercase;letter-spacing:0.06em;">已准备</div>
+                            <div style="font-size:1.2rem;font-weight:700;color:#7B61FF;font-family:'Courier New',monospace;" id="readyCount">0</div>
+                        </div>
+                        <div>
+                            <div style="font-size:0.5rem;color:rgba(255,255,255,0.06);text-transform:uppercase;letter-spacing:0.06em;">最大</div>
+                            <div style="font-size:1.2rem;font-weight:700;color:rgba(255,255,255,0.2);font-family:'Courier New',monospace;" id="maxCount">20</div>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- 统计 -->
-                <div class="stats-row">
-                    <span class="stat-item">
-                        👥 已加入 <span class="num cyan" id="playerCount">0</span>
-                    </span>
-                    <span class="stat-item">
-                        ✅ 已准备 <span class="num green" id="readyCount">0</span>
-                    </span>
-                    <span class="stat-item">
-                        ⏳ 等待 <span class="num gold" id="waitingCount">0</span>
-                    </span>
+                <!-- ===== ⭐ 游戏选择 + 设置 ===== -->
+                <div class="holo-card" style="flex-shrink:0;">
+                    <div class="card-title">
+                        🎮 游戏控制台
+                        <span class="accent-line"></span>
+                        <span class="badge-count" id="gameStatusBadge">● 选择游戏</span>
+                    </div>
+
+                    <!-- 游戏选择按钮 -->
+                    <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.8rem;">
+                        <button class="game-select-btn active" data-game="werewolf" onclick="selectGame('werewolf')">
+                            🐺 狼人杀
+                        </button>
+                        <button class="game-select-btn coming" data-game="spy" onclick="selectGame('spy')" disabled style="position:relative;">
+                            🕵️ 谁是卧底
+                            <span style="font-size:0.4rem;color:rgba(255,255,255,0.04);display:block;">开发中</span>
+                        </button>
+                        <button class="game-select-btn coming" data-game="draw" onclick="selectGame('draw')" disabled style="position:relative;">
+                            🎨 你画我猜
+                            <span style="font-size:0.4rem;color:rgba(255,255,255,0.04);display:block;">开发中</span>
+                        </button>
+                        <button class="game-select-btn coming" data-game="quiz" onclick="selectGame('quiz')" disabled style="position:relative;">
+                            📝 知识竞答
+                            <span style="font-size:0.4rem;color:rgba(255,255,255,0.04);display:block;">开发中</span>
+                        </button>
+                    </div>
+
+                    <!-- 游戏设置 -->
+                    <div id="gameSettings" style="background:rgba(255,255,255,0.01);border-radius:12px;padding:0.8rem 1rem;border:1px solid rgba(255,255,255,0.02);">
+                        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;">
+                            <div>
+                                <span style="font-size:0.6rem;color:rgba(255,255,255,0.08);text-transform:uppercase;letter-spacing:0.06em;">当前游戏</span>
+                                <div style="font-size:1rem;font-weight:700;color:#fff;" id="selectedGameName">🐺 狼人杀</div>
+                            </div>
+                            <div style="display:flex;gap:0.8rem;flex-wrap:wrap;align-items:center;">
+                                <div style="display:flex;align-items:center;gap:0.3rem;">
+                                    <span style="font-size:0.5rem;color:rgba(255,255,255,0.06);">👥 人数</span>
+                                    <select id="gamePlayerCount" onchange="updateGameSettings()" style="padding:0.2rem 0.6rem;border-radius:20px;border:1px solid rgba(255,255,255,0.04);background:rgba(255,255,255,0.02);color:rgba(255,255,255,0.3);font-size:0.65rem;outline:none;font-family:inherit;">
+                                        <option value="8">8人</option>
+                                        <option value="10" selected>10人</option>
+                                        <option value="12">12人</option>
+                                        <option value="16">16人</option>
+                                    </select>
+                                </div>
+                                <div style="display:flex;align-items:center;gap:0.3rem;">
+                                    <span style="font-size:0.5rem;color:rgba(255,255,255,0.06);">⚙️ 模式</span>
+                                    <select id="gameMode" onchange="updateGameSettings()" style="padding:0.2rem 0.6rem;border-radius:20px;border:1px solid rgba(255,255,255,0.04);background:rgba(255,255,255,0.02);color:rgba(255,255,255,0.3);font-size:0.65rem;outline:none;font-family:inherit;">
+                                        <option value="standard">标准</option>
+                                        <option value="advanced">进阶</option>
+                                        <option value="expert">专家</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="gameConfigDetail" style="font-size:0.6rem;color:rgba(255,255,255,0.06);margin-top:0.3rem;">
+                            ⚙️ 3狼 · 3神 · 4民 · 10人局 · 标准模式
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- ===== 右侧：玩家列表 ===== -->
+            <div class="holo-card players-card">
+                <div class="card-title">
+                    👥 全息玩家列表
+                    <span class="accent-line"></span>
+                    <span class="badge-count" id="playerCountBadge">0 人</span>
+                </div>
+
+                <div class="player-stats">
+                    <div class="stat-item">
+                        🟢 在线 <span class="num online" id="statOnline">0</span>
+                    </div>
+                    <div class="stat-item">
+                        🟣 已准备 <span class="num ready" id="statReady">0</span>
+                    </div>
+                    <div class="stat-item">
+                        🟡 等待中 <span class="num waiting" id="statWaiting">0</span>
+                    </div>
+                </div>
+
+                <div class="player-list" id="playerList">
+                    <div class="empty-players">✦ 等待玩家接入 ✦</div>
+                </div>
+
+                <div class="host-actions">
+                    <button class="btn-primary-glow" id="startGameBtn" onclick="startGame()" disabled>
+                        <span class="icon">🚀</span> 开始 <span id="startGameName">狼人杀</span>
+                    </button>
+                    <button class="btn-secondary-glow" onclick="refreshRoom()">
+                        🔄 刷新
+                    </button>
+                    <button class="btn-danger-glow" onclick="closeRoom()">
+                        🗑️ 解散房间
+                    </button>
+                    <span class="status-text" id="actionStatusText">● 等待玩家加入</span>
                 </div>
             </div>
 
-            <!-- ===== 右侧面板 ===== -->
-            <div class="side-panel">
-
-                <!-- ===== 玩家列表 ===== -->
-                <div class="holo-card panel-card">
-                    <div class="card-glow"></div>
-                    <div class="corner tl"></div>
-                    <div class="corner tr"></div>
-                    <div class="corner bl"></div>
-                    <div class="corner br"></div>
-
-                    <div class="card-title">👥 全息玩家 <span class="accent"></span></div>
-
-                    <div class="player-list" id="playerList">
-                        <div class="player-empty">✦ 等待玩家接入 ✦</div>
-                    </div>
-
-                    <!-- ⭐ 转移管理员 -->
-                    <div class="transfer-section">
-                        <select id="transferSelect">
-                            <option value="">-- 转移管理员给 --</option>
-                        </select>
-                        <button class="btn-transfer" id="transferBtn" onclick="transferAdmin()" disabled>
-                            👑 转移
-                        </button>
-                    </div>
-                </div>
-
-                <!-- ===== 控制栏 ===== -->
-                <div class="holo-card panel-card" style="flex:0.6;">
-                    <div class="card-glow"></div>
-                    <div class="corner tl"></div>
-                    <div class="corner tr"></div>
-                    <div class="corner bl"></div>
-                    <div class="corner br"></div>
-
-                    <div class="card-title">🎮 控制 <span class="accent"></span></div>
-
-                    <div class="action-bar">
-                        <button class="btn-start-game" id="startBtn" onclick="startGame()" disabled>
-                            🐺 开始狼人杀
-                            <span class="sub" id="startSub">等待所有玩家准备</span>
-                        </button>
-                        <button class="btn-reset" onclick="resetRoom()">🔄 重置</button>
-                    </div>
-                </div>
-
-            </div>
         </div>
 
     </div>
 
-    <!-- ===== Toast ===== -->
+    <!-- Toast -->
     <div class="toast-container" id="toastContainer"></div>
 
-    <!-- ============================================================
-    Scripts
-    ============================================================ -->
+    <!-- Scripts -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js">
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js">
@@ -961,14 +974,39 @@
 
     <script>
         // ============================================================
-        // 粒子背景
+        // 自动全屏
+        // ============================================================
+        function requestFullscreen() {
+            var el = document.documentElement;
+            if (el.requestFullscreen) {
+                el.requestFullscreen().catch(function() {});
+            } else if (el.webkitRequestFullscreen) {
+                el.webkitRequestFullscreen();
+            } else if (el.msRequestFullscreen) {
+                el.msRequestFullscreen();
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(requestFullscreen, 300);
+        });
+
+        document.addEventListener('click', function() {
+            if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+                requestFullscreen();
+            }
+        });
+
+        // ============================================================
+        // 粒子背景（增强版）
         // ============================================================
         (function initParticles() {
             var canvas = document.getElementById('particleCanvas');
             if (!canvas) return;
             var ctx = canvas.getContext('2d');
             var particles = [];
-            var count = Math.min(60, Math.floor(window.innerWidth / 8));
+            var particleCount = 120;
+            var mouse = { x: null, y: null };
 
             function resize() {
                 canvas.width = window.innerWidth;
@@ -977,449 +1015,86 @@
             window.addEventListener('resize', resize);
             resize();
 
-            for (var i = 0; i < count; i++) {
+            for (var i = 0; i < particleCount; i++) {
                 particles.push({
                     x: Math.random() * canvas.width,
                     y: Math.random() * canvas.height,
-                    vx: (Math.random() - 0.5) * 0.06,
-                    vy: (Math.random() - 0.5) * 0.06,
-                    r: Math.random() * 1.2 + 0.3,
-                    o: Math.random() * 0.08 + 0.01
+                    vx: (Math.random() - 0.5) * 0.3,
+                    vy: (Math.random() - 0.5) * 0.3,
+                    radius: Math.random() * 1.2 + 0.3,
+                    opacity: Math.random() * 0.3 + 0.05
                 });
             }
+
+            // 鼠标追踪
+            document.addEventListener('mousemove', function(e) {
+                mouse.x = e.clientX;
+                mouse.y = e.clientY;
+            });
 
             function draw() {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
+
                 for (var p of particles) {
                     p.x += p.vx;
                     p.y += p.vy;
+
                     if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
                     if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
-                    ctx.beginPath();
-                    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-                    ctx.fillStyle = 'rgba(0, 240, 255, ' + p.o + ')';
-                    ctx.fill();
-                }
-                requestAnimationFrame(draw);
-            }
-            draw();
-        })();
 
-        (function initParticles2() {
-            var canvas = document.getElementById('particleCanvas2');
-            if (!canvas) return;
-            var ctx = canvas.getContext('2d');
-            var particles = [];
-            var count = Math.min(30, Math.floor(window.innerWidth / 16));
-
-            function resize() {
-                canvas.width = window.innerWidth;
-                canvas.height = window.innerHeight;
-            }
-            window.addEventListener('resize', resize);
-            resize();
-
-            for (var i = 0; i < count; i++) {
-                particles.push({
-                    x: Math.random() * canvas.width,
-                    y: Math.random() * canvas.height,
-                    vx: (Math.random() - 0.5) * 0.03,
-                    vy: (Math.random() - 0.5) * 0.03,
-                    r: Math.random() * 2 + 1,
-                    o: Math.random() * 0.04 + 0.005
-                });
-            }
-
-            function draw() {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                for (var p of particles) {
-                    p.x += p.vx;
-                    p.y += p.vy;
-                    if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
-                    if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
-                    ctx.beginPath();
-                    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-                    ctx.fillStyle = 'rgba(139, 92, 246, ' + p.o + ')';
-                    ctx.fill();
-                }
-                requestAnimationFrame(draw);
-            }
-            draw();
-        })();
-
-        // ============================================================
-        // 配置
-        // ============================================================
-        var config = {
-            roomId: null,
-            playerId: null,
-            players: [],
-            maxPlayers: 12,
-            minPlayers: 2,
-            isHost: true,
-            adminId: null,
-            isGameStarted: false
-        };
-
-        var connection = null;
-
-        // ============================================================
-        // 连接 SignalR
-        // ============================================================
-        function connectSignalR() {
-            try {
-                connection = new signalR.HubConnectionBuilder()
-                    .withUrl('/partyHub')
-                    .configureLogging(signalR.LogLevel.Information)
-                    .build();
-
-                // ===== 事件监听 =====
-                connection.on('RoomCreated', function(data) {
-                    if (data.success) {
-                        config.roomId = data.roomId;
-                        config.adminId = data.playerId;
-                        document.getElementById('roomCodeDisplay').textContent = data.roomId;
-                        document.getElementById('qrUrlDisplay').textContent = window.location.origin + '/Party/Player?roomId=' +
-                            data.roomId;
-                        generateQRCode(data.roomId);
-                        showToast('✅ 房间已创建！', 'success');
-                    }
-                });
-
-                connection.on('PlayerJoined', function(player) {
-                    config.players.push(player);
-                    updateUI();
-                    showToast('🟢 ' + player.nickname + ' 加入了房间', 'success');
-                });
-
-                connection.on('PlayerReadyToggled', function(player) {
-                    var existing = config.players.find(function(p) { return p.playerId === player.playerId; });
-                    if (existing) {
-                        existing.isReady = player.isReady;
-                        updateUI();
-                    }
-                });
-
-                connection.on('PlayerLeft', function(playerId) {
-                    config.players = config.players.filter(function(p) { return p.playerId !== playerId; });
-                    updateUI();
-                });
-
-                connection.on('RoomUpdated', function(room) {
-                    config.players = room.players || [];
-                    config.adminId = room.adminUserIds && room.adminUserIds.length > 0 ? room.adminUserIds[0] : config.adminId;
-                    updateUI();
-                });
-
-                connection.on('AdminUpdated', function(player) {
-                    var existing = config.players.find(function(p) { return p.playerId === player.playerId; });
-                    if (existing) {
-                        existing.isAdmin = player.isAdmin;
-                        updateUI();
-                        if (player.playerId === config.playerId && player.isAdmin) {
-                            document.getElementById('adminBadge').textContent = '👑 管理员';
+                    // 鼠标引力
+                    if (mouse.x !== null) {
+                        var dx = mouse.x - p.x;
+                        var dy = mouse.y - p.y;
+                        var dist = Math.sqrt(dx * dx + dy * dy);
+                        if (dist < 200) {
+                            var force = 0.002;
+                            p.vx += dx * force;
+                            p.vy += dy * force;
+                            var speed = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
+                            if (speed > 0.5) {
+                                p.vx = (p.vx / speed) * 0.5;
+                                p.vy = (p.vy / speed) * 0.5;
+                            }
                         }
                     }
-                });
 
-                connection.on('GameStarted', function(room) {
-                    config.isGameStarted = true;
-                    document.getElementById('phaseDisplay').textContent = '🎮 游戏中';
-                    document.getElementById('startBtn').disabled = true;
-                    document.getElementById('startBtn').textContent = '🎮 游戏进行中...';
-                    document.getElementById('startBtn').querySelector('.sub').textContent = '';
-                    showToast('🚀 游戏已开始！', 'success');
-                    setTimeout(function() {
-                        window.location.href = '/Werewolf/Host?roomId=' + config.roomId;
-                    }, 1500);
-                });
-
-                connection.on('GameStartFailed', function(message) {
-                    showToast('❌ ' + message, 'error');
-                });
-
-                connection.on('Kicked', function(message) {
-                    showToast('⚠️ ' + message, 'warning');
-                    setTimeout(function() { window.location.reload(); }, 2000);
-                });
-
-                // ===== 启动连接 =====
-                connection.start()
-                    .then(function() {
-                        console.log('✅ SignalR 已连接');
-                        createRoom();
-                    })
-                    .catch(function(err) {
-                        console.error('❌ 连接失败:', err);
-                        showToast('⚠️ 连接失败，正在重试...', 'warning');
-                        setTimeout(connectSignalR, 3000);
-                    });
-
-            } catch (e) {
-                console.error('SignalR 初始化失败:', e);
-            }
-        }
-
-        // ============================================================
-        // 创建房间
-        // ============================================================
-        function createRoom() {
-            if (!connection || connection.state !== signalR.HubConnectionState.Connected) {
-                setTimeout(createRoom, 1000);
-                return;
-            }
-            connection.invoke('CreateRoom', '房主', 12);
-        }
-
-        // ============================================================
-        // 生成二维码
-        // ============================================================
-        function generateQRCode(roomId) {
-            var container = document.getElementById('qrcode');
-            container.innerHTML = '';
-            var url = window.location.origin + '/Party/Player?roomId=' + roomId;
-
-            try {
-                new QRCode(container, {
-                    text: url,
-                    width: 180,
-                    height: 180,
-                    colorDark: '#00F0FF',
-                    colorLight: 'transparent',
-                    correctLevel: QRCode.CorrectLevel.H
-                });
-            } catch (e) {
-                container.innerHTML = '<div style="color:rgba(255,255,255,0.1);font-size:0.7rem;padding:1rem;">📱 ' + url +
-                    '</div>';
-            }
-        }
-
-        // ============================================================
-        // 更新 UI
-        // ============================================================
-        function updateUI() {
-            updatePlayerList();
-            updateStats();
-            updateTransferOptions();
-            checkStartReady();
-            updateAdminBadge();
-        }
-
-        function updatePlayerList() {
-            var container = document.getElementById('playerList');
-            if (config.players.length === 0) {
-                container.innerHTML = '<div class="player-empty">✦ 等待玩家接入 ✦</div>';
-                return;
-            }
-
-            var html = '';
-            config.players.forEach(function(p) {
-                var isReady = p.isReady || false;
-                var isHost = p.isHost || false;
-                var isAdmin = p.isAdmin || false;
-                var isSelf = p.playerId === config.playerId;
-
-                var statusText = isHost ? '👑 房主' : isAdmin ? '🛡️ 管理员' : isReady ? '✅ 已准备' : '⏳ 等待';
-                var statusClass = isHost ? 'host' : isAdmin ? 'admin' : isReady ? 'ready' : 'waiting';
-
-                html += '<div class="player-item" data-playerid="' + p.playerId + '">';
-                html += '<span class="avatar">' + (p.avatarEmoji || '🧑') + '</span>';
-                html += '<div class="info">';
-                html += '<span class="name">';
-                html += p.nickname;
-                if (isSelf) html += ' <span style="color:rgba(0,240,255,0.3);font-size:0.4rem;">(你)</span>';
-                if (isHost) html += ' <span class="host-tag">👑 房主</span>';
-                if (isAdmin && !isHost) html += ' <span class="admin-tag">🛡️ 管理员</span>';
-                html += '</span>';
-                html += '</div>';
-                html += '<span class="status ' + statusClass + '">' + statusText + '</span>';
-                html += '<div class="actions">';
-
-                if (isAdmin && !isHost && !isSelf) {
-                    html += '<button class="btn-mini promote" onclick="promoteAdmin(\'' + p.playerId + '\')">👑 提升</button>';
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(0, 240, 255, ' + p.opacity + ')';
+                    ctx.fill();
                 }
-                if (!isHost && !isSelf && config.isHost) {
-                    html += '<button class="btn-mini kick" onclick="kickPlayer(\'' + p.playerId + '\')">✕</button>';
+
+                // 连线
+                for (var i = 0; i < particles.length; i++) {
+                    for (var j = i + 1; j < particles.length; j++) {
+                        var dx = particles[i].x - particles[j].x;
+                        var dy = particles[i].y - particles[j].y;
+                        var dist = Math.sqrt(dx * dx + dy * dy);
+                        if (dist < 150) {
+                            ctx.beginPath();
+                            ctx.moveTo(particles[i].x, particles[i].y);
+                            ctx.lineTo(particles[j].x, particles[j].y);
+                            ctx.strokeStyle = 'rgba(0, 240, 255, ' + (0.02 * (1 - dist / 150)) + ')';
+                            ctx.lineWidth = 0.5;
+                            ctx.stroke();
+                        }
+                    }
                 }
-                html += '</div>';
-                html += '</div>';
-            });
 
-            container.innerHTML = html;
-        }
-
-        function updateStats() {
-            var total = config.players.length;
-            var ready = config.players.filter(function(p) { return p.isReady; }).length;
-            var waiting = total - ready;
-
-            document.getElementById('playerCount').textContent = total;
-            document.getElementById('readyCount').textContent = ready;
-            document.getElementById('waitingCount').textContent = waiting;
-
-            document.getElementById('phaseDisplay').textContent = total > 0 ? total + ' 人在线' : '等待中';
-        }
-
-        function updateTransferOptions() {
-            var select = document.getElementById('transferSelect');
-            var currentValue = select.value;
-
-            var options = '<option value="">-- 转移管理员给 --</option>';
-            config.players.forEach(function(p) {
-                if (p.playerId === config.playerId) return;
-                var isAdmin = p.isAdmin || false;
-                options += '<option value="' + p.playerId + '" ' + (isAdmin ? 'selected' : '') + '>' +
-                    (p.avatarEmoji || '🧑') + ' ' + p.nickname +
-                    (isAdmin ? ' (管理员)' : '') +
-                    '</option>';
-            });
-
-            select.innerHTML = options;
-            if (currentValue) select.value = currentValue;
-            document.getElementById('transferBtn').disabled = select.value === '' || config.players.length <= 1;
-        }
-
-        function updateAdminBadge() {
-            var self = config.players.find(function(p) { return p.playerId === config.playerId; });
-            if (self && self.isAdmin) {
-                document.getElementById('adminBadge').textContent = '👑 管理员';
-                document.getElementById('adminBadge').style.color = '#00F0FF';
-                document.getElementById('adminBadge').style.borderColor = 'rgba(0,240,255,0.06)';
-                config.isHost = true;
-            } else {
-                document.getElementById('adminBadge').textContent = '👤 玩家';
-                document.getElementById('adminBadge').style.color = 'rgba(255,255,255,0.06)';
-                document.getElementById('adminBadge').style.borderColor = 'rgba(255,255,255,0.02)';
-                config.isHost = false;
+                requestAnimationFrame(draw);
             }
-        }
-
-        // ============================================================
-        // 检查是否可以开始
-        // ============================================================
-        function checkStartReady() {
-            var total = config.players.length;
-            var ready = config.players.filter(function(p) { return p.isReady; }).length;
-            var btn = document.getElementById('startBtn');
-            var sub = document.getElementById('startSub');
-
-            if (total >= config.minPlayers && ready === total) {
-                btn.disabled = false;
-                btn.innerHTML = '🚀 开始狼人杀 <span class="sub" id="startSub">' + total + ' 位玩家已准备</span>';
-            } else {
-                btn.disabled = true;
-                var msg = total < config.minPlayers ? '需要至少 ' + config.minPlayers + ' 位玩家' :
-                    (ready < total ? '等待 ' + (total - ready) + ' 位玩家准备' : '等待玩家');
-                btn.innerHTML = '🐺 开始狼人杀 <span class="sub" id="startSub">' + msg + '</span>';
-            }
-        }
-
-        // ============================================================
-        // 开始游戏
-        // ============================================================
-        function startGame() {
-            if (!config.roomId) {
-                showToast('⚠️ 房间未创建', 'error');
-                return;
-            }
-
-            if (!config.isHost) {
-                showToast('⚠️ 只有管理员可以开始游戏', 'warning');
-                return;
-            }
-
-            var btn = document.getElementById('startBtn');
-            btn.disabled = true;
-            btn.textContent = '⏳ 准备中...';
-
-            connection.invoke('StartGame', config.roomId)
-                .catch(function(err) {
-                    showToast('❌ ' + err, 'error');
-                    btn.disabled = false;
-                    btn.innerHTML = '🐺 开始狼人杀 <span class="sub">重试</span>';
-                });
-        }
-
-        // ============================================================
-        // ⭐ 转移管理员
-        // ============================================================
-        function transferAdmin() {
-            var select = document.getElementById('transferSelect');
-            var targetPlayerId = select.value;
-
-            if (!targetPlayerId) {
-                showToast('⚠️ 请选择要转移的玩家', 'warning');
-                return;
-            }
-
-            var target = config.players.find(function(p) { return p.playerId === targetPlayerId; });
-            if (!target) {
-                showToast('⚠️ 玩家不存在', 'error');
-                return;
-            }
-
-            if (!confirm('确定要将管理员权限转移给 ' + target.nickname + ' 吗？')) return;
-
-            connection.invoke('ToggleAdmin', config.roomId, config.playerId, targetPlayerId)
-                .then(function() {
-                    showToast('👑 管理员已转移给 ' + target.nickname, 'success');
-                })
-                .catch(function(err) {
-                    showToast('❌ 转移失败: ' + err, 'error');
-                });
-        }
-
-        // ============================================================
-        // ⭐ 提升管理员
-        // ============================================================
-        function promoteAdmin(playerId) {
-            var target = config.players.find(function(p) { return p.playerId === playerId; });
-            if (!target) return;
-
-            if (!confirm('确定要将 ' + target.nickname + ' 提升为管理员吗？')) return;
-
-            connection.invoke('ToggleAdmin', config.roomId, config.playerId, playerId)
-                .then(function() {
-                    showToast('✅ ' + target.nickname + ' 已成为管理员', 'success');
-                })
-                .catch(function(err) {
-                    showToast('❌ 操作失败: ' + err, 'error');
-                });
-        }
-
-        // ============================================================
-        // ⭐ 踢出玩家
-        // ============================================================
-        function kickPlayer(playerId) {
-            var target = config.players.find(function(p) { return p.playerId === playerId; });
-            if (!target) return;
-
-            if (!confirm('确定要将 ' + target.nickname + ' 踢出房间吗？')) return;
-
-            connection.invoke('KickPlayer', config.roomId, config.playerId, playerId)
-                .then(function() {
-                    showToast('🗑️ 已踢出 ' + target.nickname, 'info');
-                })
-                .catch(function(err) {
-                    showToast('❌ 操作失败: ' + err, 'error');
-                });
-        }
-
-        // ============================================================
-        // 重置房间
-        // ============================================================
-        function resetRoom() {
-            if (!confirm('确定要重置房间吗？所有玩家将被移出。')) return;
-            window.location.reload();
-        }
+            draw();
+        })();
 
         // ============================================================
         // Toast
         // ============================================================
         function showToast(message, type) {
+            type = type || 'info';
             var container = document.getElementById('toastContainer');
             var toast = document.createElement('div');
-            toast.className = 'toast-msg ' + (type || 'info');
+            toast.className = 'toast-msg ' + type;
             toast.textContent = message;
             container.appendChild(toast);
             setTimeout(function() {
@@ -1430,9 +1105,601 @@
         }
 
         // ============================================================
-        // 启动
+        // 复制房间码
+        // ============================================================
+        function copyRoomCode() {
+            var code = document.getElementById('roomCodeDisplay').textContent;
+            if (!code || code === '------') {
+                showToast('⚠️ 暂无房间码', 'warning');
+                return;
+            }
+            navigator.clipboard.writeText(code).then(function() {
+                showToast('✅ 房间码已复制', 'success');
+            }).catch(function() {
+                var input = document.createElement('input');
+                input.value = code;
+                document.body.appendChild(input);
+                input.select();
+                document.execCommand('copy');
+                document.body.removeChild(input);
+                showToast('✅ 房间码已复制', 'success');
+            });
+        }
+
+        // ============================================================
+        // ⭐ 游戏选择系统
+        // ============================================================
+        var selectedGame = 'werewolf';
+        var gameConfig = {
+            werewolf: { 
+                name: '🐺 狼人杀', 
+                route: '/Werewolf/Host', 
+                defaultPlayers: 10, 
+                modes: ['标准', '进阶', '专家'],
+                detail: { 8: '2狼 · 3神 · 3民', 10: '3狼 · 3神 · 4民', 12: '4狼 · 4神 · 4民', 16: '5狼 · 5神 · 6民' }
+            },
+            spy: { 
+                name: '🕵️ 谁是卧底', 
+                route: '/Spy/Host', 
+                defaultPlayers: 8, 
+                modes: ['标准', '困难'],
+                detail: { 6: '4人 · 2卧底', 8: '6人 · 2卧底', 10: '7人 · 3卧底' }
+            },
+            draw: { 
+                name: '🎨 你画我猜', 
+                route: '/Draw/Host', 
+                defaultPlayers: 6, 
+                modes: ['标准', '计时'],
+                detail: { 4: '4人轮流画', 6: '6人轮流画', 8: '8人轮流画' }
+            },
+            quiz: { 
+                name: '📝 知识竞答', 
+                route: '/Quiz/Host', 
+                defaultPlayers: 12, 
+                modes: ['标准', '抢答'],
+                detail: { 6: '6人抢答', 8: '8人抢答', 12: '12人抢答', 16: '16人抢答' }
+            }
+        };
+
+        function selectGame(game) {
+            // 检查是否开发中
+            var btn = document.querySelector('.game-select-btn[data-game="' + game + '"]');
+            if (btn && btn.classList.contains('coming')) {
+                showToast('⏳ ' + gameConfig[game]?.name + ' 正在开发中，敬请期待！', 'warning');
+                return;
+            }
+
+            selectedGame = game;
+            
+            // 更新按钮样式
+            document.querySelectorAll('.game-select-btn').forEach(function(btn) {
+                btn.classList.remove('active');
+                btn.style.borderColor = 'rgba(255,255,255,0.04)';
+                btn.style.background = 'rgba(255,255,255,0.02)';
+                btn.style.color = 'rgba(255,255,255,0.1)';
+            });
+            var activeBtn = document.querySelector('.game-select-btn[data-game="' + game + '"]');
+            if (activeBtn) {
+                activeBtn.classList.add('active');
+                activeBtn.style.borderColor = 'rgba(0,240,255,0.06)';
+                activeBtn.style.background = 'rgba(0,240,255,0.03)';
+                activeBtn.style.color = 'rgba(255,255,255,0.3)';
+            }
+            
+            // 更新显示
+            var config = gameConfig[game];
+            if (config) {
+                document.getElementById('selectedGameName').textContent = config.name;
+                document.getElementById('startGameName').textContent = config.name.replace(/[🐺🕵️🎨📝]\s*/, '');
+                document.getElementById('gameStatusBadge').textContent = '● ' + config.name.replace(/[🐺🕵️🎨📝]\s*/, '');
+            }
+            
+            // 更新人数选项
+            var playerCounts = { werewolf: [8, 10, 12, 16], spy: [6, 8, 10], draw: [4, 6, 8], quiz: [6, 8, 12, 16] };
+            var counts = playerCounts[game] || [8, 10, 12];
+            var select = document.getElementById('gamePlayerCount');
+            var currentVal = select.value;
+            select.innerHTML = '';
+            counts.forEach(function(c) {
+                var opt = document.createElement('option');
+                opt.value = c;
+                opt.textContent = c + '人';
+                if (c === gameConfig[game]?.defaultPlayers || c === parseInt(currentVal)) opt.selected = true;
+                select.appendChild(opt);
+            });
+            
+            updateGameSettings();
+            showToast('🎮 已选择 ' + config.name, 'info');
+        }
+
+        function updateGameSettings() {
+            var config = gameConfig[selectedGame];
+            if (!config) return;
+            
+            var players = document.getElementById('gamePlayerCount').value;
+            var mode = document.getElementById('gameMode').value;
+            var modeLabel = document.getElementById('gameMode').options[document.getElementById('gameMode').selectedIndex]?.text || '标准';
+            
+            var detail = (config.detail && config.detail[players]) || players + '人 · ' + modeLabel;
+            document.getElementById('gameConfigDetail').textContent = '⚙️ ' + detail + ' · ' + modeLabel + '模式';
+            document.getElementById('gameStatusBadge').textContent = '● ' + detail;
+        }
+
+        // ============================================================
+        // 游戏状态
+        // ============================================================
+        var gameState = {
+            roomId: null,
+            playerId: null,
+            isHost: true,
+            isAdmin: true,
+            players: [],
+            isGameStarted: false,
+            isConnected: false,
+            isRoomCreated: false
+        };
+
+        // ============================================================
+        // SignalR
+        // ============================================================
+        var connection = null;
+        var token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+
+        function connectSignalR() {
+            try {
+                connection = new signalR.HubConnectionBuilder()
+                    .withUrl('/partyHub')
+                    .configureLogging(signalR.LogLevel.Information)
+                    .build();
+
+                connection.on('RoomCreated', function(data) {
+                    console.log('🔍 RoomCreated:', data);
+
+                    var roomId = data?.roomId || data?.room?.roomId;
+                    var playerId = data?.playerId || data?.room?.hostUserId;
+
+                    if (roomId) {
+                        gameState.roomId = roomId;
+                        gameState.playerId = playerId;
+                        gameState.isRoomCreated = true;
+
+                        document.getElementById('roomCodeDisplay').textContent = roomId;
+                        generateQRCode(roomId);
+
+                        showToast('✅ 房间已创建！房间码: ' + roomId, 'success');
+                        updateRoomStatus('waiting');
+                        document.getElementById('actionStatusText').textContent = '● 等待玩家加入';
+                    } else {
+                        console.error('❌ 创建房间失败', data);
+                        showToast('❌ 创建房间失败，请刷新重试', 'error');
+                    }
+                });
+
+                connection.on('PlayerJoined', function(player) {
+                    showToast('🟢 ' + player.nickname + ' 加入了派对', 'info');
+                    addPlayerToList(player);
+                    updateStats();
+                });
+
+                connection.on('PlayerLeft', function(playerId) {
+                    removePlayerFromList(playerId);
+                    updateStats();
+                });
+
+                connection.on('PlayerReadyToggled', function(player) {
+                    updatePlayerReady(player);
+                    updateStats();
+                });
+
+                connection.on('RoomUpdated', function(room) {
+                    syncRoomData(room);
+                });
+
+                connection.on('GameStarted', function(room) {
+                    gameState.isGameStarted = true;
+                    showToast('🚀 派对开始！所有玩家进入游戏！', 'success');
+                    updateRoomStatus('playing');
+                    document.getElementById('actionStatusText').textContent = '● 游戏进行中...';
+                    document.getElementById('startGameBtn').disabled = true;
+                    
+                    // ⭐ 根据选择的游戏跳转
+                    var config = gameConfig[selectedGame];
+                    if (config && config.route) {
+                        setTimeout(function() {
+                            window.location.href = config.route + '?roomId=' + gameState.roomId;
+                        }, 1500);
+                    }
+                });
+
+                connection.on('GameStartFailed', function(message) {
+                    showToast('❌ ' + message, 'error');
+                    document.getElementById('startGameBtn').disabled = false;
+                });
+
+                connection.on('Kicked', function(message) {
+                    showToast('⚠️ ' + message, 'warning');
+                    setTimeout(function() {
+                        window.location.href = '/';
+                    }, 2000);
+                });
+
+                connection.on('AdminUpdated', function(player) {
+                    updatePlayerAdmin(player);
+                });
+
+                connection.start()
+                    .then(function() {
+                        gameState.isConnected = true;
+                        console.log('✅ SignalR 已连接');
+                        setTimeout(function() {
+                            createRoom();
+                        }, 500);
+                    })
+                    .catch(function(err) {
+                        console.error('❌ SignalR 连接失败:', err);
+                        showToast('⚠️ 连接失败，正在重试...', 'warning');
+                        setTimeout(function() { connectSignalR(); }, 3000);
+                    });
+
+            } catch (e) {
+                console.error('SignalR 初始化失败:', e);
+                showToast('⚠️ 连接失败，请刷新重试', 'error');
+            }
+        }
+
+        // ============================================================
+        // 创建房间
+        // ============================================================
+        function createRoom() {
+            if (!connection || connection.state !== signalR.HubConnectionState.Connected) {
+                showToast('⏳ 正在连接...', 'info');
+                setTimeout(function() { createRoom(); }, 1000);
+                return;
+            }
+
+            var hostName = '@username' || 'admin';
+            console.log('📡 创建房间，主控:', hostName);
+
+            connection.invoke('CreateRoom', hostName, 20, null)
+                .then(function(result) {
+                    console.log('📡 CreateRoom 返回:', result);
+                    if (result && result.success) {
+                        if (result.roomId && !gameState.roomId) {
+                            gameState.roomId = result.roomId;
+                            gameState.playerId = result.playerId;
+                            gameState.isRoomCreated = true;
+
+                            document.getElementById('roomCodeDisplay').textContent = result.roomId;
+                            generateQRCode(result.roomId);
+                            showToast('✅ 房间已创建！房间码: ' + result.roomId, 'success');
+                            updateRoomStatus('waiting');
+                            document.getElementById('actionStatusText').textContent = '● 等待玩家加入';
+                        }
+                    } else if (result && !result.success) {
+                        showToast('❌ ' + result.message, 'error');
+                    }
+                })
+                .catch(function(err) {
+                    console.error('❌ 创建房间失败:', err);
+                    showToast('❌ 创建房间失败: ' + err, 'error');
+                });
+        }
+
+        // ============================================================
+        // 生成二维码
+        // ============================================================
+        var qrInstance = null;
+
+        function generateQRCode(roomId) {
+            var container = document.getElementById('qrcode');
+            container.innerHTML = '';
+
+            if (!roomId || roomId === '------') {
+                container.innerHTML = '<div class="qr-loading">⏳ 等待房间码...</div>';
+                return;
+            }
+
+            var url = window.location.origin + '/Party/Player?roomId=' + roomId;
+
+            try {
+                qrInstance = new QRCode(container, {
+                    text: url,
+                    width: 160,
+                    height: 160,
+                    colorDark: '#00F0FF',
+                    colorLight: 'transparent',
+                    correctLevel: QRCode.CorrectLevel.H
+                });
+                console.log('✅ 二维码已生成:', url);
+            } catch (e) {
+                console.error('❌ 二维码生成失败:', e);
+                container.innerHTML =
+                    '<div style="padding:1rem;text-align:center;color:rgba(255,255,255,0.1);font-size:0.7rem;">📱 扫码加入<br><span style="font-size:0.5rem;color:rgba(255,255,255,0.04);">' +
+                    url + '</span></div>';
+            }
+        }
+
+        // ============================================================
+        // 玩家列表操作
+        // ============================================================
+        function addPlayerToList(player) {
+            var list = document.getElementById('playerList');
+            var empty = list.querySelector('.empty-players');
+            if (empty) empty.remove();
+
+            var existing = document.querySelector('.player-item[data-id="' + player.playerId + '"]');
+            if (existing) return;
+
+            var isSelf = player.playerId === gameState.playerId;
+            var isAdmin = player.isAdmin || false;
+            var isHost = player.isHost || false;
+
+            var div = document.createElement('div');
+            div.className = 'player-item';
+            div.dataset.id = player.playerId;
+            div.innerHTML = `
+                <div class="avatar ${player.isReady ? 'ready' : 'online'}">${player.avatarEmoji || '🧑'}</div>
+                <div class="info">
+                    <div class="name">
+                        ${player.nickname}
+                        ${isHost ? '<span class="host-tag">👑 主控</span>' : ''}
+                        ${isAdmin && !isHost ? '<span class="admin-tag">⚡ 管理</span>' : ''}
+                        ${isSelf ? '<span style="font-size:0.5rem;color:rgba(255,255,255,0.1);">(你)</span>' : ''}
+                    </div>
+                    <div class="status-text ${player.isReady ? 'ready' : 'waiting'}">
+                        ${player.isReady ? '✅ 已准备' : '⏳ 未准备'}
+                    </div>
+                </div>
+                <div class="actions">
+                    <span class="ready-dot ${player.isReady ? 'ready' : 'waiting'}"></span>
+                    ${!isSelf && !isHost ? `
+                        <button class="btn-icon admin-toggle" onclick="toggleAdmin('${player.playerId}')" title="切换管理员">⚡</button>
+                        <button class="btn-icon kick" onclick="kickPlayer('${player.playerId}')" title="踢出">✕</button>
+                    ` : ''}
+                    ${isSelf && !isHost ? `
+                        <button class="btn-icon" onclick="toggleReady()" title="准备/取消准备" style="color:${player.isReady ? '#7B61FF' : 'rgba(255,255,255,0.08)'}">
+                            ${player.isReady ? '✅' : '⏳'}
+                        </button>
+                    ` : ''}
+                </div>
+            `;
+
+            list.appendChild(div);
+            updateStats();
+        }
+
+        function removePlayerFromList(playerId) {
+            var item = document.querySelector('.player-item[data-id="' + playerId + '"]');
+            if (item) item.remove();
+
+            var list = document.getElementById('playerList');
+            if (!list.querySelector('.player-item')) {
+                list.innerHTML = '<div class="empty-players">✦ 等待玩家接入 ✦</div>';
+            }
+            updateStats();
+        }
+
+        function updatePlayerReady(player) {
+            var item = document.querySelector('.player-item[data-id="' + player.playerId + '"]');
+            if (!item) return;
+
+            var avatar = item.querySelector('.avatar');
+            var statusText = item.querySelector('.status-text');
+            var dot = item.querySelector('.ready-dot');
+
+            avatar.className = 'avatar ' + (player.isReady ? 'ready' : 'online');
+            statusText.className = 'status-text ' + (player.isReady ? 'ready' : 'waiting');
+            statusText.textContent = player.isReady ? '✅ 已准备' : '⏳ 未准备';
+            if (dot) {
+                dot.className = 'ready-dot ' + (player.isReady ? 'ready' : 'waiting');
+            }
+
+            if (player.playerId === gameState.playerId) {
+                var selfBtn = item.querySelector('.btn-icon');
+                if (selfBtn) {
+                    selfBtn.textContent = player.isReady ? '✅' : '⏳';
+                    selfBtn.style.color = player.isReady ? '#7B61FF' : 'rgba(255,255,255,0.08)';
+                }
+            }
+
+            updateStats();
+        }
+
+        function updatePlayerAdmin(player) {
+            var item = document.querySelector('.player-item[data-id="' + player.playerId + '"]');
+            if (!item) return;
+
+            var nameDiv = item.querySelector('.name');
+            var oldTags = nameDiv.querySelectorAll('.admin-tag, .host-tag');
+            oldTags.forEach(function(t) { t.remove(); });
+
+            if (player.isHost) {
+                var tag = document.createElement('span');
+                tag.className = 'host-tag';
+                tag.textContent = '👑 主控';
+                nameDiv.appendChild(tag);
+            } else if (player.isAdmin) {
+                var tag = document.createElement('span');
+                tag.className = 'admin-tag';
+                tag.textContent = '⚡ 管理';
+                nameDiv.appendChild(tag);
+            }
+            updateStats();
+        }
+
+        function syncRoomData(room) {
+            if (!room || !room.players) return;
+
+            var currentIds = new Set();
+            document.querySelectorAll('.player-item').forEach(function(el) {
+                currentIds.add(el.dataset.id);
+            });
+
+            var newIds = new Set();
+            room.players.forEach(function(p) {
+                newIds.add(p.playerId);
+                if (!currentIds.has(p.playerId)) {
+                    addPlayerToList(p);
+                } else {
+                    updatePlayerReady(p);
+                    updatePlayerAdmin(p);
+                }
+            });
+
+            currentIds.forEach(function(id) {
+                if (!newIds.has(id)) {
+                    removePlayerFromList(id);
+                }
+            });
+
+            updateStats();
+
+            if (room.status === 'playing') {
+                gameState.isGameStarted = true;
+                updateRoomStatus('playing');
+                document.getElementById('actionStatusText').textContent = '● 游戏进行中...';
+                document.getElementById('startGameBtn').disabled = true;
+            }
+
+            document.getElementById('maxCount').textContent = room.maxPlayers || 20;
+        }
+
+        // ============================================================
+        // 更新统计
+        // ============================================================
+        function updateStats() {
+            var items = document.querySelectorAll('.player-item');
+            var total = items.length;
+            var ready = 0;
+
+            items.forEach(function(el) {
+                var statusText = el.querySelector('.status-text');
+                if (statusText && statusText.textContent.includes('已准备')) ready++;
+            });
+
+            document.getElementById('onlineCount').textContent = total;
+            document.getElementById('readyCount').textContent = ready;
+            document.getElementById('statOnline').textContent = total;
+            document.getElementById('statReady').textContent = ready;
+            document.getElementById('statWaiting').textContent = total - ready;
+            document.getElementById('playerCountBadge').textContent = total + ' 人';
+
+            var btn = document.getElementById('startGameBtn');
+            if (total >= 2 && ready === total && ready > 0) {
+                btn.disabled = false;
+            } else {
+                btn.disabled = true;
+            }
+        }
+
+        // ============================================================
+        // 更新房间状态
+        // ============================================================
+        function updateRoomStatus(status) {
+            var badge = document.getElementById('roomStatusBadge');
+            var statusMap = {
+                'waiting': '● 等待中',
+                'ready': '● 准备就绪',
+                'playing': '● 进行中',
+                'ended': '● 已结束'
+            };
+            badge.textContent = statusMap[status] || status;
+        }
+
+        // ============================================================
+        // 玩家操作
+        // ============================================================
+        function toggleReady() {
+            if (!connection || !gameState.roomId || !gameState.playerId) {
+                showToast('⚠️ 房间未创建', 'warning');
+                return;
+            }
+            connection.invoke('ToggleReady', gameState.roomId, gameState.playerId)
+                .catch(function(err) {
+                    console.error('切换准备状态失败:', err);
+                    showToast('操作失败', 'error');
+                });
+        }
+
+        // ⭐ 切换管理员
+        function toggleAdmin(targetPlayerId) {
+            if (!connection || !gameState.roomId || !gameState.playerId) return;
+            if (!confirm('切换该用户的管理员权限？')) return;
+
+            connection.invoke('ToggleAdmin', gameState.roomId, gameState.playerId, targetPlayerId)
+                .then(function() {
+                    showToast('✅ 管理员权限已切换', 'success');
+                })
+                .catch(function(err) {
+                    console.error('切换管理员失败:', err);
+                    showToast('操作失败', 'error');
+                });
+        }
+
+        // ⭐ 踢出玩家
+        function kickPlayer(targetPlayerId) {
+            if (!connection || !gameState.roomId || !gameState.playerId) return;
+            if (!confirm('确定要踢出该玩家吗？')) return;
+
+            connection.invoke('KickPlayer', gameState.roomId, gameState.playerId, targetPlayerId)
+                .then(function() {
+                    showToast('🗑️ 已踢出', 'info');
+                })
+                .catch(function(err) {
+                    console.error('踢出玩家失败:', err);
+                    showToast('操作失败', 'error');
+                });
+        }
+
+        // ⭐ 开始游戏（根据选择的游戏跳转）
+        function startGame() {
+            if (!connection || !gameState.roomId || !gameState.playerId) return;
+
+            var btn = document.getElementById('startGameBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="icon">⏳</span> 启动中...';
+
+            var config = gameConfig[selectedGame];
+            var gameName = config ? config.name : '游戏';
+
+            connection.invoke('StartGame', gameState.roomId, gameState.playerId)
+                .then(function() {
+                    showToast('🚀 ' + gameName + ' 开始！', 'success');
+                })
+                .catch(function(err) {
+                    console.error('开始游戏失败:', err);
+                    showToast('❌ 开始游戏失败: ' + err, 'error');
+                    btn.disabled = false;
+                    btn.innerHTML = '<span class="icon">🚀</span> 开始 ' + (config ? config.name.replace(/[🐺🕵️🎨📝]\s*/, '') : '游戏');
+                });
+        }
+
+        function refreshRoom() {
+            if (!connection || !gameState.roomId) {
+                showToast('⚠️ 暂无房间', 'warning');
+                return;
+            }
+            showToast('🔄 刷新中...', 'info');
+            connection.invoke('RefreshRoom', gameState.roomId)
+                .catch(function() {});
+        }
+
+        function closeRoom() {
+            if (!confirm('确定要解散房间吗？所有玩家将被移出。')) return;
+            showToast('🗑️ 房间已解散', 'warning');
+            if (connection) {
+                connection.stop();
+            }
+            setTimeout(function() {
+                window.location.href = '/Game';
+            }, 1500);
+        }
+
+        // ============================================================
+        // 初始化
         // ============================================================
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 全息派对中枢启动...');
             connectSignalR();
         });
     </script>
