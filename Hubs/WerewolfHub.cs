@@ -204,30 +204,7 @@ namespace MyPersonalWebsite.Hubs
             return new { success = true, seatNumber, playerId };
         }
 
-        // ============================================================
-        // 3. 玩家准备/取消准备
-        // ============================================================
-        public async Task ToggleReady(string playerId, bool isReady)
-        {
-            if (!_playerToRoom.TryGetValue(playerId, out var roomId))
-                return;
-
-            if (!_games.TryGetValue(roomId, out var game))
-                return;
-
-            var player = game.Players.FirstOrDefault(p => p.PlayerId == playerId);
-            if (player == null || player.IsSpectator)
-                return;
-
-            player.IsReady = isReady;
-            await Clients.Group(roomId).SendAsync("PlayerListUpdate", game.Players);
-
-            var players = game.AlivePlayers;
-            if (players.All(p => p.IsReady) && players.Count > 0 && game.Phase == GamePhase.Setup)
-            {
-                await _voiceService.AnnounceAsync(roomId, "所有玩家已准备，等待房主开始游戏");
-            }
-        }
+        
 
         // ============================================================
         // ⭐ 4. 心跳检测
