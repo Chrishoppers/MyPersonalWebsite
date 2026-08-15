@@ -1185,6 +1185,15 @@
                         }, 500);
                     }
                 });
+// Party/Player.cshtml 中，在 SignalR 连接里添加
+
+// ⭐ 监听游戏跳转指令
+connection.on('RedirectToGame', function(data) {
+    showToast('🚀 游戏即将开始，跳转中...', 'success');
+    setTimeout(function() {
+        window.location.href = data.url;
+    }, 1500);
+});
 
                 connection.on('PlayerJoined', function(player) {
                     showToast('🟢 ' + player.nickname + ' 加入了派对', 'info');
