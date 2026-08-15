@@ -2,6 +2,11 @@
     Layout = null;
     ViewData["Title"] = "✦ 全息登机舱 ✦";
     var roomId = ViewBag.RoomId as string ?? Context.Request.Query["roomId"].ToString();
+    
+    // ⭐ 检测用户是否已登录
+    var userId = Context.Session.GetInt32("UserId");
+    var username = Context.Session.GetString("Username") ?? "";
+    var isLoggedIn = userId.HasValue && userId.Value > 0;
 }
 
 <!DOCTYPE html>
@@ -9,7 +14,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>全息登机舱</title>
+    <title>✦ 全息登机舱 ✦</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -33,9 +38,7 @@
             padding: 12px;
         }
 
-        /* ============================================================
-           粒子背景（2层）
-           ============================================================ */
+        /* ===== 粒子背景 ===== */
         #particleCanvas {
             position: fixed;
             top: 0;
@@ -65,7 +68,7 @@
             height: 100%;
             z-index: 0;
             pointer-events: none;
-            background-image: 
+            background-image:
                 linear-gradient(rgba(0, 240, 255, 0.01) 1px, transparent 1px),
                 linear-gradient(90deg, rgba(0, 240, 255, 0.01) 1px, transparent 1px);
             background-size: 60px 60px;
@@ -246,6 +249,55 @@
         }
 
         /* ============================================================
+           ⭐ 登录状态提示
+           ============================================================ */
+        .login-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            font-size: 0.75rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .login-status.logged-in {
+            background: rgba(0, 255, 136, 0.04);
+            border: 1px solid rgba(0, 255, 136, 0.04);
+            color: rgba(0, 255, 136, 0.4);
+        }
+
+        .login-status.guest {
+            background: rgba(245, 158, 11, 0.04);
+            border: 1px solid rgba(245, 158, 11, 0.04);
+            color: rgba(245, 158, 11, 0.4);
+        }
+
+        .login-status .avatar-preview {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1px solid rgba(255,255,255,0.04);
+            flex-shrink: 0;
+        }
+
+        .login-status .avatar-preview-placeholder {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.04);
+            flex-shrink: 0;
+        }
+
+        /* ============================================================
            表单
            ============================================================ */
         .form-group {
@@ -288,8 +340,13 @@
             color: rgba(255,255,255,0.06);
         }
 
+        .form-group input:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
         /* ============================================================
-           头像选择（自适应网格）
+           头像选择
            ============================================================ */
         .avatar-select {
             display: grid;
@@ -355,6 +412,16 @@
         .avatar-option.selected .check-mark {
             opacity: 1;
             transform: scale(1);
+        }
+
+        .avatar-option.disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .avatar-option.disabled::after {
+            opacity: 0 !important;
         }
 
         /* ============================================================
@@ -687,12 +754,12 @@
         .toast-msg.info { background: rgba(0, 240, 255, 0.06); border-color: rgba(0, 240, 255, 0.04); color: #00F0FF; }
 
         @@keyframes toastIn {
-            from { opacity: 0; transform: translateY(20px) scale(0.95); }
+            from { opacity: 0; transform: translateY(16px) scale(0.95); }
             to { opacity: 1; transform: translateY(0) scale(1); }
         }
 
         /* ============================================================
-           响应式 - 移动端优先
+           响应式
            ============================================================ */
         @@media (max-width: 480px) {
             body { padding: 8px; }
@@ -814,31 +881,82 @@
                 </div>
             </div>
 
+            <!-- ⭐ 登录状态提示 -->
+            <div class="login-status @(isLoggedIn ? "logged-in" : "guest")" id="loginStatus">
+                @if (isLoggedIn)
+                {
+                    <span>✅ 已登录：<strong>@username</strong></span>
+                    <span style="margin-left:auto;font-size:0.55rem;color:rgba(255,255,255,0.06);">头像已同步</span>
+                }
+                else
+                {
+                    <span>👤 游客模式</span>
+                    <span style="margin-left:auto;font-size:0.55rem;color:rgba(245,158,11,0.2);">不影响游戏功能</span>
+                }
+            </div>
+
             <!-- 未加入状态 -->
             <div id="joinForm">
                 <div class="form-group">
                     <label>你的代号</label>
-                    <input type="text" id="nicknameInput" placeholder="输入你的昵称..." maxlength="20" autocomplete="off" />
+                    <input type="text" id="nicknameInput" 
+                           placeholder="@(isLoggedIn ? "使用账号昵称" : "输入你的昵称...")" 
+                           maxlength="20" autocomplete="off"
+                           value="@(isLoggedIn ? username : "")"
+                           @(isLoggedIn ? "disabled" : "") />
+                    @if (isLoggedIn)
+                    {
+                        <div style="font-size:0.5rem;color:rgba(255,255,255,0.04);margin-top:0.2rem;">
+                            💡 使用账号昵称，无需修改
+                        </div>
+                    }
                 </div>
 
                 <div class="form-group">
                     <label>选择头像</label>
                     <div class="avatar-select" id="avatarSelect">
-                        <div class="avatar-option selected" data-emoji="🧑">🧑<span class="check-mark">✓</span></div>
-                        <div class="avatar-option" data-emoji="👩">👩<span class="check-mark">✓</span></div>
-                        <div class="avatar-option" data-emoji="👨">👨<span class="check-mark">✓</span></div>
-                        <div class="avatar-option" data-emoji="🦸">🦸<span class="check-mark">✓</span></div>
-                        <div class="avatar-option" data-emoji="🧙">🧙<span class="check-mark">✓</span></div>
-                        <div class="avatar-option" data-emoji="🧚">🧚<span class="check-mark">✓</span></div>
-                        <div class="avatar-option" data-emoji="🤖">🤖<span class="check-mark">✓</span></div>
-                        <div class="avatar-option" data-emoji="👾">👾<span class="check-mark">✓</span></div>
-                        <div class="avatar-option" data-emoji="🦊">🦊<span class="check-mark">✓</span></div>
-                        <div class="avatar-option" data-emoji="🐺">🐺<span class="check-mark">✓</span></div>
+                        @if (isLoggedIn)
+                        {
+                            // ⭐ 已登录：头像不可选，显示账号头像
+                            var avatarUrl = Context.Session.GetString("UserAvatar") ?? "";
+                            var firstLetter = username.FirstOrDefault().ToString().ToUpper() ?? "?";
+                            <div style="grid-column:1/-1;text-align:center;padding:8px 0;color:rgba(255,255,255,0.1);font-size:0.7rem;">
+                                📸 使用账号头像
+                            </div>
+                            <div style="grid-column:1/-1;display:flex;justify-content:center;padding:4px 0;">
+                                @if (!string.IsNullOrEmpty(avatarUrl))
+                                {
+                                    <img src="@avatarUrl" style="width:60px;height:60px;border-radius:50%;object-fit:cover;border:2px solid rgba(0,240,255,0.1);" />
+                                }
+                                else
+                                {
+                                    <div style="width:60px;height:60px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.8rem;font-weight:700;background:linear-gradient(135deg,rgba(139,92,246,0.1),rgba(236,72,153,0.1));border:2px solid rgba(255,255,255,0.04);color:rgba(255,255,255,0.2);">
+                                        @firstLetter
+                                    </div>
+                                }
+                            </div>
+                            <input type="hidden" id="selectedAvatar" value="@(avatarUrl ?? firstLetter)" />
+                        }
+                        else
+                        {
+                            // ⭐ 未登录：可选择头像
+                            <div class="avatar-option selected" data-emoji="🧑">🧑<span class="check-mark">✓</span></div>
+                            <div class="avatar-option" data-emoji="👩">👩<span class="check-mark">✓</span></div>
+                            <div class="avatar-option" data-emoji="👨">👨<span class="check-mark">✓</span></div>
+                            <div class="avatar-option" data-emoji="🦸">🦸<span class="check-mark">✓</span></div>
+                            <div class="avatar-option" data-emoji="🧙">🧙<span class="check-mark">✓</span></div>
+                            <div class="avatar-option" data-emoji="🧚">🧚<span class="check-mark">✓</span></div>
+                            <div class="avatar-option" data-emoji="🤖">🤖<span class="check-mark">✓</span></div>
+                            <div class="avatar-option" data-emoji="👾">👾<span class="check-mark">✓</span></div>
+                            <div class="avatar-option" data-emoji="🦊">🦊<span class="check-mark">✓</span></div>
+                            <div class="avatar-option" data-emoji="🐺">🐺<span class="check-mark">✓</span></div>
+                            <input type="hidden" id="selectedAvatar" value="🧑" />
+                        }
                     </div>
                 </div>
 
                 <button class="btn-join" id="joinBtn" onclick="joinRoom()">
-                    进入派对
+                    @(isLoggedIn ? "🚀 进入派对" : "🚀 进入派对")
                 </button>
             </div>
 
@@ -892,7 +1010,7 @@
 
     <script>
         // ============================================================
-        // 自动全屏
+        // ⭐ 全屏函数（只在加入房间后调用）
         // ============================================================
         function requestFullscreen() {
             var el = document.documentElement;
@@ -905,18 +1023,8 @@
             }
         }
 
-        document.addEventListener('DOMContentLoaded', function() {
-            setTimeout(requestFullscreen, 300);
-        });
-
-        document.addEventListener('click', function() {
-            if (!document.fullscreenElement && !document.webkitFullscreenElement) {
-                requestFullscreen();
-            }
-        });
-
         // ============================================================
-        // 粒子背景（精简版）
+        // 粒子背景
         // ============================================================
         (function initParticles() {
             var canvas = document.getElementById('particleCanvas');
@@ -1020,28 +1128,33 @@
         }
 
         // ============================================================
+        // 头像选择（仅未登录时可用）
+        // ============================================================
+        var isLoggedIn = @(isLoggedIn ? "true" : "false");
+        var userAvatar = '@(Context.Session.GetString("UserAvatar") ?? "")';
+
+        if (!isLoggedIn) {
+            document.querySelectorAll('.avatar-option').forEach(function(el) {
+                el.addEventListener('click', function() {
+                    document.querySelectorAll('.avatar-option').forEach(function(e) { e.classList.remove('selected'); });
+                    this.classList.add('selected');
+                    document.getElementById('selectedAvatar').value = this.dataset.emoji;
+                });
+            });
+        }
+
+        // ============================================================
         // 游戏状态
         // ============================================================
         var state = {
             roomId: '@roomId',
             playerId: null,
-            nickname: '',
-            avatar: '🧑',
+            nickname: '@(isLoggedIn ? username : "")',
+            avatar: '@(isLoggedIn ? (Context.Session.GetString("UserAvatar") ?? "🧑") : "🧑")',
             isJoined: false,
-            isReady: false
+            isReady: false,
+            isLoggedIn: isLoggedIn
         };
-
-        // ============================================================
-        // 头像选择
-        // ============================================================
-        document.querySelectorAll('.avatar-option').forEach(function(el) {
-            el.addEventListener('click', function() {
-                document.querySelectorAll('.avatar-option').forEach(function(e) { e.classList.remove(
-                    'selected'); });
-                this.classList.add('selected');
-                state.avatar = this.dataset.emoji;
-            });
-        });
 
         // ============================================================
         // SignalR
@@ -1062,9 +1175,14 @@
                         document.getElementById('joinForm').style.display = 'none';
                         document.getElementById('joinedStatus').style.display = 'block';
                         document.getElementById('hostNameDisplay').textContent = '👑 ' + data.room.hostName;
-                        showToast('✅ 登机成功！', 'success');
                         updateMiniList(data.room.players);
                         updateReadyButton();
+                        showToast('✅ 登机成功！', 'success');
+
+                        // ⭐ 进入房间后才全屏（仅非手机或用户点击触发）
+                        setTimeout(function() {
+                            requestFullscreen();
+                        }, 500);
                     }
                 });
 
@@ -1155,17 +1273,25 @@
         // ============================================================
         function joinRoom() {
             var nickname = document.getElementById('nicknameInput').value.trim();
-            if (!nickname) {
-                showToast('⚠️ 请输入你的代号', 'error');
-                document.getElementById('nicknameInput').focus();
-                return;
+            
+            // ⭐ 如果是游客模式，必须输入昵称
+            if (!isLoggedIn) {
+                if (!nickname) {
+                    showToast('⚠️ 请输入你的代号', 'error');
+                    document.getElementById('nicknameInput').focus();
+                    return;
+                }
+                if (nickname.length < 2) {
+                    showToast('⚠️ 代号至少 2 个字符', 'error');
+                    return;
+                }
+                state.nickname = nickname;
+                state.avatar = document.getElementById('selectedAvatar').value || '🧑';
+            } else {
+                // ⭐ 已登录：使用账号信息
+                state.nickname = '@username';
+                state.avatar = userAvatar || '🧑';
             }
-            if (nickname.length < 2) {
-                showToast('⚠️ 代号至少 2 个字符', 'error');
-                return;
-            }
-
-            state.nickname = nickname;
 
             if (!connection || connection.state !== signalR.HubConnectionState.Connected) {
                 showToast('⏳ 正在连接...', 'info');
@@ -1177,7 +1303,7 @@
             btn.disabled = true;
             btn.textContent = '⏳ 登机中...';
 
-            connection.invoke('JoinRoom', state.roomId, nickname, state.avatar)
+            connection.invoke('JoinRoom', state.roomId, state.nickname, state.avatar)
                 .then(function(result) {
                     if (result && result.success) {
                         // 由 JoinedRoom 事件处理
