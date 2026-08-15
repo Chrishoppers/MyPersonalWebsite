@@ -67,7 +67,7 @@ namespace MyPersonalWebsite.Hubs
         public async Task<object> CreateRoom(string hostName, int playerCount = 10, List<string>? selectedRoles = null)
         {
             var roomId = GenerateRoomCode();
-            var playerId = $"host_{Guid.NewGuid():N}";
+            var hostPlayerId = $"host_{Guid.NewGuid():N}";
 
             var game = new WerewolfGameState
             {
@@ -81,19 +81,20 @@ namespace MyPersonalWebsite.Hubs
             game.Players.Add(new WerewolfPlayer
             {
                 SeatNumber = 0,
-                PlayerId = playerId,
+                PlayerId = hostPlayerId,
                 Nickname = hostName + " (主控)",
                 AvatarEmoji = "👑",
                 ConnectionId = Context.ConnectionId,
                 IsAlive = true,
                 IsSpectator = true,
-                Role = RoleType.Villager,
-                IsOnline = true
+                IsOnline = true,
+                IsHost = true,
+                Role = RoleType.Villager
             });
 
             _games[roomId] = game;
-            _playerToRoom[playerId] = roomId;
-            _connectionToPlayer[Context.ConnectionId] = playerId;
+            _playerToRoom[hostPlayerId] = roomId;
+            _connectionToPlayer[Context.ConnectionId] = hostPlayerId;
             _speedMultiplier[roomId] = 1.0;
 
             await Groups.AddToGroupAsync(Context.ConnectionId, roomId);
@@ -102,7 +103,7 @@ namespace MyPersonalWebsite.Hubs
             // 启动心跳检查
             _ = StartHeartbeatChecker(roomId);
 
-            return new { success = true, roomId, playerId };
+            return new { success = true, roomId, playerId = hostPlayerId };
         }
 
         // ============================================================
@@ -119,26 +120,27 @@ namespace MyPersonalWebsite.Hubs
             // 如果是主控端，只加入群组，不分配座位
             if (isHost)
             {
-                var playerId = $"host_{Guid.NewGuid():N}";
-                var player = new WerewolfPlayer
+                var newPlayerId = $"host_{Guid.NewGuid():N}";
+                var newPlayer = new WerewolfPlayer
                 {
                     SeatNumber = 0,
-                    PlayerId = playerId,
+                    PlayerId = newPlayerId,
                     Nickname = nickname + " (主控)",
                     AvatarEmoji = "👑",
                     ConnectionId = Context.ConnectionId,
                     IsAlive = true,
                     IsSpectator = true,
                     IsOnline = true,
+                    IsHost = true,
                     Role = RoleType.Villager
                 };
-                game.Players.Add(player);
-                _playerToRoom[playerId] = roomId;
-                _connectionToPlayer[Context.ConnectionId] = playerId;
+                game.Players.Add(newPlayer);
+                _playerToRoom[newPlayerId] = roomId;
+                _connectionToPlayer[Context.ConnectionId] = newPlayerId;
                 await Groups.AddToGroupAsync(Context.ConnectionId, roomId);
 
                 await Clients.Group(roomId).SendAsync("PlayerListUpdate", game.Players);
-                return new { success = true, isSpectator = true, playerId };
+                return new { success = true, isSpectator = true, playerId = newPlayerId };
             }
 
             // 普通玩家：分配座位
@@ -156,6 +158,7 @@ namespace MyPersonalWebsite.Hubs
                     IsAlive = true,
                     IsSpectator = true,
                     IsOnline = true,
+                    IsHost = false,
                     Role = RoleType.Villager
                 });
                 _playerToRoom[spectatorId] = roomId;
@@ -170,11 +173,11 @@ namespace MyPersonalWebsite.Hubs
             while (usedSeats.Contains(seatNumber) && seatNumber <= 12) seatNumber++;
             if (seatNumber > 12) return new { success = false, message = "座位已满" };
 
-            var playerId = $"player_{Guid.NewGuid():N}";
-            var player = new WerewolfPlayer
+            var newPlayerId = $"player_{Guid.NewGuid():N}";
+            var newPlayer = new WerewolfPlayer
             {
                 SeatNumber = seatNumber,
-                PlayerId = playerId,
+                PlayerId = newPlayerId,
                 Nickname = nickname,
                 AvatarEmoji = avatarEmoji,
                 ConnectionId = Context.ConnectionId,
@@ -182,17 +185,19 @@ namespace MyPersonalWebsite.Hubs
                 IsSpectator = false,
                 IsReady = false,
                 IsOnline = true,
+                IsHost = false,
                 Role = RoleType.Villager,
-                IsHunterCanShoot = true
+                IsHunterCanShoot = true,
+                CheatCount = 0
             };
 
-            game.Players.Add(player);
-            _playerToRoom[playerId] = roomId;
-            _connectionToPlayer[Context.ConnectionId] = playerId;
+            game.Players.Add(newPlayer);
+            _playerToRoom[newPlayerId] = roomId;
+            _connectionToPlayer[Context.ConnectionId] = newPlayerId;
 
             await Groups.AddToGroupAsync(Context.ConnectionId, roomId);
             await Clients.Group(roomId).SendAsync("PlayerListUpdate", game.Players);
-            await Clients.Caller.SendAsync("JoinedGame", new { success = true, seatNumber, playerId });
+            await Clients.Caller.SendAsync("JoinedGame", new { success = true, seatNumber, playerId = newPlayerId });
 
             if (game.PlayerCount >= GetTotalSeats(game))
             {
@@ -201,10 +206,33 @@ namespace MyPersonalWebsite.Hubs
                 await _voiceService.AnnounceAsync(roomId, "所有玩家已就坐，准备发牌");
             }
 
-            return new { success = true, seatNumber, playerId };
+            return new { success = true, seatNumber, playerId = newPlayerId };
         }
 
-        
+        // ============================================================
+        // 3. 玩家准备/取消准备
+        // ============================================================
+        public async Task ToggleReady(string playerId, bool isReady)
+        {
+            if (!_playerToRoom.TryGetValue(playerId, out var roomId))
+                return;
+
+            if (!_games.TryGetValue(roomId, out var game))
+                return;
+
+            var player = game.Players.FirstOrDefault(p => p.PlayerId == playerId);
+            if (player == null || player.IsSpectator)
+                return;
+
+            player.IsReady = isReady;
+            await Clients.Group(roomId).SendAsync("PlayerListUpdate", game.Players);
+
+            var players = game.AlivePlayers;
+            if (players.All(p => p.IsReady) && players.Count > 0 && game.Phase == GamePhase.Setup)
+            {
+                await _voiceService.AnnounceAsync(roomId, "所有玩家已准备，等待房主开始游戏");
+            }
+        }
 
         // ============================================================
         // ⭐ 4. 心跳检测
@@ -628,7 +656,87 @@ namespace MyPersonalWebsite.Hubs
         }
 
         // ============================================================
-        // 16. 开始发牌
+        // ⭐ 16. 添加机器人（测试用）
+        // ============================================================
+        public async Task<object> AddBot(string roomId)
+        {
+            if (!_games.TryGetValue(roomId, out var game))
+                return new { success = false, message = "房间不存在" };
+
+            if (game.Phase != GamePhase.Setup && game.Phase != GamePhase.Seating)
+                return new { success = false, message = "游戏已开始" };
+
+            var playerCount = game.PlayerCount;
+            if (playerCount >= 12)
+                return new { success = false, message = "座位已满" };
+
+            var usedSeats = game.Players.Where(p => !p.IsSpectator).Select(p => p.SeatNumber).ToHashSet();
+            var seatNumber = 1;
+            while (usedSeats.Contains(seatNumber) && seatNumber <= 12) seatNumber++;
+            if (seatNumber > 12) return new { success = false, message = "座位已满" };
+
+            var botNames = new[] { "🤖 小A", "🤖 小B", "🤖 小C", "🤖 小D", "🤖 小E", "🤖 小F", "🤖 小G", "🤖 小H", "🤖 小I", "🤖 小J", "🤖 小K", "🤖 小L" };
+            var botAvatars = new[] { "🤖", "🎮", "⭐", "🌈", "🔥", "💎", "🎯", "🚀", "🌟", "💫", "⚡", "🎪" };
+
+            var index = game.Players.Count(p => !p.IsSpectator && p.Nickname.StartsWith("🤖"));
+            var botName = botNames[index % botNames.Length] + (index > 0 ? "" + (index + 1) : "");
+            var botAvatar = botAvatars[index % botAvatars.Length];
+
+            var botId = $"bot_{Guid.NewGuid():N}";
+            var bot = new WerewolfPlayer
+            {
+                SeatNumber = seatNumber,
+                PlayerId = botId,
+                Nickname = botName,
+                AvatarEmoji = botAvatar,
+                ConnectionId = null,
+                IsAlive = true,
+                IsSpectator = false,
+                IsReady = true,
+                IsOnline = true,
+                IsHost = false,
+                Role = RoleType.Villager,
+                IsHunterCanShoot = true,
+                CheatCount = 0
+            };
+
+            game.Players.Add(bot);
+            _playerToRoom[botId] = roomId;
+
+            await Clients.Group(roomId).SendAsync("SeatTaken", seatNumber, new
+            {
+                playerId = bot.PlayerId,
+                nickname = bot.Nickname,
+                avatarEmoji = bot.AvatarEmoji,
+                isReady = bot.IsReady,
+                isHost = false
+            });
+            await Clients.Group(roomId).SendAsync("PlayerListUpdate", game.Players);
+            await Clients.Group(roomId).SendAsync("DisplayMessage", $"🤖 {botName} 加入了房间");
+
+            return new { success = true, seatNumber, botName };
+        }
+
+        public async Task<object> AddBots(string roomId, int count = 10)
+        {
+            if (!_games.TryGetValue(roomId, out var game))
+                return new { success = false, message = "房间不存在" };
+
+            var added = 0;
+            var maxSeats = 12;
+
+            for (int i = 0; i < count && game.PlayerCount + added < maxSeats; i++)
+            {
+                var result = await AddBot(roomId);
+                if (result is { success: true }) added++;
+                else break;
+            }
+
+            return new { success = true, added, message = $"✅ 已添加 {added} 个机器人" };
+        }
+
+        // ============================================================
+        // 17. 开始发牌
         // ============================================================
         public async Task StartDealing(string roomId)
         {
@@ -690,7 +798,7 @@ namespace MyPersonalWebsite.Hubs
         }
 
         // ============================================================
-        // 17. 警长竞选
+        // 18. 警长竞选
         // ============================================================
         public async Task StartSheriffElection(string roomId)
         {
@@ -811,7 +919,7 @@ namespace MyPersonalWebsite.Hubs
         }
 
         // ============================================================
-        // 18. 夜晚流程
+        // 19. 夜晚流程
         // ============================================================
         public async Task StartNight(string roomId)
         {
@@ -857,7 +965,7 @@ namespace MyPersonalWebsite.Hubs
         }
 
         // ============================================================
-        // 19. AI自动计时器
+        // 20. AI自动计时器
         // ============================================================
         private async Task StartAutoTimer(string roomId, int seconds, string phaseName)
         {
@@ -947,7 +1055,7 @@ namespace MyPersonalWebsite.Hubs
         }
 
         // ============================================================
-        // 20. 下一阶段
+        // 21. 下一阶段
         // ============================================================
         public async Task NextPhase(string roomId)
         {
@@ -1069,7 +1177,7 @@ namespace MyPersonalWebsite.Hubs
         }
 
         // ============================================================
-        // 21. 守卫操作
+        // 22. 守卫操作
         // ============================================================
         public async Task GuardProtect(string playerId, int targetSeat)
         {
@@ -1108,7 +1216,7 @@ namespace MyPersonalWebsite.Hubs
         }
 
         // ============================================================
-        // 22. 预言家操作
+        // 23. 预言家操作
         // ============================================================
         public async Task SeerCheck(string playerId, int targetSeat)
         {
@@ -1138,7 +1246,7 @@ namespace MyPersonalWebsite.Hubs
         }
 
         // ============================================================
-        // 23. 狼人投票
+        // 24. 狼人投票
         // ============================================================
         public async Task WerewolfVote(string playerId, int targetSeat)
         {
@@ -1179,7 +1287,7 @@ namespace MyPersonalWebsite.Hubs
         }
 
         // ============================================================
-        // 24. 女巫操作
+        // 25. 女巫操作
         // ============================================================
         public async Task WitchAction(string playerId, bool useAntidote, bool usePoison, int targetSeat = -1)
         {
@@ -1222,7 +1330,7 @@ namespace MyPersonalWebsite.Hubs
         }
 
         // ============================================================
-        // 25. 狼人自爆
+        // 26. 狼人自爆
         // ============================================================
         public async Task WerewolfExplode(string playerId)
         {
@@ -1260,7 +1368,7 @@ namespace MyPersonalWebsite.Hubs
         }
 
         // ============================================================
-        // 26. 投票
+        // 27. 投票
         // ============================================================
         public async Task DayVote(string playerId, int targetSeat)
         {
@@ -1275,7 +1383,7 @@ namespace MyPersonalWebsite.Hubs
         }
 
         // ============================================================
-        // 27. 结算夜晚
+        // 28. 结算夜晚
         // ============================================================
         private async Task ResolveNight(string roomId)
         {
@@ -1360,7 +1468,7 @@ namespace MyPersonalWebsite.Hubs
         }
 
         // ============================================================
-        // 28. 结算白天
+        // 29. 结算白天
         // ============================================================
         private async Task ResolveDay(string roomId)
         {
@@ -1551,7 +1659,7 @@ namespace MyPersonalWebsite.Hubs
         }
 
         // ============================================================
-        // 29. 猎人开枪
+        // 30. 猎人开枪
         // ============================================================
         public async Task HunterShoot(string playerId, int targetSeat)
         {
@@ -1596,7 +1704,7 @@ namespace MyPersonalWebsite.Hubs
         }
 
         // ============================================================
-        // 30. 检查游戏结束
+        // 31. 检查游戏结束
         // ============================================================
         private async Task<bool> CheckGameOver(string roomId)
         {
@@ -1655,7 +1763,7 @@ namespace MyPersonalWebsite.Hubs
         }
 
         // ============================================================
-        // 31. 房主控制
+        // 32. 房主控制
         // ============================================================
         public async Task JoinControlCenter(string roomId)
         {
@@ -1724,7 +1832,7 @@ namespace MyPersonalWebsite.Hubs
         }
 
         // ============================================================
-        // 32. 断开连接
+        // 33. 断开连接
         // ============================================================
         public override async Task OnDisconnectedAsync(Exception? exception)
         {
@@ -1749,7 +1857,7 @@ namespace MyPersonalWebsite.Hubs
         }
 
         // ============================================================
-        // 33. 辅助方法
+        // 34. 辅助方法
         // ============================================================
         private int GetTotalSeats(WerewolfGameState game)
         {
@@ -1814,7 +1922,7 @@ namespace MyPersonalWebsite.Hubs
         }
 
         // ============================================================
-        // 34. 获取房间信息（供Controller调用）
+        // 35. 获取房间信息（供Controller调用）
         // ============================================================
         public static WerewolfGameState? GetGame(string roomId)
         {
