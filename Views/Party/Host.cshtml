@@ -22,7 +22,7 @@
 
     <style>
         /* ============================================================
-           全局重置
+           全局重置 - 可滚动
            ============================================================ */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
@@ -31,8 +31,10 @@
             font-family: 'Inter', 'Segoe UI', sans-serif;
             color: #e0e0e0;
             min-height: 100vh;
-            overflow: hidden;
+            overflow-y: auto;
+            overflow-x: hidden;
             margin: 0;
+            padding: 0;
         }
 
         /* ===== 粒子背景 ===== */
@@ -46,7 +48,39 @@
             pointer-events: none;
         }
 
-        /* ===== 顶部光带 ===== */
+        #particleCanvas2 {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+            opacity: 0.3;
+        }
+
+        /* ===== 网格扫描线 ===== */
+        .grid-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+            background-image:
+                linear-gradient(rgba(0, 240, 255, 0.005) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 240, 255, 0.005) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: gridMove 10s linear infinite;
+        }
+
+        @@keyframes gridMove {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(50px, 50px); }
+        }
+
+        /* ===== 光带 ===== */
         .top-light-bar {
             position: fixed;
             top: 0;
@@ -64,11 +98,11 @@
                 transparent 100%
             );
             animation: lightBarPulse 3s ease-in-out infinite;
-            box-shadow: 0 0 40px rgba(0, 240, 255, 0.15);
+            box-shadow: 0 0 60px rgba(0, 240, 255, 0.1);
         }
 
         @@keyframes lightBarPulse {
-            0%, 100% { opacity: 0.6; }
+            0%, 100% { opacity: 0.4; }
             50% { opacity: 1; }
         }
 
@@ -81,15 +115,15 @@
             z-index: 100;
             background: linear-gradient(90deg, 
                 transparent 0%, 
-                rgba(123, 97, 255, 0.2) 25%, 
-                rgba(0, 240, 255, 0.1) 50%, 
-                rgba(255, 0, 110, 0.2) 75%, 
+                rgba(123, 97, 255, 0.3) 25%, 
+                rgba(0, 240, 255, 0.15) 50%, 
+                rgba(255, 0, 110, 0.3) 75%, 
                 transparent 100%
             );
         }
 
         /* ============================================================
-           主容器
+           主容器 - 可滚动
            ============================================================ */
         .host-container {
             position: relative;
@@ -100,113 +134,148 @@
             min-height: 100vh;
             display: flex;
             flex-direction: column;
+            overflow-y: auto;
+            max-height: 100vh;
+        }
+
+        /* ============================================================
+           自定义滚动条 - 全息风格
+           ============================================================ */
+        .host-container::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .host-container::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.01);
+            border-radius: 10px;
+        }
+
+        .host-container::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #00F0FF, #7B61FF);
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 240, 255, 0.05);
+        }
+
+        .host-container::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, #00F0FF, #EC4899);
+            box-shadow: 0 0 40px rgba(0, 240, 255, 0.1);
+        }
+
+        .host-container {
+            scrollbar-width: thin;
+            scrollbar-color: #7B61FF rgba(255, 255, 255, 0.01);
         }
 
         /* ============================================================
            头部
            ============================================================ */
-        .host-header {
+        .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 0.5rem 0 1.5rem;
-            border-bottom: 1px solid rgba(0, 240, 255, 0.06);
+            padding: 0.8rem 1.5rem;
+            border-radius: 20px;
+            background: rgba(10, 10, 30, 0.4);
+            backdrop-filter: blur(30px);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            flex-shrink: 0;
             flex-wrap: wrap;
-            gap: 1rem;
+            gap: 0.8rem;
+            box-shadow: 0 8px 60px rgba(0, 0, 0, 0.3);
         }
 
-        .host-header .left {
+        .header .brand {
             display: flex;
             align-items: center;
-            gap: 1.2rem;
+            gap: 12px;
         }
 
-        .host-header .logo-icon {
+        .header .brand .icon {
             font-size: 2rem;
-            animation: logoGlow 2s ease-in-out infinite;
+            animation: wolfPulse 2s ease-in-out infinite;
+            filter: drop-shadow(0 0 20px rgba(139, 92, 246, 0.1));
         }
 
-        @@keyframes logoGlow {
-            0%, 100% { filter: drop-shadow(0 0 10px rgba(0, 240, 255, 0.1)); }
-            50% { filter: drop-shadow(0 0 30px rgba(0, 240, 255, 0.3)); }
+        @@keyframes wolfPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.08); filter: drop-shadow(0 0 40px rgba(139, 92, 246, 0.3)); }
         }
 
-        .host-header .title {
-            font-size: 1.6rem;
+        .header .brand h1 {
+            font-size: 1.3rem;
             font-weight: 800;
-            background: linear-gradient(135deg, #00F0FF, #7B61FF, #FF006E);
+            background: linear-gradient(135deg, #8B5CF6, #EC4899);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
-            letter-spacing: 0.06em;
         }
 
-        .host-header .title .sub {
-            font-size: 0.7rem;
-            font-weight: 400;
-            -webkit-text-fill-color: rgba(255,255,255,0.1);
+        .header .brand .sub {
+            font-size: 0.45rem;
+            color: rgba(255,255,255,0.04);
             letter-spacing: 0.2em;
+            text-transform: uppercase;
             display: block;
-            margin-top: -0.1rem;
+            margin-top: -2px;
         }
 
-        .host-header .right {
+        .header .status-group {
             display: flex;
             align-items: center;
-            gap: 1rem;
+            gap: 12px;
             flex-wrap: wrap;
         }
 
-        .host-header .user-badge {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.4rem 1.2rem 0.4rem 0.8rem;
+        .header .room-badge {
+            padding: 0.3rem 1.2rem;
             border-radius: 40px;
-            background: rgba(0, 240, 255, 0.04);
-            border: 1px solid rgba(0, 240, 255, 0.06);
-            font-size: 0.8rem;
-            color: rgba(255,255,255,0.4);
-        }
-
-        .host-header .user-badge .avatar {
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #00F0FF, #7B61FF);
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            background: rgba(0, 240, 255, 0.02);
+            border: 1px solid rgba(0, 240, 255, 0.04);
             font-size: 0.7rem;
-            font-weight: 700;
-            color: #fff;
+            color: rgba(255,255,255,0.15);
+            font-family: 'Courier New', monospace;
+            letter-spacing: 2px;
         }
 
-        .host-header .user-badge .role {
-            color: #FF006E;
-            font-size: 0.55rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-            padding: 0.05rem 0.6rem;
-            border-radius: 20px;
-            background: rgba(255, 0, 110, 0.08);
-            border: 1px solid rgba(255, 0, 110, 0.06);
-        }
-
-        .host-header .status-dot {
-            display: inline-block;
+        .header .status-dot {
             width: 8px;
             height: 8px;
             border-radius: 50%;
+            display: inline-block;
             background: #00FF88;
-            animation: pulse 2s ease-in-out infinite;
-            margin-right: 0.2rem;
+            animation: pulse 2s infinite;
+            margin-right: 4px;
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.05);
         }
 
         @@keyframes pulse {
             0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.4; transform: scale(1.2); }
+            50% { opacity: 0.3; transform: scale(1.3); }
+        }
+
+        .header .user-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 0.2rem 1rem 0.2rem 0.3rem;
+            border-radius: 40px;
+            background: rgba(139, 92, 246, 0.03);
+            border: 1px solid rgba(139, 92, 246, 0.04);
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.2);
+        }
+
+        .header .user-badge .avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #8B5CF6, #EC4899);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.65rem;
+            font-weight: 700;
+            color: #fff;
         }
 
         /* ============================================================
@@ -216,76 +285,80 @@
             display: grid;
             grid-template-columns: 340px 1fr;
             gap: 1.5rem;
-            margin-top: 1rem;
+            margin-top: 1.5rem;
             flex: 1;
+            min-height: 0;
         }
 
-        @@media (max-width: 1100px) {
-            .host-grid {
-                grid-template-columns: 1fr;
-                gap: 1.2rem;
-            }
+        @@media (max-width: 1024px) {
+            .host-grid { grid-template-columns: 1fr; gap: 16px; }
         }
 
         /* ============================================================
-           全息卡片
+           毛玻璃卡片
            ============================================================ */
         .holo-card {
-            background: rgba(10, 10, 30, 0.6);
-            backdrop-filter: blur(30px);
-            border: 1px solid rgba(0, 240, 255, 0.06);
+            background: rgba(10, 10, 30, 0.35);
+            backdrop-filter: blur(40px);
+            border: 1px solid rgba(255, 255, 255, 0.04);
             border-radius: 24px;
-            padding: 1.5rem 1.8rem;
+            padding: 1.5rem;
+            transition: all 0.5s ease;
             position: relative;
             overflow: hidden;
-            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+            box-shadow: 0 8px 80px rgba(0, 0, 0, 0.2);
         }
 
         .holo-card::before {
             content: '';
             position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(ellipse at 30% 30%, rgba(0, 240, 255, 0.015), transparent 70%);
+            inset: 0;
+            border-radius: 24px;
+            padding: 1px;
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.05), transparent, rgba(0, 240, 255, 0.05));
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
             pointer-events: none;
         }
 
         .holo-card:hover {
-            border-color: rgba(0, 240, 255, 0.12);
-            box-shadow: 0 0 60px rgba(0, 240, 255, 0.02);
+            border-color: rgba(139, 92, 246, 0.06);
+            box-shadow: 0 20px 100px rgba(0, 0, 0, 0.3);
         }
 
         .holo-card .card-title {
-            font-size: 0.7rem;
+            font-size: 0.6rem;
             font-weight: 600;
             text-transform: uppercase;
-            letter-spacing: 0.12em;
-            color: rgba(0, 240, 255, 0.3);
-            margin-bottom: 0.8rem;
+            letter-spacing: 0.15em;
+            color: rgba(255,255,255,0.06);
+            margin-bottom: 1rem;
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 8px;
+            position: relative;
+            z-index: 1;
         }
 
-        .holo-card .card-title .accent-line {
+        .holo-card .card-title .accent {
             flex: 1;
             height: 1px;
-            background: linear-gradient(90deg, rgba(0, 240, 255, 0.1), transparent);
+            background: linear-gradient(90deg, rgba(255,255,255,0.03), transparent);
         }
 
-        .holo-card .card-title .badge-count {
-            font-size: 0.6rem;
+        .holo-card .card-title .badge {
+            font-size: 0.5rem;
             padding: 0.1rem 0.6rem;
             border-radius: 20px;
-            background: rgba(0, 240, 255, 0.04);
-            border: 1px solid rgba(0, 240, 255, 0.04);
-            color: rgba(255,255,255,0.2);
+            background: rgba(139, 92, 246, 0.04);
+            color: rgba(255,255,255,0.08);
+            border: 1px solid rgba(139, 92, 246, 0.02);
         }
 
         /* ============================================================
-           左侧：房间信息
+           左侧 - 房间信息
            ============================================================ */
         .room-info-card {
             display: flex;
@@ -476,12 +549,12 @@
         .players-card .player-stats .stat-item .num.waiting { color: #FFB800; }
 
         /* ============================================================
-           玩家列表
+           玩家列表 - 内部滚动
            ============================================================ */
         .player-list {
             flex: 1;
             overflow-y: auto;
-            max-height: 420px;
+            max-height: 350px;
             padding-right: 0.3rem;
         }
 
@@ -751,8 +824,8 @@
            ============================================================ */
         @@media (max-width: 768px) {
             .host-container { padding: 0.8rem 0.8rem 1.5rem; }
-            .host-header .title { font-size: 1.1rem; }
-            .host-header .right { gap: 0.5rem; }
+            .header .brand h1 { font-size: 1.1rem; }
+            .header .right { gap: 0.5rem; }
             .room-code-display .code { font-size: 1.8rem; letter-spacing: 3px; }
             .host-grid { grid-template-columns: 1fr; gap: 1rem; }
             .holo-card { padding: 1rem 1rem; }
@@ -760,14 +833,15 @@
             .host-actions { flex-direction: column; align-items: stretch; }
             .host-actions .status-text { text-align: center; margin-left: 0; }
             .btn-primary-glow, .btn-secondary-glow, .btn-danger-glow { justify-content: center; }
+            .player-list { max-height: 250px; }
         }
 
         @@media (max-width: 480px) {
             .room-code-display .code { font-size: 1.4rem; letter-spacing: 2px; }
-            .host-header .title { font-size: 0.95rem; }
-            .host-header .logo-icon { font-size: 1.4rem; }
-            .host-header .user-badge { font-size: 0.65rem; padding: 0.2rem 0.8rem 0.2rem 0.5rem; }
-            .host-header .user-badge .avatar { width: 22px; height: 22px; font-size: 0.55rem; }
+            .header .brand h1 { font-size: 0.95rem; }
+            .header .brand .icon { font-size: 1.4rem; }
+            .header .user-badge { font-size: 0.65rem; padding: 0.2rem 0.8rem 0.2rem 0.5rem; }
+            .header .user-badge .avatar { width: 22px; height: 22px; font-size: 0.55rem; }
             .holo-card { padding: 0.8rem 0.8rem; border-radius: 18px; }
             .player-item .avatar { width: 28px; height: 28px; font-size: 0.9rem; }
             .player-item .info .name { font-size: 0.75rem; }
@@ -775,6 +849,7 @@
             .qr-container #qrcode img { width: 120px !important; height: 120px !important; }
             .btn-primary-glow { font-size: 0.75rem; padding: 0.5rem 1.2rem; }
             .btn-secondary-glow, .btn-danger-glow { font-size: 0.7rem; padding: 0.5rem 1.2rem; }
+            .player-list { max-height: 180px; }
         }
     </style>
 </head>
@@ -782,20 +857,22 @@
 
     <!-- 粒子背景 -->
     <canvas id="particleCanvas"></canvas>
+    <canvas id="particleCanvas2"></canvas>
+    <div class="grid-overlay"></div>
 
     <!-- 光带 -->
     <div class="top-light-bar"></div>
     <div class="bottom-light-bar"></div>
 
     <!-- ============================================================
-    ⭐ 主容器
+    ⭐ 主容器 - 可滚动
     ============================================================ -->
     <div class="host-container">
 
         <!-- ===== 头部 ===== -->
-        <div class="host-header">
-            <div class="left">
-                <span class="logo-icon">✦</span>
+        <div class="header">
+            <div class="brand">
+                <span class="icon">✦</span>
                 <div>
                     <div class="title">
                         全息派对中枢
@@ -998,15 +1075,14 @@
         });
 
         // ============================================================
-        // 粒子背景（增强版）
+        // 粒子背景
         // ============================================================
         (function initParticles() {
             var canvas = document.getElementById('particleCanvas');
             if (!canvas) return;
             var ctx = canvas.getContext('2d');
             var particles = [];
-            var particleCount = 120;
-            var mouse = { x: null, y: null };
+            var count = Math.min(80, Math.floor(window.innerWidth / 8));
 
             function resize() {
                 canvas.width = window.innerWidth;
@@ -1015,73 +1091,74 @@
             window.addEventListener('resize', resize);
             resize();
 
-            for (var i = 0; i < particleCount; i++) {
+            var colors = ['rgba(139,92,246,', 'rgba(236,72,153,', 'rgba(245,158,11,', 'rgba(0,240,255,'];
+            for (var i = 0; i < count; i++) {
+                var color = colors[Math.floor(Math.random() * colors.length)];
                 particles.push({
                     x: Math.random() * canvas.width,
                     y: Math.random() * canvas.height,
-                    vx: (Math.random() - 0.5) * 0.3,
-                    vy: (Math.random() - 0.5) * 0.3,
-                    radius: Math.random() * 1.2 + 0.3,
-                    opacity: Math.random() * 0.3 + 0.05
+                    vx: (Math.random() - 0.5) * 0.06,
+                    vy: (Math.random() - 0.5) * 0.06,
+                    r: Math.random() * 1.2 + 0.3,
+                    o: Math.random() * 0.08 + 0.01,
+                    color: color
                 });
             }
 
-            // 鼠标追踪
-            document.addEventListener('mousemove', function(e) {
-                mouse.x = e.clientX;
-                mouse.y = e.clientY;
-            });
-
             function draw() {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
-
                 for (var p of particles) {
                     p.x += p.vx;
                     p.y += p.vy;
-
                     if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
                     if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
-
-                    // 鼠标引力
-                    if (mouse.x !== null) {
-                        var dx = mouse.x - p.x;
-                        var dy = mouse.y - p.y;
-                        var dist = Math.sqrt(dx * dx + dy * dy);
-                        if (dist < 200) {
-                            var force = 0.002;
-                            p.vx += dx * force;
-                            p.vy += dy * force;
-                            var speed = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
-                            if (speed > 0.5) {
-                                p.vx = (p.vx / speed) * 0.5;
-                                p.vy = (p.vy / speed) * 0.5;
-                            }
-                        }
-                    }
-
                     ctx.beginPath();
-                    ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-                    ctx.fillStyle = 'rgba(0, 240, 255, ' + p.opacity + ')';
+                    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                    ctx.fillStyle = p.color + p.o + ')';
                     ctx.fill();
                 }
+                requestAnimationFrame(draw);
+            }
+            draw();
+        })();
 
-                // 连线
-                for (var i = 0; i < particles.length; i++) {
-                    for (var j = i + 1; j < particles.length; j++) {
-                        var dx = particles[i].x - particles[j].x;
-                        var dy = particles[i].y - particles[j].y;
-                        var dist = Math.sqrt(dx * dx + dy * dy);
-                        if (dist < 150) {
-                            ctx.beginPath();
-                            ctx.moveTo(particles[i].x, particles[i].y);
-                            ctx.lineTo(particles[j].x, particles[j].y);
-                            ctx.strokeStyle = 'rgba(0, 240, 255, ' + (0.02 * (1 - dist / 150)) + ')';
-                            ctx.lineWidth = 0.5;
-                            ctx.stroke();
-                        }
-                    }
+        (function initParticles2() {
+            var canvas = document.getElementById('particleCanvas2');
+            if (!canvas) return;
+            var ctx = canvas.getContext('2d');
+            var particles = [];
+            var count = Math.min(30, Math.floor(window.innerWidth / 16));
+
+            function resize() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+            window.addEventListener('resize', resize);
+            resize();
+
+            for (var i = 0; i < count; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    vx: (Math.random() - 0.5) * 0.03,
+                    vy: (Math.random() - 0.5) * 0.03,
+                    r: Math.random() * 2 + 1,
+                    o: Math.random() * 0.04 + 0.005
+                });
+            }
+
+            function draw() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                for (var p of particles) {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+                    if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(0, 240, 255, ' + p.o + ')';
+                    ctx.fill();
                 }
-
                 requestAnimationFrame(draw);
             }
             draw();
@@ -1133,7 +1210,7 @@
         var gameConfig = {
             werewolf: { 
                 name: '🐺 狼人杀', 
-                route: '/Werewolf/Host', 
+                route: '/Werewolf/Waiting', 
                 defaultPlayers: 10, 
                 modes: ['标准', '进阶', '专家'],
                 detail: { 8: '2狼 · 3神 · 3民', 10: '3狼 · 3神 · 4民', 12: '4狼 · 4神 · 4民', 16: '5狼 · 5神 · 6民' }
@@ -1162,7 +1239,6 @@
         };
 
         function selectGame(game) {
-            // 检查是否开发中
             var btn = document.querySelector('.game-select-btn[data-game="' + game + '"]');
             if (btn && btn.classList.contains('coming')) {
                 showToast('⏳ ' + gameConfig[game]?.name + ' 正在开发中，敬请期待！', 'warning');
@@ -1171,7 +1247,6 @@
 
             selectedGame = game;
             
-            // 更新按钮样式
             document.querySelectorAll('.game-select-btn').forEach(function(btn) {
                 btn.classList.remove('active');
                 btn.style.borderColor = 'rgba(255,255,255,0.04)';
@@ -1186,7 +1261,6 @@
                 activeBtn.style.color = 'rgba(255,255,255,0.3)';
             }
             
-            // 更新显示
             var config = gameConfig[game];
             if (config) {
                 document.getElementById('selectedGameName').textContent = config.name;
@@ -1194,7 +1268,6 @@
                 document.getElementById('gameStatusBadge').textContent = '● ' + config.name.replace(/[🐺🕵️🎨📝]\s*/, '');
             }
             
-            // 更新人数选项
             var playerCounts = { werewolf: [8, 10, 12, 16], spy: [6, 8, 10], draw: [4, 6, 8], quiz: [6, 8, 12, 16] };
             var counts = playerCounts[game] || [8, 10, 12];
             var select = document.getElementById('gamePlayerCount');
@@ -1302,7 +1375,6 @@
                     document.getElementById('actionStatusText').textContent = '● 游戏进行中...';
                     document.getElementById('startGameBtn').disabled = true;
                     
-                    // ⭐ 根据选择的游戏跳转
                     var config = gameConfig[selectedGame];
                     if (config && config.route) {
                         setTimeout(function() {
@@ -1651,31 +1723,28 @@
                 });
         }
 
-        // ⭐ 开始游戏（根据选择的游戏跳转）
+        // ⭐ 开始游戏
         function startGame() {
-    if (!connection || !gameState.roomId || !gameState.playerId) return;
+            if (!connection || !gameState.roomId || !gameState.playerId) return;
 
-    var btn = document.getElementById('startGameBtn');
-    btn.disabled = true;
-    btn.innerHTML = '<span class="icon">⏳</span> 启动中...';
+            var btn = document.getElementById('startGameBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="icon">⏳</span> 启动中...';
 
-    var config = gameConfig[selectedGame];
-    var gameName = config ? config.name : '游戏';
+            var config = gameConfig[selectedGame];
+            var gameName = config ? config.name : '游戏';
 
-    // ⭐ 改成调用 StartGame（派对大厅的）
-    connection.invoke('StartGame', gameState.roomId, gameState.playerId)
-        .then(function() {
-            showToast('🚀 ' + gameName + ' 开始！', 'success');
-            // ⭐ 跳转到狼人杀等待大厅，而不是直接进座位图
-            window.location.href = '/Werewolf/Waiting?roomId=' + gameState.roomId;
-        })
-        .catch(function(err) {
-            console.error('开始游戏失败:', err);
-            showToast('❌ 开始游戏失败: ' + err, 'error');
-            btn.disabled = false;
-            btn.innerHTML = '<span class="icon">🚀</span> 开始 ' + (config ? config.name.replace(/[🐺🕵️🎨📝]\s*/, '') : '游戏');
-        });
-}
+            connection.invoke('StartGame', gameState.roomId, gameState.playerId)
+                .then(function() {
+                    showToast('🚀 ' + gameName + ' 开始！', 'success');
+                })
+                .catch(function(err) {
+                    console.error('开始游戏失败:', err);
+                    showToast('❌ 开始游戏失败: ' + err, 'error');
+                    btn.disabled = false;
+                    btn.innerHTML = '<span class="icon">🚀</span> 开始 ' + (config ? config.name.replace(/[🐺🕵️🎨📝]\s*/, '') : '游戏');
+                });
+        }
 
         function refreshRoom() {
             if (!connection || !gameState.roomId) {
