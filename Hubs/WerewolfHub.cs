@@ -159,23 +159,36 @@ namespace MyPersonalWebsite.Hubs
         }
 
         // ============================================================
-        // 3. 准备状态
+        // 3. ⭐ 玩家准备/取消准备（等待大厅用）
         // ============================================================
         public async Task ToggleReady(string playerId, bool isReady)
         {
-            if (!_playerToRoom.TryGetValue(playerId, out var roomId)) return;
-            if (!_games.TryGetValue(roomId, out var game)) return;
+            if (!_playerToRoom.TryGetValue(playerId, out var roomId))
+            {
+                return;
+            }
+
+            if (!_games.TryGetValue(roomId, out var game))
+            {
+                return;
+            }
 
             var player = game.Players.FirstOrDefault(p => p.PlayerId == playerId);
-            if (player == null || player.IsSpectator) return;
+            if (player == null || player.IsSpectator)
+            {
+                return;
+            }
 
             player.IsReady = isReady;
+
+            // 广播玩家列表更新
             await Clients.Group(roomId).SendAsync("PlayerListUpdate", game.Players);
 
+            // 检查是否所有玩家都已准备（房主除外）
             var players = game.AlivePlayers;
             if (players.All(p => p.IsReady) && players.Count > 0 && game.Phase == GamePhase.Setup)
             {
-                await StartDealing(roomId);
+                await _voiceService.AnnounceAsync(roomId, "所有玩家已准备，等待房主开始游戏");
             }
         }
 
@@ -1287,7 +1300,18 @@ namespace MyPersonalWebsite.Hubs
         }
 
         // ============================================================
-        // 20. 断开连接
+        // 20. 发送玩家角色（发牌时调用）
+        // ============================================================
+        public async Task SendPlayerRoles(List<object> playerData)
+        {
+            foreach (var data in playerData)
+            {
+                // 由 StartDealing 中单独发送
+            }
+        }
+
+        // ============================================================
+        // 21. 断开连接
         // ============================================================
         public override async Task OnDisconnectedAsync(Exception? exception)
         {
@@ -1316,7 +1340,7 @@ namespace MyPersonalWebsite.Hubs
         }
 
         // ============================================================
-        // 21. 辅助方法
+        // 22. 辅助方法
         // ============================================================
         private int GetTotalSeats(WerewolfGameState game)
         {
@@ -1381,7 +1405,7 @@ namespace MyPersonalWebsite.Hubs
         }
 
         // ============================================================
-        // 22. 获取房间信息（供Controller调用）
+        // 23. 获取房间信息（供Controller调用）
         // ============================================================
         public static WerewolfGameState? GetGame(string roomId)
         {
@@ -1393,31 +1417,5 @@ namespace MyPersonalWebsite.Hubs
         {
             return _games.Values.ToList();
         }
-        // ============================================================
-// ⭐ 玩家准备/取消准备（等待大厅用）
-// ============================================================
-public async Task ToggleReady(string playerId, bool isReady)
-{
-    if (!_playerToRoom.TryGetValue(playerId, out var roomId))
-    {
-        return;
-    }
-
-    if (!_games.TryGetValue(roomId, out var game))
-    {
-        return;
-    }
-
-    var player = game.Players.FirstOrDefault(p => p.PlayerId == playerId);
-    if (player == null || player.IsSpectator)
-    {
-        return;
-    }
-
-    player.IsReady = isReady;
-    
-    // 广播玩家列表更新
-    await Clients.Group(roomId).SendAsync("PlayerListUpdate", game.Players);
-}
     }
 }
