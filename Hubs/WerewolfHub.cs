@@ -1393,5 +1393,31 @@ namespace MyPersonalWebsite.Hubs
         {
             return _games.Values.ToList();
         }
+        // ============================================================
+// ⭐ 玩家准备/取消准备（等待大厅用）
+// ============================================================
+public async Task ToggleReady(string playerId, bool isReady)
+{
+    if (!_playerToRoom.TryGetValue(playerId, out var roomId))
+    {
+        return;
+    }
+
+    if (!_games.TryGetValue(roomId, out var game))
+    {
+        return;
+    }
+
+    var player = game.Players.FirstOrDefault(p => p.PlayerId == playerId);
+    if (player == null || player.IsSpectator)
+    {
+        return;
+    }
+
+    player.IsReady = isReady;
+    
+    // 广播玩家列表更新
+    await Clients.Group(roomId).SendAsync("PlayerListUpdate", game.Players);
+}
     }
 }
