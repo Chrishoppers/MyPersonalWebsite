@@ -50,6 +50,8 @@ namespace MyPersonalWebsite.Models.Werewolf
         public bool IsOnline { get; set; } = true;
         public bool HasRevealed { get; set; } = false;
         public RoleType Role { get; set; } = RoleType.Villager;
+        public bool IsHost { get; set; } = false;
+public int CheatCount { get; set; } = 0;
         
         // 特殊身份标记
         public bool IsSheriff { get; set; } = false;
