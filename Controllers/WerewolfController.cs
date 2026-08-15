@@ -38,6 +38,25 @@ namespace MyPersonalWebsite.Controllers
             ViewBag.RoomId = roomId;
             return View();
         }
+        // ============================================================
+// ⭐ 等待大厅
+// ============================================================
+public IActionResult Waiting(string roomId)
+{
+    var isAdmin = Context.Session.GetInt32("IsAdmin") ?? 0;
+    if (isAdmin != 1)
+    {
+        return RedirectToAction("Login", "Auth");
+    }
+
+    if (string.IsNullOrEmpty(roomId))
+    {
+        return RedirectToAction("Host");
+    }
+
+    ViewBag.RoomId = roomId;
+    return View();
+}
 
         public IActionResult Rules(string roomId)
         {
