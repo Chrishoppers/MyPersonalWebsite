@@ -40,6 +40,7 @@ namespace MyPersonalWebsite.Models.Werewolf
     public class WerewolfPlayer
     {
         public int SeatNumber { get; set; }
+        public bool IsAI { get; set; } = false;  // ⭐ 新增
         public string PlayerId { get; set; } = string.Empty;
         public string Nickname { get; set; } = string.Empty;
         public string AvatarEmoji { get; set; } = "🧑";
