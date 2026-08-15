@@ -1653,26 +1653,29 @@
 
         // ⭐ 开始游戏（根据选择的游戏跳转）
         function startGame() {
-            if (!connection || !gameState.roomId || !gameState.playerId) return;
+    if (!connection || !gameState.roomId || !gameState.playerId) return;
 
-            var btn = document.getElementById('startGameBtn');
-            btn.disabled = true;
-            btn.innerHTML = '<span class="icon">⏳</span> 启动中...';
+    var btn = document.getElementById('startGameBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="icon">⏳</span> 启动中...';
 
-            var config = gameConfig[selectedGame];
-            var gameName = config ? config.name : '游戏';
+    var config = gameConfig[selectedGame];
+    var gameName = config ? config.name : '游戏';
 
-            connection.invoke('StartGame', gameState.roomId, gameState.playerId)
-                .then(function() {
-                    showToast('🚀 ' + gameName + ' 开始！', 'success');
-                })
-                .catch(function(err) {
-                    console.error('开始游戏失败:', err);
-                    showToast('❌ 开始游戏失败: ' + err, 'error');
-                    btn.disabled = false;
-                    btn.innerHTML = '<span class="icon">🚀</span> 开始 ' + (config ? config.name.replace(/[🐺🕵️🎨📝]\s*/, '') : '游戏');
-                });
-        }
+    // ⭐ 改成调用 StartGame（派对大厅的）
+    connection.invoke('StartGame', gameState.roomId, gameState.playerId)
+        .then(function() {
+            showToast('🚀 ' + gameName + ' 开始！', 'success');
+            // ⭐ 跳转到狼人杀等待大厅，而不是直接进座位图
+            window.location.href = '/Werewolf/Waiting?roomId=' + gameState.roomId;
+        })
+        .catch(function(err) {
+            console.error('开始游戏失败:', err);
+            showToast('❌ 开始游戏失败: ' + err, 'error');
+            btn.disabled = false;
+            btn.innerHTML = '<span class="icon">🚀</span> 开始 ' + (config ? config.name.replace(/[🐺🕵️🎨📝]\s*/, '') : '游戏');
+        });
+}
 
         function refreshRoom() {
             if (!connection || !gameState.roomId) {
