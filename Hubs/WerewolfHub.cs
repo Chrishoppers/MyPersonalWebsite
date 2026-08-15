@@ -29,10 +29,6 @@ namespace MyPersonalWebsite.Hubs
         private static readonly ConcurrentDictionary<string, CancellationTokenSource> _autoTimers = new();
         private static readonly ConcurrentDictionary<string, bool> _isPaused = new();
         private static readonly ConcurrentDictionary<string, double> _speedMultiplier = new();
-        // ============================================================
-// 换座请求存储
-// ============================================================
-private static readonly ConcurrentDictionary<string, (string fromPlayerId, int targetSeat, DateTime time)> _swapRequests = new();
 
         // ============================================================
         // 行动记录
@@ -40,6 +36,20 @@ private static readonly ConcurrentDictionary<string, (string fromPlayerId, int t
         private static readonly ConcurrentDictionary<string, bool> _guardActions = new();
         private static readonly ConcurrentDictionary<string, bool> _seerActions = new();
         private static readonly ConcurrentDictionary<string, bool> _witchActions = new();
+
+        // ============================================================
+        // ⭐ 心跳检测 & 掉线管理
+        // ============================================================
+        private static readonly ConcurrentDictionary<string, DateTime> _lastHeartbeat = new();
+        private static readonly ConcurrentDictionary<string, CancellationTokenSource> _disbandTimers = new();
+        private static readonly ConcurrentDictionary<string, DateTime> _disbandStartTime = new();
+        private static readonly int HEARTBEAT_TIMEOUT_SECONDS = 30;
+        private static readonly int DISBAND_WAIT_MINUTES = 10;
+
+        // ============================================================
+        // ⭐ 换座请求存储
+        // ============================================================
+        private static readonly ConcurrentDictionary<string, (string fromPlayerId, int targetSeat, DateTime time)> _swapRequests = new();
 
         // ============================================================
         // ⭐ 语音服务
@@ -77,7 +87,8 @@ private static readonly ConcurrentDictionary<string, (string fromPlayerId, int t
                 ConnectionId = Context.ConnectionId,
                 IsAlive = true,
                 IsSpectator = true,
-                Role = RoleType.Villager
+                Role = RoleType.Villager,
+                IsOnline = true
             });
 
             _games[roomId] = game;
@@ -88,13 +99,16 @@ private static readonly ConcurrentDictionary<string, (string fromPlayerId, int t
             await Groups.AddToGroupAsync(Context.ConnectionId, roomId);
             await Clients.Caller.SendAsync("RoomCreated", new { success = true, roomId });
 
+            // 启动心跳检查
+            _ = StartHeartbeatChecker(roomId);
+
             return new { success = true, roomId, playerId };
         }
 
         // ============================================================
         // 2. 加入游戏
         // ============================================================
-        public async Task<object> JoinGame(string roomId, string nickname, string avatarEmoji = "🧑")
+        public async Task<object> JoinGame(string roomId, string nickname, string avatarEmoji = "🧑", bool isHost = false)
         {
             if (!_games.TryGetValue(roomId, out var game))
                 return new { success = false, message = "房间不存在" };
@@ -102,6 +116,32 @@ private static readonly ConcurrentDictionary<string, (string fromPlayerId, int t
             if (game.Phase != GamePhase.Setup && game.Phase != GamePhase.Seating)
                 return new { success = false, message = "游戏已开始" };
 
+            // 如果是主控端，只加入群组，不分配座位
+            if (isHost)
+            {
+                var playerId = $"host_{Guid.NewGuid():N}";
+                var player = new WerewolfPlayer
+                {
+                    SeatNumber = 0,
+                    PlayerId = playerId,
+                    Nickname = nickname + " (主控)",
+                    AvatarEmoji = "👑",
+                    ConnectionId = Context.ConnectionId,
+                    IsAlive = true,
+                    IsSpectator = true,
+                    IsOnline = true,
+                    Role = RoleType.Villager
+                };
+                game.Players.Add(player);
+                _playerToRoom[playerId] = roomId;
+                _connectionToPlayer[Context.ConnectionId] = playerId;
+                await Groups.AddToGroupAsync(Context.ConnectionId, roomId);
+
+                await Clients.Group(roomId).SendAsync("PlayerListUpdate", game.Players);
+                return new { success = true, isSpectator = true, playerId };
+            }
+
+            // 普通玩家：分配座位
             var playerCount = game.PlayerCount;
             if (playerCount >= 12)
             {
@@ -115,6 +155,7 @@ private static readonly ConcurrentDictionary<string, (string fromPlayerId, int t
                     ConnectionId = Context.ConnectionId,
                     IsAlive = true,
                     IsSpectator = true,
+                    IsOnline = true,
                     Role = RoleType.Villager
                 });
                 _playerToRoom[spectatorId] = roomId;
@@ -140,6 +181,7 @@ private static readonly ConcurrentDictionary<string, (string fromPlayerId, int t
                 IsAlive = true,
                 IsSpectator = false,
                 IsReady = false,
+                IsOnline = true,
                 Role = RoleType.Villager,
                 IsHunterCanShoot = true
             };
@@ -163,32 +205,23 @@ private static readonly ConcurrentDictionary<string, (string fromPlayerId, int t
         }
 
         // ============================================================
-        // 3. ⭐ 玩家准备/取消准备（等待大厅用）
+        // 3. 玩家准备/取消准备
         // ============================================================
         public async Task ToggleReady(string playerId, bool isReady)
         {
             if (!_playerToRoom.TryGetValue(playerId, out var roomId))
-            {
                 return;
-            }
 
             if (!_games.TryGetValue(roomId, out var game))
-            {
                 return;
-            }
 
             var player = game.Players.FirstOrDefault(p => p.PlayerId == playerId);
             if (player == null || player.IsSpectator)
-            {
                 return;
-            }
 
             player.IsReady = isReady;
-
-            // 广播玩家列表更新
             await Clients.Group(roomId).SendAsync("PlayerListUpdate", game.Players);
 
-            // 检查是否所有玩家都已准备（房主除外）
             var players = game.AlivePlayers;
             if (players.All(p => p.IsReady) && players.Count > 0 && game.Phase == GamePhase.Setup)
             {
@@ -197,7 +230,428 @@ private static readonly ConcurrentDictionary<string, (string fromPlayerId, int t
         }
 
         // ============================================================
-        // 4. 开始发牌
+        // ⭐ 4. 心跳检测
+        // ============================================================
+        public async Task Heartbeat(string playerId)
+        {
+            if (!_playerToRoom.TryGetValue(playerId, out var roomId))
+                return;
+
+            if (!_games.TryGetValue(roomId, out var game))
+                return;
+
+            var player = game.Players.FirstOrDefault(p => p.PlayerId == playerId);
+            if (player == null)
+                return;
+
+            _lastHeartbeat[playerId] = DateTime.Now;
+            player.IsOnline = true;
+
+            // 如果有倒计时，检查是否所有玩家已恢复
+            if (_disbandTimers.ContainsKey(roomId))
+            {
+                var offlinePlayers = game.Players.Where(p => !p.IsSpectator && p.IsAlive && !p.IsOnline).ToList();
+                if (!offlinePlayers.Any())
+                {
+                    _disbandTimers.TryRemove(roomId, out var cts);
+                    cts?.Cancel();
+                    _disbandStartTime.TryRemove(roomId, out _);
+                    await Clients.Group(roomId).SendAsync("DisplayMessage", "✅ 所有玩家已恢复在线，游戏继续");
+                    await Clients.Group(roomId).SendAsync("DisbandTimerUpdate", null);
+                }
+            }
+
+            await Clients.Group(roomId).SendAsync("PlayerListUpdate", game.Players);
+        }
+
+        // ============================================================
+        // ⭐ 5. 心跳检查器（每10秒执行）
+        // ============================================================
+        private async Task StartHeartbeatChecker(string roomId)
+        {
+            while (_games.ContainsKey(roomId))
+            {
+                await Task.Delay(10000);
+                await CheckAllPlayersOnline(roomId);
+            }
+        }
+
+        private async Task CheckAllPlayersOnline(string roomId)
+        {
+            if (!_games.TryGetValue(roomId, out var game))
+                return;
+
+            if (game.Phase == GamePhase.GameOver || game.Phase == GamePhase.Setup)
+                return;
+
+            var now = DateTime.Now;
+            var anyOffline = false;
+
+            foreach (var p in game.Players.Where(p => !p.IsSpectator && p.IsAlive))
+            {
+                if (_lastHeartbeat.TryGetValue(p.PlayerId, out var lastHeartbeat))
+                {
+                    if ((now - lastHeartbeat).TotalSeconds > HEARTBEAT_TIMEOUT_SECONDS)
+                    {
+                        p.IsOnline = false;
+                        anyOffline = true;
+                    }
+                }
+                else
+                {
+                    p.IsOnline = false;
+                    anyOffline = true;
+                }
+            }
+
+            if (anyOffline)
+            {
+                if (!_disbandTimers.ContainsKey(roomId))
+                {
+                    _disbandStartTime[roomId] = DateTime.Now;
+                    var cts = new CancellationTokenSource();
+                    _disbandTimers[roomId] = cts;
+                    _ = StartDisbandCountdown(roomId, cts.Token);
+                }
+
+                var offlinePlayers = game.Players
+                    .Where(p => !p.IsSpectator && p.IsAlive && !p.IsOnline)
+                    .Select(p => new { p.PlayerId, p.Nickname, p.SeatNumber, p.AvatarEmoji })
+                    .ToList();
+
+                await Clients.Group(roomId).SendAsync("OfflinePlayersUpdate", offlinePlayers);
+            }
+
+            await Clients.Group(roomId).SendAsync("PlayerListUpdate", game.Players);
+        }
+
+        // ============================================================
+        // ⭐ 6. 解散倒计时
+        // ============================================================
+        private async Task StartDisbandCountdown(string roomId, CancellationToken token)
+        {
+            var totalSeconds = DISBAND_WAIT_MINUTES * 60;
+
+            await Clients.Group(roomId).SendAsync("DisplayMessage", $"⚠️ 检测到玩家掉线，{DISBAND_WAIT_MINUTES}分钟后自动解散房间");
+
+            for (int i = 0; i < totalSeconds && !token.IsCancellationRequested; i++)
+            {
+                var remaining = totalSeconds - i;
+
+                if (i % 5 == 0 || remaining <= 60)
+                {
+                    await Clients.Group(roomId).SendAsync("DisbandTimerUpdate", new
+                    {
+                        remaining = remaining,
+                        display = $"{(remaining / 60)}分{(remaining % 60)}秒"
+                    });
+                }
+
+                if (remaining == 60)
+                    await _voiceService.AnnounceAsync(roomId, "⚠️ 距离房间解散还有1分钟", true);
+                if (remaining == 30)
+                    await _voiceService.AnnounceAsync(roomId, "⚠️ 距离房间解散还有30秒", true);
+
+                await Task.Delay(1000, token);
+            }
+
+            if (!token.IsCancellationRequested)
+            {
+                await DisbandRoom(roomId);
+            }
+        }
+
+        // ============================================================
+        // ⭐ 7. 解散房间
+        // ============================================================
+        private async Task DisbandRoom(string roomId)
+        {
+            if (!_games.TryGetValue(roomId, out var game))
+                return;
+
+            await Clients.Group(roomId).SendAsync("DisplayMessage", "🏁 房间已解散（玩家掉线超时）");
+            await Clients.Group(roomId).SendAsync("VoiceAnnounce", "🏁 房间已解散", "important");
+            await Clients.Group(roomId).SendAsync("RoomDisbanded", "房间已解散");
+
+            _games.TryRemove(roomId, out _);
+            _disbandTimers.TryRemove(roomId, out _);
+            _disbandStartTime.TryRemove(roomId, out _);
+            _wolfVotes.TryRemove(roomId, out _);
+            _dayVotes.TryRemove(roomId, out _);
+            _sheriffVotes.TryRemove(roomId, out _);
+            _wolfExplode.TryRemove(roomId, out _);
+            _isPaused.TryRemove(roomId, out _);
+            _speedMultiplier.TryRemove(roomId, out _);
+            _guardActions.TryRemove(roomId, out _);
+            _seerActions.TryRemove(roomId, out _);
+            _witchActions.TryRemove(roomId, out _);
+            _autoTimers.TryRemove(roomId, out _);
+        }
+
+        // ============================================================
+        // ⭐ 8. 立即解散（房主手动）
+        // ============================================================
+        public async Task DisbandRoomNow(string roomId)
+        {
+            await DisbandRoom(roomId);
+        }
+
+        // ============================================================
+        // ⭐ 9. 抢座位（坐下）
+        // ============================================================
+        public async Task<object> TakeSeat(string playerId, int seatNumber)
+        {
+            if (!_playerToRoom.TryGetValue(playerId, out var roomId))
+                return new { success = false, message = "玩家不在房间中" };
+
+            if (!_games.TryGetValue(roomId, out var game))
+                return new { success = false, message = "房间不存在" };
+
+            if (game.Phase != GamePhase.Setup && game.Phase != GamePhase.Seating)
+                return new { success = false, message = "游戏已开始，无法更换座位" };
+
+            var player = game.Players.FirstOrDefault(p => p.PlayerId == playerId);
+            if (player == null || player.IsSpectator)
+                return new { success = false, message = "玩家不存在" };
+
+            var existing = game.Players.FirstOrDefault(p => p.SeatNumber == seatNumber && !p.IsSpectator && p.IsAlive);
+            if (existing != null && existing.PlayerId != playerId)
+                return new { success = false, message = "该座位已被占用" };
+
+            if (player.SeatNumber > 0)
+            {
+                var oldSeat = player.SeatNumber;
+                player.SeatNumber = 0;
+                await Clients.Group(roomId).SendAsync("SeatReleased", oldSeat);
+            }
+
+            player.SeatNumber = seatNumber;
+            await Clients.Group(roomId).SendAsync("SeatTaken", seatNumber, new
+            {
+                playerId = player.PlayerId,
+                nickname = player.Nickname,
+                avatarEmoji = player.AvatarEmoji,
+                isReady = player.IsReady,
+                isHost = player.IsHost
+            });
+
+            await Clients.Group(roomId).SendAsync("PlayerListUpdate", game.Players);
+
+            return new { success = true, seatNumber };
+        }
+
+        // ============================================================
+        // ⭐ 10. 请求换座
+        // ============================================================
+        public async Task<object> RequestSwapSeat(string playerId, int targetSeat)
+        {
+            if (!_playerToRoom.TryGetValue(playerId, out var roomId))
+                return new { success = false, message = "玩家不在房间中" };
+
+            if (!_games.TryGetValue(roomId, out var game))
+                return new { success = false, message = "房间不存在" };
+
+            var fromPlayer = game.Players.FirstOrDefault(p => p.PlayerId == playerId);
+            if (fromPlayer == null || fromPlayer.IsSpectator)
+                return new { success = false, message = "玩家不存在" };
+
+            var toPlayer = game.Players.FirstOrDefault(p => p.SeatNumber == targetSeat && !p.IsSpectator && p.IsAlive);
+            if (toPlayer == null)
+                return new { success = false, message = "目标玩家不存在" };
+
+            if (toPlayer.PlayerId == playerId)
+                return new { success = false, message = "不能和自己换座" };
+
+            if (string.IsNullOrEmpty(toPlayer.ConnectionId))
+                return new { success = false, message = "目标玩家不在线" };
+
+            await Clients.Client(toPlayer.ConnectionId).SendAsync("SwapRequest", new
+            {
+                playerId = fromPlayer.PlayerId,
+                nickname = fromPlayer.Nickname,
+                avatarEmoji = fromPlayer.AvatarEmoji
+            }, targetSeat);
+
+            _swapRequests[roomId] = (fromPlayer.PlayerId, targetSeat, DateTime.Now);
+
+            return new { success = true, message = "换座请求已发送" };
+        }
+
+        // ============================================================
+        // ⭐ 11. 接受/拒绝换座
+        // ============================================================
+        public async Task<object> AcceptSwapSeat(string playerId, string fromPlayerId, bool accept)
+        {
+            if (!_playerToRoom.TryGetValue(playerId, out var roomId))
+                return new { success = false, message = "玩家不在房间中" };
+
+            if (!_games.TryGetValue(roomId, out var game))
+                return new { success = false, message = "房间不存在" };
+
+            var toPlayer = game.Players.FirstOrDefault(p => p.PlayerId == playerId);
+            if (toPlayer == null || toPlayer.IsSpectator)
+                return new { success = false, message = "玩家不存在" };
+
+            var fromPlayer = game.Players.FirstOrDefault(p => p.PlayerId == fromPlayerId);
+            if (fromPlayer == null || fromPlayer.IsSpectator)
+                return new { success = false, message = "请求玩家不存在" };
+
+            if (!accept)
+            {
+                if (!string.IsNullOrEmpty(fromPlayer.ConnectionId))
+                {
+                    await Clients.Client(fromPlayer.ConnectionId).SendAsync("SwapRejected", new
+                    {
+                        playerId = toPlayer.PlayerId,
+                        nickname = toPlayer.Nickname
+                    });
+                }
+                return new { success = true, message = "已拒绝换座" };
+            }
+
+            var fromSeat = fromPlayer.SeatNumber;
+            var toSeat = toPlayer.SeatNumber;
+
+            fromPlayer.SeatNumber = toSeat;
+            toPlayer.SeatNumber = fromSeat;
+
+            await Clients.Group(roomId).SendAsync("SwapAccepted", fromSeat, toSeat, new
+            {
+                playerId = fromPlayer.PlayerId,
+                nickname = fromPlayer.Nickname,
+                avatarEmoji = fromPlayer.AvatarEmoji
+            }, new
+            {
+                playerId = toPlayer.PlayerId,
+                nickname = toPlayer.Nickname,
+                avatarEmoji = toPlayer.AvatarEmoji
+            });
+
+            await Clients.Group(roomId).SendAsync("PlayerListUpdate", game.Players);
+
+            return new { success = true, message = "换座成功" };
+        }
+
+        // ============================================================
+        // ⭐ 12. 释放座位
+        // ============================================================
+        public async Task<object> ReleaseSeat(string playerId)
+        {
+            if (!_playerToRoom.TryGetValue(playerId, out var roomId))
+                return new { success = false, message = "玩家不在房间中" };
+
+            if (!_games.TryGetValue(roomId, out var game))
+                return new { success = false, message = "房间不存在" };
+
+            var player = game.Players.FirstOrDefault(p => p.PlayerId == playerId);
+            if (player == null || player.IsSpectator)
+                return new { success = false, message = "玩家不存在" };
+
+            if (player.SeatNumber == 0)
+                return new { success = false, message = "你没有座位" };
+
+            var oldSeat = player.SeatNumber;
+            player.SeatNumber = 0;
+
+            await Clients.Group(roomId).SendAsync("SeatReleased", oldSeat);
+            await Clients.Group(roomId).SendAsync("PlayerListUpdate", game.Players);
+
+            return new { success = true, message = "已释放座位" };
+        }
+
+        // ============================================================
+        // ⭐ 13. 新玩家接替离线玩家
+        // ============================================================
+        public async Task<object> TakeOverSeat(string roomId, string newPlayerId, int seatNumber)
+        {
+            if (!_games.TryGetValue(roomId, out var game))
+                return new { success = false, message = "房间不存在" };
+
+            var newPlayer = game.Players.FirstOrDefault(p => p.PlayerId == newPlayerId);
+            if (newPlayer == null)
+                return new { success = false, message = "玩家不存在" };
+
+            var offlinePlayer = game.Players.FirstOrDefault(p => p.SeatNumber == seatNumber && !p.IsOnline && p.IsAlive);
+            if (offlinePlayer == null)
+                return new { success = false, message = "该座位没有离线玩家" };
+
+            var role = offlinePlayer.Role;
+            var isReady = offlinePlayer.IsReady;
+
+            offlinePlayer.IsAlive = false;
+            offlinePlayer.IsSpectator = true;
+            offlinePlayer.SeatNumber = 0;
+
+            newPlayer.SeatNumber = seatNumber;
+            newPlayer.Role = role;
+            newPlayer.IsReady = isReady;
+            newPlayer.IsAlive = true;
+            newPlayer.IsSpectator = false;
+
+            var stillOffline = game.Players.Any(p => !p.IsSpectator && p.IsAlive && !p.IsOnline);
+            if (!stillOffline && _disbandTimers.TryRemove(roomId, out var cts))
+            {
+                cts.Cancel();
+                _disbandStartTime.TryRemove(roomId, out _);
+                await Clients.Group(roomId).SendAsync("DisplayMessage", "✅ 所有玩家已恢复在线，游戏继续");
+                await Clients.Group(roomId).SendAsync("DisbandTimerUpdate", null);
+            }
+
+            await Clients.Group(roomId).SendAsync("PlayerListUpdate", game.Players);
+            await Clients.Group(roomId).SendAsync("DisplayMessage", $"🔄 {newPlayer.Nickname} 接替了 {offlinePlayer.Nickname} 的座位");
+
+            return new { success = true, message = "接替成功" };
+        }
+
+        // ============================================================
+        // ⭐ 14. 获取离线座位列表
+        // ============================================================
+        public async Task<List<object>> GetOfflineSeats(string roomId)
+        {
+            if (!_games.TryGetValue(roomId, out var game))
+                return new List<object>();
+
+            return game.Players
+                .Where(p => !p.IsSpectator && p.IsAlive && !p.IsOnline)
+                .Select(p => new
+                {
+                    p.PlayerId,
+                    p.Nickname,
+                    p.SeatNumber,
+                    p.AvatarEmoji
+                })
+                .Cast<object>()
+                .ToList();
+        }
+
+        // ============================================================
+        // ⭐ 15. 作弊报告
+        // ============================================================
+        public async Task ReportCheat(string playerId, string reason)
+        {
+            if (!_playerToRoom.TryGetValue(playerId, out var roomId))
+                return;
+
+            if (!_games.TryGetValue(roomId, out var game))
+                return;
+
+            var player = game.Players.FirstOrDefault(p => p.PlayerId == playerId);
+            if (player == null)
+                return;
+
+            player.CheatCount++;
+
+            await Clients.Group(roomId).SendAsync("DisplayMessage", $"⚠️ {player.Nickname} 检测到作弊行为：{reason}");
+
+            if (player.CheatCount >= 3)
+            {
+                await _voiceService.AnnounceAsync(roomId, $"⚠️ {player.Nickname} 多次作弊", true);
+                await Clients.Group(roomId).SendAsync("DisplayMessage", $"🚫 {player.Nickname} 已被标记为作弊玩家");
+            }
+        }
+
+        // ============================================================
+        // 16. 开始发牌
         // ============================================================
         public async Task StartDealing(string roomId)
         {
@@ -245,7 +699,6 @@ private static readonly ConcurrentDictionary<string, (string fromPlayerId, int t
             await Clients.Group(roomId).SendAsync("PhaseUpdate", "revealing", game.Day, game.Night);
             await _voiceService.AnnounceAsync(roomId, "请所有玩家在手机上查看自己的身份");
 
-            // 10秒后自动进入下一步（警长竞选或直接夜晚）
             _ = Task.Delay(10000).ContinueWith(async _ =>
             {
                 if (game.PlayerCount >= 10)
@@ -260,7 +713,7 @@ private static readonly ConcurrentDictionary<string, (string fromPlayerId, int t
         }
 
         // ============================================================
-        // 5. 警长竞选
+        // 17. 警长竞选
         // ============================================================
         public async Task StartSheriffElection(string roomId)
         {
@@ -286,7 +739,6 @@ private static readonly ConcurrentDictionary<string, (string fromPlayerId, int t
                 });
             }
 
-            // 30秒后开始投票
             _ = Task.Delay(30000).ContinueWith(async _ =>
             {
                 await Clients.Group(roomId).SendAsync("DisplayMessage", "竞选发言结束，请警下玩家投票");
@@ -303,7 +755,6 @@ private static readonly ConcurrentDictionary<string, (string fromPlayerId, int t
                     });
                 }
 
-                // 20秒后结算
                 _ = Task.Delay(20000).ContinueWith(async _ =>
                 {
                     await ResolveSheriffElection(roomId);
@@ -383,13 +834,12 @@ private static readonly ConcurrentDictionary<string, (string fromPlayerId, int t
         }
 
         // ============================================================
-        // 6. 夜晚流程（AI自动推进）
+        // 18. 夜晚流程
         // ============================================================
         public async Task StartNight(string roomId)
         {
             if (!_games.TryGetValue(roomId, out var game)) return;
 
-            // ⭐ 天黑请闭眼（重复两遍）
             await _voiceService.AnnounceAsync(roomId, "🌙 天黑请闭眼", repeat: true);
 
             CancelAutoTimer(roomId);
@@ -402,7 +852,6 @@ private static readonly ConcurrentDictionary<string, (string fromPlayerId, int t
             _seerActions[roomId] = false;
             _witchActions[roomId] = false;
 
-            // 重置玩家夜晚状态
             foreach (var p in game.Players)
             {
                 p.IsGuardProtected = false;
@@ -410,7 +859,6 @@ private static readonly ConcurrentDictionary<string, (string fromPlayerId, int t
                 p.IsPoisoned = false;
             }
 
-            // 守卫行动
             game.Phase = GamePhase.NightGuard;
             await Clients.Group(roomId).SendAsync("PhaseUpdate", "night_guard", game.Day, game.Night);
             await _voiceService.AnnounceAsync(roomId, $"第{game.Night}夜，守卫请睁眼");
@@ -428,12 +876,11 @@ private static readonly ConcurrentDictionary<string, (string fromPlayerId, int t
                 });
             }
 
-            // AI自动计时（20秒）
             _ = StartAutoTimer(roomId, 20, "守卫行动");
         }
 
         // ============================================================
-        // 7. AI自动计时器（核心）
+        // 19. AI自动计时器
         // ============================================================
         private async Task StartAutoTimer(string roomId, int seconds, string phaseName)
         {
@@ -523,7 +970,7 @@ private static readonly ConcurrentDictionary<string, (string fromPlayerId, int t
         }
 
         // ============================================================
-        // 8. 下一阶段
+        // 20. 下一阶段
         // ============================================================
         public async Task NextPhase(string roomId)
         {
@@ -580,7 +1027,6 @@ private static readonly ConcurrentDictionary<string, (string fromPlayerId, int t
                     if (witch != null)
                     {
                         var deathSeats = GetWerewolfTargets(roomId);
-                        // ⭐ 死亡信息仅显示给女巫，不播报
                         await Clients.Client(witch.ConnectionId).SendAsync("WitchAction", new
                         {
                             night = game.Night,
@@ -646,7 +1092,7 @@ private static readonly ConcurrentDictionary<string, (string fromPlayerId, int t
         }
 
         // ============================================================
-        // 9. 玩家操作 - 守卫
+        // 21. 守卫操作
         // ============================================================
         public async Task GuardProtect(string playerId, int targetSeat)
         {
@@ -685,7 +1131,7 @@ private static readonly ConcurrentDictionary<string, (string fromPlayerId, int t
         }
 
         // ============================================================
-        // 10. 玩家操作 - 预言家
+        // 22. 预言家操作
         // ============================================================
         public async Task SeerCheck(string playerId, int targetSeat)
         {
@@ -701,7 +1147,6 @@ private static readonly ConcurrentDictionary<string, (string fromPlayerId, int t
             _seerActions[roomId] = true;
 
             var isWerewolf = target.Role == RoleType.Werewolf;
-            // ⭐ 查验结果仅显示给预言家，不播报
             await Clients.Client(player.ConnectionId).SendAsync("SeerResult", new
             {
                 targetSeat = targetSeat,
@@ -716,7 +1161,7 @@ private static readonly ConcurrentDictionary<string, (string fromPlayerId, int t
         }
 
         // ============================================================
-        // 11. 玩家操作 - 狼人投票
+        // 23. 狼人投票
         // ============================================================
         public async Task WerewolfVote(string playerId, int targetSeat)
         {
@@ -757,7 +1202,7 @@ private static readonly ConcurrentDictionary<string, (string fromPlayerId, int t
         }
 
         // ============================================================
-        // 12. 玩家操作 - 女巫
+        // 24. 女巫操作
         // ============================================================
         public async Task WitchAction(string playerId, bool useAntidote, bool usePoison, int targetSeat = -1)
         {
@@ -800,7 +1245,7 @@ private static readonly ConcurrentDictionary<string, (string fromPlayerId, int t
         }
 
         // ============================================================
-        // 13. 狼人自爆
+        // 25. 狼人自爆
         // ============================================================
         public async Task WerewolfExplode(string playerId)
         {
@@ -824,7 +1269,6 @@ private static readonly ConcurrentDictionary<string, (string fromPlayerId, int t
                 await Clients.Group(roomId).SendAsync("DisplayMessage", $"{player.SeatNumber}号狼人自爆");
             }
 
-            // ⭐ 狼人自爆（重复两遍）
             await _voiceService.AnnounceAsync(roomId, $"💥 {player.SeatNumber}号狼人自爆", repeat: true);
 
             player.IsAlive = false;
@@ -839,7 +1283,7 @@ private static readonly ConcurrentDictionary<string, (string fromPlayerId, int t
         }
 
         // ============================================================
-        // 14. 投票
+        // 26. 投票
         // ============================================================
         public async Task DayVote(string playerId, int targetSeat)
         {
@@ -854,7 +1298,7 @@ private static readonly ConcurrentDictionary<string, (string fromPlayerId, int t
         }
 
         // ============================================================
-        // 15. 结算夜晚
+        // 27. 结算夜晚
         // ============================================================
         private async Task ResolveNight(string roomId)
         {
@@ -917,7 +1361,6 @@ private static readonly ConcurrentDictionary<string, (string fromPlayerId, int t
             game.Day++;
             await Clients.Group(roomId).SendAsync("PhaseUpdate", "day_announce", game.Day, game.Night);
 
-            // ⭐ 天亮（重复两遍）
             await _voiceService.AnnounceAsync(roomId, "☀️ 天亮了", repeat: true);
 
             if (deathList.Any())
@@ -940,7 +1383,7 @@ private static readonly ConcurrentDictionary<string, (string fromPlayerId, int t
         }
 
         // ============================================================
-        // 16. 结算白天
+        // 28. 结算白天
         // ============================================================
         private async Task ResolveDay(string roomId)
         {
@@ -985,7 +1428,6 @@ private static readonly ConcurrentDictionary<string, (string fromPlayerId, int t
                     }
 
                     player.IsAlive = false;
-                    // ⭐ 被放逐（重复两遍）
                     await _voiceService.AnnounceAsync(roomId, $"🗳️ {eliminated}号被放逐", repeat: true);
                     await Clients.Group(roomId).SendAsync("DisplayMessage", $"{eliminated}号被放逐出局");
                     await Clients.Group(roomId).SendAsync("PlayerDeath", new { seatNumber = eliminated, nickname = player.Nickname });
@@ -1132,7 +1574,7 @@ private static readonly ConcurrentDictionary<string, (string fromPlayerId, int t
         }
 
         // ============================================================
-        // 17. 猎人开枪
+        // 29. 猎人开枪
         // ============================================================
         public async Task HunterShoot(string playerId, int targetSeat)
         {
@@ -1177,7 +1619,7 @@ private static readonly ConcurrentDictionary<string, (string fromPlayerId, int t
         }
 
         // ============================================================
-        // 18. 检查游戏结束
+        // 30. 检查游戏结束
         // ============================================================
         private async Task<bool> CheckGameOver(string roomId)
         {
@@ -1236,7 +1678,7 @@ private static readonly ConcurrentDictionary<string, (string fromPlayerId, int t
         }
 
         // ============================================================
-        // 19. 房主控制
+        // 31. 房主控制
         // ============================================================
         public async Task JoinControlCenter(string roomId)
         {
@@ -1301,21 +1743,11 @@ private static readonly ConcurrentDictionary<string, (string fromPlayerId, int t
             _guardActions.TryRemove(roomId, out _);
             _seerActions.TryRemove(roomId, out _);
             _witchActions.TryRemove(roomId, out _);
+            _autoTimers.TryRemove(roomId, out _);
         }
 
         // ============================================================
-        // 20. 发送玩家角色（发牌时调用）
-        // ============================================================
-        public async Task SendPlayerRoles(List<object> playerData)
-        {
-            foreach (var data in playerData)
-            {
-                // 由 StartDealing 中单独发送
-            }
-        }
-
-        // ============================================================
-        // 21. 断开连接
+        // 32. 断开连接
         // ============================================================
         public override async Task OnDisconnectedAsync(Exception? exception)
         {
@@ -1329,12 +1761,8 @@ private static readonly ConcurrentDictionary<string, (string fromPlayerId, int t
                         if (player != null)
                         {
                             player.IsOnline = false;
+                            player.ConnectionId = null;
                             await Clients.Group(roomId).SendAsync("PlayerListUpdate", game.Players);
-
-                            if (game.Phase == GamePhase.Setup && game.PlayerCount == 0)
-                            {
-                                _games.TryRemove(roomId, out _);
-                            }
                         }
                     }
                 }
@@ -1344,7 +1772,7 @@ private static readonly ConcurrentDictionary<string, (string fromPlayerId, int t
         }
 
         // ============================================================
-        // 22. 辅助方法
+        // 33. 辅助方法
         // ============================================================
         private int GetTotalSeats(WerewolfGameState game)
         {
@@ -1409,7 +1837,7 @@ private static readonly ConcurrentDictionary<string, (string fromPlayerId, int t
         }
 
         // ============================================================
-        // 23. 获取房间信息（供Controller调用）
+        // 34. 获取房间信息（供Controller调用）
         // ============================================================
         public static WerewolfGameState? GetGame(string roomId)
         {
