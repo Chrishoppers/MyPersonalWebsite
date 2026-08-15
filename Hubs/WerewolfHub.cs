@@ -29,6 +29,10 @@ namespace MyPersonalWebsite.Hubs
         private static readonly ConcurrentDictionary<string, CancellationTokenSource> _autoTimers = new();
         private static readonly ConcurrentDictionary<string, bool> _isPaused = new();
         private static readonly ConcurrentDictionary<string, double> _speedMultiplier = new();
+        // ============================================================
+// 换座请求存储
+// ============================================================
+private static readonly ConcurrentDictionary<string, (string fromPlayerId, int targetSeat, DateTime time)> _swapRequests = new();
 
         // ============================================================
         // 行动记录
