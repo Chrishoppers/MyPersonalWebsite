@@ -122,33 +122,47 @@ namespace MyPersonalWebsite.Hubs
         // ============================================================
         // 开始游戏（仅主控）
         // ============================================================
-        public async Task StartGame(string roomId, string hostId)
-        {
-            if (!_rooms.TryGetValue(roomId, out var room)) return;
+       // Hubs/PartyHub.cs
+public async Task StartGame(string roomId, string playerId)
+{
+    if (!_rooms.TryGetValue(roomId, out var room))
+    {
+        await Clients.Caller.SendAsync("GameStartFailed", "房间不存在");
+        return;
+    }
 
-            var host = room.Players.FirstOrDefault(p => p.PlayerId == hostId);
-            if (host == null || !host.IsHost) return;
+    var player = room.Players.FirstOrDefault(p => p.PlayerId == playerId);
+    if (player == null || !player.IsHost)
+    {
+        await Clients.Caller.SendAsync("GameStartFailed", "只有房主可以开始游戏");
+        return;
+    }
 
-            var notReady = room.Players.Where(p => !p.IsReady && !p.IsHost).ToList();
-            if (notReady.Any())
-            {
-                await Clients.Caller.SendAsync("GameStartFailed",
-                    $"{notReady.Count} 位玩家尚未准备");
-                return;
-            }
+    var notReady = room.Players.Where(p => !p.IsReady && !p.IsHost).ToList();
+    if (notReady.Any())
+    {
+        await Clients.Caller.SendAsync("GameStartFailed", $"{notReady.Count} 位玩家尚未准备");
+        return;
+    }
 
-            if (room.Players.Count < room.MinPlayers)
-            {
-                await Clients.Caller.SendAsync("GameStartFailed",
-                    $"至少需要 {room.MinPlayers} 位玩家");
-                return;
-            }
+    if (room.Players.Count < room.MinPlayers)
+    {
+        await Clients.Caller.SendAsync("GameStartFailed", $"至少需要 {room.MinPlayers} 位玩家");
+        return;
+    }
 
-            room.Status = "playing";
-            room.StartedAt = DateTime.Now;
-
-            await Clients.Group(roomId).SendAsync("GameStarted", room);
-        }
+    room.Status = "playing";
+    
+    // ⭐ 广播给所有玩家，让他们跳转
+    await Clients.Group(roomId).SendAsync("GameStarted", room);
+    
+    // ⭐ 发送跳转指令给所有玩家
+    await Clients.Group(roomId).SendAsync("RedirectToGame", new { 
+        roomId = roomId, 
+        game = "werewolf",
+        url = "/Werewolf/Waiting?roomId=" + roomId
+    });
+}
 
         // ============================================================
         // 踢出玩家（仅管理员）
