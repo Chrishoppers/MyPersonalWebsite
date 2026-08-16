@@ -1,0 +1,398 @@
+@model MyPersonalWebsite.Models.ResourceRequest
+@{
+    ViewData["Title"] = "🔍 处理资源申请";
+    var isAdmin = Context.Session.GetInt32("IsAdmin") ?? 0;
+    if (isAdmin != 1)
+    {
+        Context.Response.Redirect("/Auth/Login");
+        return;
+    }
+    var adminName = ViewBag.AdminName as string ?? "管理员";
+}
+
+<style>
+    .process-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 1rem 1.2rem;
+    }
+
+    .process-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .process-header h1 {
+        font-size: 1.6rem;
+        font-weight: 800;
+        color: #fff;
+        margin: 0;
+    }
+
+    .btn-back {
+        padding: 0.4rem 1.2rem;
+        border: 1px solid rgba(255,255,255,0.04);
+        border-radius: 40px;
+        background: rgba(255,255,255,0.02);
+        color: rgba(255,255,255,0.3);
+        text-decoration: none;
+        font-size: 0.8rem;
+        transition: all 0.3s ease;
+    }
+
+    .btn-back:hover {
+        background: rgba(255,255,255,0.04);
+        color: #fff;
+    }
+
+    .card {
+        background: rgba(255,255,255,0.02);
+        border: 1px solid rgba(255,255,255,0.04);
+        border-radius: 20px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .card-title {
+        font-size: 0.7rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: rgba(255,255,255,0.08);
+        margin-bottom: 0.8rem;
+    }
+
+    .detail-row {
+        display: flex;
+        padding: 0.4rem 0;
+        border-bottom: 1px solid rgba(255,255,255,0.02);
+    }
+
+    .detail-row:last-child { border-bottom: none; }
+
+    .detail-row .label {
+        min-width: 100px;
+        color: rgba(255,255,255,0.15);
+        font-size: 0.75rem;
+        font-weight: 500;
+        flex-shrink: 0;
+    }
+
+    .detail-row .value {
+        color: rgba(255,255,255,0.5);
+        font-size: 0.85rem;
+        word-break: break-all;
+    }
+
+    .detail-row .value strong { color: #fff; }
+
+    .form-group {
+        margin-bottom: 1rem;
+    }
+
+    .form-group label {
+        display: block;
+        color: rgba(255,255,255,0.3);
+        font-size: 0.75rem;
+        font-weight: 500;
+        margin-bottom: 0.2rem;
+    }
+
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+        width: 100%;
+        padding: 0.6rem 1rem;
+        border-radius: 12px;
+        border: 1px solid rgba(255,255,255,0.04);
+        background: rgba(255,255,255,0.02);
+        color: #fff;
+        font-size: 0.85rem;
+        outline: none;
+        transition: all 0.3s ease;
+        font-family: inherit;
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus {
+        border-color: rgba(139,92,246,0.15);
+        background: rgba(255,255,255,0.04);
+    }
+
+    .form-group textarea {
+        resize: vertical;
+        min-height: 60px;
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+
+    .file-upload-area {
+        border: 2px dashed rgba(255,255,255,0.04);
+        border-radius: 16px;
+        padding: 1.5rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .file-upload-area:hover {
+        border-color: rgba(139,92,246,0.1);
+        background: rgba(139,92,246,0.02);
+    }
+
+    .file-upload-area .icon { font-size: 2rem; display: block; margin-bottom: 0.3rem; opacity: 0.3; }
+    .file-upload-area .text { color: rgba(255,255,255,0.1); font-size: 0.8rem; }
+    .file-upload-area .hint { color: rgba(255,255,255,0.04); font-size: 0.6rem; margin-top: 0.2rem; }
+
+    .btn-submit {
+        padding: 0.7rem 2rem;
+        border: none;
+        border-radius: 40px;
+        background: linear-gradient(135deg, #8B5CF6, #EC4899);
+        color: #fff;
+        font-weight: 700;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-family: inherit;
+    }
+
+    .btn-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 40px rgba(108,60,225,0.2);
+    }
+
+    .btn-submit:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .btn-cancel {
+        padding: 0.7rem 2rem;
+        border: 1px solid rgba(255,255,255,0.04);
+        border-radius: 40px;
+        background: rgba(255,255,255,0.02);
+        color: rgba(255,255,255,0.2);
+        font-weight: 500;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-family: inherit;
+        text-decoration: none;
+        display: inline-block;
+        text-align: center;
+    }
+
+    .btn-cancel:hover {
+        background: rgba(255,255,255,0.04);
+        color: #fff;
+    }
+
+    .actions {
+        display: flex;
+        gap: 0.8rem;
+        flex-wrap: wrap;
+        margin-top: 1rem;
+    }
+
+    .file-preview {
+        margin-top: 0.5rem;
+        padding: 0.5rem 1rem;
+        border-radius: 12px;
+        background: rgba(40,167,69,0.04);
+        border: 1px solid rgba(40,167,69,0.04);
+        color: rgba(40,167,69,0.3);
+        font-size: 0.8rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .refund-info {
+        padding: 0.5rem 1rem;
+        border-radius: 12px;
+        background: rgba(245,158,11,0.04);
+        border: 1px solid rgba(245,158,11,0.04);
+        color: rgba(245,158,11,0.3);
+        font-size: 0.75rem;
+        margin-top: 0.5rem;
+    }
+
+    @@media (max-width: 640px) {
+        .form-row { grid-template-columns: 1fr; gap: 0.6rem; }
+        .card { padding: 1rem; }
+        .actions { flex-direction: column; }
+        .btn-submit, .btn-cancel { width: 100%; text-align: center; }
+    }
+</style>
+
+<div class="process-container">
+    <div class="process-header">
+        <h1>🔍 处理资源申请</h1>
+        <a href="/Admin/ResourceManagement" class="btn-back">← 返回列表</a>
+    </div>
+
+    <!-- 申请信息 -->
+    <div class="card">
+        <div class="card-title">📋 申请信息</div>
+
+        <div class="detail-row">
+            <span class="label">ID</span>
+            <span class="value" style="color:rgba(255,255,255,0.1);font-family:'Courier New',monospace;">#@Model.Id</span>
+        </div>
+        <div class="detail-row">
+            <span class="label">申请人</span>
+            <span class="value"><strong>@Model.UserName</strong></span>
+        </div>
+        <div class="detail-row">
+            <span class="label">邮箱</span>
+            <span class="value">@Model.UserEmail</span>
+        </div>
+        <div class="detail-row">
+            <span class="label">联系人</span>
+            <span class="value"><strong>@Model.PersonName</strong></span>
+        </div>
+        <div class="detail-row">
+            <span class="label">平台</span>
+            <span class="value">@Model.Platform</span>
+        </div>
+        <div class="detail-row">
+            <span class="label">资源类型</span>
+            <span class="value">@Model.ResourceType</span>
+        </div>
+        <div class="detail-row">
+            <span class="label">资源名称</span>
+            <span class="value"><strong>@Model.ResourceName</strong></span>
+        </div>
+        <div class="detail-row">
+            <span class="label">资源链接</span>
+            <span class="value">@(string.IsNullOrEmpty(Model.ResourceUrl) ? "无" : $"<a href='{Model.ResourceUrl}' target='_blank' style='color:#8B5CF6;'>{Model.ResourceUrl}</a>")</span>
+        </div>
+        <div class="detail-row">
+            <span class="label">备注</span>
+            <span class="value">@(string.IsNullOrEmpty(Model.Description) ? "无" : Model.Description)</span>
+        </div>
+        <div class="detail-row">
+            <span class="label">退款选项</span>
+            <span class="value">
+                @if (Model.RefundOption == "1day_paid")
+                {
+                    <span style="color:#F59E0B;">⚡ 1天内超时退款 (¥2)</span>
+                }
+                else
+                {
+                    <span style="color:#00FF88;">📅 两周内处理 (免费)</span>
+                }
+                @if (Model.RefundDeadline.HasValue)
+                {
+                    <span style="color:rgba(255,255,255,0.06);font-size:0.7rem;margin-left:0.5rem;">
+                        (截止: @Model.RefundDeadline.Value.ToString("yyyy-MM-dd HH:mm"))
+                    </span>
+                }
+            </span>
+        </div>
+        <div class="detail-row">
+            <span class="label">申请时间</span>
+            <span class="value">@Model.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss")</span>
+        </div>
+
+        @if (Model.ProcessedAt.HasValue)
+        {
+            <div class="detail-row">
+                <span class="label">处理时间</span>
+                <span class="value">@Model.ProcessedAt.Value.ToString("yyyy-MM-dd HH:mm:ss")</span>
+            </div>
+        }
+    </div>
+
+    <!-- 处理表单 -->
+    <form method="post" enctype="multipart/form-data" id="processForm">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="Id" value="@Model.Id" />
+
+        <div class="card">
+            <div class="card-title">📊 处理结果</div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>状态 <span style="color:#dc3545;">*</span></label>
+                    <select name="Status" required>
+                        <option value="processing" @(Model.Status == "processing" ? "selected" : "")>🔄 处理中</option>
+                        <option value="completed" @(Model.Status == "completed" ? "selected" : "")>✅ 已完成</option>
+                        <option value="rejected" @(Model.Status == "rejected" ? "selected" : "")>❌ 已拒绝</option>
+                        <option value="refunded" @(Model.Status == "refunded" ? "selected" : "")>💰 已退款</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>✅ 已找到类型</label>
+                    <input type="text" name="FoundTypes" value="@Model.FoundTypes" placeholder="如：图片、文档、视频" />
+                </div>
+                <div class="form-group">
+                    <label>❌ 未找到类型</label>
+                    <input type="text" name="NotFoundTypes" value="@Model.NotFoundTypes" placeholder="如：软件、音频" />
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>📎 上传资源文件</label>
+                <div class="file-upload-area" onclick="document.getElementById('fileInput').click()">
+                    <span class="icon">📤</span>
+                    <div class="text">点击上传资源文件</div>
+                    <div class="hint">支持 ZIP, RAR, 7Z, PDF, 图片 · 最大 100MB</div>
+                </div>
+                <input type="file" id="fileInput" name="resourceFile" accept=".zip,.rar,.7z,.pdf,image/*" style="display:none;" />
+                <div id="filePreview" style="display:none;" class="file-preview">
+                    📎 <span id="fileName"></span>
+                    <button type="button" onclick="clearFile()" style="background:none;border:none;color:rgba(255,255,255,0.1);cursor:pointer;margin-left:auto;">✕</button>
+                </div>
+                @if (!string.IsNullOrEmpty(Model.FileUrl))
+                {
+                    <div class="file-preview" style="background:rgba(40,167,69,0.02);border-color:rgba(40,167,69,0.02);color:rgba(40,167,69,0.2);margin-top:0.3rem;">
+                        📎 当前文件：<a href="@Model.FileUrl" target="_blank" style="color:#8B5CF6;">查看</a>
+                    </div>
+                }
+            </div>
+
+            <div class="form-group">
+                <label>📝 管理员备注</label>
+                <textarea name="AdminNote" placeholder="填写处理备注...">@Model.AdminNote</textarea>
+            </div>
+
+            @if (Model.RefundOption == "1day_paid" && Model.Status != "refunded")
+            {
+                <div class="refund-info">
+                    💰 用户选择了 "1天内超时退款" (¥2)，如果超时请标记为"已退款"
+                </div>
+            }
+
+            <div class="actions">
+                <button type="submit" class="btn-submit">💾 保存并发送邮件</button>
+                <a href="/Admin/ResourceManagement" class="btn-cancel">取消</a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+    // 文件选择预览
+    document.getElementById('fileInput').addEventListener('change', function(e) {
+        var file = this.files[0];
+        if (file) {
+            document.getElementById('fileName').textContent = file.name + ' (' + (file.size / 1024 / 1024).toFixed(2) + ' MB)';
+            document.getElementById('filePreview').style.display = 'flex';
+        }
+    });
+
+    function clearFile
