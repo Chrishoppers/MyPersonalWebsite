@@ -1927,6 +1927,107 @@ namespace MyPersonalWebsite.Controllers
 
             return Json(new { success = true, users = brief });
         }
+        // ============================================================
+// 资源管理（管理员）
+// ============================================================
+
+[HttpGet]
+public async Task<IActionResult> ResourceManagement()
+{
+    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+    if (isAdmin != 1) return RedirectToAction("Login", "Auth");
+
+    var allRequests = await _dataSync.GetAllResourceRequestsAsync();
+    var pendingRequests = allRequests.Where(r => r.Status == "pending" || r.Status == "processing").ToList();
+    var processedRequests = allRequests.Where(r => r.Status == "completed" || r.Status == "rejected" || r.Status == "refunded").ToList();
+
+    ViewBag.PendingCount = pendingRequests.Count;
+    ViewBag.ProcessedCount = processedRequests.Count;
+    ViewBag.TotalCount = allRequests.Count;
+    ViewBag.PendingRequests = pendingRequests;
+    ViewBag.ProcessedRequests = processedRequests.Take(50).ToList();
+    return View();
+}
+
+[HttpGet]
+public async Task<IActionResult> ProcessResource(int id)
+{
+    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+    if (isAdmin != 1) return RedirectToAction("Login", "Auth");
+
+    var request = await _dataSync.GetResourceRequestByIdAsync(id);
+    if (request == null) return NotFound();
+
+    var adminName = HttpContext.Session.GetString("Username") ?? "管理员";
+    ViewBag.AdminName = adminName;
+    return View(request);
+}
+
+[HttpPost]
+public async Task<IActionResult> ProcessResource(ResourceRequest request, IFormFile? resourceFile)
+{
+    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+    if (isAdmin != 1) return RedirectToAction("Login", "Auth");
+
+    var existing = await _dataSync.GetResourceRequestByIdAsync(request.Id);
+    if (existing == null) return NotFound();
+
+    // 处理文件上传
+    string? fileUrl = null;
+    if (resourceFile != null && resourceFile.Length > 0)
+    {
+        var allowedTypes = new[] { "application/zip", "application/x-rar-compressed", "application/x-7z-compressed", "application/pdf", "image/jpeg", "image/png", "application/octet-stream" };
+        if (!allowedTypes.Contains(resourceFile.ContentType) && !resourceFile.FileName.EndsWith(".zip") && !resourceFile.FileName.EndsWith(".rar") && !resourceFile.FileName.EndsWith(".7z"))
+        {
+            TempData["Error"] = "不支持的文件格式，请上传 ZIP、RAR、7Z、PDF 或图片文件";
+            return RedirectToAction("ProcessResource", new { id = request.Id });
+        }
+
+        if (resourceFile.Length > 100 * 1024 * 1024)
+        {
+            TempData["Error"] = "文件大小不能超过 100MB";
+            return RedirectToAction("ProcessResource", new { id = request.Id });
+        }
+
+        var fileName = $"{Guid.NewGuid():N}_{resourceFile.FileName}";
+        var uploadPath = Path.Combine("wwwroot", "uploads", "resources");
+        if (!Directory.Exists(uploadPath)) Directory.CreateDirectory(uploadPath);
+
+        var filePath = Path.Combine(uploadPath, fileName);
+        using (var stream = new FileStream(filePath, FileMode.Create))
+        {
+            await resourceFile.CopyToAsync(stream);
+        }
+        fileUrl = $"/uploads/resources/{fileName}";
+    }
+
+    // 更新状态
+    existing.Status = request.Status;
+    existing.FoundTypes = request.FoundTypes ?? "";
+    existing.NotFoundTypes = request.NotFoundTypes ?? "";
+    existing.FileUrl = fileUrl ?? existing.FileUrl;
+    existing.AdminNote = request.AdminNote ?? "";
+    existing.AdminName = HttpContext.Session.GetString("Username") ?? "管理员";
+    existing.ProcessedAt = DateTime.Now;
+
+    await _dataSync.UpdateResourceRequestAsync(existing);
+
+    // 发送邮件通知用户
+    await _emailService.SendResourceResultEmailAsync(existing);
+
+    TempData["Success"] = "✅ 资源已处理，邮件已发送给用户";
+    return RedirectToAction("ResourceManagement");
+}
+
+[HttpPost]
+public async Task<IActionResult> DeleteResourceRequest(int id)
+{
+    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+    if (isAdmin != 1) return Json(new { success = false, message = "权限不足" });
+
+    await _dataSync.DeleteResourceRequestAsync(id);
+    return Json(new { success = true, message = "已删除" });
+}
 
     }
 }
