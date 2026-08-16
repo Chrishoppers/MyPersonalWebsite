@@ -22,13 +22,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
     <style>
-        /* ============================================================
-           全局重置 - 全屏沉浸式
-           ============================================================ */
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        
-        body { 
-            background: #05050F; 
+        body {
+            background: #05050F;
             font-family: 'Inter', sans-serif;
             color: #e0e0e0;
             min-height: 100vh;
@@ -38,7 +34,6 @@
             height: 100vh;
         }
 
-        /* ===== 全屏容器 ===== */
         .fullscreen-container {
             position: fixed;
             inset: 0;
@@ -51,7 +46,6 @@
             background: #05050F;
         }
 
-        /* ===== 多层粒子背景 ===== */
         #particleCanvas {
             position: fixed;
             top: 0;
@@ -73,7 +67,6 @@
             opacity: 0.3;
         }
 
-        /* ===== 网格扫描线 ===== */
         .grid-overlay {
             position: fixed;
             top: 0;
@@ -94,7 +87,6 @@
             100% { transform: translate(50px, 50px); }
         }
 
-        /* ===== 光带 ===== */
         .top-light-bar {
             position: fixed;
             top: 0;
@@ -102,15 +94,7 @@
             right: 0;
             height: 2px;
             z-index: 100;
-            background: linear-gradient(90deg, 
-                transparent 0%, 
-                #00F0FF 15%, 
-                #7B61FF 30%, 
-                #FF006E 50%, 
-                #7B61FF 70%, 
-                #00F0FF 85%, 
-                transparent 100%
-            );
+            background: linear-gradient(90deg, transparent 0%, #00F0FF 15%, #7B61FF 30%, #FF006E 50%, #7B61FF 70%, #00F0FF 85%, transparent 100%);
             animation: lightBarPulse 3s ease-in-out infinite;
             box-shadow: 0 0 60px rgba(0, 240, 255, 0.1);
         }
@@ -127,85 +111,47 @@
             right: 0;
             height: 1px;
             z-index: 100;
-            background: linear-gradient(90deg, 
-                transparent 0%, 
-                rgba(123, 97, 255, 0.3) 25%, 
-                rgba(0, 240, 255, 0.15) 50%, 
-                rgba(255, 0, 110, 0.3) 75%, 
-                transparent 100%
-            );
+            background: linear-gradient(90deg, transparent 0%, rgba(123, 97, 255, 0.3) 25%, rgba(0, 240, 255, 0.15) 50%, rgba(255, 0, 110, 0.3) 75%, transparent 100%);
         }
 
-        /* ============================================================
-           头部 - 全息毛玻璃
-           ============================================================ */
         .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 0.8rem 1.5rem;
+            padding: 0.6rem 1.5rem;
             border-radius: 20px;
             background: rgba(10, 10, 30, 0.4);
             backdrop-filter: blur(30px);
-            -webkit-backdrop-filter: blur(30px);
             border: 1px solid rgba(255, 255, 255, 0.04);
             flex-shrink: 0;
             flex-wrap: wrap;
-            gap: 0.8rem;
+            gap: 0.6rem;
             box-shadow: 0 8px 60px rgba(0, 0, 0, 0.3);
             position: relative;
             z-index: 2;
         }
 
-        .header .brand {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .header .brand .icon {
-            font-size: 2rem;
-            animation: wolfPulse 2s ease-in-out infinite;
-            filter: drop-shadow(0 0 20px rgba(139, 92, 246, 0.1));
-        }
-
-        @@keyframes wolfPulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.08); filter: drop-shadow(0 0 40px rgba(139, 92, 246, 0.3)); }
-        }
-
+        .header .brand { display: flex; align-items: center; gap: 10px; }
+        .header .brand .icon { font-size: 1.8rem; animation: wolfPulse 2s ease-in-out infinite; }
+        @@keyframes wolfPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
         .header .brand h1 {
-            font-size: 1.4rem;
+            font-size: 1.3rem;
             font-weight: 800;
             background: linear-gradient(135deg, #8B5CF6, #EC4899);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
         }
+        .header .brand .sub { font-size: 0.45rem; color: rgba(255,255,255,0.06); letter-spacing: 0.15em; text-transform: uppercase; display: block; margin-top: -2px; }
 
-        .header .brand .sub {
-            font-size: 0.5rem;
-            color: rgba(255,255,255,0.06);
-            letter-spacing: 0.15em;
-            text-transform: uppercase;
-            display: block;
-            margin-top: -2px;
-        }
-
-        .header .status-group {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-
+        .header .status-group { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
         .header .room-badge {
-            padding: 4px 16px;
+            padding: 3px 14px;
             border-radius: 40px;
             background: rgba(0, 240, 255, 0.03);
             border: 1px solid rgba(0, 240, 255, 0.04);
-            font-size: 0.7rem;
-            color: rgba(255,255,255,0.2);
+            font-size: 0.65rem;
+            color: rgba(255,255,255, 0.2);
             font-family: 'Courier New', monospace;
             letter-spacing: 2px;
         }
@@ -213,56 +159,58 @@
         .header .user-badge {
             display: flex;
             align-items: center;
-            gap: 6px;
-            padding: 4px 12px 4px 8px;
+            gap: 5px;
+            padding: 3px 10px 3px 6px;
             border-radius: 40px;
             background: rgba(139, 92, 246, 0.04);
             border: 1px solid rgba(139, 92, 246, 0.04);
-            font-size: 0.75rem;
-            color: rgba(255,255,255,0.3);
+            font-size: 0.7rem;
+            color: rgba(255,255,255, 0.3);
         }
-
         .header .user-badge .avatar {
-            width: 24px;
-            height: 24px;
+            width: 22px;
+            height: 22px;
             border-radius: 50%;
             background: linear-gradient(135deg, #8B5CF6, #EC4899);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 0.55rem;
+            font-size: 0.5rem;
             font-weight: 700;
             color: #fff;
         }
 
-        /* ============================================================
-           主网格
-           ============================================================ */
+        .header .status-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #00FF88;
+            animation: pulse 2s infinite;
+            margin-right: 4px;
+        }
+
         .main-grid {
             flex: 1;
             display: grid;
-            grid-template-columns: 1fr 380px;
-            gap: 20px;
-            padding: 1rem 0;
+            grid-template-columns: 1fr 340px;
+            gap: 18px;
+            padding: 0.8rem 0;
             min-height: 0;
             position: relative;
             z-index: 2;
         }
 
         @@media (max-width: 1024px) {
-            .main-grid { grid-template-columns: 1fr; gap: 16px; }
+            .main-grid { grid-template-columns: 1fr; gap: 14px; }
         }
 
-        /* ============================================================
-           全息卡片
-           ============================================================ */
         .holo-card {
             background: rgba(10, 10, 30, 0.35);
             backdrop-filter: blur(40px);
-            -webkit-backdrop-filter: blur(40px);
             border: 1px solid rgba(255, 255, 255, 0.04);
             border-radius: 24px;
-            padding: 1.5rem;
+            padding: 1.2rem 1.5rem;
             transition: all 0.5s ease;
             position: relative;
             overflow: hidden;
@@ -283,43 +231,38 @@
             pointer-events: none;
         }
 
+        .holo-card:hover { border-color: rgba(139, 92, 246, 0.06); }
+
         .holo-card .card-title {
-            font-size: 0.6rem;
+            font-size: 0.55rem;
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.15em;
             color: rgba(255,255,255,0.06);
-            margin-bottom: 0.8rem;
+            margin-bottom: 0.6rem;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
             position: relative;
             z-index: 1;
         }
 
-        .holo-card .card-title .accent {
-            flex: 1;
-            height: 1px;
-            background: linear-gradient(90deg, rgba(255,255,255,0.03), transparent);
-        }
+        .holo-card .card-title .accent { flex: 1; height: 1px; background: linear-gradient(90deg, rgba(255,255,255,0.03), transparent); }
 
-        /* ============================================================
-           等待主视觉 - 炫酷3D浮动
-           ============================================================ */
         .waiting-area {
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            min-height: 300px;
+            min-height: 260px;
             text-align: center;
             position: relative;
             z-index: 1;
         }
 
         .waiting-area .big-icon {
-            font-size: 5rem;
-            margin-bottom: 0.5rem;
+            font-size: 4.5rem;
+            margin-bottom: 0.3rem;
             animation: floatIcon3D 3s ease-in-out infinite;
             filter: drop-shadow(0 0 60px rgba(139, 92, 246, 0.05));
             transform-style: preserve-3d;
@@ -328,12 +271,12 @@
 
         @@keyframes floatIcon3D {
             0%, 100% { transform: translateY(0) rotateY(0deg) scale(1); }
-            25% { transform: translateY(-12px) rotateY(5deg) scale(1.03); }
-            75% { transform: translateY(-12px) rotateY(-5deg) scale(1.03); }
+            25% { transform: translateY(-10px) rotateY(5deg) scale(1.03); }
+            75% { transform: translateY(-10px) rotateY(-5deg) scale(1.03); }
         }
 
         .waiting-area .waiting-title {
-            font-size: 2.2rem;
+            font-size: 2rem;
             font-weight: 900;
             background: linear-gradient(135deg, #8B5CF6, #EC4899, #F59E0B);
             background-size: 300% 300%;
@@ -350,9 +293,9 @@
 
         .waiting-area .waiting-sub {
             color: rgba(255,255,255,0.1);
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             letter-spacing: 0.08em;
-            margin-top: 0.2rem;
+            margin-top: 0.15rem;
             animation: pulseText 2s ease-in-out infinite;
         }
 
@@ -361,22 +304,15 @@
             50% { opacity: 1; }
         }
 
-        /* ============================================================
-           进度环 - 炫酷发光
-           ============================================================ */
         .progress-ring-container {
-            margin: 1.5rem auto;
+            margin: 1rem auto;
             position: relative;
-            width: 140px;
-            height: 140px;
+            width: 120px;
+            height: 120px;
         }
 
         .progress-ring-container svg { transform: rotate(-90deg); }
-        .progress-ring-container .ring-bg {
-            fill: none;
-            stroke: rgba(255,255,255,0.02);
-            stroke-width: 6;
-        }
+        .progress-ring-container .ring-bg { fill: none; stroke: rgba(255,255,255,0.02); stroke-width: 6; }
         .progress-ring-container .ring-fg {
             fill: none;
             stroke: url(#ringGradient);
@@ -393,7 +329,7 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            font-size: 2.2rem;
+            font-size: 2rem;
             font-weight: 800;
             color: #8B5CF6;
             font-family: 'Courier New', monospace;
@@ -405,20 +341,17 @@
             top: 74%;
             left: 50%;
             transform: translateX(-50%);
-            font-size: 0.5rem;
+            font-size: 0.45rem;
             color: rgba(255,255,255,0.04);
             text-transform: uppercase;
             letter-spacing: 0.1em;
             white-space: nowrap;
         }
 
-        /* ============================================================
-           统计行
-           ============================================================ */
         .stats-row {
             display: flex;
-            gap: 2rem;
-            padding: 0.5rem 0;
+            gap: 1.5rem;
+            padding: 0.3rem 0;
             flex-wrap: wrap;
             justify-content: center;
         }
@@ -426,28 +359,24 @@
         .stats-row .stat-item {
             display: flex;
             align-items: center;
-            gap: 0.4rem;
-            font-size: 0.7rem;
+            gap: 0.3rem;
+            font-size: 0.65rem;
             color: rgba(255,255,255,0.08);
         }
 
         .stats-row .stat-item .num {
             font-weight: 700;
-            font-size: 1.1rem;
+            font-size: 1rem;
             color: rgba(255,255,255,0.2);
             font-family: 'Courier New', monospace;
         }
-
         .stats-row .stat-item .num.green { color: #00FF88; }
         .stats-row .stat-item .num.purple { color: #8B5CF6; }
         .stats-row .stat-item .num.gold { color: #F59E0B; }
 
-        /* ============================================================
-           玩家列表 - 炫酷
-           ============================================================ */
         .player-list {
             overflow-y: auto;
-            max-height: 280px;
+            max-height: 250px;
             padding-right: 4px;
         }
 
@@ -458,12 +387,12 @@
         .player-item {
             display: flex;
             align-items: center;
-            gap: 0.6rem;
-            padding: 0.5rem 0.6rem;
+            gap: 0.5rem;
+            padding: 0.4rem 0.5rem;
             border-radius: 12px;
             border: 1px solid rgba(255,255,255,0.02);
             transition: all 0.4s ease;
-            margin-bottom: 4px;
+            margin-bottom: 3px;
             animation: playerEntry 0.5s ease;
         }
 
@@ -472,28 +401,22 @@
             to { opacity: 1; transform: translateX(0) scale(1); }
         }
 
-        .player-item:hover {
-            background: rgba(255,255,255,0.02);
-            border-color: rgba(255,255,255,0.04);
-        }
+        .player-item:hover { background: rgba(255,255,255,0.02); border-color: rgba(255,255,255,0.04); }
 
-        .player-item .avatar { font-size: 1.1rem; width: 30px; text-align: center; flex-shrink: 0; }
-        
+        .player-item .avatar { font-size: 1rem; width: 28px; text-align: center; flex-shrink: 0; }
         .player-item .info { flex: 1; min-width: 0; }
-        
         .player-item .info .name {
             color: rgba(255,255,255,0.3);
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             font-weight: 500;
             display: flex;
             align-items: center;
             gap: 0.3rem;
             flex-wrap: wrap;
         }
-        
         .player-item .info .name .ai-tag {
-            font-size: 0.4rem;
-            padding: 0.05rem 0.5rem;
+            font-size: 0.35rem;
+            padding: 0.05rem 0.4rem;
             border-radius: 20px;
             background: rgba(0, 240, 255, 0.04);
             color: #00F0FF;
@@ -501,138 +424,127 @@
             font-weight: 600;
             animation: aiGlow 2s ease-in-out infinite;
         }
-
-        @@keyframes aiGlow {
-            0%, 100% { opacity: 0.6; }
-            50% { opacity: 1; box-shadow: 0 0 20px rgba(0, 240, 255, 0.02); }
-        }
-        
-        .player-item .info .name .me { color: rgba(139, 92, 246, 0.3); font-size: 0.45rem; margin-left: 4px; }
+        @@keyframes aiGlow { 0%, 100% { opacity: 0.6; } 50% { opacity: 1; box-shadow: 0 0 20px rgba(0, 240, 255, 0.02); } }
+        .player-item .info .name .me { color: rgba(139, 92, 246, 0.3); font-size: 0.4rem; margin-left: 4px; }
 
         .player-item .status {
-            font-size: 0.45rem;
+            font-size: 0.4rem;
             font-weight: 600;
-            padding: 2px 10px;
+            padding: 2px 8px;
             border-radius: 20px;
             white-space: nowrap;
         }
-
         .player-item .status.ready { background: rgba(0,255,136,0.06); color: #00FF88; border: 1px solid rgba(0,255,136,0.03); }
         .player-item .status.waiting { background: rgba(255,255,255,0.02); color: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.02); }
         .player-item .status.host { background: rgba(139, 92, 246, 0.06); color: #8B5CF6; border: 1px solid rgba(139, 92, 246, 0.03); }
         .player-item .status.ai { background: rgba(0, 240, 255, 0.04); color: #00F0FF; border: 1px solid rgba(0, 240, 255, 0.02); }
 
-        /* AI玩家的特殊样式 */
-        .player-item.ai-player {
-            border-color: rgba(0, 240, 255, 0.04);
-            background: rgba(0, 240, 255, 0.01);
-        }
-
-        .player-item.ai-player .avatar {
-            animation: aiAvatarPulse 2s ease-in-out infinite;
-        }
-
-        @@keyframes aiAvatarPulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-        }
+        .player-item.ai-player { border-color: rgba(0, 240, 255, 0.04); background: rgba(0, 240, 255, 0.01); }
+        .player-item.ai-player .avatar { animation: aiAvatarPulse 2s ease-in-out infinite; }
+        @@keyframes aiAvatarPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
 
         .player-empty {
             color: rgba(255,255,255,0.02);
-            font-size: 0.7rem;
+            font-size: 0.65rem;
             text-align: center;
             padding: 1rem 0;
             letter-spacing: 0.06em;
         }
 
-        /* ============================================================
-           底部操作栏
-           ============================================================ */
         .host-actions {
             display: flex;
-            gap: 0.6rem;
+            gap: 0.5rem;
             flex-wrap: wrap;
             align-items: center;
-            padding-top: 0.8rem;
+            padding-top: 0.6rem;
             border-top: 1px solid rgba(255,255,255,0.02);
         }
 
         .btn-primary {
-            padding: 0.6rem 2rem;
+            padding: 0.5rem 1.8rem;
             border: none;
             border-radius: 40px;
             background: linear-gradient(135deg, #8B5CF6, #EC4899);
             color: #fff;
             font-weight: 700;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             cursor: pointer;
             transition: all 0.4s ease;
             font-family: inherit;
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 0.4rem;
             box-shadow: 0 0 40px rgba(139, 92, 246, 0.02);
         }
 
         .btn-primary:hover:not(:disabled) { transform: translateY(-2px) scale(1.02); box-shadow: 0 8px 60px rgba(139, 92, 246, 0.1); }
         .btn-primary:disabled { opacity: 0.2; cursor: not-allowed; transform: none !important; }
 
-        /* ⭐ AI陪玩按钮 - 炫酷发光 */
         .btn-ai {
-            padding: 0.6rem 1.5rem;
+            padding: 0.5rem 1.2rem;
             border: none;
             border-radius: 40px;
             background: linear-gradient(135deg, #00F0FF, #7B61FF);
             color: #fff;
             font-weight: 700;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             cursor: pointer;
             transition: all 0.4s ease;
             font-family: inherit;
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 0.4rem;
             box-shadow: 0 0 40px rgba(0, 240, 255, 0.02);
             animation: aiBtnPulse 2s ease-in-out infinite;
         }
-
-        @@keyframes aiBtnPulse {
-            0%, 100% { box-shadow: 0 0 20px rgba(0, 240, 255, 0.02); }
-            50% { box-shadow: 0 0 40px rgba(0, 240, 255, 0.08); }
-        }
-
-        .btn-ai:hover:not(:disabled) {
-            transform: translateY(-2px) scale(1.02);
-            box-shadow: 0 8px 60px rgba(0, 240, 255, 0.1);
-        }
-
+        @@keyframes aiBtnPulse { 0%, 100% { box-shadow: 0 0 20px rgba(0, 240, 255, 0.02); } 50% { box-shadow: 0 0 40px rgba(0, 240, 255, 0.08); } }
+        .btn-ai:hover:not(:disabled) { transform: translateY(-2px) scale(1.02); box-shadow: 0 8px 60px rgba(0, 240, 255, 0.1); }
         .btn-ai:disabled { opacity: 0.3; cursor: not-allowed; transform: none !important; }
         .btn-ai.active { background: linear-gradient(135deg, #00FF88, #00F0FF); }
 
         .btn-secondary {
-            padding: 0.6rem 1.5rem;
+            padding: 0.5rem 1.2rem;
             border: 1px solid rgba(255,255,255,0.04);
             border-radius: 40px;
             background: rgba(255,255,255,0.02);
             color: rgba(255,255,255,0.15);
             font-weight: 500;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             cursor: pointer;
             transition: all 0.3s ease;
             font-family: inherit;
         }
-
         .btn-secondary:hover { background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.3); }
 
         .host-actions .status-text {
-            font-size: 0.6rem;
+            font-size: 0.55rem;
             color: rgba(255,255,255,0.04);
             margin-left: auto;
         }
 
-        /* ============================================================
-           Toast
-           ============================================================ */
+        .ai-voice-indicator {
+            display: none;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.2rem 0.8rem;
+            border-radius: 40px;
+            background: rgba(0, 240, 255, 0.04);
+            border: 1px solid rgba(0, 240, 255, 0.04);
+            font-size: 0.5rem;
+            color: rgba(0, 240, 255, 0.2);
+            margin-top: 0.3rem;
+        }
+        .ai-voice-indicator.active { display: flex; animation: voicePulse 1s ease-in-out infinite; }
+        @@keyframes voicePulse { 0%, 100% { opacity: 0.6; border-color: rgba(0, 240, 255, 0.04); } 50% { opacity: 1; border-color: rgba(0, 240, 255, 0.08); } }
+        .ai-voice-indicator .dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: #00F0FF;
+            animation: dotPulse 0.8s ease-in-out infinite;
+        }
+        @@keyframes dotPulse { 0%, 100% { opacity: 0.3; transform: scale(1); } 50% { opacity: 1; transform: scale(1.3); } }
+
         .toast-container {
             position: fixed;
             bottom: 20px;
@@ -643,102 +555,57 @@
             gap: 4px;
             align-items: flex-end;
         }
-
         .toast-msg {
-            padding: 6px 18px;
+            padding: 5px 16px;
             border-radius: 40px;
             color: #fff;
             font-weight: 500;
             animation: toastIn 0.4s ease;
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             backdrop-filter: blur(20px);
             background: rgba(10,10,30,0.8);
             border: 1px solid rgba(255,255,255,0.04);
         }
-
         .toast-msg.success { background: rgba(0,255,136,0.08); border-color: rgba(0,255,136,0.04); color: #00FF88; }
         .toast-msg.error { background: rgba(255,0,110,0.08); border-color: rgba(255,0,110,0.04); color: #FF006E; }
         .toast-msg.info { background: rgba(0,240,255,0.06); border-color: rgba(0,240,255,0.04); color: #00F0FF; }
-        .toast-msg.warning { background: rgba(245,158,11,0.06); border-color: rgba(245,158,11,0.04); color: #F59E0B; }
 
-        @@keyframes toastIn {
-            from { opacity: 0; transform: translateY(16px) scale(0.95); }
-            to { opacity: 1; transform: translateY(0) scale(1); }
-        }
+        @@keyframes toastIn { from { opacity: 0; transform: translateY(16px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
 
-        /* ============================================================
-           AI语音识别状态指示器
-           ============================================================ */
-        .ai-voice-indicator {
-            display: none;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.3rem 1rem;
-            border-radius: 40px;
-            background: rgba(0, 240, 255, 0.04);
-            border: 1px solid rgba(0, 240, 255, 0.04);
-            font-size: 0.55rem;
-            color: rgba(0, 240, 255, 0.2);
-        }
-
-        .ai-voice-indicator.active {
-            display: flex;
-            animation: voicePulse 1s ease-in-out infinite;
-        }
-
-        @@keyframes voicePulse {
-            0%, 100% { opacity: 0.6; border-color: rgba(0, 240, 255, 0.04); }
-            50% { opacity: 1; border-color: rgba(0, 240, 255, 0.08); }
-        }
-
-        .ai-voice-indicator .dot {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background: #00F0FF;
-            animation: dotPulse 0.8s ease-in-out infinite;
-        }
-
-        @@keyframes dotPulse {
-            0%, 100% { opacity: 0.3; transform: scale(1); }
-            50% { opacity: 1; transform: scale(1.3); }
-        }
-
-        /* ============================================================
-           响应式
-           ============================================================ */
         @@media (max-width: 768px) {
-            .fullscreen-container { padding: 0.5rem 0.8rem 1rem; }
+            .fullscreen-container { padding: 0.5rem 0.6rem 0.8rem; }
             .header .brand h1 { font-size: 1rem; }
             .header .brand .icon { font-size: 1.4rem; }
-            .header .room-badge { font-size: 0.55rem; padding: 2px 10px; }
+            .header .room-badge { font-size: 0.5rem; padding: 2px 10px; }
             .waiting-area .waiting-title { font-size: 1.4rem; }
-            .waiting-area .big-icon { font-size: 3.5rem; }
-            .progress-ring-container { width: 100px; height: 100px; }
-            .progress-ring-container .center-text { font-size: 1.6rem; }
-            .main-grid { grid-template-columns: 1fr; gap: 12px; }
-            .holo-card { padding: 1rem; }
+            .waiting-area .big-icon { font-size: 3rem; }
+            .progress-ring-container { width: 90px; height: 90px; }
+            .progress-ring-container .center-text { font-size: 1.4rem; }
+            .main-grid { grid-template-columns: 1fr; gap: 10px; }
+            .holo-card { padding: 0.8rem 1rem; }
             .host-actions { flex-direction: column; align-items: stretch; }
             .host-actions .status-text { text-align: center; margin-left: 0; }
             .btn-primary, .btn-ai, .btn-secondary { justify-content: center; }
-            .player-list { max-height: 200px; }
-            .stats-row { gap: 0.8rem; }
+            .player-list { max-height: 180px; }
+            .stats-row { gap: 0.6rem; }
+            .header .status-group { gap: 6px; }
         }
 
         @@media (max-width: 480px) {
             .header .brand h1 { font-size: 0.8rem; }
             .header .brand .icon { font-size: 1.2rem; }
-            .header .room-badge { font-size: 0.45rem; padding: 2px 8px; }
+            .header .room-badge { font-size: 0.4rem; padding: 2px 8px; }
             .waiting-area .waiting-title { font-size: 1.1rem; }
-            .waiting-area .big-icon { font-size: 2.8rem; }
-            .progress-ring-container { width: 80px; height: 80px; }
-            .progress-ring-container .center-text { font-size: 1.2rem; }
-            .player-item { padding: 0.3rem 0.4rem; }
-            .player-item .avatar { font-size: 0.8rem; width: 24px; }
-            .player-item .info .name { font-size: 0.65rem; }
-            .player-item .status { font-size: 0.4rem; padding: 1px 6px; }
-            .btn-primary { font-size: 0.7rem; padding: 0.5rem 1.2rem; }
-            .btn-ai { font-size: 0.65rem; padding: 0.4rem 1rem; }
+            .waiting-area .big-icon { font-size: 2.5rem; }
+            .progress-ring-container { width: 70px; height: 70px; }
+            .progress-ring-container .center-text { font-size: 1.1rem; }
+            .player-item { padding: 0.25rem 0.3rem; }
+            .player-item .avatar { font-size: 0.7rem; width: 20px; }
+            .player-item .info .name { font-size: 0.6rem; }
+            .player-item .status { font-size: 0.35rem; padding: 1px 5px; }
+            .btn-primary { font-size: 0.65rem; padding: 0.4rem 1rem; }
+            .btn-ai { font-size: 0.6rem; padding: 0.35rem 0.8rem; }
+            .btn-secondary { font-size: 0.6rem; padding: 0.35rem 0.8rem; }
         }
     </style>
 </head>
@@ -773,9 +640,8 @@
                     <span class="avatar">@(username?.FirstOrDefault().ToString().ToUpper() ?? "A")</span>
                     <span>@username</span>
                 </span>
-                <span style="font-size:0.6rem;color:rgba(255,255,255,0.04);">
-                    <span class="status-dot" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#00FF88;animation:pulse 2s infinite;margin-right:4px;"></span>
-                    在线
+                <span style="font-size:0.55rem;color:rgba(255,255,255,0.04);">
+                    <span class="status-dot"></span> 在线
                 </span>
             </div>
         </div>
@@ -788,7 +654,7 @@
                 <div class="card-title">
                     📡 匹配状态
                     <span class="accent"></span>
-                    <span class="badge" id="statusBadge" style="font-size:0.5rem;padding:0.1rem 0.6rem;border-radius:20px;background:rgba(139,92,246,0.04);color:rgba(255,255,255,0.1);border:1px solid rgba(139,92,246,0.02);">● 等待玩家</span>
+                    <span class="badge" id="statusBadge" style="font-size:0.45rem;padding:0.1rem 0.5rem;border-radius:20px;background:rgba(139,92,246,0.04);color:rgba(255,255,255,0.1);border:1px solid rgba(139,92,246,0.02);">● 等待玩家</span>
                 </div>
 
                 <div class="big-icon" id="mainIcon">🐺</div>
@@ -797,7 +663,7 @@
 
                 <!-- 进度环 -->
                 <div class="progress-ring-container" id="progressRing">
-                    <svg width="140" height="140" viewBox="0 0 140 140">
+                    <svg width="120" height="120" viewBox="0 0 120 120">
                         <defs>
                             <linearGradient id="ringGradient" x1="0%" y1="0%" x2="100%" y2="100%">
                                 <stop offset="0%" style="stop-color:#8B5CF6" />
@@ -805,8 +671,8 @@
                                 <stop offset="100%" style="stop-color:#F59E0B" />
                             </linearGradient>
                         </defs>
-                        <circle class="ring-bg" cx="70" cy="70" r="50" />
-                        <circle class="ring-fg" id="progressRing" cx="70" cy="70" r="50" />
+                        <circle class="ring-bg" cx="60" cy="60" r="50" />
+                        <circle class="ring-fg" id="progressRing" cx="60" cy="60" r="50" />
                     </svg>
                     <div class="center-text" id="progressText">0</div>
                     <div class="center-label">已准备</div>
@@ -821,14 +687,14 @@
             </div>
 
             <!-- 右侧面板 -->
-            <div class="side-panel" style="display:flex;flex-direction:column;gap:16px;height:100%;">
+            <div class="side-panel" style="display:flex;flex-direction:column;gap:12px;height:100%;">
 
                 <!-- 玩家列表 -->
                 <div class="holo-card" style="flex:1;min-height:0;">
                     <div class="card-title">
                         👥 全息玩家列表
                         <span class="accent"></span>
-                        <span class="badge" id="playerCountBadge" style="font-size:0.5rem;padding:0.1rem 0.6rem;border-radius:20px;background:rgba(139,92,246,0.04);color:rgba(255,255,255,0.1);border:1px solid rgba(139,92,246,0.02);">0 人</span>
+                        <span class="badge" id="playerCountBadge" style="font-size:0.45rem;padding:0.1rem 0.5rem;border-radius:20px;background:rgba(139,92,246,0.04);color:rgba(255,255,255,0.1);border:1px solid rgba(139,92,246,0.02);">0 人</span>
                     </div>
 
                     <div class="player-list" id="playerList">
@@ -1006,26 +872,11 @@
         var aiName = '🤖 AI助手';
         var aiAvatar = '🤖';
         var aiComments = [
-            '我觉得这局很精彩！',
-            '大家加油！',
-            '我已经准备好了！',
-            '狼人别得意！',
-            '好人的胜利就在眼前！',
-            '我支持好人阵营！',
-            '这局游戏太有意思了！',
-            '大家配合得很好！',
-            '我觉得预言家可以出来带队！',
-            '女巫的药要省着用！',
-            '守卫要保护好关键人物！',
-            '猎人是好人的最后防线！',
-            '白痴要保留技能！',
-            '平民要积极参与投票！',
-            '这局狼人很强！',
-            '好人要团结一致！',
-            '我预感这局会赢！',
-            '大家加油！不要放弃！',
-            '我已经看穿了一切！',
-            '这局游戏很精彩！'
+            '我觉得这局很精彩！', '大家加油！', '我已经准备好了！', '狼人别得意！',
+            '好人的胜利就在眼前！', '我支持好人阵营！', '这局游戏太有意思了！', '大家配合得很好！',
+            '我觉得预言家可以出来带队！', '女巫的药要省着用！', '守卫要保护好关键人物！',
+            '猎人是好人的最后防线！', '白痴要保留技能！', '平民要积极参与投票！',
+            '这局狼人很强！', '好人要团结一致！', '我预感这局会赢！', '我已经看穿了一切！'
         ];
 
         function toggleAI() {
@@ -1038,36 +889,20 @@
                 btn.classList.add('active');
                 showToast('🤖 AI陪玩已开启，差人也能玩！', 'success');
                 indicator.classList.add('active');
-
-                // 添加AI玩家到列表
                 addAIPlayer();
-
-                // 启动AI语音识别（只识别不显示）
                 startAIVoiceRecognition();
-
-                // 启动AI自动评论（每30秒一次）
                 startAICommentLoop();
-
             } else {
                 btn.textContent = '🤖 AI陪玩';
                 btn.classList.remove('active');
                 showToast('🤖 AI陪玩已关闭', 'info');
                 indicator.classList.remove('active');
-
-                // 移除AI玩家
                 removeAIPlayer();
-
-                // 停止AI语音识别
                 stopAIVoiceRecognition();
-
-                // 停止AI评论
                 stopAICommentLoop();
             }
         }
 
-        // ============================================================
-        // ⭐ AI玩家管理
-        // ============================================================
         function addAIPlayer() {
             if (!connection || !state.roomId) {
                 showToast('⚠️ 请先创建房间', 'warning');
@@ -1101,16 +936,14 @@
         }
 
         function removeAIPlayer() {
-            if (!aiPlayerId) return;
             // AI玩家由服务端自动移除
         }
 
         // ============================================================
-        // ⭐ AI语音识别（只识别，不显示）
+        // ⭐ AI语音识别
         // ============================================================
         var aiRecognition = null;
         var aiListening = false;
-        var aiTranscript = '';
 
         function startAIVoiceRecognition() {
             try {
@@ -1126,140 +959,81 @@
                 aiRecognition.interimResults = true;
                 aiRecognition.maxAlternatives = 3;
 
-                aiRecognition.onstart = function() {
-                    aiListening = true;
-                    console.log('🎤 AI语音识别已启动');
-                };
-
+                aiRecognition.onstart = function() { aiListening = true; console.log('🎤 AI语音识别已启动'); };
                 aiRecognition.onresult = function(event) {
                     var finalText = '';
                     for (var i = event.resultIndex; i < event.results.length; i++) {
                         var result = event.results[i];
                         var text = result[0].transcript.trim();
-                        if (result.isFinal) {
-                            finalText += text;
-                        }
+                        if (result.isFinal) { finalText += text; }
                     }
-
                     if (finalText) {
-                        aiTranscript = finalText;
                         console.log('🎤 AI听到:', finalText);
-                        // 解析玩家意图，生成AI评论
                         processAIInput(finalText);
                     }
                 };
-
                 aiRecognition.onerror = function(event) {
                     console.log('🎤 AI语音识别错误:', event.error);
                     if (event.error === 'not-allowed') {
                         showToast('⚠️ 请允许麦克风权限', 'warning');
                     }
                 };
-
                 aiRecognition.onend = function() {
                     if (aiEnabled && aiListening) {
-                        setTimeout(function() {
-                            try { aiRecognition.start(); } catch(e) {}
-                        }, 500);
+                        setTimeout(function() { try { aiRecognition.start(); } catch(e) {} }, 500);
                     }
                 };
-
                 aiRecognition.start();
-
-            } catch (e) {
-                console.log('🎤 AI语音识别启动失败:', e);
-            }
+            } catch (e) { console.log('🎤 AI语音识别启动失败:', e); }
         }
 
         function stopAIVoiceRecognition() {
             aiListening = false;
-            if (aiRecognition) {
-                try { aiRecognition.stop(); } catch(e) {}
-            }
+            if (aiRecognition) { try { aiRecognition.stop(); } catch(e) {} }
         }
 
         // ============================================================
-        // ⭐ AI输入处理（生成评论）
+        // ⭐ AI输入处理（发送给DeepSeek AI）
         // ============================================================
         function processAIInput(text) {
-            // 检测关键词生成评论
-            var lowerText = text.toLowerCase();
+            if (!aiEnabled || !aiPlayerId) return;
+            if (!connection || connection.state !== signalR.HubConnectionState.Connected) return;
 
-            var responses = [];
+            // 过滤太短的消息
+            if (text.length < 2) return;
 
-            if (lowerText.includes('狼人') || lowerText.includes('狼')) {
-                responses.push('🐺 狼人确实很强，但好人更团结！');
-                responses.push('🐺 我觉得狼人今晚会刀预言家！');
-            }
-            if (lowerText.includes('预言家') || lowerText.includes('查验')) {
-                responses.push('🔮 预言家昨晚查验了吗？');
-                responses.push('🔮 预言家应该早点出来带队！');
-            }
-            if (lowerText.includes('女巫') || lowerText.includes('解药') || lowerText.includes('毒药')) {
-                responses.push('🧪 女巫的药要省着用！');
-                responses.push('🧪 女巫首夜可以自救！');
-            }
-            if (lowerText.includes('守卫') || lowerText.includes('保护')) {
-                responses.push('🛡️ 守卫要保护好关键人物！');
-                responses.push('🛡️ 守卫不能连续守同一个人！');
-            }
-            if (lowerText.includes('猎人') || lowerText.includes('开枪')) {
-                responses.push('🔫 猎人死后可以开枪！');
-                responses.push('🔫 猎人被毒杀不能开枪！');
-            }
-            if (lowerText.includes('投票') || lowerText.includes('放逐')) {
-                responses.push('🗳️ 投票要认真思考！');
-                responses.push('🗳️ 好人不要投错票！');
-            }
-            if (lowerText.includes('准备') || lowerText.includes('开始')) {
-                responses.push('🎮 我已经准备好了！');
-                responses.push('🎮 开始吧！大家都准备好了！');
-            }
-
-            if (responses.length > 0) {
-                var randomResponse = responses[Math.floor(Math.random() * responses.length)];
-                // 延迟发送评论，模拟思考
-                setTimeout(function() {
-                    sendAIComment(randomResponse);
-                }, 1000 + Math.random() * 2000);
-            }
+            // 发送给服务器，由服务器调用DeepSeek
+            connection.invoke('AISpeak', state.roomId, aiPlayerId, text)
+                .catch(function(err) {
+                    console.log('AI请求失败:', err);
+                });
         }
 
         // ============================================================
-        // ⭐ AI自动评论（每30秒）
+        // ⭐ AI自动评论（备用，当AI没反应时）
         // ============================================================
         var aiCommentInterval = null;
 
         function startAICommentLoop() {
             aiCommentInterval = setInterval(function() {
                 if (!aiEnabled || !connection || !state.roomId) return;
-
-                // 随机选择评论
-                var comment = aiComments[Math.floor(Math.random() * aiComments.length)];
-                sendAIComment(comment);
-
-            }, 25000 + Math.random() * 15000);
+                // 只在AI没有发言时偶尔发一条
+                if (Math.random() > 0.6) {
+                    var comment = aiComments[Math.floor(Math.random() * aiComments.length)];
+                    sendAIComment(comment);
+                }
+            }, 45000 + Math.random() * 20000);
         }
 
         function stopAICommentLoop() {
-            if (aiCommentInterval) {
-                clearInterval(aiCommentInterval);
-                aiCommentInterval = null;
-            }
+            if (aiCommentInterval) { clearInterval(aiCommentInterval);
+                aiCommentInterval = null; }
         }
 
-        // ============================================================
-        // ⭐ 发送AI评论
-        // ============================================================
         function sendAIComment(comment) {
             if (!connection || !state.roomId || !aiPlayerId) return;
-
             connection.invoke('AISpeak', state.roomId, aiPlayerId, comment)
-                .catch(function(err) {
-                    console.log('AI发言失败:', err);
-                });
-
-            // 本地显示
+                .catch(function(err) { console.log('AI发言失败:', err); });
             showToast('🤖 AI: ' + comment, 'info');
         }
 
@@ -1297,8 +1071,6 @@
                         state.isHost = state.seatNumber === 0 || data.isHost === true;
                         showToast('✅ 已加入房间，你是 ' + (state.isHost ? '房主' : state.seatNumber + ' 号'), 'success');
                         updateButtons();
-
-                        // 全屏
                         setTimeout(requestFullscreen, 500);
                     } else if (data && !data.success) {
                         showToast('❌ ' + data.message, 'error');
@@ -1311,10 +1083,8 @@
                 });
 
                 connection.on('AICreated', function(data) {
-                    if (data && data.success) {
-                        aiPlayerId = data.playerId;
-                        showToast('🤖 ' + data.message, 'success');
-                    }
+                    if (data && data.success) { aiPlayerId = data.playerId;
+                        showToast('🤖 ' + data.message, 'success'); }
                 });
 
                 connection.on('AISpeak', function(playerId, nickname, comment) {
@@ -1330,26 +1100,20 @@
                         document.getElementById('mainIcon').textContent = '🃏';
                         document.getElementById('startBtn').disabled = true;
                         document.getElementById('actionStatus').textContent = '● 游戏已开始';
-
                         setTimeout(function() {
                             window.location.href = '/Werewolf/Player?roomId=' + state.roomId;
                         }, 2000);
                     }
                 });
 
-                connection.on('DisplayMessage', function(message) {
-                    showToast('📢 ' + message, 'info');
-                });
-
+                connection.on('DisplayMessage', function(message) { showToast('📢 ' + message, 'info'); });
                 connection.on('VoiceAnnounce', function(message, type) {
                     showToast('🔊 ' + message, type === 'important' ? 'success' : 'info');
                     speak(message, type === 'important');
                 });
-
                 connection.on('GameOver', function(winner) {
                     showToast('🏆 游戏结束！' + (winner === '好人' ? '⭐ 好人胜利！' : '🐺 狼人胜利！'), 'success');
                 });
-
                 connection.on('DisbandTimerUpdate', function(data) {
                     if (data) {
                         document.getElementById('actionStatus').textContent = '⏱ 倒计时：' + data.display;
@@ -1359,7 +1123,6 @@
                         document.getElementById('actionStatus').style.color = '';
                     }
                 });
-
                 connection.on('RoomDisbanded', function(message) {
                     showToast('🏁 ' + message, 'warning');
                     setTimeout(function() { window.location.href = '/Game'; }, 2000);
@@ -1368,7 +1131,7 @@
                 connection.start()
                     .then(function() {
                         console.log('✅ SignalR 已连接');
-                        joinRoom();
+                        joinRoom(0);
 
                         // 心跳
                         setInterval(function() {
@@ -1391,9 +1154,12 @@
         }
 
         // ============================================================
-        // 加入房间
+        // ⭐ 加入房间（带重试机制）
         // ============================================================
-        function joinRoom() {
+        function joinRoom(retryCount) {
+            retryCount = retryCount || 0;
+            var maxRetries = 15;
+
             if (!state.roomId || state.roomId === '') {
                 showToast('⚠️ 房间号无效', 'error');
                 return;
@@ -1401,6 +1167,8 @@
 
             var nickname = '@username' || '管理员';
             var avatar = '👑';
+
+            console.log('📡 尝试加入房间 (第 ' + (retryCount + 1) + ' 次):', state.roomId);
 
             connection.invoke('JoinGame', state.roomId, nickname, avatar, true)
                 .then(function(result) {
@@ -1411,13 +1179,38 @@
                         document.getElementById('actionStatus').textContent = '● 你是房主，等待玩家准备';
                         showToast('✅ 已加入房间，你是房主', 'success');
                         updateButtons();
+                        setTimeout(requestFullscreen, 500);
+
+                        if (aiEnabled && !aiPlayerId) {
+                            setTimeout(function() { addAIPlayer(); }, 1000);
+                        }
                     } else if (result && !result.success) {
-                        showToast('❌ ' + result.message, 'error');
+                        if (result.message && result.message.includes('房间不存在') && retryCount < maxRetries) {
+                            console.log('⏳ 房间尚未创建，等待重试... (' + (retryCount + 1) + '/' + maxRetries + ')');
+                            document.getElementById('actionStatus').textContent = '⏳ 等待房间创建... (' + (retryCount + 1) +
+                                '/' + maxRetries + ')';
+                            setTimeout(function() {
+                                joinRoom(retryCount + 1);
+                            }, 1000 + retryCount * 300);
+                        } else {
+                            showToast('❌ ' + result.message, 'error');
+                            document.getElementById('actionStatus').textContent = '❌ 加入失败: ' + result.message;
+                        }
                     }
                 })
                 .catch(function(err) {
                     console.error('加入房间失败:', err);
-                    showToast('❌ 加入失败: ' + err, 'error');
+                    if (retryCount < maxRetries) {
+                        console.log('⏳ 连接失败，等待重试... (' + (retryCount + 1) + '/' + maxRetries + ')');
+                        document.getElementById('actionStatus').textContent = '⏳ 连接失败，重试中... (' + (retryCount + 1) +
+                            '/' + maxRetries + ')';
+                        setTimeout(function() {
+                            joinRoom(retryCount + 1);
+                        }, 1000 + retryCount * 300);
+                    } else {
+                        showToast('❌ 加入失败: ' + err, 'error');
+                        document.getElementById('actionStatus').textContent = '❌ 加入失败，请刷新重试';
+                    }
                 });
         }
 
@@ -1448,7 +1241,6 @@
                     window.speechSynthesis.getVoices();
                 };
             }
-            // 自动全屏
             setTimeout(requestFullscreen, 1000);
         });
 
@@ -1466,7 +1258,6 @@
             document.getElementById('waitingCount').textContent = waiting;
             document.getElementById('playerCountBadge').textContent = total + ' 人';
 
-            // 进度环
             var circumference = 314.16;
             var progress = total > 0 ? (ready / total) : 0;
             var offset = circumference - (progress * circumference);
@@ -1500,9 +1291,7 @@
                 mainSub.textContent = '✦ 点击"开始游戏" ✦';
                 mainIcon.textContent = '🎉';
                 actionStatus.textContent = '● 准备就绪，可以开始';
-                if (state.isHost) {
-                    startBtn.disabled = false;
-                }
+                if (state.isHost) { startBtn.disabled = false; }
             } else {
                 statusBadge.textContent = '● 等待准备';
                 mainTitle.textContent = '等待 ' + waiting + ' 位玩家准备...';
@@ -1547,14 +1336,9 @@
                 html += '<span class="avatar">' + (p.avatarEmoji || '🧑') + '</span>';
                 html += '<div class="info">';
                 html += '<span class="name">' + p.nickname;
-                if (isAI || isAISelf) {
-                    html += ' <span class="ai-tag">🤖 AI</span>';
-                }
-                if (isSelf) {
-                    html += ' <span class="me">(你)</span>';
-                }
-                html += '</span>';
-                html += '</div>';
+                if (isAI || isAISelf) { html += ' <span class="ai-tag">🤖 AI</span>'; }
+                if (isSelf) { html += ' <span class="me">(你)</span>'; }
+                html += '</span></div>';
                 var statusClass = isHost ? 'host' : (isAI ? 'ai' : (isReady ? 'ready' : 'waiting'));
                 var statusText = isHost ? '👑 房主' : (isAI ? '🤖 AI' : (isReady ? '✅ 已准备' : '⏳ 等待'));
                 html += '<span class="status ' + statusClass + '">' + statusText + '</span>';
@@ -1577,7 +1361,7 @@
         }
 
         // ============================================================
-        // 开始游戏
+        // ⭐ 开始游戏（房主点击后通知所有玩家跳转）
         // ============================================================
         function startGame() {
             if (!connection || !state.roomId) {
@@ -1594,8 +1378,28 @@
             btn.disabled = true;
             btn.textContent = '⏳ 跳转中...';
 
-            window.location.href = '/Werewolf/Host?roomId=' + state.roomId;
+            // ⭐ 通知所有玩家跳转到座位图
+            connection.invoke('StartGameRedirect', state.roomId)
+                .then(function() {
+                    // 房主自己也跳转
+                    window.location.href = '/Werewolf/Host?roomId=' + state.roomId;
+                })
+                .catch(function(err) {
+                    showToast('❌ 开始失败: ' + err, 'error');
+                    btn.disabled = false;
+                    btn.textContent = '🚀 开始游戏';
+                });
         }
+
+        // ============================================================
+        // ⭐ 监听跳转指令
+        // ============================================================
+        connection.on('RedirectToSeat', function(roomId) {
+            showToast('🚀 游戏即将开始，跳转中...', 'success');
+            setTimeout(function() {
+                window.location.href = '/Werewolf/Host?roomId=' + roomId;
+            }, 1000);
+        });
 
         // ============================================================
         // 刷新
