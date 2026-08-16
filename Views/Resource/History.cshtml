@@ -184,14 +184,36 @@
 
         foreach (var item in Model)
         {
-            var statusMap = new Dictionary<string, (string label, string css)> {
-                { "pending", ("⏳ 待处理", "status-pending") },
-                { "processing", ("🔄 处理中", "status-processing") },
-                { "completed", ("✅ 已完成", "status-completed") },
-                { "rejected", ("❌ 已拒绝", "status-rejected") },
-                { "refunded", ("💰 已退款", "status-refunded") }
-            };
-            var status = statusMap.ContainsKey(item.Status) ? statusMap[item.Status] : ("❓ 未知", "status-pending");
+            // ⭐ 修复：使用 if 判断而不是元组
+            var statusLabel = "";
+            var statusCss = "";
+            switch (item.Status)
+            {
+                case "pending":
+                    statusLabel = "⏳ 待处理";
+                    statusCss = "status-pending";
+                    break;
+                case "processing":
+                    statusLabel = "🔄 处理中";
+                    statusCss = "status-processing";
+                    break;
+                case "completed":
+                    statusLabel = "✅ 已完成";
+                    statusCss = "status-completed";
+                    break;
+                case "rejected":
+                    statusLabel = "❌ 已拒绝";
+                    statusCss = "status-rejected";
+                    break;
+                case "refunded":
+                    statusLabel = "💰 已退款";
+                    statusCss = "status-refunded";
+                    break;
+                default:
+                    statusLabel = "❓ 未知";
+                    statusCss = "status-pending";
+                    break;
+            }
 
             <div class="request-item">
                 <div class="info">
@@ -212,7 +234,7 @@
                     </div>
                 </div>
                 <div class="right" style="display:flex;align-items:center;gap:0.5rem;">
-                    <span class="status-badge @status.css">@status.label</span>
+                    <span class="status-badge @statusCss">@statusLabel</span>
                     <a href="/Resource/Detail/@item.Id" class="btn-detail">👁️ 详情</a>
                 </div>
             </div>
