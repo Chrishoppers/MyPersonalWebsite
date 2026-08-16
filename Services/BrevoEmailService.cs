@@ -497,5 +497,88 @@ public async Task SendUserActionNotificationAsync(string toEmail, string usernam
 
     await SendEmailAsync(toEmail, $"【Chris hopper 个人网站】账号{actionName}通知", html);
 }
+        // ============================================================
+// 资源申请邮件
+// ============================================================
+
+public async Task SendResourceRequestNotificationAsync(ResourceRequest request)
+{
+    var adminEmail = "2908685235@qq.com";
+    var subject = $"📦 新资源申请 - {request.PersonName}";
+
+    var html = $@"
+    <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #2a2a3e; border-radius: 16px; background: #0a0a0f; color: #e0e0e0;'>
+        <h2 style='color: #8B5CF6;'>📦 新资源申请</h2>
+        <p>有新的资源申请需要处理：</p>
+        <div style='background: #1a1a2e; padding: 15px; border-radius: 8px; margin: 10px 0; border: 1px solid #2a2a3e;'>
+            <p><strong>👤 申请人：</strong>{request.UserName}</p>
+            <p><strong>📧 邮箱：</strong>{request.UserEmail}</p>
+            <p><strong>📋 联系人：</strong>{request.PersonName}</p>
+            <p><strong>📱 平台：</strong>{request.Platform}</p>
+            <p><strong>📂 资源名称：</strong>{request.ResourceName}</p>
+            <p><strong>🔗 链接：</strong>{request.ResourceUrl}</p>
+            <p><strong>📝 备注：</strong>{request.Description}</p>
+            <p><strong>💰 退款选项：</strong>{(request.RefundOption == "1day_paid" ? "1天内超时退款 (¥2)" : "两周内处理 (免费)")}</p>
+            <p><strong>⏰ 申请时间：</strong>{FormatChinaTime(request.CreatedAt)}</p>
+            <p><strong>🆔 申请ID：</strong>#{request.Id}</p>
+        </div>
+        <a href='https://chris-hopper.org/Admin/ProcessResource/{request.Id}' 
+           style='display: inline-block; padding: 12px 32px; background: #8B5CF6; color: white; text-decoration: none; border-radius: 8px; font-weight: 600;'>
+            🔍 处理申请
+        </a>
+        <hr style='border: none; border-top: 1px solid #2a2a3e;'>
+        <p style='color: #555; font-size: 12px;'>此邮件由系统自动发送，请勿直接回复。</p>
+    </div>";
+
+    await SendEmailAsync(adminEmail, subject, html);
+}
+
+public async Task SendResourceResultEmailAsync(ResourceRequest request)
+{
+    var timestamp = DateTime.Now.ToString("yyyyMMddHHmm");
+    var subject = $"【{request.PersonName}】资源内容-{timestamp}";
+
+    var foundTypes = string.IsNullOrEmpty(request.FoundTypes) ? "无" : request.FoundTypes;
+    var notFoundTypes = string.IsNullOrEmpty(request.NotFoundTypes) ? "无" : request.NotFoundTypes;
+
+    var refundInfo = "";
+    if (request.RefundOption == "1day_paid" && request.Status == "refunded")
+    {
+        refundInfo = "<p style='color: #F59E0B;'>💰 已退款 ¥2.00</p>";
+    }
+    else if (request.RefundOption == "1day_paid" && request.Status == "completed")
+    {
+        refundInfo = "<p style='color: #00FF88;'>✅ 已在1天内处理，无需退款</p>";
+    }
+
+    var html = $@"
+    <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #2a2a3e; border-radius: 16px; background: #0a0a0f; color: #e0e0e0;'>
+        <h2 style='color: #8B5CF6;'>📦 资源处理结果</h2>
+        <p>您好 <strong>{request.UserName}</strong>！</p>
+        <p>您的资源申请已处理完成：</p>
+        
+        <div style='background: #1a1a2e; padding: 15px; border-radius: 8px; margin: 10px 0; border: 1px solid #2a2a3e;'>
+            <p><strong>👤 联系人：</strong>{request.PersonName}</p>
+            <p><strong>📱 平台：</strong>{request.Platform}</p>
+            <p><strong>📂 资源名称：</strong>{request.ResourceName}</p>
+            <p><strong>📊 状态：</strong>{(request.Status == "completed" ? "✅ 已完成" : request.Status == "rejected" ? "❌ 已拒绝" : request.Status == "refunded" ? "💰 已退款" : "⏳ 处理中")}</p>
+            {refundInfo}
+        </div>
+
+        <div style='background: #1a1a2e; padding: 15px; border-radius: 8px; margin: 10px 0; border: 1px solid #2a2a3e;'>
+            <p><strong>✅ 已找到类型：</strong><span style='color: #00FF88;'>{foundTypes}</span></p>
+            <p><strong>❌ 未找到类型：</strong><span style='color: #dc3545;'>{notFoundTypes}</span></p>
+            {(string.IsNullOrEmpty(request.FileUrl) ? "" : $@"<p><strong>📎 资源文件：</strong><a href='https://chris-hopper.org{request.FileUrl}' style='color: #8B5CF6;'>点击下载</a></p>")}
+            {(string.IsNullOrEmpty(request.AdminNote) ? "" : $@"<p><strong>📝 管理员备注：</strong>{request.AdminNote}</p>")}
+        </div>
+
+        <p style='color: #888; font-size: 14px;'>⏰ 处理时间：{FormatChinaTime(request.ProcessedAt ?? DateTime.Now)}</p>
+        
+        <hr style='border: none; border-top: 1px solid #2a2a3e;'>
+        <i style='color: #555; font-size: 12px;'>此邮件为系统发送，请勿回复</i>
+    </div>";
+
+    await SendEmailAsync(request.UserEmail, subject, html);
+}
     }
 }
