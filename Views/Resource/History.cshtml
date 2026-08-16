@@ -1,0 +1,229 @@
+@model List<MyPersonalWebsite.Models.ResourceRequest>
+@{
+    ViewData["Title"] = "📋 我的申请记录";
+}
+
+<style>
+    .history-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 1rem 1.2rem;
+    }
+
+    .history-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .history-header h1 {
+        font-size: 1.8rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, #8B5CF6 0%, #EC4899 50%, #F59E0B 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin: 0;
+    }
+
+    .btn-back {
+        padding: 0.4rem 1.2rem;
+        border: 1px solid rgba(255,255,255,0.04);
+        border-radius: 40px;
+        background: rgba(255,255,255,0.02);
+        color: rgba(255,255,255,0.3);
+        text-decoration: none;
+        font-size: 0.8rem;
+        transition: all 0.3s ease;
+    }
+
+    .btn-back:hover {
+        background: rgba(255,255,255,0.04);
+        color: #fff;
+    }
+
+    .request-item {
+        background: rgba(255,255,255,0.02);
+        border: 1px solid rgba(255,255,255,0.04);
+        border-radius: 16px;
+        padding: 1rem 1.2rem;
+        margin-bottom: 0.8rem;
+        transition: all 0.3s ease;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .request-item:hover {
+        background: rgba(255,255,255,0.04);
+        border-color: rgba(255,255,255,0.06);
+    }
+
+    .request-item .info .id {
+        color: rgba(255,255,255,0.1);
+        font-size: 0.65rem;
+        font-family: 'Courier New', monospace;
+    }
+
+    .request-item .info .name {
+        font-weight: 600;
+        color: #fff;
+        font-size: 0.95rem;
+    }
+
+    .request-item .info .meta {
+        color: rgba(255,255,255,0.2);
+        font-size: 0.7rem;
+        margin-top: 0.1rem;
+    }
+
+    .request-item .info .meta span {
+        margin-right: 0.8rem;
+    }
+
+    .status-badge {
+        padding: 0.15rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.65rem;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .status-pending {
+        background: rgba(255,193,7,0.06);
+        color: #ffc107;
+        border: 1px solid rgba(255,193,7,0.04);
+    }
+
+    .status-processing {
+        background: rgba(79,172,254,0.06);
+        color: #4facfe;
+        border: 1px solid rgba(79,172,254,0.04);
+    }
+
+    .status-completed {
+        background: rgba(40,167,69,0.06);
+        color: #28a745;
+        border: 1px solid rgba(40,167,69,0.04);
+    }
+
+    .status-rejected {
+        background: rgba(220,53,69,0.06);
+        color: #dc3545;
+        border: 1px solid rgba(220,53,69,0.04);
+    }
+
+    .status-refunded {
+        background: rgba(245,158,11,0.06);
+        color: #F59E0B;
+        border: 1px solid rgba(245,158,11,0.04);
+    }
+
+    .btn-detail {
+        padding: 0.2rem 0.8rem;
+        border: 1px solid rgba(139,92,246,0.06);
+        border-radius: 30px;
+        background: rgba(139,92,246,0.04);
+        color: #8B5CF6;
+        text-decoration: none;
+        font-size: 0.7rem;
+        transition: all 0.3s ease;
+    }
+
+    .btn-detail:hover {
+        background: rgba(139,92,246,0.08);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem 1rem;
+        color: rgba(255,255,255,0.08);
+    }
+
+    .empty-state .icon { font-size: 3rem; margin-bottom: 0.5rem; opacity: 0.3; display: block; }
+
+    .refund-tag {
+        font-size: 0.5rem;
+        padding: 0.05rem 0.5rem;
+        border-radius: 20px;
+        background: rgba(245,158,11,0.04);
+        color: rgba(245,158,11,0.3);
+        border: 1px solid rgba(245,158,11,0.02);
+        margin-left: 0.4rem;
+    }
+
+    @@media (max-width: 640px) {
+        .request-item { flex-direction: column; align-items: stretch; }
+        .request-item .right { display: flex; justify-content: space-between; align-items: center; }
+    }
+</style>
+
+<div class="history-container">
+    <div class="history-header">
+        <h1>📋 我的申请记录</h1>
+        <a href="/Resource/Index" class="btn-back">← 返回资源大厅</a>
+    </div>
+
+    @if (TempData["Warning"] != null)
+    {
+        <div style="padding:0.8rem 1.2rem;border-radius:12px;background:rgba(255,193,7,0.04);border:1px solid rgba(255,193,7,0.06);color:rgba(255,193,7,0.4);font-size:0.85rem;margin-bottom:1rem;">
+            ⚠️ @TempData["Warning"]
+        </div>
+    }
+
+    @if (Model != null && Model.Any())
+    {
+        <div style="color:rgba(255,255,255,0.06);font-size:0.7rem;margin-bottom:0.8rem;">
+            显示最近15天内的申请记录（共 @Model.Count 条）
+        </div>
+
+        foreach (var item in Model)
+        {
+            var statusMap = new Dictionary<string, (string label, string css)> {
+                { "pending", ("⏳ 待处理", "status-pending") },
+                { "processing", ("🔄 处理中", "status-processing") },
+                { "completed", ("✅ 已完成", "status-completed") },
+                { "rejected", ("❌ 已拒绝", "status-rejected") },
+                { "refunded", ("💰 已退款", "status-refunded") }
+            };
+            var status = statusMap.ContainsKey(item.Status) ? statusMap[item.Status] : ("❓ 未知", "status-pending");
+
+            <div class="request-item">
+                <div class="info">
+                    <div class="id">#@item.Id</div>
+                    <div class="name">@item.ResourceName</div>
+                    <div class="meta">
+                        <span>📱 @item.Platform</span>
+                        <span>📂 @item.ResourceType</span>
+                        <span>⏰ @item.CreatedAt.ToString("yyyy-MM-dd HH:mm")</span>
+                        @if (item.RefundOption == "1day_paid")
+                        {
+                            <span class="refund-tag">💰 1天退款</span>
+                        }
+                        else
+                        {
+                            <span class="refund-tag" style="color:rgba(0,255,136,0.2);border-color:rgba(0,255,136,0.02);">📅 两周免费</span>
+                        }
+                    </div>
+                </div>
+                <div class="right" style="display:flex;align-items:center;gap:0.5rem;">
+                    <span class="status-badge @status.css">@status.label</span>
+                    <a href="/Resource/Detail/@item.Id" class="btn-detail">👁️ 详情</a>
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="empty-state">
+            <span class="icon">📭</span>
+            <p>暂无申请记录</p>
+            <a href="/Resource/Submit" style="color:rgba(139,92,246,0.3);text-decoration:none;font-size:0.8rem;">📤 提交第一个资源申请</a>
+        </div>
+    }
+</div>
