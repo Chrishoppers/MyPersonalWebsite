@@ -1,0 +1,140 @@
+@{
+    ViewData["Title"] = "📦 资源大厅";
+    var user = ViewBag.User as MyPersonalWebsite.Models.User;
+}
+
+<style>
+    .resource-hall {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 2rem 1.2rem;
+        text-align: center;
+    }
+
+    .resource-hall .icon {
+        font-size: 4rem;
+        margin-bottom: 0.5rem;
+        animation: floatIcon 3s ease-in-out infinite;
+    }
+
+    @@keyframes floatIcon {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-10px); }
+    }
+
+    .resource-hall h1 {
+        font-size: 2.5rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, #8B5CF6 0%, #EC4899 50%, #F59E0B 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 0.3rem;
+    }
+
+    .resource-hall .subtitle {
+        color: rgba(255,255,255,0.3);
+        font-size: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .resource-hall .user-info {
+        background: rgba(255,255,255,0.02);
+        border-radius: 16px;
+        padding: 1rem 1.5rem;
+        border: 1px solid rgba(255,255,255,0.04);
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .resource-hall .user-info .greeting {
+        color: rgba(255,255,255,0.3);
+        font-size: 0.9rem;
+    }
+
+    .resource-hall .user-info .greeting strong {
+        color: #fff;
+    }
+
+    .resource-hall .user-info .badge {
+        padding: 0.2rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.65rem;
+        font-weight: 600;
+        background: rgba(0, 240, 255, 0.04);
+        color: #00F0FF;
+        border: 1px solid rgba(0, 240, 255, 0.04);
+    }
+
+    .resource-hall .cards {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        margin-top: 1.5rem;
+    }
+
+    .resource-hall .card {
+        background: rgba(255,255,255,0.02);
+        border: 1px solid rgba(255,255,255,0.04);
+        border-radius: 20px;
+        padding: 1.8rem 1.2rem;
+        text-decoration: none;
+        color: inherit;
+        transition: all 0.3s ease;
+        display: block;
+    }
+
+    .resource-hall .card:hover {
+        background: rgba(255,255,255,0.04);
+        transform: translateY(-4px);
+        border-color: rgba(139,92,246,0.08);
+    }
+
+    .resource-hall .card .card-icon { font-size: 2.5rem; display: block; margin-bottom: 0.3rem; }
+    .resource-hall .card .card-title { font-size: 1rem; font-weight: 700; color: #fff; }
+    .resource-hall .card .card-desc { font-size: 0.75rem; color: rgba(255,255,255,0.2); margin-top: 0.1rem; }
+
+    .resource-hall .footer {
+        margin-top: 2rem;
+        color: rgba(255,255,255,0.04);
+        font-size: 0.65rem;
+    }
+
+    @@media (max-width: 640px) {
+        .resource-hall .cards { grid-template-columns: 1fr; }
+        .resource-hall h1 { font-size: 1.8rem; }
+        .resource-hall .icon { font-size: 3rem; }
+    }
+</style>
+
+<div class="resource-hall">
+    <div class="icon">📦</div>
+    <h1>资源大厅</h1>
+    <p class="subtitle">提交资源需求 · 查看处理进度</p>
+
+    <div class="user-info">
+        <div class="greeting">👋 欢迎，<strong>@user?.Username</strong></div>
+        <span class="badge">✅ 已验证</span>
+    </div>
+
+    <div class="cards">
+        <a href="/Resource/Submit" class="card">
+            <span class="card-icon">📤</span>
+            <div class="card-title">提交资源申请</div>
+            <div class="card-desc">填写资源需求，管理员会尽快处理</div>
+        </a>
+        <a href="/Resource/History" class="card">
+            <span class="card-icon">📋</span>
+            <div class="card-title">我的申请记录</div>
+            <div class="card-desc">查看15天内的提交详情与进度</div>
+        </a>
+    </div>
+
+    <div class="footer">
+        所有操作完全免费 · 无任何私密信息
+    </div>
+</div>
