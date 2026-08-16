@@ -1927,7 +1927,7 @@ namespace MyPersonalWebsite.Controllers
 
             return Json(new { success = true, users = brief });
         }
-        // ============================================================
+       // ============================================================
 // 资源管理（管理员）
 // ============================================================
 
@@ -1972,50 +1972,36 @@ public async Task<IActionResult> ProcessResource(ResourceRequest request, IFormF
     var existing = await _dataSync.GetResourceRequestByIdAsync(request.Id);
     if (existing == null) return NotFound();
 
-    // 处理文件上传
-    string? fileUrl = null;
+    byte[]? attachmentData = null;
+    string? attachmentName = null;
+
+    // ⭐ 读取文件到内存（作为邮件附件）
     if (resourceFile != null && resourceFile.Length > 0)
     {
-        var allowedTypes = new[] { "application/zip", "application/x-rar-compressed", "application/x-7z-compressed", "application/pdf", "image/jpeg", "image/png", "application/octet-stream" };
-        if (!allowedTypes.Contains(resourceFile.ContentType) && !resourceFile.FileName.EndsWith(".zip") && !resourceFile.FileName.EndsWith(".rar") && !resourceFile.FileName.EndsWith(".7z"))
-        {
-            TempData["Error"] = "不支持的文件格式，请上传 ZIP、RAR、7Z、PDF 或图片文件";
-            return RedirectToAction("ProcessResource", new { id = request.Id });
-        }
+        using var memoryStream = new MemoryStream();
+        await resourceFile.CopyToAsync(memoryStream);
+        attachmentData = memoryStream.ToArray();
+        attachmentName = resourceFile.FileName;
 
-        if (resourceFile.Length > 100 * 1024 * 1024)
-        {
-            TempData["Error"] = "文件大小不能超过 100MB";
-            return RedirectToAction("ProcessResource", new { id = request.Id });
-        }
-
-        var fileName = $"{Guid.NewGuid():N}_{resourceFile.FileName}";
-        var uploadPath = Path.Combine("wwwroot", "uploads", "resources");
-        if (!Directory.Exists(uploadPath)) Directory.CreateDirectory(uploadPath);
-
-        var filePath = Path.Combine(uploadPath, fileName);
-        using (var stream = new FileStream(filePath, FileMode.Create))
-        {
-            await resourceFile.CopyToAsync(stream);
-        }
-        fileUrl = $"/uploads/resources/{fileName}";
+        Console.WriteLine($"📎 附件已读取: {attachmentName} ({attachmentData.Length} bytes)");
     }
 
     // 更新状态
     existing.Status = request.Status;
     existing.FoundTypes = request.FoundTypes ?? "";
     existing.NotFoundTypes = request.NotFoundTypes ?? "";
-    existing.FileUrl = fileUrl ?? existing.FileUrl;
     existing.AdminNote = request.AdminNote ?? "";
     existing.AdminName = HttpContext.Session.GetString("Username") ?? "管理员";
     existing.ProcessedAt = DateTime.Now;
 
     await _dataSync.UpdateResourceRequestAsync(existing);
 
-    // 发送邮件通知用户
-    await _emailService.SendResourceResultEmailAsync(existing);
+    // ⭐ 发送带附件的邮件给用户
+    await _emailService.SendResourceResultEmailAsync(existing, attachmentData, attachmentName);
 
-    TempData["Success"] = "✅ 资源已处理，邮件已发送给用户";
+    // ⭐ 附件数据发送后自动释放（不需要手动删除任何文件）
+
+    TempData["Success"] = "✅ 资源已处理，邮件（含附件）已发送给用户";
     return RedirectToAction("ResourceManagement");
 }
 
