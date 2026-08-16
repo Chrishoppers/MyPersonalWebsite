@@ -104,6 +104,8 @@ builder.Services.AddScoped<TrainService>();
 builder.Services.AddScoped<ReCaptchaService>();
 builder.Services.AddScoped<EmailRateLimitService>();
 builder.Services.AddScoped<GameAntiCheatService>();
+builder.Services.AddScoped<DeepSeekService>();
+builder.Services.AddHttpClient<DeepSeekService>();
 
 builder.Services.AddHttpClient<TrainService>();
 builder.Services.AddHttpClient<ReCaptchaService>();
