@@ -326,10 +326,26 @@
                 <div class="form-group">
                     <label>状态 <span style="color:#dc3545;">*</span></label>
                     <select name="Status" required>
-                        <option value="processing" @(Model.Status == "processing" ? "selected" : "")>🔄 处理中</option>
-                        <option value="completed" @(Model.Status == "completed" ? "selected" : "")>✅ 已完成</option>
-                        <option value="rejected" @(Model.Status == "rejected" ? "selected" : "")>❌ 已拒绝</option>
-                        <option value="refunded" @(Model.Status == "refunded" ? "selected" : "")>💰 已退款</option>
+                        @{
+                            var statusList = new[]
+                            {
+                                new { Value = "processing", Label = "🔄 处理中" },
+                                new { Value = "completed", Label = "✅ 已完成" },
+                                new { Value = "rejected", Label = "❌ 已拒绝" },
+                                new { Value = "refunded", Label = "💰 已退款" }
+                            };
+                        }
+                        @foreach (var status in statusList)
+                        {
+                            if (Model.Status == status.Value)
+                            {
+                                <option value="@status.Value" selected>@status.Label</option>
+                            }
+                            else
+                            {
+                                <option value="@status.Value">@status.Label</option>
+                            }
+                        }
                     </select>
                 </div>
             </div>
@@ -345,24 +361,19 @@
                 </div>
             </div>
 
+            <!-- 文件上传 -->
             <div class="form-group">
                 <label>📎 上传资源文件</label>
                 <div class="file-upload-area" onclick="document.getElementById('fileInput').click()">
                     <span class="icon">📤</span>
-                    <div class="text">点击上传资源文件</div>
-                    <div class="hint">支持 ZIP, RAR, 7Z, PDF, 图片 · 最大 100MB</div>
+                    <div class="text">点击上传文件</div>
+                    <div class="hint">任意类型 · 不限制大小 · 将作为邮件附件直接发送</div>
                 </div>
-                <input type="file" id="fileInput" name="resourceFile" accept=".zip,.rar,.7z,.pdf,image/*" style="display:none;" />
-                <div id="filePreview" style="display:none;" class="file-preview">
+                <input type="file" id="fileInput" name="resourceFile" style="display:none;" />
+                <div id="filePreview" style="display:none; margin-top: 0.5rem; padding: 0.5rem 1rem; border-radius: 12px; background: rgba(40,167,69,0.04); border: 1px solid rgba(40,167,69,0.04); color: rgba(40,167,69,0.3); font-size: 0.8rem; display:flex; align-items:center; gap:0.5rem;">
                     📎 <span id="fileName"></span>
                     <button type="button" onclick="clearFile()" style="background:none;border:none;color:rgba(255,255,255,0.1);cursor:pointer;margin-left:auto;">✕</button>
                 </div>
-                @if (!string.IsNullOrEmpty(Model.FileUrl))
-                {
-                    <div class="file-preview" style="background:rgba(40,167,69,0.02);border-color:rgba(40,167,69,0.02);color:rgba(40,167,69,0.2);margin-top:0.3rem;">
-                        📎 当前文件：<a href="@Model.FileUrl" target="_blank" style="color:#8B5CF6;">查看</a>
-                    </div>
-                }
             </div>
 
             <div class="form-group">
@@ -386,7 +397,6 @@
 </div>
 
 <script>
-    // 文件选择预览
     document.getElementById('fileInput').addEventListener('change', function(e) {
         var file = this.files[0];
         if (file) {
@@ -395,4 +405,8 @@
         }
     });
 
-    function clearFile
+    function clearFile() {
+        document.getElementById('fileInput').value = '';
+        document.getElementById('filePreview').style.display = 'none';
+    }
+</script>
