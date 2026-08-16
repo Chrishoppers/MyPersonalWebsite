@@ -1815,6 +1815,201 @@ private List<GameAnswerLog> ParseGameAnswerLogs(string json)
     }
     return list;
 }
+        // ============================================================
+// 资源申请相关
+// ============================================================
+
+public async Task AddResourceRequestAsync(ResourceRequest request)
+{
+    if (!_tursoAvailable) return;
+
+    var maxIdResult = await _tursoService.QueryAsync("SELECT MAX(Id) as MaxId FROM ResourceRequests");
+    var maxId = ParseMaxId(maxIdResult);
+    request.Id = maxId + 1;
+
+    var sql = $@"INSERT INTO ResourceRequests (
+        Id, UserId, UserName, UserEmail, PersonName, Platform, ResourceType,
+        ResourceName, ResourceUrl, Description, RefundOption, RefundAmount,
+        RefundDeadline, Status, CreatedAt, FoundTypes, NotFoundTypes,
+        FileUrl, AdminNote, AdminName, IpAddress, UserAgent
+    ) VALUES (
+        {request.Id}, {request.UserId}, '{EscapeSql(request.UserName)}',
+        '{EscapeSql(request.UserEmail)}', '{EscapeSql(request.PersonName)}',
+        '{EscapeSql(request.Platform)}', '{EscapeSql(request.ResourceType)}',
+        '{EscapeSql(request.ResourceName)}', '{EscapeSql(request.ResourceUrl)}',
+        '{EscapeSql(request.Description)}', '{request.RefundOption}',
+        {request.RefundAmount}, {(request.RefundDeadline.HasValue ? $"'{request.RefundDeadline.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")}',
+        '{request.Status}', '{request.CreatedAt:yyyy-MM-dd HH:mm:ss}',
+        '{EscapeSql(request.FoundTypes)}', '{EscapeSql(request.NotFoundTypes)}',
+        '{EscapeSql(request.FileUrl)}', '{EscapeSql(request.AdminNote)}',
+        '{EscapeSql(request.AdminName)}', '{EscapeSql(request.IpAddress)}',
+        '{EscapeSql(request.UserAgent)}'
+    )";
+
+    await _tursoService.ExecuteSqlAsync(sql);
+}
+
+public async Task<ResourceRequest?> GetResourceRequestByIdAsync(int id)
+{
+    if (!_tursoAvailable) return null;
+
+    var result = await _tursoService.QueryAsync($"SELECT * FROM ResourceRequests WHERE Id = {id}");
+    return ParseResourceRequest(result);
+}
+
+public async Task<List<ResourceRequest>> GetResourceRequestsByUserIdAsync(int userId)
+{
+    if (!_tursoAvailable) return new List<ResourceRequest>();
+
+    var result = await _tursoService.QueryAsync($"SELECT * FROM ResourceRequests WHERE UserId = {userId} ORDER BY CreatedAt DESC");
+    return ParseResourceRequestList(result);
+}
+
+public async Task<List<ResourceRequest>> GetPendingResourceRequestsAsync(int userId)
+{
+    if (!_tursoAvailable) return new List<ResourceRequest>();
+
+    var result = await _tursoService.QueryAsync(
+        $"SELECT * FROM ResourceRequests WHERE UserId = {userId} AND (Status = 'pending' OR Status = 'processing')"
+    );
+    return ParseResourceRequestList(result);
+}
+
+public async Task<List<ResourceRequest>> GetAllResourceRequestsAsync()
+{
+    if (!_tursoAvailable) return new List<ResourceRequest>();
+
+    var result = await _tursoService.QueryAsync(
+        "SELECT * FROM ResourceRequests ORDER BY CreatedAt DESC"
+    );
+    return ParseResourceRequestList(result);
+}
+
+public async Task UpdateResourceRequestAsync(ResourceRequest request)
+{
+    if (!_tursoAvailable) return;
+
+    var sql = $@"UPDATE ResourceRequests SET
+        Status = '{request.Status}',
+        FoundTypes = '{EscapeSql(request.FoundTypes)}',
+        NotFoundTypes = '{EscapeSql(request.NotFoundTypes)}',
+        FileUrl = '{EscapeSql(request.FileUrl)}',
+        AdminNote = '{EscapeSql(request.AdminNote)}',
+        AdminName = '{EscapeSql(request.AdminName)}',
+        ProcessedAt = {(request.ProcessedAt.HasValue ? $"'{request.ProcessedAt.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")}
+    WHERE Id = {request.Id}";
+
+    await _tursoService.ExecuteSqlAsync(sql);
+}
+
+public async Task DeleteResourceRequestAsync(int id)
+{
+    if (!_tursoAvailable) return;
+    await _tursoService.ExecuteSqlAsync($"DELETE FROM ResourceRequests WHERE Id = {id}");
+}
+
+// ============================================================
+// 解析 ResourceRequest
+// ============================================================
+private ResourceRequest? ParseResourceRequest(string json)
+{
+    var list = ParseResourceRequestList(json);
+    return list.FirstOrDefault();
+}
+
+private List<ResourceRequest> ParseResourceRequestList(string json)
+{
+    var list = new List<ResourceRequest>();
+    try
+    {
+        using var doc = JsonDocument.Parse(json);
+        var root = doc.RootElement;
+
+        if (root.TryGetProperty("results", out var results) && results.GetArrayLength() > 0)
+        {
+            var firstResult = results[0];
+            if (firstResult.TryGetProperty("response", out var response) &&
+                response.TryGetProperty("result", out var result))
+            {
+                if (result.TryGetProperty("rows", out var rows) && rows.GetArrayLength() > 0)
+                {
+                    var cols = result.GetProperty("cols");
+
+                    for (int r = 0; r < rows.GetArrayLength(); r++)
+                    {
+                        var row = rows[r];
+                        if (row.ValueKind != JsonValueKind.Array) continue;
+
+                        var req = new ResourceRequest();
+
+                        for (int i = 0; i < cols.GetArrayLength(); i++)
+                        {
+                            var colName = cols[i].GetProperty("name").GetString();
+                            var element = row[i];
+
+                            switch (colName)
+                            {
+                                case "Id": req.Id = GetIntFromRow(element); break;
+                                case "UserId": req.UserId = GetIntFromRow(element); break;
+                                case "UserName": req.UserName = GetStringFromRow(element); break;
+                                case "UserEmail": req.UserEmail = GetStringFromRow(element); break;
+                                case "PersonName": req.PersonName = GetStringFromRow(element); break;
+                                case "Platform": req.Platform = GetStringFromRow(element); break;
+                                case "ResourceType": req.ResourceType = GetStringFromRow(element); break;
+                                case "ResourceName": req.ResourceName = GetStringFromRow(element); break;
+                                case "ResourceUrl": req.ResourceUrl = GetStringFromRow(element); break;
+                                case "Description": req.Description = GetStringFromRow(element); break;
+                                case "RefundOption": req.RefundOption = GetStringFromRow(element); break;
+                                case "RefundAmount": req.RefundAmount = (decimal)GetDoubleFromRow(element); break;
+                                case "RefundDeadline": req.RefundDeadline = GetDateTimeFromRow(element); break;
+                                case "Status": req.Status = GetStringFromRow(element); break;
+                                case "CreatedAt": req.CreatedAt = GetDateTimeFromRow(element) ?? DateTime.Now; break;
+                                case "ProcessedAt": req.ProcessedAt = GetDateTimeFromRow(element); break;
+                                case "FoundTypes": req.FoundTypes = GetStringFromRow(element); break;
+                                case "NotFoundTypes": req.NotFoundTypes = GetStringFromRow(element); break;
+                                case "FileUrl": req.FileUrl = GetStringFromRow(element); break;
+                                case "AdminNote": req.AdminNote = GetStringFromRow(element); break;
+                                case "AdminName": req.AdminName = GetStringFromRow(element); break;
+                            }
+                        }
+                        list.Add(req);
+                    }
+                }
+            }
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"⚠️ 解析 ResourceRequest JSON 失败: {ex.Message}");
+    }
+    return list;
+}
+
+private double GetDoubleFromRow(JsonElement element)
+{
+    try
+    {
+        var val = GetValueFromRow(element);
+        if (val is JsonElement je)
+        {
+            if (je.ValueKind == JsonValueKind.Null) return 0;
+            if (je.ValueKind == JsonValueKind.Number) return je.GetDouble();
+            if (je.ValueKind == JsonValueKind.String)
+            {
+                var str = je.GetString();
+                if (double.TryParse(str, out var result))
+                    return result;
+                return 0;
+            }
+            return 0;
+        }
+        var strVal = val?.ToString();
+        if (double.TryParse(strVal, out var result2))
+            return result2;
+        return 0;
+    }
+    catch { return 0; }
+}
        
     }
 }
