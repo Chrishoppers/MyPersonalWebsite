@@ -89,79 +89,89 @@ namespace MyPersonalWebsite.Controllers
             });
         }
 
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Submit(ResourceRequest request)
-        {
-            var userId = HttpContext.Session.GetInt32("UserId");
-            if (!userId.HasValue)
-            {
-                return RedirectToAction("Login", "Auth");
-            }
+        // Controllers/ResourceController.cs - Submit POST 方法
 
-            var user = await _dataSync.GetUserByIdAsync(userId.Value);
-            if (user == null || user.IsBanned)
-            {
-                TempData["Error"] = "账号不可用";
-                return RedirectToAction("Index", "Home");
-            }
+[HttpPost]
+[ValidateAntiForgeryToken]
+public async Task<IActionResult> Submit(ResourceRequest request)
+{
+    var userId = HttpContext.Session.GetInt32("UserId");
+    if (!userId.HasValue)
+    {
+        return RedirectToAction("Login", "Auth");
+    }
 
-            // 验证
-            if (string.IsNullOrEmpty(request.PersonName) || string.IsNullOrEmpty(request.ResourceName))
-            {
-                ModelState.AddModelError("", "请填写必填项");
-                ViewBag.User = user;
-                ViewBag.UserName = user.Username;
-                ViewBag.UserEmail = user.Email;
-                return View(request);
-            }
+    var user = await _dataSync.GetUserByIdAsync(userId.Value);
+    if (user == null || user.IsBanned)
+    {
+        TempData["Error"] = "账号不可用";
+        return RedirectToAction("Index", "Home");
+    }
 
-            // 检查是否有未处理的事项
-            var pendingRequests = await _dataSync.GetPendingResourceRequestsAsync(userId.Value);
-            if (pendingRequests.Any())
-            {
-                TempData["Error"] = "您有未处理的资源申请，请等待管理员处理";
-                return RedirectToAction("History");
-            }
+    // 验证
+    if (string.IsNullOrEmpty(request.PersonName) || string.IsNullOrEmpty(request.ResourceName))
+    {
+        ModelState.AddModelError("", "请填写必填项");
+        ViewBag.User = user;
+        ViewBag.UserName = user.Username;
+        ViewBag.UserEmail = user.Email;
+        return View(request);
+    }
 
-            // 设置退款选项
-            var now = DateTime.Now;
-            request.RefundOption = string.IsNullOrEmpty(request.RefundOption) ? "2weeks_free" : request.RefundOption;
-            
-            switch (request.RefundOption)
-            {
-                case "1day_paid":
-                    request.RefundAmount = 2.00m;
-                    request.RefundDeadline = now.AddDays(1);
-                    break;
-                case "2weeks_free":
-                    request.RefundAmount = 0;
-                    request.RefundDeadline = now.AddDays(14);
-                    break;
-                default:
-                    request.RefundAmount = 0;
-                    request.RefundDeadline = now.AddDays(14);
-                    request.RefundOption = "2weeks_free";
-                    break;
-            }
+    // 检查是否有未处理的事项
+    var pendingRequests = await _dataSync.GetPendingResourceRequestsAsync(userId.Value);
+    if (pendingRequests.Any())
+    {
+        TempData["Error"] = "您有未处理的资源申请，请等待管理员处理";
+        return RedirectToAction("History");
+    }
 
-            // 保存申请
-            request.UserId = userId.Value;
-            request.UserName = user.Username;
-            request.UserEmail = user.Email;
-            request.Status = "pending";
-            request.CreatedAt = now;
-            request.IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "";
-            request.UserAgent = Request.Headers["User-Agent"].ToString();
+    // 设置退款选项
+    var now = DateTime.Now;
+    request.RefundOption = string.IsNullOrEmpty(request.RefundOption) ? "2weeks_free" : request.RefundOption;
+    
+    switch (request.RefundOption)
+    {
+        case "1day_paid":
+            request.RefundAmount = 2.00m;
+            request.RefundDeadline = now.AddDays(1);
+            break;
+        case "2weeks_free":
+            request.RefundAmount = 0;
+            request.RefundDeadline = now.AddDays(14);
+            break;
+        default:
+            request.RefundAmount = 0;
+            request.RefundDeadline = now.AddDays(14);
+            request.RefundOption = "2weeks_free";
+            break;
+    }
 
-            await _dataSync.AddResourceRequestAsync(request);
+    // 保存申请
+    request.UserId = userId.Value;
+    request.UserName = user.Username;
+    request.UserEmail = user.Email;
+    request.Status = "pending";
+    request.CreatedAt = now;
+    request.IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "";
+    request.UserAgent = Request.Headers["User-Agent"].ToString();
 
-            // 通知管理员
-            await _emailService.SendResourceRequestNotificationAsync(request);
+    await _dataSync.AddResourceRequestAsync(request);
 
-            TempData["Success"] = "✅ 资源申请已提交，请等待管理员处理";
-            return RedirectToAction("History");
-        }
+    // ⭐ 发送通知邮件给管理员（包含申请详情和直达链接）
+    try
+    {
+        await _emailService.SendResourceRequestNotificationAsync(request);
+        Console.WriteLine($"✅ 管理员通知邮件已发送: {request.Id}");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"❌ 管理员通知邮件发送失败: {ex.Message}");
+    }
+
+    TempData["Success"] = "✅ 资源申请已提交，管理员将尽快处理";
+    return RedirectToAction("History");
+}
 
         // ============================================================
         // 3. 查看历史记录（15天内）
