@@ -4,6 +4,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using MyPersonalWebsite.Models;  // ⭐ 添加这一行
 
 namespace MyPersonalWebsite.Services
 {
