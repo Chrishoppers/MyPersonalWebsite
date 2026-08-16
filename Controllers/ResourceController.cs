@@ -49,47 +49,46 @@ namespace MyPersonalWebsite.Controllers
             return View();
         }
 
-        // ============================================================
-        // 2. 提交资源申请
-        // ============================================================
-        [HttpGet]
-        public async Task<IActionResult> Submit()
-        {
-            var userId = HttpContext.Session.GetInt32("UserId");
-            if (!userId.HasValue)
-            {
-                return RedirectToAction("Login", "Auth");
-            }
+       // ============================================================
+// 2. 提交资源申请
+// ============================================================
 
-            var user = await _dataSync.GetUserByIdAsync(userId.Value);
-            if (user == null || user.IsBanned)
-            {
-                TempData["Error"] = user?.IsBanned == true ? "账号已被封禁" : "用户不存在";
-                return RedirectToAction("Index", "Home");
-            }
+[HttpGet]
+public async Task<IActionResult> Submit()
+{
+    var userId = HttpContext.Session.GetInt32("UserId");
+    if (!userId.HasValue)
+    {
+        return RedirectToAction("Login", "Auth");
+    }
 
-            // 检查是否有未处理的事项
-            var pendingRequests = await _dataSync.GetPendingResourceRequestsAsync(userId.Value);
-            if (pendingRequests.Any())
-            {
-                TempData["Warning"] = "您有未处理的资源申请，请等待管理员处理后再提交新的申请";
-                return RedirectToAction("History");
-            }
+    var user = await _dataSync.GetUserByIdAsync(userId.Value);
+    if (user == null || user.IsBanned)
+    {
+        TempData["Error"] = user?.IsBanned == true ? "账号已被封禁" : "用户不存在";
+        return RedirectToAction("Index", "Home");
+    }
 
-            ViewBag.User = user;
-            ViewBag.UserName = user.Username;
-            ViewBag.UserEmail = user.Email;
+    // 检查是否有未处理的事项
+    var pendingRequests = await _dataSync.GetPendingResourceRequestsAsync(userId.Value);
+    if (pendingRequests.Any())
+    {
+        TempData["Warning"] = "您有未处理的资源申请，请等待管理员处理后再提交新的申请";
+        return RedirectToAction("History");
+    }
 
-            return View(new ResourceRequest
-            {
-                UserId = userId.Value,
-                UserName = user.Username,
-                UserEmail = user.Email,
-                RefundOption = "2weeks_free"
-            });
-        }
+    ViewBag.User = user;
+    ViewBag.UserName = user.Username;
+    ViewBag.UserEmail = user.Email;
 
-        // Controllers/ResourceController.cs - Submit POST 方法
+    return View(new ResourceRequest
+    {
+        UserId = userId.Value,
+        UserName = user.Username,
+        UserEmail = user.Email,
+        RefundOption = "2weeks_free"
+    });
+}
 
 [HttpPost]
 [ValidateAntiForgeryToken]
@@ -129,7 +128,7 @@ public async Task<IActionResult> Submit(ResourceRequest request)
     // 设置退款选项
     var now = DateTime.Now;
     request.RefundOption = string.IsNullOrEmpty(request.RefundOption) ? "2weeks_free" : request.RefundOption;
-    
+
     switch (request.RefundOption)
     {
         case "1day_paid":
@@ -158,7 +157,7 @@ public async Task<IActionResult> Submit(ResourceRequest request)
 
     await _dataSync.AddResourceRequestAsync(request);
 
-    // ⭐ 发送通知邮件给管理员（包含申请详情和直达链接）
+    // ⭐ 通知管理员（带直达链接）
     try
     {
         await _emailService.SendResourceRequestNotificationAsync(request);
