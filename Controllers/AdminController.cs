@@ -310,36 +310,46 @@ namespace MyPersonalWebsite.Controllers
         // ============================================================
         // 1. 仪表盘
         // ============================================================
-        public async Task<IActionResult> Dashboard()
-        {
-            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-            if (isAdmin != 1)
-                return RedirectToAction("Login", "Auth");
+       // Controllers/AdminController.cs - Dashboard 方法
 
-            var users = await _dataSync.GetAllUsersAsync();
-            var blogs = await _dataSync.GetBlogsAsync();
-            var messages = await _dataSync.GetMessagesAsync();
-            var contactRequests = await _dataSync.GetContactRequestsAsync();
-            var notifications = await _dataSync.GetAllNotificationsAsync();
+public async Task<IActionResult> Dashboard()
+{
+    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+    if (isAdmin != 1)
+        return RedirectToAction("Login", "Auth");
 
-            ViewBag.UserCount = users.Count(u => !u.IsDeleted);
-            ViewBag.BlogCount = blogs.Count;
-            ViewBag.MessageCount = messages.Count;
-            ViewBag.PendingMessages = messages.Count(m => !m.IsApproved);
-            ViewBag.ContactRequestCount = contactRequests.Count;
-            ViewBag.PendingContactRequests = contactRequests.Count(r => !r.IsUsed && !r.IsApproved);
-            ViewBag.PendingChangesCount = users.Count(u =>
-                !u.IsDeleted && (
-                    !string.IsNullOrEmpty(u.PendingUsername) ||
-                    !string.IsNullOrEmpty(u.PendingEmail) ||
-                    (!u.IsAvatarApproved && !string.IsNullOrEmpty(u.AvatarUrl))
-                ));
-            ViewBag.NotificationCount = notifications.Count;
+    var users = await _dataSync.GetAllUsersAsync();
+    var blogs = await _dataSync.GetBlogsAsync();
+    var messages = await _dataSync.GetMessagesAsync();
+    var contactRequests = await _dataSync.GetContactRequestsAsync();
+    var notifications = await _dataSync.GetAllNotificationsAsync();
+    
+    // ⭐ 新增：资源申请统计
+    var allRequests = await _dataSync.GetAllResourceRequestsAsync();
+    var pendingRequests = allRequests.Where(r => r.Status == "pending" || r.Status == "processing").ToList();
 
-            ViewBag.RecentMessages = messages.OrderByDescending(m => m.CreateTime).Take(5).ToList();
-            ViewBag.RecentContactRequests = contactRequests.OrderByDescending(r => r.RequestTime).Take(5).ToList();
-            return View();
-        }
+    ViewBag.UserCount = users.Count(u => !u.IsDeleted);
+    ViewBag.BlogCount = blogs.Count;
+    ViewBag.MessageCount = messages.Count;
+    ViewBag.PendingMessages = messages.Count(m => !m.IsApproved);
+    ViewBag.ContactRequestCount = contactRequests.Count;
+    ViewBag.PendingContactRequests = contactRequests.Count(r => !r.IsUsed && !r.IsApproved);
+    ViewBag.PendingChangesCount = users.Count(u =>
+        !u.IsDeleted && (
+            !string.IsNullOrEmpty(u.PendingUsername) ||
+            !string.IsNullOrEmpty(u.PendingEmail) ||
+            (!u.IsAvatarApproved && !string.IsNullOrEmpty(u.AvatarUrl))
+        ));
+    ViewBag.NotificationCount = notifications.Count;
+    
+    // ⭐ 新增
+    ViewBag.ResourceTotalCount = allRequests.Count;
+    ViewBag.ResourcePendingCount = pendingRequests.Count;
+
+    ViewBag.RecentMessages = messages.OrderByDescending(m => m.CreateTime).Take(5).ToList();
+    ViewBag.RecentContactRequests = contactRequests.OrderByDescending(r => r.RequestTime).Take(5).ToList();
+    return View();
+}
 
         // ============================================================
         // 2. 博客管理
