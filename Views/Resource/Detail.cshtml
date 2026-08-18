@@ -91,6 +91,7 @@
     .status-completed { background: rgba(40,167,69,0.08); color: #28a745; border: 1px solid rgba(40,167,69,0.04); }
     .status-rejected { background: rgba(220,53,69,0.08); color: #dc3545; border: 1px solid rgba(220,53,69,0.04); }
     .status-refunded { background: rgba(245,158,11,0.08); color: #F59E0B; border: 1px solid rgba(245,158,11,0.04); }
+    .status-paid { background: rgba(40,167,69,0.08); color: #28a745; border: 1px solid rgba(40,167,69,0.04); }
 
     .file-link {
         color: #8B5CF6;
@@ -105,6 +106,28 @@
 
     .file-link:hover {
         background: rgba(139,92,246,0.08);
+    }
+
+    .paid-badge {
+        display: inline-block;
+        padding: 0.15rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        background: rgba(40,167,69,0.1);
+        color: #28a745;
+        border: 1px solid rgba(40,167,69,0.04);
+    }
+
+    .unpaid-badge {
+        display: inline-block;
+        padding: 0.15rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        background: rgba(255,193,7,0.08);
+        color: #ffc107;
+        border: 1px solid rgba(255,193,7,0.04);
     }
 
     @@media (max-width: 640px) {
@@ -122,13 +145,24 @@
     <div class="detail-card">
         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.5rem;">
             <span style="color:rgba(255,255,255,0.1);font-size:0.8rem;">#@Model.Id</span>
-            <span class="status-badge-large @("status-" + Model.Status)">
-                @(Model.Status == "pending" ? "⏳ 待处理" :
-                  Model.Status == "processing" ? "🔄 处理中" :
-                  Model.Status == "completed" ? "✅ 已完成" :
-                  Model.Status == "rejected" ? "❌ 已拒绝" :
-                  Model.Status == "refunded" ? "💰 已退款" : "❓ 未知")
-            </span>
+            <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+                <span class="status-badge-large @("status-" + Model.Status)">
+                    @(Model.Status == "pending" ? "⏳ 待处理" :
+                      Model.Status == "paid" ? "💰 已付款" :
+                      Model.Status == "processing" ? "🔄 处理中" :
+                      Model.Status == "completed" ? "✅ 已完成" :
+                      Model.Status == "rejected" ? "❌ 已拒绝" :
+                      Model.Status == "refunded" ? "💰 已退款" : "❓ 未知")
+                </span>
+                @if (Model.IsPaid)
+                {
+                    <span class="paid-badge">✅ 已支付</span>
+                }
+                else
+                {
+                    <span class="unpaid-badge">⏳ 未支付</span>
+                }
+            </div>
         </div>
 
         <div class="detail-row">
@@ -145,7 +179,24 @@
         </div>
         <div class="detail-row">
             <span class="label">📱 平台</span>
-            <span class="value">@Model.Platform</span>
+            <span class="value">
+                @if (!string.IsNullOrEmpty(Model.Platform1))
+                {
+                    <span>@Model.Platform1</span>
+                    @if (!string.IsNullOrEmpty(Model.Platform2))
+                    {
+                        <span> + @Model.Platform2</span>
+                    }
+                    @if (!string.IsNullOrEmpty(Model.PlatformOther))
+                    {
+                        <span style="color:rgba(255,255,255,0.2);font-size:0.75rem;">（@Model.PlatformOther）</span>
+                    }
+                }
+                else
+                {
+                    <span style="color:rgba(255,255,255,0.2);">未选择</span>
+                }
+            </span>
         </div>
         <div class="detail-row">
             <span class="label">📂 资源类型</span>
@@ -156,30 +207,19 @@
             <span class="value"><strong style="color:#fff;">@Model.ResourceName</strong></span>
         </div>
         <div class="detail-row">
-            <span class="label">🔗 资源链接</span>
-            <span class="value">@(string.IsNullOrEmpty(Model.ResourceUrl) ? "无" : $"<a href='{Model.ResourceUrl}' target='_blank' style='color:#8B5CF6;'>{Model.ResourceUrl}</a>")</span>
-        </div>
-        <div class="detail-row">
             <span class="label">📝 备注</span>
             <span class="value">@(string.IsNullOrEmpty(Model.Description) ? "无" : Model.Description)</span>
         </div>
         <div class="detail-row">
-            <span class="label">💰 退款选项</span>
+            <span class="label">⚙️ 人物设定</span>
+            <span class="value"><span class="highlight">@Model.CharacterSetting</span></span>
+        </div>
+        <div class="detail-row">
+            <span class="label">📊 偏好</span>
             <span class="value">
-                @if (Model.RefundOption == "1day_paid")
-                {
-                    <span style="color:#F59E0B;">⚡ 1天内超时退款 (¥2)</span>
-                }
-                else
-                {
-                    <span style="color:#00FF88;">📅 两周内处理 (免费)</span>
-                }
-                @if (Model.RefundDeadline.HasValue)
-                {
-                    <span style="color:rgba(255,255,255,0.1);font-size:0.7rem;margin-left:0.5rem;">
-                        (截止: @Model.RefundDeadline.Value.ToString("yyyy-MM-dd HH:mm"))
-                    </span>
-                }
+                小说: <span class="highlight">@Model.NovelPreference</span>
+                · 漫画: <span class="highlight">@Model.ComicPreference</span>
+                · 图片: <span class="highlight">@Model.ImagePreference</span>
             </span>
         </div>
         <div class="detail-row">
@@ -195,19 +235,64 @@
             </div>
         }
 
-        @if (!string.IsNullOrEmpty(Model.FoundTypes) || !string.IsNullOrEmpty(Model.NotFoundTypes))
+        <!-- ===== 支付信息 ===== -->
+        <div class="detail-row">
+            <span class="label">💰 支付状态</span>
+            <span class="value">
+                @if (Model.IsPaid)
+                {
+                    <span style="color:#28a745;">✅ 已支付</span>
+                    @if (Model.PaidAt.HasValue)
+                    {
+                        <span style="color:rgba(255,255,255,0.2);font-size:0.75rem;margin-left:0.5rem;">
+                            @Model.PaidAt.Value.ToString("yyyy-MM-dd HH:mm")
+                        </span>
+                    }
+                    if (!string.IsNullOrEmpty(Model.PaidNote))
+                    {
+                        <div style="color:rgba(255,255,255,0.15);font-size:0.7rem;margin-top:0.2rem;">
+                            📝 备注：@Model.PaidNote
+                        </div>
+                    }
+                }
+                else
+                {
+                    <span style="color:#ffc107;">⏳ 未支付</span>
+                    if (!string.IsNullOrEmpty(Model.OrderId))
+                    {
+                        <span style="color:rgba(255,255,255,0.15);font-size:0.75rem;margin-left:0.5rem;">
+                            订单号：<span style="font-family:monospace;">@Model.OrderId</span>
+                        </span>
+                    }
+                }
+            </span>
+        </div>
+
+        <!-- ===== 验证信息 ===== -->
+        @if (!string.IsNullOrEmpty(Model.VerifyPlatform) && !string.IsNullOrEmpty(Model.VerifyAccountId))
         {
             <div class="detail-row">
-                <span class="label">📊 处理结果</span>
+                <span class="label">🔍 验证信息</span>
                 <span class="value">
-                    <div style="margin-top:0.2rem;">
-                        <div>✅ 已找到：<span style="color:#28a745;">@(string.IsNullOrEmpty(Model.FoundTypes) ? "无" : Model.FoundTypes)</span></div>
-                        <div>❌ 未找到：<span style="color:#dc3545;">@(string.IsNullOrEmpty(Model.NotFoundTypes) ? "无" : Model.NotFoundTypes)</span></div>
+                    <div>
+                        <strong style="color:#fff;">@Model.VerifyPlatform</strong>
+                        <span style="color:rgba(255,255,255,0.3);"> - </span>
+                        <span style="color:rgba(255,255,255,0.5);">@Model.VerifyAccountId</span>
+                    </div>
+                    <div style="font-size:0.75rem;color:rgba(255,255,255,0.2);margin-top:0.2rem;">
+                        @(Model.VerifyStatus == "auto_verified" ? "✅ 自动验证通过" :
+                          Model.VerifyStatus == "manual_required" ? "⚠️ 待人工核验" :
+                          Model.VerifyStatus == "rejected" ? "❌ 验证未通过" : "⏳ 未验证")
+                        @if (!string.IsNullOrEmpty(Model.FollowVerifyError))
+                        {
+                            <span style="display:block;color:rgba(255,255,255,0.1);">@Model.FollowVerifyError</span>
+                        }
                     </div>
                 </span>
             </div>
         }
 
+        <!-- ===== 文件 ===== -->
         @if (!string.IsNullOrEmpty(Model.FileUrl))
         {
             <div class="detail-row">
