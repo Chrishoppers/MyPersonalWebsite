@@ -281,6 +281,7 @@ namespace MyPersonalWebsite.Controllers
         public async Task<IActionResult> Login(string username, string password)
         {
             var user = await _dataSync.GetUserByUsernameAsync(username);
+            
             if (user == null)
             {
                 user = await _dataSync.GetUserByEmailAsync(username);
@@ -343,6 +344,13 @@ namespace MyPersonalWebsite.Controllers
             HttpContext.Session.SetString("Username", user.Username);
             HttpContext.Session.SetString("UserEmail", user.Email);
             HttpContext.Session.SetInt32("IsAdmin", user.IsAdmin ? 1 : 0);
+            HttpContext.Session.SetInt32("IsRestricted", user.IsRestricted ? 1 : 0);  // ⭐ 新增
+
+    // ⭐ 如果是受限用户，跳转到资源大厅
+    if (user.IsRestricted)
+    {
+        return RedirectToAction("Index", "Resource");
+    }
 
             if (user.IsAdmin)
             {
