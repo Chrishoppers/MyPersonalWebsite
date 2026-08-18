@@ -1,0 +1,372 @@
+@model MyPersonalWebsite.Models.ResourceRequest
+@{
+    ViewData["Title"] = "💰 支付 - 资源申请";
+    var isWeChat = ViewBag.PaymentMethod == "wechat";
+}
+
+<style>
+    .pay-container {
+        max-width: 560px;
+        margin: 0 auto;
+        padding: 1rem 1.2rem;
+    }
+
+    .pay-card {
+        background: rgba(255,255,255,0.02);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255,255,255,0.04);
+        border-radius: 24px;
+        padding: 2rem;
+        text-align: center;
+    }
+
+    .pay-card .order-id {
+        font-family: 'Courier New', monospace;
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #8B5CF6;
+        background: rgba(139,92,246,0.06);
+        padding: 0.3rem 1rem;
+        border-radius: 8px;
+        display: inline-block;
+        margin: 0.3rem 0;
+        letter-spacing: 2px;
+    }
+
+    .pay-card .amount {
+        font-size: 3.5rem;
+        font-weight: 900;
+        color: #F59E0B;
+        margin: 0.3rem 0;
+    }
+
+    .pay-card .qr-container {
+        background: #fff;
+        border-radius: 16px;
+        padding: 1.5rem;
+        display: inline-block;
+        margin: 1rem auto;
+        border: 2px dashed rgba(0,0,0,0.05);
+    }
+
+    .pay-card .qr-container img {
+        width: 220px;
+        height: 220px;
+        display: block;
+    }
+
+    .pay-card .payment-methods {
+        display: flex;
+        gap: 0.8rem;
+        justify-content: center;
+        margin: 0.8rem 0;
+    }
+
+    .pay-card .payment-methods .method-btn {
+        padding: 0.5rem 1.5rem;
+        border: 2px solid rgba(255,255,255,0.04);
+        border-radius: 40px;
+        background: rgba(255,255,255,0.02);
+        color: rgba(255,255,255,0.3);
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-weight: 600;
+        font-size: 0.9rem;
+        font-family: inherit;
+    }
+
+    .pay-card .payment-methods .method-btn:hover {
+        border-color: rgba(139,92,246,0.1);
+        color: rgba(255,255,255,0.5);
+    }
+
+    .pay-card .payment-methods .method-btn.active {
+        border-color: #8B5CF6;
+        color: #8B5CF6;
+        background: rgba(139,92,246,0.04);
+    }
+
+    .pay-card .info-box {
+        background: rgba(255,193,7,0.04);
+        border: 1px solid rgba(255,193,7,0.06);
+        border-radius: 12px;
+        padding: 0.8rem 1.2rem;
+        margin: 0.8rem 0;
+        text-align: left;
+    }
+
+    .pay-card .info-box .label {
+        color: rgba(255,255,255,0.15);
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        font-weight: 600;
+    }
+
+    .pay-card .info-box .value {
+        color: rgba(255,255,255,0.6);
+        font-size: 0.85rem;
+        margin-top: 0.1rem;
+        word-break: break-all;
+    }
+
+    .pay-card .info-box .value strong {
+        color: #F59E0B;
+    }
+
+    .pay-card .status {
+        margin-top: 0.8rem;
+        padding: 0.8rem;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 1rem;
+    }
+
+    .pay-card .status.waiting {
+        background: rgba(255,193,7,0.06);
+        color: #ffc107;
+        border: 1px solid rgba(255,193,7,0.04);
+    }
+
+    .pay-card .status.paid {
+        background: rgba(40,167,69,0.06);
+        color: #28a745;
+        border: 1px solid rgba(40,167,69,0.04);
+    }
+
+    .btn-check {
+        padding: 0.8rem 2.5rem;
+        border: none;
+        border-radius: 40px;
+        background: linear-gradient(135deg, #8B5CF6, #EC4899);
+        color: #fff;
+        font-weight: 700;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-family: inherit;
+        margin-top: 0.8rem;
+    }
+
+    .btn-check:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 40px rgba(108,60,225,0.2);
+    }
+
+    .btn-check:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .btn-back {
+        display: inline-block;
+        margin-top: 1rem;
+        color: rgba(255,255,255,0.15);
+        text-decoration: none;
+        font-size: 0.8rem;
+        transition: color 0.3s ease;
+    }
+
+    .btn-back:hover {
+        color: rgba(255,255,255,0.3);
+    }
+
+    .copy-btn {
+        background: rgba(139,92,246,0.08);
+        border: none;
+        padding: 0.15rem 0.8rem;
+        border-radius: 20px;
+        color: #8B5CF6;
+        font-size: 0.65rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-family: inherit;
+        margin-left: 0.3rem;
+    }
+
+    .copy-btn:hover {
+        background: rgba(139,92,246,0.15);
+    }
+
+    @@media (max-width: 640px) {
+        .pay-card { padding: 1.2rem; }
+        .pay-card .amount { font-size: 2.5rem; }
+        .pay-card .qr-container img { width: 160px; height: 160px; }
+        .pay-card .payment-methods { flex-wrap: wrap; }
+    }
+</style>
+
+<div class="pay-container">
+    <div class="pay-card">
+
+        <span style="font-size:2.5rem;">💰</span>
+        <h2 style="color:#fff;font-weight:700;margin-bottom:0.1rem;">支付申请费</h2>
+        <p style="color:rgba(255,255,255,0.2);font-size:0.85rem;">支付完成后管理员将处理你的申请</p>
+
+        <div class="amount">¥@Model.Amount.ToString("F2")</div>
+
+        <!-- 订单号 -->
+        <div>
+            <span style="color:rgba(255,255,255,0.15);font-size:0.7rem;">📋 订单号</span>
+            <div>
+                <span class="order-id" id="orderIdDisplay">@Model.OrderId</span>
+                <button class="copy-btn" onclick="copyOrderId()">📋 复制</button>
+            </div>
+        </div>
+
+        <!-- 支付方式切换 -->
+        <div class="payment-methods">
+            <button class="method-btn active" data-method="wechat" onclick="switchMethod('wechat')">
+                💬 微信支付
+            </button>
+            <button class="method-btn" data-method="alipay" onclick="switchMethod('alipay')">
+                📱 支付宝
+            </button>
+        </div>
+
+        <!-- 二维码 -->
+        <div class="qr-container" id="qrContainer">
+            <img id="qrCodeImage" src="/images/payment/wechat_qr.jpg" alt="支付二维码" />
+        </div>
+
+        <p style="color:rgba(255,255,255,0.08);font-size:0.6rem;">
+            💡 扫码支付时请 <strong style="color:#F59E0B;">备注订单号</strong>
+        </p>
+
+        <!-- 支付信息 -->
+        <div class="info-box">
+            <div class="label">📌 支付须知</div>
+            <div class="value">
+                1. 扫码支付 <strong>¥@Model.Amount.ToString("F2")</strong><br />
+                2. 支付时 <strong style="color:#F59E0B;">务必备注订单号</strong><br />
+                3. 支付后等待管理员确认（<strong>24小时内</strong>）<br />
+                4. 确认后你会收到邮件通知
+            </div>
+        </div>
+
+        <!-- 状态 -->
+        <div class="status waiting" id="payStatus">
+            ⏳ 等待支付确认...
+        </div>
+
+        <button class="btn-check" onclick="checkPayment()">🔄 查询支付状态</button>
+
+        <div>
+            <a href="/Resource/History" class="btn-back">← 返回我的申请</a>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    var orderId = '@Model.OrderId';
+    var requestId = @Model.Id;
+    var isPaid = @(Model.IsPaid ? "true" : "false");
+    var checkInterval = null;
+
+    // ============================================================
+    // 切换支付方式
+    // ============================================================
+    function switchMethod(method) {
+        document.querySelectorAll('.method-btn').forEach(function(el) {
+            el.classList.toggle('active', el.dataset.method === method);
+        });
+
+        var img = document.getElementById('qrCodeImage');
+        if (method === 'wechat') {
+            img.src = '/images/payment/wechat_qr.jpg';
+            img.alt = '微信支付二维码';
+        } else {
+            img.src = '/images/payment/alipay_qr.jpg';
+            img.alt = '支付宝支付二维码';
+        }
+    }
+
+    // ============================================================
+    // 复制订单号
+    // ============================================================
+    function copyOrderId() {
+        var text = document.getElementById('orderIdDisplay').textContent;
+        navigator.clipboard.writeText(text).then(function() {
+            var btn = document.querySelector('.copy-btn');
+            btn.textContent = '✅ 已复制';
+            setTimeout(function() {
+                btn.textContent = '📋 复制';
+            }, 2000);
+        }).catch(function() {
+            var input = document.createElement('input');
+            input.value = text;
+            document.body.appendChild(input);
+            input.select();
+            document.execCommand('copy');
+            document.body.removeChild(input);
+            alert('订单号已复制！');
+        });
+    }
+
+    // ============================================================
+    // 查询支付状态
+    // ============================================================
+    function checkPayment() {
+        var btn = document.querySelector('.btn-check');
+        var status = document.getElementById('payStatus');
+
+        if (isPaid) {
+            status.className = 'status paid';
+            status.textContent = '✅ 已支付！管理员将尽快处理';
+            return;
+        }
+
+        btn.disabled = true;
+        btn.textContent = '⏳ 查询中...';
+        status.textContent = '🔍 正在查询...';
+
+        fetch('/Resource/CheckPayment?requestId=' + requestId)
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.paid) {
+                    isPaid = true;
+                    status.className = 'status paid';
+                    status.textContent = '✅ 支付已确认！管理员将尽快处理';
+                    btn.textContent = '✅ 已支付';
+                    if (checkInterval) clearInterval(checkInterval);
+                    setTimeout(function() {
+                        window.location.href = '/Resource/History';
+                    }, 2000);
+                } else {
+                    status.className = 'status waiting';
+                    status.textContent = '⏳ 等待管理员确认支付...\n💡 请确保已备注订单号';
+                    btn.disabled = false;
+                    btn.textContent = '🔄 查询支付状态';
+                }
+            })
+            .catch(function() {
+                status.className = 'status waiting';
+                status.textContent = '⚠️ 查询失败，请重试';
+                btn.disabled = false;
+                btn.textContent = '🔄 查询支付状态';
+            });
+    }
+
+    // 每15秒自动查询一次
+    if (!isPaid) {
+        checkInterval = setInterval(function() {
+            fetch('/Resource/CheckPayment?requestId=' + requestId)
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (data.paid) {
+                        isPaid = true;
+                        var status = document.getElementById('payStatus');
+                        status.className = 'status paid';
+                        status.textContent = '✅ 支付已确认！正在跳转...';
+                        if (checkInterval) clearInterval(checkInterval);
+                        setTimeout(function() {
+                            window.location.href = '/Resource/History';
+                        }, 1500);
+                    }
+                })
+                .catch(function() {});
+        }, 15000);
+    }
+</script>
