@@ -39,6 +39,12 @@ public int VerifyGameMaxCombo { get; set; } = 0;   // 最高连击
         public bool IsStreakEmailEnabled { get; set; } = false;  // 是否开启
     public DateTime? StreakEmailOptInAt { get; set; }        // 开启时间
     public int LastStreakEmailDay { get; set; } = 0;          // 最后发送时的连续天数
+         // ⭐ 新增：是否受限用户（通过二维码注册）
+    public bool IsRestricted { get; set; } = false;
+    
+    // ⭐ 新增：受限原因
+    public string? RestrictionReason { get; set; }
+}
 
         public ICollection<Message>? Messages { get; set; }
     }
