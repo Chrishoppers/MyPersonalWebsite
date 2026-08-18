@@ -74,7 +74,6 @@ namespace MyPersonalWebsite.Controllers
                 return RedirectToAction("Index", "Home");
             }
 
-            // 检查是否有未处理的事项
             var pendingRequests = await _dataSync.GetPendingResourceRequestsAsync(userId.Value);
             if (pendingRequests.Any())
             {
@@ -85,6 +84,7 @@ namespace MyPersonalWebsite.Controllers
             ViewBag.User = user;
             ViewBag.UserName = user.Username;
             ViewBag.UserEmail = user.Email;
+            ViewBag.SupportedPlatforms = _platformVerifyService.GetSupportedPlatforms();
 
             return View(new ResourceRequest
             {
@@ -187,7 +187,39 @@ namespace MyPersonalWebsite.Controllers
             }
 
             // ============================================================
-            // 5. 检查是否有未处理的事项
+            // 5. 验证关注
+            // ============================================================
+            if (!string.IsNullOrEmpty(request.VerifyPlatform) && !string.IsNullOrEmpty(request.VerifyAccountId))
+            {
+                var (isValid, message, displayName, verifyStatus) = await _platformVerifyService.VerifyFollowAsync(
+                    request.VerifyPlatform,
+                    request.VerifyAccountId
+                );
+
+                request.IsFollowVerified = isValid;
+                request.FollowVerifyError = isValid ? null : message;
+                request.FollowVerifiedAt = DateTime.Now;
+                request.VerifyStatus = verifyStatus;
+
+                if (verifyStatus == "rejected")
+                {
+                    ModelState.AddModelError("", message);
+                    ViewBag.User = user;
+                    return View(request);
+                }
+
+                if (verifyStatus == "manual_required")
+                {
+                    TempData["Warning"] = $"⚠️ {message}，管理员将人工核验";
+                }
+                else if (verifyStatus == "auto_verified")
+                {
+                    TempData["Success"] = "✅ 关注验证通过！";
+                }
+            }
+
+            // ============================================================
+            // 6. 检查是否有未处理的事项
             // ============================================================
             var pendingRequests = await _dataSync.GetPendingResourceRequestsAsync(userId.Value);
             if (pendingRequests.Any())
@@ -237,14 +269,15 @@ namespace MyPersonalWebsite.Controllers
                 return Json(new { success = false, message = "平台和账号ID不能为空" });
             }
 
-            var (isValid, message, displayName) = await _platformVerifyService.VerifyFollowAsync(platform, accountId);
+            var (isValid, message, displayName, verifyStatus) = await _platformVerifyService.VerifyFollowAsync(platform, accountId);
 
             return Json(new
             {
                 success = true,
                 isValid = isValid,
                 message = message,
-                displayName = displayName
+                displayName = displayName,
+                verifyStatus = verifyStatus
             });
         }
 
