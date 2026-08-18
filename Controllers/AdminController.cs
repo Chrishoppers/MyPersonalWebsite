@@ -310,50 +310,50 @@ namespace MyPersonalWebsite.Controllers
         // ============================================================
         // 1. 仪表盘
         // ============================================================
-       // Controllers/AdminController.cs - Dashboard 方法
 
-public async Task<IActionResult> Dashboard()
-{
-    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-    if (isAdmin != 1)
-        return RedirectToAction("Login", "Auth");
+        public async Task<IActionResult> Dashboard()
+        {
+            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+            if (isAdmin != 1)
+                return RedirectToAction("Login", "Auth");
 
-    var users = await _dataSync.GetAllUsersAsync();
-    var blogs = await _dataSync.GetBlogsAsync();
-    var messages = await _dataSync.GetMessagesAsync();
-    var contactRequests = await _dataSync.GetContactRequestsAsync();
-    var notifications = await _dataSync.GetAllNotificationsAsync();
-    
-    // ⭐ 新增：资源申请统计
-    var allRequests = await _dataSync.GetAllResourceRequestsAsync();
-    var pendingRequests = allRequests.Where(r => r.Status == "pending" || r.Status == "processing").ToList();
+            var users = await _dataSync.GetAllUsersAsync();
+            var blogs = await _dataSync.GetBlogsAsync();
+            var messages = await _dataSync.GetMessagesAsync();
+            var contactRequests = await _dataSync.GetContactRequestsAsync();
+            var notifications = await _dataSync.GetAllNotificationsAsync();
 
-    ViewBag.UserCount = users.Count(u => !u.IsDeleted);
-    ViewBag.BlogCount = blogs.Count;
-    ViewBag.MessageCount = messages.Count;
-    ViewBag.PendingMessages = messages.Count(m => !m.IsApproved);
-    ViewBag.ContactRequestCount = contactRequests.Count;
-    ViewBag.PendingContactRequests = contactRequests.Count(r => !r.IsUsed && !r.IsApproved);
-    ViewBag.PendingChangesCount = users.Count(u =>
-        !u.IsDeleted && (
-            !string.IsNullOrEmpty(u.PendingUsername) ||
-            !string.IsNullOrEmpty(u.PendingEmail) ||
-            (!u.IsAvatarApproved && !string.IsNullOrEmpty(u.AvatarUrl))
-        ));
-    ViewBag.NotificationCount = notifications.Count;
-    
-    // ⭐ 新增
-    ViewBag.ResourceTotalCount = allRequests.Count;
-    ViewBag.ResourcePendingCount = pendingRequests.Count;
+            // ⭐ 资源申请统计
+            var allRequests = await _dataSync.GetAllResourceRequestsAsync();
+            var pendingRequests = allRequests.Where(r => r.Status == "pending" || r.Status == "processing").ToList();
 
-    ViewBag.RecentMessages = messages.OrderByDescending(m => m.CreateTime).Take(5).ToList();
-    ViewBag.RecentContactRequests = contactRequests.OrderByDescending(r => r.RequestTime).Take(5).ToList();
-    return View();
-}
+            ViewBag.UserCount = users.Count(u => !u.IsDeleted);
+            ViewBag.BlogCount = blogs.Count;
+            ViewBag.MessageCount = messages.Count;
+            ViewBag.PendingMessages = messages.Count(m => !m.IsApproved);
+            ViewBag.ContactRequestCount = contactRequests.Count;
+            ViewBag.PendingContactRequests = contactRequests.Count(r => !r.IsUsed && !r.IsApproved);
+            ViewBag.PendingChangesCount = users.Count(u =>
+                !u.IsDeleted && (
+                    !string.IsNullOrEmpty(u.PendingUsername) ||
+                    !string.IsNullOrEmpty(u.PendingEmail) ||
+                    (!u.IsAvatarApproved && !string.IsNullOrEmpty(u.AvatarUrl))
+                ));
+            ViewBag.NotificationCount = notifications.Count;
+
+            // ⭐ 新增
+            ViewBag.ResourceTotalCount = allRequests.Count;
+            ViewBag.ResourcePendingCount = pendingRequests.Count;
+
+            ViewBag.RecentMessages = messages.OrderByDescending(m => m.CreateTime).Take(5).ToList();
+            ViewBag.RecentContactRequests = contactRequests.OrderByDescending(r => r.RequestTime).Take(5).ToList();
+            return View();
+        }
 
         // ============================================================
         // 2. 博客管理
         // ============================================================
+
         public async Task<IActionResult> Blogs()
         {
             var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
@@ -478,6 +478,7 @@ public async Task<IActionResult> Dashboard()
         // ============================================================
         // 3. 留言管理
         // ============================================================
+
         public async Task<IActionResult> Messages()
         {
             var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
@@ -491,6 +492,7 @@ public async Task<IActionResult> Dashboard()
         // ============================================================
         // 4. 用户管理
         // ============================================================
+
         public async Task<IActionResult> Users()
         {
             var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
@@ -504,6 +506,7 @@ public async Task<IActionResult> Dashboard()
         // ============================================================
         // 5. 授权码管理
         // ============================================================
+
         public async Task<IActionResult> ContactRequests()
         {
             var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
@@ -584,6 +587,7 @@ public async Task<IActionResult> Dashboard()
         // ============================================================
         // 6. 待审核更改
         // ============================================================
+
         public async Task<IActionResult> PendingChanges()
         {
             var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
@@ -655,6 +659,7 @@ public async Task<IActionResult> Dashboard()
         // ============================================================
         // 7. 新用户审核（通过）- 无需登录
         // ============================================================
+
         [HttpGet]
         public async Task<IActionResult> ApproveUser(int userId)
         {
@@ -715,6 +720,7 @@ public async Task<IActionResult> Dashboard()
         // ============================================================
         // 8. 新用户审核（拒绝）- 无需登录
         // ============================================================
+
         [HttpGet]
         public async Task<IActionResult> RejectUser(int userId)
         {
@@ -776,6 +782,7 @@ public async Task<IActionResult> Dashboard()
         // ============================================================
         // 9. 头像审核（通过）- 无需登录
         // ============================================================
+
         [HttpGet]
         public async Task<IActionResult> ApproveAvatar(int userId)
         {
@@ -835,6 +842,7 @@ public async Task<IActionResult> Dashboard()
         // ============================================================
         // 10. 头像审核（拒绝）- 无需登录
         // ============================================================
+
         [HttpGet]
         public async Task<IActionResult> RejectAvatar(int userId)
         {
@@ -885,6 +893,7 @@ public async Task<IActionResult> Dashboard()
         // ============================================================
         // 11. 昵称修改审核（通过）- 无需登录
         // ============================================================
+
         [HttpGet]
         public async Task<IActionResult> ApproveUsername(int userId)
         {
@@ -947,6 +956,7 @@ public async Task<IActionResult> Dashboard()
         // ============================================================
         // 12. 昵称修改审核（拒绝）- 无需登录
         // ============================================================
+
         [HttpGet]
         public async Task<IActionResult> RejectUsername(int userId)
         {
@@ -997,6 +1007,7 @@ public async Task<IActionResult> Dashboard()
         // ============================================================
         // 13. 邮箱修改审核（通过）- 无需登录
         // ============================================================
+
         [HttpGet]
         public async Task<IActionResult> ApproveEmail(int userId)
         {
@@ -1059,6 +1070,7 @@ public async Task<IActionResult> Dashboard()
         // ============================================================
         // 14. 邮箱修改审核（拒绝）- 无需登录
         // ============================================================
+
         [HttpGet]
         public async Task<IActionResult> RejectEmail(int userId)
         {
@@ -1109,6 +1121,7 @@ public async Task<IActionResult> Dashboard()
         // ============================================================
         // 15. 留言审核（通过）- 无需登录
         // ============================================================
+
         [HttpGet]
         public async Task<IActionResult> ApproveMessage(int messageId)
         {
@@ -1166,6 +1179,7 @@ public async Task<IActionResult> Dashboard()
         // ============================================================
         // 16. 留言审核（删除）- 无需登录
         // ============================================================
+
         [HttpGet]
         public async Task<IActionResult> RejectMessage(int messageId)
         {
@@ -1211,6 +1225,7 @@ public async Task<IActionResult> Dashboard()
         // ============================================================
         // 17. 关于我编辑
         // ============================================================
+
         public async Task<IActionResult> About()
         {
             var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
@@ -1278,6 +1293,7 @@ public async Task<IActionResult> Dashboard()
         // ============================================================
         // 18. ⭐ 发送通知给用户（弹窗 + 邮件 + 自动登录）
         // ============================================================
+
         [HttpPost]
         public async Task<IActionResult> SendNotification(int userId, string title, string message, string type)
         {
@@ -1347,6 +1363,7 @@ public async Task<IActionResult> Dashboard()
         // ============================================================
         // 19. 封禁用户
         // ============================================================
+
         [HttpPost]
         public async Task<IActionResult> BanUser(int id, int hours, string reason, string note)
         {
@@ -1385,6 +1402,7 @@ public async Task<IActionResult> Dashboard()
         // ============================================================
         // 20. 解封用户
         // ============================================================
+
         [HttpPost]
         public async Task<IActionResult> UnbanUser(int id)
         {
@@ -1419,6 +1437,7 @@ public async Task<IActionResult> Dashboard()
         // ============================================================
         // 21. 删除用户
         // ============================================================
+
         [HttpPost]
         public async Task<IActionResult> DeleteUser(int id, string reason, string note)
         {
@@ -1457,6 +1476,7 @@ public async Task<IActionResult> Dashboard()
         // ============================================================
         // 22. 激活用户
         // ============================================================
+
         [HttpPost]
         public async Task<IActionResult> ActivateUser(int userId)
         {
@@ -1737,7 +1757,7 @@ public async Task<IActionResult> Dashboard()
                 var candidate = availableQuestions
                     .Where(q => !usedQuestions.Contains(q.Id))
                     .OrderBy(q => q.UseCount)
-                    .ThenBy(q => random.Next())  // 随机排序
+                    .ThenBy(q => random.Next())
                     .FirstOrDefault();
 
                 // 如果所有题目都用完了，重置
@@ -1915,6 +1935,7 @@ public async Task<IActionResult> Dashboard()
         // ============================================================
         // ⭐ 获取所有用户简要信息（用于在线用户列表）
         // ============================================================
+
         [HttpGet]
         public async Task<IActionResult> GetAllUsersBrief()
         {
@@ -1937,93 +1958,121 @@ public async Task<IActionResult> Dashboard()
 
             return Json(new { success = true, users = brief });
         }
-       // ============================================================
-// 资源管理（管理员）
-// ============================================================
 
-[HttpGet]
-public async Task<IActionResult> ResourceManagement()
-{
-    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-    if (isAdmin != 1) return RedirectToAction("Login", "Auth");
+        // ============================================================
+        // ⭐ 资源管理（管理员）
+        // ============================================================
 
-    var allRequests = await _dataSync.GetAllResourceRequestsAsync();
-    var pendingRequests = allRequests.Where(r => r.Status == "pending" || r.Status == "processing").ToList();
-    var processedRequests = allRequests.Where(r => r.Status == "completed" || r.Status == "rejected" || r.Status == "refunded").ToList();
+        [HttpGet]
+        public async Task<IActionResult> ResourceManagement()
+        {
+            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+            if (isAdmin != 1) return RedirectToAction("Login", "Auth");
 
-    ViewBag.PendingCount = pendingRequests.Count;
-    ViewBag.ProcessedCount = processedRequests.Count;
-    ViewBag.TotalCount = allRequests.Count;
-    ViewBag.PendingRequests = pendingRequests;
-    ViewBag.ProcessedRequests = processedRequests.Take(50).ToList();
-    return View();
-}
+            var allRequests = await _dataSync.GetAllResourceRequestsAsync();
+            var pendingRequests = allRequests.Where(r => r.Status == "pending" || r.Status == "processing").ToList();
+            var processedRequests = allRequests.Where(r => r.Status == "completed" || r.Status == "rejected" || r.Status == "refunded").ToList();
 
-[HttpGet]
-public async Task<IActionResult> ProcessResource(int id)
-{
-    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-    if (isAdmin != 1) return RedirectToAction("Login", "Auth");
+            ViewBag.PendingCount = pendingRequests.Count;
+            ViewBag.ProcessedCount = processedRequests.Count;
+            ViewBag.TotalCount = allRequests.Count;
+            ViewBag.PendingRequests = pendingRequests;
+            ViewBag.ProcessedRequests = processedRequests.Take(50).ToList();
+            return View();
+        }
 
-    var request = await _dataSync.GetResourceRequestByIdAsync(id);
-    if (request == null) return NotFound();
+        [HttpGet]
+        public async Task<IActionResult> ProcessResource(int id)
+        {
+            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+            if (isAdmin != 1) return RedirectToAction("Login", "Auth");
 
-    var adminName = HttpContext.Session.GetString("Username") ?? "管理员";
-    ViewBag.AdminName = adminName;
-    return View(request);
-}
+            var request = await _dataSync.GetResourceRequestByIdAsync(id);
+            if (request == null) return NotFound();
 
-[HttpPost]
-public async Task<IActionResult> ProcessResource(ResourceRequest request, IFormFile? resourceFile)
-{
-    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-    if (isAdmin != 1) return RedirectToAction("Login", "Auth");
+            var adminName = HttpContext.Session.GetString("Username") ?? "管理员";
+            ViewBag.AdminName = adminName;
+            return View(request);
+        }
 
-    var existing = await _dataSync.GetResourceRequestByIdAsync(request.Id);
-    if (existing == null) return NotFound();
+        [HttpPost]
+        public async Task<IActionResult> ProcessResource(ResourceRequest request, IFormFile? resourceFile)
+        {
+            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+            if (isAdmin != 1) return RedirectToAction("Login", "Auth");
 
-    byte[]? attachmentData = null;
-    string? attachmentName = null;
+            var existing = await _dataSync.GetResourceRequestByIdAsync(request.Id);
+            if (existing == null) return NotFound();
 
-    // ⭐ 读取文件到内存（作为邮件附件）
-    if (resourceFile != null && resourceFile.Length > 0)
-    {
-        using var memoryStream = new MemoryStream();
-        await resourceFile.CopyToAsync(memoryStream);
-        attachmentData = memoryStream.ToArray();
-        attachmentName = resourceFile.FileName;
+            byte[]? attachmentData = null;
+            string? attachmentName = null;
 
-        Console.WriteLine($"📎 附件已读取: {attachmentName} ({attachmentData.Length} bytes)");
-    }
+            // ⭐ 读取文件到内存（作为邮件附件）
+            if (resourceFile != null && resourceFile.Length > 0)
+            {
+                using var memoryStream = new MemoryStream();
+                await resourceFile.CopyToAsync(memoryStream);
+                attachmentData = memoryStream.ToArray();
+                attachmentName = resourceFile.FileName;
 
-    // 更新状态
-    existing.Status = request.Status;
-    existing.FoundTypes = request.FoundTypes ?? "";
-    existing.NotFoundTypes = request.NotFoundTypes ?? "";
-    existing.AdminNote = request.AdminNote ?? "";
-    existing.AdminName = HttpContext.Session.GetString("Username") ?? "管理员";
-    existing.ProcessedAt = DateTime.Now;
+                Console.WriteLine($"📎 附件已读取: {attachmentName} ({attachmentData.Length} bytes)");
+            }
 
-    await _dataSync.UpdateResourceRequestAsync(existing);
+            // 更新状态
+            existing.Status = request.Status;
+            existing.FoundTypes = request.FoundTypes ?? "";
+            existing.NotFoundTypes = request.NotFoundTypes ?? "";
+            existing.AdminNote = request.AdminNote ?? "";
+            existing.AdminName = HttpContext.Session.GetString("Username") ?? "管理员";
+            existing.ProcessedAt = DateTime.Now;
 
-    // ⭐ 发送带附件的邮件给用户
-    await _emailService.SendResourceResultEmailAsync(existing, attachmentData, attachmentName);
+            await _dataSync.UpdateResourceRequestAsync(existing);
 
-    // ⭐ 附件数据发送后自动释放（不需要手动删除任何文件）
+            // ⭐ 发送带附件的邮件给用户
+            await _emailService.SendResourceResultEmailAsync(existing, attachmentData, attachmentName);
 
-    TempData["Success"] = "✅ 资源已处理，邮件（含附件）已发送给用户";
-    return RedirectToAction("ResourceManagement");
-}
+            // ⭐ 附件数据发送后自动释放（不需要手动删除任何文件）
 
-[HttpPost]
-public async Task<IActionResult> DeleteResourceRequest(int id)
-{
-    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-    if (isAdmin != 1) return Json(new { success = false, message = "权限不足" });
+            TempData["Success"] = "✅ 资源已处理，邮件（含附件）已发送给用户";
+            return RedirectToAction("ResourceManagement");
+        }
 
-    await _dataSync.DeleteResourceRequestAsync(id);
-    return Json(new { success = true, message = "已删除" });
-}
+        [HttpPost]
+        public async Task<IActionResult> DeleteResourceRequest(int id)
+        {
+            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+            if (isAdmin != 1) return Json(new { success = false, message = "权限不足" });
 
+            await _dataSync.DeleteResourceRequestAsync(id);
+            return Json(new { success = true, message = "已删除" });
+        }
+
+        // ⭐ 管理员手动验证关注（AJAX）
+        [HttpPost]
+        public async Task<IActionResult> ManualVerifyFollow(int requestId, bool approved)
+        {
+            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+            if (isAdmin != 1) return Json(new { success = false, message = "权限不足" });
+
+            var request = await _dataSync.GetResourceRequestByIdAsync(requestId);
+            if (request == null) return Json(new { success = false, message = "申请不存在" });
+
+            if (approved)
+            {
+                request.VerifyStatus = "auto_verified";
+                request.IsFollowVerified = true;
+                request.FollowVerifyError = null;
+            }
+            else
+            {
+                request.VerifyStatus = "rejected";
+                request.IsFollowVerified = false;
+                request.FollowVerifyError = "管理员人工核验未通过";
+            }
+
+            await _dataSync.UpdateResourceRequestAsync(request);
+
+            return Json(new { success = true, message = approved ? "✅ 已通过人工核验" : "❌ 已拒绝" });
+        }
     }
 }
