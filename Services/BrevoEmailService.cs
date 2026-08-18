@@ -544,60 +544,61 @@ namespace MyPersonalWebsite.Services
         // ⭐ 13. 资源处理结果 - 带附件发送给用户
         // ============================================================
 
-        public async Task SendResourceResultEmailAsync(ResourceRequest request, byte[]? attachmentData = null, string? attachmentName = null)
-        {
-            var timestamp = DateTime.Now.ToString("yyyyMMddHHmm");
-            var subject = $"【{request.PersonName}】资源内容-{timestamp}";
+        // BrevoEmailService.cs - 资源结果邮件（只保留微信）
 
-            var foundTypes = string.IsNullOrEmpty(request.FoundTypes) ? "无" : request.FoundTypes;
-            var notFoundTypes = string.IsNullOrEmpty(request.NotFoundTypes) ? "无" : request.NotFoundTypes;
+public async Task SendResourceResultEmailAsync(ResourceRequest request, byte[]? attachmentData = null, string? attachmentName = null)
+{
+    var timestamp = DateTime.Now.ToString("yyyyMMddHHmm");
+    var subject = $"【{request.PersonName}】资源内容-{timestamp}";
 
-            var refundInfo = "";
-            if (request.RefundOption == "1day_paid" && request.Status == "refunded")
-            {
-                refundInfo = "<p style='color: #F59E0B;'>💰 已退款 ¥2.00</p>";
-            }
-            else if (request.RefundOption == "1day_paid" && request.Status == "completed")
-            {
-                refundInfo = "<p style='color: #00FF88;'>✅ 已在1天内处理，无需退款</p>";
-            }
+    var foundTypes = string.IsNullOrEmpty(request.FoundTypes) ? "无" : request.FoundTypes;
+    var notFoundTypes = string.IsNullOrEmpty(request.NotFoundTypes) ? "无" : request.NotFoundTypes;
 
-            var attachmentInfo = "";
-            if (!string.IsNullOrEmpty(attachmentName))
-            {
-                attachmentInfo = $"<p style='color: #8B5CF6;'>📎 附件：{attachmentName}</p>";
-            }
+    var refundInfo = "";
+    if (request.RefundOption == "1day_paid" && request.Status == "refunded")
+    {
+        refundInfo = "<p style='color: #F59E0B;'>💰 已退款 ¥2.00</p>";
+    }
+    else if (request.RefundOption == "1day_paid" && request.Status == "completed")
+    {
+        refundInfo = "<p style='color: #00FF88;'>✅ 已在1天内处理，无需退款</p>";
+    }
 
-            var html = $@"
-                <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #2a2a3e; border-radius: 16px; background: #0a0a0f; color: #e0e0e0;'>
-                    <h2 style='color: #8B5CF6;'>📦 资源处理结果</h2>
-                    <p>您好 <strong>{request.UserName}</strong>！</p>
-                    <p>您的资源申请已处理完成：</p>
+    var attachmentInfo = "";
+    if (!string.IsNullOrEmpty(attachmentName))
+    {
+        attachmentInfo = $"<p style='color: #8B5CF6;'>📎 附件：{attachmentName}</p>";
+    }
 
-                    <div style='background: #1a1a2e; padding: 15px; border-radius: 8px; margin: 10px 0; border: 1px solid #2a2a3e;'>
-                        <p><strong>👤 联系人：</strong>{request.PersonName}</p>
-                        <p><strong>📱 平台：</strong>{request.Platform1}{(string.IsNullOrEmpty(request.Platform2) ? "" : " + " + request.Platform2)}</p>
-                        <p><strong>📂 资源名称：</strong>{request.ResourceName}</p>
-                        <p><strong>📊 状态：</strong>{(request.Status == "completed" ? "✅ 已完成" : request.Status == "rejected" ? "❌ 已拒绝" : request.Status == "refunded" ? "💰 已退款" : "⏳ 处理中")}</p>
-                        {refundInfo}
-                    </div>
+    var html = $@"
+    <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #2a2a3e; border-radius: 16px; background: #0a0a0f; color: #e0e0e0;'>
+        <h2 style='color: #8B5CF6;'>📦 资源处理结果</h2>
+        <p>您好 <strong>{request.UserName}</strong>！</p>
+        <p>您的资源申请已处理完成：</p>
 
-                    <div style='background: #1a1a2e; padding: 15px; border-radius: 8px; margin: 10px 0; border: 1px solid #2a2a3e;'>
-                        <p><strong>✅ 已找到类型：</strong><span style='color: #00FF88;'>{foundTypes}</span></p>
-                        <p><strong>❌ 未找到类型：</strong><span style='color: #dc3545;'>{notFoundTypes}</span></p>
-                        {attachmentInfo}
-                        {(string.IsNullOrEmpty(request.AdminNote) ? "" : $@"<p><strong>📝 管理员备注：</strong>{request.AdminNote}</p>")}
-                    </div>
+        <div style='background: #1a1a2e; padding: 15px; border-radius: 8px; margin: 10px 0; border: 1px solid #2a2a3e;'>
+            <p><strong>👤 联系人：</strong>{request.PersonName}</p>
+            <p><strong>📱 平台：</strong>{request.Platform1}{(string.IsNullOrEmpty(request.Platform2) ? "" : " + " + request.Platform2)}</p>
+            <p><strong>📂 资源名称：</strong>{request.ResourceName}</p>
+            <p><strong>📊 状态：</strong>{(request.Status == "completed" ? "✅ 已完成" : request.Status == "rejected" ? "❌ 已拒绝" : request.Status == "refunded" ? "💰 已退款" : "⏳ 处理中")}</p>
+            {refundInfo}
+        </div>
 
-                    <p style='color: #888; font-size: 14px;'>⏰ 处理时间：{FormatChinaTime(request.ProcessedAt ?? DateTime.Now)}</p>
+        <div style='background: #1a1a2e; padding: 15px; border-radius: 8px; margin: 10px 0; border: 1px solid #2a2a3e;'>
+            <p><strong>✅ 已找到类型：</strong><span style='color: #00FF88;'>{foundTypes}</span></p>
+            <p><strong>❌ 未找到类型：</strong><span style='color: #dc3545;'>{notFoundTypes}</span></p>
+            {attachmentInfo}
+            {(string.IsNullOrEmpty(request.AdminNote) ? "" : $@"<p><strong>📝 管理员备注：</strong>{request.AdminNote}</p>")}
+        </div>
 
-                    <hr style='border: none; border-top: 1px solid #2a2a3e;'>
-                    <p style='color: #555; font-size: 12px;'>此邮件为系统发送，请勿回复</p>
-                </div>
-            ";
+        <p style='color: #888; font-size: 14px;'>⏰ 处理时间：{FormatChinaTime(request.ProcessedAt ?? DateTime.Now)}</p>
 
-            await SendEmailWithAttachmentAsync(request.UserEmail, subject, html, attachmentData, attachmentName);
-        }
+        <hr style='border: none; border-top: 1px solid #2a2a3e;'>
+        <p style='color: #555; font-size: 12px;'>此邮件为系统发送，请勿回复</p>
+    </div>";
+
+    await SendEmailWithAttachmentAsync(request.UserEmail, subject, html, attachmentData, attachmentName);
+}
         // BrevoEmailService.cs
 
 /// <summary>
