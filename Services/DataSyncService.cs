@@ -123,124 +123,6 @@ namespace MyPersonalWebsite.Services
             await _tursoService.ExecuteSqlAsync(sql);
             return token;
         }
-        // ============================================================
-// 验证大闯关独立统计（不依赖 User 表字段）
-// ============================================================
-
-public async Task<VerifyGameStat?> GetVerifyGameStatAsync(int userId)
-{
-    if (!_tursoAvailable) return null;
-
-    var result = await _tursoService.QueryAsync(
-        $"SELECT * FROM VerifyGameStats WHERE UserId = {userId}"
-    );
-    return ParseVerifyGameStat(result);
-}
-
-public async Task<List<VerifyGameStat>> GetAllVerifyGameStatsAsync()
-{
-    if (!_tursoAvailable) return new List<VerifyGameStat>();
-
-    var result = await _tursoService.QueryAsync(
-        "SELECT * FROM VerifyGameStats ORDER BY TotalScore DESC"
-    );
-    return ParseVerifyGameStatList(result);
-}
-
-public async Task AddVerifyGameStatAsync(VerifyGameStat stat)
-{
-    if (!_tursoAvailable) return;
-
-    var maxIdResult = await _tursoService.QueryAsync("SELECT MAX(Id) as MaxId FROM VerifyGameStats");
-    var maxId = ParseMaxId(maxIdResult);
-    stat.Id = maxId + 1;
-
-    var sql = $@"INSERT INTO VerifyGameStats (
-        Id, UserId, TotalScore, MaxCombo, MaxLevel, GamesPlayed, UpdatedAt
-    ) VALUES (
-        {stat.Id}, {stat.UserId}, {stat.TotalScore}, {stat.MaxCombo},
-        {stat.MaxLevel}, {stat.GamesPlayed}, '{stat.UpdatedAt:yyyy-MM-dd HH:mm:ss}'
-    )";
-
-    await _tursoService.ExecuteSqlAsync(sql);
-    Console.WriteLine($"✅ 验证大闯关统计已创建: UserId={stat.UserId}, Score={stat.TotalScore}");
-}
-
-public async Task UpdateVerifyGameStatAsync(VerifyGameStat stat)
-{
-    if (!_tursoAvailable) return;
-
-    var sql = $@"UPDATE VerifyGameStats SET
-        TotalScore = {stat.TotalScore},
-        MaxCombo = {stat.MaxCombo},
-        MaxLevel = {stat.MaxLevel},
-        GamesPlayed = {stat.GamesPlayed},
-        UpdatedAt = '{stat.UpdatedAt:yyyy-MM-dd HH:mm:ss}'
-    WHERE UserId = {stat.UserId}";
-
-    await _tursoService.ExecuteSqlAsync(sql);
-    Console.WriteLine($"✅ 验证大闯关统计已更新: UserId={stat.UserId}, Score={stat.TotalScore}");
-}
-
-// 解析方法
-private VerifyGameStat? ParseVerifyGameStat(string json)
-{
-    var list = ParseVerifyGameStatList(json);
-    return list.FirstOrDefault();
-}
-
-private List<VerifyGameStat> ParseVerifyGameStatList(string json)
-{
-    var list = new List<VerifyGameStat>();
-    try
-    {
-        using var doc = JsonDocument.Parse(json);
-        var root = doc.RootElement;
-
-        if (root.TryGetProperty("results", out var results) && results.GetArrayLength() > 0)
-        {
-            var firstResult = results[0];
-            if (firstResult.TryGetProperty("response", out var response) &&
-                response.TryGetProperty("result", out var result))
-            {
-                if (result.TryGetProperty("rows", out var rows) && rows.GetArrayLength() > 0)
-                {
-                    var cols = result.GetProperty("cols");
-
-                    for (int r = 0; r < rows.GetArrayLength(); r++)
-                    {
-                        var row = rows[r];
-                        if (row.ValueKind != JsonValueKind.Array) continue;
-
-                        var stat = new VerifyGameStat();
-                        for (int i = 0; i < cols.GetArrayLength(); i++)
-                        {
-                            var colName = cols[i].GetProperty("name").GetString();
-                            var element = row[i];
-
-                            switch (colName)
-                            {
-                                case "Id": stat.Id = GetIntFromRow(element); break;
-                                case "UserId": stat.UserId = GetIntFromRow(element); break;
-                                case "TotalScore": stat.TotalScore = GetIntFromRow(element); break;
-                                case "MaxCombo": stat.MaxCombo = GetIntFromRow(element); break;
-                                case "MaxLevel": stat.MaxLevel = GetIntFromRow(element); break;
-                                case "GamesPlayed": stat.GamesPlayed = GetIntFromRow(element); break;
-                                case "UpdatedAt": stat.UpdatedAt = GetDateTimeFromRow(element) ?? DateTime.Now; break;
-                            }
-                        }
-                        list.Add(stat);
-                    }
-                }
-            }
-        }
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"⚠️ 解析验证大闯关统计 JSON 失败: {ex.Message}");
-    }
-    return list;
-}
 
         public async Task UpdateUserAsync(User user)
         {
@@ -795,6 +677,277 @@ private List<VerifyGameStat> ParseVerifyGameStatList(string json)
             WHERE UserId = {stats.UserId}";
 
             await _tursoService.ExecuteSqlAsync(sql);
+        }
+
+        // ============================================================
+        // 验证大闯关统计
+        // ============================================================
+
+        public async Task<VerifyGameStat?> GetVerifyGameStatAsync(int userId)
+        {
+            if (!_tursoAvailable) return null;
+
+            var result = await _tursoService.QueryAsync(
+                $"SELECT * FROM VerifyGameStats WHERE UserId = {userId}"
+            );
+            return ParseVerifyGameStat(result);
+        }
+
+        public async Task<List<VerifyGameStat>> GetAllVerifyGameStatsAsync()
+        {
+            if (!_tursoAvailable) return new List<VerifyGameStat>();
+
+            var result = await _tursoService.QueryAsync(
+                "SELECT * FROM VerifyGameStats ORDER BY TotalScore DESC"
+            );
+            return ParseVerifyGameStatList(result);
+        }
+
+        public async Task AddVerifyGameStatAsync(VerifyGameStat stat)
+        {
+            if (!_tursoAvailable) return;
+
+            var maxIdResult = await _tursoService.QueryAsync("SELECT MAX(Id) as MaxId FROM VerifyGameStats");
+            var maxId = ParseMaxId(maxIdResult);
+            stat.Id = maxId + 1;
+
+            var sql = $@"INSERT INTO VerifyGameStats (
+                Id, UserId, TotalScore, MaxCombo, MaxLevel, GamesPlayed, UpdatedAt
+            ) VALUES (
+                {stat.Id}, {stat.UserId}, {stat.TotalScore}, {stat.MaxCombo},
+                {stat.MaxLevel}, {stat.GamesPlayed}, '{stat.UpdatedAt:yyyy-MM-dd HH:mm:ss}'
+            )";
+
+            await _tursoService.ExecuteSqlAsync(sql);
+            Console.WriteLine($"✅ 验证大闯关统计已创建: UserId={stat.UserId}, Score={stat.TotalScore}");
+        }
+
+        public async Task UpdateVerifyGameStatAsync(VerifyGameStat stat)
+        {
+            if (!_tursoAvailable) return;
+
+            var sql = $@"UPDATE VerifyGameStats SET
+                TotalScore = {stat.TotalScore},
+                MaxCombo = {stat.MaxCombo},
+                MaxLevel = {stat.MaxLevel},
+                GamesPlayed = {stat.GamesPlayed},
+                UpdatedAt = '{stat.UpdatedAt:yyyy-MM-dd HH:mm:ss}'
+            WHERE UserId = {stat.UserId}";
+
+            await _tursoService.ExecuteSqlAsync(sql);
+            Console.WriteLine($"✅ 验证大闯关统计已更新: UserId={stat.UserId}, Score={stat.TotalScore}");
+        }
+
+        // ============================================================
+        // 游戏会话相关
+        // ============================================================
+
+        public async Task AddGameSessionAsync(GameSession session)
+        {
+            if (!_tursoAvailable) return;
+
+            var sql = $@"INSERT INTO GameSessions (
+                UserId, SessionId, StartTime, EndTime, TotalScore, FinalScore,
+                PassedCount, MaxCombo, CheatCount, MicEnabled, CamEnabled,
+                PenaltyMic, PenaltyCam, IsCompleted, Status
+            ) VALUES (
+                {session.UserId}, '{session.SessionId}', '{session.StartTime:yyyy-MM-dd HH:mm:ss}',
+                {(session.EndTime.HasValue ? $"'{session.EndTime.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
+                {session.TotalScore}, {session.FinalScore}, {session.PassedCount},
+                {session.MaxCombo}, {session.CheatCount}, {(session.MicEnabled ? 1 : 0)},
+                {(session.CamEnabled ? 1 : 0)}, {session.PenaltyMic}, {session.PenaltyCam},
+                {(session.IsCompleted ? 1 : 0)}, '{session.Status}'
+            )";
+
+            await _tursoService.ExecuteSqlAsync(sql);
+        }
+
+        public async Task<GameSession?> GetGameSessionAsync(string sessionId)
+        {
+            if (!_tursoAvailable) return null;
+
+            var result = await _tursoService.QueryAsync(
+                $"SELECT * FROM GameSessions WHERE SessionId = '{sessionId}'"
+            );
+            return ParseGameSession(result);
+        }
+
+        public async Task UpdateGameSessionAsync(GameSession session)
+        {
+            if (!_tursoAvailable) return;
+
+            var sql = $@"UPDATE GameSessions SET
+                EndTime = {(session.EndTime.HasValue ? $"'{session.EndTime.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
+                TotalScore = {session.TotalScore},
+                FinalScore = {session.FinalScore},
+                PassedCount = {session.PassedCount},
+                MaxCombo = {session.MaxCombo},
+                CheatCount = {session.CheatCount},
+                IsCompleted = {(session.IsCompleted ? 1 : 0)},
+                Status = '{session.Status}'
+            WHERE SessionId = '{session.SessionId}'";
+
+            await _tursoService.ExecuteSqlAsync(sql);
+        }
+
+        // ============================================================
+        // 答题日志相关
+        // ============================================================
+
+        public async Task AddGameAnswerLogAsync(GameAnswerLog log)
+        {
+            if (!_tursoAvailable) return;
+
+            var sql = $@"INSERT INTO GameAnswerLogs (
+                SessionId, UserId, Level, QuestionType, StartTime, SubmitTime,
+                ElapsedSeconds, IsCorrect, IsTimeout, CheatDetected, CheatReason,
+                PointsEarned, PenaltyApplied
+            ) VALUES (
+                '{log.SessionId}', {log.UserId}, {log.Level}, '{log.QuestionType}',
+                '{log.StartTime:yyyy-MM-dd HH:mm:ss}', '{log.SubmitTime:yyyy-MM-dd HH:mm:ss}',
+                {log.ElapsedSeconds:F2}, {(log.IsCorrect ? 1 : 0)}, {(log.IsTimeout ? 1 : 0)},
+                {(log.CheatDetected ? 1 : 0)}, {(string.IsNullOrEmpty(log.CheatReason) ? "NULL" : $"'{log.CheatReason}'")},
+                {log.PointsEarned}, {log.PenaltyApplied}
+            )";
+
+            await _tursoService.ExecuteSqlAsync(sql);
+        }
+
+        public async Task<List<GameAnswerLog>> GetGameAnswerLogsAsync(string sessionId)
+        {
+            if (!_tursoAvailable) return new List<GameAnswerLog>();
+
+            var result = await _tursoService.QueryAsync(
+                $"SELECT * FROM GameAnswerLogs WHERE SessionId = '{sessionId}' ORDER BY Id ASC"
+            );
+            return ParseGameAnswerLogs(result);
+        }
+
+        // ============================================================
+        // 作弊事件相关
+        // ============================================================
+
+        public async Task AddCheatEventAsync(CheatEvent cheatEvent)
+        {
+            if (!_tursoAvailable) return;
+
+            var sql = $@"INSERT INTO CheatEvents (
+                SessionId, UserId, EventType, EventDetail, DetectedAt, PenaltyAmount
+            ) VALUES (
+                '{cheatEvent.SessionId}', {cheatEvent.UserId}, '{cheatEvent.EventType}',
+                {(string.IsNullOrEmpty(cheatEvent.EventDetail) ? "NULL" : $"'{cheatEvent.EventDetail}'")},
+                '{cheatEvent.DetectedAt:yyyy-MM-dd HH:mm:ss}', {cheatEvent.PenaltyAmount}
+            )";
+
+            await _tursoService.ExecuteSqlAsync(sql);
+        }
+
+        // ============================================================
+        // ⭐ 资源申请相关
+        // ============================================================
+
+        public async Task AddResourceRequestAsync(ResourceRequest request)
+        {
+            if (!_tursoAvailable) return;
+
+            var maxIdResult = await _tursoService.QueryAsync("SELECT MAX(Id) as MaxId FROM ResourceRequests");
+            var maxId = ParseMaxId(maxIdResult);
+            request.Id = maxId + 1;
+
+            var sql = $@"INSERT INTO ResourceRequests (
+                Id, UserId, UserName, UserEmail, PersonName, Platform1, Platform2, PlatformOther,
+                CharacterName, ResourceType, CharacterSetting,
+                NovelPreference, ComicPreference, ImagePreference,
+                VerifyPlatform, VerifyAccountId, IsFollowVerified, FollowVerifiedAt, FollowVerifyError, VerifyStatus,
+                AgreeToBLContent, AgreeToTerms,
+                Status, CreatedAt, ProcessedAt,
+                FoundTypes, NotFoundTypes, AdminNote, AdminName,
+                IpAddress, UserAgent
+            ) VALUES (
+                {request.Id}, {request.UserId}, '{EscapeSql(request.UserName)}',
+                '{EscapeSql(request.UserEmail)}', '{EscapeSql(request.PersonName)}',
+                '{EscapeSql(request.Platform1)}', '{EscapeSql(request.Platform2)}',
+                {(string.IsNullOrEmpty(request.PlatformOther) ? "NULL" : $"'{EscapeSql(request.PlatformOther)}'")},
+                '{EscapeSql(request.CharacterName)}', '{request.ResourceType}',
+                '{request.CharacterSetting}',
+                '{request.NovelPreference}', '{request.ComicPreference}', '{request.ImagePreference}',
+                '{EscapeSql(request.VerifyPlatform)}', '{EscapeSql(request.VerifyAccountId)}',
+                {(request.IsFollowVerified ? 1 : 0)},
+                {(request.FollowVerifiedAt.HasValue ? $"'{request.FollowVerifiedAt.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
+                {(string.IsNullOrEmpty(request.FollowVerifyError) ? "NULL" : $"'{EscapeSql(request.FollowVerifyError)}'")},
+                '{request.VerifyStatus}',
+                {(request.AgreeToBLContent ? 1 : 0)}, {(request.AgreeToTerms ? 1 : 0)},
+                '{request.Status}', '{request.CreatedAt:yyyy-MM-dd HH:mm:ss}',
+                {(request.ProcessedAt.HasValue ? $"'{request.ProcessedAt.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
+                '{EscapeSql(request.FoundTypes)}', '{EscapeSql(request.NotFoundTypes)}',
+                '{EscapeSql(request.AdminNote)}', '{EscapeSql(request.AdminName)}',
+                '{EscapeSql(request.IpAddress)}', '{EscapeSql(request.UserAgent)}'
+            )";
+
+            await _tursoService.ExecuteSqlAsync(sql);
+        }
+
+        public async Task<ResourceRequest?> GetResourceRequestByIdAsync(int id)
+        {
+            if (!_tursoAvailable) return null;
+
+            var result = await _tursoService.QueryAsync($"SELECT * FROM ResourceRequests WHERE Id = {id}");
+            return ParseResourceRequest(result);
+        }
+
+        public async Task<List<ResourceRequest>> GetResourceRequestsByUserIdAsync(int userId)
+        {
+            if (!_tursoAvailable) return new List<ResourceRequest>();
+
+            var result = await _tursoService.QueryAsync(
+                $"SELECT * FROM ResourceRequests WHERE UserId = {userId} ORDER BY CreatedAt DESC"
+            );
+            return ParseResourceRequestList(result);
+        }
+
+        public async Task<List<ResourceRequest>> GetPendingResourceRequestsAsync(int userId)
+        {
+            if (!_tursoAvailable) return new List<ResourceRequest>();
+
+            var result = await _tursoService.QueryAsync(
+                $"SELECT * FROM ResourceRequests WHERE UserId = {userId} AND (Status = 'pending' OR Status = 'processing')"
+            );
+            return ParseResourceRequestList(result);
+        }
+
+        public async Task<List<ResourceRequest>> GetAllResourceRequestsAsync()
+        {
+            if (!_tursoAvailable) return new List<ResourceRequest>();
+
+            var result = await _tursoService.QueryAsync(
+                "SELECT * FROM ResourceRequests ORDER BY CreatedAt DESC"
+            );
+            return ParseResourceRequestList(result);
+        }
+
+        public async Task UpdateResourceRequestAsync(ResourceRequest request)
+        {
+            if (!_tursoAvailable) return;
+
+            var sql = $@"UPDATE ResourceRequests SET
+                Status = '{request.Status}',
+                FoundTypes = '{EscapeSql(request.FoundTypes)}',
+                NotFoundTypes = '{EscapeSql(request.NotFoundTypes)}',
+                AdminNote = '{EscapeSql(request.AdminNote)}',
+                AdminName = '{EscapeSql(request.AdminName)}',
+                ProcessedAt = {(request.ProcessedAt.HasValue ? $"'{request.ProcessedAt.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
+                VerifyStatus = '{request.VerifyStatus}',
+                IsFollowVerified = {(request.IsFollowVerified ? 1 : 0)},
+                FollowVerifyError = {(string.IsNullOrEmpty(request.FollowVerifyError) ? "NULL" : $"'{EscapeSql(request.FollowVerifyError)}'")}
+            WHERE Id = {request.Id}";
+
+            await _tursoService.ExecuteSqlAsync(sql);
+        }
+
+        public async Task DeleteResourceRequestAsync(int id)
+        {
+            if (!_tursoAvailable) return;
+            await _tursoService.ExecuteSqlAsync($"DELETE FROM ResourceRequests WHERE Id = {id}");
         }
 
         // ============================================================
@@ -1549,6 +1702,294 @@ private List<VerifyGameStat> ParseVerifyGameStatList(string json)
         }
 
         // ============================================================
+        // 验证大闯关统计解析
+        // ============================================================
+
+        private VerifyGameStat? ParseVerifyGameStat(string json)
+        {
+            var list = ParseVerifyGameStatList(json);
+            return list.FirstOrDefault();
+        }
+
+        private List<VerifyGameStat> ParseVerifyGameStatList(string json)
+        {
+            var list = new List<VerifyGameStat>();
+            try
+            {
+                using var doc = JsonDocument.Parse(json);
+                var root = doc.RootElement;
+
+                if (root.TryGetProperty("results", out var results) && results.GetArrayLength() > 0)
+                {
+                    var firstResult = results[0];
+                    if (firstResult.TryGetProperty("response", out var response) &&
+                        response.TryGetProperty("result", out var result))
+                    {
+                        if (result.TryGetProperty("rows", out var rows) && rows.GetArrayLength() > 0)
+                        {
+                            var cols = result.GetProperty("cols");
+
+                            for (int r = 0; r < rows.GetArrayLength(); r++)
+                            {
+                                var row = rows[r];
+                                if (row.ValueKind != JsonValueKind.Array) continue;
+
+                                var stat = new VerifyGameStat();
+                                for (int i = 0; i < cols.GetArrayLength(); i++)
+                                {
+                                    var colName = cols[i].GetProperty("name").GetString();
+                                    var element = row[i];
+
+                                    switch (colName)
+                                    {
+                                        case "Id": stat.Id = GetIntFromRow(element); break;
+                                        case "UserId": stat.UserId = GetIntFromRow(element); break;
+                                        case "TotalScore": stat.TotalScore = GetIntFromRow(element); break;
+                                        case "MaxCombo": stat.MaxCombo = GetIntFromRow(element); break;
+                                        case "MaxLevel": stat.MaxLevel = GetIntFromRow(element); break;
+                                        case "GamesPlayed": stat.GamesPlayed = GetIntFromRow(element); break;
+                                        case "UpdatedAt": stat.UpdatedAt = GetDateTimeFromRow(element) ?? DateTime.Now; break;
+                                    }
+                                }
+                                list.Add(stat);
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"⚠️ 解析验证大闯关统计 JSON 失败: {ex.Message}");
+            }
+            return list;
+        }
+
+        // ============================================================
+        // ResourceRequest 解析
+        // ============================================================
+
+        private ResourceRequest? ParseResourceRequest(string json)
+        {
+            var list = ParseResourceRequestList(json);
+            return list.FirstOrDefault();
+        }
+
+        private List<ResourceRequest> ParseResourceRequestList(string json)
+        {
+            var list = new List<ResourceRequest>();
+            try
+            {
+                using var doc = JsonDocument.Parse(json);
+                var root = doc.RootElement;
+
+                if (root.TryGetProperty("results", out var results) && results.GetArrayLength() > 0)
+                {
+                    var firstResult = results[0];
+                    if (firstResult.TryGetProperty("response", out var response) &&
+                        response.TryGetProperty("result", out var result))
+                    {
+                        if (result.TryGetProperty("rows", out var rows) && rows.GetArrayLength() > 0)
+                        {
+                            var cols = result.GetProperty("cols");
+
+                            for (int r = 0; r < rows.GetArrayLength(); r++)
+                            {
+                                var row = rows[r];
+                                if (row.ValueKind != JsonValueKind.Array) continue;
+
+                                var req = new ResourceRequest();
+
+                                for (int i = 0; i < cols.GetArrayLength(); i++)
+                                {
+                                    var colName = cols[i].GetProperty("name").GetString();
+                                    var element = row[i];
+
+                                    switch (colName)
+                                    {
+                                        case "Id": req.Id = GetIntFromRow(element); break;
+                                        case "UserId": req.UserId = GetIntFromRow(element); break;
+                                        case "UserName": req.UserName = GetStringFromRow(element); break;
+                                        case "UserEmail": req.UserEmail = GetStringFromRow(element); break;
+                                        case "PersonName": req.PersonName = GetStringFromRow(element); break;
+                                        case "Platform1": req.Platform1 = GetStringFromRow(element); break;
+                                        case "Platform2": req.Platform2 = GetStringFromRow(element); break;
+                                        case "PlatformOther": req.PlatformOther = GetStringOrNullFromRow(element); break;
+                                        case "CharacterName": req.CharacterName = GetStringFromRow(element); break;
+                                        case "ResourceType": req.ResourceType = GetStringFromRow(element); break;
+                                        case "CharacterSetting": req.CharacterSetting = GetStringFromRow(element); break;
+                                        case "NovelPreference": req.NovelPreference = GetStringFromRow(element); break;
+                                        case "ComicPreference": req.ComicPreference = GetStringFromRow(element); break;
+                                        case "ImagePreference": req.ImagePreference = GetStringFromRow(element); break;
+                                        case "VerifyPlatform": req.VerifyPlatform = GetStringFromRow(element); break;
+                                        case "VerifyAccountId": req.VerifyAccountId = GetStringFromRow(element); break;
+                                        case "IsFollowVerified": req.IsFollowVerified = GetBoolFromRow(element); break;
+                                        case "FollowVerifiedAt": req.FollowVerifiedAt = GetDateTimeFromRow(element); break;
+                                        case "FollowVerifyError": req.FollowVerifyError = GetStringOrNullFromRow(element); break;
+                                        case "VerifyStatus": req.VerifyStatus = GetStringFromRow(element); break;
+                                        case "AgreeToBLContent": req.AgreeToBLContent = GetBoolFromRow(element); break;
+                                        case "AgreeToTerms": req.AgreeToTerms = GetBoolFromRow(element); break;
+                                        case "Status": req.Status = GetStringFromRow(element); break;
+                                        case "CreatedAt": req.CreatedAt = GetDateTimeFromRow(element) ?? DateTime.Now; break;
+                                        case "ProcessedAt": req.ProcessedAt = GetDateTimeFromRow(element); break;
+                                        case "FoundTypes": req.FoundTypes = GetStringFromRow(element); break;
+                                        case "NotFoundTypes": req.NotFoundTypes = GetStringFromRow(element); break;
+                                        case "AdminNote": req.AdminNote = GetStringFromRow(element); break;
+                                        case "AdminName": req.AdminName = GetStringFromRow(element); break;
+                                    }
+                                }
+                                list.Add(req);
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"⚠️ 解析 ResourceRequest JSON 失败: {ex.Message}");
+            }
+            return list;
+        }
+
+        // ============================================================
+        // GameSession 解析
+        // ============================================================
+
+        private GameSession? ParseGameSession(string json)
+        {
+            try
+            {
+                using var doc = JsonDocument.Parse(json);
+                var root = doc.RootElement;
+
+                if (root.TryGetProperty("results", out var results) && results.GetArrayLength() > 0)
+                {
+                    var firstResult = results[0];
+                    if (firstResult.TryGetProperty("response", out var response) &&
+                        response.TryGetProperty("result", out var result))
+                    {
+                        if (result.TryGetProperty("rows", out var rows) && rows.GetArrayLength() > 0)
+                        {
+                            var row = rows[0];
+                            var cols = result.GetProperty("cols");
+
+                            if (row.ValueKind != JsonValueKind.Array)
+                                return null;
+
+                            var session = new GameSession();
+
+                            for (int i = 0; i < cols.GetArrayLength(); i++)
+                            {
+                                var colName = cols[i].GetProperty("name").GetString();
+                                var element = row[i];
+
+                                switch (colName)
+                                {
+                                    case "Id": session.Id = GetIntFromRow(element); break;
+                                    case "UserId": session.UserId = GetIntFromRow(element); break;
+                                    case "SessionId": session.SessionId = GetStringFromRow(element); break;
+                                    case "StartTime": session.StartTime = GetDateTimeFromRow(element) ?? DateTime.Now; break;
+                                    case "EndTime": session.EndTime = GetDateTimeFromRow(element); break;
+                                    case "TotalScore": session.TotalScore = GetIntFromRow(element); break;
+                                    case "FinalScore": session.FinalScore = GetIntFromRow(element); break;
+                                    case "PassedCount": session.PassedCount = GetIntFromRow(element); break;
+                                    case "MaxCombo": session.MaxCombo = GetIntFromRow(element); break;
+                                    case "CheatCount": session.CheatCount = GetIntFromRow(element); break;
+                                    case "MicEnabled": session.MicEnabled = GetBoolFromRow(element); break;
+                                    case "CamEnabled": session.CamEnabled = GetBoolFromRow(element); break;
+                                    case "PenaltyMic": session.PenaltyMic = GetIntFromRow(element); break;
+                                    case "PenaltyCam": session.PenaltyCam = GetIntFromRow(element); break;
+                                    case "IsCompleted": session.IsCompleted = GetBoolFromRow(element); break;
+                                    case "Status": session.Status = GetStringFromRow(element); break;
+                                }
+                            }
+                            return session;
+                        }
+                    }
+                }
+                return null;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"⚠️ 解析 GameSession JSON 失败: {ex.Message}");
+                return null;
+            }
+        }
+
+        // ============================================================
+        // GameAnswerLog 解析
+        // ============================================================
+
+        private List<GameAnswerLog> ParseGameAnswerLogs(string json)
+        {
+            var list = new List<GameAnswerLog>();
+            try
+            {
+                using var doc = JsonDocument.Parse(json);
+                var root = doc.RootElement;
+
+                if (root.TryGetProperty("results", out var results) && results.GetArrayLength() > 0)
+                {
+                    var firstResult = results[0];
+                    if (firstResult.TryGetProperty("response", out var response) &&
+                        response.TryGetProperty("result", out var result))
+                    {
+                        if (result.TryGetProperty("rows", out var rows) && rows.GetArrayLength() > 0)
+                        {
+                            var cols = result.GetProperty("cols");
+
+                            for (int r = 0; r < rows.GetArrayLength(); r++)
+                            {
+                                var row = rows[r];
+                                if (row.ValueKind != JsonValueKind.Array) continue;
+
+                                var log = new GameAnswerLog();
+
+                                for (int i = 0; i < cols.GetArrayLength(); i++)
+                                {
+                                    var colName = cols[i].GetProperty("name").GetString();
+                                    var element = row[i];
+
+                                    switch (colName)
+                                    {
+                                        case "Id": log.Id = GetIntFromRow(element); break;
+                                        case "SessionId": log.SessionId = GetStringFromRow(element); break;
+                                        case "UserId": log.UserId = GetIntFromRow(element); break;
+                                        case "Level": log.Level = GetIntFromRow(element); break;
+                                        case "QuestionType": log.QuestionType = GetStringFromRow(element); break;
+                                        case "StartTime": log.StartTime = GetDateTimeFromRow(element) ?? DateTime.Now; break;
+                                        case "SubmitTime": log.SubmitTime = GetDateTimeFromRow(element) ?? DateTime.Now; break;
+                                        case "ElapsedSeconds":
+                                            var val = GetValueFromRow(element);
+                                            if (val is JsonElement je && je.ValueKind == JsonValueKind.Number)
+                                                log.ElapsedSeconds = je.GetDouble();
+                                            else if (val is JsonElement je2 && je2.ValueKind == JsonValueKind.String)
+                                                if (double.TryParse(je2.GetString(), out var parsedValue))
+                                                {
+                                                    log.ElapsedSeconds = parsedValue;
+                                                }
+                                            break;
+                                        case "IsCorrect": log.IsCorrect = GetBoolFromRow(element); break;
+                                        case "IsTimeout": log.IsTimeout = GetBoolFromRow(element); break;
+                                        case "CheatDetected": log.CheatDetected = GetBoolFromRow(element); break;
+                                        case "CheatReason": log.CheatReason = GetStringOrNullFromRow(element); break;
+                                        case "PointsEarned": log.PointsEarned = GetIntFromRow(element); break;
+                                        case "PenaltyApplied": log.PenaltyApplied = GetIntFromRow(element); break;
+                                    }
+                                }
+                                list.Add(log);
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"⚠️ 解析 GameAnswerLog 列表 JSON 失败: {ex.Message}");
+            }
+            return list;
+        }
+
+        // ============================================================
         // 工具方法
         // ============================================================
 
@@ -1576,477 +2017,31 @@ private List<VerifyGameStat> ParseVerifyGameStatList(string json)
             if (string.IsNullOrEmpty(value)) return "";
             return value.Replace("'", "''");
         }
-        // ============================================================
-// 游戏会话相关
-// ============================================================
 
-public async Task AddGameSessionAsync(GameSession session)
-{
-    if (!_tursoAvailable) return;
-    
-    var sql = $@"INSERT INTO GameSessions (
-        UserId, SessionId, StartTime, EndTime, TotalScore, FinalScore,
-        PassedCount, MaxCombo, CheatCount, MicEnabled, CamEnabled,
-        PenaltyMic, PenaltyCam, IsCompleted, Status
-    ) VALUES (
-        {session.UserId}, '{session.SessionId}', '{session.StartTime:yyyy-MM-dd HH:mm:ss}',
-        {(session.EndTime.HasValue ? $"'{session.EndTime.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
-        {session.TotalScore}, {session.FinalScore}, {session.PassedCount},
-        {session.MaxCombo}, {session.CheatCount}, {(session.MicEnabled ? 1 : 0)},
-        {(session.CamEnabled ? 1 : 0)}, {session.PenaltyMic}, {session.PenaltyCam},
-        {(session.IsCompleted ? 1 : 0)}, '{session.Status}'
-    )";
-    
-    await _tursoService.ExecuteSqlAsync(sql);
-}
-
-public async Task<GameSession?> GetGameSessionAsync(string sessionId)
-{
-    if (!_tursoAvailable) return null;
-    
-    var result = await _tursoService.QueryAsync(
-        $"SELECT * FROM GameSessions WHERE SessionId = '{sessionId}'"
-    );
-    return ParseGameSession(result);
-}
-
-public async Task UpdateGameSessionAsync(GameSession session)
-{
-    if (!_tursoAvailable) return;
-    
-    var sql = $@"UPDATE GameSessions SET
-        EndTime = {(session.EndTime.HasValue ? $"'{session.EndTime.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
-        TotalScore = {session.TotalScore},
-        FinalScore = {session.FinalScore},
-        PassedCount = {session.PassedCount},
-        MaxCombo = {session.MaxCombo},
-        CheatCount = {session.CheatCount},
-        IsCompleted = {(session.IsCompleted ? 1 : 0)},
-        Status = '{session.Status}'
-    WHERE SessionId = '{session.SessionId}'";
-    
-    await _tursoService.ExecuteSqlAsync(sql);
-}
-
-// ============================================================
-// 答题日志相关
-// ============================================================
-
-public async Task AddGameAnswerLogAsync(GameAnswerLog log)
-{
-    if (!_tursoAvailable) return;
-    
-    var sql = $@"INSERT INTO GameAnswerLogs (
-        SessionId, UserId, Level, QuestionType, StartTime, SubmitTime,
-        ElapsedSeconds, IsCorrect, IsTimeout, CheatDetected, CheatReason,
-        PointsEarned, PenaltyApplied
-    ) VALUES (
-        '{log.SessionId}', {log.UserId}, {log.Level}, '{log.QuestionType}',
-        '{log.StartTime:yyyy-MM-dd HH:mm:ss}', '{log.SubmitTime:yyyy-MM-dd HH:mm:ss}',
-        {log.ElapsedSeconds:F2}, {(log.IsCorrect ? 1 : 0)}, {(log.IsTimeout ? 1 : 0)},
-        {(log.CheatDetected ? 1 : 0)}, {(string.IsNullOrEmpty(log.CheatReason) ? "NULL" : $"'{log.CheatReason}'")},
-        {log.PointsEarned}, {log.PenaltyApplied}
-    )";
-    
-    await _tursoService.ExecuteSqlAsync(sql);
-}
-
-public async Task<List<GameAnswerLog>> GetGameAnswerLogsAsync(string sessionId)
-{
-    if (!_tursoAvailable) return new List<GameAnswerLog>();
-    
-    var result = await _tursoService.QueryAsync(
-        $"SELECT * FROM GameAnswerLogs WHERE SessionId = '{sessionId}' ORDER BY Id ASC"
-    );
-    return ParseGameAnswerLogs(result);
-}
-
-// ============================================================
-// 作弊事件相关
-// ============================================================
-
-public async Task AddCheatEventAsync(CheatEvent cheatEvent)
-{
-    if (!_tursoAvailable) return;
-    
-    var sql = $@"INSERT INTO CheatEvents (
-        SessionId, UserId, EventType, EventDetail, DetectedAt, PenaltyAmount
-    ) VALUES (
-        '{cheatEvent.SessionId}', {cheatEvent.UserId}, '{cheatEvent.EventType}',
-        {(string.IsNullOrEmpty(cheatEvent.EventDetail) ? "NULL" : $"'{cheatEvent.EventDetail}'")},
-        '{cheatEvent.DetectedAt:yyyy-MM-dd HH:mm:ss}', {cheatEvent.PenaltyAmount}
-    )";
-    
-    await _tursoService.ExecuteSqlAsync(sql);
-}
-        // ============================================================
-// 解析 GameSession
-// ============================================================
-private GameSession? ParseGameSession(string json)
-{
-    try
-    {
-        using var doc = JsonDocument.Parse(json);
-        var root = doc.RootElement;
-
-        if (root.TryGetProperty("results", out var results) && results.GetArrayLength() > 0)
+        private double GetDoubleFromRow(JsonElement element)
         {
-            var firstResult = results[0];
-            if (firstResult.TryGetProperty("response", out var response) &&
-                response.TryGetProperty("result", out var result))
+            try
             {
-                if (result.TryGetProperty("rows", out var rows) && rows.GetArrayLength() > 0)
+                var val = GetValueFromRow(element);
+                if (val is JsonElement je)
                 {
-                    var row = rows[0];
-                    var cols = result.GetProperty("cols");
-
-                    if (row.ValueKind != JsonValueKind.Array)
-                        return null;
-
-                    var session = new GameSession();
-
-                    for (int i = 0; i < cols.GetArrayLength(); i++)
+                    if (je.ValueKind == JsonValueKind.Null) return 0;
+                    if (je.ValueKind == JsonValueKind.Number) return je.GetDouble();
+                    if (je.ValueKind == JsonValueKind.String)
                     {
-                        var colName = cols[i].GetProperty("name").GetString();
-                        var element = row[i];
-
-                        switch (colName)
-                        {
-                            case "Id": session.Id = GetIntFromRow(element); break;
-                            case "UserId": session.UserId = GetIntFromRow(element); break;
-                            case "SessionId": session.SessionId = GetStringFromRow(element); break;
-                            case "StartTime": session.StartTime = GetDateTimeFromRow(element) ?? DateTime.Now; break;
-                            case "EndTime": session.EndTime = GetDateTimeFromRow(element); break;
-                            case "TotalScore": session.TotalScore = GetIntFromRow(element); break;
-                            case "FinalScore": session.FinalScore = GetIntFromRow(element); break;
-                            case "PassedCount": session.PassedCount = GetIntFromRow(element); break;
-                            case "MaxCombo": session.MaxCombo = GetIntFromRow(element); break;
-                            case "CheatCount": session.CheatCount = GetIntFromRow(element); break;
-                            case "MicEnabled": session.MicEnabled = GetBoolFromRow(element); break;
-                            case "CamEnabled": session.CamEnabled = GetBoolFromRow(element); break;
-                            case "PenaltyMic": session.PenaltyMic = GetIntFromRow(element); break;
-                            case "PenaltyCam": session.PenaltyCam = GetIntFromRow(element); break;
-                            case "IsCompleted": session.IsCompleted = GetBoolFromRow(element); break;
-                            case "Status": session.Status = GetStringFromRow(element); break;
-                        }
+                        var str = je.GetString();
+                        if (double.TryParse(str, out var result))
+                            return result;
+                        return 0;
                     }
-                    return session;
+                    return 0;
                 }
-            }
-        }
-        return null;
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"⚠️ 解析 GameSession JSON 失败: {ex.Message}");
-        return null;
-    }
-}
-
-// ============================================================
-// 解析 GameAnswerLog 列表
-// ============================================================
-private List<GameAnswerLog> ParseGameAnswerLogs(string json)
-{
-    var list = new List<GameAnswerLog>();
-    try
-    {
-        using var doc = JsonDocument.Parse(json);
-        var root = doc.RootElement;
-
-        if (root.TryGetProperty("results", out var results) && results.GetArrayLength() > 0)
-        {
-            var firstResult = results[0];
-            if (firstResult.TryGetProperty("response", out var response) &&
-                response.TryGetProperty("result", out var result))
-            {
-                if (result.TryGetProperty("rows", out var rows) && rows.GetArrayLength() > 0)
-                {
-                    var cols = result.GetProperty("cols");
-
-                    for (int r = 0; r < rows.GetArrayLength(); r++)
-                    {
-                        var row = rows[r];
-                        if (row.ValueKind != JsonValueKind.Array) continue;
-
-                        var log = new GameAnswerLog();
-
-                        for (int i = 0; i < cols.GetArrayLength(); i++)
-                        {
-                            var colName = cols[i].GetProperty("name").GetString();
-                            var element = row[i];
-
-                            switch (colName)
-                            {
-                                case "Id": log.Id = GetIntFromRow(element); break;
-                                case "SessionId": log.SessionId = GetStringFromRow(element); break;
-                                case "UserId": log.UserId = GetIntFromRow(element); break;
-                                case "Level": log.Level = GetIntFromRow(element); break;
-                                case "QuestionType": log.QuestionType = GetStringFromRow(element); break;
-                                case "StartTime": log.StartTime = GetDateTimeFromRow(element) ?? DateTime.Now; break;
-                                case "SubmitTime": log.SubmitTime = GetDateTimeFromRow(element) ?? DateTime.Now; break;
-                                case "ElapsedSeconds": 
-                                    var val = GetValueFromRow(element);
-                                    if (val is JsonElement je && je.ValueKind == JsonValueKind.Number)
-                                        log.ElapsedSeconds = je.GetDouble();
-                                    else if (val is JsonElement je2 && je2.ValueKind == JsonValueKind.String)
-                                       if (double.TryParse(je2.GetString(), out var parsedValue))
-{
-    log.ElapsedSeconds = parsedValue;
-}
-                                    break;
-                                case "IsCorrect": log.IsCorrect = GetBoolFromRow(element); break;
-                                case "IsTimeout": log.IsTimeout = GetBoolFromRow(element); break;
-                                case "CheatDetected": log.CheatDetected = GetBoolFromRow(element); break;
-                                case "CheatReason": log.CheatReason = GetStringOrNullFromRow(element); break;
-                                case "PointsEarned": log.PointsEarned = GetIntFromRow(element); break;
-                                case "PenaltyApplied": log.PenaltyApplied = GetIntFromRow(element); break;
-                            }
-                        }
-                        list.Add(log);
-                    }
-                }
-            }
-        }
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"⚠️ 解析 GameAnswerLog 列表 JSON 失败: {ex.Message}");
-    }
-    return list;
-}
-        // ============================================================
-// 资源申请相关
-// ============================================================
-
-public async Task AddResourceRequestAsync(ResourceRequest request)
-{
-    if (!_tursoAvailable) return;
-
-    var maxIdResult = await _tursoService.QueryAsync("SELECT MAX(Id) as MaxId FROM ResourceRequests");
-    var maxId = ParseMaxId(maxIdResult);
-    request.Id = maxId + 1;
-
-    var sql = $@"INSERT INTO ResourceRequests (
-        Id, UserId, UserName, UserEmail, PersonName, Platform, ResourceType,
-        ResourceName, ResourceUrl, Description, RefundOption, RefundAmount,
-        RefundDeadline, Status, CreatedAt, FoundTypes, NotFoundTypes,
-        FileUrl, AdminNote, AdminName, IpAddress, UserAgent
-    ) VALUES (
-        {request.Id}, {request.UserId}, '{EscapeSql(request.UserName)}',
-        '{EscapeSql(request.UserEmail)}', '{EscapeSql(request.PersonName)}',
-        '{EscapeSql(request.Platform)}', '{EscapeSql(request.ResourceType)}',
-        '{EscapeSql(request.ResourceName)}', '{EscapeSql(request.ResourceUrl)}',
-        '{EscapeSql(request.Description)}', '{request.RefundOption}',
-        {request.RefundAmount}, {(request.RefundDeadline.HasValue ? $"'{request.RefundDeadline.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")}',
-        '{request.Status}', '{request.CreatedAt:yyyy-MM-dd HH:mm:ss}',
-        '{EscapeSql(request.FoundTypes)}', '{EscapeSql(request.NotFoundTypes)}',
-        '{EscapeSql(request.FileUrl)}', '{EscapeSql(request.AdminNote)}',
-        '{EscapeSql(request.AdminName)}', '{EscapeSql(request.IpAddress)}',
-        '{EscapeSql(request.UserAgent)}'
-    )";
-
-    await _tursoService.ExecuteSqlAsync(sql);
-}
-
-public async Task<ResourceRequest?> GetResourceRequestByIdAsync(int id)
-{
-    if (!_tursoAvailable) return null;
-
-    var result = await _tursoService.QueryAsync($"SELECT * FROM ResourceRequests WHERE Id = {id}");
-    return ParseResourceRequest(result);
-}
-
-public async Task<List<ResourceRequest>> GetResourceRequestsByUserIdAsync(int userId)
-{
-    if (!_tursoAvailable) return new List<ResourceRequest>();
-
-    var result = await _tursoService.QueryAsync($"SELECT * FROM ResourceRequests WHERE UserId = {userId} ORDER BY CreatedAt DESC");
-    return ParseResourceRequestList(result);
-}
-
-public async Task<List<ResourceRequest>> GetPendingResourceRequestsAsync(int userId)
-{
-    if (!_tursoAvailable) return new List<ResourceRequest>();
-
-    var result = await _tursoService.QueryAsync(
-        $"SELECT * FROM ResourceRequests WHERE UserId = {userId} AND (Status = 'pending' OR Status = 'processing')"
-    );
-    return ParseResourceRequestList(result);
-}
-
-public async Task<List<ResourceRequest>> GetAllResourceRequestsAsync()
-{
-    if (!_tursoAvailable) return new List<ResourceRequest>();
-
-    var result = await _tursoService.QueryAsync(
-        "SELECT * FROM ResourceRequests ORDER BY CreatedAt DESC"
-    );
-    return ParseResourceRequestList(result);
-}
-
-public async Task UpdateResourceRequestAsync(ResourceRequest request)
-{
-    if (!_tursoAvailable) return;
-
-    var sql = $@"UPDATE ResourceRequests SET
-        Status = '{request.Status}',
-        FoundTypes = '{EscapeSql(request.FoundTypes)}',
-        NotFoundTypes = '{EscapeSql(request.NotFoundTypes)}',
-        FileUrl = '{EscapeSql(request.FileUrl)}',
-        AdminNote = '{EscapeSql(request.AdminNote)}',
-        AdminName = '{EscapeSql(request.AdminName)}',
-        ProcessedAt = {(request.ProcessedAt.HasValue ? $"'{request.ProcessedAt.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")}
-    WHERE Id = {request.Id}";
-
-    await _tursoService.ExecuteSqlAsync(sql);
-}
-
-public async Task DeleteResourceRequestAsync(int id)
-{
-    if (!_tursoAvailable) return;
-    await _tursoService.ExecuteSqlAsync($"DELETE FROM ResourceRequests WHERE Id = {id}");
-}
-
-// ============================================================
-// 解析 ResourceRequest
-// ============================================================
-private ResourceRequest? ParseResourceRequest(string json)
-{
-    var list = ParseResourceRequestList(json);
-    return list.FirstOrDefault();
-}
-
-private List<ResourceRequest> ParseResourceRequestList(string json)
-{
-    var list = new List<ResourceRequest>();
-    try
-    {
-        using var doc = JsonDocument.Parse(json);
-        var root = doc.RootElement;
-
-        if (root.TryGetProperty("results", out var results) && results.GetArrayLength() > 0)
-        {
-            var firstResult = results[0];
-            if (firstResult.TryGetProperty("response", out var response) &&
-                response.TryGetProperty("result", out var result))
-            {
-                if (result.TryGetProperty("rows", out var rows) && rows.GetArrayLength() > 0)
-                {
-                    var cols = result.GetProperty("cols");
-
-                    for (int r = 0; r < rows.GetArrayLength(); r++)
-                    {
-                        var row = rows[r];
-                        if (row.ValueKind != JsonValueKind.Array) continue;
-
-                        var req = new ResourceRequest();
-
-                        for (int i = 0; i < cols.GetArrayLength(); i++)
-                        {
-                            var colName = cols[i].GetProperty("name").GetString();
-                            var element = row[i];
-
-                            switch (colName)
-                            {
-                                case "Id": req.Id = GetIntFromRow(element); break;
-                                case "UserId": req.UserId = GetIntFromRow(element); break;
-                                case "UserName": req.UserName = GetStringFromRow(element); break;
-                                case "UserEmail": req.UserEmail = GetStringFromRow(element); break;
-                                case "PersonName": req.PersonName = GetStringFromRow(element); break;
-                                case "Platform": req.Platform = GetStringFromRow(element); break;
-                                case "ResourceType": req.ResourceType = GetStringFromRow(element); break;
-                                case "ResourceName": req.ResourceName = GetStringFromRow(element); break;
-                                case "ResourceUrl": req.ResourceUrl = GetStringFromRow(element); break;
-                                case "Description": req.Description = GetStringFromRow(element); break;
-                                case "RefundOption": req.RefundOption = GetStringFromRow(element); break;
-                                case "RefundAmount": req.RefundAmount = (decimal)GetDoubleFromRow(element); break;
-                                case "RefundDeadline": req.RefundDeadline = GetDateTimeFromRow(element); break;
-                                case "Status": req.Status = GetStringFromRow(element); break;
-                                case "CreatedAt": req.CreatedAt = GetDateTimeFromRow(element) ?? DateTime.Now; break;
-                                case "ProcessedAt": req.ProcessedAt = GetDateTimeFromRow(element); break;
-                                case "FoundTypes": req.FoundTypes = GetStringFromRow(element); break;
-                                case "NotFoundTypes": req.NotFoundTypes = GetStringFromRow(element); break;
-                                case "FileUrl": req.FileUrl = GetStringFromRow(element); break;
-                                case "AdminNote": req.AdminNote = GetStringFromRow(element); break;
-                                case "AdminName": req.AdminName = GetStringFromRow(element); break;
-                            }
-                        }
-                        list.Add(req);
-                    }
-                }
-            }
-        }
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"⚠️ 解析 ResourceRequest JSON 失败: {ex.Message}");
-    }
-    return list;
-}
-
-private double GetDoubleFromRow(JsonElement element)
-{
-    try
-    {
-        var val = GetValueFromRow(element);
-        if (val is JsonElement je)
-        {
-            if (je.ValueKind == JsonValueKind.Null) return 0;
-            if (je.ValueKind == JsonValueKind.Number) return je.GetDouble();
-            if (je.ValueKind == JsonValueKind.String)
-            {
-                var str = je.GetString();
-                if (double.TryParse(str, out var result))
-                    return result;
+                var strVal = val?.ToString();
+                if (double.TryParse(strVal, out var result2))
+                    return result2;
                 return 0;
             }
-            return 0;
+            catch { return 0; }
         }
-        var strVal = val?.ToString();
-        if (double.TryParse(strVal, out var result2))
-            return result2;
-        return 0;
-    }
-    catch { return 0; }
-}
-        // DataSyncService.cs - 添加资源请求时包含新字段
-
-public async Task AddResourceRequestAsync(ResourceRequest request)
-{
-    if (!_tursoAvailable) return;
-
-    var maxIdResult = await _tursoService.QueryAsync("SELECT MAX(Id) as MaxId FROM ResourceRequests");
-    var maxId = ParseMaxId(maxIdResult);
-    request.Id = maxId + 1;
-
-    var sql = $@"INSERT INTO ResourceRequests (
-        Id, UserId, UserName, UserEmail, PersonName, Platform, PlatformUserId,
-        IsPlatformVerified, PlatformVerifiedAt, PlatformVerifyError,
-        ResourceType, ResourceName, ResourceUrl, Description,
-        RefundOption, RefundAmount, RefundDeadline, Status,
-        CreatedAt, FoundTypes, NotFoundTypes, FileUrl, AdminNote, AdminName,
-        IpAddress, UserAgent
-    ) VALUES (
-        {request.Id}, {request.UserId}, '{EscapeSql(request.UserName)}',
-        '{EscapeSql(request.UserEmail)}', '{EscapeSql(request.PersonName)}',
-        '{EscapeSql(request.Platform)}', '{EscapeSql(request.PlatformUserId)}',
-        {(request.IsPlatformVerified ? 1 : 0)},
-        {(request.PlatformVerifiedAt.HasValue ? $"'{request.PlatformVerifiedAt.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
-        {(string.IsNullOrEmpty(request.PlatformVerifyError) ? "NULL" : $"'{EscapeSql(request.PlatformVerifyError)}'")},
-        '{EscapeSql(request.ResourceType)}', '{EscapeSql(request.ResourceName)}',
-        '{EscapeSql(request.ResourceUrl)}', '{EscapeSql(request.Description)}',
-        '{request.RefundOption}', {request.RefundAmount},
-        {(request.RefundDeadline.HasValue ? $"'{request.RefundDeadline.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")}',
-        '{request.Status}', '{request.CreatedAt:yyyy-MM-dd HH:mm:ss}',
-        '{EscapeSql(request.FoundTypes)}', '{EscapeSql(request.NotFoundTypes)}',
-        '{EscapeSql(request.FileUrl)}', '{EscapeSql(request.AdminNote)}',
-        '{EscapeSql(request.AdminName)}', '{EscapeSql(request.IpAddress)}',
-        '{EscapeSql(request.UserAgent)}'
-    )";
-
-    await _tursoService.ExecuteSqlAsync(sql);
-}
-       
     }
 }
