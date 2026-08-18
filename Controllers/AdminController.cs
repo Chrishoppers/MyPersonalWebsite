@@ -1963,23 +1963,33 @@ namespace MyPersonalWebsite.Controllers
         // ⭐ 资源管理（管理员）
         // ============================================================
 
-        [HttpGet]
-        public async Task<IActionResult> ResourceManagement()
-        {
-            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-            if (isAdmin != 1) return RedirectToAction("Login", "Auth");
+        // AdminController.cs - ResourceManagement
 
-            var allRequests = await _dataSync.GetAllResourceRequestsAsync();
-            var pendingRequests = allRequests.Where(r => r.Status == "pending" || r.Status == "processing").ToList();
-            var processedRequests = allRequests.Where(r => r.Status == "completed" || r.Status == "rejected" || r.Status == "refunded").ToList();
+[HttpGet]
+public async Task<IActionResult> ResourceManagement()
+{
+    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+    if (isAdmin != 1) return RedirectToAction("Login", "Auth");
 
-            ViewBag.PendingCount = pendingRequests.Count;
-            ViewBag.ProcessedCount = processedRequests.Count;
-            ViewBag.TotalCount = allRequests.Count;
-            ViewBag.PendingRequests = pendingRequests;
-            ViewBag.ProcessedRequests = processedRequests.Take(50).ToList();
-            return View();
-        }
+    var allRequests = await _dataSync.GetAllResourceRequestsAsync();
+
+    // ⭐ 按支付状态和订单状态分组
+    var pendingPaymentRequests = allRequests.Where(r => !r.IsPaid && r.Status != "rejected" && r.Status != "refunded").ToList();
+    var paidRequests = allRequests.Where(r => r.IsPaid && (r.Status == "paid" || r.Status == "pending")).ToList();
+    var pendingRequests = allRequests.Where(r => r.Status == "pending" || r.Status == "processing").ToList();
+    var processedRequests = allRequests.Where(r => r.Status == "completed" || r.Status == "rejected" || r.Status == "refunded").ToList();
+
+    ViewBag.PendingPaymentCount = pendingPaymentRequests.Count;
+    ViewBag.PendingPaymentRequests = pendingPaymentRequests;
+    ViewBag.PaidRequests = paidRequests;
+    ViewBag.PendingCount = pendingRequests.Count;
+    ViewBag.ProcessedCount = processedRequests.Count;
+    ViewBag.TotalCount = allRequests.Count;
+    ViewBag.PendingRequests = pendingRequests;
+    ViewBag.ProcessedRequests = processedRequests.Take(50).ToList();
+
+    return View();
+}
 
         [HttpGet]
         public async Task<IActionResult> ProcessResource(int id)
