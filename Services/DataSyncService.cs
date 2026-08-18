@@ -1819,94 +1819,103 @@ namespace MyPersonalWebsite.Services
             return list.FirstOrDefault();
         }
 
-        private List<ResourceRequest> ParseResourceRequestList(string json)
+       private List<ResourceRequest> ParseResourceRequestList(string json)
+{
+    var list = new List<ResourceRequest>();
+    try
+    {
+        using var doc = JsonDocument.Parse(json);
+        var root = doc.RootElement;
+
+        if (root.TryGetProperty("results", out var results) && results.GetArrayLength() > 0)
         {
-            var list = new List<ResourceRequest>();
-            try
+            var firstResult = results[0];
+            if (firstResult.TryGetProperty("response", out var response) &&
+                response.TryGetProperty("result", out var result))
             {
-                using var doc = JsonDocument.Parse(json);
-                var root = doc.RootElement;
-
-                if (root.TryGetProperty("results", out var results) && results.GetArrayLength() > 0)
+                if (result.TryGetProperty("rows", out var rows) && rows.GetArrayLength() > 0)
                 {
-                    var firstResult = results[0];
-                    if (firstResult.TryGetProperty("response", out var response) &&
-                        response.TryGetProperty("result", out var result))
+                    var cols = result.GetProperty("cols");
+
+                    for (int r = 0; r < rows.GetArrayLength(); r++)
                     {
-                        if (result.TryGetProperty("rows", out var rows) && rows.GetArrayLength() > 0)
+                        var row = rows[r];
+                        if (row.ValueKind != JsonValueKind.Array) continue;
+
+                        var req = new ResourceRequest();
+
+                        for (int i = 0; i < cols.GetArrayLength(); i++)
                         {
-                            var cols = result.GetProperty("cols");
+                            var colName = cols[i].GetProperty("name").GetString();
+                            var element = row[i];
 
-                            for (int r = 0; r < rows.GetArrayLength(); r++)
+                            switch (colName)
                             {
-                                var row = rows[r];
-                                if (row.ValueKind != JsonValueKind.Array) continue;
-
-                                var req = new ResourceRequest();
-
-                                for (int i = 0; i < cols.GetArrayLength(); i++)
-                                {
-                                    var colName = cols[i].GetProperty("name").GetString();
-                                    var element = row[i];
-
-                                    switch (colName)
-                                    {
-                                        case "Id": req.Id = GetIntFromRow(element); break;
-                                        case "UserId": req.UserId = GetIntFromRow(element); break;
-                                        case "UserName": req.UserName = GetStringFromRow(element); break;
-                                        case "UserEmail": req.UserEmail = GetStringFromRow(element); break;
-                                        case "PersonName": req.PersonName = GetStringFromRow(element); break;
-                                        case "Platform1": req.Platform1 = GetStringFromRow(element); break;
-                                        case "Platform2": req.Platform2 = GetStringFromRow(element); break;
-                                        case "PlatformOther": req.PlatformOther = GetStringOrNullFromRow(element); break;
-                                        case "CharacterName": req.CharacterName = GetStringFromRow(element); break;
-                                        case "ResourceType": req.ResourceType = GetStringFromRow(element); break;
-                                        case "CharacterSetting": req.CharacterSetting = GetStringFromRow(element); break;
-                                        case "NovelPreference": req.NovelPreference = GetStringFromRow(element); break;
-                                        case "ComicPreference": req.ComicPreference = GetStringFromRow(element); break;
-                                        case "ImagePreference": req.ImagePreference = GetStringFromRow(element); break;
-                                        case "VerifyPlatform": req.VerifyPlatform = GetStringFromRow(element); break;
-                                        case "VerifyAccountId": req.VerifyAccountId = GetStringFromRow(element); break;
-                                        case "IsFollowVerified": req.IsFollowVerified = GetBoolFromRow(element); break;
-                                        case "FollowVerifiedAt": req.FollowVerifiedAt = GetDateTimeFromRow(element); break;
-                                        case "FollowVerifyError": req.FollowVerifyError = GetStringOrNullFromRow(element); break;
-                                        case "VerifyStatus": req.VerifyStatus = GetStringFromRow(element); break;
-                                        case "AgreeToBLContent": req.AgreeToBLContent = GetBoolFromRow(element); break;
-                                        case "AgreeToTerms": req.AgreeToTerms = GetBoolFromRow(element); break;
-                                        case "OrderId": req.OrderId = GetStringFromRow(element); break;
-                                        case "Amount": 
-                                            var amountVal = GetValueFromRow(element);
-                                            if (amountVal is JsonElement je && je.ValueKind == JsonValueKind.Number)
-                                                req.Amount = (decimal)je.GetDouble();
-                                            else
-                                                req.Amount = 2.00m;
-                                            break;
-                                        case "PaymentMethod": req.PaymentMethod = GetStringFromRow(element); break;
-                                        case "IsPaid": req.IsPaid = GetBoolFromRow(element); break;
-                                        case "PaidAt": req.PaidAt = GetDateTimeFromRow(element); break;
-                                        case "PaidNote": req.PaidNote = GetStringOrNullFromRow(element); break;
-                                        case "AdminPaidBy": req.AdminPaidBy = GetStringOrNullFromRow(element); break;
-                                        case "Status": req.Status = GetStringFromRow(element); break;
-                                        case "CreatedAt": req.CreatedAt = GetDateTimeFromRow(element) ?? DateTime.Now; break;
-                                        case "ProcessedAt": req.ProcessedAt = GetDateTimeFromRow(element); break;
-                                        case "FoundTypes": req.FoundTypes = GetStringFromRow(element); break;
-                                        case "NotFoundTypes": req.NotFoundTypes = GetStringFromRow(element); break;
-                                        case "AdminNote": req.AdminNote = GetStringFromRow(element); break;
-                                        case "AdminName": req.AdminName = GetStringFromRow(element); break;
-                                    }
-                                }
-                                list.Add(req);
+                                case "Id": req.Id = GetIntFromRow(element); break;
+                                case "UserId": req.UserId = GetIntFromRow(element); break;
+                                case "UserName": req.UserName = GetStringFromRow(element); break;
+                                case "UserEmail": req.UserEmail = GetStringFromRow(element); break;
+                                case "PersonName": req.PersonName = GetStringFromRow(element); break;
+                                case "Platform1": req.Platform1 = GetStringFromRow(element); break;
+                                case "Platform2": req.Platform2 = GetStringFromRow(element); break;
+                                case "PlatformOther": req.PlatformOther = GetStringOrNullFromRow(element); break;
+                                case "CharacterName": req.CharacterName = GetStringFromRow(element); break;
+                                case "ResourceType": req.ResourceType = GetStringFromRow(element); break;
+                                case "CharacterSetting": req.CharacterSetting = GetStringFromRow(element); break;
+                                case "NovelPreference": req.NovelPreference = GetStringFromRow(element); break;
+                                case "ComicPreference": req.ComicPreference = GetStringFromRow(element); break;
+                                case "ImagePreference": req.ImagePreference = GetStringFromRow(element); break;
+                                case "VerifyPlatform": req.VerifyPlatform = GetStringFromRow(element); break;
+                                case "VerifyAccountId": req.VerifyAccountId = GetStringFromRow(element); break;
+                                case "IsFollowVerified": req.IsFollowVerified = GetBoolFromRow(element); break;
+                                case "FollowVerifiedAt": req.FollowVerifiedAt = GetDateTimeFromRow(element); break;
+                                case "FollowVerifyError": req.FollowVerifyError = GetStringOrNullFromRow(element); break;
+                                case "VerifyStatus": req.VerifyStatus = GetStringFromRow(element); break;
+                                case "AgreeToBLContent": req.AgreeToBLContent = GetBoolFromRow(element); break;
+                                case "AgreeToTerms": req.AgreeToTerms = GetBoolFromRow(element); break;
+                                case "Description": req.Description = GetStringFromRow(element); break;
+                                case "ResourceName": req.ResourceName = GetStringFromRow(element); break;
+                                case "RefundOption": req.RefundOption = GetStringFromRow(element); break;
+                                case "RefundAmount": 
+                                    var amt = GetValueFromRow(element);
+                                    if (amt is JsonElement je && je.ValueKind == JsonValueKind.Number)
+                                        req.RefundAmount = (decimal)je.GetDouble();
+                                    break;
+                                case "RefundDeadline": req.RefundDeadline = GetDateTimeFromRow(element); break;
+                                case "FileUrl": req.FileUrl = GetStringFromRow(element); break;
+                                case "OrderId": req.OrderId = GetStringFromRow(element); break;
+                                case "Amount":
+                                    var amt2 = GetValueFromRow(element);
+                                    if (amt2 is JsonElement je2 && je2.ValueKind == JsonValueKind.Number)
+                                        req.Amount = (decimal)je2.GetDouble();
+                                    else
+                                        req.Amount = 2.00m;
+                                    break;
+                                case "IsPaid": req.IsPaid = GetBoolFromRow(element); break;
+                                case "PaidAt": req.PaidAt = GetDateTimeFromRow(element); break;
+                                case "PaidNote": req.PaidNote = GetStringOrNullFromRow(element); break;
+                                case "AdminPaidBy": req.AdminPaidBy = GetStringOrNullFromRow(element); break;
+                                case "Status": req.Status = GetStringFromRow(element); break;
+                                case "CreatedAt": req.CreatedAt = GetDateTimeFromRow(element) ?? DateTime.Now; break;
+                                case "ProcessedAt": req.ProcessedAt = GetDateTimeFromRow(element); break;
+                                case "FoundTypes": req.FoundTypes = GetStringFromRow(element); break;
+                                case "NotFoundTypes": req.NotFoundTypes = GetStringFromRow(element); break;
+                                case "AdminNote": req.AdminNote = GetStringFromRow(element); break;
+                                case "AdminName": req.AdminName = GetStringFromRow(element); break;
                             }
                         }
+                        list.Add(req);
                     }
                 }
             }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"⚠️ 解析 ResourceRequest JSON 失败: {ex.Message}");
-            }
-            return list;
         }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"⚠️ 解析 ResourceRequest JSON 失败: {ex.Message}");
+    }
+    return list;
+}
 
         // ============================================================
         // GameSession 解析
