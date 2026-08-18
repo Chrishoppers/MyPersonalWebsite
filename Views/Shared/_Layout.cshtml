@@ -49,117 +49,209 @@
         .nav-item.dropdown { position: relative; }
         .nav-link-bell { position: relative; cursor: pointer; padding: 0.5rem 0.8rem; border-radius: 40px; transition: all 0.3s ease; }
         .nav-link-bell:hover { background: rgba(255,255,255,0.04); }
+
+        /* ⭐ 受限用户提示条 */
+        .restricted-banner {
+            background: linear-gradient(135deg, rgba(139,92,246,0.08), rgba(236,72,153,0.08));
+            border-bottom: 1px solid rgba(139,92,246,0.06);
+            padding: 0.3rem 0;
+            text-align: center;
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.2);
+        }
+        .restricted-banner strong {
+            color: #8B5CF6;
+        }
+        .restricted-banner .highlight {
+            color: #EC4899;
+        }
     </style>
 </head>
 <body>
 
+@{
+    var userId = Context.Session.GetInt32("UserId");
+    var isAdmin = Context.Session.GetInt32("IsAdmin") ?? 0;
+    var isRestricted = Context.Session.GetInt32("IsRestricted") ?? 0;
+    var username = Context.Session.GetString("Username");
+    
+    // ⭐ 受限用户允许的路径
+    var currentPath = Context.Request.Path.Value?.ToLower() ?? "";
+    var allowedPaths = new[] { "/resource", "/auth", "/home/contact", "/home/about" };
+    var isAllowedPath = allowedPaths.Any(p => currentPath.StartsWith(p, StringComparison.OrdinalIgnoreCase));
+    
+    // ⭐ 如果是受限用户且不在允许路径中，重定向到资源大厅
+    if (isRestricted == 1 && !isAllowedPath && !currentPath.Contains("/resource"))
+    {
+        Context.Response.Redirect("/Resource/Index");
+        return;
+    }
+}
+
+    <!-- ⭐ 受限用户顶部提示条 -->
+    @if (isRestricted == 1)
+    {
+        <div class="restricted-banner">
+            🔒 你当前处于 <strong>资源专区</strong> 模式 · 仅可访问资源相关页面
+            <span class="highlight">✦</span> 如需完整访问，请联系管理员
+        </div>
+    }
+
     <nav class="navbar navbar-expand-lg nav-advanced">
         <div class="container">
-            <a class="navbar-brand nav-brand" href="/"><i class="bi bi-command"></i> Chris hopper</a>
+            <a class="navbar-brand nav-brand" href="/">
+                <i class="bi bi-command"></i> 
+                @if (isRestricted == 1)
+                {
+                    <span>资源专区</span>
+                }
+                else
+                {
+                    <span>Chris hopper</span>
+                }
+            </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" style="border:1px solid rgba(255,255,255,0.06);">
                 <span class="navbar-toggler-icon" style="filter:invert(1);"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-                @{
-                    var userId = Context.Session.GetInt32("UserId");
-                    var isAdmin = Context.Session.GetInt32("IsAdmin") ?? 0;
-                    var username = Context.Session.GetString("Username");
-                }
                 <ul class="navbar-nav ms-auto">
-                    <li class="nav-item"><a class="nav-link" href="/"><i class="bi bi-house"></i> 首页</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/Blog"><i class="bi bi-journal"></i> 博客</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/Home/About"><i class="bi bi-person"></i> 关于</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/Home/Contact"><i class="bi bi-envelope"></i> 联系</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/Message/Index"><i class="bi bi-chat"></i> 留言</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/Game"><i class="bi bi-controller"></i> 游戏</a></li>
-
+                    
                     @if (userId.HasValue)
                     {
-                        MyPersonalWebsite.Models.User? user = null;
-                        string? avatarUrl = null;
-                        bool isAvatarApproved = false;
-                        int unreadCount = 0;
-                        var notifications = new List<MyPersonalWebsite.Models.Notification>();
-                        try
+                        @if (isRestricted == 1)
                         {
-                            var dataSync = Context.RequestServices.GetService<MyPersonalWebsite.Services.DataSyncService>();
-                            if (dataSync != null)
+                            <!-- ⭐⭐⭐ 受限用户：只显示资源大厅一个按钮 ⭐⭐⭐ -->
+                            <li class="nav-item"><a class="nav-link" href="/Resource/Index" style="color:#8B5CF6;font-weight:600;"><i class="bi bi-box"></i> 资源大厅</a></li>
+                            
+                            <!-- ⭐ 登出按钮（必须保留，否则用户无法退出） -->
+                            <li class="nav-item"><a class="nav-link" href="/Auth/Logout" style="color:#EC4899;"><i class="bi bi-box-arrow-right"></i> 退出</a></li>
+                        }
+                        else
+                        {
+                            <!-- ⭐ 正常用户显示所有导航 -->
+                            <li class="nav-item"><a class="nav-link" href="/"><i class="bi bi-house"></i> 首页</a></li>
+                            <li class="nav-item"><a class="nav-link" href="/Blog"><i class="bi bi-journal"></i> 博客</a></li>
+                            <li class="nav-item"><a class="nav-link" href="/Home/About"><i class="bi bi-person"></i> 关于</a></li>
+                            <li class="nav-item"><a class="nav-link" href="/Home/Contact"><i class="bi bi-envelope"></i> 联系</a></li>
+                            <li class="nav-item"><a class="nav-link" href="/Message/Index"><i class="bi bi-chat"></i> 留言</a></li>
+                            <li class="nav-item"><a class="nav-link" href="/Game"><i class="bi bi-controller"></i> 游戏</a></li>
+                            
+                            @if (isAdmin == 1)
                             {
-                                user = await dataSync.GetUserByIdAsync(userId.Value);
-                                if (user != null)
-                                {
-                                    avatarUrl = user.AvatarUrl;
-                                    isAvatarApproved = user.IsAvatarApproved;
-                                }
-                                notifications = await dataSync.GetNotificationsByUserIdAsync(userId.Value);
-                                unreadCount = notifications.Count(n => !n.IsRead);
+                                <li class="nav-item"><a class="nav-link" href="/Admin/Dashboard" style="color:#8B5CF6;"><i class="bi bi-speedometer2"></i> 管理</a></li>
                             }
-                        }
-                        catch { }
 
-                        @if (isAdmin == 1)
-                        {
-                            <li class="nav-item"><a class="nav-link" href="/Admin/Dashboard" style="color:#8B5CF6;"><i class="bi bi-speedometer2"></i> 管理</a></li>
-                        }
-
-                        <li class="nav-item dropdown">
-                            <a class="nav-link nav-link-bell" onclick="toggleNotifications(event)">
-                                <i class="bi bi-bell" style="font-size:1.2rem;"></i>
-                                @if (unreadCount > 0)
-                                {
-                                    <span class="notif-badge">@(unreadCount > 99 ? "99+" : unreadCount.ToString())</span>
-                                }
-                            </a>
-                            <div class="notif-dropdown" id="notifDropdown">
-                                <div class="notif-header">
-                                    <span>📬 通知</span>
+                            <!-- ⭐ 通知 -->
+                            <li class="nav-item dropdown">
+                                <a class="nav-link nav-link-bell" onclick="toggleNotifications(event)">
+                                    <i class="bi bi-bell" style="font-size:1.2rem;"></i>
+                                    @{
+                                        int unreadCount = 0;
+                                        try
+                                        {
+                                            var dataSync = Context.RequestServices.GetService<MyPersonalWebsite.Services.DataSyncService>();
+                                            if (dataSync != null)
+                                            {
+                                                var notifications = await dataSync.GetNotificationsByUserIdAsync(userId.Value);
+                                                unreadCount = notifications.Count(n => !n.IsRead);
+                                            }
+                                        }
+                                        catch { }
+                                    }
                                     @if (unreadCount > 0)
                                     {
-                                        <button onclick="markAllRead()" class="notif-mark-all">全部已读</button>
+                                        <span class="notif-badge">@(unreadCount > 99 ? "99+" : unreadCount.ToString())</span>
                                     }
-                                </div>
-                                <div class="notif-list" id="notifList">
-                                    @if (notifications.Any())
-                                    {
-                                        foreach (var n in notifications.Take(10))
+                                </a>
+                                <div class="notif-dropdown" id="notifDropdown">
+                                    <div class="notif-header">
+                                        <span>📬 通知</span>
+                                        @if (unreadCount > 0)
                                         {
-                                            <div class="notif-item @(n.IsRead ? "read" : "")" data-id="@n.Id" onclick="markNotifRead(@n.Id, this)">
-                                                <div class="notif-dot @n.Type"></div>
-                                                <div class="notif-content">
-                                                    <div class="notif-title">@n.Title</div>
-                                                    <div class="notif-msg">@n.Message</div>
-                                                    <div class="notif-time">@n.CreatedAt.ToString("MM-dd HH:mm")</div>
-                                                </div>
-                                            </div>
+                                            <button onclick="markAllRead()" class="notif-mark-all">全部已读</button>
                                         }
+                                    </div>
+                                    <div class="notif-list" id="notifList">
+                                        @{
+                                            try
+                                            {
+                                                var dataSync = Context.RequestServices.GetService<MyPersonalWebsite.Services.DataSyncService>();
+                                                if (dataSync != null)
+                                                {
+                                                    var notifications = await dataSync.GetNotificationsByUserIdAsync(userId.Value);
+                                                    if (notifications.Any())
+                                                    {
+                                                        foreach (var n in notifications.Take(10))
+                                                        {
+                                                            <div class="notif-item @(n.IsRead ? "read" : "")" data-id="@n.Id" onclick="markNotifRead(@n.Id, this)">
+                                                                <div class="notif-dot @n.Type"></div>
+                                                                <div class="notif-content">
+                                                                    <div class="notif-title">@n.Title</div>
+                                                                    <div class="notif-msg">@n.Message</div>
+                                                                    <div class="notif-time">@n.CreatedAt.ToString("MM-dd HH:mm")</div>
+                                                                </div>
+                                                            </div>
+                                                        }
+                                                    }
+                                                    else
+                                                    {
+                                                        <div class="notif-empty">🎉 暂无通知</div>
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    <div class="notif-empty">🎉 暂无通知</div>
+                                                }
+                                            }
+                                            catch
+                                            {
+                                                <div class="notif-empty">🎉 暂无通知</div>
+                                            }
+                                        }
+                                    </div>
+                                    <div class="notif-footer"><a href="/Home/Notifications">查看全部</a></div>
+                                </div>
+                            </li>
+
+                            <!-- ⭐ 用户头像 -->
+                            <li class="nav-item">
+                                <a class="nav-link" href="/Home/Profile">
+                                    @{
+                                        string? avatarUrl = null;
+                                        bool isAvatarApproved = false;
+                                        try
+                                        {
+                                            var dataSync = Context.RequestServices.GetService<MyPersonalWebsite.Services.DataSyncService>();
+                                            if (dataSync != null)
+                                            {
+                                                var user = await dataSync.GetUserByIdAsync(userId.Value);
+                                                if (user != null)
+                                                {
+                                                    avatarUrl = user.AvatarUrl;
+                                                    isAvatarApproved = user.IsAvatarApproved;
+                                                }
+                                            }
+                                        }
+                                        catch { }
+                                    }
+                                    @if (!string.IsNullOrEmpty(avatarUrl) && isAvatarApproved)
+                                    {
+                                        <img src="@avatarUrl" alt="头像" class="nav-avatar" />
                                     }
                                     else
                                     {
-                                        <div class="notif-empty">🎉 暂无通知</div>
+                                        <span class="nav-avatar-placeholder">@(username?.FirstOrDefault().ToString().ToUpper() ?? "?")</span>
                                     }
-                                </div>
-                                <div class="notif-footer"><a href="/Home/Notifications">查看全部</a></div>
-                            </div>
-                        </li>
+                                    <span>@username</span>
+                                </a>
+                            </li>
 
-                        <li class="nav-item">
-                            <a class="nav-link" href="/Home/Profile">
-                                @if (!string.IsNullOrEmpty(avatarUrl) && isAvatarApproved)
-                                {
-                                    <img src="@avatarUrl" alt="头像" class="nav-avatar" />
-                                }
-                                else
-                                {
-                                    <span class="nav-avatar-placeholder">@(username?.FirstOrDefault().ToString().ToUpper() ?? "?")</span>
-                                }
-                                <span>@username</span>
-                            </a>
-                        </li>
-
-                        <li class="nav-item"><a class="nav-link" href="/Auth/Logout" style="color:#EC4899;"><i class="bi bi-box-arrow-right"></i></a></li>
+                            <li class="nav-item"><a class="nav-link" href="/Auth/Logout" style="color:#EC4899;"><i class="bi bi-box-arrow-right"></i></a></li>
+                        }
                     }
                     else
                     {
+                        <!-- ⭐ 未登录状态 -->
                         <li class="nav-item"><a class="nav-link" href="/Auth/Login"><i class="bi bi-box-arrow-in-right"></i> 登录</a></li>
                         <li class="nav-item"><a class="nav-link" href="/Auth/Register" style="background:linear-gradient(135deg,#8B5CF6,#EC4899);color:#fff;border-radius:50px;padding:0.4rem 1.2rem;">注册</a></li>
                     }
@@ -175,7 +267,14 @@
     <footer style="border-top:1px solid rgba(255,255,255,0.03);padding:2rem 0;margin-top:2rem;">
         <div class="container text-center">
             <p style="color:rgba(255,255,255,0.3);font-size:0.85rem;">
-                © 2026 <span style="background:linear-gradient(135deg,#8B5CF6,#EC4899,#F59E0B);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Chris hopper</span>
+                @if (isRestricted == 1)
+                {
+                    <span>© 2026 <span style="color:#8B5CF6;">Chris hopper</span> · 资源专区</span>
+                }
+                else
+                {
+                    <span>© 2026 <span style="background:linear-gradient(135deg,#8B5CF6,#EC4899,#F59E0B);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Chris hopper</span></span>
+                }
                 <br>
                 <span style="font-size:0.75rem;color:rgba(255,255,255,0.15);">用 <i class="bi bi-heart-fill" style="color:#EC4899;"></i> 和 ASP.NET Core 10.0 构建</span>
             </p>
@@ -332,7 +431,7 @@
         }
 
         // ============================================================
-        // ⭐ 恐怖入侵：极度扭曲 + 禁用交互
+        // ⭐ 恐怖入侵
         // ============================================================
         function triggerHorrorInvasion(message) {
             if (document.documentElement.requestFullscreen) {
@@ -340,7 +439,6 @@
             }
             playHorrorSound();
 
-            // ===== 禁用所有交互元素 =====
             var allInteractive = document.querySelectorAll('button, a, input, textarea, select, [onclick], .nav-link, .btn, .btn-glass');
             var originalPointers = [];
             allInteractive.forEach(function(el, index) {
@@ -356,7 +454,6 @@
                 }
             });
 
-            // ===== 获取文本节点 =====
             var textNodes = [];
             var walker = document.createTreeWalker(
                 document.body,
@@ -396,13 +493,11 @@
             var startTime = Date.now();
             var duration = 12000;
 
-            // ===== 极度扭曲变形 =====
             var distortionInterval = setInterval(function() {
                 var elapsed = Date.now() - startTime;
                 var progress = Math.min(elapsed / duration, 1);
                 var intensity = progress * 15;
 
-                // 多重扭曲叠加
                 var skewX = Math.sin(elapsed / 200) * intensity * 0.6;
                 var skewY = Math.cos(elapsed / 250 + 1) * intensity * 0.4;
                 var scaleX = 1 + Math.sin(elapsed / 300) * intensity * 0.015;
@@ -411,7 +506,6 @@
                 var translateX = Math.sin(elapsed / 220) * intensity * 1.5;
                 var translateY = Math.cos(elapsed / 280 + 1.5) * intensity * 1.5;
 
-                // 应用极度扭曲
                 document.body.style.transform =
                     'skewX(' + skewX + 'deg) skewY(' + skewY + 'deg) ' +
                     'scale(' + scaleX + ',' + scaleY + ') ' +
@@ -420,7 +514,6 @@
                 document.body.style.transformOrigin = 'center center';
                 document.body.style.transition = 'none';
 
-                // 红色边框脉冲
                 if (progress > 0.2 && Math.random() > 0.7) {
                     var borderIntensity = 0.05 + Math.random() * 0.15;
                     document.body.style.boxShadow = 'inset 0 0 ' + (80 + Math.random() * 150) + 'px rgba(255,0,0,' + borderIntensity + ')';
@@ -428,7 +521,6 @@
                     document.body.style.boxShadow = 'inset 0 0 20px rgba(255,0,0,0.02)';
                 }
 
-                // 屏幕闪烁
                 if (Math.random() > 0.92) {
                     document.body.style.backgroundColor = 'rgba(255,0,0,0.02)';
                     setTimeout(function() { document.body.style.backgroundColor = ''; }, 50);
@@ -436,7 +528,6 @@
 
             }, 30);
 
-            // ===== 乱码从中心扩散 =====
             var glitchInterval = setInterval(function() {
                 var elapsed = Date.now() - startTime;
                 var progress = Math.min(elapsed / duration, 1);
@@ -472,13 +563,11 @@
                     document.body.style.boxShadow = '';
                     document.body.style.backgroundColor = '';
 
-                    // ===== 黑屏恐怖显示 =====
                     var overlay = document.createElement('div');
                     overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.97);z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:default;user-select:none;overflow:hidden;';
                     overlay.id = 'horrorOverlay';
                     document.body.appendChild(overlay);
 
-                    // 图片
                     var images = ['ghost.png','face1.png','face2.png','face3.png','skull.png','demon.png','scream.png','blood_eyes.png'];
                     var selectedImage = images[Math.floor(Math.random() * images.length)];
                     var img = document.createElement('img');
@@ -493,7 +582,6 @@
                     };
                     overlay.appendChild(img);
 
-                    // 缩放动画
                     var scale = 0.05;
                     var scaleInterval = setInterval(function() {
                         scale += 0.07;
@@ -504,21 +592,18 @@
                         img.style.transform = 'scale(' + scale + ') rotate(' + (scale * 15 - 15) + 'deg)';
                     }, 20);
 
-                    // 抖动
                     var shakeInterval = setInterval(function() {
                         if (Math.random() > 0.4) {
                             var dx = (Math.random() - 0.5) * 30;
                             var dy = (Math.random() - 0.5) * 30;
                             var dr = (Math.random() - 0.5) * 8;
                             img.style.transform += ' translate(' + dx + 'px, ' + dy + 'px) rotate(' + dr + 'deg)';
-                            // 立即复位
                             setTimeout(function() {
                                 img.style.transform = img.style.transform.replace(/translate\([^)]*\)/g, '').replace(/rotate\([^)]*\)/g, '');
                             }, 50);
                         }
                     }, 100);
 
-                    // 恐怖文字
                     var messages = [
                         '你 刚 才 关 门 了 吗 ？',
                         '镜 子 里 的 人 刚 才 笑 了',
@@ -543,7 +628,6 @@
                     textDiv.textContent = finalMsg;
                     overlay.appendChild(textDiv);
 
-                    // 文字扭曲动画
                     var textDistortion = setInterval(function() {
                         var time = Date.now() / 1000;
                         var skew = Math.sin(time * 2.5) * 5;
@@ -563,7 +647,6 @@
                     subDiv.textContent = '⚠️ 你 已 经 无 法 逃 离 ⚠️';
                     overlay.appendChild(subDiv);
 
-                    // 闪烁
                     var flashInterval = setInterval(function() {
                         var flash = document.createElement('div');
                         flash.style.cssText = 'position:fixed;inset:0;background:rgba(255,0,0,' + (0.05 + Math.random() * 0.12) + ');z-index:99998;pointer-events:none;';
@@ -571,7 +654,6 @@
                         setTimeout(function() { flash.remove(); }, 80);
                     }, 150);
 
-                    // 4秒后恢复
                     setTimeout(function() {
                         clearInterval(flashInterval);
                         clearInterval(shakeInterval);
@@ -580,7 +662,6 @@
                             item.node.textContent = item.original || '';
                         });
 
-                        // 恢复交互
                         allInteractive.forEach(function(el, index) {
                             el.style.pointerEvents = originalPointers[index] || '';
                             el.style.cursor = '';
