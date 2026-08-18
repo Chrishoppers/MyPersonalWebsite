@@ -323,5 +323,47 @@ namespace MyPersonalWebsite.Controllers
 
             return View(request);
         }
+        // Controllers/ResourceController.cs
+
+/// <summary>
+/// 支付页面
+/// </summary>
+[HttpGet]
+public async Task<IActionResult> Pay(int id)
+{
+    var userId = HttpContext.Session.GetInt32("UserId");
+    if (!userId.HasValue)
+        return RedirectToAction("Login", "Auth");
+
+    var request = await _dataSync.GetResourceRequestByIdAsync(id);
+    if (request == null || request.UserId != userId.Value)
+        return NotFound();
+
+    if (request.IsPaid)
+    {
+        TempData["Message"] = "该订单已支付";
+        return RedirectToAction("History", "Resource");
+    }
+
+    ViewBag.PaymentMethod = "wechat";
+    return View(request);
+}
+
+/// <summary>
+/// 检查支付状态（AJAX）
+/// </summary>
+[HttpGet]
+public async Task<IActionResult> CheckPayment(int requestId)
+{
+    var userId = HttpContext.Session.GetInt32("UserId");
+    if (!userId.HasValue)
+        return Json(new { paid = false });
+
+    var request = await _dataSync.GetResourceRequestByIdAsync(requestId);
+    if (request == null || request.UserId != userId.Value)
+        return Json(new { paid = false });
+
+    return Json(new { paid = request.IsPaid });
+}
     }
 }
