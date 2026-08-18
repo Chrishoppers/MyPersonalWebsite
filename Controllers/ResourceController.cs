@@ -27,6 +27,37 @@ namespace MyPersonalWebsite.Controllers
             _context = context;
             _platformVerifyService = platformVerifyService;
         }
+        // Controllers/ResourceController.cs - Index 方法
+
+public async Task<IActionResult> Index()
+{
+    var userId = HttpContext.Session.GetInt32("UserId");
+    if (!userId.HasValue)
+    {
+        return RedirectToAction("Login", "Auth");
+    }
+
+    var user = await _dataSync.GetUserByIdAsync(userId.Value);
+    if (user == null)
+    {
+        return RedirectToAction("Login", "Auth");
+    }
+
+    if (user.IsBanned)
+    {
+        TempData["Error"] = "您的账号已被封禁，无法使用资源系统";
+        return RedirectToAction("Index", "Home");
+    }
+
+    // ⭐ 如果是受限用户，显示欢迎信息
+    if (user.IsRestricted)
+    {
+        ViewBag.WelcomeMessage = "👋 欢迎来到资源专区！你通过二维码注册，可在此提交资源申请。";
+    }
+
+    ViewBag.User = user;
+    return View();
+}
 
         // ============================================================
         // 1. 资源大厅
