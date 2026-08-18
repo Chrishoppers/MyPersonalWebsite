@@ -212,5 +212,28 @@ public async Task<IActionResult> Submit(ResourceRequest request)
 
             return View(request);
         }
+        // Controllers/ResourceController.cs
+
+/// <summary>
+/// 验证平台用户ID
+/// </summary>
+[HttpPost]
+public async Task<IActionResult> VerifyPlatform(string platform, string userId)
+{
+    if (string.IsNullOrEmpty(platform) || string.IsNullOrEmpty(userId))
+    {
+        return Json(new { success = false, message = "平台和ID不能为空" });
+    }
+
+    var (isValid, message, displayName) = await _platformVerifyService.VerifyPlatformUserAsync(platform, userId);
+    
+    return Json(new 
+    { 
+        success = true, 
+        isValid = isValid,
+        message = message,
+        displayName = displayName
+    });
+}
     }
 }
