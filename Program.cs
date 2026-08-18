@@ -110,6 +110,15 @@ builder.Services.AddHttpClient<DeepSeekService>();
 builder.Services.AddHttpClient<TrainService>();
 builder.Services.AddHttpClient<ReCaptchaService>();
 builder.Services.AddScoped<WerewolfVoiceService>();
+// Program.cs
+
+// 添加服务
+builder.Services.AddScoped<PlatformVerifyService>();
+builder.Services.AddHttpClient<PlatformVerifyService>(client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(10);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+});
 
 // ============================================================
 // ⭐ SignalR（核心）
