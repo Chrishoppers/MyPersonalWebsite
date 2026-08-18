@@ -330,6 +330,8 @@ namespace MyPersonalWebsite.Controllers
 /// <summary>
 /// 支付页面（只支持微信）
 /// </summary>
+// Controllers/ResourceController.cs - Pay 方法
+
 [HttpGet]
 public async Task<IActionResult> Pay(int id)
 {
@@ -347,11 +349,10 @@ public async Task<IActionResult> Pay(int id)
         return RedirectToAction("History", "Resource");
     }
 
-    // ⭐ 设置支付方式为微信
+    // ⭐ 设置支付方式为微信（模型已包含 PaymentMethod 字段）
     request.PaymentMethod = "wechat";
     await _dataSync.UpdateResourceRequestAsync(request);
 
-    // ⭐ 微信收款二维码（从配置或静态文件读取）
     ViewBag.QRCodeUrl = "/images/payment/wechat_qr.jpg";
 
     return View(request);
