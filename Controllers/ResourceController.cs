@@ -227,35 +227,37 @@ namespace MyPersonalWebsite.Controllers
                 TempData["Error"] = "您有未处理的资源申请，请等待管理员处理";
                 return RedirectToAction("History");
             }
+             // ============================================================
+    // 保存申请（自动生成订单号）
+    // ============================================================
+    var now = DateTime.Now;
+    request.UserId = userId.Value;
+    request.UserName = user.Username;
+    request.UserEmail = user.Email;
+    request.Status = "pending";
+    request.Amount = 2.00m;  // 默认2元
+    request.CreatedAt = now;
+    request.IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "";
+    request.UserAgent = Request.Headers["User-Agent"].ToString();
 
-            // ============================================================
-            // 保存申请
-            // ============================================================
-            var now = DateTime.Now;
-            request.UserId = userId.Value;
-            request.UserName = user.Username;
-            request.UserEmail = user.Email;
-            request.Status = "pending";
-            request.CreatedAt = now;
-            request.IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "";
-            request.UserAgent = Request.Headers["User-Agent"].ToString();
+    await _dataSync.AddResourceRequestAsync(request);
 
-            await _dataSync.AddResourceRequestAsync(request);
+    // ⭐ 通知管理员
+    try
+    {
+        await _emailService.SendResourceRequestNotificationAsync(request);
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"管理员通知邮件发送失败: {ex.Message}");
+    }
 
-            // ============================================================
-            // 通知管理员
-            // ============================================================
-            try
-            {
-                await _emailService.SendResourceRequestNotificationAsync(request);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"管理员通知邮件发送失败: {ex.Message}");
-            }
+    // ⭐ 跳转到支付页面
+    return RedirectToAction("Pay", new { id = request.Id });
 
-            TempData["Success"] = "✅ 资源申请已提交，管理员将尽快处理";
-            return RedirectToAction("History");
+            
+
+           
         }
 
         // ============================================================
