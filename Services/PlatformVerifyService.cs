@@ -1,8 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
-using System.Collections.Generic;
+using Microsoft.Extensions.Logging;
 
 namespace MyPersonalWebsite.Services
 {
@@ -11,260 +12,308 @@ namespace MyPersonalWebsite.Services
         private readonly HttpClient _httpClient;
         private readonly ILogger<PlatformVerifyService> _logger;
 
+        // ⭐ 我的各平台账号
+        private readonly Dictionary<string, string> _myAccounts = new()
+        {
+            { "抖音", "chris_hopper" },
+            { "快手", "chris_hopper" },
+            { "B站", "chris_hopper" },
+            { "小红书", "chris_hopper" },
+            { "微博", "chris_hopper" },
+            { "知乎", "chris_hopper" }
+        };
+
         public PlatformVerifyService(HttpClient httpClient, ILogger<PlatformVerifyService> logger)
         {
             _httpClient = httpClient;
             _logger = logger;
         }
 
-        /// <summary>
-        /// 验证平台用户ID是否存在
-        /// </summary>
-        public async Task<(bool IsValid, string Message, string? DisplayName)> VerifyPlatformUserAsync(string platform, string userId)
+        public string GetMyAccount(string platform)
         {
-            if (string.IsNullOrEmpty(platform) || string.IsNullOrEmpty(userId))
-                return (false, "平台和ID不能为空", null);
+            return _myAccounts.GetValueOrDefault(platform, "");
+        }
 
-            platform = platform.ToLower();
+        public List<string> GetSupportedPlatforms()
+        {
+            return new List<string> { "抖音", "快手", "B站", "小红书", "微博", "知乎" };
+        }
+
+        /// <summary>
+        /// 验证是否关注了我
+        /// 返回: (是否验证通过, 显示消息, 用户显示名, 验证状态)
+        /// </summary>
+        public async Task<(bool IsValid, string Message, string? DisplayName, string VerifyStatus)> VerifyFollowAsync(
+            string platform,
+            string accountId)
+        {
+            if (string.IsNullOrEmpty(platform) || string.IsNullOrEmpty(accountId))
+                return (false, "平台和账号ID不能为空", null, "pending");
+
+            var myAccount = _myAccounts.GetValueOrDefault(platform, "");
+            if (string.IsNullOrEmpty(myAccount))
+                return (false, $"⚠️ 平台 '{platform}' 暂不支持验证", null, "pending");
 
             try
             {
                 switch (platform)
                 {
-                    case "douyin":
-                        return await VerifyDouyinAsync(userId);
-                    case "kuaishou":
-                        return await VerifyKuaishouAsync(userId);
-                    case "bilibili":
-                    case "b站":
-                        return await VerifyBilibiliAsync(userId);
-                    case "xiaohongshu":
+                    case "抖音":
+                        return await VerifyDouyinFollowAsync(accountId, myAccount);
+                    case "快手":
+                        return await VerifyKuaishouFollowAsync(accountId, myAccount);
+                    case "B站":
+                        return await VerifyBilibiliFollowAsync(accountId, myAccount);
                     case "小红书":
-                        return await VerifyXiaohongshuAsync(userId);
-                    case "weibo":
+                        return await VerifyXiaohongshuFollowAsync(accountId, myAccount);
                     case "微博":
-                        return await VerifyWeiboAsync(userId);
-                    case "zhihu":
+                        return await VerifyWeiboFollowAsync(accountId, myAccount);
                     case "知乎":
-                        return await VerifyZhihuAsync(userId);
+                        return await VerifyZhihuFollowAsync(accountId, myAccount);
                     default:
-                        // 不支持的平台，跳过验证（允许用户提交）
-                        return (true, "平台不支持自动验证，请管理员手动核实", null);
+                        return (false, $"⚠️ 平台 '{platform}' 暂不支持验证", null, "pending");
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError($"平台验证失败 ({platform}): {ex.Message}");
-                return (false, $"验证失败: {ex.Message}", null);
+                _logger.LogError($"关注验证失败 ({platform}): {ex.Message}");
+                return (false, $"验证失败: {ex.Message}", null, "pending");
             }
         }
 
-        /// <summary>
-        /// 验证抖音用户（通过公开API）
-        /// </summary>
-        private async Task<(bool IsValid, string Message, string? DisplayName)> VerifyDouyinAsync(string userId)
+        // ============================================================
+        // 各平台验证方法
+        // ============================================================
+
+        private async Task<(bool IsValid, string Message, string? DisplayName, string VerifyStatus)> VerifyDouyinFollowAsync(
+            string userId,
+            string myAccount)
         {
-            // 抖音用户主页: https://www.douyin.com/user/{userId}
-            // 注意：抖音可能需要模拟浏览器请求，这里使用HEAD请求检查页面是否存在
-            
             try
             {
                 var url = $"https://www.douyin.com/user/{userId}";
                 var request = new HttpRequestMessage(HttpMethod.Head, url);
                 request.Headers.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36");
-                
+
                 var response = await _httpClient.SendAsync(request);
-                
+
                 if (response.IsSuccessStatusCode)
                 {
-                    return (true, "✅ 抖音用户存在", null);
+                    return (true, $"✅ 用户 {userId} 存在，请管理员手动确认是否关注 @{myAccount}", null, "manual_required");
                 }
                 else if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
                 {
-                    return (false, "❌ 抖音用户不存在", null);
+                    return (false, $"❌ 用户 {userId} 不存在，请检查账号ID是否正确", null, "rejected");
                 }
                 else
                 {
-                    return (false, $"⚠️ 验证失败 (HTTP {response.StatusCode})", null);
+                    return (false, $"⚠️ 无法自动验证 (HTTP {response.StatusCode})，需要管理员人工核验", null, "manual_required");
                 }
             }
-            catch (Exception ex)
+            catch (HttpRequestException ex) when (ex.Message.Contains("403"))
             {
-                // 如果请求失败，可能是反爬，返回未知状态
-                return (true, "⚠️ 无法自动验证，请管理员手动核实", null);
+                return (false, $"⚠️ 抖音反爬限制，需要管理员人工核验是否关注 @{myAccount}", null, "manual_required");
+            }
+            catch
+            {
+                return (false, $"⚠️ 无法自动验证，需要管理员人工核验是否关注 @{myAccount}", null, "manual_required");
             }
         }
 
-        /// <summary>
-        /// 验证快手用户
-        /// </summary>
-        private async Task<(bool IsValid, string Message, string? DisplayName)> VerifyKuaishouAsync(string userId)
+        private async Task<(bool IsValid, string Message, string? DisplayName, string VerifyStatus)> VerifyKuaishouFollowAsync(
+            string userId,
+            string myAccount)
         {
             try
             {
                 var url = $"https://www.kuaishou.com/profile/{userId}";
                 var request = new HttpRequestMessage(HttpMethod.Head, url);
                 request.Headers.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36");
-                
+
                 var response = await _httpClient.SendAsync(request);
-                
+
                 if (response.IsSuccessStatusCode)
                 {
-                    return (true, "✅ 快手用户存在", null);
+                    return (true, $"✅ 用户 {userId} 存在，请管理员手动确认是否关注 @{myAccount}", null, "manual_required");
                 }
                 else if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
                 {
-                    return (false, "❌ 快手用户不存在", null);
+                    return (false, $"❌ 用户 {userId} 不存在，请检查账号ID是否正确", null, "rejected");
                 }
                 else
                 {
-                    return (false, $"⚠️ 验证失败 (HTTP {response.StatusCode})", null);
+                    return (false, $"⚠️ 无法自动验证 (HTTP {response.StatusCode})，需要管理员人工核验", null, "manual_required");
                 }
+            }
+            catch (HttpRequestException ex) when (ex.Message.Contains("403"))
+            {
+                return (false, $"⚠️ 快手反爬限制，需要管理员人工核验是否关注 @{myAccount}", null, "manual_required");
             }
             catch
             {
-                return (true, "⚠️ 无法自动验证，请管理员手动核实", null);
+                return (false, $"⚠️ 无法自动验证，需要管理员人工核验是否关注 @{myAccount}", null, "manual_required");
             }
         }
 
-        /// <summary>
-        /// 验证B站用户
-        /// </summary>
-        private async Task<(bool IsValid, string Message, string? DisplayName)> VerifyBilibiliAsync(string userId)
+        private async Task<(bool IsValid, string Message, string? DisplayName, string VerifyStatus)> VerifyBilibiliFollowAsync(
+            string userId,
+            string myAccount)
         {
             try
             {
-                // B站API: https://api.bilibili.com/x/space/acc/info?mid={userId}
                 var url = $"https://api.bilibili.com/x/space/acc/info?mid={userId}";
                 var response = await _httpClient.GetAsync(url);
-                
+
                 if (response.IsSuccessStatusCode)
                 {
                     var json = await response.Content.ReadAsStringAsync();
                     using var doc = JsonDocument.Parse(json);
                     var root = doc.RootElement;
-                    
-                    var code = root.GetProperty("code").GetInt32();
-                    if (code == 0)
+
+                    if (root.TryGetProperty("code", out var codeElement))
                     {
-                        var data = root.GetProperty("data");
-                        var name = data.GetProperty("name").GetString();
-                        return (true, $"✅ B站用户存在", name);
-                    }
-                    else if (code == -404)
-                    {
-                        return (false, "❌ B站用户不存在", null);
+                        var code = codeElement.GetInt32();
+                        if (code == 0)
+                        {
+                            var data = root.GetProperty("data");
+                            var name = data.TryGetProperty("name", out var nameEl) ? nameEl.GetString() : userId;
+                            return (true, $"✅ B站用户 {name} 存在，请管理员手动确认是否关注 @{myAccount}", name, "manual_required");
+                        }
+                        else if (code == -404)
+                        {
+                            return (false, $"❌ B站用户 {userId} 不存在，请检查账号ID是否正确", null, "rejected");
+                        }
+                        else
+                        {
+                            return (false, $"⚠️ B站API返回未知状态 (code: {code})，需要管理员人工核验", null, "manual_required");
+                        }
                     }
                     else
                     {
-                        return (false, $"⚠️ B站验证失败 (code: {code})", null);
+                        return (false, $"⚠️ B站API响应异常，需要管理员人工核验", null, "manual_required");
                     }
                 }
                 else
                 {
-                    // 降级：检查用户主页
                     var homeUrl = $"https://space.bilibili.com/{userId}";
                     var headRequest = new HttpRequestMessage(HttpMethod.Head, homeUrl);
                     headRequest.Headers.Add("User-Agent", "Mozilla/5.0");
+
                     var headResponse = await _httpClient.SendAsync(headRequest);
-                    
+
                     if (headResponse.IsSuccessStatusCode)
                     {
-                        return (true, "✅ B站用户存在", null);
+                        return (true, $"✅ B站用户 {userId} 存在，请管理员手动确认是否关注 @{myAccount}", null, "manual_required");
                     }
                     else
                     {
-                        return (false, "❌ B站用户不存在", null);
+                        return (false, $"❌ B站用户 {userId} 不存在，请检查账号ID是否正确", null, "rejected");
                     }
                 }
             }
+            catch (HttpRequestException ex) when (ex.Message.Contains("403"))
+            {
+                return (false, $"⚠️ B站反爬限制，需要管理员人工核验是否关注 @{myAccount}", null, "manual_required");
+            }
             catch
             {
-                return (true, "⚠️ 无法自动验证，请管理员手动核实", null);
+                return (false, $"⚠️ 无法自动验证，需要管理员人工核验是否关注 @{myAccount}", null, "manual_required");
             }
         }
 
-        /// <summary>
-        /// 验证小红书用户
-        /// </summary>
-        private async Task<(bool IsValid, string Message, string? DisplayName)> VerifyXiaohongshuAsync(string userId)
+        private async Task<(bool IsValid, string Message, string? DisplayName, string VerifyStatus)> VerifyXiaohongshuFollowAsync(
+            string userId,
+            string myAccount)
         {
             try
             {
                 var url = $"https://www.xiaohongshu.com/user/profile/{userId}";
                 var request = new HttpRequestMessage(HttpMethod.Head, url);
                 request.Headers.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36");
-                
+
                 var response = await _httpClient.SendAsync(request);
-                
+
                 if (response.IsSuccessStatusCode)
                 {
-                    return (true, "✅ 小红书用户存在", null);
+                    return (true, $"✅ 用户 {userId} 存在，请管理员手动确认是否关注 @{myAccount}", null, "manual_required");
                 }
                 else
                 {
-                    return (true, "⚠️ 无法自动验证，请管理员手动核实", null);
+                    return (false, $"⚠️ 无法自动验证，需要管理员人工核验是否关注 @{myAccount}", null, "manual_required");
                 }
             }
             catch
             {
-                return (true, "⚠️ 无法自动验证，请管理员手动核实", null);
+                return (false, $"⚠️ 无法自动验证，需要管理员人工核验是否关注 @{myAccount}", null, "manual_required");
             }
         }
 
-        /// <summary>
-        /// 验证微博用户
-        /// </summary>
-        private async Task<(bool IsValid, string Message, string? DisplayName)> VerifyWeiboAsync(string userId)
+        private async Task<(bool IsValid, string Message, string? DisplayName, string VerifyStatus)> VerifyWeiboFollowAsync(
+            string userId,
+            string myAccount)
         {
             try
             {
                 var url = $"https://weibo.com/u/{userId}";
                 var request = new HttpRequestMessage(HttpMethod.Head, url);
                 request.Headers.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36");
-                
+
                 var response = await _httpClient.SendAsync(request);
-                
+
                 if (response.IsSuccessStatusCode)
                 {
-                    return (true, "✅ 微博用户存在", null);
+                    return (true, $"✅ 用户 {userId} 存在，请管理员手动确认是否关注 @{myAccount}", null, "manual_required");
                 }
                 else
                 {
-                    return (true, "⚠️ 无法自动验证，请管理员手动核实", null);
+                    return (false, $"⚠️ 无法自动验证，需要管理员人工核验是否关注 @{myAccount}", null, "manual_required");
                 }
             }
             catch
             {
-                return (true, "⚠️ 无法自动验证，请管理员手动核实", null);
+                return (false, $"⚠️ 无法自动验证，需要管理员人工核验是否关注 @{myAccount}", null, "manual_required");
             }
         }
 
-        /// <summary>
-        /// 验证知乎用户
-        /// </summary>
-        private async Task<(bool IsValid, string Message, string? DisplayName)> VerifyZhihuAsync(string userId)
+        private async Task<(bool IsValid, string Message, string? DisplayName, string VerifyStatus)> VerifyZhihuFollowAsync(
+            string userId,
+            string myAccount)
         {
             try
             {
                 var url = $"https://www.zhihu.com/people/{userId}";
                 var request = new HttpRequestMessage(HttpMethod.Head, url);
                 request.Headers.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36");
-                
+
                 var response = await _httpClient.SendAsync(request);
-                
+
                 if (response.IsSuccessStatusCode)
                 {
-                    return (true, "✅ 知乎用户存在", null);
+                    return (true, $"✅ 用户 {userId} 存在，请管理员手动确认是否关注 @{myAccount}", null, "manual_required");
                 }
                 else
                 {
-                    return (true, "⚠️ 无法自动验证，请管理员手动核实", null);
+                    return (false, $"⚠️ 无法自动验证，需要管理员人工核验是否关注 @{myAccount}", null, "manual_required");
                 }
             }
             catch
             {
-                return (true, "⚠️ 无法自动验证，请管理员手动核实", null);
+                return (false, $"⚠️ 无法自动验证，需要管理员人工核验是否关注 @{myAccount}", null, "manual_required");
+            }
+        }
+
+        /// <summary>
+        /// 管理员手动验证通过
+        /// </summary>
+        public (bool IsValid, string Message, string VerifyStatus) ManualVerify(bool approved)
+        {
+            if (approved)
+            {
+                return (true, "✅ 管理员已人工核验通过", "auto_verified");
+            }
+            else
+            {
+                return (false, "❌ 管理员人工核验未通过", "rejected");
             }
         }
     }
