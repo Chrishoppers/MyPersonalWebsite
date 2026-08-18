@@ -375,66 +375,77 @@ public async Task<IActionResult> Login(string username, string password)
         // ============================================================
         // 邮件自动登录
         // ============================================================
-        [HttpGet]
-        public async Task<IActionResult> AutoLogin(string token)
+       // Controllers/AuthController.cs - AutoLogin
+
+[HttpGet]
+public async Task<IActionResult> AutoLogin(string token)
+{
+    if (string.IsNullOrEmpty(token))
+    {
+        TempData["Message"] = "无效的登录链接";
+        return RedirectToAction("Login");
+    }
+
+    var user = await _dataSync.GetUserByLoginTokenAsync(token);
+    if (user == null)
+    {
+        TempData["Message"] = "登录链接无效或已过期";
+        return RedirectToAction("Login");
+    }
+
+    if (user.IsDeleted)
+    {
+        TempData["Message"] = "账号已被删除";
+        return RedirectToAction("Login");
+    }
+
+    if (user.IsBanned)
+    {
+        if (user.BanExpiry.HasValue && user.BanExpiry.Value > DateTime.Now)
         {
-            if (string.IsNullOrEmpty(token))
-            {
-                TempData["Message"] = "无效的登录链接";
-                return RedirectToAction("Login");
-            }
-
-            var user = await _dataSync.GetUserByLoginTokenAsync(token);
-            if (user == null)
-            {
-                TempData["Message"] = "登录链接无效或已过期";
-                return RedirectToAction("Login");
-            }
-
-            if (user.IsDeleted)
-            {
-                TempData["Message"] = "账号已被删除";
-                return RedirectToAction("Login");
-            }
-
-            if (user.IsBanned)
-            {
-                if (user.BanExpiry.HasValue && user.BanExpiry.Value > DateTime.Now)
-                {
-                    TempData["Message"] = $"账号已被封禁至 {user.BanExpiry.Value:yyyy-MM-dd HH:mm}";
-                    return RedirectToAction("Login");
-                }
-                else if (user.BanExpiry.HasValue && user.BanExpiry.Value <= DateTime.Now)
-                {
-                    user.IsBanned = false;
-                    user.BanExpiry = null;
-                    await _dataSync.UpdateUserAsync(user);
-                }
-                else
-                {
-                    TempData["Message"] = "账号已被封禁";
-                    return RedirectToAction("Login");
-                }
-            }
-
-            if (!user.IsAdmin && !user.IsApproved)
-            {
-                TempData["Message"] = "账号正在等待管理员审核，请耐心等待";
-                return RedirectToAction("Login");
-            }
-
-            user.LoginToken = null;
-            user.LoginTokenExpiry = null;
-            await _dataSync.UpdateUserAsync(user);
-
-            HttpContext.Session.SetInt32("UserId", user.Id);
-            HttpContext.Session.SetString("Username", user.Username);
-            HttpContext.Session.SetString("UserEmail", user.Email);
-            HttpContext.Session.SetInt32("IsAdmin", user.IsAdmin ? 1 : 0);
-
-            return RedirectToAction("Notifications", "Home");
+            TempData["Message"] = $"账号已被封禁至 {user.BanExpiry.Value:yyyy-MM-dd HH:mm}";
+            return RedirectToAction("Login");
         }
+        else if (user.BanExpiry.HasValue && user.BanExpiry.Value <= DateTime.Now)
+        {
+            user.IsBanned = false;
+            user.BanExpiry = null;
+            await _dataSync.UpdateUserAsync(user);
+        }
+        else
+        {
+            TempData["Message"] = "账号已被封禁";
+            return RedirectToAction("Login");
+        }
+    }
 
+    if (!user.IsAdmin && !user.IsApproved)
+    {
+        TempData["Message"] = "账号正在等待管理员审核，请耐心等待";
+        return RedirectToAction("Login");
+    }
+
+    user.LoginToken = null;
+    user.LoginTokenExpiry = null;
+    await _dataSync.UpdateUserAsync(user);
+
+    // ⭐ 设置 Session
+    HttpContext.Session.SetInt32("UserId", user.Id);
+    HttpContext.Session.SetString("Username", user.Username);
+    HttpContext.Session.SetString("UserEmail", user.Email);
+    HttpContext.Session.SetInt32("IsAdmin", user.IsAdmin ? 1 : 0);
+    
+    // ⭐⭐⭐ 关键修复：设置受限用户状态 ⭐⭐⭐
+    HttpContext.Session.SetInt32("IsRestricted", user.IsRestricted ? 1 : 0);
+
+    // ⭐ 如果是受限用户，跳转到资源大厅
+    if (user.IsRestricted)
+    {
+        return RedirectToAction("Index", "Resource");
+    }
+
+    return RedirectToAction("Notifications", "Home");
+}
         // ============================================================
         // 修改密码
         // ============================================================
