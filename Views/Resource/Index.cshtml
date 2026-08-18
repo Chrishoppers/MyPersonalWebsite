@@ -1,6 +1,9 @@
+<!-- Views/Resource/Index.cshtml -->
+
 @{
     ViewData["Title"] = "📦 资源大厅";
     var user = ViewBag.User as MyPersonalWebsite.Models.User;
+    var welcomeMessage = ViewBag.WelcomeMessage as string;
 }
 
 <style>
@@ -38,6 +41,20 @@
         margin-bottom: 2rem;
     }
 
+    .resource-hall .welcome-box {
+        background: linear-gradient(135deg, rgba(139,92,246,0.06), rgba(236,72,153,0.06));
+        border: 1px solid rgba(139,92,246,0.08);
+        border-radius: 16px;
+        padding: 1rem 1.5rem;
+        margin-bottom: 1.5rem;
+        color: rgba(255,255,255,0.6);
+        font-size: 0.95rem;
+    }
+
+    .resource-hall .welcome-box strong {
+        color: #8B5CF6;
+    }
+
     .resource-hall .user-info {
         background: rgba(255,255,255,0.02);
         border-radius: 16px;
@@ -65,9 +82,15 @@
         border-radius: 20px;
         font-size: 0.65rem;
         font-weight: 600;
-        background: rgba(0, 240, 255, 0.04);
-        color: #00F0FF;
-        border: 1px solid rgba(0, 240, 255, 0.04);
+        background: rgba(7,193,96,0.08);
+        color: #07C160;
+        border: 1px solid rgba(7,193,96,0.04);
+    }
+
+    .resource-hall .user-info .badge.restricted {
+        background: rgba(139,92,246,0.08);
+        color: #8B5CF6;
+        border: 1px solid rgba(139,92,246,0.04);
     }
 
     .resource-hall .cards {
@@ -116,9 +139,28 @@
     <h1>资源大厅</h1>
     <p class="subtitle">提交资源需求 · 查看处理进度</p>
 
+    <!-- ⭐ 受限用户欢迎信息 -->
+    @if (!string.IsNullOrEmpty(welcomeMessage))
+    {
+        <div class="welcome-box">
+            @welcomeMessage
+            <br>
+            <span style="font-size:0.8rem;color:rgba(255,255,255,0.1);">
+                💡 你目前只能访问资源相关页面
+            </span>
+        </div>
+    }
+
     <div class="user-info">
         <div class="greeting">👋 欢迎，<strong>@user?.Username</strong></div>
-        <span class="badge">✅ 已验证</span>
+        @if (user?.IsRestricted == true)
+        {
+            <span class="badge restricted">🔒 资源专区</span>
+        }
+        else
+        {
+            <span class="badge">✅ 已验证</span>
+        }
     </div>
 
     <div class="cards">
@@ -133,6 +175,18 @@
             <div class="card-desc">查看15天内的提交详情与进度</div>
         </a>
     </div>
+
+    <!-- ⭐ 受限用户不显示其他入口 -->
+    @if (user?.IsRestricted != true)
+    {
+        <div class="cards" style="margin-top:0.5rem;">
+            <a href="/" class="card" style="opacity:0.5;">
+                <span class="card-icon">🏠</span>
+                <div class="card-title">返回首页</div>
+                <div class="card-desc">回到网站主页</div>
+            </a>
+        </div>
+    }
 
     <div class="footer">
         所有操作完全免费 · 无任何私密信息
