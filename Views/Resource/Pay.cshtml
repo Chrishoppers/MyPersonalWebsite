@@ -1,12 +1,11 @@
 @model MyPersonalWebsite.Models.ResourceRequest
 @{
-    ViewData["Title"] = "💰 支付 - 资源申请";
-    var isWeChat = ViewBag.PaymentMethod == "wechat";
+    ViewData["Title"] = "💰 微信支付 - 资源申请";
 }
 
 <style>
     .pay-container {
-        max-width: 560px;
+        max-width: 520px;
         margin: 0 auto;
         padding: 1rem 1.2rem;
     }
@@ -47,6 +46,7 @@
         display: inline-block;
         margin: 1rem auto;
         border: 2px dashed rgba(0,0,0,0.05);
+        max-width: 100%;
     }
 
     .pay-card .qr-container img {
@@ -55,40 +55,28 @@
         display: block;
     }
 
-    .pay-card .payment-methods {
-        display: flex;
-        gap: 0.8rem;
-        justify-content: center;
-        margin: 0.8rem 0;
-    }
-
-    .pay-card .payment-methods .method-btn {
-        padding: 0.5rem 1.5rem;
-        border: 2px solid rgba(255,255,255,0.04);
-        border-radius: 40px;
+    .pay-card .qr-container .qr-placeholder {
+        width: 220px;
+        height: 220px;
         background: rgba(255,255,255,0.02);
-        color: rgba(255,255,255,0.3);
-        cursor: pointer;
-        transition: all 0.3s ease;
-        font-weight: 600;
-        font-size: 0.9rem;
-        font-family: inherit;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: rgba(255,255,255,0.08);
+        font-size: 0.8rem;
+        flex-direction: column;
+        gap: 0.5rem;
+        border: 1px solid rgba(255,255,255,0.04);
     }
 
-    .pay-card .payment-methods .method-btn:hover {
-        border-color: rgba(139,92,246,0.1);
-        color: rgba(255,255,255,0.5);
-    }
-
-    .pay-card .payment-methods .method-btn.active {
-        border-color: #8B5CF6;
-        color: #8B5CF6;
-        background: rgba(139,92,246,0.04);
+    .pay-card .qr-container .qr-placeholder .big-icon {
+        font-size: 3rem;
     }
 
     .pay-card .info-box {
-        background: rgba(255,193,7,0.04);
-        border: 1px solid rgba(255,193,7,0.06);
+        background: rgba(40,167,69,0.04);
+        border: 1px solid rgba(40,167,69,0.06);
         border-radius: 12px;
         padding: 0.8rem 1.2rem;
         margin: 0.8rem 0;
@@ -108,10 +96,16 @@
         font-size: 0.85rem;
         margin-top: 0.1rem;
         word-break: break-all;
+        line-height: 1.8;
     }
 
     .pay-card .info-box .value strong {
         color: #F59E0B;
+    }
+
+    .pay-card .info-box .value .highlight {
+        color: #8B5CF6;
+        font-weight: 600;
     }
 
     .pay-card .status {
@@ -134,11 +128,17 @@
         border: 1px solid rgba(40,167,69,0.04);
     }
 
+    .pay-card .status.checking {
+        background: rgba(79,172,254,0.06);
+        color: #4facfe;
+        border: 1px solid rgba(79,172,254,0.04);
+    }
+
     .btn-check {
         padding: 0.8rem 2.5rem;
         border: none;
         border-radius: 40px;
-        background: linear-gradient(135deg, #8B5CF6, #EC4899);
+        background: linear-gradient(135deg, #07C160, #06AD56);
         color: #fff;
         font-weight: 700;
         font-size: 1rem;
@@ -146,11 +146,12 @@
         transition: all 0.3s ease;
         font-family: inherit;
         margin-top: 0.8rem;
+        box-shadow: 0 4px 24px rgba(7,193,96,0.15);
     }
 
     .btn-check:hover:not(:disabled) {
         transform: translateY(-2px);
-        box-shadow: 0 8px 40px rgba(108,60,225,0.2);
+        box-shadow: 0 8px 40px rgba(7,193,96,0.25);
     }
 
     .btn-check:disabled {
@@ -189,68 +190,143 @@
         background: rgba(139,92,246,0.15);
     }
 
+    .payment-method-badge {
+        display: inline-block;
+        padding: 0.3rem 1.5rem;
+        border-radius: 40px;
+        background: rgba(7,193,96,0.08);
+        color: #07C160;
+        border: 1px solid rgba(7,193,96,0.04);
+        font-weight: 600;
+        font-size: 0.85rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .step-guide {
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+        text-align: left;
+        padding: 0.5rem 0;
+    }
+
+    .step-guide .step {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        color: rgba(255,255,255,0.25);
+        font-size: 0.8rem;
+    }
+
+    .step-guide .step .num {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: rgba(7,193,96,0.06);
+        color: #07C160;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.6rem;
+        font-weight: 700;
+        flex-shrink: 0;
+    }
+
+    .step-guide .step .num.done {
+        background: rgba(7,193,96,0.12);
+    }
+
     @@media (max-width: 640px) {
         .pay-card { padding: 1.2rem; }
         .pay-card .amount { font-size: 2.5rem; }
         .pay-card .qr-container img { width: 160px; height: 160px; }
-        .pay-card .payment-methods { flex-wrap: wrap; }
+        .pay-card .qr-container .qr-placeholder { width: 160px; height: 160px; }
+        .step-guide .step { font-size: 0.7rem; }
     }
 </style>
 
 <div class="pay-container">
     <div class="pay-card">
 
-        <span style="font-size:2.5rem;">💰</span>
-        <h2 style="color:#fff;font-weight:700;margin-bottom:0.1rem;">支付申请费</h2>
+        <span style="font-size:2.5rem;">💚</span>
+        <h2 style="color:#fff;font-weight:700;margin-bottom:0.1rem;">微信支付</h2>
         <p style="color:rgba(255,255,255,0.2);font-size:0.85rem;">支付完成后管理员将处理你的申请</p>
+
+        <div class="payment-method-badge">💬 微信支付</div>
 
         <div class="amount">¥@Model.Amount.ToString("F2")</div>
 
         <!-- 订单号 -->
         <div>
-            <span style="color:rgba(255,255,255,0.15);font-size:0.7rem;">📋 订单号</span>
+            <span style="color:rgba(255,255,255,0.15);font-size:0.7rem;">📋 订单号（支付时备注）</span>
             <div>
                 <span class="order-id" id="orderIdDisplay">@Model.OrderId</span>
                 <button class="copy-btn" onclick="copyOrderId()">📋 复制</button>
             </div>
         </div>
 
-        <!-- 支付方式切换 -->
-        <div class="payment-methods">
-            <button class="method-btn active" data-method="wechat" onclick="switchMethod('wechat')">
-                💬 微信支付
-            </button>
-            <button class="method-btn" data-method="alipay" onclick="switchMethod('alipay')">
-                📱 支付宝
-            </button>
-        </div>
-
         <!-- 二维码 -->
-        <div class="qr-container" id="qrContainer">
-            <img id="qrCodeImage" src="/images/payment/wechat_qr.jpg" alt="支付二维码" />
+        <div class="qr-container">
+            @if (!string.IsNullOrEmpty(ViewBag.QRCodeUrl))
+            {
+                <img id="qrCodeImage" src="@ViewBag.QRCodeUrl" alt="微信支付二维码" />
+            }
+            else
+            {
+                <div class="qr-placeholder">
+                    <div class="big-icon">💚</div>
+                    <span>微信收款码</span>
+                    <span style="font-size:0.5rem;color:rgba(255,255,255,0.04);">请联系管理员获取</span>
+                </div>
+            }
         </div>
 
         <p style="color:rgba(255,255,255,0.08);font-size:0.6rem;">
-            💡 扫码支付时请 <strong style="color:#F59E0B;">备注订单号</strong>
+            💡 扫码支付时请 <strong style="color:#07C160;">务必备注订单号</strong>
         </p>
 
-        <!-- 支付信息 -->
+        <!-- 支付步骤 -->
         <div class="info-box">
-            <div class="label">📌 支付须知</div>
+            <div class="label">📌 支付步骤</div>
+            <div class="step-guide">
+                <div class="step">
+                    <span class="num">1</span>
+                    打开微信扫一扫，扫描上方二维码
+                </div>
+                <div class="step">
+                    <span class="num">2</span>
+                    支付 <strong style="color:#F59E0B;">¥@Model.Amount.ToString("F2")</strong>
+                </div>
+                <div class="step">
+                    <span class="num">3</span>
+                    在备注中填写 <strong style="color:#8B5CF6;">@Model.OrderId</strong>
+                </div>
+                <div class="step">
+                    <span class="num">4</span>
+                    点击下方 <strong style="color:#07C160;">"查询支付状态"</strong>
+                </div>
+            </div>
+        </div>
+
+        <!-- 支付须知 -->
+        <div class="info-box" style="background:rgba(255,193,7,0.03);border-color:rgba(255,193,7,0.04);">
+            <div class="label">⚠️ 支付须知</div>
             <div class="value">
-                1. 扫码支付 <strong>¥@Model.Amount.ToString("F2")</strong><br />
-                2. 支付时 <strong style="color:#F59E0B;">务必备注订单号</strong><br />
-                3. 支付后等待管理员确认（<strong>24小时内</strong>）<br />
-                4. 确认后你会收到邮件通知
+                • 支付后请 <strong style="color:#07C160;">保留截图</strong><br />
+                • 管理员将在 <strong>24小时内</strong> 确认<br />
+                • 确认后你会收到邮件通知<br />
+                • 如有问题请联系管理员
             </div>
         </div>
 
         <!-- 状态 -->
         <div class="status waiting" id="payStatus">
-            ⏳ 等待支付确认...
+            ⏳ 等待支付...
         </div>
 
-        <button class="btn-check" onclick="checkPayment()">🔄 查询支付状态</button>
+        <button class="btn-check" onclick="checkPayment()" id="checkBtn">
+            🔄 查询支付状态
+        </button>
 
         <div>
             <a href="/Resource/History" class="btn-back">← 返回我的申请</a>
@@ -264,24 +340,6 @@
     var requestId = @Model.Id;
     var isPaid = @(Model.IsPaid ? "true" : "false");
     var checkInterval = null;
-
-    // ============================================================
-    // 切换支付方式
-    // ============================================================
-    function switchMethod(method) {
-        document.querySelectorAll('.method-btn').forEach(function(el) {
-            el.classList.toggle('active', el.dataset.method === method);
-        });
-
-        var img = document.getElementById('qrCodeImage');
-        if (method === 'wechat') {
-            img.src = '/images/payment/wechat_qr.jpg';
-            img.alt = '微信支付二维码';
-        } else {
-            img.src = '/images/payment/alipay_qr.jpg';
-            img.alt = '支付宝支付二维码';
-        }
-    }
 
     // ============================================================
     // 复制订单号
@@ -309,7 +367,7 @@
     // 查询支付状态
     // ============================================================
     function checkPayment() {
-        var btn = document.querySelector('.btn-check');
+        var btn = document.getElementById('checkBtn');
         var status = document.getElementById('payStatus');
 
         if (isPaid) {
@@ -320,7 +378,8 @@
 
         btn.disabled = true;
         btn.textContent = '⏳ 查询中...';
-        status.textContent = '🔍 正在查询...';
+        status.className = 'status checking';
+        status.textContent = '🔍 正在查询支付状态...';
 
         fetch('/Resource/CheckPayment?requestId=' + requestId)
             .then(function(r) { return r.json(); })
