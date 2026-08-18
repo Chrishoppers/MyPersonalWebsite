@@ -7,11 +7,13 @@
         return;
     }
 
+    // ⭐ 从 ViewBag 获取数据
+    var pendingPaymentRequests = ViewBag.PendingPaymentRequests as List<MyPersonalWebsite.Models.ResourceRequest> ?? new List<MyPersonalWebsite.Models.ResourceRequest>();
+    var paidRequests = ViewBag.PaidRequests as List<MyPersonalWebsite.Models.ResourceRequest> ?? new List<MyPersonalWebsite.Models.ResourceRequest>();
     var pendingRequests = ViewBag.PendingRequests as List<MyPersonalWebsite.Models.ResourceRequest> ?? new List<MyPersonalWebsite.Models.ResourceRequest>();
-    var manualVerifyRequests = ViewBag.ManualVerifyRequests as List<MyPersonalWebsite.Models.ResourceRequest> ?? new List<MyPersonalWebsite.Models.ResourceRequest>();
     var processedRequests = ViewBag.ProcessedRequests as List<MyPersonalWebsite.Models.ResourceRequest> ?? new List<MyPersonalWebsite.Models.ResourceRequest>();
-    var pendingCount = ViewBag.PendingCount ?? 0;
-    var manualVerifyCount = ViewBag.ManualVerifyCount ?? 0;
+    
+    var pendingPaymentCount = ViewBag.PendingPaymentCount ?? 0;
     var processedCount = ViewBag.ProcessedCount ?? 0;
     var totalCount = ViewBag.TotalCount ?? 0;
 }
