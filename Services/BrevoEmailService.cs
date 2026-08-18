@@ -21,23 +21,6 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 辅助方法
-        // ============================================================
-
-        private string FormatChinaTime(DateTime utcTime)
-        {
-            try
-            {
-                var chinaTime = TimeZoneInfo.ConvertTimeFromUtc(utcTime, TimeZoneInfo.FindSystemTimeZoneById("Asia/Shanghai"));
-                return chinaTime.ToString("yyyy-MM-dd HH:mm:ss");
-            }
-            catch
-            {
-                return utcTime.ToString("yyyy-MM-dd HH:mm:ss");
-            }
-        }
-
-        // ============================================================
         // ⭐ 核心发送方法 - 支持附件
         // ============================================================
 
@@ -113,6 +96,23 @@ namespace MyPersonalWebsite.Services
         public async Task<bool> SendEmailAsync(string to, string subject, string htmlContent)
         {
             return await SendEmailWithAttachmentAsync(to, subject, htmlContent, null, null);
+        }
+
+        // ============================================================
+        // 辅助方法
+        // ============================================================
+
+        private string FormatChinaTime(DateTime utcTime)
+        {
+            try
+            {
+                var chinaTime = TimeZoneInfo.ConvertTimeFromUtc(utcTime, TimeZoneInfo.FindSystemTimeZoneById("Asia/Shanghai"));
+                return chinaTime.ToString("yyyy-MM-dd HH:mm:ss");
+            }
+            catch
+            {
+                return utcTime.ToString("yyyy-MM-dd HH:mm:ss");
+            }
         }
 
         // ============================================================
@@ -265,7 +265,7 @@ namespace MyPersonalWebsite.Services
                     </div>
                     <div style='display: flex; gap: 12px; margin: 16px 0; flex-wrap: wrap;'>
                         <a href='{approveUrl}' style='display: inline-block; padding: 12px 32px; background: #28a745; color: white; text-decoration: none; border-radius: 8px; font-weight: 600;'>✅ 通过</a>
-                        <a href={rejectUrl}' style='display: inline-block; padding: 12px 32px; background: #dc3545; color: white; text-decoration: none; border-radius: 8px; font-weight: 600;'>❌ 拒绝</a>
+                        <a href='{rejectUrl}' style='display: inline-block; padding: 12px 32px; background: #dc3545; color: white; text-decoration: none; border-radius: 8px; font-weight: 600;'>❌ 拒绝</a>
                     </div>
                     <p style='color: #888; font-size: 14px;'>点击按钮后，系统将自动通知用户。</p>
                     <hr style='border: none; border-top: 1px solid #2a2a3e;'>
@@ -499,6 +499,15 @@ namespace MyPersonalWebsite.Services
         public async Task SendResourceRequestNotificationAsync(ResourceRequest request)
         {
             var baseUrl = "https://chris-hopper.org";
+
+            var verifyStatusText = request.VerifyStatus switch
+            {
+                "auto_verified" => "✅ 自动验证通过",
+                "manual_required" => "⚠️ 待人工核验",
+                "rejected" => "❌ 验证未通过",
+                _ => "⏳ 未验证"
+            };
+
             var html = $@"
                 <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #2a2a3e; border-radius: 16px; background: #0a0a0f; color: #e0e0e0;'>
                     <h2 style='color: #8B5CF6;'>📦 新资源申请</h2>
@@ -506,12 +515,14 @@ namespace MyPersonalWebsite.Services
                     <div style='background: #1a1a2e; padding: 15px; border-radius: 8px; margin: 10px 0; border: 1px solid #2a2a3e;'>
                         <p><strong>👤 申请人：</strong>{request.UserName}</p>
                         <p><strong>📧 邮箱：</strong>{request.UserEmail}</p>
-                        <p><strong>📋 联系人：</strong>{request.PersonName}</p>
-                        <p><strong>📱 平台：</strong>{request.Platform}</p>
-                        <p><strong>📂 资源名称：</strong>{request.ResourceName}</p>
-                        <p><strong>🔗 链接：</strong>{request.ResourceUrl}</p>
-                        <p><strong>📝 备注：</strong>{request.Description}</p>
-                        <p><strong>💰 退款选项：</strong>{(request.RefundOption == "1day_paid" ? "1天内超时退款 (¥2)" : "两周内处理 (免费)")}</p>
+                        <p><strong>📝 人物/CP：</strong>{request.CharacterName}</p>
+                        <p><strong>📱 平台：</strong>{(string.IsNullOrEmpty(request.Platform1) ? "未选择" : request.Platform1 + (string.IsNullOrEmpty(request.Platform2) ? "" : " + " + request.Platform2))}</p>
+                        <p><strong>📂 资源类型：</strong>{request.ResourceType}</p>
+                        <p><strong>⚙️ 人物设定：</strong>{request.CharacterSetting}</p>
+                        <p><strong>📊 偏好：</strong>小说:{request.NovelPreference} · 漫画:{request.ComicPreference} · 图片:{request.ImagePreference}</p>
+                        {(!string.IsNullOrEmpty(request.VerifyPlatform) ? $"<p><strong>🔍 验证平台：</strong>{request.VerifyPlatform} - {request.VerifyAccountId}</p>" : "")}
+                        <p><strong>🔐 验证状态：</strong>{verifyStatusText}</p>
+                        <p><strong>📝 备注：</strong>{(string.IsNullOrEmpty(request.AdminNote) ? "无" : request.AdminNote)}</p>
                         <p><strong>⏰ 申请时间：</strong>{FormatChinaTime(request.CreatedAt)}</p>
                         <p><strong>🆔 申请ID：</strong>#{request.Id}</p>
                     </div>
@@ -526,7 +537,7 @@ namespace MyPersonalWebsite.Services
                 </div>
             ";
 
-            await SendEmailAsync(_adminEmail, $"📦 新资源申请 - {request.PersonName}", html);
+            await SendEmailAsync(_adminEmail, $"📦 新资源申请 - {request.CharacterName}", html);
         }
 
         // ============================================================
@@ -565,7 +576,7 @@ namespace MyPersonalWebsite.Services
 
                     <div style='background: #1a1a2e; padding: 15px; border-radius: 8px; margin: 10px 0; border: 1px solid #2a2a3e;'>
                         <p><strong>👤 联系人：</strong>{request.PersonName}</p>
-                        <p><strong>📱 平台：</strong>{request.Platform}</p>
+                        <p><strong>📱 平台：</strong>{request.Platform1}{(string.IsNullOrEmpty(request.Platform2) ? "" : " + " + request.Platform2)}</p>
                         <p><strong>📂 资源名称：</strong>{request.ResourceName}</p>
                         <p><strong>📊 状态：</strong>{(request.Status == "completed" ? "✅ 已完成" : request.Status == "rejected" ? "❌ 已拒绝" : request.Status == "refunded" ? "💰 已退款" : "⏳ 处理中")}</p>
                         {refundInfo}
@@ -587,51 +598,5 @@ namespace MyPersonalWebsite.Services
 
             await SendEmailWithAttachmentAsync(request.UserEmail, subject, html, attachmentData, attachmentName);
         }
-        // ============================================================
-// 资源申请 - 管理员通知（包含验证状态）
-// ============================================================
-
-public async Task SendResourceRequestNotificationAsync(ResourceRequest request)
-{
-    var baseUrl = "https://chris-hopper.org";
-    
-    var verifyStatusText = request.VerifyStatus switch
-    {
-        "auto_verified" => "✅ 自动验证通过",
-        "manual_required" => "⚠️ 待人工核验",
-        "rejected" => "❌ 验证未通过",
-        _ => "⏳ 未验证"
-    };
-
-    var html = $@"
-    <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #2a2a3e; border-radius: 16px; background: #0a0a0f; color: #e0e0e0;'>
-        <h2 style='color: #8B5CF6;'>📦 新资源申请</h2>
-        <p>有新的资源申请需要处理：</p>
-        <div style='background: #1a1a2e; padding: 15px; border-radius: 8px; margin: 10px 0; border: 1px solid #2a2a3e;'>
-            <p><strong>👤 申请人：</strong>{request.UserName}</p>
-            <p><strong>📧 邮箱：</strong>{request.UserEmail}</p>
-            <p><strong>📝 人物/CP：</strong>{request.CharacterName}</p>
-            <p><strong>📱 平台：</strong>{(string.IsNullOrEmpty(request.Platform1) ? "未选择" : request.Platform1 + (string.IsNullOrEmpty(request.Platform2) ? "" : " + " + request.Platform2))}</p>
-            <p><strong>📂 资源类型：</strong>{request.ResourceType}</p>
-            <p><strong>⚙️ 人物设定：</strong>{request.CharacterSetting}</p>
-            <p><strong>📊 偏好：</strong>小说:{request.NovelPreference} · 漫画:{request.ComicPreference} · 图片:{request.ImagePreference}</p>
-            {(!string.IsNullOrEmpty(request.VerifyPlatform) ? $"<p><strong>🔍 验证平台：</strong>{request.VerifyPlatform} - {request.VerifyAccountId}</p>" : "")}
-            <p><strong>🔐 验证状态：</strong>{verifyStatusText}</p>
-            <p><strong>📝 备注：</strong>{(string.IsNullOrEmpty(request.AdminNote) ? "无" : request.AdminNote)}</p>
-            <p><strong>⏰ 申请时间：</strong>{FormatChinaTime(request.CreatedAt)}</p>
-            <p><strong>🆔 申请ID：</strong>#{request.Id}</p>
-        </div>
-        <div style='margin: 16px 0;'>
-            <a href='{baseUrl}/Admin/ProcessResource/{request.Id}'
-               style='display: inline-block; padding: 12px 32px; background: #8B5CF6; color: white; text-decoration: none; border-radius: 8px; font-weight: 600;'>
-                🔍 立即处理
-            </a>
-        </div>
-        <hr style='border: none; border-top: 1px solid #2a2a3e;'>
-        <p style='color: #555; font-size: 12px;'>此邮件由系统自动发送，请勿直接回复。</p>
-    </div>";
-
-    await SendEmailAsync("2908685235@qq.com", $"📦 新资源申请 - {request.CharacterName}", html);
-}
     }
 }
