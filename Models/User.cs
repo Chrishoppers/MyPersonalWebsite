@@ -44,7 +44,7 @@ public int VerifyGameMaxCombo { get; set; } = 0;   // 最高连击
     
     // ⭐ 新增：受限原因
     public string? RestrictionReason { get; set; }
-}
+
 
         public ICollection<Message>? Messages { get; set; }
     }
