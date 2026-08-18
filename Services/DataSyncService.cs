@@ -843,7 +843,7 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // ⭐ 资源申请相关
+        // ⭐ 资源申请相关（完整版含支付）
         // ============================================================
 
         public async Task AddResourceRequestAsync(ResourceRequest request)
@@ -854,12 +854,19 @@ namespace MyPersonalWebsite.Services
             var maxId = ParseMaxId(maxIdResult);
             request.Id = maxId + 1;
 
+            // ⭐ 自动生成订单号
+            if (string.IsNullOrEmpty(request.OrderId))
+            {
+                request.OrderId = $"REQ_{DateTime.Now:yyyyMMddHHmmss}_{request.Id}_{new Random().Next(1000, 9999)}";
+            }
+
             var sql = $@"INSERT INTO ResourceRequests (
                 Id, UserId, UserName, UserEmail, PersonName, Platform1, Platform2, PlatformOther,
                 CharacterName, ResourceType, CharacterSetting,
                 NovelPreference, ComicPreference, ImagePreference,
                 VerifyPlatform, VerifyAccountId, IsFollowVerified, FollowVerifiedAt, FollowVerifyError, VerifyStatus,
                 AgreeToBLContent, AgreeToTerms,
+                OrderId, Amount, PaymentMethod, IsPaid, PaidAt, PaidNote, AdminPaidBy,
                 Status, CreatedAt, ProcessedAt,
                 FoundTypes, NotFoundTypes, AdminNote, AdminName,
                 IpAddress, UserAgent
@@ -877,6 +884,12 @@ namespace MyPersonalWebsite.Services
                 {(string.IsNullOrEmpty(request.FollowVerifyError) ? "NULL" : $"'{EscapeSql(request.FollowVerifyError)}'")},
                 '{request.VerifyStatus}',
                 {(request.AgreeToBLContent ? 1 : 0)}, {(request.AgreeToTerms ? 1 : 0)},
+                '{EscapeSql(request.OrderId)}', {request.Amount},
+                '{EscapeSql(request.PaymentMethod)}',
+                {(request.IsPaid ? 1 : 0)},
+                {(request.PaidAt.HasValue ? $"'{request.PaidAt.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
+                {(string.IsNullOrEmpty(request.PaidNote) ? "NULL" : $"'{EscapeSql(request.PaidNote)}'")},
+                {(string.IsNullOrEmpty(request.AdminPaidBy) ? "NULL" : $"'{EscapeSql(request.AdminPaidBy)}'")},
                 '{request.Status}', '{request.CreatedAt:yyyy-MM-dd HH:mm:ss}',
                 {(request.ProcessedAt.HasValue ? $"'{request.ProcessedAt.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
                 '{EscapeSql(request.FoundTypes)}', '{EscapeSql(request.NotFoundTypes)}',
@@ -885,6 +898,7 @@ namespace MyPersonalWebsite.Services
             )";
 
             await _tursoService.ExecuteSqlAsync(sql);
+            Console.WriteLine($"✅ 资源申请已添加: #{request.Id}, 订单号: {request.OrderId}");
         }
 
         public async Task<ResourceRequest?> GetResourceRequestByIdAsync(int id)
@@ -892,6 +906,16 @@ namespace MyPersonalWebsite.Services
             if (!_tursoAvailable) return null;
 
             var result = await _tursoService.QueryAsync($"SELECT * FROM ResourceRequests WHERE Id = {id}");
+            return ParseResourceRequest(result);
+        }
+
+        public async Task<ResourceRequest?> GetResourceRequestByOrderIdAsync(string orderId)
+        {
+            if (!_tursoAvailable) return null;
+
+            var result = await _tursoService.QueryAsync(
+                $"SELECT * FROM ResourceRequests WHERE OrderId = '{EscapeSql(orderId)}'"
+            );
             return ParseResourceRequest(result);
         }
 
@@ -938,7 +962,11 @@ namespace MyPersonalWebsite.Services
                 ProcessedAt = {(request.ProcessedAt.HasValue ? $"'{request.ProcessedAt.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
                 VerifyStatus = '{request.VerifyStatus}',
                 IsFollowVerified = {(request.IsFollowVerified ? 1 : 0)},
-                FollowVerifyError = {(string.IsNullOrEmpty(request.FollowVerifyError) ? "NULL" : $"'{EscapeSql(request.FollowVerifyError)}'")}
+                FollowVerifyError = {(string.IsNullOrEmpty(request.FollowVerifyError) ? "NULL" : $"'{EscapeSql(request.FollowVerifyError)}'")},
+                IsPaid = {(request.IsPaid ? 1 : 0)},
+                PaidAt = {(request.PaidAt.HasValue ? $"'{request.PaidAt.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
+                PaidNote = {(string.IsNullOrEmpty(request.PaidNote) ? "NULL" : $"'{EscapeSql(request.PaidNote)}'")},
+                AdminPaidBy = {(string.IsNullOrEmpty(request.AdminPaidBy) ? "NULL" : $"'{EscapeSql(request.AdminPaidBy)}'")}
             WHERE Id = {request.Id}";
 
             await _tursoService.ExecuteSqlAsync(sql);
@@ -948,6 +976,23 @@ namespace MyPersonalWebsite.Services
         {
             if (!_tursoAvailable) return;
             await _tursoService.ExecuteSqlAsync($"DELETE FROM ResourceRequests WHERE Id = {id}");
+        }
+
+        // ⭐ 确认支付
+        public async Task ConfirmPaymentAsync(int requestId, string adminName, string? note = null)
+        {
+            if (!_tursoAvailable) return;
+
+            var sql = $@"UPDATE ResourceRequests SET
+                IsPaid = 1,
+                PaidAt = '{DateTime.Now:yyyy-MM-dd HH:mm:ss}',
+                AdminPaidBy = '{EscapeSql(adminName)}',
+                PaidNote = {(string.IsNullOrEmpty(note) ? "NULL" : $"'{EscapeSql(note)}'")},
+                Status = 'paid'
+            WHERE Id = {requestId}";
+
+            await _tursoService.ExecuteSqlAsync(sql);
+            Console.WriteLine($"✅ 支付已确认: #{requestId}, 管理员: {adminName}");
         }
 
         // ============================================================
@@ -1828,6 +1873,19 @@ namespace MyPersonalWebsite.Services
                                         case "VerifyStatus": req.VerifyStatus = GetStringFromRow(element); break;
                                         case "AgreeToBLContent": req.AgreeToBLContent = GetBoolFromRow(element); break;
                                         case "AgreeToTerms": req.AgreeToTerms = GetBoolFromRow(element); break;
+                                        case "OrderId": req.OrderId = GetStringFromRow(element); break;
+                                        case "Amount": 
+                                            var amountVal = GetValueFromRow(element);
+                                            if (amountVal is JsonElement je && je.ValueKind == JsonValueKind.Number)
+                                                req.Amount = (decimal)je.GetDouble();
+                                            else
+                                                req.Amount = 2.00m;
+                                            break;
+                                        case "PaymentMethod": req.PaymentMethod = GetStringFromRow(element); break;
+                                        case "IsPaid": req.IsPaid = GetBoolFromRow(element); break;
+                                        case "PaidAt": req.PaidAt = GetDateTimeFromRow(element); break;
+                                        case "PaidNote": req.PaidNote = GetStringOrNullFromRow(element); break;
+                                        case "AdminPaidBy": req.AdminPaidBy = GetStringOrNullFromRow(element); break;
                                         case "Status": req.Status = GetStringFromRow(element); break;
                                         case "CreatedAt": req.CreatedAt = GetDateTimeFromRow(element) ?? DateTime.Now; break;
                                         case "ProcessedAt": req.ProcessedAt = GetDateTimeFromRow(element); break;
