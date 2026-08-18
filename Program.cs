@@ -105,19 +105,21 @@ builder.Services.AddScoped<ReCaptchaService>();
 builder.Services.AddScoped<EmailRateLimitService>();
 builder.Services.AddScoped<GameAntiCheatService>();
 builder.Services.AddScoped<DeepSeekService>();
-builder.Services.AddHttpClient<DeepSeekService>();
+builder.Services.AddScoped<WerewolfVoiceService>();
 
+// ⭐ 平台验证服务（新增）
+builder.Services.AddScoped<PlatformVerifyService>();
+
+// ⭐ HttpClient 配置
+builder.Services.AddHttpClient<DeepSeekService>();
 builder.Services.AddHttpClient<TrainService>();
 builder.Services.AddHttpClient<ReCaptchaService>();
-builder.Services.AddScoped<WerewolfVoiceService>();
-// Program.cs
 
-// 添加服务
-builder.Services.AddScoped<PlatformVerifyService>();
+// ⭐ PlatformVerifyService 的 HttpClient（带超时和 User-Agent）
 builder.Services.AddHttpClient<PlatformVerifyService>(client =>
 {
-    client.Timeout = TimeSpan.FromSeconds(10);
-    client.DefaultRequestHeaders.Add("Accept", "application/json");
+    client.Timeout = TimeSpan.FromSeconds(15);
+    client.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36");
 });
 
 // ============================================================
@@ -185,7 +187,7 @@ app.MapControllerRoute(
 // ⭐ SignalR Hub 映射
 app.MapHub<MessageHub>("/messageHub");
 app.MapHub<PartyHub>("/partyHub");
-app.MapHub<WerewolfHub>("/werewolfHub");  // ⭐ 新增
+app.MapHub<WerewolfHub>("/werewolfHub");
 
 // ============================================================
 // 应用生命周期事件
@@ -231,7 +233,50 @@ async Task EnsureTursoTablesAsync(DataSyncService dataSync)
         { "UserGameStats", @"CREATE TABLE IF NOT EXISTS UserGameStats (Id INTEGER PRIMARY KEY AUTOINCREMENT, UserId INTEGER NOT NULL UNIQUE, TotalPoints INTEGER DEFAULT 0, MaxCombo INTEGER DEFAULT 0, MaxLevel INTEGER DEFAULT 0, GamesPlayed INTEGER DEFAULT 0, UpdatedAt TEXT)" },
         { "GameSessions", @"CREATE TABLE IF NOT EXISTS GameSessions (Id INTEGER PRIMARY KEY, UserId INTEGER NOT NULL, SessionId TEXT NOT NULL UNIQUE, StartTime TEXT NOT NULL, EndTime TEXT, TotalScore INTEGER DEFAULT 0, FinalScore INTEGER DEFAULT 0, PassedCount INTEGER DEFAULT 0, MaxCombo INTEGER DEFAULT 0, CheatCount INTEGER DEFAULT 0, MicEnabled INTEGER DEFAULT 1, CamEnabled INTEGER DEFAULT 1, PenaltyMic INTEGER DEFAULT 8, PenaltyCam INTEGER DEFAULT 5, IsCompleted INTEGER DEFAULT 0, Status TEXT DEFAULT 'playing')" },
         { "GameAnswerLogs", @"CREATE TABLE IF NOT EXISTS GameAnswerLogs (Id INTEGER PRIMARY KEY, SessionId TEXT NOT NULL, UserId INTEGER NOT NULL, Level INTEGER NOT NULL, QuestionType TEXT NOT NULL, StartTime TEXT NOT NULL, SubmitTime TEXT NOT NULL, ElapsedSeconds REAL NOT NULL, IsCorrect INTEGER DEFAULT 0, IsTimeout INTEGER DEFAULT 0, CheatDetected INTEGER DEFAULT 0, CheatReason TEXT, PointsEarned INTEGER DEFAULT 0, PenaltyApplied INTEGER DEFAULT 0)" },
-        { "CheatEvents", @"CREATE TABLE IF NOT EXISTS CheatEvents (Id INTEGER PRIMARY KEY, SessionId TEXT NOT NULL, UserId INTEGER NOT NULL, EventType TEXT NOT NULL, EventDetail TEXT, DetectedAt TEXT NOT NULL, PenaltyAmount INTEGER DEFAULT 5)" }
+        { "CheatEvents", @"CREATE TABLE IF NOT EXISTS CheatEvents (Id INTEGER PRIMARY KEY, SessionId TEXT NOT NULL, UserId INTEGER NOT NULL, EventType TEXT NOT NULL, EventDetail TEXT, DetectedAt TEXT NOT NULL, PenaltyAmount INTEGER DEFAULT 5)" },
+        // ⭐ 新增：资源申请表
+        { "ResourceRequests", @"CREATE TABLE IF NOT EXISTS ResourceRequests (
+            Id INTEGER PRIMARY KEY,
+            UserId INTEGER NOT NULL,
+            UserName TEXT NOT NULL,
+            UserEmail TEXT NOT NULL,
+            PersonName TEXT NOT NULL,
+            Platform1 TEXT,
+            Platform2 TEXT,
+            PlatformOther TEXT,
+            CharacterName TEXT NOT NULL,
+            ResourceType TEXT DEFAULT '一人',
+            CharacterSetting TEXT DEFAULT '都行',
+            NovelPreference TEXT DEFAULT '不需要',
+            ComicPreference TEXT DEFAULT '不需要',
+            ImagePreference TEXT DEFAULT '不需要',
+            VerifyPlatform TEXT,
+            VerifyAccountId TEXT,
+            IsFollowVerified INTEGER DEFAULT 0,
+            FollowVerifiedAt TEXT,
+            FollowVerifyError TEXT,
+            AgreeToBLContent INTEGER DEFAULT 0,
+            AgreeToTerms INTEGER DEFAULT 0,
+            Status TEXT DEFAULT 'pending',
+            CreatedAt TEXT NOT NULL,
+            ProcessedAt TEXT,
+            FoundTypes TEXT,
+            NotFoundTypes TEXT,
+            AdminNote TEXT,
+            AdminName TEXT,
+            IpAddress TEXT,
+            UserAgent TEXT
+        )" },
+        // ⭐ 新增：验证大闯关统计表
+        { "VerifyGameStats", @"CREATE TABLE IF NOT EXISTS VerifyGameStats (
+            Id INTEGER PRIMARY KEY AUTOINCREMENT,
+            UserId INTEGER NOT NULL UNIQUE,
+            TotalScore INTEGER DEFAULT 0,
+            MaxCombo INTEGER DEFAULT 0,
+            MaxLevel INTEGER DEFAULT 0,
+            GamesPlayed INTEGER DEFAULT 0,
+            UpdatedAt TEXT
+        )" }
     };
 
     int successCount = 0;
