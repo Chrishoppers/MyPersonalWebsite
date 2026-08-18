@@ -276,75 +276,79 @@ namespace MyPersonalWebsite.Controllers
         // ============================================================
         // 登录 POST
         // ============================================================
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Login(string username, string password)
+        // Controllers/AuthController.cs - Login POST
+
+[HttpPost]
+[ValidateAntiForgeryToken]
+public async Task<IActionResult> Login(string username, string password)
+{
+    var user = await _dataSync.GetUserByUsernameAsync(username);
+    if (user == null)
+    {
+        user = await _dataSync.GetUserByEmailAsync(username);
+    }
+
+    if (user == null)
+    {
+        ModelState.AddModelError("", "用户名或密码错误");
+        return View();
+    }
+
+    if (user.IsDeleted)
+    {
+        ModelState.AddModelError("", "账号已被删除");
+        return View();
+    }
+
+    if (user.IsBanned)
+    {
+        string banMessage = "您的账号已被封禁";
+        if (user.BanExpiry.HasValue && user.BanExpiry.Value > DateTime.Now)
         {
-            var user = await _dataSync.GetUserByUsernameAsync(username);
-            
-            if (user == null)
-            {
-                user = await _dataSync.GetUserByEmailAsync(username);
-            }
-
-            if (user == null)
-            {
-                ModelState.AddModelError("", "用户名或密码错误");
-                return View();
-            }
-
-            if (user.IsDeleted)
-            {
-                ModelState.AddModelError("", "账号已被删除");
-                return View();
-            }
-
-            if (user.IsBanned)
-            {
-                string banMessage = "您的账号已被封禁";
-                if (user.BanExpiry.HasValue && user.BanExpiry.Value > DateTime.Now)
-                {
-                    banMessage += $"，将于 {user.BanExpiry.Value:yyyy-MM-dd HH:mm} 解封";
-                }
-                else if (user.BanExpiry.HasValue && user.BanExpiry.Value <= DateTime.Now)
-                {
-                    user.IsBanned = false;
-                    user.BanExpiry = null;
-                    await _dataSync.UpdateUserAsync(user);
-                }
-                else
-                {
-                    ModelState.AddModelError("", banMessage);
-                    return View();
-                }
-            }
-
-            if (!user.IsEmailVerified)
-            {
-                ModelState.AddModelError("", "请先验证邮箱");
-                return View();
-            }
-
-            if (!user.IsAdmin && !user.IsApproved)
-            {
-                ModelState.AddModelError("", "您的账号正在等待管理员审核，请耐心等待");
-                return View();
-            }
-
-            if (!PasswordHelper.VerifyPassword(password, user.PasswordHash))
-            {
-                ModelState.AddModelError("", "用户名或密码错误");
-                return View();
-            }
-
-            user.LastLoginAt = DateTime.Now;
+            banMessage += $"，将于 {user.BanExpiry.Value:yyyy-MM-dd HH:mm} 解封";
+        }
+        else if (user.BanExpiry.HasValue && user.BanExpiry.Value <= DateTime.Now)
+        {
+            user.IsBanned = false;
+            user.BanExpiry = null;
             await _dataSync.UpdateUserAsync(user);
+        }
+        else
+        {
+            ModelState.AddModelError("", banMessage);
+            return View();
+        }
+    }
 
-            HttpContext.Session.SetInt32("UserId", user.Id);
-            HttpContext.Session.SetString("Username", user.Username);
-            HttpContext.Session.SetString("UserEmail", user.Email);
-            HttpContext.Session.SetInt32("IsAdmin", user.IsAdmin ? 1 : 0);
-            HttpContext.Session.SetInt32("IsRestricted", user.IsRestricted ? 1 : 0);  // ⭐ 新增
+    if (!user.IsEmailVerified)
+    {
+        ModelState.AddModelError("", "请先验证邮箱");
+        return View();
+    }
+
+    if (!user.IsAdmin && !user.IsApproved)
+    {
+        ModelState.AddModelError("", "您的账号正在等待管理员审核，请耐心等待");
+        return View();
+    }
+
+    if (!PasswordHelper.VerifyPassword(password, user.PasswordHash))
+    {
+        ModelState.AddModelError("", "用户名或密码错误");
+        return View();
+    }
+
+    user.LastLoginAt = DateTime.Now;
+    await _dataSync.UpdateUserAsync(user);
+
+    // ⭐ 设置 Session
+    HttpContext.Session.SetInt32("UserId", user.Id);
+    HttpContext.Session.SetString("Username", user.Username);
+    HttpContext.Session.SetString("UserEmail", user.Email);
+    HttpContext.Session.SetInt32("IsAdmin", user.IsAdmin ? 1 : 0);
+    
+    // ⭐⭐⭐ 关键修复：设置受限用户状态 ⭐⭐⭐
+    HttpContext.Session.SetInt32("IsRestricted", user.IsRestricted ? 1 : 0);
 
     // ⭐ 如果是受限用户，跳转到资源大厅
     if (user.IsRestricted)
@@ -352,14 +356,13 @@ namespace MyPersonalWebsite.Controllers
         return RedirectToAction("Index", "Resource");
     }
 
-            if (user.IsAdmin)
-            {
-                return RedirectToAction("Dashboard", "Admin");
-            }
+    if (user.IsAdmin)
+    {
+        return RedirectToAction("Dashboard", "Admin");
+    }
 
-            return RedirectToAction("Index", "Home");
-        }
-
+    return RedirectToAction("Index", "Home");
+}
         // ============================================================
         // 登出
         // ============================================================
