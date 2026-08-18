@@ -29,6 +29,15 @@ namespace MyPersonalWebsite.Controllers
         }
         // Controllers/ResourceController.cs - Index 方法
 
+
+
+        // ============================================================
+        // 1. 资源大厅
+        // ============================================================
+       // Controllers/ResourceController.cs
+
+// ⭐ 只保留这一个 Index 方法，删除其他同名的
+
 public async Task<IActionResult> Index()
 {
     var userId = HttpContext.Session.GetInt32("UserId");
@@ -58,33 +67,6 @@ public async Task<IActionResult> Index()
     ViewBag.User = user;
     return View();
 }
-
-        // ============================================================
-        // 1. 资源大厅
-        // ============================================================
-        public async Task<IActionResult> Index()
-        {
-            var userId = HttpContext.Session.GetInt32("UserId");
-            if (!userId.HasValue)
-            {
-                return RedirectToAction("Login", "Auth");
-            }
-
-            var user = await _dataSync.GetUserByIdAsync(userId.Value);
-            if (user == null)
-            {
-                return RedirectToAction("Login", "Auth");
-            }
-
-            if (user.IsBanned)
-            {
-                TempData["Error"] = "您的账号已被封禁，无法使用资源系统";
-                return RedirectToAction("Index", "Home");
-            }
-
-            ViewBag.User = user;
-            return View();
-        }
 
         // ============================================================
         // 2. 提交资源申请 (GET)
