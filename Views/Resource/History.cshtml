@@ -220,7 +220,7 @@
                     <div class="id">#@item.Id</div>
                     <div class="name">@item.ResourceName</div>
                     <div class="meta">
-                        <span>📱 @item.Platform</span>
+                        <span>📱 @(string.IsNullOrEmpty(item.Platform1) ? "未选择" : item.Platform1 + (string.IsNullOrEmpty(item.Platform2) ? "" : " + " + item.Platform2))</span>
                         <span>📂 @item.ResourceType</span>
                         <span>⏰ @item.CreatedAt.ToString("yyyy-MM-dd HH:mm")</span>
                         @if (item.RefundOption == "1day_paid")
