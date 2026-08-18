@@ -46,14 +46,13 @@ namespace MyPersonalWebsite.Models
         public bool IsFollowVerified { get; set; } = false;
         public DateTime? FollowVerifiedAt { get; set; }
         public string? FollowVerifyError { get; set; }
+        public string VerifyStatus { get; set; } = "pending";  // pending, auto_verified, manual_required, rejected
 
         // ============================================================
-        // 7. 免责声明（完整版）
+        // 7. 免责声明
         // ============================================================
-        public bool AgreeToBLContent { get; set; } = false;      // 男同性向内容声明
-        public bool AgreeToPrivacy { get; set; } = false;        // 隐私声明
-        public bool AgreeToCopyright { get; set; } = false;      // 版权声明
-        public bool AgreeToAllTerms { get; set; } = false;       // 全部同意
+        public bool AgreeToBLContent { get; set; } = false;
+        public bool AgreeToTerms { get; set; } = false;
 
         // ============================================================
         // 状态
