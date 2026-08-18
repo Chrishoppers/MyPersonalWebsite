@@ -142,7 +142,7 @@ namespace MyPersonalWebsite.Controllers
                 CreatedAt = DateTime.Now,
                 AvatarUrl = avatarData,
                 IsAvatarApproved = false,
-                AvatarSubmittedAt = avatarData != null ? DateTime.Now : null
+                AvatarSubmittedAt = avatarData != null ? DateTime.Now : null,
                 // ⭐ 标记受限用户
         IsRestricted = isFromQR,
         RestrictionReason = isFromQR ? "通过二维码注册" : null
