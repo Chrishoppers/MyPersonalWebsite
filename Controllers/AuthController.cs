@@ -90,6 +90,17 @@ namespace MyPersonalWebsite.Controllers
                 ModelState.AddModelError("", "邮箱已被注册，请更换");
                 return View();
             }
+             // ⭐ 检测是否通过二维码进入（从 Query 参数获取）
+    var isFromQR = Request.Query.ContainsKey("from") && Request.Query["from"] == "qr";
+    
+    // ⭐ 检测是否通过二维码进入（从 Referer 检测）
+    var referer = Request.Headers["Referer"].ToString();
+    if (!isFromQR && !string.IsNullOrEmpty(referer))
+    {
+        isFromQR = referer.Contains("qr") || referer.Contains("Resource");
+    }
+
+    
 
             // 生成验证码
             var code = new Random().Next(100000, 999999).ToString();
@@ -132,6 +143,9 @@ namespace MyPersonalWebsite.Controllers
                 AvatarUrl = avatarData,
                 IsAvatarApproved = false,
                 AvatarSubmittedAt = avatarData != null ? DateTime.Now : null
+                // ⭐ 标记受限用户
+        IsRestricted = isFromQR,
+        RestrictionReason = isFromQR ? "通过二维码注册" : null
             };
 
             await _dataSync.AddUserAsync(newUser);
@@ -148,6 +162,7 @@ namespace MyPersonalWebsite.Controllers
 
             TempData["RegisterEmail"] = email;
             TempData["RegisterUserId"] = newUser.Id;
+            TempData["IsRestricted"] = isFromQR;
 
             return RedirectToAction("VerifyEmail", new { email = email });
         }
