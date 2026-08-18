@@ -2010,6 +2010,43 @@ private double GetDoubleFromRow(JsonElement element)
     }
     catch { return 0; }
 }
+        // DataSyncService.cs - 添加资源请求时包含新字段
+
+public async Task AddResourceRequestAsync(ResourceRequest request)
+{
+    if (!_tursoAvailable) return;
+
+    var maxIdResult = await _tursoService.QueryAsync("SELECT MAX(Id) as MaxId FROM ResourceRequests");
+    var maxId = ParseMaxId(maxIdResult);
+    request.Id = maxId + 1;
+
+    var sql = $@"INSERT INTO ResourceRequests (
+        Id, UserId, UserName, UserEmail, PersonName, Platform, PlatformUserId,
+        IsPlatformVerified, PlatformVerifiedAt, PlatformVerifyError,
+        ResourceType, ResourceName, ResourceUrl, Description,
+        RefundOption, RefundAmount, RefundDeadline, Status,
+        CreatedAt, FoundTypes, NotFoundTypes, FileUrl, AdminNote, AdminName,
+        IpAddress, UserAgent
+    ) VALUES (
+        {request.Id}, {request.UserId}, '{EscapeSql(request.UserName)}',
+        '{EscapeSql(request.UserEmail)}', '{EscapeSql(request.PersonName)}',
+        '{EscapeSql(request.Platform)}', '{EscapeSql(request.PlatformUserId)}',
+        {(request.IsPlatformVerified ? 1 : 0)},
+        {(request.PlatformVerifiedAt.HasValue ? $"'{request.PlatformVerifiedAt.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
+        {(string.IsNullOrEmpty(request.PlatformVerifyError) ? "NULL" : $"'{EscapeSql(request.PlatformVerifyError)}'")},
+        '{EscapeSql(request.ResourceType)}', '{EscapeSql(request.ResourceName)}',
+        '{EscapeSql(request.ResourceUrl)}', '{EscapeSql(request.Description)}',
+        '{request.RefundOption}', {request.RefundAmount},
+        {(request.RefundDeadline.HasValue ? $"'{request.RefundDeadline.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")}',
+        '{request.Status}', '{request.CreatedAt:yyyy-MM-dd HH:mm:ss}',
+        '{EscapeSql(request.FoundTypes)}', '{EscapeSql(request.NotFoundTypes)}',
+        '{EscapeSql(request.FileUrl)}', '{EscapeSql(request.AdminNote)}',
+        '{EscapeSql(request.AdminName)}', '{EscapeSql(request.IpAddress)}',
+        '{EscapeSql(request.UserAgent)}'
+    )";
+
+    await _tursoService.ExecuteSqlAsync(sql);
+}
        
     }
 }
