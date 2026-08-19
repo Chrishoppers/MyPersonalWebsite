@@ -761,34 +761,36 @@
             <!-- ============================================================
             6. 平台验证关注
             ============================================================ -->
-            <div class="form-group">
-                <label>🔍 平台验证关注 <span style="color:rgba(255,255,255,0.08);font-weight:400;font-size:0.7rem;">（必须）</span></label>
-                <div class="form-row">
-                    <div>
-                        <label style="font-size:0.7rem;color:rgba(255,255,255,0.15);">选择平台</label>
-                        <select id="VerifyPlatform" name="VerifyPlatform" style="width:100%;padding:0.6rem 1rem;border-radius:12px;border:1px solid rgba(255,255,255,0.04);background:rgba(255,255,255,0.02);color:#fff;font-size:0.85rem;outline:none;font-family:inherit;">
-                            <option value="">请选择平台</option>
-                            <option value="抖音">抖音</option>
-                            <option value="快手">快手</option>
-                            <option value="B站">B站</option>
-                            <option value="小红书">小红书</option>
-                            <option value="微博">微博</option>
-                            <option value="知乎">知乎</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label style="font-size:0.7rem;color:rgba(255,255,255,0.15);">你的账号ID</label>
-                        <div style="display:flex;gap:0.5rem;">
-                            <input type="text" id="VerifyAccountId" name="VerifyAccountId" placeholder="输入你的账号ID" style="flex:1;min-width:120px;" />
-                            <button type="button" class="btn-verify" id="verifyBtn" onclick="verifyFollow()">🔍 验证</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="verify-result" id="verifyResult"></div>
-                <div class="hint">💡 验证你是否关注了我的账号，验证后才可通过申请</div>
-                <input type="hidden" id="IsFollowVerified" name="IsFollowVerified" value="false" />
+           <!-- 平台验证关注（必填） -->
+<div class="form-group">
+    <label>🔍 平台验证关注 <span class="required">*</span></label>
+    <div class="form-row">
+        <div>
+            <label style="font-size:0.7rem;color:rgba(255,255,255,0.15);">选择平台</label>
+            <select id="VerifyPlatform" name="VerifyPlatform" required style="width:100%;padding:0.6rem 1rem;border-radius:12px;border:1px solid rgba(255,255,255,0.04);background:rgba(255,255,255,0.02);color:#fff;font-size:0.85rem;outline:none;font-family:inherit;">
+                <option value="">请选择平台</option>
+                <option value="抖音">抖音</option>
+                <option value="快手">快手</option>
+                <option value="B站">B站</option>
+                <option value="小红书">小红书</option>
+                <option value="微博">微博</option>
+                <option value="知乎">知乎</option>
+            </select>
+        </div>
+        <div>
+            <label style="font-size:0.7rem;color:rgba(255,255,255,0.15);">你的账号ID <span class="required">*</span></label>
+            <div style="display:flex;gap:0.5rem;">
+                <input type="text" id="VerifyAccountId" name="VerifyAccountId" placeholder="输入你的账号ID" required style="flex:1;min-width:120px;" />
+                <button type="button" class="btn-verify" id="verifyBtn" onclick="verifyFollow()">
+                    🔍 验证
+                </button>
             </div>
-
+        </div>
+    </div>
+    <div class="verify-result" id="verifyResult"></div>
+    <div class="hint">💡 验证账号真实性（管理员后续会确认是否关注）</div>
+    <input type="hidden" id="IsFollowVerified" name="IsFollowVerified" value="false" />
+</div>
             <!-- ============================================================
             7. 免责声明（简版，点击查看完整版）
             ============================================================ -->
