@@ -11,6 +11,7 @@
 }
 
 <style>
+    /* ===== 全局 ===== */
     body {
         background: #0b0e1a;
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -18,7 +19,7 @@
     }
 
     .dashboard-container {
-        max-width: 1200px;
+        max-width: 1400px;
         margin: 0 auto;
         padding: 2rem 1.5rem;
     }
@@ -55,6 +56,7 @@
         display: flex;
         align-items: center;
         gap: 1rem;
+        flex-wrap: wrap;
     }
 
     .dashboard-header .right .user-badge {
@@ -99,12 +101,23 @@
         background: rgba(220, 53, 69, 0.15);
     }
 
+    .btn-glass.primary {
+        background: linear-gradient(135deg, #8B5CF6, #EC4899);
+        border: none;
+        color: #fff;
+    }
+
+    .btn-glass.primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 32px rgba(108, 60, 225, 0.2);
+    }
+
     /* ===== 统计卡片 ===== */
     .stats-row {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
         gap: 1rem;
-        margin-bottom: 2.5rem;
+        margin-bottom: 2rem;
     }
 
     .stat-card {
@@ -146,12 +159,89 @@
     .stat-card.pink .number { color: #f5576c; }
     .stat-card.orange .number { color: #ffc107; }
     .stat-card.purple .number { color: #a855f7; }
+    .stat-card.red .number { color: #dc3545; }
+    .stat-card.cyan .number { color: #06b6d4; }
     .stat-card.online .number { color: #28a745; }
+    .stat-card.gold .number { color: #F59E0B; }
 
-    /* ===== 快捷卡片网格 ===== */
+    /* ===== 统计表格 ===== */
+    .stats-section {
+        background: rgba(255, 255, 255, 0.02);
+        border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.04);
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stats-section .section-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #fff;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .stats-section .section-title .badge {
+        font-size: 0.6rem;
+        padding: 0.1rem 0.6rem;
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.04);
+        color: rgba(255, 255, 255, 0.2);
+    }
+
+    .stat-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 0.5rem;
+    }
+
+    .stat-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.4rem 0.8rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+        border-radius: 8px;
+        transition: all 0.2s ease;
+    }
+
+    .stat-item:hover {
+        background: rgba(255, 255, 255, 0.02);
+    }
+
+    .stat-item .label {
+        color: rgba(255, 255, 255, 0.3);
+        font-size: 0.8rem;
+    }
+
+    .stat-item .value {
+        color: rgba(255, 255, 255, 0.7);
+        font-weight: 600;
+        font-size: 0.85rem;
+    }
+
+    .stat-item .value.highlight {
+        color: #8B5CF6;
+    }
+    .stat-item .value.green {
+        color: #28a745;
+    }
+    .stat-item .value.red {
+        color: #dc3545;
+    }
+    .stat-item .value.orange {
+        color: #ffc107;
+    }
+    .stat-item .value.pink {
+        color: #EC4899;
+    }
+
+    /* ===== 快速操作卡片 ===== */
     .card-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
         gap: 1.2rem;
         margin-bottom: 2rem;
     }
@@ -231,167 +321,30 @@
         border: 1px solid rgba(79, 172, 254, 0.06);
     }
 
-    /* ===== 在线用户 ===== */
-    .online-users-section {
-        background: rgba(255, 255, 255, 0.02);
-        border-radius: 20px;
-        padding: 1.5rem 1.8rem;
-        border: 1px solid rgba(255, 255, 255, 0.04);
-        margin-bottom: 1.5rem;
-        transition: all 0.3s ease;
+    .card-badge.danger {
+        background: rgba(220, 53, 69, 0.12);
+        color: #dc3545;
+        border: 1px solid rgba(220, 53, 69, 0.06);
     }
 
-    .online-users-section:hover {
-        border-color: rgba(40, 167, 69, 0.08);
-    }
-
-    .online-users-section .section-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 1rem;
-    }
-
-    .online-users-section .section-header .title {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-
-    .online-users-section .section-header .title .dot {
-        width: 10px;
-        height: 10px;
-        border-radius: 50%;
-        background: #28a745;
-        animation: pulse 2s infinite;
-    }
-
-    @@keyframes pulse {
-        0%, 100% { opacity: 1; transform: scale(1); }
-        50% { opacity: 0.5; transform: scale(1.2); }
-    }
-
-    .online-users-section .section-header .title span {
-        color: rgba(255, 255, 255, 0.6);
-        font-weight: 600;
-        font-size: 1rem;
-    }
-
-    .online-users-section .section-header .online-badge {
-        background: rgba(40, 167, 69, 0.12);
-        color: #28a745;
-        padding: 0.1rem 0.8rem;
-        border-radius: 20px;
-        font-size: 0.7rem;
-        border: 1px solid rgba(40, 167, 69, 0.06);
-        font-weight: 500;
-    }
-
-    .online-users-section .section-header .hint {
-        color: rgba(255, 255, 255, 0.08);
-        font-size: 0.7rem;
-    }
-
-    .online-users-list {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.5rem;
-        min-height: 40px;
-        align-items: center;
-    }
-
-    .online-user-item {
-        display: flex;
-        align-items: center;
-        gap: 0.3rem;
-        background: rgba(255, 255, 255, 0.02);
-        border: 1px solid rgba(255, 255, 255, 0.04);
-        border-radius: 40px;
-        padding: 0.2rem 0.8rem 0.2rem 0.3rem;
-        transition: all 0.3s ease;
-    }
-
-    .online-user-item:hover {
-        background: rgba(255, 255, 255, 0.04);
-        border-color: rgba(40, 167, 69, 0.1);
-    }
-
-    .online-user-item .status-dot {
-        display: inline-block;
-        width: 6px;
-        height: 6px;
-        border-radius: 50%;
-        background: #28a745;
-        margin-right: 0.1rem;
-        flex-shrink: 0;
-    }
-
-    .online-user-item .avatar {
-        width: 28px;
-        height: 28px;
-        border-radius: 50%;
-        object-fit: cover;
-        border: 1px solid rgba(255, 255, 255, 0.06);
-        flex-shrink: 0;
-        background: rgba(255, 255, 255, 0.03);
-    }
-
-    .online-user-item .avatar-placeholder {
-        width: 28px;
-        height: 28px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(236, 72, 153, 0.15));
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 0.7rem;
-        color: rgba(255, 255, 255, 0.3);
-        flex-shrink: 0;
-        border: 1px solid rgba(255, 255, 255, 0.04);
-        font-weight: 600;
-    }
-
-    .online-user-item .name {
-        color: rgba(255, 255, 255, 0.6);
-        font-size: 0.8rem;
-    }
-
-    .online-user-item .admin-tag {
-        color: #8B5CF6;
-        font-size: 0.55rem;
-        background: rgba(139, 92, 246, 0.08);
-        padding: 0.05rem 0.4rem;
-        border-radius: 20px;
-        font-weight: 500;
-    }
-
-    .horror-btn {
-        padding: 0.15rem 0.6rem;
+    /* ===== 导出按钮 ===== */
+    .btn-export {
+        padding: 0.6rem 2rem;
         border: none;
-        border-radius: 20px;
-        background: linear-gradient(135deg, #dc3545, #8B0000);
+        border-radius: 40px;
+        background: linear-gradient(135deg, #4facfe, #00f2fe);
         color: #fff;
-        font-size: 0.65rem;
+        font-weight: 600;
+        font-size: 0.9rem;
         cursor: pointer;
-        transition: all 0.2s ease;
-        margin-left: 0.3rem;
-        flex-shrink: 0;
+        transition: all 0.3s ease;
+        font-family: inherit;
+        margin-top: 0.5rem;
     }
 
-    .horror-btn:hover:not(:disabled) {
-        transform: scale(1.1);
-        box-shadow: 0 0 20px rgba(220, 53, 69, 0.3);
-    }
-
-    .horror-btn:disabled {
-        opacity: 0.4;
-        cursor: not-allowed;
-        transform: none;
-    }
-
-    .online-empty {
-        color: rgba(255, 255, 255, 0.08);
-        font-size: 0.85rem;
+    .btn-export:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 32px rgba(79, 172, 254, 0.2);
     }
 
     /* ===== 最近活动 ===== */
@@ -436,6 +389,7 @@
     .activity-item .dot.orange { background: #ffc107; }
     .activity-item .dot.pink { background: #f5576c; }
     .activity-item .dot.purple { background: #a855f7; }
+    .activity-item .dot.red { background: #dc3545; }
 
     .activity-item .act-text {
         flex: 1;
@@ -454,7 +408,6 @@
         flex-shrink: 0;
     }
 
-    /* ===== 空状态 ===== */
     .empty-state {
         text-align: center;
         padding: 1.5rem;
@@ -463,7 +416,7 @@
     }
 
     /* ===== 响应式 ===== */
-    @@media (max-width: 640px) {
+    @@media (max-width: 768px) {
         .dashboard-header {
             flex-direction: column;
             align-items: stretch;
@@ -487,33 +440,34 @@
             font-size: 1.6rem;
         }
         .card-grid {
+            grid-template-columns: 1fr 1fr;
+        }
+        .stat-grid {
             grid-template-columns: 1fr;
         }
         .activity-section {
             padding: 1rem;
         }
-        .online-users-section {
-            padding: 1rem;
-        }
-        .online-user-item .name {
-            font-size: 0.7rem;
-        }
-        .online-user-item .avatar,
-        .online-user-item .avatar-placeholder {
-            width: 22px;
-            height: 22px;
-        }
     }
 
-    @@media (max-width: 400px) {
+    @@media (max-width: 480px) {
         .stats-row {
             grid-template-columns: 1fr 1fr;
+        }
+        .card-grid {
+            grid-template-columns: 1fr;
         }
         .stat-card .number {
             font-size: 1.3rem;
         }
         .stat-card .label {
             font-size: 0.65rem;
+        }
+        .stat-item .label {
+            font-size: 0.7rem;
+        }
+        .stat-item .value {
+            font-size: 0.75rem;
         }
     }
 </style>
@@ -537,74 +491,113 @@
         </div>
     </div>
 
-    <!-- ===== 统计卡片 ===== -->
+    <!-- ===== 快速统计 ===== -->
     <div class="stats-row">
         <div class="stat-card blue">
-            <div class="number"><span class="icon">📝</span> @ViewBag.BlogCount</div>
-            <div class="label">博客文章</div>
+            <div class="number"><span class="icon">👤</span> @ViewBag.ActiveUsers</div>
+            <div class="label">活跃用户</div>
         </div>
-        <div class="stat-card green">
-            <div class="number"><span class="icon">💬</span> @ViewBag.MessageCount</div>
-            <div class="label">留言总数</div>
-        </div>
-        <div class="stat-card orange">
-            <div class="number"><span class="icon">⏳</span> @ViewBag.PendingMessages</div>
-            <div class="label">待审核留言</div>
-        </div>
-        <div class="stat-card pink">
-            <div class="number"><span class="icon">👤</span> @ViewBag.UserCount</div>
-            <div class="label">注册用户</div>
+        <div class="stat-card red">
+            <div class="number"><span class="icon">🚫</span> @ViewBag.BannedUsers</div>
+            <div class="label">已封禁</div>
         </div>
         <div class="stat-card purple">
-            <div class="number"><span class="icon">🔑</span> @ViewBag.ContactRequestCount</div>
-            <div class="label">授权码申请</div>
+            <div class="number"><span class="icon">🔒</span> @ViewBag.RestrictedUsers</div>
+            <div class="label">受限用户</div>
         </div>
-        <div class="stat-card online">
-            <div class="number" id="onlineUsersCount">0</div>
-            <div class="label">🟢 当前在线</div>
+        <div class="stat-card orange">
+            <div class="number"><span class="icon">⏳</span> @ViewBag.PendingApproval</div>
+            <div class="label">待审核</div>
         </div>
-<div class="stat-card purple">
-        <div class="number"><span class="icon">📦</span> @ViewBag.ResourcePendingCount</div>
-        <div class="label">待处理资源</div>
-    </div>
-    <div class="stat-card">
-        <div class="number"><span class="icon">📊</span> @ViewBag.ResourceTotalCount</div>
-        <div class="label">资源申请总数</div>
-    </div>
-    </div>
-
-    <!-- ===== 在线用户 ===== -->
-    <div class="online-users-section">
-        <div class="section-header">
-            <div class="title">
-                <span class="dot"></span>
-                <span>在线用户</span>
-                <span class="online-badge" id="onlineUsersBadge">0</span>
-            </div>
-            <span class="hint">🔄 实时更新</span>
+        <div class="stat-card pink">
+            <div class="number"><span class="icon">💬</span> @ViewBag.PendingMessages</div>
+            <div class="label">待审核留言</div>
         </div>
-        <div class="online-users-list" id="onlineUsersList">
-            <span class="online-empty">加载中...</span>
-        </div>
-
-        <!-- ===== 恐怖控制面板 ===== -->
-        <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:0.8rem;padding-top:0.8rem;border-top:1px solid rgba(255,255,255,0.04);">
-            <button onclick="triggerHorror()" style="padding:0.5rem 1.5rem;border:none;border-radius:40px;background:linear-gradient(135deg,#dc3545,#8B0000);color:#fff;font-weight:600;font-size:0.85rem;cursor:pointer;transition:all 0.3s ease;display:flex;align-items:center;gap:0.5rem;">
-                👻 释放恐怖入侵
-            </button>
-            <button onclick="triggerHorrorWithMessage()" style="padding:0.5rem 1.5rem;border:none;border-radius:40px;background:linear-gradient(135deg,#8B008B,#4B0082);color:#fff;font-weight:600;font-size:0.85rem;cursor:pointer;transition:all 0.3s ease;display:flex;align-items:center;gap:0.5rem;">
-                📝 自定义恐怖
-            </button>
-            <button onclick="triggerGhost()" style="padding:0.5rem 1.5rem;border:none;border-radius:40px;background:linear-gradient(135deg,#2d2d2d,#1a1a1a);color:rgba(255,255,255,0.6);font-weight:600;font-size:0.85rem;cursor:pointer;transition:all 0.3s ease;display:flex;align-items:center;gap:0.5rem;border:1px solid rgba(255,255,255,0.04);">
-                👻 幽灵飘过
-            </button>
-            <button onclick="triggerShake()" style="padding:0.5rem 1.5rem;border:none;border-radius:40px;background:linear-gradient(135deg,#8B4513,#3d1f00);color:#fff;font-weight:600;font-size:0.85rem;cursor:pointer;transition:all 0.3s ease;display:flex;align-items:center;gap:0.5rem;">
-                💀 屏幕震动
-            </button>
+        <div class="stat-card gold">
+            <div class="number"><span class="icon">📦</span> @ViewBag.PendingResourceRequests</div>
+            <div class="label">待处理资源</div>
         </div>
     </div>
 
-    <!-- ===== 功能卡片 ===== -->
+    <!-- ===== ⭐ 超级详细统计 ===== -->
+    <div class="stats-section">
+        <div class="section-title">
+            📊 超级详细统计
+            <span class="badge">实时</span>
+            <button class="btn-export" onclick="exportStats()" style="margin-left:auto;padding:0.3rem 1.2rem;font-size:0.7rem;">📥 导出CSV</button>
+        </div>
+
+        <!-- 用户统计 -->
+        <h4 style="color:rgba(255,255,255,0.3);font-size:0.75rem;margin:0.5rem 0 0.3rem;text-transform:uppercase;letter-spacing:0.06em;">👤 用户统计</h4>
+        <div class="stat-grid">
+            <div class="stat-item"><span class="label">总用户数</span><span class="value">@ViewBag.TotalUsers</span></div>
+            <div class="stat-item"><span class="label">活跃用户</span><span class="value highlight">@ViewBag.ActiveUsers</span></div>
+            <div class="stat-item"><span class="label">已删除用户</span><span class="value red">@ViewBag.DeletedUsers</span></div>
+            <div class="stat-item"><span class="label">管理员</span><span class="value pink">@ViewBag.AdminUsers</span></div>
+            <div class="stat-item"><span class="label">普通用户</span><span class="value">@ViewBag.NormalUsers</span></div>
+            <div class="stat-item"><span class="label">🚫 已封禁</span><span class="value red">@ViewBag.BannedUsers</span></div>
+            <div class="stat-item"><span class="label">&nbsp;&nbsp;永久封禁</span><span class="value red">@ViewBag.PermanentBanned</span></div>
+            <div class="stat-item"><span class="label">&nbsp;&nbsp;临时封禁</span><span class="value orange">@ViewBag.TempBanned</span></div>
+            <div class="stat-item"><span class="label">&nbsp;&nbsp;已过期封禁</span><span class="value">@ViewBag.ExpiredBans</span></div>
+            <div class="stat-item"><span class="label">✅ 已验证邮箱</span><span class="value green">@ViewBag.EmailVerified</span></div>
+            <div class="stat-item"><span class="label">⏳ 未验证邮箱</span><span class="value orange">@ViewBag.EmailUnverified</span></div>
+            <div class="stat-item"><span class="label">✅ 已审核通过</span><span class="value green">@ViewBag.ApprovedUsers</span></div>
+            <div class="stat-item"><span class="label">⏳ 待审核</span><span class="value orange">@ViewBag.PendingApproval</span></div>
+            <div class="stat-item"><span class="label">🔒 受限用户</span><span class="value purple">@ViewBag.RestrictedUsers</span></div>
+            <div class="stat-item"><span class="label">🖼️ 有头像</span><span class="value">@ViewBag.HasAvatar</span></div>
+            <div class="stat-item"><span class="label">⏳ 头像待审核</span><span class="value orange">@ViewBag.AvatarPending</span></div>
+            <div class="stat-item"><span class="label">📷 无头像</span><span class="value">@ViewBag.NoAvatar</span></div>
+            <div class="stat-item"><span class="label">✏️ 待审核昵称修改</span><span class="value orange">@ViewBag.PendingUsernameChanges</span></div>
+            <div class="stat-item"><span class="label">✏️ 待审核邮箱修改</span><span class="value orange">@ViewBag.PendingEmailChanges</span></div>
+            <div class="stat-item"><span class="label">📧 开启连对邮件</span><span class="value green">@ViewBag.StreakEmailEnabled</span></div>
+            <div class="stat-item"><span class="label">📅 今日注册</span><span class="value">@ViewBag.RegisteredToday</span></div>
+            <div class="stat-item"><span class="label">📅 本周注册</span><span class="value">@ViewBag.RegisteredThisWeek</span></div>
+            <div class="stat-item"><span class="label">📅 本月注册</span><span class="value">@ViewBag.RegisteredThisMonth</span></div>
+            <div class="stat-item"><span class="label">🟢 今日登录</span><span class="value green">@ViewBag.LoggedInToday</span></div>
+            <div class="stat-item"><span class="label">🟢 本周登录</span><span class="value">@ViewBag.LoggedInThisWeek</span></div>
+            <div class="stat-item"><span class="label">💤 从未登录</span><span class="value red">@ViewBag.NeverLoggedIn</span></div>
+        </div>
+
+        <!-- 留言统计 -->
+        <h4 style="color:rgba(255,255,255,0.3);font-size:0.75rem;margin:1rem 0 0.3rem;text-transform:uppercase;letter-spacing:0.06em;">💬 留言统计</h4>
+        <div class="stat-grid">
+            <div class="stat-item"><span class="label">总留言</span><span class="value">@ViewBag.TotalMessages</span></div>
+            <div class="stat-item"><span class="label">✅ 已审核</span><span class="value green">@ViewBag.ApprovedMessages</span></div>
+            <div class="stat-item"><span class="label">⏳ 待审核</span><span class="value orange">@ViewBag.PendingMessages</span></div>
+            <div class="stat-item"><span class="label">🚩 被举报</span><span class="value red">@ViewBag.ReportedMessages</span></div>
+            <div class="stat-item"><span class="label">❤️ 总点赞</span><span class="value pink">@ViewBag.TotalLikes</span></div>
+            <div class="stat-item"><span class="label">💬 有回复</span><span class="value">@ViewBag.MessagesWithReply</span></div>
+        </div>
+
+        <!-- 资源申请统计 -->
+        <h4 style="color:rgba(255,255,255,0.3);font-size:0.75rem;margin:1rem 0 0.3rem;text-transform:uppercase;letter-spacing:0.06em;">📦 资源申请统计</h4>
+        <div class="stat-grid">
+            <div class="stat-item"><span class="label">总申请</span><span class="value">@ViewBag.TotalResourceRequests</span></div>
+            <div class="stat-item"><span class="label">⏳ 待付款</span><span class="value orange">@ViewBag.PendingPayments</span></div>
+            <div class="stat-item"><span class="label">✅ 已付款</span><span class="value green">@ViewBag.PaidRequests</span></div>
+            <div class="stat-item"><span class="label">📋 待处理</span><span class="value orange">@ViewBag.PendingResourceRequests</span></div>
+            <div class="stat-item"><span class="label">✅ 已完成</span><span class="value green">@ViewBag.CompletedRequests</span></div>
+            <div class="stat-item"><span class="label">❌ 已拒绝</span><span class="value red">@ViewBag.RejectedRequests</span></div>
+            <div class="stat-item"><span class="label">💰 已退款</span><span class="value gold">@ViewBag.RefundedRequests</span></div>
+            <div class="stat-item"><span class="label">🔍 待人工核验</span><span class="value red">@ViewBag.ManualVerifyNeeded</span></div>
+            <div class="stat-item"><span class="label">💰 总金额</span><span class="value gold">¥@ViewBag.TotalResourceAmount</span></div>
+        </div>
+
+        <!-- 其他统计 -->
+        <h4 style="color:rgba(255,255,255,0.3);font-size:0.75rem;margin:1rem 0 0.3rem;text-transform:uppercase;letter-spacing:0.06em;">📊 其他统计</h4>
+        <div class="stat-grid">
+            <div class="stat-item"><span class="label">📖 博客总数</span><span class="value">@ViewBag.TotalBlogs</span></div>
+            <div class="stat-item"><span class="label">❤️ 博客总赞</span><span class="value pink">@ViewBag.TotalBlogLikes</span></div>
+            <div class="stat-item"><span class="label">🔑 授权码申请</span><span class="value">@ViewBag.TotalContactRequests</span></div>
+            <div class="stat-item"><span class="label">✅ 已使用授权码</span><span class="value green">@ViewBag.UsedContactRequests</span></div>
+            <div class="stat-item"><span class="label">⏳ 待处理授权码</span><span class="value orange">@ViewBag.PendingContactRequests</span></div>
+            <div class="stat-item"><span class="label">📬 总通知</span><span class="value">@ViewBag.TotalNotifications</span></div>
+            <div class="stat-item"><span class="label">✅ 已读通知</span><span class="value green">@ViewBag.ReadNotifications</span></div>
+            <div class="stat-item"><span class="label">⏳ 未读通知</span><span class="value orange">@ViewBag.UnreadNotifications</span></div>
+        </div>
+    </div>
+
+    <!-- ===== 快速操作卡片 ===== -->
     <div class="card-grid">
         <a href="/Admin/Blogs" class="card-item">
             <span class="card-icon">📖</span>
@@ -633,8 +626,8 @@
         <a href="/Admin/Users" class="card-item">
             <span class="card-icon">👥</span>
             <div class="card-title">用户管理</div>
-            <div class="card-desc">查看所有注册用户</div>
-            <span class="card-badge count">@ViewBag.UserCount 人</span>
+            <div class="card-desc">查看、封禁、管理所有用户</div>
+            <span class="card-badge count">@ViewBag.ActiveUsers 人</span>
         </a>
 
         <a href="/Admin/ContactRequests" class="card-item">
@@ -672,11 +665,18 @@
             }
         </a>
 
-        <a href="/Admin/Notifications" class="card-item">
-            <span class="card-icon">📬</span>
-            <div class="card-title">通知管理</div>
-            <div class="card-desc">查看所有已发送的通知</div>
-            <span class="card-badge count">@ViewBag.NotificationCount 条</span>
+        <a href="/Admin/ResourceManagement" class="card-item">
+            <span class="card-icon">📦</span>
+            <div class="card-title">资源管理</div>
+            <div class="card-desc">处理资源申请、确认付款</div>
+            @if (ViewBag.ResourcePendingCount > 0)
+            {
+                <span class="card-badge pending">@ViewBag.ResourcePendingCount 待处理</span>
+            }
+            else
+            {
+                <span class="card-badge count">@ViewBag.ResourceTotalCount 条</span>
+            }
         </a>
 
         <a href="/Admin/QuestionBank" class="card-item">
@@ -692,24 +692,9 @@
             <div class="card-desc">查看未来7天题目安排</div>
             <span class="card-badge count">🗓️ 智能排期</span>
         </a>
-
-        
-<a href="/Admin/ResourceManagement" class="card-item">
-    <span class="card-icon">📦</span>
-    <div class="card-title">资源管理</div>
-    <div class="card-desc">处理用户的资源申请</div>
-    @if (ViewBag.ResourcePendingCount > 0)
-    {
-        <span class="card-badge pending">@ViewBag.ResourcePendingCount 待处理</span>
-    }
-    else
-    {
-        <span class="card-badge count">@ViewBag.ResourceTotalCount 条</span>
-    }
-</a>
     </div>
 
-    <!-- ===== 最近活动 ===== -->
+    <!-- ===== 最近动态 ===== -->
     <div class="activity-section">
         <div class="section-title">📋 最近动态</div>
         @{
@@ -756,311 +741,33 @@
 
 </div>
 
-<!-- ===== SignalR + 恐怖控制脚本 ===== -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
 <script>
-    var userId = @userId;
-    var isAdmin = @isAdmin;
-
     // ============================================================
-    // 在线用户系统
+    // 导出统计 CSV
     // ============================================================
-    var allUsers = [];
-
-    function fetchUsersInfo() {
-        return fetch('/Admin/GetAllUsersBrief')
-            .then(function(r) { return r.json(); })
-            .then(function(data) {
-                if (data.success) {
-                    allUsers = data.users || [];
-                    return allUsers;
+    function exportStats() {
+        var data = [];
+        document.querySelectorAll('.stat-grid').forEach(function(grid) {
+            grid.querySelectorAll('.stat-item').forEach(function(item) {
+                var label = item.querySelector('.label')?.textContent?.trim() || '';
+                var value = item.querySelector('.value')?.textContent?.trim() || '';
+                if (label && value) {
+                    data.push({ label: label, value: value });
                 }
-                return [];
-            })
-            .catch(function() { return []; });
-    }
-
-    function updateOnlineUsers(onlineUserIds) {
-        var container = document.getElementById('onlineUsersList');
-        var badge = document.getElementById('onlineUsersBadge');
-        var countEl = document.getElementById('onlineUsersCount');
-
-        if (!container) return;
-
-        if (allUsers.length === 0) {
-            container.innerHTML = '<span class="online-empty">加载中...</span>';
-            return;
-        }
-
-        var onlineUsers = allUsers.filter(function(u) {
-            return onlineUserIds && onlineUserIds.indexOf(u.id) !== -1;
+            });
         });
 
-        var count = onlineUsers.length;
-
-        if (badge) badge.textContent = count;
-        if (countEl) countEl.textContent = count;
-
-        if (count === 0) {
-            container.innerHTML = '<span class="online-empty">暂无用户在线</span>';
-            return;
-        }
-
-        var html = '';
-        onlineUsers.forEach(function(u) {
-            var avatarHtml = '';
-            if (u.avatarUrl && u.isAvatarApproved) {
-                avatarHtml = '<img src="' + u.avatarUrl + '" class="avatar" />';
-            } else {
-                avatarHtml = '<div class="avatar-placeholder">' + (u.username ? u.username.charAt(0).toUpperCase() : '?') + '</div>';
-            }
-            html += '<div class="online-user-item">';
-            html += '<span class="status-dot"></span>';
-            html += avatarHtml;
-            html += '<span class="name">' + u.username + '</span>';
-            if (u.isAdmin) {
-                html += '<span class="admin-tag">👑</span>';
-            }
-            // ⭐ 单个用户恐怖按钮
-            if (u.id !== userId) {
-                html += '<button class="horror-btn" onclick="triggerSingleHorror(' + u.id + ', \'' + u.username + '\')" title="对 ' + u.username + ' 释放恐怖">👻</button>';
-            }
-            html += '</div>';
+        // 添加头部信息
+        var csv = '统计项,数值\n';
+        csv += '"导出时间","' + new Date().toLocaleString('zh-CN') + '"\n';
+        data.forEach(function(item) {
+            csv += '"' + item.label + '","' + item.value + '"\n';
         });
-        container.innerHTML = html;
+
+        var blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+        var link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'dashboard_stats_' + new Date().toISOString().slice(0,10) + '.csv';
+        link.click();
     }
-
-    window._updateOnlineList = updateOnlineUsers;
-
-    // ============================================================
-    // SignalR 连接
-    // ============================================================
-    var _horrorConnection = null;
-
-    function getHorrorConnection() {
-        return new Promise(function(resolve, reject) {
-            try {
-                if (_horrorConnection && _horrorConnection.state === signalR.HubConnectionState.Connected) {
-                    resolve(_horrorConnection);
-                    return;
-                }
-                var conn = new signalR.HubConnectionBuilder()
-                    .withUrl('/messageHub')
-                    .configureLogging(signalR.LogLevel.Information)
-                    .build();
-
-                conn.start()
-                    .then(function() {
-                        _horrorConnection = conn;
-                        resolve(conn);
-                    })
-                    .catch(function(err) {
-                        reject(err);
-                    });
-            } catch(e) {
-                reject(e);
-            }
-        });
-    }
-
-    // 初始化
-    fetchUsersInfo().then(function() {
-        updateOnlineUsers([]);
-
-        try {
-            var connection = new signalR.HubConnectionBuilder()
-                .withUrl('/messageHub')
-                .configureLogging(signalR.LogLevel.Information)
-                .build();
-
-            connection.start()
-                .then(function() {
-                    connection.invoke('UserOnline', userId);
-                    console.log('✅ SignalR 已连接');
-                })
-                .catch(function(err) {
-                    console.error('❌ SignalR 连接失败:', err);
-                    document.getElementById('onlineUsersList').innerHTML = '<span class="online-empty">实时功能不可用</span>';
-                });
-
-            connection.on('OnlineUsersUpdated', function(onlineUserIds) {
-                updateOnlineUsers(onlineUserIds);
-            });
-
-            window.addEventListener('beforeunload', function() {
-                connection.stop();
-            });
-
-            setTimeout(function() {
-                if (document.getElementById('onlineUsersList').innerHTML === '加载中...') {
-                    fetch('/Admin/GetOnlineUsers')
-                        .then(function(r) { return r.json(); })
-                        .then(function(data) {
-                            if (data.success) {
-                                updateOnlineUsers(data.onlineUsers || []);
-                            }
-                        })
-                        .catch(function() {});
-                }
-            }, 3000);
-
-        } catch (e) {
-            console.log('SignalR 不可用');
-            document.getElementById('onlineUsersList').innerHTML = '<span class="online-empty">实时功能不可用</span>';
-        }
-    }).catch(function() {
-        document.getElementById('onlineUsersList').innerHTML = '<span class="online-empty">加载失败</span>';
-    });
-
-    // ============================================================
-    // ⭐ 恐怖控制函数
-    // ============================================================
-
-    var horrorMessages = [
-        '你 刚 才 关 门 了 吗 ？',
-        '镜 子 里 的 人 刚 才 笑 了',
-        '你 的 背 后 有 呼 吸 声',
-        '床 底 下 有 人 在 看 你',
-        '你 家 窗 户 外 面 站 着 人',
-        '它 就 在 你 身 后 ！ ！ ！',
-        '快 跑 ！ ！ ！ 它 来 了 ！',
-        '你 已 经 被 锁 定 了 ！',
-        '别 回 头 ！ ！ ！ 别 回 头 ！',
-        '它 正 在 爬 你 的 床 ！',
-        '你 的 天 花 板 上 有 东 西',
-        '⚠️ 你 被 标 记 了 ！ ！ ！',
-        '🔴 无 法 逃 离 。 。 。',
-        '💀 你 的 数 据 已 泄 露',
-        '🔴 它 已 经 进 入 你 的 大 脑'
-    ];
-
-    function getRandomMessage() {
-        return horrorMessages[Math.floor(Math.random() * horrorMessages.length)];
-    }
-
-    function triggerHorror() {
-        if (!confirm('⚠️ 确定要对所有在线玩家释放恐怖入侵吗？')) return;
-        var btn = event.target;
-        btn.disabled = true;
-        btn.textContent = '⏳ 释放中...';
-
-        var msg = getRandomMessage();
-
-        getHorrorConnection()
-            .then(function(conn) {
-                conn.invoke('TriggerHorror', msg);
-                btn.textContent = '✅ 已释放';
-                setTimeout(function() {
-                    btn.disabled = false;
-                    btn.textContent = '👻 释放恐怖入侵';
-                }, 3000);
-            })
-            .catch(function(err) {
-                alert('释放失败: ' + err);
-                btn.disabled = false;
-                btn.textContent = '👻 释放恐怖入侵';
-            });
-    }
-
-    function triggerHorrorWithMessage() {
-        var msg = prompt('输入恐怖消息：', '💀 你逃不掉的...');
-        if (msg === null) return;
-        var btn = event.target;
-        btn.disabled = true;
-        btn.textContent = '⏳ 发送中...';
-        getHorrorConnection()
-            .then(function(conn) {
-                conn.invoke('TriggerHorror', msg.trim() || '💀 你逃不掉的...');
-                btn.textContent = '✅ 已发送';
-                setTimeout(function() {
-                    btn.disabled = false;
-                    btn.textContent = '📝 自定义恐怖';
-                }, 3000);
-            })
-            .catch(function(err) {
-                alert('发送失败: ' + err);
-                btn.disabled = false;
-                btn.textContent = '📝 自定义恐怖';
-            });
-    }
-
-    function triggerGhost() {
-        var btn = event.target;
-        btn.disabled = true;
-        btn.textContent = '⏳ 释放中...';
-        getHorrorConnection()
-            .then(function(conn) {
-                conn.invoke('TriggerGhost', '👻 幽灵出没！');
-                btn.textContent = '✅ 已释放';
-                setTimeout(function() {
-                    btn.disabled = false;
-                    btn.textContent = '👻 幽灵飘过';
-                }, 2000);
-            })
-            .catch(function(err) {
-                alert('释放失败: ' + err);
-                btn.disabled = false;
-                btn.textContent = '👻 幽灵飘过';
-            });
-    }
-
-    function triggerShake() {
-        var btn = event.target;
-        btn.disabled = true;
-        btn.textContent = '⏳ 释放中...';
-        getHorrorConnection()
-            .then(function(conn) {
-                var intensities = ['light', 'medium', 'hard'];
-                var intensity = intensities[Math.floor(Math.random() * intensities.length)];
-                conn.invoke('TriggerShake', intensity);
-                btn.textContent = '✅ 已释放';
-                setTimeout(function() {
-                    btn.disabled = false;
-                    btn.textContent = '💀 屏幕震动';
-                }, 2000);
-            })
-            .catch(function(err) {
-                alert('释放失败: ' + err);
-                btn.disabled = false;
-                btn.textContent = '💀 屏幕震动';
-            });
-    }
-
-    // ============================================================
-    // ⭐ 对指定用户释放恐怖
-    // ============================================================
-    function triggerSingleHorror(targetUserId, targetUsername) {
-        if (!confirm('⚠️ 确定要对 ' + targetUsername + ' 释放恐怖入侵吗？')) return;
-
-        var btn = event.target;
-        btn.disabled = true;
-        btn.textContent = '⏳';
-
-        var msg = getRandomMessage();
-
-        getHorrorConnection()
-            .then(function(conn) {
-                conn.invoke('TriggerHorrorToUser', targetUserId, msg);
-                btn.textContent = '✅';
-                setTimeout(function() {
-                    btn.disabled = false;
-                    btn.textContent = '👻';
-                }, 2000);
-            })
-            .catch(function(err) {
-                alert('释放失败: ' + err);
-                btn.disabled = false;
-                btn.textContent = '👻';
-            });
-    }
-
-    document.addEventListener('click', function(e) {
-        var item = e.target.closest('.notif-item');
-        if (item && !item.classList.contains('read')) {
-            var id = item.dataset.id;
-            if (id) {
-                markNotifRead(id, item);
-            }
-        }
-    });
 </script>
