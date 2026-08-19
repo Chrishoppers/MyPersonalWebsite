@@ -544,116 +544,190 @@ namespace MyPersonalWebsite.Services
         // ⭐ 13. 资源处理结果 - 带附件发送给用户
         // ============================================================
 
-        // BrevoEmailService.cs - 资源结果邮件（只保留微信）
+        public async Task SendResourceResultEmailAsync(ResourceRequest request, byte[]? attachmentData = null, string? attachmentName = null)
+        {
+            var timestamp = DateTime.Now.ToString("yyyyMMddHHmm");
+            var subject = $"【{request.PersonName}】资源内容-{timestamp}";
 
-public async Task SendResourceResultEmailAsync(ResourceRequest request, byte[]? attachmentData = null, string? attachmentName = null)
-{
-    var timestamp = DateTime.Now.ToString("yyyyMMddHHmm");
-    var subject = $"【{request.PersonName}】资源内容-{timestamp}";
+            var foundTypes = string.IsNullOrEmpty(request.FoundTypes) ? "无" : request.FoundTypes;
+            var notFoundTypes = string.IsNullOrEmpty(request.NotFoundTypes) ? "无" : request.NotFoundTypes;
 
-    var foundTypes = string.IsNullOrEmpty(request.FoundTypes) ? "无" : request.FoundTypes;
-    var notFoundTypes = string.IsNullOrEmpty(request.NotFoundTypes) ? "无" : request.NotFoundTypes;
+            var refundInfo = "";
+            if (request.RefundOption == "1day_paid" && request.Status == "refunded")
+            {
+                refundInfo = "<p style='color: #F59E0B;'>💰 已退款 ¥2.00</p>";
+            }
+            else if (request.RefundOption == "1day_paid" && request.Status == "completed")
+            {
+                refundInfo = "<p style='color: #00FF88;'>✅ 已在1天内处理，无需退款</p>";
+            }
 
-    var refundInfo = "";
-    if (request.RefundOption == "1day_paid" && request.Status == "refunded")
-    {
-        refundInfo = "<p style='color: #F59E0B;'>💰 已退款 ¥2.00</p>";
-    }
-    else if (request.RefundOption == "1day_paid" && request.Status == "completed")
-    {
-        refundInfo = "<p style='color: #00FF88;'>✅ 已在1天内处理，无需退款</p>";
-    }
+            var attachmentInfo = "";
+            if (!string.IsNullOrEmpty(attachmentName))
+            {
+                attachmentInfo = $"<p style='color: #8B5CF6;'>📎 附件：{attachmentName}</p>";
+            }
 
-    var attachmentInfo = "";
-    if (!string.IsNullOrEmpty(attachmentName))
-    {
-        attachmentInfo = $"<p style='color: #8B5CF6;'>📎 附件：{attachmentName}</p>";
-    }
+            var html = $@"
+                <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #2a2a3e; border-radius: 16px; background: #0a0a0f; color: #e0e0e0;'>
+                    <h2 style='color: #8B5CF6;'>📦 资源处理结果</h2>
+                    <p>您好 <strong>{request.UserName}</strong>！</p>
+                    <p>您的资源申请已处理完成：</p>
 
-    var html = $@"
-    <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #2a2a3e; border-radius: 16px; background: #0a0a0f; color: #e0e0e0;'>
-        <h2 style='color: #8B5CF6;'>📦 资源处理结果</h2>
-        <p>您好 <strong>{request.UserName}</strong>！</p>
-        <p>您的资源申请已处理完成：</p>
+                    <div style='background: #1a1a2e; padding: 15px; border-radius: 8px; margin: 10px 0; border: 1px solid #2a2a3e;'>
+                        <p><strong>👤 联系人：</strong>{request.PersonName}</p>
+                        <p><strong>📱 平台：</strong>{request.Platform1}{(string.IsNullOrEmpty(request.Platform2) ? "" : " + " + request.Platform2)}</p>
+                        <p><strong>📂 资源名称：</strong>{request.ResourceName}</p>
+                        <p><strong>📊 状态：</strong>{(request.Status == "completed" ? "✅ 已完成" : request.Status == "rejected" ? "❌ 已拒绝" : request.Status == "refunded" ? "💰 已退款" : "⏳ 处理中")}</p>
+                        {refundInfo}
+                    </div>
 
-        <div style='background: #1a1a2e; padding: 15px; border-radius: 8px; margin: 10px 0; border: 1px solid #2a2a3e;'>
-            <p><strong>👤 联系人：</strong>{request.PersonName}</p>
-            <p><strong>📱 平台：</strong>{request.Platform1}{(string.IsNullOrEmpty(request.Platform2) ? "" : " + " + request.Platform2)}</p>
-            <p><strong>📂 资源名称：</strong>{request.ResourceName}</p>
-            <p><strong>📊 状态：</strong>{(request.Status == "completed" ? "✅ 已完成" : request.Status == "rejected" ? "❌ 已拒绝" : request.Status == "refunded" ? "💰 已退款" : "⏳ 处理中")}</p>
-            {refundInfo}
-        </div>
+                    <div style='background: #1a1a2e; padding: 15px; border-radius: 8px; margin: 10px 0; border: 1px solid #2a2a3e;'>
+                        <p><strong>✅ 已找到类型：</strong><span style='color: #00FF88;'>{foundTypes}</span></p>
+                        <p><strong>❌ 未找到类型：</strong><span style='color: #dc3545;'>{notFoundTypes}</span></p>
+                        {attachmentInfo}
+                        {(string.IsNullOrEmpty(request.AdminNote) ? "" : $@"<p><strong>📝 管理员备注：</strong>{request.AdminNote}</p>")}
+                    </div>
 
-        <div style='background: #1a1a2e; padding: 15px; border-radius: 8px; margin: 10px 0; border: 1px solid #2a2a3e;'>
-            <p><strong>✅ 已找到类型：</strong><span style='color: #00FF88;'>{foundTypes}</span></p>
-            <p><strong>❌ 未找到类型：</strong><span style='color: #dc3545;'>{notFoundTypes}</span></p>
-            {attachmentInfo}
-            {(string.IsNullOrEmpty(request.AdminNote) ? "" : $@"<p><strong>📝 管理员备注：</strong>{request.AdminNote}</p>")}
-        </div>
+                    <p style='color: #888; font-size: 14px;'>⏰ 处理时间：{FormatChinaTime(request.ProcessedAt ?? DateTime.Now)}</p>
 
-        <p style='color: #888; font-size: 14px;'>⏰ 处理时间：{FormatChinaTime(request.ProcessedAt ?? DateTime.Now)}</p>
+                    <hr style='border: none; border-top: 1px solid #2a2a3e;'>
+                    <p style='color: #555; font-size: 12px;'>此邮件为系统发送，请勿回复</p>
+                </div>";
 
-        <hr style='border: none; border-top: 1px solid #2a2a3e;'>
-        <p style='color: #555; font-size: 12px;'>此邮件为系统发送，请勿回复</p>
-    </div>";
+            await SendEmailWithAttachmentAsync(request.UserEmail, subject, html, attachmentData, attachmentName);
+        }
 
-    await SendEmailWithAttachmentAsync(request.UserEmail, subject, html, attachmentData, attachmentName);
-}
-        // BrevoEmailService.cs
+        // ============================================================
+        // ⭐ 14. 支付确认通知（发送给用户）
+        // ============================================================
 
-/// <summary>
-/// 支付确认通知（发送给用户）
-/// </summary>
-public async Task SendPaymentConfirmedEmailAsync(ResourceRequest request)
-{
-    var html = $@"
-    <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #2a2a3e; border-radius: 16px; background: #0a0a0f; color: #e0e0e0;'>
-        <h2 style='color: #28a745;'>✅ 支付已确认</h2>
-        <p>您好 <strong>{request.UserName}</strong>！</p>
-        <p>您的支付已由管理员确认：</p>
-        <div style='background: #1a1a2e; padding: 15px; border-radius: 8px; margin: 10px 0; border: 1px solid #2a2a3e;'>
-            <p><strong>📋 订单号：</strong><span style='color:#8B5CF6;font-family:monospace;'>{request.OrderId}</span></p>
-            <p><strong>💰 金额：</strong>¥{request.Amount:F2}</p>
-            <p><strong>⏰ 确认时间：</strong>{FormatChinaTime(request.PaidAt ?? DateTime.Now)}</p>
-            {(string.IsNullOrEmpty(request.PaidNote) ? "" : $"<p><strong>📝 备注：</strong>{request.PaidNote}</p>")}
-        </div>
-        <p style='color: #888; font-size: 14px;'>管理员将尽快处理你的资源申请。</p>
-        <div style='margin: 20px 0; text-align: center;'>
-            <a href='https://chris-hopper.org/Resource/History' style='display: inline-block; padding: 12px 32px; background: #8B5CF6; color: white; text-decoration: none; border-radius: 8px; font-weight: 600;'>
-                📋 查看申请
-            </a>
-        </div>
-        <hr style='border: none; border-top: 1px solid #2a2a3e;'>
-        <p style='color: #555; font-size: 12px;'>此邮件由系统自动发送，请勿直接回复。</p>
-    </div>";
+        public async Task SendPaymentConfirmedEmailAsync(ResourceRequest request)
+        {
+            var html = $@"
+                <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #2a2a3e; border-radius: 16px; background: #0a0a0f; color: #e0e0e0;'>
+                    <h2 style='color: #28a745;'>✅ 支付已确认</h2>
+                    <p>您好 <strong>{request.UserName}</strong>！</p>
+                    <p>您的支付已由管理员确认：</p>
+                    <div style='background: #1a1a2e; padding: 15px; border-radius: 8px; margin: 10px 0; border: 1px solid #2a2a3e;'>
+                        <p><strong>📋 订单号：</strong><span style='color:#8B5CF6;font-family:monospace;'>{request.OrderId}</span></p>
+                        <p><strong>💰 金额：</strong>¥{request.Amount:F2}</p>
+                        <p><strong>⏰ 确认时间：</strong>{FormatChinaTime(request.PaidAt ?? DateTime.Now)}</p>
+                        {(string.IsNullOrEmpty(request.PaidNote) ? "" : $"<p><strong>📝 备注：</strong>{request.PaidNote}</p>")}
+                    </div>
+                    <p style='color: #888; font-size: 14px;'>管理员将尽快处理你的资源申请。</p>
+                    <div style='margin: 20px 0; text-align: center;'>
+                        <a href='https://chris-hopper.org/Resource/History' style='display: inline-block; padding: 12px 32px; background: #8B5CF6; color: white; text-decoration: none; border-radius: 8px; font-weight: 600;'>
+                            📋 查看申请
+                        </a>
+                    </div>
+                    <hr style='border: none; border-top: 1px solid #2a2a3e;'>
+                    <p style='color: #555; font-size: 12px;'>此邮件由系统自动发送，请勿直接回复。</p>
+                </div>";
 
-    await SendEmailAsync(request.UserEmail, $"✅ 支付已确认 - {request.CharacterName}", html);
-}
-        // BrevoEmailService.cs - 添加关注确认邮件
+            await SendEmailAsync(request.UserEmail, $"✅ 支付已确认 - {request.CharacterName}", html);
+        }
 
-public async Task SendFollowConfirmedEmailAsync(ResourceRequest request)
-{
-    var html = $@"
-    <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #2a2a3e; border-radius: 16px; background: #0a0a0f; color: #e0e0e0;'>
-        <h2 style='color: #28a745;'>✅ 关注已确认</h2>
-        <p>您好 <strong>{request.UserName}</strong>！</p>
-        <p>管理员已确认你在 <strong>{request.VerifyPlatform}</strong> 的关注：</p>
-        <div style='background: #1a1a2e; padding: 15px; border-radius: 8px; margin: 10px 0; border: 1px solid #2a2a3e;'>
-            <p><strong>📱 平台：</strong>{request.VerifyPlatform}</p>
-            <p><strong>🆔 账号ID：</strong>{request.VerifyAccountId}</p>
-            <p><strong>⏰ 确认时间：</strong>{FormatChinaTime(request.FollowVerifiedAt ?? DateTime.Now)}</p>
-        </div>
-        <p style='color: #888; font-size: 14px;'>你的资源申请正在处理中，请耐心等待。</p>
-        <div style='margin: 20px 0; text-align: center;'>
-            <a href='https://chris-hopper.org/Resource/History' style='display: inline-block; padding: 12px 32px; background: #8B5CF6; color: white; text-decoration: none; border-radius: 8px; font-weight: 600;'>
-                📋 查看申请
-            </a>
-        </div>
-        <hr style='border: none; border-top: 1px solid #2a2a3e;'>
-        <p style='color: #555; font-size: 12px;'>此邮件由系统自动发送，请勿直接回复。</p>
-    </div>";
+        // ============================================================
+        // ⭐ 15. 关注确认邮件（发送给用户）
+        // ============================================================
 
-    await SendEmailAsync(request.UserEmail, $"✅ 关注已确认 - {request.CharacterName}", html);
-}
+        public async Task SendFollowConfirmedEmailAsync(ResourceRequest request)
+        {
+            var html = $@"
+                <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #2a2a3e; border-radius: 16px; background: #0a0a0f; color: #e0e0e0;'>
+                    <h2 style='color: #28a745;'>✅ 关注已确认</h2>
+                    <p>您好 <strong>{request.UserName}</strong>！</p>
+                    <p>管理员已确认你在 <strong>{request.VerifyPlatform}</strong> 的关注：</p>
+                    <div style='background: #1a1a2e; padding: 15px; border-radius: 8px; margin: 10px 0; border: 1px solid #2a2a3e;'>
+                        <p><strong>📱 平台：</strong>{request.VerifyPlatform}</p>
+                        <p><strong>🆔 账号ID：</strong>{request.VerifyAccountId}</p>
+                        <p><strong>⏰ 确认时间：</strong>{FormatChinaTime(request.FollowVerifiedAt ?? DateTime.Now)}</p>
+                    </div>
+                    <p style='color: #888; font-size: 14px;'>你的资源申请正在处理中，请耐心等待。</p>
+                    <div style='margin: 20px 0; text-align: center;'>
+                        <a href='https://chris-hopper.org/Resource/History' style='display: inline-block; padding: 12px 32px; background: #8B5CF6; color: white; text-decoration: none; border-radius: 8px; font-weight: 600;'>
+                            📋 查看申请
+                        </a>
+                    </div>
+                    <hr style='border: none; border-top: 1px solid #2a2a3e;'>
+                    <p style='color: #555; font-size: 12px;'>此邮件由系统自动发送，请勿直接回复。</p>
+                </div>";
+
+            await SendEmailAsync(request.UserEmail, $"✅ 关注已确认 - {request.CharacterName}", html);
+        }
+
+        // ============================================================
+        // ⭐⭐⭐ 16. 封禁通知（发送给被封禁用户）⭐⭐⭐
+        // ============================================================
+
+        public async Task SendBanNotificationAsync(string toEmail, string username, string reason, string? loginToken = null)
+        {
+            var baseUrl = "https://chris-hopper.org";
+            var detailUrl = !string.IsNullOrEmpty(loginToken)
+                ? $"{baseUrl}/Auth/AutoLogin?token={loginToken}"
+                : $"{baseUrl}/Home/Notifications";
+
+            var html = $@"
+                <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #dc3545; border-radius: 16px; background: #0a0a0f; color: #e0e0e0;'>
+                    <div style='text-align: center; margin-bottom: 16px;'>
+                        <span style='font-size: 2.5rem;'>🚫</span>
+                    </div>
+                    <h2 style='color: #dc3545; text-align: center;'>⛔ 账户封禁通知</h2>
+                    <p>您好 <strong>{username}</strong>！</p>
+                    <p>您的账号在 <strong>Chris hopper 个人网站</strong> 已被管理员封禁。</p>
+                    <div style='background: #1a1a2e; padding: 15px; border-radius: 8px; margin: 10px 0; border: 1px solid #dc3545;'>
+                        <p><strong>📌 封禁原因：</strong>{reason}</p>
+                        <p><strong>⏰ 封禁时间：</strong>{FormatChinaTime(DateTime.UtcNow)}</p>
+                        <p style='color: #888; font-size: 14px;'>⚠️ 如有疑问，请联系管理员申诉。</p>
+                    </div>
+                    <div style='margin: 20px 0; text-align: center;'>
+                        <a href='{detailUrl}' style='display: inline-block; padding: 14px 48px; background: linear-gradient(135deg, #dc3545, #a71d2a); color: white; text-decoration: none; border-radius: 40px; font-weight: 600; font-size: 1rem;'>
+                            👁️ 查看详情
+                        </a>
+                    </div>
+                    <hr style='border: none; border-top: 1px solid #2a2a3e;'>
+                    <p style='color: #555; font-size: 12px; text-align: center;'>💌 系统自动发送，请勿直接回复。</p>
+                </div>
+            ";
+
+            await SendEmailAsync(toEmail, "【Chris hopper 个人网站】⛔ 账户封禁通知", html);
+        }
+
+        // ============================================================
+        // ⭐⭐⭐ 17. 解封通知（发送给解封用户）⭐⭐⭐
+        // ============================================================
+
+        public async Task SendUnbanNotificationAsync(string toEmail, string username, string? loginToken = null)
+        {
+            var baseUrl = "https://chris-hopper.org";
+            var detailUrl = !string.IsNullOrEmpty(loginToken)
+                ? $"{baseUrl}/Auth/AutoLogin?token={loginToken}"
+                : $"{baseUrl}/Home/Notifications";
+
+            var html = $@"
+                <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #28a745; border-radius: 16px; background: #0a0a0f; color: #e0e0e0;'>
+                    <div style='text-align: center; margin-bottom: 16px;'>
+                        <span style='font-size: 2.5rem;'>🎉</span>
+                    </div>
+                    <h2 style='color: #28a745; text-align: center;'>✅ 账户解封通知</h2>
+                    <p>您好 <strong>{username}</strong>！</p>
+                    <p>您的账号在 <strong>Chris hopper 个人网站</strong> 已被管理员解封。</p>
+                    <div style='background: #1a1a2e; padding: 15px; border-radius: 8px; margin: 10px 0; border: 1px solid #28a745;'>
+                        <p><strong>⏰ 解封时间：</strong>{FormatChinaTime(DateTime.UtcNow)}</p>
+                        <p style='color: #28a745; font-weight: 600;'>🎊 欢迎回来！</p>
+                    </div>
+                    <div style='margin: 20px 0; text-align: center;'>
+                        <a href='{detailUrl}' style='display: inline-block; padding: 14px 48px; background: linear-gradient(135deg, #28a745, #1e7e34); color: white; text-decoration: none; border-radius: 40px; font-weight: 600; font-size: 1rem;'>
+                            👁️ 查看详情
+                        </a>
+                    </div>
+                    <hr style='border: none; border-top: 1px solid #2a2a3e;'>
+                    <p style='color: #555; font-size: 12px; text-align: center;'>💌 系统自动发送，请勿直接回复。</p>
+                </div>
+            ";
+
+            await SendEmailAsync(toEmail, "【Chris hopper 个人网站】✅ 账户解封通知", html);
+        }
     }
 }
