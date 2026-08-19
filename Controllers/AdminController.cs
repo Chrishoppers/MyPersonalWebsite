@@ -1432,77 +1432,86 @@ namespace MyPersonalWebsite.Controllers
         // 19. 封禁用户
         // ============================================================
 
-        [HttpPost]
-        public async Task<IActionResult> BanUser(int id, int hours, string reason, string note)
-        {
-            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-            if (isAdmin != 1)
-                return Json(new { success = false, message = "权限不足" });
+       [HttpPost]
+public async Task<IActionResult> BanUser(int id, int hours, string reason, string note)
+{
+    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+    if (isAdmin != 1)
+        return Json(new { success = false, message = "权限不足" });
 
-            var user = await _dataSync.GetUserByIdAsync(id);
-            if (user == null)
-                return Json(new { success = false, message = "用户不存在" });
+    var user = await _dataSync.GetUserByIdAsync(id);
+    if (user == null)
+        return Json(new { success = false, message = "用户不存在" });
 
-            if (user.IsAdmin)
-                return Json(new { success = false, message = "不能封禁管理员" });
+    if (user.IsAdmin)
+        return Json(new { success = false, message = "不能封禁管理员" });
 
-            var adminName = HttpContext.Session.GetString("Username") ?? "管理员";
+    var adminName = HttpContext.Session.GetString("Username") ?? "管理员";
 
-            user.IsBanned = true;
-            user.BanExpiry = hours > 0 ? DateTime.Now.AddHours(hours) : (DateTime?)null;
-            user.BanReason = reason;
-            user.BanNote = note;
-            user.BannedAt = DateTime.Now;
-            user.BannedBy = adminName;
-            user.BanCount += 1;
+    user.IsBanned = true;
+    user.BanExpiry = hours > 0 ? DateTime.Now.AddHours(hours) : (DateTime?)null;
+    user.BanReason = reason;
+    user.BanNote = note;
+    user.BannedAt = DateTime.Now;
+    user.BannedBy = adminName;
+    user.BanCount += 1;
 
-            await _dataSync.UpdateUserAsync(user);
+    await _dataSync.UpdateUserAsync(user);
 
-            try
-            {
-                await _emailService.SendBanNotificationAsync(user, hours, reason, note);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"邮件发送失败: {ex.Message}");
-            }
+    try
+    {
+        // ✅ 修复：传入正确的参数 (email, username, reason)
+        await _emailService.SendBanNotificationAsync(
+            user.Email,      // 收件人邮箱
+            user.Username,   // 用户名
+            reason ?? "违反网站规定"  // 封禁原因
+        );
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"邮件发送失败: {ex.Message}");
+    }
 
-            return Json(new { success = true, message = $"已封禁用户 {user.Username}" });
-        }
+    return Json(new { success = true, message = $"已封禁用户 {user.Username}" });
+}
 
         // ============================================================
         // 20. 解封用户
         // ============================================================
 
         [HttpPost]
-        public async Task<IActionResult> UnbanUser(int id)
-        {
-            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-            if (isAdmin != 1)
-                return Json(new { success = false, message = "权限不足" });
+public async Task<IActionResult> UnbanUser(int id)
+{
+    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+    if (isAdmin != 1)
+        return Json(new { success = false, message = "权限不足" });
 
-            var user = await _dataSync.GetUserByIdAsync(id);
-            if (user == null)
-                return Json(new { success = false, message = "用户不存在" });
+    var user = await _dataSync.GetUserByIdAsync(id);
+    if (user == null)
+        return Json(new { success = false, message = "用户不存在" });
 
-            user.IsBanned = false;
-            user.BanExpiry = null;
-            user.BanReason = null;
-            user.BanNote = null;
+    user.IsBanned = false;
+    user.BanExpiry = null;
+    user.BanReason = null;
+    user.BanNote = null;
 
-            await _dataSync.UpdateUserAsync(user);
+    await _dataSync.UpdateUserAsync(user);
 
-            try
-            {
-                await _emailService.SendUnbanNotificationAsync(user);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"邮件发送失败: {ex.Message}");
-            }
+    try
+    {
+        // ✅ 修复：传入正确的参数 (email, username)
+        await _emailService.SendUnbanNotificationAsync(
+            user.Email,      // 收件人邮箱
+            user.Username    // 用户名
+        );
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"邮件发送失败: {ex.Message}");
+    }
 
-            return Json(new { success = true, message = $"已解封用户 {user.Username}" });
-        }
+    return Json(new { success = true, message = $"已解封用户 {user.Username}" });
+}
 
         // ============================================================
         // 21. 删除用户
