@@ -97,18 +97,16 @@ namespace MyPersonalWebsite.Services
 
                 var response = await _httpClient.SendAsync(request);
 
-                if (response.IsSuccessStatusCode)
-                {
-                    return (true, $"✅ 用户 {userId} 存在，请管理员手动确认是否关注 @{myAccount}", null, "manual_required");
-                }
-                else if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
-                {
-                    return (false, $"❌ 用户 {userId} 不存在，请检查账号ID是否正确", null, "rejected");
-                }
-                else
-                {
-                    return (false, $"⚠️ 无法自动验证 (HTTP {response.StatusCode})，需要管理员人工核验", null, "manual_required");
-                }
+               // 修改返回逻辑
+if (response.IsSuccessStatusCode)
+{
+    // 账号存在，但需要管理员确认是否关注
+    return (true, $"✅ 用户 {userId} 存在（管理员后续确认是否关注）", null, "manual_required");
+}
+else if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+{
+    return (false, $"❌ 用户 {userId} 不存在，请检查账号ID是否正确或再次尝试", null, "rejected");
+}
             }
             catch (HttpRequestException ex) when (ex.Message.Contains("403"))
             {
