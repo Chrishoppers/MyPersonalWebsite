@@ -950,74 +950,75 @@ JavaScript
     // ============================================================
     // 2. 平台验证关注
     // ============================================================
-    function verifyFollow() {
-        var platform = document.getElementById('VerifyPlatform').value;
-        var accountId = document.getElementById('VerifyAccountId').value.trim();
-        var resultEl = document.getElementById('verifyResult');
-        var btn = document.getElementById('verifyBtn');
+    // 验证关注
+function verifyFollow() {
+    var platform = document.getElementById('VerifyPlatform').value;
+    var accountId = document.getElementById('VerifyAccountId').value.trim();
+    var resultEl = document.getElementById('verifyResult');
+    var btn = document.getElementById('verifyBtn');
 
-        if (!platform) {
-            resultEl.className = 'verify-result warning';
-            resultEl.textContent = '⚠️ 请先选择平台';
-            return;
-        }
+    if (!platform) {
+        resultEl.className = 'verify-result warning';
+        resultEl.textContent = '⚠️ 请先选择平台';
+        return;
+    }
 
-        if (!accountId) {
-            resultEl.className = 'verify-result warning';
-            resultEl.textContent = '⚠️ 请输入你的账号ID';
-            return;
-        }
+    if (!accountId) {
+        resultEl.className = 'verify-result warning';
+        resultEl.textContent = '⚠️ 请输入你的账号ID';
+        return;
+    }
 
-        btn.disabled = true;
-        btn.textContent = '⏳ 验证中...';
-        resultEl.className = 'verify-result info';
-        resultEl.textContent = '🔍 正在验证...';
+    btn.disabled = true;
+    btn.textContent = '⏳ 验证中...';
+    resultEl.className = 'verify-result info';
+    resultEl.textContent = '🔍 正在验证账号是否存在...';
 
-        var token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+    var token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
 
-        fetch('/Resource/VerifyFollow', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'RequestVerificationToken': token
-            },
-            body: 'platform=' + encodeURIComponent(platform) + '&accountId=' + encodeURIComponent(accountId)
-        })
-        .then(function(r) { return r.json(); })
-        .then(function(data) {
-            if (data.success) {
-                if (data.isValid) {
-                    resultEl.className = 'verify-result success';
-                    resultEl.textContent = '✅ ' + data.message;
-                    document.getElementById('IsFollowVerified').value = 'true';
-                    btn.classList.add('verified');
-                    btn.textContent = '✅ 已验证';
-                } else {
-                    resultEl.className = 'verify-result error';
-                    resultEl.textContent = '❌ ' + data.message;
-                    document.getElementById('IsFollowVerified').value = 'false';
-                    btn.classList.remove('verified');
-                    btn.textContent = '🔍 验证';
-                }
+    fetch('/Resource/VerifyFollow', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'RequestVerificationToken': token
+        },
+        body: 'platform=' + encodeURIComponent(platform) + '&accountId=' + encodeURIComponent(accountId)
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        if (data.success) {
+            if (data.isValid) {
+                resultEl.className = 'verify-result success';
+                resultEl.textContent = '✅ ' + data.message;
+                document.getElementById('IsFollowVerified').value = 'true';
+                btn.classList.add('verified');
+                btn.textContent = '✅ 已验证';
             } else {
-                resultEl.className = 'verify-result warning';
-                resultEl.textContent = '⚠️ ' + data.message;
+                resultEl.className = 'verify-result error';
+                resultEl.textContent = '❌ ' + data.message;
                 document.getElementById('IsFollowVerified').value = 'false';
                 btn.classList.remove('verified');
                 btn.textContent = '🔍 验证';
             }
-        })
-        .catch(function() {
-            resultEl.className = 'verify-result error';
-            resultEl.textContent = '❌ 验证失败，请稍后重试';
+        } else {
+            resultEl.className = 'verify-result warning';
+            resultEl.textContent = '⚠️ ' + data.message;
             document.getElementById('IsFollowVerified').value = 'false';
             btn.classList.remove('verified');
             btn.textContent = '🔍 验证';
-        })
-        .finally(function() {
-            btn.disabled = false;
-        });
-    }
+        }
+    })
+    .catch(function() {
+        resultEl.className = 'verify-result error';
+        resultEl.textContent = '❌ 验证失败，请稍后重试';
+        document.getElementById('IsFollowVerified').value = 'false';
+        btn.classList.remove('verified');
+        btn.textContent = '🔍 验证';
+    })
+    .finally(function() {
+        btn.disabled = false;
+    });
+}
 
     // ============================================================
     // 3. 免责声明弹窗
