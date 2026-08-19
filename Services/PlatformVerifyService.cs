@@ -12,7 +12,7 @@ namespace MyPersonalWebsite.Services
         private readonly HttpClient _httpClient;
         private readonly ILogger<PlatformVerifyService> _logger;
 
-        // ⭐ 我的各平台账号
+        // ⭐ 我的各平台账号（用户需要关注我）
         private readonly Dictionary<string, string> _myAccounts = new()
         {
             { "抖音", "chris_hopper" },
@@ -85,6 +85,9 @@ namespace MyPersonalWebsite.Services
         // 各平台验证方法
         // ============================================================
 
+        /// <summary>
+        /// 验证抖音关注
+        /// </summary>
         private async Task<(bool IsValid, string Message, string? DisplayName, string VerifyStatus)> VerifyDouyinFollowAsync(
             string userId,
             string myAccount)
@@ -97,16 +100,18 @@ namespace MyPersonalWebsite.Services
 
                 var response = await _httpClient.SendAsync(request);
 
-               // 修改返回逻辑
-if (response.IsSuccessStatusCode)
-{
-    // 账号存在，但需要管理员确认是否关注
-    return (true, $"✅ 用户 {userId} 存在（管理员后续确认是否关注）", null, "manual_required");
-}
-else if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
-{
-    return (false, $"❌ 用户 {userId} 不存在，请检查账号ID是否正确或再次尝试", null, "rejected");
-}
+                if (response.IsSuccessStatusCode)
+                {
+                    return (true, $"✅ 用户 {userId} 存在，请提交申请后等待管理员手动确认是否关注 @{myAccount}", null, "manual_required");
+                }
+                else if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                {
+                    return (false, $"❌ 用户 {userId} 不存在，请检查账号ID是否正确", null, "rejected");
+                }
+                else
+                {
+                    return (false, $"⚠️ 无法自动验证 (HTTP {response.StatusCode})，请重试或联系管理员", null, "manual_required");
+                }
             }
             catch (HttpRequestException ex) when (ex.Message.Contains("403"))
             {
@@ -118,6 +123,9 @@ else if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
             }
         }
 
+        /// <summary>
+        /// 验证快手关注
+        /// </summary>
         private async Task<(bool IsValid, string Message, string? DisplayName, string VerifyStatus)> VerifyKuaishouFollowAsync(
             string userId,
             string myAccount)
@@ -132,7 +140,7 @@ else if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
 
                 if (response.IsSuccessStatusCode)
                 {
-                    return (true, $"✅ 用户 {userId} 存在，请管理员手动确认是否关注 @{myAccount}", null, "manual_required");
+                    return (true, $"✅ 用户 {userId} 存在，请提交申请后等待管理员手动确认是否关注 @{myAccount}", null, "manual_required");
                 }
                 else if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
                 {
@@ -140,7 +148,7 @@ else if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
                 }
                 else
                 {
-                    return (false, $"⚠️ 无法自动验证 (HTTP {response.StatusCode})，需要管理员人工核验", null, "manual_required");
+                    return (false, $"⚠️ 无法自动验证 (HTTP {response.StatusCode})，请重试或联系管理员", null, "manual_required");
                 }
             }
             catch (HttpRequestException ex) when (ex.Message.Contains("403"))
@@ -153,6 +161,9 @@ else if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
             }
         }
 
+        /// <summary>
+        /// 验证B站关注
+        /// </summary>
         private async Task<(bool IsValid, string Message, string? DisplayName, string VerifyStatus)> VerifyBilibiliFollowAsync(
             string userId,
             string myAccount)
@@ -175,7 +186,7 @@ else if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
                         {
                             var data = root.GetProperty("data");
                             var name = data.TryGetProperty("name", out var nameEl) ? nameEl.GetString() : userId;
-                            return (true, $"✅ B站用户 {name} 存在，请管理员手动确认是否关注 @{myAccount}", name, "manual_required");
+                            return (true, $"✅ B站用户 {name} 存在，请提交申请后等待管理员手动确认是否关注 @{myAccount}", name, "manual_required");
                         }
                         else if (code == -404)
                         {
@@ -183,7 +194,7 @@ else if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
                         }
                         else
                         {
-                            return (false, $"⚠️ B站API返回未知状态 (code: {code})，需要管理员人工核验", null, "manual_required");
+                            return (false, $"⚠️ B站API返回未知状态 (code: {code})，请重试或联系管理员", null, "manual_required");
                         }
                     }
                     else
@@ -201,7 +212,7 @@ else if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
 
                     if (headResponse.IsSuccessStatusCode)
                     {
-                        return (true, $"✅ B站用户 {userId} 存在，请管理员手动确认是否关注 @{myAccount}", null, "manual_required");
+                        return (true, $"✅ B站用户 {userId} 存在，请提交申请后等待管理员手动确认是否关注 @{myAccount}", null, "manual_required");
                     }
                     else
                     {
@@ -219,6 +230,9 @@ else if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
             }
         }
 
+        /// <summary>
+        /// 验证小红书关注
+        /// </summary>
         private async Task<(bool IsValid, string Message, string? DisplayName, string VerifyStatus)> VerifyXiaohongshuFollowAsync(
             string userId,
             string myAccount)
@@ -233,7 +247,7 @@ else if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
 
                 if (response.IsSuccessStatusCode)
                 {
-                    return (true, $"✅ 用户 {userId} 存在，请管理员手动确认是否关注 @{myAccount}", null, "manual_required");
+                    return (true, $"✅ 用户 {userId} 存在，请提交申请后等待管理员手动确认是否关注 @{myAccount}", null, "manual_required");
                 }
                 else
                 {
@@ -246,6 +260,9 @@ else if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
             }
         }
 
+        /// <summary>
+        /// 验证微博关注
+        /// </summary>
         private async Task<(bool IsValid, string Message, string? DisplayName, string VerifyStatus)> VerifyWeiboFollowAsync(
             string userId,
             string myAccount)
@@ -260,7 +277,7 @@ else if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
 
                 if (response.IsSuccessStatusCode)
                 {
-                    return (true, $"✅ 用户 {userId} 存在，请管理员手动确认是否关注 @{myAccount}", null, "manual_required");
+                    return (true, $"✅ 用户 {userId} 存在，请提交申请后等待管理员手动确认是否关注 @{myAccount}", null, "manual_required");
                 }
                 else
                 {
@@ -273,6 +290,9 @@ else if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
             }
         }
 
+        /// <summary>
+        /// 验证知乎关注
+        /// </summary>
         private async Task<(bool IsValid, string Message, string? DisplayName, string VerifyStatus)> VerifyZhihuFollowAsync(
             string userId,
             string myAccount)
@@ -287,7 +307,7 @@ else if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
 
                 if (response.IsSuccessStatusCode)
                 {
-                    return (true, $"✅ 用户 {userId} 存在，请管理员手动确认是否关注 @{myAccount}", null, "manual_required");
+                    return (true, $"✅ 用户 {userId} 存在，请提交申请后等待管理员手动确认是否关注 @{myAccount}", null, "manual_required");
                 }
                 else
                 {
