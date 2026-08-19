@@ -295,6 +295,44 @@
         color: #fff;
     }
 
+    /* 验证结果 */
+    .verify-result {
+        margin-top: 0.3rem;
+        font-size: 0.8rem;
+        font-weight: 500;
+        padding: 0.3rem 0.8rem;
+        border-radius: 8px;
+        display: none;
+    }
+
+    .verify-result.success {
+        display: block;
+        background: rgba(40,167,69,0.06);
+        color: #28a745;
+        border: 1px solid rgba(40,167,69,0.04);
+    }
+
+    .verify-result.error {
+        display: block;
+        background: rgba(220,53,69,0.06);
+        color: #dc3545;
+        border: 1px solid rgba(220,53,69,0.04);
+    }
+
+    .verify-result.warning {
+        display: block;
+        background: rgba(255,193,7,0.06);
+        color: #ffc107;
+        border: 1px solid rgba(255,193,7,0.04);
+    }
+
+    .verify-result.info {
+        display: block;
+        background: rgba(79,172,254,0.06);
+        color: #4facfe;
+        border: 1px solid rgba(79,172,254,0.04);
+    }
+
     /* ===== 免责声明弹窗 ===== */
     .disclaimer-overlay {
         position: fixed;
@@ -527,44 +565,26 @@
         margin-bottom: 1rem;
     }
 
-    .verify-result {
-        margin-top: 0.3rem;
-        font-size: 0.8rem;
-        font-weight: 500;
-        padding: 0.3rem 0.8rem;
-        border-radius: 8px;
-        display: none;
+    /* ⭐ 验证平台标签 */
+    .verify-platform-tag {
+        display: inline-block;
+        padding: 0.15rem 0.6rem;
+        border-radius: 20px;
+        font-size: 0.6rem;
+        font-weight: 600;
+        background: rgba(139,92,246,0.06);
+        color: #8B5CF6;
+        border: 1px solid rgba(139,92,246,0.04);
+        margin-top: 0.2rem;
     }
 
-    .verify-result.success {
-        display: block;
-        background: rgba(40, 167, 69, 0.06);
+    .verify-platform-tag.verified {
+        background: rgba(40,167,69,0.06);
         color: #28a745;
-        border: 1px solid rgba(40, 167, 69, 0.04);
+        border-color: rgba(40,167,69,0.04);
     }
 
-    .verify-result.error {
-        display: block;
-        background: rgba(220, 53, 69, 0.06);
-        color: #dc3545;
-        border: 1px solid rgba(220, 53, 69, 0.04);
-    }
-
-    .verify-result.warning {
-        display: block;
-        background: rgba(255, 193, 7, 0.06);
-        color: #ffc107;
-        border: 1px solid rgba(255, 193, 7, 0.04);
-    }
-
-    .verify-result.info {
-        display: block;
-        background: rgba(79, 172, 254, 0.06);
-        color: #4facfe;
-        border: 1px solid rgba(79, 172, 254, 0.04);
-    }
-
-    @@media (max-width: 640px) {
+    @media (max-width: 640px) {
         .card {
             padding: 1.2rem 1rem;
         }
@@ -598,7 +618,7 @@
         }
     }
 
-    @@media (max-width: 480px) {
+    @media (max-width: 480px) {
         .form-row-3 {
             grid-template-columns: 1fr;
         }
@@ -635,7 +655,7 @@
             @Html.AntiForgeryToken()
 
             <!-- ============================================================
-            用户信息（自动识别，不可更改）
+            用户信息（自动识别）
             ============================================================ -->
             <div class="form-row">
                 <div class="form-group">
@@ -651,12 +671,12 @@
             </div>
 
             <!-- ============================================================
-            1. 平台选择（最多2项）
+            1. 平台选择（X、Pixiv、EhViewer、哔咔、其他）
             ============================================================ -->
             <div class="form-group">
                 <label>📱 平台选择 <span class="required">*</span> <span style="color:rgba(255,255,255,0.08);font-weight:400;font-size:0.7rem;">（最多选2项）</span></label>
                 <div class="platform-grid" id="platformGrid">
-                    @foreach (var platform in new[] { "抖音", "快手", "B站", "小红书", "微博", "知乎" })
+                    @foreach (var platform in new[] { "X", "Pixiv", "EhViewer", "哔咔" })
                     {
                         <div class="platform-option" data-platform="@platform" onclick="togglePlatform(this)">
                             @platform
@@ -717,7 +737,7 @@
             </div>
 
             <!-- ============================================================
-            5. 里克特量表
+            5. 里克特量表（纯爱、肉、剧情、不需要）
             ============================================================ -->
             <div class="form-group">
                 <label>📊 偏好设置 <span class="required">*</span></label>
@@ -727,8 +747,8 @@
                         <tr>
                             <th style="width:80px;text-align:left;padding-left:1rem;">类型</th>
                             <th>纯爱</th>
-                            <th>第一项</th>
-                            <th>第二项</th>
+                            <th>肉</th>
+                            <th>剧情</th>
                             <th>不需要</th>
                         </tr>
                     </thead>
@@ -736,22 +756,22 @@
                         <tr>
                             <td>小说</td>
                             <td><input type="radio" name="NovelPreference" value="纯爱" /><span class="radio-label"></span></td>
-                            <td><input type="radio" name="NovelPreference" value="R18" /><span class="radio-label"></span></td>
-                            <td><input type="radio" name="NovelPreference" value="R18+" /><span class="radio-label"></span></td>
+                            <td><input type="radio" name="NovelPreference" value="肉" /><span class="radio-label"></span></td>
+                            <td><input type="radio" name="NovelPreference" value="剧情" /><span class="radio-label"></span></td>
                             <td><input type="radio" name="NovelPreference" value="不需要" checked /><span class="radio-label"></span></td>
                         </tr>
                         <tr>
                             <td>漫画</td>
                             <td><input type="radio" name="ComicPreference" value="纯爱" /><span class="radio-label"></span></td>
-                            <td><input type="radio" name="ComicPreference" value="R18" /><span class="radio-label"></span></td>
-                            <td><input type="radio" name="ComicPreference" value="R18+" /><span class="radio-label"></span></td>
+                            <td><input type="radio" name="ComicPreference" value="肉" /><span class="radio-label"></span></td>
+                            <td><input type="radio" name="ComicPreference" value="剧情" /><span class="radio-label"></span></td>
                             <td><input type="radio" name="ComicPreference" value="不需要" checked /><span class="radio-label"></span></td>
                         </tr>
                         <tr>
                             <td>图片</td>
                             <td><input type="radio" name="ImagePreference" value="纯爱" /><span class="radio-label"></span></td>
-                            <td><input type="radio" name="ImagePreference" value="R18" /><span class="radio-label"></span></td>
-                            <td><input type="radio" name="ImagePreference" value="R18+" /><span class="radio-label"></span></td>
+                            <td><input type="radio" name="ImagePreference" value="肉" /><span class="radio-label"></span></td>
+                            <td><input type="radio" name="ImagePreference" value="剧情" /><span class="radio-label"></span></td>
                             <td><input type="radio" name="ImagePreference" value="不需要" checked /><span class="radio-label"></span></td>
                         </tr>
                     </tbody>
@@ -759,40 +779,40 @@
             </div>
 
             <!-- ============================================================
-            6. 平台验证关注
+            6. ⭐⭐⭐ 平台验证关注（必填）⭐⭐⭐
             ============================================================ -->
-           <!-- 平台验证关注（必填） -->
-<div class="form-group">
-    <label>🔍 平台验证关注 <span class="required">*</span></label>
-    <div class="form-row">
-        <div>
-            <label style="font-size:0.7rem;color:rgba(255,255,255,0.15);">选择平台</label>
-            <select id="VerifyPlatform" name="VerifyPlatform" required style="width:100%;padding:0.6rem 1rem;border-radius:12px;border:1px solid rgba(255,255,255,0.04);background:rgba(255,255,255,0.02);color:#fff;font-size:0.85rem;outline:none;font-family:inherit;">
-                <option value="">请选择平台</option>
-                <option value="抖音">抖音</option>
-                <option value="快手">快手</option>
-                <option value="B站">B站</option>
-                <option value="小红书">小红书</option>
-                <option value="微博">微博</option>
-                <option value="知乎">知乎</option>
-            </select>
-        </div>
-        <div>
-            <label style="font-size:0.7rem;color:rgba(255,255,255,0.15);">你的账号ID <span class="required">*</span></label>
-            <div style="display:flex;gap:0.5rem;">
-                <input type="text" id="VerifyAccountId" name="VerifyAccountId" placeholder="输入你的账号ID" required style="flex:1;min-width:120px;" />
-                <button type="button" class="btn-verify" id="verifyBtn" onclick="verifyFollow()">
-                    🔍 验证
-                </button>
+            <div class="form-group">
+                <label>🔍 平台验证关注 <span class="required">*</span></label>
+                <div class="form-row">
+                    <div>
+                        <label style="font-size:0.7rem;color:rgba(255,255,255,0.15);">选择平台</label>
+                        <select id="VerifyPlatform" name="VerifyPlatform" required style="width:100%;padding:0.6rem 1rem;border-radius:12px;border:1px solid rgba(255,255,255,0.04);background:rgba(255,255,255,0.02);color:#fff;font-size:0.85rem;outline:none;font-family:inherit;">
+                            <option value="">请选择平台</option>
+                            <option value="抖音">抖音</option>
+                            <option value="快手">快手</option>
+                            <option value="B站">B站</option>
+                            <option value="小红书">小红书</option>
+                            <option value="微博">微博</option>
+                            <option value="知乎">知乎</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-size:0.7rem;color:rgba(255,255,255,0.15);">你的账号ID <span class="required">*</span></label>
+                        <div style="display:flex;gap:0.5rem;">
+                            <input type="text" id="VerifyAccountId" name="VerifyAccountId" placeholder="输入你的账号ID" required style="flex:1;min-width:120px;" />
+                            <button type="button" class="btn-verify" id="verifyBtn" onclick="verifyFollow()">
+                                🔍 验证
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="verify-result" id="verifyResult"></div>
+                <div class="hint">💡 验证账号真实性（管理员后续会确认是否关注）</div>
+                <input type="hidden" id="IsFollowVerified" name="IsFollowVerified" value="false" />
             </div>
-        </div>
-    </div>
-    <div class="verify-result" id="verifyResult"></div>
-    <div class="hint">💡 验证账号真实性（管理员后续会确认是否关注）</div>
-    <input type="hidden" id="IsFollowVerified" name="IsFollowVerified" value="false" />
-</div>
+
             <!-- ============================================================
-            7. 免责声明（简版，点击查看完整版）
+            7. 免责声明
             ============================================================ -->
             <div class="form-group" style="margin-top:1rem;">
                 <label style="color:rgba(255,255,255,0.4);font-size:0.8rem;font-weight:500;margin-bottom:0.3rem;">
@@ -837,79 +857,51 @@
         <div class="modal-title">📜 完整免责声明</div>
         <div class="modal-sub">请仔细阅读以下条款，确认后提交</div>
 
-        <!-- 1. 内容声明 -->
         <div class="disclaimer-section">
             <div class="section-title">🏳️‍🌈 内容声明（重要）</div>
             <div class="item"><span class="mark">•</span> 本资源申请服务仅受理 <strong class="highlight-pink">男同性向（BL）内容</strong></div>
-            <div class="item"><span class="mark">•</span> <strong class="highlight-pink">⚠️ 其他性向内容暂不受理</strong>，请勿提交</div>
+            <div class="item"><span class="mark">•</span> <strong class="highlight-pink">⚠️ 其他性向内容暂不受理</strong></div>
             <div class="item"><span class="mark">•</span> 提交即代表你确认申请内容为男同性向（BL）内容</div>
-            <div class="item"><span class="mark">•</span> 如提交其他性向内容，申请将被 <strong style="color:#dc3545;">直接拒绝</strong></div>
         </div>
 
-        <!-- 2. 服务说明 -->
         <div class="disclaimer-section">
             <div class="section-title">📋 服务说明</div>
-            <div class="item"><span class="mark">•</span> 当前平台为 <strong>Chris hopper 个人网站</strong> 资源申请系统</div>
-            <div class="item"><span class="mark">•</span> 所有操作 <strong style="color:#00FF88;">完全免费</strong>，无任何隐藏费用</div>
-            <div class="item"><span class="mark">•</span> 资源需求填写后由管理员 <strong>人工处理</strong>，请耐心等待</div>
-            <div class="item"><span class="mark">•</span> 处理时间一般为 <strong>1-7 个工作日</strong></div>
+            <div class="item"><span class="mark">•</span> 当前平台为 <strong>Chris hopper 个人网站</strong></div>
+            <div class="item"><span class="mark">•</span> 所有操作 <strong style="color:#00FF88;">完全免费</strong></div>
+            <div class="item"><span class="mark">•</span> 资源需求由管理员 <strong>人工处理</strong></div>
         </div>
 
-        <!-- 3. 隐私声明 -->
         <div class="disclaimer-section">
             <div class="section-title">🔒 隐私声明</div>
-            <div class="item"><span class="mark">•</span> 你提交的数据仅用于 <strong>资源申请处理</strong></div>
-            <div class="item"><span class="mark">•</span> 不会将你的个人信息 <strong>分享给任何第三方</strong></div>
+            <div class="item"><span class="mark">•</span> 数据仅用于 <strong>资源申请处理</strong></div>
+            <div class="item"><span class="mark">•</span> 不会分享给 <strong>任何第三方</strong></div>
             <div class="item"><span class="mark">•</span> <strong style="color:#dc3545;">⚠️ 绝对不要泄露你的密码</strong></div>
-            <div class="item"><span class="mark">•</span> 报告滥用行为可通过 <strong style="color:rgba(79,172,254,0.3);">2908685235@qq.com</strong> 联系</div>
         </div>
 
-        <!-- 4. 版权声明 -->
         <div class="disclaimer-section">
             <div class="section-title">📄 版权声明</div>
-            <div class="item"><span class="mark">•</span> 申请的资源仅限 <strong style="color:#F59E0B;">个人使用</strong>，不得用于商业用途</div>
-            <div class="item"><span class="mark">•</span> 如涉及版权问题，由 <strong>申请人自行承担</strong> 相关责任</div>
-            <div class="item"><span class="mark">•</span> 管理员对资源内容 <strong>不承担任何责任</strong></div>
-            <div class="item"><span class="mark">•</span> 如资源涉及侵权，请联系管理员删除</div>
+            <div class="item"><span class="mark">•</span> 资源仅限 <strong style="color:#F59E0B;">个人使用</strong></div>
+            <div class="item"><span class="mark">•</span> 版权问题由 <strong>申请人自行承担</strong></div>
         </div>
 
-        <!-- 5. 免责条款 -->
-        <div class="disclaimer-section">
-            <div class="section-title">⚖️ 免责条款</div>
-            <div class="item"><span class="mark">•</span> 资源内容由 <strong>第三方提供</strong>，本站仅作为信息中转</div>
-            <div class="item"><span class="mark">•</span> 管理员对资源内容的 <strong>准确性、完整性</strong> 不承担任何责任</div>
-            <div class="item"><span class="mark">•</span> 如资源涉及违法内容，请 <strong>立即联系管理员</strong> 处理</div>
-            <div class="item"><span class="mark">•</span> 使用资源即代表你已 <strong>完全理解并接受</strong> 以上条款</div>
-        </div>
-
-        <!-- 确认复选框 -->
         <div class="disclaimer-check">
             <div class="check-row">
                 <input type="checkbox" id="disclaimerBL" />
-                <label for="disclaimerBL">
-                    我已确认申请内容为 <strong class="highlight-pink">男同性向（BL）内容</strong>
-                </label>
+                <label for="disclaimerBL">我已确认申请内容为 <strong class="highlight-pink">男同性向（BL）内容</strong></label>
             </div>
             <div class="check-row">
                 <input type="checkbox" id="disclaimerAll" />
-                <label for="disclaimerAll">
-                    我已阅读并同意以上 <strong>全部条款</strong>（隐私声明 · 版权声明 · 免责条款）
-                </label>
+                <label for="disclaimerAll">我已阅读并同意以上 <strong>全部条款</strong></label>
             </div>
         </div>
 
         <div class="modal-actions">
-            <button class="btn-disclaimer accept" id="disclaimerAcceptBtn" onclick="confirmDisclaimer()" disabled>
-                ✅ 确认并提交
-            </button>
+            <button class="btn-disclaimer accept" id="disclaimerAcceptBtn" onclick="confirmDisclaimer()" disabled>✅ 确认并提交</button>
             <button class="btn-disclaimer reject" onclick="closeDisclaimer()">✕ 取消</button>
         </div>
     </div>
 </div>
 
-<!-- ============================================================
-JavaScript
-============================================================ -->
 <script>
     var selectedPlatforms = [];
 
@@ -931,11 +923,9 @@ JavaScript
             selectedPlatforms.push(platform);
         }
 
-        // 更新隐藏字段
         document.getElementById('Platform1').value = selectedPlatforms[0] || '';
         document.getElementById('Platform2').value = selectedPlatforms[1] || '';
 
-        // 显示/隐藏其他平台输入
         var otherGroup = document.getElementById('otherPlatformGroup');
         if (selectedPlatforms.includes('其他')) {
             otherGroup.style.display = 'block';
@@ -948,77 +938,76 @@ JavaScript
     }
 
     // ============================================================
-    // 2. 平台验证关注
+    // 2. 平台验证关注（自动验证账号真实性）
     // ============================================================
-    // 验证关注
-function verifyFollow() {
-    var platform = document.getElementById('VerifyPlatform').value;
-    var accountId = document.getElementById('VerifyAccountId').value.trim();
-    var resultEl = document.getElementById('verifyResult');
-    var btn = document.getElementById('verifyBtn');
+    function verifyFollow() {
+        var platform = document.getElementById('VerifyPlatform').value;
+        var accountId = document.getElementById('VerifyAccountId').value.trim();
+        var resultEl = document.getElementById('verifyResult');
+        var btn = document.getElementById('verifyBtn');
 
-    if (!platform) {
-        resultEl.className = 'verify-result warning';
-        resultEl.textContent = '⚠️ 请先选择平台';
-        return;
-    }
+        if (!platform) {
+            resultEl.className = 'verify-result warning';
+            resultEl.textContent = '⚠️ 请先选择平台';
+            return;
+        }
 
-    if (!accountId) {
-        resultEl.className = 'verify-result warning';
-        resultEl.textContent = '⚠️ 请输入你的账号ID';
-        return;
-    }
+        if (!accountId) {
+            resultEl.className = 'verify-result warning';
+            resultEl.textContent = '⚠️ 请输入你的账号ID';
+            return;
+        }
 
-    btn.disabled = true;
-    btn.textContent = '⏳ 验证中...';
-    resultEl.className = 'verify-result info';
-    resultEl.textContent = '🔍 正在验证账号是否存在...';
+        btn.disabled = true;
+        btn.textContent = '⏳ 验证中...';
+        resultEl.className = 'verify-result info';
+        resultEl.textContent = '🔍 正在验证账号是否存在...';
 
-    var token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+        var token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
 
-    fetch('/Resource/VerifyFollow', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'RequestVerificationToken': token
-        },
-        body: 'platform=' + encodeURIComponent(platform) + '&accountId=' + encodeURIComponent(accountId)
-    })
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
-        if (data.success) {
-            if (data.isValid) {
-                resultEl.className = 'verify-result success';
-                resultEl.textContent = '✅ ' + data.message;
-                document.getElementById('IsFollowVerified').value = 'true';
-                btn.classList.add('verified');
-                btn.textContent = '✅ 已验证';
+        fetch('/Resource/VerifyFollow', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'RequestVerificationToken': token
+            },
+            body: 'platform=' + encodeURIComponent(platform) + '&accountId=' + encodeURIComponent(accountId)
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.success) {
+                if (data.isValid) {
+                    resultEl.className = 'verify-result success';
+                    resultEl.textContent = '✅ ' + data.message;
+                    document.getElementById('IsFollowVerified').value = 'true';
+                    btn.classList.add('verified');
+                    btn.textContent = '✅ 已验证';
+                } else {
+                    resultEl.className = 'verify-result error';
+                    resultEl.textContent = '❌ ' + data.message;
+                    document.getElementById('IsFollowVerified').value = 'false';
+                    btn.classList.remove('verified');
+                    btn.textContent = '🔍 验证';
+                }
             } else {
-                resultEl.className = 'verify-result error';
-                resultEl.textContent = '❌ ' + data.message;
+                resultEl.className = 'verify-result warning';
+                resultEl.textContent = '⚠️ ' + data.message;
                 document.getElementById('IsFollowVerified').value = 'false';
                 btn.classList.remove('verified');
                 btn.textContent = '🔍 验证';
             }
-        } else {
-            resultEl.className = 'verify-result warning';
-            resultEl.textContent = '⚠️ ' + data.message;
+        })
+        .catch(function() {
+            resultEl.className = 'verify-result error';
+            resultEl.textContent = '❌ 验证失败，请稍后重试';
             document.getElementById('IsFollowVerified').value = 'false';
             btn.classList.remove('verified');
             btn.textContent = '🔍 验证';
-        }
-    })
-    .catch(function() {
-        resultEl.className = 'verify-result error';
-        resultEl.textContent = '❌ 验证失败，请稍后重试';
-        document.getElementById('IsFollowVerified').value = 'false';
-        btn.classList.remove('verified');
-        btn.textContent = '🔍 验证';
-    })
-    .finally(function() {
-        btn.disabled = false;
-    });
-}
+        })
+        .finally(function() {
+            btn.disabled = false;
+        });
+    }
 
     // ============================================================
     // 3. 免责声明弹窗
@@ -1051,13 +1040,20 @@ function verifyFollow() {
     }
 
     function confirmDisclaimer() {
-        // 同步到主表单
         document.getElementById('AgreeToBLContent').checked = true;
         document.getElementById('AgreeToTerms').checked = true;
         closeDisclaimer();
-        // 提交表单
         submitForm();
     }
+
+    // 点击外部关闭弹窗
+    document.getElementById('disclaimerOverlay').addEventListener('click', function(e) {
+        if (e.target === this) closeDisclaimer();
+    });
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') closeDisclaimer();
+    });
 
     // ============================================================
     // 4. 提交表单
@@ -1072,7 +1068,7 @@ function verifyFollow() {
         }
 
         if (!termsChecked) {
-            alert('请阅读并同意完整免责声明（点击"查看完整免责声明"按钮）');
+            alert('请阅读并同意完整免责声明');
             return;
         }
 
@@ -1084,7 +1080,6 @@ function verifyFollow() {
             return;
         }
 
-        // 验证其他平台
         if (selectedPlatforms.includes('其他')) {
             var other = document.getElementById('PlatformOther').value.trim();
             if (!other) {
@@ -1115,19 +1110,29 @@ function verifyFollow() {
             return;
         }
 
+        // ⭐ 验证平台验证是否已完成
+        var verifyPlatform = document.getElementById('VerifyPlatform').value;
+        var verifyAccountId = document.getElementById('VerifyAccountId').value.trim();
+        var isVerified = document.getElementById('IsFollowVerified').value === 'true';
+
+        if (!verifyPlatform) {
+            alert('请选择验证平台');
+            return;
+        }
+
+        if (!verifyAccountId) {
+            alert('请输入你的平台账号ID');
+            return;
+        }
+
+        if (!isVerified) {
+            alert('请先点击"验证"按钮完成账号真实性验证');
+            return;
+        }
+
         var btn = document.getElementById('submitBtn');
         btn.disabled = true;
         btn.textContent = '⏳ 提交中...';
         document.getElementById('resourceForm').submit();
     }
-
-    // 点击外部关闭弹窗
-    document.getElementById('disclaimerOverlay').addEventListener('click', function(e) {
-        if (e.target === this) closeDisclaimer();
-    });
-
-    // ESC键关闭
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') closeDisclaimer();
-    });
 </script>
