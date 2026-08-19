@@ -629,5 +629,31 @@ public async Task SendPaymentConfirmedEmailAsync(ResourceRequest request)
 
     await SendEmailAsync(request.UserEmail, $"✅ 支付已确认 - {request.CharacterName}", html);
 }
+        // BrevoEmailService.cs - 添加关注确认邮件
+
+public async Task SendFollowConfirmedEmailAsync(ResourceRequest request)
+{
+    var html = $@"
+    <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #2a2a3e; border-radius: 16px; background: #0a0a0f; color: #e0e0e0;'>
+        <h2 style='color: #28a745;'>✅ 关注已确认</h2>
+        <p>您好 <strong>{request.UserName}</strong>！</p>
+        <p>管理员已确认你在 <strong>{request.VerifyPlatform}</strong> 的关注：</p>
+        <div style='background: #1a1a2e; padding: 15px; border-radius: 8px; margin: 10px 0; border: 1px solid #2a2a3e;'>
+            <p><strong>📱 平台：</strong>{request.VerifyPlatform}</p>
+            <p><strong>🆔 账号ID：</strong>{request.VerifyAccountId}</p>
+            <p><strong>⏰ 确认时间：</strong>{FormatChinaTime(request.FollowVerifiedAt ?? DateTime.Now)}</p>
+        </div>
+        <p style='color: #888; font-size: 14px;'>你的资源申请正在处理中，请耐心等待。</p>
+        <div style='margin: 20px 0; text-align: center;'>
+            <a href='https://chris-hopper.org/Resource/History' style='display: inline-block; padding: 12px 32px; background: #8B5CF6; color: white; text-decoration: none; border-radius: 8px; font-weight: 600;'>
+                📋 查看申请
+            </a>
+        </div>
+        <hr style='border: none; border-top: 1px solid #2a2a3e;'>
+        <p style='color: #555; font-size: 12px;'>此邮件由系统自动发送，请勿直接回复。</p>
+    </div>";
+
+    await SendEmailAsync(request.UserEmail, $"✅ 关注已确认 - {request.CharacterName}", html);
+}
     }
 }
