@@ -564,18 +564,41 @@
                                 else
                                 {
                                     <div style="display:flex;flex-wrap:wrap;gap:0.2rem;">
-                                        @if (!user.IsEmailVerified)
-                                        {
-                                            <button class="btn-action success" onclick="verifyUser(@user.Id)">✅ 验证</button>
-                                        }
-                                        @if (!user.IsBanned)
-                                        {
-                                            <button class="btn-action danger" onclick="banUser(@user.Id)">🚫 封禁</button>
-                                        }
-                                        else
-                                        {
-                                            <button class="btn-action success" onclick="unbanUser(@user.Id)">✅ 解封</button>
-                                        }
+                                       <!-- 在操作按钮中添加 -->
+@if (!user.IsAdmin && !user.IsDeleted)
+{
+    <div style="display:flex;flex-wrap:wrap;gap:0.2rem;">
+        @if (!user.IsEmailVerified)
+        {
+            <button class="btn-action success" onclick="verifyUser(@user.Id)">✅ 验证</button>
+        }
+        @if (!user.IsBanned)
+        {
+            <button class="btn-action danger" onclick="banUser(@user.Id)">🚫 封禁</button>
+        }
+        else
+        {
+            <button class="btn-action success" onclick="unbanUser(@user.Id)">✅ 解封</button>
+        }
+        
+        <!-- ⭐ 新增：设置/解除受限 -->
+        @if (user.IsRestricted)
+        {
+            <button class="btn-action warning" onclick="toggleRestricted(@user.Id, false)" style="background:rgba(139,92,246,0.08);color:#8B5CF6;">
+                🔓 解除受限
+            </button>
+        }
+        else
+        {
+            <button class="btn-action warning" onclick="toggleRestricted(@user.Id, true)" style="background:rgba(139,92,246,0.08);color:#8B5CF6;">
+                🔒 设为受限
+            </button>
+        }
+        
+        <button class="btn-action danger" onclick="deleteUser(@user.Id)" style="background:rgba(220,53,69,0.04);color:rgba(220,53,69,0.4);">🗑️ 删除</button>
+        <button class="btn-action primary" onclick="openNotificationModal(@user.Id, '@user.Username')">📬 通知</button>
+    </div>
+}
                                         <button class="btn-action danger" onclick="deleteUser(@user.Id)" style="background:rgba(220,53,69,0.04);color:rgba(220,53,69,0.4);">🗑️ 删除</button>
                                         <button class="btn-action primary" onclick="openNotificationModal(@user.Id, '@user.Username')">
                                             📬 通知
