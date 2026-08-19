@@ -75,6 +75,12 @@
     var isRestricted = Context.Session.GetInt32("IsRestricted") ?? 0;
     var username = Context.Session.GetString("Username");
     
+    // ⭐ 打印调试日志
+    if (isRestricted == 1)
+    {
+        Console.WriteLine($"🔒 受限用户访问: {Context.Request.Path}");
+    }
+    
     // ⭐ 受限用户允许的路径
     var currentPath = Context.Request.Path.Value?.ToLower() ?? "";
     var allowedPaths = new[] { "/resource", "/auth", "/home/contact", "/home/about" };
@@ -120,10 +126,8 @@
                     {
                         @if (isRestricted == 1)
                         {
-                            <!-- ⭐⭐⭐ 受限用户：只显示资源大厅一个按钮 ⭐⭐⭐ -->
+                            <!-- ⭐⭐⭐ 受限用户：只显示资源大厅 + 退出 ⭐⭐⭐ -->
                             <li class="nav-item"><a class="nav-link" href="/Resource/Index" style="color:#8B5CF6;font-weight:600;"><i class="bi bi-box"></i> 资源大厅</a></li>
-                            
-                            <!-- ⭐ 登出按钮（必须保留，否则用户无法退出） -->
                             <li class="nav-item"><a class="nav-link" href="/Auth/Logout" style="color:#EC4899;"><i class="bi bi-box-arrow-right"></i> 退出</a></li>
                         }
                         else
