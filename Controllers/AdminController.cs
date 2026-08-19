@@ -2118,5 +2118,29 @@ public async Task<IActionResult> ConfirmPayment(int requestId, string? note)
 
     return Json(new { success = true, message = $"✅ 已确认收款 #{request.OrderId}" });
 }
+// AdminController.cs - 添加确认关注方法
+
+[HttpPost]
+public async Task<IActionResult> ConfirmFollow(int requestId)
+{
+    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+    if (isAdmin != 1)
+        return Json(new { success = false, message = "权限不足" });
+
+    var request = await _dataSync.GetResourceRequestByIdAsync(requestId);
+    if (request == null)
+        return Json(new { success = false, message = "申请不存在" });
+
+    request.VerifyStatus = "auto_verified";
+    request.IsFollowVerified = true;
+    request.FollowVerifyError = null;
+
+    await _dataSync.UpdateResourceRequestAsync(request);
+
+    // 发送邮件通知用户关注已确认
+    await _emailService.SendFollowConfirmedEmailAsync(request);
+
+    return Json(new { success = true, message = "✅ 关注已确认" });
+}
     }
 }
