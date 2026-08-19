@@ -693,12 +693,20 @@
             <span class="card-badge count">🗓️ 智能排期</span>
         </a>
 
-        <a href="/Train" class="card-item">
-            <span class="card-icon">🚄</span>
-            <div class="card-title">火车查询</div>
-            <div class="card-desc">查询车次、座位状态</div>
-            <span class="card-badge count">🚆 实时</span>
-        </a>
+        
+<a href="/Admin/ResourceManagement" class="card-item">
+    <span class="card-icon">📦</span>
+    <div class="card-title">资源管理</div>
+    <div class="card-desc">处理用户的资源申请</div>
+    @if (ViewBag.ResourcePendingCount > 0)
+    {
+        <span class="card-badge pending">@ViewBag.ResourcePendingCount 待处理</span>
+    }
+    else
+    {
+        <span class="card-badge count">@ViewBag.ResourceTotalCount 条</span>
+    }
+</a>
     </div>
 
     <!-- ===== 最近活动 ===== -->
