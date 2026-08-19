@@ -278,6 +278,8 @@ namespace MyPersonalWebsite.Controllers
         // ============================================================
         // Controllers/AuthController.cs - Login POST
 
+// Controllers/AuthController.cs - Login POST
+
 [HttpPost]
 [ValidateAntiForgeryToken]
 public async Task<IActionResult> Login(string username, string password)
@@ -300,22 +302,24 @@ public async Task<IActionResult> Login(string username, string password)
         return View();
     }
 
+    // ⭐ 检查封禁状态
     if (user.IsBanned)
     {
-        string banMessage = "您的账号已被封禁";
         if (user.BanExpiry.HasValue && user.BanExpiry.Value > DateTime.Now)
         {
-            banMessage += $"，将于 {user.BanExpiry.Value:yyyy-MM-dd HH:mm} 解封";
+            ModelState.AddModelError("", $"您的账号已被封禁至 {user.BanExpiry.Value:yyyy-MM-dd HH:mm}");
+            return View();
         }
         else if (user.BanExpiry.HasValue && user.BanExpiry.Value <= DateTime.Now)
         {
+            // 封禁已过期，自动解封
             user.IsBanned = false;
             user.BanExpiry = null;
             await _dataSync.UpdateUserAsync(user);
         }
         else
         {
-            ModelState.AddModelError("", banMessage);
+            ModelState.AddModelError("", "您的账号已被永久封禁");
             return View();
         }
     }
@@ -341,13 +345,13 @@ public async Task<IActionResult> Login(string username, string password)
     user.LastLoginAt = DateTime.Now;
     await _dataSync.UpdateUserAsync(user);
 
-    // ⭐ 设置 Session
+    // ⭐⭐⭐ 关键修复：设置 Session ⭐⭐⭐
     HttpContext.Session.SetInt32("UserId", user.Id);
     HttpContext.Session.SetString("Username", user.Username);
     HttpContext.Session.SetString("UserEmail", user.Email);
     HttpContext.Session.SetInt32("IsAdmin", user.IsAdmin ? 1 : 0);
     
-    // ⭐⭐⭐ 关键修复：设置受限用户状态 ⭐⭐⭐
+    // ⭐⭐⭐ 必须设置受限状态 ⭐⭐⭐
     HttpContext.Session.SetInt32("IsRestricted", user.IsRestricted ? 1 : 0);
 
     // ⭐ 如果是受限用户，跳转到资源大厅
