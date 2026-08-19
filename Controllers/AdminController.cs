@@ -2142,5 +2142,62 @@ public async Task<IActionResult> ConfirmFollow(int requestId)
 
     return Json(new { success = true, message = "✅ 关注已确认" });
 }
+// Controllers/AdminController.cs - 添加以下方法
+
+/// <summary>
+/// 设置用户为受限用户
+/// </summary>
+[HttpPost]
+public async Task<IActionResult> SetRestricted(int userId, bool restricted, string? reason = null)
+{
+    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+    if (isAdmin != 1)
+        return Json(new { success = false, message = "权限不足" });
+
+    var user = await _dataSync.GetUserByIdAsync(userId);
+    if (user == null)
+        return Json(new { success = false, message = "用户不存在" });
+
+    if (user.IsAdmin)
+        return Json(new { success = false, message = "不能操作管理员" });
+
+    user.IsRestricted = restricted;
+    user.RestrictionReason = restricted ? (reason ?? "管理员手动设置") : null;
+
+    await _dataSync.UpdateUserAsync(user);
+
+    return Json(new
+    {
+        success = true,
+        message = restricted ? $"✅ {user.Username} 已设为受限用户" : $"✅ {user.Username} 已解除限制"
+    });
+}
+
+/// <summary>
+/// 获取受限用户列表
+/// </summary>
+[HttpGet]
+public async Task<IActionResult> GetRestrictedUsers()
+{
+    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+    if (isAdmin != 1)
+        return Json(new { success = false, message = "权限不足" });
+
+    var users = await _dataSync.GetAllUsersAsync();
+    var restrictedUsers = users
+        .Where(u => u.IsRestricted && !u.IsDeleted)
+        .Select(u => new
+        {
+            u.Id,
+            u.Username,
+            u.Email,
+            u.RestrictionReason,
+            u.CreatedAt,
+            u.LastLoginAt
+        })
+        .ToList();
+
+    return Json(new { success = true, users = restrictedUsers });
+}
     }
 }
