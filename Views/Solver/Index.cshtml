@@ -12,6 +12,7 @@
     .problems-list { margin-top:1rem; display:grid; grid-template-columns: 1fr; gap:0.8rem; }
     .problem-card { background:rgba(255,255,255,0.03); padding:1rem; border-radius:12px; }
     .ai-answer { white-space:pre-wrap; margin-top:0.6rem; }
+    .privacy-note { color: rgba(255,255,255,0.45); font-size:0.9rem; margin-top:0.6rem }
 </style>
 
 <div class="solver-container">
@@ -34,8 +35,11 @@
         <span id="status" style="margin-left:1rem;color:rgba(255,255,255,0.6)"></span>
     </div>
 
+    <div class="privacy-note">上传的图片将用于 OCR 识别并发送到外部 AI 服务进行解题（处理完成后将立即删除）。</div>
+
     <div class="problems-list" id="problems"></div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
 <script src="/js/solver.js"></script>

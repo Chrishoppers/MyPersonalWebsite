@@ -11,6 +11,29 @@
     let stream = null;
     let connectionId = null;
 
+    // SignalR wiring
+    (function initHub(){
+        if (!window.signalR) { console.log('SignalR not loaded'); return; }
+        const hubConnection = new signalR.HubConnectionBuilder()
+            .withUrl('/solverHub')
+            .withAutomaticReconnect()
+            .build();
+
+        hubConnection.on('Connected', id => {
+            connectionId = id;
+            console.log('SolverHub connected id=', connectionId);
+        });
+
+        hubConnection.on('SolverProgress', msg => {
+            if (statusEl) statusEl.textContent = msg;
+        });
+
+        hubConnection.start().then(()=> console.log('SolverHub started')).catch(e=> console.log('SolverHub start failed', e));
+
+        // expose for debugging
+        window._solverHub = hubConnection;
+    })();
+
     btnUpload.addEventListener('click', ()=> fileInput.click());
     fileInput.addEventListener('change', async (e)=>{
         const f = e.target.files[0];
@@ -57,6 +80,8 @@
         const blob = await new Promise(res=> canvas.toBlob(res,'image/png'));
         const fd = new FormData();
         fd.append('image', blob, 'capture.png');
+        // include SignalR connection id so server can push progress to this client
+        fd.append('connectionId', connectionId || '');
         statusEl.textContent = '上传图片并开始识别...';
         try{
             const resp = await fetch('/Solver/Upload', { method:'POST', body: fd });
