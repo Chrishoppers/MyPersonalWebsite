@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+@inject MyPersonalWebsite.Services.DataSyncService DataSync
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -74,18 +75,36 @@
     var isAdmin = Context.Session.GetInt32("IsAdmin") ?? 0;
     var isRestricted = Context.Session.GetInt32("IsRestricted") ?? 0;
     var username = Context.Session.GetString("Username");
-    
+
+    // 如果 session 中未反映最新受限状态，从数据库读取最新状态（以管理员修改能即时生效）
+    try
+    {
+        if (userId.HasValue)
+        {
+            var dbUser = DataSync.GetUserByIdAsync(userId.Value).Result;
+            if (dbUser != null)
+            {
+                isRestricted = dbUser.IsRestricted ? 1 : isRestricted;
+            }
+        }
+    }
+    catch (Exception ex)
+    {
+        // 忽略异常，使用 session 值
+        Console.WriteLine($"检查受限状态失败: {ex.Message}");
+    }
+
     // ⭐ 打印调试日志
     if (isRestricted == 1)
     {
         Console.WriteLine($"🔒 受限用户访问: {Context.Request.Path}");
     }
-    
+
     // ⭐ 受限用户允许的路径
     var currentPath = Context.Request.Path.Value?.ToLower() ?? "";
     var allowedPaths = new[] { "/resource", "/auth", "/home/contact", "/home/about" };
     var isAllowedPath = allowedPaths.Any(p => currentPath.StartsWith(p, StringComparison.OrdinalIgnoreCase));
-    
+
     // ⭐ 如果是受限用户且不在允许路径中，重定向到资源大厅
     if (isRestricted == 1 && !isAllowedPath && !currentPath.Contains("/resource"))
     {
