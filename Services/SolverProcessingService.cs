@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.SignalR;
 using MyPersonalWebsite.Hubs;
+using MyPersonalWebsite.Models;
 using System.Text.RegularExpressions;
 
 namespace MyPersonalWebsite.Services
