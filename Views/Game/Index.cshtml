@@ -83,8 +83,14 @@
             </div>
         </a>
 
-        <!-- 包含拍题卡片 -->
-        @Html.Partial("_SolverCardFragment")
+        <!-- 拍题入口仅显示为按钮（不改动原有布局） -->
+        <a href="/Solver/Index" class="game-card" style="--card-gradient: linear-gradient(135deg, #06B6D4, #3B82F6); min-height:96px; padding:12px; display:flex; align-items:center; gap:12px;">
+            <div style="font-size:1.6rem">📸</div>
+            <div>
+                <div style="font-weight:700">智能拍题</div>
+                <div style="font-size:0.85rem; color:rgba(255,255,255,0.6)">拍照/上传试题，智能识别并逐题解答</div>
+            </div>
+        </a>
 
     </div>
 </div>
