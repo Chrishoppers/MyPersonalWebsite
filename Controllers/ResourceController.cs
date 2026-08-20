@@ -272,7 +272,7 @@ namespace MyPersonalWebsite.Controllers
         // 4. ⭐ 支付页面
         // ============================================================
         [HttpGet]
-        public async Task<IActionResult> Pay(int id)
+        public async Task<IActionResult> Pay(int? id)
         {
             var userId = HttpContext.Session.GetInt32("UserId");
             if (!userId.HasValue)
@@ -280,7 +280,14 @@ namespace MyPersonalWebsite.Controllers
                 return RedirectToAction("Login", "Auth");
             }
 
-            var request = await _dataSync.GetResourceRequestByIdAsync(id);
+            if (!id.HasValue)
+            {
+                // 未提供订单ID，重定向回资源历史或列表
+                TempData["Error"] = "无效的支付请求";
+                return RedirectToAction("History", "Resource");
+            }
+
+            var request = await _dataSync.GetResourceRequestByIdAsync(id.Value);
             if (request == null || request.UserId != userId.Value)
             {
                 return NotFound();
