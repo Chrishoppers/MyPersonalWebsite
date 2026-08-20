@@ -31,6 +31,13 @@ namespace MyPersonalWebsite.Controllers
             return View();
         }
 
+        // Health endpoint for quick deployment checks. Returns 200 OK with a simple text body.
+        [HttpGet("/Solver/health")]
+        public IActionResult Health()
+        {
+            return Content("solver ok");
+        }
+
         [HttpPost]
         public async Task<IActionResult> Ask(string question)
         {
