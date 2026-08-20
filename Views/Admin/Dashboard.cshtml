@@ -525,7 +525,10 @@
             📊 超级详细统计
             <span class="badge">实时</span>
             <button class="btn-export" onclick="exportStats()" style="margin-left:auto;padding:0.3rem 1.2rem;font-size:0.7rem;">📥 导出CSV</button>
+            <button id="toggleDetails" class="btn-glass" style="margin-left:0.6rem;padding:0.3rem 0.8rem;font-size:0.75rem;" onclick="toggleDetails()">隐藏详情</button>
         </div>
+
+        <div id="detailsContent">
 
         <!-- 用户统计 -->
         <h4 style="color:rgba(255,255,255,0.3);font-size:0.75rem;margin:0.5rem 0 0.3rem;text-transform:uppercase;letter-spacing:0.06em;">👤 用户统计</h4>
@@ -770,4 +773,24 @@
         link.download = 'dashboard_stats_' + new Date().toISOString().slice(0,10) + '.csv';
         link.click();
     }
+
+// 折叠/展开详细统计
+function toggleDetails() {
+    var el = document.getElementById('detailsContent');
+    var btn = document.getElementById('toggleDetails');
+    if (!el) return;
+    if (el.style.display === 'none') {
+        el.style.display = 'block';
+        if (btn) btn.innerText = '隐藏详情';
+    } else {
+        el.style.display = 'none';
+        if (btn) btn.innerText = '展开详情';
+    }
+}
+
+// 页面加载时保持默认显示状态
+document.addEventListener('DOMContentLoaded', function() {
+    var el = document.getElementById('detailsContent');
+    if (el) el.style.display = 'block';
+});
 </script>
