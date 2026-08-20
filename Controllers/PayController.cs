@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Configuration;
 using System;
 using System.Threading.Tasks;
 using MyPersonalWebsite.Models;
@@ -10,12 +11,12 @@ namespace MyPersonalWebsite.Controllers
     public class PayController : Controller
     {
         private readonly ILogger<PayController> _logger;
-        private readonly IDataSyncService _dataSync;
+        private readonly DataSyncService _dataSync;
         private readonly IConfiguration _configuration;
 
         public PayController(
             ILogger<PayController> logger,
-            IDataSyncService dataSync,
+            DataSyncService dataSync,
             IConfiguration configuration)
         {
             _logger = logger;
@@ -172,9 +173,9 @@ namespace MyPersonalWebsite.Controllers
             // 示例：从 Turso 数据库查询
             try
             {
-                var sql = "SELECT * FROM Orders WHERE OrderId = @OrderId";
-                var result = await _dataSync.QueryAsync(sql, new { OrderId = orderId });
-                if (result != null)
+                var sql = $"SELECT * FROM Orders WHERE OrderId = '{orderId}'";
+                var result = await _dataSync.QueryAsync(sql);
+                if (!string.IsNullOrEmpty(result) && result != "{}")
                 {
                     return new OrderInfo
                     {
