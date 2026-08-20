@@ -9,30 +9,31 @@
     const problemsEl = document.getElementById('problems');
     let cropper = null;
     let stream = null;
-    let connectionId = null;
+    let connection = null;
+    let connectionId = '';
 
-    // SignalR wiring
-    (function initHub(){
-        if (!window.signalR) { console.log('SignalR not loaded'); return; }
-        const hubConnection = new signalR.HubConnectionBuilder()
+    // 建立 SignalR 连接
+    async function ensureConnection() {
+        if (connection) return;
+        connection = new signalR.HubConnectionBuilder()
             .withUrl('/solverHub')
             .withAutomaticReconnect()
             .build();
 
-        hubConnection.on('Connected', id => {
-            connectionId = id;
-            console.log('SolverHub connected id=', connectionId);
+        connection.on('SolverProgress', (msg) => {
+            // 显示进度到页面顶部状态
+            statusEl.textContent = msg;
         });
 
-        hubConnection.on('SolverProgress', msg => {
-            if (statusEl) statusEl.textContent = msg;
-        });
-
-        hubConnection.start().then(()=> console.log('SolverHub started')).catch(e=> console.log('SolverHub start failed', e));
-
-        // expose for debugging
-        window._solverHub = hubConnection;
-    })();
+        await connection.start();
+        // 获取 connectionId
+        try {
+            connectionId = await connection.invoke('GetConnectionId');
+            console.log('SolverHub connectionId =', connectionId);
+        } catch (e) {
+            console.warn('无法获取 connectionId', e);
+        }
+    }
 
     btnUpload.addEventListener('click', ()=> fileInput.click());
     fileInput.addEventListener('change', async (e)=>{
@@ -40,7 +41,6 @@
         if (!f) return;
         const url = URL.createObjectURL(f);
         showImage(url);
-        // keep file for upload
         previewImage._file = f;
     });
 
@@ -53,14 +53,12 @@
                 previewImage.style.display = 'none';
             }catch(e){ alert('摄像头打开失败：' + e); }
         } else {
-            // take photo
             const canvas = document.createElement('canvas');
             canvas.width = video.videoWidth; canvas.height = video.videoHeight;
             const ctx = canvas.getContext('2d');
             ctx.drawImage(video,0,0,canvas.width,canvas.height);
             const dataUrl = canvas.toDataURL('image/png');
             showImage(dataUrl);
-            // stop stream
             stream.getTracks().forEach(t=>t.stop());
             video.style.display = 'none';
         }
@@ -75,12 +73,14 @@
 
     btnCrop.addEventListener('click', async ()=>{
         if (!cropper) { alert('请先上传或拍照图片'); return; }
+
+        await ensureConnection();
+
         statusEl.textContent = '正在导出裁剪图片...';
         const canvas = cropper.getCroppedCanvas({ maxWidth:1600, maxHeight:1600, imageSmoothingQuality:'high' });
         const blob = await new Promise(res=> canvas.toBlob(res,'image/png'));
         const fd = new FormData();
         fd.append('image', blob, 'capture.png');
-        // include SignalR connection id so server can push progress to this client
         fd.append('connectionId', connectionId || '');
         statusEl.textContent = '上传图片并开始识别...';
         try{
@@ -99,7 +99,7 @@
             const div = document.createElement('div'); div.className='problem-card';
             div.innerHTML = `<div><strong>题 ${idx+1}</strong> ${p.shortText}</div>
                 <div style="margin-top:6px"><button data-id="${p.id}" class="btn btn-ask">查看 AI 解答</button></div>
-                <div class="ai-answer" id="answer_${p.id}"></div>`;
+                <div class="ai-answer" id="answer_${p.id}">${p.aiAnswer ? p.aiAnswer : ''}</div>`;
             problemsEl.appendChild(div);
         });
         // bind
@@ -108,6 +108,7 @@
             const card = list.find(x=>x.id===id);
             if (!card) return;
             const el = document.getElementById('answer_'+id);
+            if (card.aiAnswer) { el.textContent = card.aiAnswer; return; }
             el.textContent = 'AI 正在作答...';
             try{
                 const resp = await fetch('/Solver/Ask', { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body: 'question='+encodeURIComponent(card.fullText) });
