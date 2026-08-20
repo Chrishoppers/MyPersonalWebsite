@@ -1,0 +1,41 @@
+@{
+    ViewData["Title"] = "📸 智能拍题";
+    var username = ViewBag.Username as string ?? "玩家";
+}
+
+<link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet" />
+
+<style>
+    .solver-container { max-width: 1000px; margin: 2rem auto; padding: 1rem; }
+    .solver-top { display:flex; gap:1rem; align-items:center; margin-bottom:1rem; }
+    .solver-canvas { width:100%; max-height:600px; background:#111; display:flex; justify-content:center; align-items:center; overflow:auto; }
+    .problems-list { margin-top:1rem; display:grid; grid-template-columns: 1fr; gap:0.8rem; }
+    .problem-card { background:rgba(255,255,255,0.03); padding:1rem; border-radius:12px; }
+    .ai-answer { white-space:pre-wrap; margin-top:0.6rem; }
+</style>
+
+<div class="solver-container">
+    <div class="solver-top">
+        <div>
+            <button id="btnCamera" class="btn">📷 打开摄像头</button>
+            <button id="btnUpload" class="btn">⬆️ 上传图片</button>
+            <input type="file" id="fileInput" accept="image/*" style="display:none" />
+        </div>
+        <div style="margin-left:auto; color:rgba(255,255,255,0.6)">欢迎，<strong>@username</strong></div>
+    </div>
+
+    <div class="solver-canvas">
+        <img id="previewImage" src="" style="max-width:100%; display:none;" />
+        <video id="video" autoplay playsinline style="max-width:100%; display:none;"></video>
+    </div>
+
+    <div style="margin-top:0.8rem">
+        <button id="btnCrop" class="btn">裁剪并识别</button>
+        <span id="status" style="margin-left:1rem;color:rgba(255,255,255,0.6)"></span>
+    </div>
+
+    <div class="problems-list" id="problems"></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+<script src="/js/solver.js"></script>
