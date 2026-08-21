@@ -272,41 +272,36 @@ namespace MyPersonalWebsite.Controllers
         // 4. ⭐ 支付页面
         // ============================================================
         [HttpGet]
-        public async Task<IActionResult> Pay(int? id)
-        {
-            var userId = HttpContext.Session.GetInt32("UserId");
-            if (!userId.HasValue)
-            {
-                return RedirectToAction("Login", "Auth");
-            }
+[Route("Resource/Pay/{id?}")]
+public async Task<IActionResult> Pay(int? id)
+{
+    var userId = HttpContext.Session.GetInt32("UserId");
+    if (!userId.HasValue)
+    {
+        return RedirectToAction("Login", "Auth");
+    }
 
-            if (!id.HasValue)
-            {
-                // 未提供订单ID，重定向回资源历史或列表
-                TempData["Error"] = "无效的支付请求";
-                return RedirectToAction("History", "Resource");
-            }
+    if (!id.HasValue)
+    {
+        TempData["Error"] = "无效的支付请求";
+        return RedirectToAction("History", "Resource");
+    }
 
-            var request = await _dataSync.GetResourceRequestByIdAsync(id.Value);
-            if (request == null || request.UserId != userId.Value)
-            {
-                return NotFound();
-            }
+    var request = await _dataSync.GetResourceRequestByIdAsync(id.Value);
+    if (request == null || request.UserId != userId.Value)
+    {
+        return NotFound();
+    }
 
-            if (request.IsPaid)
-            {
-                TempData["Message"] = "该订单已支付";
-                return RedirectToAction("History", "Resource");
-            }
+    if (request.IsPaid)
+    {
+        TempData["Message"] = "该订单已支付";
+        return RedirectToAction("History", "Resource");
+    }
 
-            // 设置支付方式为微信
-            request.PaymentMethod = "wechat";
-            await _dataSync.UpdateResourceRequestAsync(request);
-
-            ViewBag.QRCodeUrl = "/images/payment/wechat_qr.jpg";
-
-            return View(request);
-        }
+    ViewBag.QRCodeUrl = "/images/payment/wechat_qr.jpg";
+    return View(request);
+}
 
         // ============================================================
         // 5. 检查支付状态 (AJAX)
