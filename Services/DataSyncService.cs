@@ -31,50 +31,53 @@ namespace MyPersonalWebsite.Services
         // ============================================================
 
         public async Task AddUserAsync(User user)
-        {
-            if (!_tursoAvailable) throw new Exception("Turso 未配置");
+{
+    if (!_tursoAvailable) throw new Exception("Turso 未配置");
 
-            var maxIdResult = await _tursoService.QueryAsync("SELECT MAX(Id) as MaxId FROM Users");
-            var maxId = ParseMaxId(maxIdResult);
-            user.Id = maxId + 1;
+    var maxIdResult = await _tursoService.QueryAsync("SELECT MAX(Id) as MaxId FROM Users");
+    var maxId = ParseMaxId(maxIdResult);
+    user.Id = maxId + 1;
 
-            var sql = $@"INSERT INTO Users (
-                Id, Username, Email, PasswordHash, IsEmailVerified, IsAdmin,
-                CreatedAt, LastLoginAt, IsBanned, BanExpiry, BanReason,
-                IsDeleted, DeletedAt, DeleteReason, DeleteNote,
-                AvatarUrl, IsAvatarApproved, AvatarSubmittedAt,
-                PendingEmail, PendingUsername, IsEmailChangeApproved, IsUsernameChangeApproved,
-                VerificationCode, VerificationCodeExpiry, IsApproved,
-                LoginToken, LoginTokenExpiry
-            ) VALUES (
-                {user.Id}, '{EscapeSql(user.Username)}', '{EscapeSql(user.Email)}',
-                '{EscapeSql(user.PasswordHash)}', {(user.IsEmailVerified ? 1 : 0)},
-                {(user.IsAdmin ? 1 : 0)}, '{user.CreatedAt:yyyy-MM-dd HH:mm:ss}',
-                {(user.LastLoginAt.HasValue ? $"'{user.LastLoginAt.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
-                {(user.IsBanned ? 1 : 0)},
-                {(user.BanExpiry.HasValue ? $"'{user.BanExpiry.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
-                {(string.IsNullOrEmpty(user.BanReason) ? "NULL" : $"'{EscapeSql(user.BanReason)}'")},
-                {(user.IsDeleted ? 1 : 0)},
-                {(user.DeletedAt.HasValue ? $"'{user.DeletedAt.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
-                {(string.IsNullOrEmpty(user.DeleteReason) ? "NULL" : $"'{EscapeSql(user.DeleteReason)}'")},
-                {(string.IsNullOrEmpty(user.DeleteNote) ? "NULL" : $"'{EscapeSql(user.DeleteNote)}'")},
-                {(string.IsNullOrEmpty(user.AvatarUrl) ? "NULL" : $"'{EscapeSql(user.AvatarUrl)}'")},
-                {(user.IsAvatarApproved ? 1 : 0)},
-                {(user.AvatarSubmittedAt.HasValue ? $"'{user.AvatarSubmittedAt.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
-                {(string.IsNullOrEmpty(user.PendingEmail) ? "NULL" : $"'{EscapeSql(user.PendingEmail)}'")},
-                {(string.IsNullOrEmpty(user.PendingUsername) ? "NULL" : $"'{EscapeSql(user.PendingUsername)}'")},
-                {(user.IsEmailChangeApproved ? 1 : 0)},
-                {(user.IsUsernameChangeApproved ? 1 : 0)},
-                {(string.IsNullOrEmpty(user.VerificationCode) ? "NULL" : $"'{EscapeSql(user.VerificationCode)}'")},
-                {(user.VerificationCodeExpiry.HasValue ? $"'{user.VerificationCodeExpiry.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
-                {(user.IsApproved ? 1 : 0)},
-                {(string.IsNullOrEmpty(user.LoginToken) ? "NULL" : $"'{EscapeSql(user.LoginToken)}'")},
-                {(user.LoginTokenExpiry.HasValue ? $"'{user.LoginTokenExpiry.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")}
-            )";
+    var sql = $@"INSERT INTO Users (
+        Id, Username, Email, PasswordHash, IsEmailVerified, IsAdmin,
+        CreatedAt, LastLoginAt, IsBanned, BanExpiry, BanReason,
+        IsDeleted, DeletedAt, DeleteReason, DeleteNote,
+        AvatarUrl, IsAvatarApproved, AvatarSubmittedAt,
+        PendingEmail, PendingUsername, IsEmailChangeApproved, IsUsernameChangeApproved,
+        VerificationCode, VerificationCodeExpiry, IsApproved,
+        LoginToken, LoginTokenExpiry,
+        IsRestricted, RestrictionReason
+    ) VALUES (
+        {user.Id}, '{EscapeSql(user.Username)}', '{EscapeSql(user.Email)}',
+        '{EscapeSql(user.PasswordHash)}', {(user.IsEmailVerified ? 1 : 0)},
+        {(user.IsAdmin ? 1 : 0)}, '{user.CreatedAt:yyyy-MM-dd HH:mm:ss}',
+        {(user.LastLoginAt.HasValue ? $"'{user.LastLoginAt.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
+        {(user.IsBanned ? 1 : 0)},
+        {(user.BanExpiry.HasValue ? $"'{user.BanExpiry.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
+        {(string.IsNullOrEmpty(user.BanReason) ? "NULL" : $"'{EscapeSql(user.BanReason)}'")},
+        {(user.IsDeleted ? 1 : 0)},
+        {(user.DeletedAt.HasValue ? $"'{user.DeletedAt.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
+        {(string.IsNullOrEmpty(user.DeleteReason) ? "NULL" : $"'{EscapeSql(user.DeleteReason)}'")},
+        {(string.IsNullOrEmpty(user.DeleteNote) ? "NULL" : $"'{EscapeSql(user.DeleteNote)}'")},
+        {(string.IsNullOrEmpty(user.AvatarUrl) ? "NULL" : $"'{EscapeSql(user.AvatarUrl)}'")},
+        {(user.IsAvatarApproved ? 1 : 0)},
+        {(user.AvatarSubmittedAt.HasValue ? $"'{user.AvatarSubmittedAt.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
+        {(string.IsNullOrEmpty(user.PendingEmail) ? "NULL" : $"'{EscapeSql(user.PendingEmail)}'")},
+        {(string.IsNullOrEmpty(user.PendingUsername) ? "NULL" : $"'{EscapeSql(user.PendingUsername)}'")},
+        {(user.IsEmailChangeApproved ? 1 : 0)},
+        {(user.IsUsernameChangeApproved ? 1 : 0)},
+        {(string.IsNullOrEmpty(user.VerificationCode) ? "NULL" : $"'{EscapeSql(user.VerificationCode)}'")},
+        {(user.VerificationCodeExpiry.HasValue ? $"'{user.VerificationCodeExpiry.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
+        {(user.IsApproved ? 1 : 0)},
+        {(string.IsNullOrEmpty(user.LoginToken) ? "NULL" : $"'{EscapeSql(user.LoginToken)}'")},
+        {(user.LoginTokenExpiry.HasValue ? $"'{user.LoginTokenExpiry.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
+        {(user.IsRestricted ? 1 : 0)},
+        {(string.IsNullOrEmpty(user.RestrictionReason) ? "NULL" : $"'{EscapeSql(user.RestrictionReason)}'")}
+    )";
 
-            await _tursoService.ExecuteSqlAsync(sql);
-            Console.WriteLine($"✅ 用户 {user.Username} 已写入 Turso");
-        }
+    await _tursoService.ExecuteSqlAsync(sql);
+    Console.WriteLine($"✅ 用户 {user.Username} 已写入 Turso");
+}
 
         public async Task<User?> GetUserByEmailAsync(string email)
         {
