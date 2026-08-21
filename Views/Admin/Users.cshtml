@@ -99,14 +99,14 @@
         border-radius: 16px;
         border: 1px solid rgba(255,255,255,0.04);
         overflow-x: auto;
-        overflow-y: visible; /* ⭐ 去掉垂直滚动条 */
+        overflow-y: visible;
     }
 
     table {
         width: 100%;
         border-collapse: collapse;
         font-size: 0.85rem;
-        min-width: 1100px; /* ⭐ 宽度调大 */
+        min-width: 1200px;
     }
 
     th {
@@ -133,7 +133,6 @@
         background: rgba(255,255,255,0.02);
     }
 
-    /* ⭐ 复选框样式 */
     .checkbox-wrapper {
         display: flex;
         align-items: center;
@@ -227,6 +226,18 @@
         border: 1px solid rgba(220,53,69,0.04);
     }
 
+    .badge-restricted {
+        background: rgba(139,92,246,0.15);
+        color: #8B5CF6;
+        border: 1px solid rgba(139,92,246,0.06);
+    }
+
+    .badge-normal {
+        background: rgba(255,255,255,0.04);
+        color: rgba(255,255,255,0.15);
+        border: 1px solid rgba(255,255,255,0.04);
+    }
+
     .btn-action {
         padding: 0.2rem 0.7rem;
         border: none;
@@ -270,6 +281,15 @@
     }
     .btn-action.warning:hover {
         background: rgba(255,193,7,0.2);
+    }
+
+    .btn-action.restricted {
+        background: rgba(139,92,246,0.08);
+        color: #8B5CF6;
+        border: 1px solid rgba(139,92,246,0.06);
+    }
+    .btn-action.restricted:hover {
+        background: rgba(139,92,246,0.15);
     }
 
     .btn-action:disabled {
@@ -343,7 +363,7 @@
     .toast-msg.error { background: rgba(220,53,69,0.8); }
     .toast-msg.info { background: rgba(79,172,254,0.8); }
 
-    @@keyframes slideUp {
+    @keyframes slideUp {
         from { opacity: 0; transform: translateY(20px) scale(0.95); }
         to { opacity: 1; transform: translateY(0) scale(1); }
     }
@@ -353,7 +373,6 @@
         font-size: 0.75rem;
     }
 
-    /* ⭐ 批量操作栏 */
     .batch-bar {
         display: flex;
         align-items: center;
@@ -410,7 +429,14 @@
         transform: none;
     }
 
-    @@media (max-width: 768px) {
+    .restriction-reason {
+        font-size: 0.55rem;
+        color: rgba(255,255,255,0.05);
+        display: block;
+        margin-top: 0.1rem;
+    }
+
+    @media (max-width: 768px) {
         .admin-header h1 { font-size: 1.3rem; }
         .filter-bar { flex-direction: column; align-items: stretch; }
         .stats-row { grid-template-columns: repeat(2, 1fr); }
@@ -450,6 +476,10 @@
             <div class="number">@Model.Count(u => u.IsDeleted)</div>
             <div class="label">🗑️ 已删除</div>
         </div>
+        <div class="stat-card">
+            <div class="number">@Model.Count(u => u.IsRestricted && !u.IsDeleted)</div>
+            <div class="label">🔒 受限用户</div>
+        </div>
     </div>
 
     <!-- 筛选 -->
@@ -462,13 +492,14 @@
             <option value="unverified">⏳ 未验证</option>
             <option value="deleted">🗑️ 已删除</option>
             <option value="admin">👑 管理员</option>
+            <option value="restricted">🔒 受限</option>
         </select>
         <input type="text" id="searchInput" placeholder="搜索用户名或邮箱..." style="flex:1;min-width:160px;" />
         <button class="btn-action primary" onclick="applyFilters()" style="padding:0.3rem 1.2rem;">应用</button>
         <button class="btn-action" onclick="resetFilters()" style="padding:0.3rem 1.2rem;background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.4);">重置</button>
     </div>
 
-    <!-- ⭐ 批量操作栏 -->
+    <!-- 批量操作栏 -->
     <div class="batch-bar" id="batchBar">
         <div class="checkbox-wrapper">
             <input type="checkbox" id="selectAll" onchange="toggleAllUsers()" />
@@ -496,6 +527,7 @@
                     <th>角色</th>
                     <th>邮箱验证</th>
                     <th>状态</th>
+                    <th>受限</th>
                     <th>注册时间</th>
                     <th>操作</th>
                 </tr>
@@ -551,6 +583,20 @@
                             <td><span class="badge @roleClass">@roleText</span></td>
                             <td><span class="badge @verifyClass">@verifyText</span></td>
                             <td><span class="badge @statusClass">@statusText</span></td>
+                            <td>
+                                @if (user.IsRestricted)
+                                {
+                                    <span class="badge badge-restricted">🔒 受限</span>
+                                    @if (!string.IsNullOrEmpty(user.RestrictionReason))
+                                    {
+                                        <span class="restriction-reason">@user.RestrictionReason</span>
+                                    }
+                                }
+                                else
+                                {
+                                    <span class="badge badge-normal">✅ 正常</span>
+                                }
+                            </td>
                             <td style="font-size:0.75rem;color:rgba(255,255,255,0.25);">@user.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
                             <td>
                                 @if (user.IsDeleted)
@@ -564,45 +610,34 @@
                                 else
                                 {
                                     <div style="display:flex;flex-wrap:wrap;gap:0.2rem;">
-                                       <!-- 在操作按钮中添加 -->
-@if (!user.IsAdmin && !user.IsDeleted)
-{
-    <div style="display:flex;flex-wrap:wrap;gap:0.2rem;">
-        @if (!user.IsEmailVerified)
-        {
-            <button class="btn-action success" onclick="verifyUser(@user.Id)">✅ 验证</button>
-        }
-        @if (!user.IsBanned)
-        {
-            <button class="btn-action danger" onclick="banUser(@user.Id)">🚫 封禁</button>
-        }
-        else
-        {
-            <button class="btn-action success" onclick="unbanUser(@user.Id)">✅ 解封</button>
-        }
-        
-        <!-- ⭐ 新增：设置/解除受限 -->
-        @if (user.IsRestricted)
-        {
-            <button class="btn-action warning" onclick="toggleRestricted(@user.Id, false)" style="background:rgba(139,92,246,0.08);color:#8B5CF6;">
-                🔓 解除受限
-            </button>
-        }
-        else
-        {
-            <button class="btn-action warning" onclick="toggleRestricted(@user.Id, true)" style="background:rgba(139,92,246,0.08);color:#8B5CF6;">
-                🔒 设为受限
-            </button>
-        }
-        
-        <button class="btn-action danger" onclick="deleteUser(@user.Id)" style="background:rgba(220,53,69,0.04);color:rgba(220,53,69,0.4);">🗑️ 删除</button>
-        <button class="btn-action primary" onclick="openNotificationModal(@user.Id, '@user.Username')">📬 通知</button>
-    </div>
-}
+                                        @if (!user.IsEmailVerified)
+                                        {
+                                            <button class="btn-action success" onclick="verifyUser(@user.Id)">✅ 验证</button>
+                                        }
+                                        @if (!user.IsBanned)
+                                        {
+                                            <button class="btn-action danger" onclick="banUser(@user.Id)">🚫 封禁</button>
+                                        }
+                                        else
+                                        {
+                                            <button class="btn-action success" onclick="unbanUser(@user.Id)">✅ 解封</button>
+                                        }
+                                        
+                                        @if (user.IsRestricted)
+                                        {
+                                            <button class="btn-action restricted" onclick="toggleRestricted(@user.Id, false)">
+                                                🔓 解除受限
+                                            </button>
+                                        }
+                                        else
+                                        {
+                                            <button class="btn-action restricted" onclick="toggleRestricted(@user.Id, true)">
+                                                🔒 设为受限
+                                            </button>
+                                        }
+                                        
                                         <button class="btn-action danger" onclick="deleteUser(@user.Id)" style="background:rgba(220,53,69,0.04);color:rgba(220,53,69,0.4);">🗑️ 删除</button>
-                                        <button class="btn-action primary" onclick="openNotificationModal(@user.Id, '@user.Username')">
-                                            📬 通知
-                                        </button>
+                                        <button class="btn-action primary" onclick="openNotificationModal(@user.Id, '@user.Username')">📬 通知</button>
                                     </div>
                                 }
                             </td>
@@ -612,7 +647,7 @@
                 else
                 {
                     <tr>
-                        <td colspan="8">
+                        <td colspan="9">
                             <div class="empty-state">📭 暂无用户</div>
                         </td>
                     </tr>
@@ -656,7 +691,7 @@
         }
 
         // ============================================================
-        // ⭐ 多选功能
+        // 多选功能
         // ============================================================
         let selectedUsers = [];
 
@@ -673,7 +708,6 @@
             document.getElementById('selectedCount').textContent = selectedUsers.length;
             document.getElementById('batchSendBtn').disabled = selectedUsers.length === 0;
 
-            // 更新全选状态
             const allCheckboxes = document.querySelectorAll('.user-checkbox');
             const checkedCheckboxes = document.querySelectorAll('.user-checkbox:checked');
             const selectAll = document.getElementById('selectAll');
@@ -707,7 +741,7 @@
         }
 
         // ============================================================
-        // ⭐ 批量发送通知
+        // 批量发送通知
         // ============================================================
         function batchSendNotification() {
             if (selectedUsers.length === 0) {
@@ -784,7 +818,6 @@
                 }
             });
 
-            // 字数统计
             setTimeout(() => {
                 const titleInput = document.getElementById('batchTitle');
                 const msgInput = document.getElementById('batchMessage');
@@ -804,9 +837,6 @@
             }, 100);
         }
 
-        // ============================================================
-        // ⭐ 执行批量发送
-        // ============================================================
         function executeBatchSend(title, message, type) {
             Swal.fire({
                 title: '⏳ 发送中...',
@@ -816,7 +846,7 @@
                         <p style="color:rgba(255,255,255,0.3);font-size:0.85rem;margin-top:0.8rem;">正在发送给 ${selectedUsers.length} 位用户...</p>
                     </div>
                     <style>
-                        @@keyframes spin { to { transform: rotate(360deg); } }
+                        @keyframes spin { to { transform: rotate(360deg); } }
                     </style>
                 `,
                 allowOutsideClick: false,
@@ -890,7 +920,7 @@
         }
 
         // ============================================================
-        // 单用户发送通知（保留原有功能）
+        // 单用户发送通知
         // ============================================================
         function openNotificationModal(userId, username) {
             Swal.fire({
@@ -988,7 +1018,7 @@
                         <p style="color:rgba(255,255,255,0.3);font-size:0.85rem;margin-top:0.8rem;">正在发送...</p>
                     </div>
                     <style>
-                        @@keyframes spin { to { transform: rotate(360deg); } }
+                        @keyframes spin { to { transform: rotate(360deg); } }
                     </style>
                 `,
                 allowOutsideClick: false,
@@ -1047,7 +1077,7 @@
         }
 
         // ============================================================
-        // 用户操作（验证/封禁/解封/删除）
+        // 用户操作
         // ============================================================
         function verifyUser(userId) {
             Swal.fire({
@@ -1103,6 +1133,9 @@
                 cancelButtonText: '取消',
                 showCancelButton: true,
                 focusConfirm: false,
+                background: '#1a1a2e',
+                color: '#e0e0e0',
+                confirmButtonColor: '#dc3545',
                 preConfirm: () => {
                     const hours = document.getElementById('banHours').value;
                     const reason = document.getElementById('banReason').value.trim();
@@ -1228,6 +1261,80 @@
         }
 
         // ============================================================
+        // ⭐ 设置/解除受限用户（使用 SweetAlert2）
+        // ============================================================
+        function toggleRestricted(userId, restricted) {
+            var action = restricted ? '设为受限用户' : '解除受限';
+            var icon = restricted ? '🔒' : '🔓';
+
+            Swal.fire({
+                title: `${icon} ${action}`,
+                html: `
+                    <div style="text-align:left;">
+                        <div style="display:flex;align-items:center;gap:0.8rem;padding:0.8rem 1rem;background:rgba(139,92,246,0.04);border-radius:12px;border:1px solid rgba(139,92,246,0.06);margin-bottom:1rem;">
+                            <div style="font-size:1.8rem;">${icon}</div>
+                            <div>
+                                <div style="color:#fff;font-weight:600;font-size:0.95rem;">${action}</div>
+                                <div style="color:rgba(255,255,255,0.15);font-size:0.75rem;">${restricted ? '用户只能访问资源相关页面' : '用户将恢复完整访问权限'}</div>
+                            </div>
+                        </div>
+                        ${restricted ? `
+                        <div>
+                            <label style="display:block;color:rgba(255,255,255,0.4);font-size:0.8rem;margin-bottom:0.3rem;">📌 受限原因（可选）</label>
+                            <input id="restrictionReason" class="swal2-input" placeholder="请输入受限原因" value="管理员手动设置" style="width:100%;padding:0.6rem 1rem;border-radius:12px;border:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.02);color:#fff;font-size:0.9rem;outline:none;">
+                        </div>
+                        ` : `
+                        <div style="color:rgba(255,255,255,0.06);font-size:0.8rem;text-align:center;padding:0.5rem;">
+                            确认解除该用户的受限状态？
+                        </div>
+                        `}
+                    </div>
+                `,
+                confirmButtonText: `✅ 确认${restricted ? '设为受限' : '解除受限'}`,
+                cancelButtonText: '取消',
+                showCancelButton: true,
+                background: '#1a1a2e',
+                color: '#e0e0e0',
+                confirmButtonColor: restricted ? '#8B5CF6' : '#28a745',
+                cancelButtonColor: '#2a2a3e',
+                focusConfirm: false,
+                width: 460,
+                preConfirm: () => {
+                    if (restricted) {
+                        var reason = document.getElementById('restrictionReason').value.trim();
+                        return { reason: reason || '管理员手动设置' };
+                    }
+                    return { reason: null };
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    var reason = result.value ? result.value.reason : '';
+                    
+                    fetch('/Admin/SetRestricted', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'RequestVerificationToken': getToken()
+                        },
+                        body: 'userId=' + userId + '&restricted=' + restricted + '&reason=' + encodeURIComponent(reason || '')
+                    })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.success) {
+                            showToast(data.message, 'success');
+                            setTimeout(function() { location.reload(); }, 800);
+                        } else {
+                            showToast(data.message || '操作失败', 'error');
+                        }
+                    })
+                    .catch(function() {
+                        showToast('操作失败，请重试', 'error');
+                    });
+                }
+            });
+        }
+
+        // ============================================================
         // 筛选功能
         // ============================================================
         function applyFilters() {
@@ -1263,35 +1370,5 @@
         document.getElementById('searchInput').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') applyFilters();
         });
-// ============================================================
-// 设置/解除受限用户
-// ============================================================
-function toggleRestricted(userId, restricted) {
-    var action = restricted ? '设为受限用户' : '解除受限';
-    if (!confirm('确定要' + action + '该用户吗？')) return;
-
-    var reason = restricted ? prompt('请输入受限原因（可选）：', '管理员手动设置') : '';
-
-    fetch('/Admin/SetRestricted', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'RequestVerificationToken': token
-        },
-        body: 'userId=' + userId + '&restricted=' + restricted + '&reason=' + encodeURIComponent(reason || '')
-    })
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
-        if (data.success) {
-            showToast(data.message, 'success');
-            setTimeout(function() { location.reload(); }, 800);
-        } else {
-            showToast(data.message || '操作失败', 'error');
-        }
-    })
-    .catch(function() {
-        showToast('操作失败，请重试', 'error');
-    });
-}
     </script>
 }
