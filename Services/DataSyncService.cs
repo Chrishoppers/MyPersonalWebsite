@@ -124,39 +124,44 @@ namespace MyPersonalWebsite.Services
             return token;
         }
 
-        public async Task UpdateUserAsync(User user)
-        {
-            if (!_tursoAvailable) return;
+         public async Task UpdateUserAsync(User user)
+{
+    if (!_tursoAvailable) return;
 
-            var sql = $@"UPDATE Users SET
-                Username = '{EscapeSql(user.Username)}',
-                Email = '{EscapeSql(user.Email)}',
-                PasswordHash = '{EscapeSql(user.PasswordHash)}',
-                IsEmailVerified = {(user.IsEmailVerified ? 1 : 0)},
-                IsAdmin = {(user.IsAdmin ? 1 : 0)},
-                LastLoginAt = {(user.LastLoginAt.HasValue ? $"'{user.LastLoginAt.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
-                IsBanned = {(user.IsBanned ? 1 : 0)},
-                BanExpiry = {(user.BanExpiry.HasValue ? $"'{user.BanExpiry.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
-                BanReason = {(string.IsNullOrEmpty(user.BanReason) ? "NULL" : $"'{EscapeSql(user.BanReason)}'")},
-                IsDeleted = {(user.IsDeleted ? 1 : 0)},
-                DeletedAt = {(user.DeletedAt.HasValue ? $"'{user.DeletedAt.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
-                DeleteReason = {(string.IsNullOrEmpty(user.DeleteReason) ? "NULL" : $"'{EscapeSql(user.DeleteReason)}'")},
-                DeleteNote = {(string.IsNullOrEmpty(user.DeleteNote) ? "NULL" : $"'{EscapeSql(user.DeleteNote)}'")},
-                AvatarUrl = {(string.IsNullOrEmpty(user.AvatarUrl) ? "NULL" : $"'{EscapeSql(user.AvatarUrl)}'")},
-                IsAvatarApproved = {(user.IsAvatarApproved ? 1 : 0)},
-                AvatarSubmittedAt = {(user.AvatarSubmittedAt.HasValue ? $"'{user.AvatarSubmittedAt.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
-                PendingEmail = {(string.IsNullOrEmpty(user.PendingEmail) ? "NULL" : $"'{EscapeSql(user.PendingEmail)}'")},
-                PendingUsername = {(string.IsNullOrEmpty(user.PendingUsername) ? "NULL" : $"'{EscapeSql(user.PendingUsername)}'")},
-                IsEmailChangeApproved = {(user.IsEmailChangeApproved ? 1 : 0)},
-                IsUsernameChangeApproved = {(user.IsUsernameChangeApproved ? 1 : 0)},
-                VerificationCode = {(string.IsNullOrEmpty(user.VerificationCode) ? "NULL" : $"'{EscapeSql(user.VerificationCode)}'")},
-                VerificationCodeExpiry = {(user.VerificationCodeExpiry.HasValue ? $"'{user.VerificationCodeExpiry.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
-                IsApproved = {(user.IsApproved ? 1 : 0)}
-            WHERE Id = {user.Id}";
+    var sql = $@"UPDATE Users SET
+        Username = '{EscapeSql(user.Username)}',
+        Email = '{EscapeSql(user.Email)}',
+        PasswordHash = '{EscapeSql(user.PasswordHash)}',
+        IsEmailVerified = {(user.IsEmailVerified ? 1 : 0)},
+        IsAdmin = {(user.IsAdmin ? 1 : 0)},
+        LastLoginAt = {(user.LastLoginAt.HasValue ? $"'{user.LastLoginAt.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
+        IsBanned = {(user.IsBanned ? 1 : 0)},
+        BanExpiry = {(user.BanExpiry.HasValue ? $"'{user.BanExpiry.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
+        BanReason = {(string.IsNullOrEmpty(user.BanReason) ? "NULL" : $"'{EscapeSql(user.BanReason)}'")},
+        IsDeleted = {(user.IsDeleted ? 1 : 0)},
+        DeletedAt = {(user.DeletedAt.HasValue ? $"'{user.DeletedAt.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
+        DeleteReason = {(string.IsNullOrEmpty(user.DeleteReason) ? "NULL" : $"'{EscapeSql(user.DeleteReason)}'")},
+        DeleteNote = {(string.IsNullOrEmpty(user.DeleteNote) ? "NULL" : $"'{EscapeSql(user.DeleteNote)}'")},
+        AvatarUrl = {(string.IsNullOrEmpty(user.AvatarUrl) ? "NULL" : $"'{EscapeSql(user.AvatarUrl)}'")},
+        IsAvatarApproved = {(user.IsAvatarApproved ? 1 : 0)},
+        AvatarSubmittedAt = {(user.AvatarSubmittedAt.HasValue ? $"'{user.AvatarSubmittedAt.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
+        PendingEmail = {(string.IsNullOrEmpty(user.PendingEmail) ? "NULL" : $"'{EscapeSql(user.PendingEmail)}'")},
+        PendingUsername = {(string.IsNullOrEmpty(user.PendingUsername) ? "NULL" : $"'{EscapeSql(user.PendingUsername)}'")},
+        IsEmailChangeApproved = {(user.IsEmailChangeApproved ? 1 : 0)},
+        IsUsernameChangeApproved = {(user.IsUsernameChangeApproved ? 1 : 0)},
+        VerificationCode = {(string.IsNullOrEmpty(user.VerificationCode) ? "NULL" : $"'{EscapeSql(user.VerificationCode)}'")},
+        VerificationCodeExpiry = {(user.VerificationCodeExpiry.HasValue ? $"'{user.VerificationCodeExpiry.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
+        IsApproved = {(user.IsApproved ? 1 : 0)},
+        LoginToken = {(string.IsNullOrEmpty(user.LoginToken) ? "NULL" : $"'{EscapeSql(user.LoginToken)}'")},
+        LoginTokenExpiry = {(user.LoginTokenExpiry.HasValue ? $"'{user.LoginTokenExpiry.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
+        -- ⭐⭐⭐ 关键：这两行必须要有 ⭐⭐⭐
+        IsRestricted = {(user.IsRestricted ? 1 : 0)},
+        RestrictionReason = {(string.IsNullOrEmpty(user.RestrictionReason) ? "NULL" : $"'{EscapeSql(user.RestrictionReason)}'")}
+    WHERE Id = {user.Id}";
 
-            await _tursoService.ExecuteSqlAsync(sql);
-            Console.WriteLine($"✅ 用户 {user.Username} 已更新到 Turso");
-        }
+    await _tursoService.ExecuteSqlAsync(sql);
+    Console.WriteLine($"✅ 用户 {user.Username} 已更新到 Turso");
+}
 
         public async Task<List<User>> GetAllUsersAsync()
         {
