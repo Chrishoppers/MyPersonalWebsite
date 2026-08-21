@@ -1,238 +1,772 @@
-// 改进 SolverProcessingService，支持更好的问题分割和 AI 解题
+@{
+    ViewData["Title"] = "📸 智能拍题";
+    var username = Context.Session.GetString("Username") ?? "玩家";
+}
 
-using Microsoft.AspNetCore.SignalR;
-using MyPersonalWebsite.Hubs;
-using MyPersonalWebsite.Models;
-using System.Text.RegularExpressions;
+<style>
+    /* ===== 全局样式 ===== */
+    .solver-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 1rem 1.5rem 2rem;
+        min-height: 80vh;
+    }
 
-namespace MyPersonalWebsite.Services
-{
-    public class SolverProcessingService
-    {
-        private readonly IOcrService _ocr;
-        private readonly DeepSeekService _deepSeek;
-        private readonly IHubContext<SolverHub> _hub;
+    .solver-header {
+        text-align: center;
+        padding: 0.5rem 0 1.5rem;
+    }
 
-        public SolverProcessingService(IOcrService ocr, DeepSeekService deepSeek, IHubContext<SolverHub> hub)
-        {
-            _ocr = ocr;
-            _deepSeek = deepSeek;
-            _hub = hub;
+    .solver-header h1 {
+        font-size: 2.4rem;
+        font-weight: 900;
+        background: linear-gradient(135deg, #8B5CF6 0%, #EC4899 40%, #F59E0B 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 0.2rem;
+    }
+
+    .solver-header .subtitle {
+        color: rgba(255,255,255,0.2);
+        font-size: 0.95rem;
+    }
+
+    /* ===== 上传区域 ===== */
+    .upload-zone {
+        border: 2px dashed rgba(139,92,246,0.15);
+        border-radius: 24px;
+        padding: 2.5rem 2rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.4s ease;
+        background: rgba(255,255,255,0.02);
+        position: relative;
+        min-height: 200px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .upload-zone:hover {
+        border-color: rgba(139,92,246,0.3);
+        background: rgba(139,92,246,0.04);
+        transform: translateY(-2px);
+    }
+
+    .upload-zone.dragover {
+        border-color: #8B5CF6;
+        background: rgba(139,92,246,0.06);
+        transform: scale(1.01);
+    }
+
+    .upload-zone .icon {
+        font-size: 3.5rem;
+        margin-bottom: 0.5rem;
+        opacity: 0.3;
+    }
+
+    .upload-zone .title-text {
+        color: rgba(255,255,255,0.4);
+        font-size: 1.1rem;
+        font-weight: 500;
+    }
+
+    .upload-zone .hint {
+        color: rgba(255,255,255,0.08);
+        font-size: 0.8rem;
+        margin-top: 0.2rem;
+    }
+
+    .upload-zone .btn-upload {
+        margin-top: 0.8rem;
+        padding: 0.6rem 2rem;
+        border: none;
+        border-radius: 40px;
+        background: linear-gradient(135deg, #8B5CF6, #EC4899);
+        color: #fff;
+        font-weight: 600;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-family: inherit;
+    }
+
+    .upload-zone .btn-upload:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 32px rgba(108,60,225,0.2);
+    }
+
+    /* ===== 图片预览 ===== */
+    .preview-area {
+        display: none;
+        margin-top: 1.5rem;
+        border-radius: 20px;
+        overflow: hidden;
+        border: 1px solid rgba(255,255,255,0.04);
+        background: rgba(255,255,255,0.02);
+        position: relative;
+    }
+
+    .preview-area.active {
+        display: block;
+        animation: fadeIn 0.4s ease;
+    }
+
+    .preview-area img {
+        width: 100%;
+        max-height: 450px;
+        object-fit: contain;
+        display: block;
+        background: rgba(0,0,0,0.2);
+    }
+
+    .preview-area .preview-toolbar {
+        display: flex;
+        gap: 0.8rem;
+        padding: 0.8rem 1.2rem;
+        background: rgba(0,0,0,0.4);
+        backdrop-filter: blur(10px);
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .preview-area .preview-toolbar .btn-action {
+        padding: 0.5rem 1.5rem;
+        border: none;
+        border-radius: 40px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-family: inherit;
+    }
+
+    .preview-area .preview-toolbar .btn-action.primary {
+        background: linear-gradient(135deg, #8B5CF6, #EC4899);
+        color: #fff;
+    }
+
+    .preview-area .preview-toolbar .btn-action.primary:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 32px rgba(108,60,225,0.2);
+    }
+
+    .preview-area .preview-toolbar .btn-action.primary:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .preview-area .preview-toolbar .btn-action.secondary {
+        background: rgba(255,255,255,0.04);
+        color: rgba(255,255,255,0.3);
+        border: 1px solid rgba(255,255,255,0.04);
+    }
+
+    .preview-area .preview-toolbar .btn-action.secondary:hover {
+        background: rgba(255,255,255,0.08);
+        color: #fff;
+    }
+
+    /* ===== 进度条 ===== */
+    .progress-section {
+        display: none;
+        margin-top: 1.5rem;
+        padding: 1rem 1.5rem;
+        background: rgba(255,255,255,0.02);
+        border-radius: 16px;
+        border: 1px solid rgba(255,255,255,0.04);
+    }
+
+    .progress-section.active {
+        display: block;
+        animation: fadeIn 0.4s ease;
+    }
+
+    .progress-section .progress-label {
+        display: flex;
+        justify-content: space-between;
+        color: rgba(255,255,255,0.2);
+        font-size: 0.85rem;
+        margin-bottom: 0.3rem;
+    }
+
+    .progress-section .progress-track {
+        width: 100%;
+        height: 6px;
+        background: rgba(255,255,255,0.04);
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    .progress-section .progress-track .progress-fill {
+        height: 100%;
+        border-radius: 10px;
+        background: linear-gradient(135deg, #8B5CF6, #EC4899);
+        transition: width 0.6s ease;
+        width: 0%;
+    }
+
+    .progress-section .progress-status {
+        color: rgba(255,255,255,0.1);
+        font-size: 0.75rem;
+        margin-top: 0.3rem;
+        text-align: center;
+        min-height: 20px;
+    }
+
+    /* ===== 结果列表 ===== */
+    .results-section {
+        display: none;
+        margin-top: 1.5rem;
+    }
+
+    .results-section.active {
+        display: block;
+        animation: fadeIn 0.5s ease;
+    }
+
+    .results-section .result-item {
+        background: rgba(255,255,255,0.02);
+        border: 1px solid rgba(255,255,255,0.04);
+        border-radius: 16px;
+        padding: 1.2rem 1.5rem;
+        margin-bottom: 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .results-section .result-item:hover {
+        background: rgba(255,255,255,0.04);
+        border-color: rgba(255,255,255,0.06);
+    }
+
+    .results-section .result-item .problem-number {
+        color: rgba(139,92,246,0.3);
+        font-size: 0.7rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        margin-bottom: 0.2rem;
+    }
+
+    .results-section .result-item .problem-text {
+        color: rgba(255,255,255,0.7);
+        font-size: 1rem;
+        line-height: 1.7;
+        margin-bottom: 0.5rem;
+        white-space: pre-wrap;
+        word-break: break-word;
+    }
+
+    .results-section .result-item .problem-answer {
+        background: rgba(40,167,69,0.04);
+        border: 1px solid rgba(40,167,69,0.04);
+        border-radius: 12px;
+        padding: 0.8rem 1.2rem;
+        color: rgba(255,255,255,0.6);
+        font-size: 0.9rem;
+        line-height: 1.8;
+        white-space: pre-wrap;
+        word-break: break-word;
+        display: none;
+    }
+
+    .results-section .result-item .problem-answer.show {
+        display: block;
+        animation: fadeIn 0.4s ease;
+    }
+
+    .results-section .result-item .problem-answer .step {
+        padding: 0.2rem 0;
+        border-bottom: 1px solid rgba(255,255,255,0.02);
+    }
+
+    .results-section .result-item .problem-answer .step:last-child {
+        border-bottom: none;
+    }
+
+    .results-section .result-item .problem-answer .step .step-num {
+        color: #8B5CF6;
+        font-weight: 600;
+        margin-right: 0.3rem;
+    }
+
+    .results-section .result-item .btn-toggle-answer {
+        padding: 0.3rem 1.2rem;
+        border: none;
+        border-radius: 30px;
+        background: rgba(139,92,246,0.06);
+        color: #8B5CF6;
+        font-size: 0.75rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-family: inherit;
+    }
+
+    .results-section .result-item .btn-toggle-answer:hover {
+        background: rgba(139,92,246,0.12);
+    }
+
+    .results-section .result-item .answer-status {
+        font-size: 0.7rem;
+        font-weight: 500;
+        padding: 0.1rem 0.8rem;
+        border-radius: 20px;
+        display: inline-block;
+        margin-left: 0.5rem;
+    }
+
+    .results-section .result-item .answer-status.solved {
+        background: rgba(40,167,69,0.06);
+        color: #28a745;
+        border: 1px solid rgba(40,167,69,0.04);
+    }
+
+    .results-section .result-item .answer-status.pending {
+        background: rgba(255,193,7,0.06);
+        color: #ffc107;
+        border: 1px solid rgba(255,193,7,0.04);
+    }
+
+    /* ===== 空状态 ===== */
+    .empty-state {
+        text-align: center;
+        padding: 3rem 2rem;
+        color: rgba(255,255,255,0.08);
+    }
+
+    .empty-state .icon {
+        font-size: 3rem;
+        margin-bottom: 0.5rem;
+        opacity: 0.3;
+        display: block;
+    }
+
+    /* ===== Toast ===== */
+    .toast-container {
+        position: fixed;
+        bottom: 2rem;
+        right: 2rem;
+        z-index: 2000;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        align-items: flex-end;
+    }
+
+    .toast-msg {
+        padding: 0.8rem 1.8rem;
+        border-radius: 40px;
+        color: #fff;
+        font-weight: 500;
+        animation: slideUp 0.4s ease;
+        font-size: 0.9rem;
+        backdrop-filter: blur(10px);
+        background: rgba(0,0,0,0.6);
+        border: 1px solid rgba(255,255,255,0.04);
+    }
+
+    .toast-msg.success { background: rgba(40,167,69,0.8); }
+    .toast-msg.error { background: rgba(220,53,69,0.8); }
+    .toast-msg.info { background: rgba(79,172,254,0.8); }
+
+    @@keyframes fadeIn {
+        from { opacity: 0; transform: translateY(12px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    @@keyframes slideUp {
+        from { opacity: 0; transform: translateY(20px) scale(0.95); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    /* ===== 响应式 ===== */
+    @@media (max-width: 640px) {
+        .solver-header h1 { font-size: 1.8rem; }
+        .upload-zone { padding: 1.5rem 1rem; min-height: 150px; }
+        .upload-zone .icon { font-size: 2.5rem; }
+        .preview-area .preview-toolbar { flex-direction: column; align-items: stretch; }
+        .preview-area .preview-toolbar .btn-action { width: 100%; justify-content: center; }
+        .results-section .result-item { padding: 0.8rem 1rem; }
+    }
+</style>
+
+<div class="solver-container">
+
+    <!-- 头部 -->
+    <div class="solver-header">
+        <h1>📸 智能拍题</h1>
+        <p class="subtitle">拍照或上传试题，AI 智能识别并逐题解答</p>
+    </div>
+
+    <!-- 上传区域 -->
+    <div class="upload-zone" id="uploadZone">
+        <span class="icon">📷</span>
+        <div class="title-text">点击或拖拽上传图片</div>
+        <div class="hint">支持 JPG, PNG, GIF, WebP · 最大 10MB</div>
+        <button class="btn-upload" onclick="document.getElementById('fileInput').click()">📤 选择图片</button>
+        <input type="file" id="fileInput" accept="image/*" style="display:none;" />
+        <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none;" />
+    </div>
+
+    <!-- 图片预览 -->
+    <div class="preview-area" id="previewArea">
+        <img id="previewImage" src="" alt="上传的图片" />
+        <div class="preview-toolbar">
+            <button class="btn-action secondary" onclick="clearImage()">🗑️ 重新选择</button>
+            <button class="btn-action primary" id="recognizeBtn" onclick="startRecognition()">🧠 识别并解题</button>
+        </div>
+    </div>
+
+    <!-- 进度条 -->
+    <div class="progress-section" id="progressSection">
+        <div class="progress-label">
+            <span id="progressLabel">⏳ 处理中...</span>
+            <span id="progressPercent">0%</span>
+        </div>
+        <div class="progress-track">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <div class="progress-status" id="progressStatus">准备开始...</div>
+    </div>
+
+    <!-- 结果 -->
+    <div class="results-section" id="resultsSection">
+        <div id="resultsList"></div>
+    </div>
+
+</div>
+
+<!-- Toast -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+    var token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+
+    // ============================================================
+    // 上传处理
+    // ============================================================
+
+    var uploadZone = document.getElementById('uploadZone');
+    var fileInput = document.getElementById('fileInput');
+    var cameraInput = document.getElementById('cameraInput');
+    var previewArea = document.getElementById('previewArea');
+    var previewImage = document.getElementById('previewImage');
+    var progressSection = document.getElementById('progressSection');
+    var resultsSection = document.getElementById('resultsSection');
+    var resultsList = document.getElementById('resultsList');
+
+    // 点击上传
+    uploadZone.addEventListener('click', function(e) {
+        if (e.target.closest('.btn-upload')) return;
+        fileInput.click();
+    });
+
+    // 文件选择
+    fileInput.addEventListener('change', function(e) {
+        if (this.files && this.files[0]) {
+            handleFile(this.files[0]);
+        }
+    });
+
+    // 拖拽上传
+    uploadZone.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        this.classList.add('dragover');
+    });
+
+    uploadZone.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        this.classList.remove('dragover');
+    });
+
+    uploadZone.addEventListener('drop', function(e) {
+        e.preventDefault();
+        this.classList.remove('dragover');
+        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+            handleFile(e.dataTransfer.files[0]);
+        }
+    });
+
+    function handleFile(file) {
+        if (!file.type.startsWith('image/')) {
+            showToast('⚠️ 请上传图片文件', 'error');
+            return;
         }
 
-        public async Task<List<DetectedProblem>> ProcessImageAsync(string imagePath, string connectionId = "")
-        {
-            var results = new List<DetectedProblem>();
-
-            try
-            {
-                // 1. 通知开始
-                await SendProgress(connectionId, "🔍 开始 OCR 识别...", 5);
-
-                // 2. OCR 识别
-                var ocrText = await _ocr.RecognizeAsync(imagePath);
-                
-                if (string.IsNullOrWhiteSpace(ocrText))
-                {
-                    await SendProgress(connectionId, "❌ OCR 识别失败，请重试", 0);
-                    return results;
-                }
-
-                await SendProgress(connectionId, "✅ OCR 识别完成，开始分题...", 30);
-
-                // 3. 分割题目
-                var problems = SplitIntoProblems(ocrText);
-                var total = problems.Count;
-
-                if (total == 0)
-                {
-                    await SendProgress(connectionId, "⚠️ 未识别到题目，请确认图片清晰", 0);
-                    return results;
-                }
-
-                await SendProgress(connectionId, $"📝 识别到 {total} 道题，开始解答...", 40);
-
-                // 4. 逐题解答
-                for (int i = 0; i < total; i++)
-                {
-                    var p = problems[i];
-                    var percent = 40 + (int)((i + 1) / (float)total * 50);
-                    
-                    await SendProgress(connectionId, $"🤖 正在解答第 {i + 1}/{total} 题...", percent);
-
-                    var prob = new DetectedProblem
-                    {
-                        Id = Guid.NewGuid().ToString("N"),
-                        ShortText = GetPreview(p, 120),
-                        FullText = p
-                    };
-
-                    try
-                    {
-                        var systemPrompt = @"你是一个专业的中学到高中阶段的解题专家（数学/物理/化学/生物/地理/历史/语文）。
-要求：
-1) 针对用户提供的题目，按步骤给出完整解题过程。
-2) 每步包含简短的说明和所用公式/理由。
-3) 如果有计算过程，给出关键计算并标注结果。
-4) 最终答案用「答案：」开头，单独一行。
-5) 输出使用中文，结构清晰，不要输出与题目无关的内容。";
-
-                        var ai = await _deepSeek.GetAIResponseAsync(p, systemPrompt, maxTokens: 1500, temperature: 0.3);
-                        prob.AiAnswer = ai;
-                        prob.Steps = ParseSteps(ai);
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"❌ AI 解答第 {i + 1} 题失败: {ex.Message}");
-                        prob.AiAnswer = "⚠️ 解答失败，请重试";
-                    }
-
-                    results.Add(prob);
-                }
-
-                await SendProgress(connectionId, "✅ 全部解答完成！", 100);
-
-                // 5. 清理临时文件
-                try { File.Delete(imagePath); } catch { }
-
-                return results;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"❌ 处理失败: {ex.Message}");
-                await SendProgress(connectionId, $"❌ 处理失败: {ex.Message}", 0);
-                return results;
-            }
+        if (file.size > 10 * 1024 * 1024) {
+            showToast('⚠️ 图片大小不能超过 10MB', 'error');
+            return;
         }
 
-        private async Task SendProgress(string connectionId, string message, int percent)
-        {
-            if (!string.IsNullOrEmpty(connectionId))
-            {
-                try
-                {
-                    await _hub.Clients.Client(connectionId).SendAsync("SolverProgress", $"{message} ({percent}%)");
-                }
-                catch { }
-            }
-            Console.WriteLine($"📡 [{percent}%] {message}");
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            previewImage.src = e.target.result;
+            previewArea.classList.add('active');
+            uploadZone.style.display = 'none';
+            document.getElementById('recognizeBtn').disabled = false;
+            showToast('✅ 图片已上传，点击"识别并解题"开始', 'success');
+        };
+        reader.readAsDataURL(file);
+
+        // 保存文件引用
+        window._uploadedFile = file;
+    }
+
+    function clearImage() {
+        previewArea.classList.remove('active');
+        uploadZone.style.display = 'flex';
+        previewImage.src = '';
+        fileInput.value = '';
+        window._uploadedFile = null;
+        resultsSection.classList.remove('active');
+        resultsList.innerHTML = '';
+        progressSection.classList.remove('active');
+        showToast('已清除图片', 'info');
+    }
+
+    // ============================================================
+    // 识别与解题
+    // ============================================================
+
+    function startRecognition() {
+        if (!window._uploadedFile) {
+            showToast('⚠️ 请先上传图片', 'error');
+            return;
         }
 
-        private List<string> SplitIntoProblems(string text)
-        {
-            if (string.IsNullOrWhiteSpace(text)) return new List<string>();
+        var btn = document.getElementById('recognizeBtn');
+        btn.disabled = true;
+        btn.textContent = '⏳ 处理中...';
 
-            // 清理文本
-            text = text.Replace("\r\n", "\n").Trim();
+        // 显示进度条
+        progressSection.classList.add('active');
+        updateProgress(0, '准备识别...');
 
-            // 多种分割模式
-            var patterns = new[]
-            {
-                // 数字编号：1. 2. 3.
-                @"(?=^\s*\d+[\.、\s])",
-                // 括号编号：(1) (2)
-                @"(?=^\s*\(\d+\))",
-                // 中文编号：一、二、三
-                @"(?=^\s*[一二三四五六七八九十]+[、\.\s])",
-                // 字母编号：A. B. C.
-                @"(?=^\s*[A-Z][\.、\s])",
-                // 多个换行
-                @"(?=\n\n)"
-            };
+        // 清空旧结果
+        resultsSection.classList.remove('active');
+        resultsList.innerHTML = '';
 
-            var parts = new List<string>();
-            var combined = text;
+        var formData = new FormData();
+        formData.append('file', window._uploadedFile);
 
-            foreach (var pattern in patterns)
-            {
-                var split = Regex.Split(combined, pattern, RegexOptions.Multiline)
-                    .Select(s => s.Trim())
-                    .Where(s => !string.IsNullOrWhiteSpace(s) && s.Length > 5)
-                    .ToList();
-
-                if (split.Count > 1)
-                {
-                    parts = split;
-                    break;
-                }
-            }
-
-            // 如果分割后只有一部分，尝试按空行分割
-            if (parts.Count <= 1)
-            {
-                parts = text.Split(new[] { "\n\n" }, StringSplitOptions.RemoveEmptyEntries)
-                    .Select(s => s.Trim())
-                    .Where(s => !string.IsNullOrWhiteSpace(s))
-                    .ToList();
-            }
-
-            // 如果还是只有一部分，尝试按句号分割
-            if (parts.Count <= 1 && text.Length > 150)
-            {
-                var sentences = text.Split(new[] { '。', '！', '？' }, StringSplitOptions.RemoveEmptyEntries);
-                if (sentences.Length > 2)
-                {
-                    var mid = sentences.Length / 2;
-                    parts = new List<string>
-                    {
-                        string.Join("。", sentences.Take(mid)) + "。",
-                        string.Join("。", sentences.Skip(mid)) + "。"
-                    };
-                }
-            }
-
-            return parts.Where(p => p.Length > 3).ToList();
+        // 获取 SignalR 连接 ID
+        var connectionId = '';
+        if (window._solverConnectionId) {
+            connectionId = window._solverConnectionId;
         }
 
-        private string GetPreview(string text, int maxLen = 100)
-        {
-            if (string.IsNullOrWhiteSpace(text)) return string.Empty;
-            return text.Length <= maxLen ? text : text.Substring(0, maxLen) + "...";
+        if (connectionId) {
+            formData.append('connectionId', connectionId);
         }
 
-        private List<ProblemStep> ParseSteps(string answer)
-        {
-            var steps = new List<ProblemStep>();
-            if (string.IsNullOrWhiteSpace(answer)) return steps;
+        // 先连接 SignalR 获取进度
+        connectSolverHub();
 
-            var lines = answer.Split('\n');
-            var stepIndex = 0;
-
-            foreach (var line in lines)
-            {
-                var trimmed = line.Trim();
-                if (string.IsNullOrWhiteSpace(trimmed)) continue;
-
-                // 检测步骤标记
-                var match = Regex.Match(trimmed, @"^步骤\s*(\d+)[：:\.\s]");
-                if (match.Success)
-                {
-                    stepIndex++;
-                    steps.Add(new ProblemStep
-                    {
-                        Index = int.Parse(match.Groups[1].Value),
-                        Content = trimmed.Replace(match.Value, "").Trim()
-                    });
-                }
-                else if (stepIndex > 0 && steps.Count > 0)
-                {
-                    // 追加到当前步骤
-                    var last = steps[steps.Count - 1];
-                    last.Content += "\n" + trimmed;
-                }
-                else
-                {
-                    // 非步骤内容
-                    steps.Add(new ProblemStep
-                    {
-                        Index = stepIndex + 1,
-                        Content = trimmed
-                    });
-                    stepIndex++;
-                }
+        fetch('/Solver/Upload', {
+            method: 'POST',
+            headers: {
+                'RequestVerificationToken': token
+            },
+            body: formData
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.success) {
+                updateProgress(100, '✅ 识别完成！');
+                renderResults(data.problems);
+                showToast('✅ 已识别 ' + data.problems.length + ' 道题', 'success');
+            } else {
+                showToast('❌ ' + (data.message || '识别失败'), 'error');
+                updateProgress(0, '❌ 识别失败: ' + (data.message || '未知错误'));
             }
+        })
+        .catch(function(err) {
+            showToast('❌ 网络错误: ' + err.message, 'error');
+            updateProgress(0, '❌ 网络错误，请重试');
+        })
+        .finally(function() {
+            btn.disabled = false;
+            btn.textContent = '🧠 识别并解题';
+        });
+    }
 
-            return steps;
+    // ============================================================
+    // 进度更新
+    // ============================================================
+
+    function updateProgress(percent, status) {
+        document.getElementById('progressFill').style.width = percent + '%';
+        document.getElementById('progressPercent').textContent = Math.round(percent) + '%';
+        document.getElementById('progressStatus').textContent = status || '处理中...';
+    }
+
+    // ============================================================
+    // 渲染结果
+    // ============================================================
+
+    function renderResults(problems) {
+        if (!problems || problems.length === 0) {
+            resultsList.innerHTML = '<div class="empty-state"><span class="icon">📭</span>未识别到题目</div>';
+            resultsSection.classList.add('active');
+            return;
+        }
+
+        var html = '';
+        problems.forEach(function(p, index) {
+            var hasAnswer = p.aiAnswer && p.aiAnswer.length > 0;
+            html += '<div class="result-item">';
+            html += '<div class="problem-number">📌 第 ' + (index + 1) + ' 题</div>';
+            html += '<div class="problem-text">' + escapeHtml(p.fullText || p.shortText || '') + '</div>';
+            html += '<div style="display:flex;align-items:center;gap:0.5rem;margin-top:0.3rem;">';
+            html += '<button class="btn-toggle-answer" onclick="toggleAnswer(this)">' + 
+                    (hasAnswer ? '📖 查看解答' : '⏳ 暂无解答') + '</button>';
+            if (hasAnswer) {
+                html += '<span class="answer-status solved">✅ 已解答</span>';
+            } else {
+                html += '<span class="answer-status pending">⏳ 处理中</span>';
+            }
+            html += '</div>';
+            html += '<div class="problem-answer' + (hasAnswer ? '' : '') + '" id="answer-' + index + '">';
+            if (hasAnswer) {
+                html += formatAnswer(p.aiAnswer);
+            } else {
+                html += '<span style="color:rgba(255,255,255,0.15);">暂无解答，请稍后重试</span>';
+            }
+            html += '</div>';
+            html += '</div>';
+        });
+
+        resultsList.innerHTML = html;
+        resultsSection.classList.add('active');
+
+        // 滚动到结果区域
+        setTimeout(function() {
+            resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 300);
+    }
+
+    function toggleAnswer(btn) {
+        var answerDiv = btn.closest('.result-item').querySelector('.problem-answer');
+        if (answerDiv) {
+            answerDiv.classList.toggle('show');
+            btn.textContent = answerDiv.classList.contains('show') ? '📖 收起解答' : '📖 查看解答';
         }
     }
-}
+
+    function formatAnswer(text) {
+        if (!text) return '<span style="color:rgba(255,255,255,0.15);">暂无解答</span>';
+
+        // 按步骤分割
+        var lines = text.split('\n').filter(function(l) { return l.trim(); });
+        var html = '';
+        var stepCount = 0;
+        var inSteps = false;
+
+        lines.forEach(function(line) {
+            var trimmed = line.trim();
+            // 检测步骤
+            var stepMatch = trimmed.match(/^步骤\s*(\d+)[：:\.\s]/i);
+            if (stepMatch) {
+                stepCount++;
+                html += '<div class="step"><span class="step-num">步骤 ' + stepMatch[1] + '.</span> ' + 
+                        trimmed.replace(/^步骤\s*\d+[：:\.\s]/i, '') + '</div>';
+                inSteps = true;
+            } else if (inSteps && trimmed.length > 0) {
+                html += '<div class="step" style="padding-left:1.5rem;color:rgba(255,255,255,0.4);">' + trimmed + '</div>';
+            } else if (trimmed.length > 0) {
+                // 非步骤内容（如答案、总结）
+                var isAnswer = /答案[：:]/i.test(trimmed) || /结果[：:]/i.test(trimmed);
+                var color = isAnswer ? '#F59E0B' : 'rgba(255,255,255,0.6)';
+                html += '<div class="step" style="color:' + color + ';font-weight:' + (isAnswer ? '700' : '400') + ';">' + 
+                        trimmed + '</div>';
+            }
+        });
+
+        if (!html) {
+            html = '<div style="color:rgba(255,255,255,0.6);">' + escapeHtml(text) + '</div>';
+        }
+
+        return html;
+    }
+
+    function escapeHtml(text) {
+        if (!text) return '';
+        var div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // ============================================================
+    // SignalR 进度推送
+    // ============================================================
+
+    var solverConnection = null;
+
+    function connectSolverHub() {
+        try {
+            if (solverConnection && solverConnection.state === signalR.HubConnectionState.Connected) {
+                return;
+            }
+
+            solverConnection = new signalR.HubConnectionBuilder()
+                .withUrl('/solverHub')
+                .configureLogging(signalR.LogLevel.Information)
+                .build();
+
+            solverConnection.on('SolverProgress', function(message) {
+                // 更新进度
+                var percentMatch = message.match(/(\d+)%/);
+                if (percentMatch) {
+                    var pct = parseInt(percentMatch[1]);
+                    updateProgress(pct, message);
+                } else {
+                    document.getElementById('progressStatus').textContent = message;
+                }
+            });
+
+            solverConnection.start()
+                .then(function() {
+                    console.log('✅ SolverHub 已连接');
+                    solverConnection.invoke('GetConnectionId')
+                        .then(function(id) {
+                            window._solverConnectionId = id;
+                            console.log('📡 连接ID:', id);
+                        })
+                        .catch(function() {});
+                })
+                .catch(function(err) {
+                    console.log('⚠️ SolverHub 连接失败:', err);
+                });
+
+        } catch (e) {
+            console.log('⚠️ SignalR 不可用');
+        }
+    }
+
+    // 预连接
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(connectSolverHub, 500);
+    });
+
+    // ============================================================
+    // Toast
+    // ============================================================
+
+    function showToast(message, type) {
+        type = type || 'info';
+        var container = document.getElementById('toastContainer');
+        var toast = document.createElement('div');
+        toast.className = 'toast-msg ' + type;
+        toast.textContent = message;
+        container.appendChild(toast);
+        setTimeout(function() {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateX(20px)';
+            setTimeout(function() { toast.remove(); }, 300);
+        }, 3000);
+    }
+</script>
