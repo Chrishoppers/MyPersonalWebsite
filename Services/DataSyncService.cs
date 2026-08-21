@@ -31,53 +31,53 @@ namespace MyPersonalWebsite.Services
         // ============================================================
 
         public async Task AddUserAsync(User user)
-{
-    if (!_tursoAvailable) throw new Exception("Turso 未配置");
+        {
+            if (!_tursoAvailable) throw new Exception("Turso 未配置");
 
-    var maxIdResult = await _tursoService.QueryAsync("SELECT MAX(Id) as MaxId FROM Users");
-    var maxId = ParseMaxId(maxIdResult);
-    user.Id = maxId + 1;
+            var maxIdResult = await _tursoService.QueryAsync("SELECT MAX(Id) as MaxId FROM Users");
+            var maxId = ParseMaxId(maxIdResult);
+            user.Id = maxId + 1;
 
-    var sql = $@"INSERT INTO Users (
-        Id, Username, Email, PasswordHash, IsEmailVerified, IsAdmin,
-        CreatedAt, LastLoginAt, IsBanned, BanExpiry, BanReason,
-        IsDeleted, DeletedAt, DeleteReason, DeleteNote,
-        AvatarUrl, IsAvatarApproved, AvatarSubmittedAt,
-        PendingEmail, PendingUsername, IsEmailChangeApproved, IsUsernameChangeApproved,
-        VerificationCode, VerificationCodeExpiry, IsApproved,
-        LoginToken, LoginTokenExpiry,
-        IsRestricted, RestrictionReason
-    ) VALUES (
-        {user.Id}, '{EscapeSql(user.Username)}', '{EscapeSql(user.Email)}',
-        '{EscapeSql(user.PasswordHash)}', {(user.IsEmailVerified ? 1 : 0)},
-        {(user.IsAdmin ? 1 : 0)}, '{user.CreatedAt:yyyy-MM-dd HH:mm:ss}',
-        {(user.LastLoginAt.HasValue ? $"'{user.LastLoginAt.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
-        {(user.IsBanned ? 1 : 0)},
-        {(user.BanExpiry.HasValue ? $"'{user.BanExpiry.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
-        {(string.IsNullOrEmpty(user.BanReason) ? "NULL" : $"'{EscapeSql(user.BanReason)}'")},
-        {(user.IsDeleted ? 1 : 0)},
-        {(user.DeletedAt.HasValue ? $"'{user.DeletedAt.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
-        {(string.IsNullOrEmpty(user.DeleteReason) ? "NULL" : $"'{EscapeSql(user.DeleteReason)}'")},
-        {(string.IsNullOrEmpty(user.DeleteNote) ? "NULL" : $"'{EscapeSql(user.DeleteNote)}'")},
-        {(string.IsNullOrEmpty(user.AvatarUrl) ? "NULL" : $"'{EscapeSql(user.AvatarUrl)}'")},
-        {(user.IsAvatarApproved ? 1 : 0)},
-        {(user.AvatarSubmittedAt.HasValue ? $"'{user.AvatarSubmittedAt.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
-        {(string.IsNullOrEmpty(user.PendingEmail) ? "NULL" : $"'{EscapeSql(user.PendingEmail)}'")},
-        {(string.IsNullOrEmpty(user.PendingUsername) ? "NULL" : $"'{EscapeSql(user.PendingUsername)}'")},
-        {(user.IsEmailChangeApproved ? 1 : 0)},
-        {(user.IsUsernameChangeApproved ? 1 : 0)},
-        {(string.IsNullOrEmpty(user.VerificationCode) ? "NULL" : $"'{EscapeSql(user.VerificationCode)}'")},
-        {(user.VerificationCodeExpiry.HasValue ? $"'{user.VerificationCodeExpiry.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
-        {(user.IsApproved ? 1 : 0)},
-        {(string.IsNullOrEmpty(user.LoginToken) ? "NULL" : $"'{EscapeSql(user.LoginToken)}'")},
-        {(user.LoginTokenExpiry.HasValue ? $"'{user.LoginTokenExpiry.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
-        {(user.IsRestricted ? 1 : 0)},
-        {(string.IsNullOrEmpty(user.RestrictionReason) ? "NULL" : $"'{EscapeSql(user.RestrictionReason)}'")}
-    )";
+            var sql = $@"INSERT INTO Users (
+                Id, Username, Email, PasswordHash, IsEmailVerified, IsAdmin,
+                CreatedAt, LastLoginAt, IsBanned, BanExpiry, BanReason,
+                IsDeleted, DeletedAt, DeleteReason, DeleteNote,
+                AvatarUrl, IsAvatarApproved, AvatarSubmittedAt,
+                PendingEmail, PendingUsername, IsEmailChangeApproved, IsUsernameChangeApproved,
+                VerificationCode, VerificationCodeExpiry, IsApproved,
+                LoginToken, LoginTokenExpiry,
+                IsRestricted, RestrictionReason
+            ) VALUES (
+                {user.Id}, '{EscapeSql(user.Username)}', '{EscapeSql(user.Email)}',
+                '{EscapeSql(user.PasswordHash)}', {(user.IsEmailVerified ? 1 : 0)},
+                {(user.IsAdmin ? 1 : 0)}, '{user.CreatedAt:yyyy-MM-dd HH:mm:ss}',
+                {(user.LastLoginAt.HasValue ? $"'{user.LastLoginAt.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
+                {(user.IsBanned ? 1 : 0)},
+                {(user.BanExpiry.HasValue ? $"'{user.BanExpiry.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
+                {(string.IsNullOrEmpty(user.BanReason) ? "NULL" : $"'{EscapeSql(user.BanReason)}'")},
+                {(user.IsDeleted ? 1 : 0)},
+                {(user.DeletedAt.HasValue ? $"'{user.DeletedAt.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
+                {(string.IsNullOrEmpty(user.DeleteReason) ? "NULL" : $"'{EscapeSql(user.DeleteReason)}'")},
+                {(string.IsNullOrEmpty(user.DeleteNote) ? "NULL" : $"'{EscapeSql(user.DeleteNote)}'")},
+                {(string.IsNullOrEmpty(user.AvatarUrl) ? "NULL" : $"'{EscapeSql(user.AvatarUrl)}'")},
+                {(user.IsAvatarApproved ? 1 : 0)},
+                {(user.AvatarSubmittedAt.HasValue ? $"'{user.AvatarSubmittedAt.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
+                {(string.IsNullOrEmpty(user.PendingEmail) ? "NULL" : $"'{EscapeSql(user.PendingEmail)}'")},
+                {(string.IsNullOrEmpty(user.PendingUsername) ? "NULL" : $"'{EscapeSql(user.PendingUsername)}'")},
+                {(user.IsEmailChangeApproved ? 1 : 0)},
+                {(user.IsUsernameChangeApproved ? 1 : 0)},
+                {(string.IsNullOrEmpty(user.VerificationCode) ? "NULL" : $"'{EscapeSql(user.VerificationCode)}'")},
+                {(user.VerificationCodeExpiry.HasValue ? $"'{user.VerificationCodeExpiry.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
+                {(user.IsApproved ? 1 : 0)},
+                {(string.IsNullOrEmpty(user.LoginToken) ? "NULL" : $"'{EscapeSql(user.LoginToken)}'")},
+                {(user.LoginTokenExpiry.HasValue ? $"'{user.LoginTokenExpiry.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
+                {(user.IsRestricted ? 1 : 0)},
+                {(string.IsNullOrEmpty(user.RestrictionReason) ? "NULL" : $"'{EscapeSql(user.RestrictionReason)}'")}
+            )";
 
-    await _tursoService.ExecuteSqlAsync(sql);
-    Console.WriteLine($"✅ 用户 {user.Username} 已写入 Turso");
-}
+            await _tursoService.ExecuteSqlAsync(sql);
+            Console.WriteLine($"✅ 用户 {user.Username} 已写入 Turso");
+        }
 
         public async Task<User?> GetUserByEmailAsync(string email)
         {
@@ -127,44 +127,43 @@ namespace MyPersonalWebsite.Services
             return token;
         }
 
-         public async Task UpdateUserAsync(User user)
-{
-    if (!_tursoAvailable) return;
+        public async Task UpdateUserAsync(User user)
+        {
+            if (!_tursoAvailable) return;
 
-    var sql = $@"UPDATE Users SET
-        Username = '{EscapeSql(user.Username)}',
-        Email = '{EscapeSql(user.Email)}',
-        PasswordHash = '{EscapeSql(user.PasswordHash)}',
-        IsEmailVerified = {(user.IsEmailVerified ? 1 : 0)},
-        IsAdmin = {(user.IsAdmin ? 1 : 0)},
-        LastLoginAt = {(user.LastLoginAt.HasValue ? $"'{user.LastLoginAt.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
-        IsBanned = {(user.IsBanned ? 1 : 0)},
-        BanExpiry = {(user.BanExpiry.HasValue ? $"'{user.BanExpiry.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
-        BanReason = {(string.IsNullOrEmpty(user.BanReason) ? "NULL" : $"'{EscapeSql(user.BanReason)}'")},
-        IsDeleted = {(user.IsDeleted ? 1 : 0)},
-        DeletedAt = {(user.DeletedAt.HasValue ? $"'{user.DeletedAt.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
-        DeleteReason = {(string.IsNullOrEmpty(user.DeleteReason) ? "NULL" : $"'{EscapeSql(user.DeleteReason)}'")},
-        DeleteNote = {(string.IsNullOrEmpty(user.DeleteNote) ? "NULL" : $"'{EscapeSql(user.DeleteNote)}'")},
-        AvatarUrl = {(string.IsNullOrEmpty(user.AvatarUrl) ? "NULL" : $"'{EscapeSql(user.AvatarUrl)}'")},
-        IsAvatarApproved = {(user.IsAvatarApproved ? 1 : 0)},
-        AvatarSubmittedAt = {(user.AvatarSubmittedAt.HasValue ? $"'{user.AvatarSubmittedAt.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
-        PendingEmail = {(string.IsNullOrEmpty(user.PendingEmail) ? "NULL" : $"'{EscapeSql(user.PendingEmail)}'")},
-        PendingUsername = {(string.IsNullOrEmpty(user.PendingUsername) ? "NULL" : $"'{EscapeSql(user.PendingUsername)}'")},
-        IsEmailChangeApproved = {(user.IsEmailChangeApproved ? 1 : 0)},
-        IsUsernameChangeApproved = {(user.IsUsernameChangeApproved ? 1 : 0)},
-        VerificationCode = {(string.IsNullOrEmpty(user.VerificationCode) ? "NULL" : $"'{EscapeSql(user.VerificationCode)}'")},
-        VerificationCodeExpiry = {(user.VerificationCodeExpiry.HasValue ? $"'{user.VerificationCodeExpiry.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
-        IsApproved = {(user.IsApproved ? 1 : 0)},
-        LoginToken = {(string.IsNullOrEmpty(user.LoginToken) ? "NULL" : $"'{EscapeSql(user.LoginToken)}'")},
-        LoginTokenExpiry = {(user.LoginTokenExpiry.HasValue ? $"'{user.LoginTokenExpiry.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
-        -- ⭐⭐⭐ 关键：这两行必须要有 ⭐⭐⭐
-        IsRestricted = {(user.IsRestricted ? 1 : 0)},
-        RestrictionReason = {(string.IsNullOrEmpty(user.RestrictionReason) ? "NULL" : $"'{EscapeSql(user.RestrictionReason)}'")}
-    WHERE Id = {user.Id}";
+            var sql = $@"UPDATE Users SET
+                Username = '{EscapeSql(user.Username)}',
+                Email = '{EscapeSql(user.Email)}',
+                PasswordHash = '{EscapeSql(user.PasswordHash)}',
+                IsEmailVerified = {(user.IsEmailVerified ? 1 : 0)},
+                IsAdmin = {(user.IsAdmin ? 1 : 0)},
+                LastLoginAt = {(user.LastLoginAt.HasValue ? $"'{user.LastLoginAt.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
+                IsBanned = {(user.IsBanned ? 1 : 0)},
+                BanExpiry = {(user.BanExpiry.HasValue ? $"'{user.BanExpiry.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
+                BanReason = {(string.IsNullOrEmpty(user.BanReason) ? "NULL" : $"'{EscapeSql(user.BanReason)}'")},
+                IsDeleted = {(user.IsDeleted ? 1 : 0)},
+                DeletedAt = {(user.DeletedAt.HasValue ? $"'{user.DeletedAt.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
+                DeleteReason = {(string.IsNullOrEmpty(user.DeleteReason) ? "NULL" : $"'{EscapeSql(user.DeleteReason)}'")},
+                DeleteNote = {(string.IsNullOrEmpty(user.DeleteNote) ? "NULL" : $"'{EscapeSql(user.DeleteNote)}'")},
+                AvatarUrl = {(string.IsNullOrEmpty(user.AvatarUrl) ? "NULL" : $"'{EscapeSql(user.AvatarUrl)}'")},
+                IsAvatarApproved = {(user.IsAvatarApproved ? 1 : 0)},
+                AvatarSubmittedAt = {(user.AvatarSubmittedAt.HasValue ? $"'{user.AvatarSubmittedAt.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
+                PendingEmail = {(string.IsNullOrEmpty(user.PendingEmail) ? "NULL" : $"'{EscapeSql(user.PendingEmail)}'")},
+                PendingUsername = {(string.IsNullOrEmpty(user.PendingUsername) ? "NULL" : $"'{EscapeSql(user.PendingUsername)}'")},
+                IsEmailChangeApproved = {(user.IsEmailChangeApproved ? 1 : 0)},
+                IsUsernameChangeApproved = {(user.IsUsernameChangeApproved ? 1 : 0)},
+                VerificationCode = {(string.IsNullOrEmpty(user.VerificationCode) ? "NULL" : $"'{EscapeSql(user.VerificationCode)}'")},
+                VerificationCodeExpiry = {(user.VerificationCodeExpiry.HasValue ? $"'{user.VerificationCodeExpiry.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
+                IsApproved = {(user.IsApproved ? 1 : 0)},
+                LoginToken = {(string.IsNullOrEmpty(user.LoginToken) ? "NULL" : $"'{EscapeSql(user.LoginToken)}'")},
+                LoginTokenExpiry = {(user.LoginTokenExpiry.HasValue ? $"'{user.LoginTokenExpiry.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
+                IsRestricted = {(user.IsRestricted ? 1 : 0)},
+                RestrictionReason = {(string.IsNullOrEmpty(user.RestrictionReason) ? "NULL" : $"'{EscapeSql(user.RestrictionReason)}'")}
+            WHERE Id = {user.Id}";
 
-    await _tursoService.ExecuteSqlAsync(sql);
-    Console.WriteLine($"✅ 用户 {user.Username} 已更新到 Turso");
-}
+            await _tursoService.ExecuteSqlAsync(sql);
+            Console.WriteLine($"✅ 用户 {user.Username} 已更新到 Turso");
+        }
 
         public async Task<List<User>> GetAllUsersAsync()
         {
@@ -203,6 +202,7 @@ namespace MyPersonalWebsite.Services
                     IsBanned = false,
                     IsDeleted = false,
                     IsAvatarApproved = true,
+                    IsRestricted = false,
                     CreatedAt = DateTime.Now
                 };
 
@@ -851,7 +851,7 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // ⭐ 资源申请相关（完整版含支付）
+        // ⭐ 资源申请相关
         // ============================================================
 
         public async Task AddResourceRequestAsync(ResourceRequest request)
@@ -862,13 +862,11 @@ namespace MyPersonalWebsite.Services
             var maxId = ParseMaxId(maxIdResult);
             request.Id = maxId + 1;
 
-            // ⭐ 自动生成订单号
             if (string.IsNullOrEmpty(request.OrderId))
             {
                 request.OrderId = $"REQ_{DateTime.Now:yyyyMMddHHmmss}_{request.Id}_{new Random().Next(1000, 9999)}";
             }
 
-            // ⭐ 默认支付方式为微信
             if (string.IsNullOrEmpty(request.PaymentMethod))
             {
                 request.PaymentMethod = "wechat";
@@ -998,7 +996,6 @@ namespace MyPersonalWebsite.Services
             await _tursoService.ExecuteSqlAsync($"DELETE FROM ResourceRequests WHERE Id = {id}");
         }
 
-        // ⭐ 确认支付
         public async Task ConfirmPaymentAsync(int requestId, string adminName, string? note = null)
         {
             if (!_tursoAvailable) return;
@@ -1155,6 +1152,10 @@ namespace MyPersonalWebsite.Services
             catch { return 0; }
         }
 
+        // ============================================================
+        // ⭐ 解析 User - 包含 IsRestricted 和 RestrictionReason
+        // ============================================================
+
         private User? ParseUserFromJson(string json)
         {
             try
@@ -1212,6 +1213,8 @@ namespace MyPersonalWebsite.Services
                                     case "VerificationCodeExpiry": user.VerificationCodeExpiry = GetDateTimeFromRow(element); break;
                                     case "LoginToken": user.LoginToken = GetStringOrNullFromRow(element); break;
                                     case "LoginTokenExpiry": user.LoginTokenExpiry = GetDateTimeFromRow(element); break;
+                                    case "IsRestricted": user.IsRestricted = GetBoolFromRow(element); break;
+                                    case "RestrictionReason": user.RestrictionReason = GetStringOrNullFromRow(element); break;
                                 }
                             }
                             return user;
@@ -1226,6 +1229,10 @@ namespace MyPersonalWebsite.Services
                 return null;
             }
         }
+
+        // ============================================================
+        // ⭐ 解析 User List - 包含 IsRestricted 和 RestrictionReason
+        // ============================================================
 
         private List<User> ParseUserListFromJson(string json)
         {
@@ -1269,10 +1276,27 @@ namespace MyPersonalWebsite.Services
                                         case "IsAdmin": user.IsAdmin = GetBoolFromRow(element); break;
                                         case "IsApproved": user.IsApproved = GetBoolFromRow(element); break;
                                         case "CreatedAt": user.CreatedAt = GetDateTimeFromRow(element) ?? DateTime.Now; break;
+                                        case "LastLoginAt": user.LastLoginAt = GetDateTimeFromRow(element); break;
                                         case "IsBanned": user.IsBanned = GetBoolFromRow(element); break;
+                                        case "BanExpiry": user.BanExpiry = GetDateTimeFromRow(element); break;
+                                        case "BanReason": user.BanReason = GetStringOrNullFromRow(element); break;
                                         case "IsDeleted": user.IsDeleted = GetBoolFromRow(element); break;
+                                        case "DeletedAt": user.DeletedAt = GetDateTimeFromRow(element); break;
+                                        case "DeleteReason": user.DeleteReason = GetStringOrNullFromRow(element); break;
+                                        case "DeleteNote": user.DeleteNote = GetStringOrNullFromRow(element); break;
                                         case "AvatarUrl": user.AvatarUrl = GetStringOrNullFromRow(element); break;
                                         case "IsAvatarApproved": user.IsAvatarApproved = GetBoolFromRow(element); break;
+                                        case "AvatarSubmittedAt": user.AvatarSubmittedAt = GetDateTimeFromRow(element); break;
+                                        case "PendingEmail": user.PendingEmail = GetStringOrNullFromRow(element); break;
+                                        case "PendingUsername": user.PendingUsername = GetStringOrNullFromRow(element); break;
+                                        case "IsEmailChangeApproved": user.IsEmailChangeApproved = GetBoolFromRow(element); break;
+                                        case "IsUsernameChangeApproved": user.IsUsernameChangeApproved = GetBoolFromRow(element); break;
+                                        case "VerificationCode": user.VerificationCode = GetStringOrNullFromRow(element); break;
+                                        case "VerificationCodeExpiry": user.VerificationCodeExpiry = GetDateTimeFromRow(element); break;
+                                        case "LoginToken": user.LoginToken = GetStringOrNullFromRow(element); break;
+                                        case "LoginTokenExpiry": user.LoginTokenExpiry = GetDateTimeFromRow(element); break;
+                                        case "IsRestricted": user.IsRestricted = GetBoolFromRow(element); break;
+                                        case "RestrictionReason": user.RestrictionReason = GetStringOrNullFromRow(element); break;
                                     }
                                 }
                                 users.Add(user);
@@ -1287,6 +1311,10 @@ namespace MyPersonalWebsite.Services
             }
             return users;
         }
+
+        // ============================================================
+        // 其他解析方法（保持原有）
+        // ============================================================
 
         private List<Blog> ParseBlogListFromJson(string json)
         {
@@ -1703,10 +1731,6 @@ namespace MyPersonalWebsite.Services
             return list.FirstOrDefault();
         }
 
-        // ============================================================
-        // 游戏统计解析方法
-        // ============================================================
-
         private UserGameStats? ParseUserGameStats(string json)
         {
             var list = ParseUserGameStatsList(json);
@@ -1766,10 +1790,6 @@ namespace MyPersonalWebsite.Services
             return list;
         }
 
-        // ============================================================
-        // 验证大闯关统计解析
-        // ============================================================
-
         private VerifyGameStat? ParseVerifyGameStat(string json)
         {
             var list = ParseVerifyGameStatList(json);
@@ -1828,10 +1848,6 @@ namespace MyPersonalWebsite.Services
             }
             return list;
         }
-
-        // ============================================================
-        // ResourceRequest 解析
-        // ============================================================
 
         private ResourceRequest? ParseResourceRequest(string json)
         {
@@ -1938,10 +1954,6 @@ namespace MyPersonalWebsite.Services
             return list;
         }
 
-        // ============================================================
-        // GameSession 解析
-        // ============================================================
-
         private GameSession? ParseGameSession(string json)
         {
             try
@@ -2002,10 +2014,6 @@ namespace MyPersonalWebsite.Services
                 return null;
             }
         }
-
-        // ============================================================
-        // GameAnswerLog 解析
-        // ============================================================
 
         private List<GameAnswerLog> ParseGameAnswerLogs(string json)
         {
