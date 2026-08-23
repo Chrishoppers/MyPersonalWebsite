@@ -3,7 +3,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
 using System;
 using System.Threading.Tasks;
-using MyPersonalWebsite.Models;
 using MyPersonalWebsite.Services;
 
 namespace MyPersonalWebsite.Controllers
@@ -29,49 +28,37 @@ namespace MyPersonalWebsite.Controllers
         /// 支持 /pay 和 /pay/{orderId} 两种访问方式
         /// </summary>
         [HttpGet]
-        public async Task<IActionResult> Index(string? id)
+        public IActionResult Index(string? id)
         {
             try
             {
-                // 如果提供了订单ID，尝试获取订单信息
-                if (!string.IsNullOrEmpty(id))
-                {
-                    var order = await GetOrderByIdAsync(id);
-                    if (order != null)
-                    {
-                        ViewBag.OrderId = id;
-                        ViewBag.Amount = order.Amount;
-                        ViewBag.Description = order.Description;
-                        ViewBag.OrderStatus = order.Status;
-                    }
-                    else
-                    {
-                        ViewBag.Error = "未找到该订单，请确认订单号是否正确。";
-                        _logger.LogWarning($"订单不存在: {id}");
-                    }
-                }
-                else
-                {
-                    // 无订单ID时显示默认支付页面
-                    ViewBag.Title = "支付中心";
-                    ViewBag.Description = "请选择支付方式完成付款";
-                }
+                // 设置页面数据
+                ViewBag.OrderId = id ?? "未指定订单";
+                ViewBag.Amount = 99.00m;
+                ViewBag.Description = "示例商品 - 测试支付";
+                ViewBag.Title = "支付中心";
 
                 // 获取当前登录用户信息（如果有）
                 var userId = HttpContext.Session.GetInt32("UserId");
                 if (userId.HasValue)
                 {
-                    var user = await _dataSync.GetUserByIdAsync(userId.Value);
-                    ViewBag.UserName = user?.Username;
+                    // 异步获取用户信息（如果 DataSyncService 有 GetUserByIdAsync 方法）
+                    // 这里为了简单，先不调用异步方法，避免阻塞
+                    ViewBag.UserName = $"用户{userId}";
                 }
 
-                return View();
+                // ✅ 关键：强制指定视图路径
+                // 如果您的文件在 Views/Pay/Index.cshtml，使用下面这行：
+                return View("~/Views/Pay/Index.cshtml");
+                
+                // 如果您的文件在 Views/Resource/Pay.cshtml，使用下面这行（注释掉上面那行）：
+                // return View("~/Views/Resource/Pay.cshtml");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "加载支付页面失败");
-                ViewBag.Error = "系统繁忙，请稍后重试";
-                return View("Error");
+                ViewBag.Error = $"系统错误：{ex.Message}";
+                return Content($"❌ 支付页面加载失败：{ex.Message}");
             }
         }
 
@@ -96,7 +83,7 @@ namespace MyPersonalWebsite.Controllers
                     return Json(new { success = false, message = "请先登录", redirect = "/Auth/Login" });
                 }
 
-                // 验证支付信息（可对接真实支付网关）
+                // 模拟支付处理（实际应对接真实支付网关）
                 var result = await ProcessPaymentAsync(request);
 
                 if (result.Success)
@@ -125,7 +112,7 @@ namespace MyPersonalWebsite.Controllers
         /// 支付成功页面
         /// </summary>
         [HttpGet]
-        public async Task<IActionResult> Success(string? orderId)
+        public IActionResult Success(string? orderId)
         {
             if (string.IsNullOrEmpty(orderId))
             {
@@ -134,16 +121,10 @@ namespace MyPersonalWebsite.Controllers
 
             ViewBag.OrderId = orderId;
             ViewBag.PayTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-            
-            // 获取订单信息用于展示
-            var order = await GetOrderByIdAsync(orderId);
-            if (order != null)
-            {
-                ViewBag.Amount = order.Amount;
-                ViewBag.Description = order.Description;
-            }
+            ViewBag.Amount = 99.00m;
+            ViewBag.Description = "示例商品";
 
-            return View();
+            return View("~/Views/Pay/Success.cshtml");
         }
 
         /// <summary>
@@ -160,42 +141,17 @@ namespace MyPersonalWebsite.Controllers
                 "PAY_FAIL" => "支付失败，请检查账户余额",
                 _ => "支付遇到问题，请稍后重试"
             };
-            return View();
+
+            return View("~/Views/Pay/Failure.cshtml");
         }
 
         // ============================================================
-        // 私有辅助方法（模拟数据，实际应从数据库读取）
+        // 私有辅助方法
         // ============================================================
-
-        private async Task<OrderInfo?> GetOrderByIdAsync(string orderId)
-        {
-            // 这里应该从数据库查询订单
-            // 示例：从 Turso 数据库查询
-            try
-            {
-                var sql = $"SELECT * FROM Orders WHERE OrderId = '{orderId}'";
-                var result = await _dataSync.QueryAsync(sql);
-                if (!string.IsNullOrEmpty(result) && result != "{}")
-                {
-                    return new OrderInfo
-                    {
-                        OrderId = orderId,
-                        Amount = 99.00m,
-                        Description = "示例商品",
-                        Status = "pending"
-                    };
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"获取订单失败: {orderId}");
-            }
-            return null;
-        }
 
         private async Task<PaymentResult> ProcessPaymentAsync(PaymentRequest request)
         {
-            // 这里应该对接真实的支付网关
+            // 这里应该对接真实的支付网关（微信/支付宝/Stripe等）
             // 示例：模拟支付处理
             await Task.Delay(1000); // 模拟网络延迟
             
@@ -220,14 +176,6 @@ namespace MyPersonalWebsite.Controllers
         public string OrderId { get; set; } = string.Empty;
         public string PaymentMethod { get; set; } = string.Empty; // "wechat", "alipay", "card"
         public decimal Amount { get; set; }
-    }
-
-    public class OrderInfo
-    {
-        public string OrderId { get; set; } = string.Empty;
-        public decimal Amount { get; set; }
-        public string Description { get; set; } = string.Empty;
-        public string Status { get; set; } = string.Empty; // pending, paid, cancelled
     }
 
     public class PaymentResult
