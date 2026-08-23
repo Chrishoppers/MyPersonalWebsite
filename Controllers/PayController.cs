@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 
 namespace MyPersonalWebsite.Controllers
 {
+ [Route("Pay")]
     public class PayController : Controller
     {
         private readonly DataSyncService _dataSync;
@@ -19,7 +20,7 @@ namespace MyPersonalWebsite.Controllers
         /// <summary>
         /// 支付页面 - /Pay/Index/{id}
         /// </summary>
-        [Route("Pay")]
+       
         [HttpGet]
         public async Task<IActionResult> Index(int? id)
         {
