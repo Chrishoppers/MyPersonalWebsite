@@ -19,6 +19,7 @@ namespace MyPersonalWebsite.Controllers
         /// <summary>
         /// 支付页面 - /Pay/Index/{id}
         /// </summary>
+        [Route("Pay")]
         [HttpGet]
         public async Task<IActionResult> Index(int? id)
         {
