@@ -1,6 +1,13 @@
-@model MyPersonalWebsite.Models.ResourceRequest
 @{
-    ViewData["Title"] = "💰 微信支付 - 资源申请";
+    ViewData["Title"] = "💰 微信支付";
+    var orderId = ViewBag.OrderId as string;
+    var amount = ViewBag.Amount as decimal? ?? 2.00m;
+    var description = ViewBag.Description as string ?? "资源申请";
+    var characterName = ViewBag.CharacterName as string;
+    var userName = ViewBag.UserName as string;
+    var error = ViewBag.Error as string;
+    var qrCodeUrl = ViewBag.QRCodeUrl as string ?? "/images/payment/wechat_qr.jpg";
+    var requestId = ViewBag.RequestId as int?;
 }
 
 <style>
@@ -68,10 +75,6 @@
         flex-direction: column;
         gap: 0.5rem;
         border: 1px solid rgba(255,255,255,0.04);
-    }
-
-    .pay-card .qr-container .qr-placeholder .big-icon {
-        font-size: 3rem;
     }
 
     .pay-card .info-box {
@@ -232,8 +235,40 @@
         flex-shrink: 0;
     }
 
-    .step-guide .step .num.done {
-        background: rgba(7,193,96,0.12);
+    .alert-error {
+        padding: 0.8rem 1.2rem;
+        border-radius: 12px;
+        background: rgba(220,53,69,0.06);
+        border: 1px solid rgba(220,53,69,0.06);
+        color: #dc3545;
+        font-size: 0.85rem;
+        margin-bottom: 1rem;
+    }
+
+    .alert-success {
+        padding: 0.8rem 1.2rem;
+        border-radius: 12px;
+        background: rgba(40,167,69,0.06);
+        border: 1px solid rgba(40,167,69,0.06);
+        color: #28a745;
+        font-size: 0.85rem;
+        margin-bottom: 1rem;
+    }
+
+    .order-info-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.3rem 0;
+        border-bottom: 1px solid rgba(255,255,255,0.02);
+        font-size: 0.85rem;
+    }
+
+    .order-info-row .label {
+        color: rgba(255,255,255,0.2);
+    }
+
+    .order-info-row .value {
+        color: rgba(255,255,255,0.6);
     }
 
     @@media (max-width: 640px) {
@@ -252,24 +287,60 @@
         <h2 style="color:#fff;font-weight:700;margin-bottom:0.1rem;">微信支付</h2>
         <p style="color:rgba(255,255,255,0.2);font-size:0.85rem;">支付完成后管理员将处理你的申请</p>
 
+        @if (!string.IsNullOrEmpty(error))
+        {
+            <div class="alert-error">❌ @error</div>
+        }
+
+        @if (TempData["Message"] != null)
+        {
+            <div class="alert-success">✅ @TempData["Message"]</div>
+        }
+
         <div class="payment-method-badge">💬 微信支付</div>
 
-        <div class="amount">¥@Model.Amount.ToString("F2")</div>
+        <div class="amount">¥@amount.ToString("F2")</div>
 
-        <!-- 订单号 -->
+        <!-- 订单信息 -->
+        <div style="text-align:left;background:rgba(255,255,255,0.02);border-radius:12px;padding:0.8rem 1rem;margin:0.5rem 0;">
+            <div class="order-info-row">
+                <span class="label">📋 订单号</span>
+                <span class="value" style="font-family:monospace;color:#8B5CF6;">@orderId</span>
+            </div>
+            @if (!string.IsNullOrEmpty(characterName))
+            {
+                <div class="order-info-row">
+                    <span class="label">📝 申请</span>
+                    <span class="value">@characterName</span>
+                </div>
+            }
+            @if (!string.IsNullOrEmpty(userName))
+            {
+                <div class="order-info-row">
+                    <span class="label">👤 申请人</span>
+                    <span class="value">@userName</span>
+                </div>
+            }
+            <div class="order-info-row">
+                <span class="label">💰 金额</span>
+                <span class="value" style="color:#F59E0B;font-weight:700;">¥@amount.ToString("F2")</span>
+            </div>
+        </div>
+
+        <!-- 复制订单号 -->
         <div>
-            <span style="color:rgba(255,255,255,0.15);font-size:0.7rem;">📋 订单号（支付时备注）</span>
+            <span style="color:rgba(255,255,255,0.15);font-size:0.7rem;">💡 支付时请备注订单号</span>
             <div>
-                <span class="order-id" id="orderIdDisplay">@Model.OrderId</span>
+                <span class="order-id" id="orderIdDisplay">@orderId</span>
                 <button class="copy-btn" onclick="copyOrderId()">📋 复制</button>
             </div>
         </div>
 
         <!-- 二维码 -->
         <div class="qr-container">
-            @if (!string.IsNullOrEmpty(ViewBag.QRCodeUrl))
+            @if (!string.IsNullOrEmpty(qrCodeUrl))
             {
-                <img id="qrCodeImage" src="@ViewBag.QRCodeUrl" alt="微信支付二维码" />
+                <img id="qrCodeImage" src="@qrCodeUrl" alt="微信支付二维码" />
             }
             else
             {
@@ -295,11 +366,11 @@
                 </div>
                 <div class="step">
                     <span class="num">2</span>
-                    支付 <strong style="color:#F59E0B;">¥@Model.Amount.ToString("F2")</strong>
+                    支付 <strong style="color:#F59E0B;">¥@amount.ToString("F2")</strong>
                 </div>
                 <div class="step">
                     <span class="num">3</span>
-                    在备注中填写 <strong style="color:#8B5CF6;">@Model.OrderId</strong>
+                    在备注中填写 <strong style="color:#8B5CF6;">@orderId</strong>
                 </div>
                 <div class="step">
                     <span class="num">4</span>
@@ -336,9 +407,10 @@
 </div>
 
 <script>
-    var orderId = '@Model.OrderId';
-    var requestId = @Model.Id;
-    var isPaid = @(Model.IsPaid ? "true" : "false");
+    var orderId = '@orderId';
+    var requestId = @(requestId ?? 0);
+    var token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+    var isPaid = false;
     var checkInterval = null;
 
     // ============================================================
@@ -349,8 +421,10 @@
         navigator.clipboard.writeText(text).then(function() {
             var btn = document.querySelector('.copy-btn');
             btn.textContent = '✅ 已复制';
+            btn.style.color = '#28a745';
             setTimeout(function() {
                 btn.textContent = '📋 复制';
+                btn.style.color = '';
             }, 2000);
         }).catch(function() {
             var input = document.createElement('input');
@@ -373,6 +447,7 @@
         if (isPaid) {
             status.className = 'status paid';
             status.textContent = '✅ 已支付！管理员将尽快处理';
+            btn.textContent = '✅ 已支付';
             return;
         }
 
@@ -381,51 +456,65 @@
         status.className = 'status checking';
         status.textContent = '🔍 正在查询支付状态...';
 
-        fetch('/Resource/CheckPayment?requestId=' + requestId)
-            .then(function(r) { return r.json(); })
-            .then(function(data) {
-                if (data.paid) {
-                    isPaid = true;
-                    status.className = 'status paid';
-                    status.textContent = '✅ 支付已确认！管理员将尽快处理';
-                    btn.textContent = '✅ 已支付';
-                    if (checkInterval) clearInterval(checkInterval);
-                    setTimeout(function() {
-                        window.location.href = '/Resource/History';
-                    }, 2000);
-                } else {
-                    status.className = 'status waiting';
-                    status.textContent = '⏳ 等待管理员确认支付...\n💡 请确保已备注订单号';
-                    btn.disabled = false;
-                    btn.textContent = '🔄 查询支付状态';
-                }
-            })
-            .catch(function() {
+        fetch('/Pay/CheckStatus?orderId=' + encodeURIComponent(orderId), {
+            headers: {
+                'RequestVerificationToken': token
+            }
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.paid) {
+                isPaid = true;
+                status.className = 'status paid';
+                status.textContent = '✅ 支付已确认！管理员将尽快处理';
+                btn.textContent = '✅ 已支付';
+                btn.disabled = true;
+                if (checkInterval) clearInterval(checkInterval);
+                setTimeout(function() {
+                    window.location.href = '/Resource/History';
+                }, 2000);
+            } else {
                 status.className = 'status waiting';
-                status.textContent = '⚠️ 查询失败，请重试';
+                status.textContent = '⏳ 等待支付确认...\n💡 请确保已付款并备注订单号';
                 btn.disabled = false;
                 btn.textContent = '🔄 查询支付状态';
-            });
+            }
+        })
+        .catch(function() {
+            status.className = 'status waiting';
+            status.textContent = '⚠️ 查询失败，请重试';
+            btn.disabled = false;
+            btn.textContent = '🔄 查询支付状态';
+        });
     }
 
     // 每15秒自动查询一次
     if (!isPaid) {
         checkInterval = setInterval(function() {
-            fetch('/Resource/CheckPayment?requestId=' + requestId)
-                .then(function(r) { return r.json(); })
-                .then(function(data) {
-                    if (data.paid) {
-                        isPaid = true;
-                        var status = document.getElementById('payStatus');
-                        status.className = 'status paid';
-                        status.textContent = '✅ 支付已确认！正在跳转...';
-                        if (checkInterval) clearInterval(checkInterval);
-                        setTimeout(function() {
-                            window.location.href = '/Resource/History';
-                        }, 1500);
-                    }
-                })
-                .catch(function() {});
+            fetch('/Pay/CheckStatus?orderId=' + encodeURIComponent(orderId), {
+                headers: {
+                    'RequestVerificationToken': token
+                }
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.paid) {
+                    isPaid = true;
+                    var status = document.getElementById('payStatus');
+                    status.className = 'status paid';
+                    status.textContent = '✅ 支付已确认！正在跳转...';
+                    if (checkInterval) clearInterval(checkInterval);
+                    setTimeout(function() {
+                        window.location.href = '/Resource/History';
+                    }, 1500);
+                }
+            })
+            .catch(function() {});
         }, 15000);
     }
+
+    // 页面关闭时清除定时器
+    window.addEventListener('beforeunload', function() {
+        if (checkInterval) clearInterval(checkInterval);
+    });
 </script>
