@@ -1,6 +1,150 @@
 @{
-    ViewData["Title"] = "支付测试";
+    ViewData["Title"] = ViewBag.Title ?? "支付中心";
 }
-<h1>✅ Pay 视图工作正常！</h1>
-<p>如果您看到这个页面，说明视图文件已正确加载。</p>
-<p>当前时间：@DateTime.Now</p>
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-lg border-0 rounded-4">
+                <div class="card-body p-5">
+                    <div class="text-center mb-4">
+                        <div class="display-1 text-primary mb-3">💳</div>
+                        <h2 class="fw-bold">支付中心</h2>
+                        <p class="text-muted">安全便捷的支付体验</p>
+                    </div>
+
+                    @if (ViewBag.Error != null)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i> @ViewBag.Error
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    @if (ViewBag.OrderId != "未指定" && ViewBag.OrderId != null)
+                    {
+                        <div class="order-summary bg-light p-4 rounded-3 mb-4">
+                            <h5 class="fw-bold mb-3">📦 订单信息</h5>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted">订单号</span>
+                                <span class="fw-semibold">@ViewBag.OrderId</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted">商品描述</span>
+                                <span>@ViewBag.Description</span>
+                            </div>
+                            <div class="d-flex justify-content-between border-top pt-2 mt-2">
+                                <span class="fw-bold">应付金额</span>
+                                <span class="fs-4 fw-bold text-primary">¥@ViewBag.Amount?.ToString("F2")</span>
+                            </div>
+                        </div>
+                    }
+
+                    <form id="paymentForm">
+                        @Html.AntiForgeryToken()
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">选择支付方式</label>
+                            <div class="payment-methods">
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="radio" name="paymentMethod" id="wechat" value="wechat" checked>
+                                    <label class="form-check-label d-flex align-items-center" for="wechat">
+                                        <span class="fs-4 me-2">💚</span> 微信支付
+                                    </label>
+                                </div>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="radio" name="paymentMethod" id="alipay" value="alipay">
+                                    <label class="form-check-label d-flex align-items-center" for="alipay">
+                                        <span class="fs-4 me-2">💙</span> 支付宝
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="paymentMethod" id="card" value="card">
+                                    <label class="form-check-label d-flex align-items-center" for="card">
+                                        <span class="fs-4 me-2">💳</span> 银行卡支付
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="submit" id="payBtn" class="btn btn-primary btn-lg w-100 py-3 rounded-3">
+                            <span id="btnText">立即支付</span>
+                            <span id="btnSpinner" class="spinner-border spinner-border-sm d-none" role="status"></span>
+                        </button>
+                    </form>
+
+                    <div class="text-center mt-3">
+                        <small class="text-muted">
+                            <i class="bi bi-shield-check me-1"></i> 支付过程采用 SSL 加密，保障您的资金安全
+                        </small>
+                    </div>
+
+                    @if (ViewBag.UserName != null)
+                    {
+                        <div class="text-center mt-3">
+                            <small class="text-muted">👤 当前用户：@ViewBag.UserName</small>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('paymentForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const btn = document.getElementById('payBtn');
+        const btnText = document.getElementById('btnText');
+        const spinner = document.getElementById('btnSpinner');
+
+        btn.disabled = true;
+        btnText.textContent = '处理中...';
+        spinner.classList.remove('d-none');
+
+        try {
+            const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
+            const orderId = '@ViewBag.OrderId' || 'ORD' + Date.now();
+            const amount = parseFloat('@ViewBag.Amount' || '0');
+
+            const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+
+            const response = await fetch('/Pay/ProcessPayment', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': token
+                },
+                body: JSON.stringify({
+                    orderId: orderId,
+                    paymentMethod: paymentMethod,
+                    amount: isNaN(amount) ? 0 : amount
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                if (result.redirect) {
+                    window.location.href = result.redirect;
+                } else {
+                    alert('支付成功！');
+                    window.location.href = '/Pay/Success?orderId=' + encodeURIComponent(orderId);
+                }
+            } else {
+                alert('支付失败：' + result.message);
+                if (result.redirect) {
+                    window.location.href = result.redirect;
+                }
+            }
+        } catch (error) {
+            alert('请求异常，请重试');
+            console.error('Payment error:', error);
+        } finally {
+            btn.disabled = false;
+            btnText.textContent = '立即支付';
+            spinner.classList.add('d-none');
+        }
+    });
+</script>
