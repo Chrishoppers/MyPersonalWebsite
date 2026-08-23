@@ -20,20 +20,10 @@ namespace MyPersonalWebsite.Controllers
         [HttpGet]
         public IActionResult Index(string? id)
         {
-            try
-            {
-                ViewBag.OrderId = id ?? "未指定订单";
-                ViewBag.Amount = 99.00m;
-                ViewBag.Description = "示例商品";
-                
-                // 强制指定视图路径
-                return View("~/Views/Pay/Index.cshtml");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "支付页面加载失败");
-                return Content($"❌ 系统错误：{ex.Message}");
-            }
+            ViewBag.OrderId = id ?? "未指定订单";
+            ViewBag.Amount = 99.00m;
+            ViewBag.Description = "示例商品";
+            return View("~/Views/Pay/Index.cshtml");
         }
 
         [HttpPost]
@@ -43,25 +33,10 @@ namespace MyPersonalWebsite.Controllers
             try
             {
                 if (request == null || string.IsNullOrEmpty(request.OrderId))
-                {
                     return Json(new { success = false, message = "订单信息无效" });
-                }
 
                 await Task.Delay(500);
-
-                if (new Random().Next(1, 101) <= 90)
-                {
-                    return Json(new
-                    {
-                        success = true,
-                        message = "支付成功",
-                        redirect = "/Pay/Success?orderId=" + request.OrderId
-                    });
-                }
-                else
-                {
-                    return Json(new { success = false, message = "支付失败，请重试" });
-                }
+                return Json(new { success = true, message = "支付成功", redirect = "/Pay/Success?orderId=" + request.OrderId });
             }
             catch (Exception ex)
             {
