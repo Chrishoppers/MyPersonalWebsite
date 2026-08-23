@@ -27,40 +27,10 @@ namespace MyPersonalWebsite.Controllers
         /// 支付页面主入口
         /// 支持 /pay 和 /pay/{orderId} 两种访问方式
         /// </summary>
-        [HttpGet]
         public IActionResult Index(string? id)
-        {
-            try
-            {
-                // 设置页面数据
-                ViewBag.OrderId = id ?? "未指定订单";
-                ViewBag.Amount = 99.00m;
-                ViewBag.Description = "示例商品 - 测试支付";
-                ViewBag.Title = "支付中心";
-
-                // 获取当前登录用户信息（如果有）
-                var userId = HttpContext.Session.GetInt32("UserId");
-                if (userId.HasValue)
-                {
-                    // 异步获取用户信息（如果 DataSyncService 有 GetUserByIdAsync 方法）
-                    // 这里为了简单，先不调用异步方法，避免阻塞
-                    ViewBag.UserName = $"用户{userId}";
-                }
-
-                // ✅ 关键：强制指定视图路径
-                // 如果您的文件在 Views/Pay/Index.cshtml，使用下面这行：
-                return View("~/Views/Pay/Index.cshtml");
-                
-                // 如果您的文件在 Views/Resource/Pay.cshtml，使用下面这行（注释掉上面那行）：
-                // return View("~/Views/Resource/Pay.cshtml");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "加载支付页面失败");
-                ViewBag.Error = $"系统错误：{ex.Message}";
-                return Content($"❌ 支付页面加载失败：{ex.Message}");
-            }
-        }
+{
+    return Content($"✅ Render 部署成功！PayController 工作正常，参数：{id ?? "空"}");
+}
 
         /// <summary>
         /// 处理支付请求（AJAX）
