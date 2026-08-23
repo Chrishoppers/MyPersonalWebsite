@@ -43,7 +43,7 @@ builder.Services.AddControllersWithViews()
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"))
 );
-
+builder.Services.AddControllersWithViews();
 // ============================================================
 // DataProtection 使用文件存储（每次部署不会丢失 Session）
 // ============================================================
