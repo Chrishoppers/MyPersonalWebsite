@@ -20,11 +20,4 @@
     <PackageReference Include="Microsoft.Extensions.Caching.SqlServer" Version="10.0.0" />
   </ItemGroup>
 
-  <!-- ✅ 唯一新增：强制复制 Views 文件夹 -->
-  <ItemGroup>
-    <Content Include="Views\**\*.cshtml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
-
 </Project>
