@@ -1,76 +1,30 @@
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
-using System;
-using System.Threading.Tasks;
-using MyPersonalWebsite.Services;
+<Project Sdk="Microsoft.NET.Sdk.Web">
 
-namespace MyPersonalWebsite.Controllers
-{
-    public class PayController : Controller
-    {
-        private readonly ILogger<PayController> _logger;
-        private readonly DataSyncService _dataSync;
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
 
-        public PayController(ILogger<PayController> logger, DataSyncService dataSync)
-        {
-            _logger = logger;
-            _dataSync = dataSync;
-        }
+  <ItemGroup>
+    <PackageReference Include="MailKit" Version="4.7.1" />
+    <PackageReference Include="MimeKit" Version="4.7.1" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="System.Drawing.Common" Version="10.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.DataProtection.EntityFrameworkCore" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Caching.SqlServer" Version="10.0.0" />
+  </ItemGroup>
 
-        [HttpGet]
-        public IActionResult Index(string? id)
-        {
-            ViewBag.OrderId = id ?? "未指定订单";
-            ViewBag.Amount = 99.00m;
-            ViewBag.Description = "示例商品";
-            return View("~/Views/Pay/Index.cshtml");
-        }
+  <!-- ✅ 唯一新增：强制复制 Views 文件夹 -->
+  <ItemGroup>
+    <Content Include="Views\**\*.cshtml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
 
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ProcessPayment([FromBody] PaymentRequest request)
-        {
-            try
-            {
-                if (request == null || string.IsNullOrEmpty(request.OrderId))
-                    return Json(new { success = false, message = "订单信息无效" });
-
-                await Task.Delay(500);
-                return Json(new { success = true, message = "支付成功", redirect = "/Pay/Success?orderId=" + request.OrderId });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "处理支付异常");
-                return Json(new { success = false, message = "系统异常" });
-            }
-        }
-
-        [HttpGet]
-        public IActionResult Success(string? orderId)
-        {
-            ViewBag.OrderId = orderId ?? "未知订单";
-            ViewBag.PayTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-            return View("~/Views/Pay/Success.cshtml");
-        }
-
-        [HttpGet]
-        public IActionResult Failure(string? errorCode)
-        {
-            ViewBag.ErrorCode = errorCode ?? "未知错误";
-            ViewBag.Message = errorCode switch
-            {
-                "PAY_CANCEL" => "您已取消支付",
-                "PAY_TIMEOUT" => "支付超时",
-                _ => "支付失败，请稍后重试"
-            };
-            return View("~/Views/Pay/Failure.cshtml");
-        }
-    }
-
-    public class PaymentRequest
-    {
-        public string OrderId { get; set; } = string.Empty;
-        public string PaymentMethod { get; set; } = string.Empty;
-        public decimal Amount { get; set; }
-    }
-}
+</Project>
