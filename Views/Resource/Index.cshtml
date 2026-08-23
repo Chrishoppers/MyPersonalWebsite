@@ -139,17 +139,7 @@
     <h1>资源大厅</h1>
     <p class="subtitle">提交资源需求 · 查看处理进度</p>
 
-    <!-- ⭐ 受限用户欢迎信息 -->
-    @if (!string.IsNullOrEmpty(welcomeMessage))
-    {
-        <div class="welcome-box">
-            @welcomeMessage
-            <br>
-            <span style="font-size:0.8rem;color:rgba(255,255,255,0.1);">
-                💡 你目前只能访问资源相关页面
-            </span>
-        </div>
-    }
+   
 
     <div class="user-info">
         <div class="greeting">👋 欢迎，<strong>@user?.Username</strong></div>
