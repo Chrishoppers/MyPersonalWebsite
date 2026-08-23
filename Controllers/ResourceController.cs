@@ -272,7 +272,7 @@ namespace MyPersonalWebsite.Controllers
         // 4. ⭐ 支付页面
         // ============================================================
         [HttpGet]
-[Route("Resource/Pay/{id?}")]
+[Route("Pay/Index/{id?}")]
 public async Task<IActionResult> Pay(int? id)
 {
     var userId = HttpContext.Session.GetInt32("UserId");
