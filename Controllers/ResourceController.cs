@@ -108,7 +108,7 @@ namespace MyPersonalWebsite.Controllers
         // ============================================================
         // 3. 提交资源申请 (POST)
         // ============================================================
-       [HttpPost]
+     [HttpPost]
 [ValidateAntiForgeryToken]
 public async Task<IActionResult> Submit(ResourceRequest request)
 {
@@ -227,9 +227,27 @@ public async Task<IActionResult> Submit(ResourceRequest request)
     }
 
     // ============================================================
-    // 6. ⭐⭐⭐ 保存申请 - 修复点 ⭐⭐⭐
+    // 6. ⭐⭐⭐ 检查是否有未处理的申请 ⭐⭐⭐
+    // ============================================================
+    var pendingRequests = await _dataSync.GetPendingResourceRequestsAsync(userId.Value);
+    if (pendingRequests.Any())
+    {
+        TempData["Warning"] = "您有未处理的资源申请，请等待管理员处理后再提交新的申请";
+        return RedirectToAction("History");
+    }
+
+    // ============================================================
+    // 7. ⭐⭐⭐ 保存申请 - 修复点 ⭐⭐⭐
     // ============================================================
     var now = DateTime.Now;
+    
+    // ⭐ 先生成 ID
+    var maxIdResult = await _dataSync.QueryAsync("SELECT MAX(Id) as MaxId FROM ResourceRequests");
+    var maxId = ParseMaxId(maxIdResult);
+    var newId = maxId + 1;
+    
+    // ⭐ 填充 request 对象
+    request.Id = newId;
     request.UserId = userId.Value;
     request.UserName = user.Username;
     request.UserEmail = user.Email;
@@ -239,13 +257,8 @@ public async Task<IActionResult> Submit(ResourceRequest request)
     request.IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "";
     request.UserAgent = Request.Headers["User-Agent"].ToString();
 
-    // ⭐ 先获取最大 ID
-    var maxIdResult = await _dataSync.QueryAsync("SELECT MAX(Id) as MaxId FROM ResourceRequests");
-    var maxId = ParseMaxId(maxIdResult);
-    request.Id = maxId + 1;
-
     // ⭐ 生成订单号
-    request.OrderId = $"REQ_{DateTime.Now:yyyyMMddHHmmss}_{request.Id}_{new Random().Next(1000, 9999)}";
+    request.OrderId = $"REQ_{DateTime.Now:yyyyMMddHHmmss}_{newId}_{new Random().Next(1000, 9999)}";
 
     // ⭐ 执行插入
     await _dataSync.AddResourceRequestAsync(request);
@@ -253,7 +266,7 @@ public async Task<IActionResult> Submit(ResourceRequest request)
     // ⭐ 验证是否保存成功
     if (request.Id == 0)
     {
-        Console.WriteLine("❌ 保存资源申请失败");
+        Console.WriteLine("❌ 保存资源申请失败，ID 为 0");
         TempData["Error"] = "提交失败，请重试";
         return View(request);
     }
@@ -261,11 +274,12 @@ public async Task<IActionResult> Submit(ResourceRequest request)
     Console.WriteLine($"✅ 资源申请已保存，ID: {request.Id}, 订单号: {request.OrderId}");
 
     // ============================================================
-    // 通知管理员
+    // 8. 通知管理员
     // ============================================================
     try
     {
         await _emailService.SendResourceRequestNotificationAsync(request);
+        Console.WriteLine($"✅ 管理员通知邮件已发送");
     }
     catch (Exception ex)
     {
@@ -273,12 +287,12 @@ public async Task<IActionResult> Submit(ResourceRequest request)
     }
 
     // ============================================================
-    // ⭐ 跳转到支付页面
+    // 9. ⭐ 跳转到支付页面
     // ============================================================
     return RedirectToAction("Index", "Pay", new { id = request.Id });
 }
 
-// ⭐ 辅助方法：解析 MaxId
+// ⭐ 在 ResourceController 中添加这个辅助方法
 private int ParseMaxId(string json)
 {
     try
