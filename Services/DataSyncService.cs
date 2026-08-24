@@ -800,75 +800,87 @@ namespace MyPersonalWebsite.Services
         // ============================================================
 
         public async Task AddResourceRequestAsync(ResourceRequest request)
+{
+    if (!_tursoAvailable)
+    {
+        Console.WriteLine("❌ Turso 不可用，无法插入数据");
+        return;
+    }
+
+    // ⭐ 确保 OrderId 不为空
+    if (string.IsNullOrEmpty(request.OrderId))
+    {
+        request.OrderId = $"REQ_{DateTime.Now:yyyyMMddHHmmss}_{request.Id}_{new Random().Next(1000, 9999)}";
+        Console.WriteLine($"⚠️ OrderId 为空，已自动生成: {request.OrderId}");
+    }
+
+    Console.WriteLine($"💾 开始插入: Id={request.Id}, OrderId={request.OrderId}, CharacterName={request.CharacterName}");
+
+    var sql = $@"INSERT INTO ResourceRequests (
+        Id, UserId, UserName, UserEmail, PersonName, Platform1, Platform2, PlatformOther,
+        CharacterName, ResourceType, CharacterSetting,
+        NovelPreference, ComicPreference, ImagePreference,
+        VerifyPlatform, VerifyAccountId, IsFollowVerified, FollowVerifiedAt, FollowVerifyError, VerifyStatus,
+        AgreeToBLContent, AgreeToTerms,
+        Description, ResourceName, RefundOption, RefundAmount, RefundDeadline, FileUrl,
+        OrderId, Amount, PaymentMethod, IsPaid, PaidAt, PaidNote, AdminPaidBy,
+        Status, CreatedAt, ProcessedAt,
+        FoundTypes, NotFoundTypes, AdminNote, AdminName,
+        IpAddress, UserAgent
+    ) VALUES (
+        {request.Id}, {request.UserId}, '{EscapeSql(request.UserName)}',
+        '{EscapeSql(request.UserEmail)}', '{EscapeSql(request.PersonName)}',
+        '{EscapeSql(request.Platform1)}', '{EscapeSql(request.Platform2)}',
+        {(string.IsNullOrEmpty(request.PlatformOther) ? "NULL" : $"'{EscapeSql(request.PlatformOther)}'")},
+        '{EscapeSql(request.CharacterName)}', '{request.ResourceType}',
+        '{request.CharacterSetting}',
+        '{request.NovelPreference}', '{request.ComicPreference}', '{request.ImagePreference}',
+        '{EscapeSql(request.VerifyPlatform)}', '{EscapeSql(request.VerifyAccountId)}',
+        {(request.IsFollowVerified ? 1 : 0)},
+        {(request.FollowVerifiedAt.HasValue ? $"'{request.FollowVerifiedAt.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
+        {(string.IsNullOrEmpty(request.FollowVerifyError) ? "NULL" : $"'{EscapeSql(request.FollowVerifyError)}'")},
+        '{request.VerifyStatus}',
+        {(request.AgreeToBLContent ? 1 : 0)}, {(request.AgreeToTerms ? 1 : 0)},
+        '{EscapeSql(request.Description)}', '{EscapeSql(request.ResourceName)}',
+        '{request.RefundOption}', {request.RefundAmount},
+        {(request.RefundDeadline.HasValue ? $"'{request.RefundDeadline.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
+        '{EscapeSql(request.FileUrl)}',
+        '{EscapeSql(request.OrderId)}', {request.Amount},
+        '{EscapeSql(request.PaymentMethod)}',
+        {(request.IsPaid ? 1 : 0)},
+        {(request.PaidAt.HasValue ? $"'{request.PaidAt.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
+        {(string.IsNullOrEmpty(request.PaidNote) ? "NULL" : $"'{EscapeSql(request.PaidNote)}'")},
+        {(string.IsNullOrEmpty(request.AdminPaidBy) ? "NULL" : $"'{EscapeSql(request.AdminPaidBy)}'")},
+        '{request.Status}', '{request.CreatedAt:yyyy-MM-dd HH:mm:ss}',
+        {(request.ProcessedAt.HasValue ? $"'{request.ProcessedAt.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
+        '{EscapeSql(request.FoundTypes)}', '{EscapeSql(request.NotFoundTypes)}',
+        '{EscapeSql(request.AdminNote)}', '{EscapeSql(request.AdminName)}',
+        '{EscapeSql(request.IpAddress)}', '{EscapeSql(request.UserAgent)}'
+    )";
+
+    Console.WriteLine($"📝 SQL 前200字符: {sql.Substring(0, Math.Min(200, sql.Length))}...");
+
+    // ⭐ 直接调用 TursoService 执行，并获取详细结果
+    try
+    {
+        var result = await _tursoService.ExecuteSqlAsync(sql);
+        if (result)
         {
-            if (!_tursoAvailable) return;
-
-            // ⭐ 确保 OrderId 不为空
-            if (string.IsNullOrEmpty(request.OrderId))
-            {
-                request.OrderId = $"REQ_{DateTime.Now:yyyyMMddHHmmss}_{request.Id}_{new Random().Next(1000, 9999)}";
-                Console.WriteLine($"⚠️ OrderId 为空，已自动生成: {request.OrderId}");
-            }
-
-            Console.WriteLine($"💾 开始插入: Id={request.Id}, OrderId={request.OrderId}, CharacterName={request.CharacterName}");
-
-            var sql = $@"INSERT INTO ResourceRequests (
-                Id, UserId, UserName, UserEmail, PersonName, Platform1, Platform2, PlatformOther,
-                CharacterName, ResourceType, CharacterSetting,
-                NovelPreference, ComicPreference, ImagePreference,
-                VerifyPlatform, VerifyAccountId, IsFollowVerified, FollowVerifiedAt, FollowVerifyError, VerifyStatus,
-                AgreeToBLContent, AgreeToTerms,
-                Description, ResourceName, RefundOption, RefundAmount, RefundDeadline, FileUrl,
-                OrderId, Amount, PaymentMethod, IsPaid, PaidAt, PaidNote, AdminPaidBy,
-                Status, CreatedAt, ProcessedAt,
-                FoundTypes, NotFoundTypes, AdminNote, AdminName,
-                IpAddress, UserAgent
-            ) VALUES (
-                {request.Id}, {request.UserId}, '{EscapeSql(request.UserName)}',
-                '{EscapeSql(request.UserEmail)}', '{EscapeSql(request.PersonName)}',
-                '{EscapeSql(request.Platform1)}', '{EscapeSql(request.Platform2)}',
-                {(string.IsNullOrEmpty(request.PlatformOther) ? "NULL" : $"'{EscapeSql(request.PlatformOther)}'")},
-                '{EscapeSql(request.CharacterName)}', '{request.ResourceType}',
-                '{request.CharacterSetting}',
-                '{request.NovelPreference}', '{request.ComicPreference}', '{request.ImagePreference}',
-                '{EscapeSql(request.VerifyPlatform)}', '{EscapeSql(request.VerifyAccountId)}',
-                {(request.IsFollowVerified ? 1 : 0)},
-                {(request.FollowVerifiedAt.HasValue ? $"'{request.FollowVerifiedAt.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
-                {(string.IsNullOrEmpty(request.FollowVerifyError) ? "NULL" : $"'{EscapeSql(request.FollowVerifyError)}'")},
-                '{request.VerifyStatus}',
-                {(request.AgreeToBLContent ? 1 : 0)}, {(request.AgreeToTerms ? 1 : 0)},
-                '{EscapeSql(request.Description)}', '{EscapeSql(request.ResourceName)}',
-                '{request.RefundOption}', {request.RefundAmount},
-                {(request.RefundDeadline.HasValue ? $"'{request.RefundDeadline.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
-                '{EscapeSql(request.FileUrl)}',
-                '{EscapeSql(request.OrderId)}', {request.Amount},
-                '{EscapeSql(request.PaymentMethod)}',
-                {(request.IsPaid ? 1 : 0)},
-                {(request.PaidAt.HasValue ? $"'{request.PaidAt.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
-                {(string.IsNullOrEmpty(request.PaidNote) ? "NULL" : $"'{EscapeSql(request.PaidNote)}'")},
-                {(string.IsNullOrEmpty(request.AdminPaidBy) ? "NULL" : $"'{EscapeSql(request.AdminPaidBy)}'")},
-                '{request.Status}', '{request.CreatedAt:yyyy-MM-dd HH:mm:ss}',
-                {(request.ProcessedAt.HasValue ? $"'{request.ProcessedAt.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
-                '{EscapeSql(request.FoundTypes)}', '{EscapeSql(request.NotFoundTypes)}',
-                '{EscapeSql(request.AdminNote)}', '{EscapeSql(request.AdminName)}',
-                '{EscapeSql(request.IpAddress)}', '{EscapeSql(request.UserAgent)}'
-            )";
-
-            Console.WriteLine($"📝 SQL 长度: {sql.Length} 字符");
-
-            var result = await _tursoService.ExecuteSqlAsync(sql);
-
-            if (result)
-            {
-                Console.WriteLine($"✅ 资源申请已添加: #{request.Id}, 订单号: {request.OrderId}");
-            }
-            else
-            {
-                Console.WriteLine($"❌ 资源申请添加失败: #{request.Id}");
-                throw new Exception("数据库插入失败");
-            }
+            Console.WriteLine($"✅ 资源申请已添加: #{request.Id}, 订单号: {request.OrderId}");
         }
-
+        else
+        {
+            Console.WriteLine($"❌ ExecuteSqlAsync 返回 false，插入失败");
+            // ⭐ 不抛出异常，让调用方知道失败
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"❌ 插入异常: {ex.Message}");
+        Console.WriteLine($"❌ 堆栈: {ex.StackTrace}");
+        throw;
+    }
+}
         public async Task<ResourceRequest?> GetResourceRequestByIdAsync(int id)
         {
             if (!_tursoAvailable) return null;
