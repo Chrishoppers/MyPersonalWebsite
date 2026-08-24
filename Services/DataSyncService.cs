@@ -854,12 +854,18 @@ namespace MyPersonalWebsite.Services
         // ⭐ 资源申请相关 - 修复版本
         // ============================================================
 
-       public async Task AddResourceRequestAsync(ResourceRequest request)
+    public async Task AddResourceRequestAsync(ResourceRequest request)
 {
     if (!_tursoAvailable) return;
 
-    // ⭐ 注意：request.Id 必须在调用此方法之前已经设置好
-    // 不要再在这里查询 MaxId
+    // ⭐ 确保 OrderId 不为空
+    if (string.IsNullOrEmpty(request.OrderId))
+    {
+        request.OrderId = $"REQ_{DateTime.Now:yyyyMMddHHmmss}_{request.Id}_{new Random().Next(1000, 9999)}";
+        Console.WriteLine($"⚠️ OrderId 为空，已自动生成: {request.OrderId}");
+    }
+
+    Console.WriteLine($"💾 开始插入: Id={request.Id}, OrderId={request.OrderId}");
 
     var sql = $@"INSERT INTO ResourceRequests (
         Id, UserId, UserName, UserEmail, PersonName, Platform1, Platform2, PlatformOther,
@@ -903,8 +909,19 @@ namespace MyPersonalWebsite.Services
         '{EscapeSql(request.IpAddress)}', '{EscapeSql(request.UserAgent)}'
     )";
 
-    await _tursoService.ExecuteSqlAsync(sql);
-    Console.WriteLine($"✅ 资源申请已添加: #{request.Id}, 订单号: {request.OrderId}");
+    Console.WriteLine($"📝 SQL: {sql.Substring(0, Math.Min(500, sql.Length))}...");
+
+    var result = await _tursoService.ExecuteSqlAsync(sql);
+    
+    if (result)
+    {
+        Console.WriteLine($"✅ 资源申请已添加: #{request.Id}, 订单号: {request.OrderId}");
+    }
+    else
+    {
+        Console.WriteLine($"❌ 资源申请添加失败: #{request.Id}");
+        throw new Exception("数据库插入失败");
+    }
 }
 
         public async Task<ResourceRequest?> GetResourceRequestByIdAsync(int id)
