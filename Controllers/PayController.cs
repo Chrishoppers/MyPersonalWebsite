@@ -19,26 +19,30 @@ namespace MyPersonalWebsite.Controllers
         }
 
         /// <summary>
-        /// 支付页面 - 显示二维码和订单信息
-        /// URL: /Pay/Index/{id} 或 /Pay/{id}
+        /// 支付页面
+        /// URL: /Pay/Index/{id}
         /// </summary>
         [HttpGet]
-        [Route("Pay/Index/{id?}")]
-        [Route("Pay/{id?}")]
         public async Task<IActionResult> Index(string? id)
         {
             try
             {
-                // 1. 检查用户是否登录
+                _logger.LogInformation($"🔍 Pay/Index 被调用, id={id}");
+
+                // 检查用户是否登录
                 var userId = HttpContext.Session.GetInt32("UserId");
+                _logger.LogInformation($"🔍 用户ID: {userId}");
+
                 if (!userId.HasValue)
                 {
+                    _logger.LogWarning("⚠️ 用户未登录，跳转到登录页");
                     return RedirectToAction("Login", "Auth");
                 }
 
-                // 2. 如果没有ID，直接返回视图（测试用）
+                // 如果没有ID，返回测试页面
                 if (string.IsNullOrEmpty(id))
                 {
+                    _logger.LogInformation("ℹ️ 没有ID，显示测试页面");
                     ViewBag.OrderId = "TEST-ORDER-001";
                     ViewBag.Amount = 2.00m;
                     ViewBag.Description = "测试订单";
@@ -46,36 +50,43 @@ namespace MyPersonalWebsite.Controllers
                     return View();
                 }
 
-                // 3. 查找订单
+                // 查找订单
                 ResourceRequest? request = null;
                 if (int.TryParse(id, out var requestId))
                 {
+                    _logger.LogInformation($"🔍 尝试按ID查询: {requestId}");
                     request = await _dataSync.GetResourceRequestByIdAsync(requestId);
                 }
                 else
                 {
+                    _logger.LogInformation($"🔍 尝试按订单号查询: {id}");
                     request = await _dataSync.GetResourceRequestByOrderIdAsync(id);
                 }
 
                 if (request == null)
                 {
+                    _logger.LogWarning($"⚠️ 订单不存在: {id}");
                     TempData["Error"] = "订单不存在";
                     return RedirectToAction("History", "Resource");
                 }
 
+                _logger.LogInformation($"✅ 找到订单: {request.OrderId}, 用户: {request.UserId}");
+
                 if (request.UserId != userId.Value)
                 {
+                    _logger.LogWarning($"⚠️ 订单不属于当前用户: {request.UserId} != {userId.Value}");
                     TempData["Error"] = "该订单不属于您";
                     return RedirectToAction("History", "Resource");
                 }
 
                 if (request.IsPaid)
                 {
+                    _logger.LogInformation($"ℹ️ 订单已支付: {request.OrderId}");
                     TempData["Message"] = "该订单已支付";
                     return RedirectToAction("History", "Resource");
                 }
 
-                // 4. 传递给视图
+                // 传递给视图
                 ViewBag.OrderId = request.OrderId;
                 ViewBag.Amount = request.Amount;
                 ViewBag.Description = request.ResourceName ?? "资源申请";
@@ -84,11 +95,13 @@ namespace MyPersonalWebsite.Controllers
                 ViewBag.RequestId = request.Id;
                 ViewBag.QRCodeUrl = "/images/payment/wechat_qr.jpg";
 
+                _logger.LogInformation($"✅ 返回支付视图, 订单: {request.OrderId}");
                 return View();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "加载支付页面失败");
+                _logger.LogError(ex, $"❌ Pay/Index 异常: {ex.Message}");
+                _logger.LogError(ex.StackTrace);
                 TempData["Error"] = "系统繁忙，请稍后重试";
                 return RedirectToAction("History", "Resource");
             }
@@ -96,13 +109,14 @@ namespace MyPersonalWebsite.Controllers
 
         /// <summary>
         /// 查询支付状态
-        /// URL: /Pay/CheckStatus?orderId=xxx
         /// </summary>
         [HttpGet]
         public async Task<IActionResult> CheckStatus(string orderId)
         {
             try
             {
+                _logger.LogInformation($"🔍 CheckStatus 被调用, orderId={orderId}");
+
                 var userId = HttpContext.Session.GetInt32("UserId");
                 if (!userId.HasValue)
                 {
@@ -138,7 +152,7 @@ namespace MyPersonalWebsite.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "查询支付状态失败");
+                _logger.LogError(ex, $"❌ CheckStatus 异常: {ex.Message}");
                 return Json(new { paid = false, message = "查询失败" });
             }
         }
@@ -149,31 +163,39 @@ namespace MyPersonalWebsite.Controllers
         [HttpGet]
         public async Task<IActionResult> Success(string? orderId)
         {
-            if (string.IsNullOrEmpty(orderId))
+            try
             {
+                if (string.IsNullOrEmpty(orderId))
+                {
+                    return RedirectToAction("Index");
+                }
+
+                ViewBag.OrderId = orderId;
+                ViewBag.PayTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+
+                ResourceRequest? request = null;
+                if (int.TryParse(orderId, out var requestId))
+                {
+                    request = await _dataSync.GetResourceRequestByIdAsync(requestId);
+                }
+                else
+                {
+                    request = await _dataSync.GetResourceRequestByOrderIdAsync(orderId);
+                }
+
+                if (request != null)
+                {
+                    ViewBag.Amount = request.Amount;
+                    ViewBag.Description = request.ResourceName;
+                }
+
+                return View();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"❌ Success 异常: {ex.Message}");
                 return RedirectToAction("Index");
             }
-
-            ViewBag.OrderId = orderId;
-            ViewBag.PayTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-
-            ResourceRequest? request = null;
-            if (int.TryParse(orderId, out var requestId))
-            {
-                request = await _dataSync.GetResourceRequestByIdAsync(requestId);
-            }
-            else
-            {
-                request = await _dataSync.GetResourceRequestByOrderIdAsync(orderId);
-            }
-
-            if (request != null)
-            {
-                ViewBag.Amount = request.Amount;
-                ViewBag.Description = request.ResourceName;
-            }
-
-            return View();
         }
 
         /// <summary>
