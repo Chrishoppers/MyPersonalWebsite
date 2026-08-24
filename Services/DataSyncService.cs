@@ -27,7 +27,7 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 用户相关
+        // 用户相关（保持不变）
         // ============================================================
 
         public async Task AddUserAsync(User user)
@@ -82,7 +82,6 @@ namespace MyPersonalWebsite.Services
         public async Task<User?> GetUserByEmailAsync(string email)
         {
             if (!_tursoAvailable) return null;
-
             var result = await _tursoService.QueryAsync($"SELECT * FROM Users WHERE Email = '{EscapeSql(email)}' AND IsDeleted = 0");
             return ParseUserFromJson(result);
         }
@@ -90,7 +89,6 @@ namespace MyPersonalWebsite.Services
         public async Task<User?> GetUserByUsernameAsync(string username)
         {
             if (!_tursoAvailable) return null;
-
             var result = await _tursoService.QueryAsync($"SELECT * FROM Users WHERE Username = '{EscapeSql(username)}' AND IsDeleted = 0");
             return ParseUserFromJson(result);
         }
@@ -98,7 +96,6 @@ namespace MyPersonalWebsite.Services
         public async Task<User?> GetUserByIdAsync(int id)
         {
             if (!_tursoAvailable) return null;
-
             var result = await _tursoService.QueryAsync($"SELECT * FROM Users WHERE Id = {id}");
             return ParseUserFromJson(result);
         }
@@ -106,7 +103,6 @@ namespace MyPersonalWebsite.Services
         public async Task<User?> GetUserByLoginTokenAsync(string token)
         {
             if (!_tursoAvailable) return null;
-
             var result = await _tursoService.QueryAsync(
                 $"SELECT * FROM Users WHERE LoginToken = '{EscapeSql(token)}' AND LoginTokenExpiry > datetime('now')"
             );
@@ -117,12 +113,7 @@ namespace MyPersonalWebsite.Services
         {
             var token = GenerateLoginToken();
             var expiry = DateTime.Now.AddDays(7);
-
-            var sql = $@"UPDATE Users SET 
-                LoginToken = '{token}', 
-                LoginTokenExpiry = '{expiry:yyyy-MM-dd HH:mm:ss}' 
-            WHERE Id = {userId}";
-
+            var sql = $@"UPDATE Users SET LoginToken = '{token}', LoginTokenExpiry = '{expiry:yyyy-MM-dd HH:mm:ss}' WHERE Id = {userId}";
             await _tursoService.ExecuteSqlAsync(sql);
             return token;
         }
@@ -168,7 +159,6 @@ namespace MyPersonalWebsite.Services
         public async Task<List<User>> GetAllUsersAsync()
         {
             if (!_tursoAvailable) return new List<User>();
-
             var result = await _tursoService.QueryAsync("SELECT * FROM Users");
             return ParseUserListFromJson(result);
         }
@@ -176,7 +166,6 @@ namespace MyPersonalWebsite.Services
         public async Task DeleteUser(int id)
         {
             if (!_tursoAvailable) return;
-
             await _tursoService.ExecuteSqlAsync($"DELETE FROM Users WHERE Id = {id}");
             Console.WriteLine($"✅ 用户 {id} 已从 Turso 删除");
         }
@@ -184,7 +173,6 @@ namespace MyPersonalWebsite.Services
         public async Task EnsureAdminExistsAsync()
         {
             if (!_tursoAvailable) return;
-
             var result = await _tursoService.QueryAsync("SELECT * FROM Users WHERE Username = 'admin'");
             var admin = ParseUserFromJson(result);
 
@@ -205,7 +193,6 @@ namespace MyPersonalWebsite.Services
                     IsRestricted = false,
                     CreatedAt = DateTime.Now
                 };
-
                 await AddUserAsync(newAdmin);
                 Console.WriteLine("✅ 管理员账号已创建到 Turso");
             }
@@ -216,7 +203,7 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 博客相关
+        // 博客相关（保持不变）
         // ============================================================
 
         public async Task AddBlogAsync(Blog blog)
@@ -243,7 +230,6 @@ namespace MyPersonalWebsite.Services
         public async Task<List<Blog>> GetBlogsAsync()
         {
             if (!_tursoAvailable) return new List<Blog>();
-
             var result = await _tursoService.QueryAsync("SELECT * FROM Blogs ORDER BY PublishDate DESC");
             return ParseBlogListFromJson(result);
         }
@@ -251,7 +237,6 @@ namespace MyPersonalWebsite.Services
         public async Task<Blog?> GetBlogByIdAsync(int id)
         {
             if (!_tursoAvailable) return null;
-
             var result = await _tursoService.QueryAsync($"SELECT * FROM Blogs WHERE Id = {id}");
             return ParseBlogFromJson(result);
         }
@@ -283,9 +268,7 @@ namespace MyPersonalWebsite.Services
         public async Task AddBlogLikeAsync(int blogId, int userId)
         {
             if (!_tursoAvailable) return;
-
-            var sql = $@"INSERT INTO BlogLikes (BlogId, UserId, CreateTime)
-                         VALUES ({blogId}, {userId}, '{DateTime.Now:yyyy-MM-dd HH:mm:ss}')";
+            var sql = $@"INSERT INTO BlogLikes (BlogId, UserId, CreateTime) VALUES ({blogId}, {userId}, '{DateTime.Now:yyyy-MM-dd HH:mm:ss}')";
             await _tursoService.ExecuteSqlAsync(sql);
             Console.WriteLine($"✅ 博客点赞已同步: BlogId={blogId}, UserId={userId}");
         }
@@ -293,14 +276,13 @@ namespace MyPersonalWebsite.Services
         public async Task DeleteBlogLikeAsync(int blogId, int userId)
         {
             if (!_tursoAvailable) return;
-
             var sql = $@"DELETE FROM BlogLikes WHERE BlogId = {blogId} AND UserId = {userId}";
             await _tursoService.ExecuteSqlAsync(sql);
             Console.WriteLine($"✅ 博客取消点赞已同步: BlogId={blogId}, UserId={userId}");
         }
 
         // ============================================================
-        // 留言相关
+        // 留言相关（保持不变）
         // ============================================================
 
         public async Task AddMessageAsync(Message message)
@@ -331,7 +313,6 @@ namespace MyPersonalWebsite.Services
         public async Task<List<Message>> GetMessagesAsync()
         {
             if (!_tursoAvailable) return new List<Message>();
-
             var result = await _tursoService.QueryAsync("SELECT * FROM Messages ORDER BY CreateTime DESC");
             return ParseMessageListFromJson(result);
         }
@@ -339,7 +320,6 @@ namespace MyPersonalWebsite.Services
         public async Task<Message?> GetMessageByIdAsync(int id)
         {
             if (!_tursoAvailable) return null;
-
             var result = await _tursoService.QueryAsync($"SELECT * FROM Messages WHERE Id = {id}");
             return ParseMessageFromJson(result);
         }
@@ -375,9 +355,7 @@ namespace MyPersonalWebsite.Services
         public async Task AddMessageLikeAsync(int messageId, int userId)
         {
             if (!_tursoAvailable) return;
-
-            var sql = $@"INSERT INTO MessageLikes (MessageId, UserId, CreateTime)
-                         VALUES ({messageId}, {userId}, '{DateTime.Now:yyyy-MM-dd HH:mm:ss}')";
+            var sql = $@"INSERT INTO MessageLikes (MessageId, UserId, CreateTime) VALUES ({messageId}, {userId}, '{DateTime.Now:yyyy-MM-dd HH:mm:ss}')";
             await _tursoService.ExecuteSqlAsync(sql);
             Console.WriteLine($"✅ 留言点赞已同步: MessageId={messageId}, UserId={userId}");
         }
@@ -385,20 +363,18 @@ namespace MyPersonalWebsite.Services
         public async Task DeleteMessageLikeAsync(int messageId, int userId)
         {
             if (!_tursoAvailable) return;
-
             var sql = $@"DELETE FROM MessageLikes WHERE MessageId = {messageId} AND UserId = {userId}";
             await _tursoService.ExecuteSqlAsync(sql);
             Console.WriteLine($"✅ 留言取消点赞已同步: MessageId={messageId}, UserId={userId}");
         }
 
         // ============================================================
-        // ContactRequest 相关
+        // ContactRequest 相关（保持不变）
         // ============================================================
 
         public async Task<List<ContactRequest>> GetContactRequestsAsync()
         {
             if (!_tursoAvailable) return new List<ContactRequest>();
-
             var result = await _tursoService.QueryAsync("SELECT * FROM ContactRequests ORDER BY RequestTime DESC");
             return ParseContactRequestListFromJson(result);
         }
@@ -406,7 +382,6 @@ namespace MyPersonalWebsite.Services
         public async Task<ContactRequest?> GetContactRequestByIdAsync(int id)
         {
             if (!_tursoAvailable) return null;
-
             var result = await _tursoService.QueryAsync($"SELECT * FROM ContactRequests WHERE Id = {id}");
             return ParseContactRequestFromJson(result);
         }
@@ -452,13 +427,12 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // AboutMe 相关
+        // AboutMe 相关（保持不变）
         // ============================================================
 
         public async Task<List<AboutMe>> GetAboutMeAsync()
         {
             if (!_tursoAvailable) return new List<AboutMe>();
-
             var result = await _tursoService.QueryAsync("SELECT * FROM AboutMeContents ORDER BY SortOrder");
             return ParseAboutMeListFromJson(result);
         }
@@ -497,7 +471,7 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 通知相关
+        // 通知相关（保持不变）
         // ============================================================
 
         public async Task AddNotificationAsync(Notification notification)
@@ -523,7 +497,6 @@ namespace MyPersonalWebsite.Services
         public async Task<List<Notification>> GetNotificationsByUserIdAsync(int userId)
         {
             if (!_tursoAvailable) return new List<Notification>();
-
             var result = await _tursoService.QueryAsync($"SELECT * FROM Notifications WHERE UserId = {userId} ORDER BY CreatedAt DESC");
             return ParseNotificationListFromJson(result);
         }
@@ -531,7 +504,6 @@ namespace MyPersonalWebsite.Services
         public async Task<List<Notification>> GetAllNotificationsAsync()
         {
             if (!_tursoAvailable) return new List<Notification>();
-
             var result = await _tursoService.QueryAsync("SELECT * FROM Notifications ORDER BY CreatedAt DESC");
             return ParseNotificationListFromJson(result);
         }
@@ -539,7 +511,6 @@ namespace MyPersonalWebsite.Services
         public async Task MarkNotificationAsReadAsync(int id)
         {
             if (!_tursoAvailable) return;
-
             await _tursoService.ExecuteSqlAsync($"UPDATE Notifications SET IsRead = 1 WHERE Id = {id}");
             Console.WriteLine($"✅ 通知 {id} 已标记为已读");
         }
@@ -547,7 +518,6 @@ namespace MyPersonalWebsite.Services
         public async Task DeleteNotificationAsync(int id)
         {
             if (!_tursoAvailable) return;
-
             await _tursoService.ExecuteSqlAsync($"DELETE FROM Notifications WHERE Id = {id}");
             Console.WriteLine($"✅ 通知 {id} 已删除");
         }
@@ -555,19 +525,17 @@ namespace MyPersonalWebsite.Services
         public async Task ClearAllNotificationsAsync()
         {
             if (!_tursoAvailable) return;
-
             await _tursoService.ExecuteSqlAsync("DELETE FROM Notifications");
             Console.WriteLine($"✅ 所有通知已清空");
         }
 
         // ============================================================
-        // 题库管理
+        // 题库管理（保持不变）
         // ============================================================
 
         public async Task<List<BankQuestion>> GetAllBankQuestionsAsync()
         {
             if (!_tursoAvailable) return new List<BankQuestion>();
-
             var result = await _tursoService.QueryAsync("SELECT * FROM DailyQuestionBank ORDER BY Id DESC");
             return ParseBankQuestionList(result);
         }
@@ -575,7 +543,6 @@ namespace MyPersonalWebsite.Services
         public async Task<BankQuestion?> GetBankQuestionByIdAsync(int id)
         {
             if (!_tursoAvailable) return null;
-
             var result = await _tursoService.QueryAsync($"SELECT * FROM DailyQuestionBank WHERE Id = {id}");
             return ParseBankQuestion(result);
         }
@@ -605,16 +572,12 @@ namespace MyPersonalWebsite.Services
         public async Task ToggleQuestionStatusAsync(int id, bool enable)
         {
             if (!_tursoAvailable) return;
-
-            await _tursoService.ExecuteSqlAsync(
-                $"UPDATE DailyQuestionBank SET IsActive = {(enable ? 1 : 0)} WHERE Id = {id}"
-            );
+            await _tursoService.ExecuteSqlAsync($"UPDATE DailyQuestionBank SET IsActive = {(enable ? 1 : 0)} WHERE Id = {id}");
         }
 
         public async Task DeleteBankQuestionAsync(int id)
         {
             if (!_tursoAvailable) return;
-
             await _tursoService.ExecuteSqlAsync($"DELETE FROM DailyQuestionBank WHERE Id = {id}");
         }
 
@@ -635,26 +598,20 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 游戏统计
+        // 游戏统计（保持不变）
         // ============================================================
 
         public async Task<UserGameStats?> GetUserGameStatsAsync(int userId)
         {
             if (!_tursoAvailable) return null;
-
-            var result = await _tursoService.QueryAsync(
-                $"SELECT * FROM UserGameStats WHERE UserId = {userId}"
-            );
+            var result = await _tursoService.QueryAsync($"SELECT * FROM UserGameStats WHERE UserId = {userId}");
             return ParseUserGameStats(result);
         }
 
         public async Task<List<UserGameStats>> GetAllUserGameStatsAsync()
         {
             if (!_tursoAvailable) return new List<UserGameStats>();
-
-            var result = await _tursoService.QueryAsync(
-                "SELECT * FROM UserGameStats ORDER BY TotalPoints DESC"
-            );
+            var result = await _tursoService.QueryAsync("SELECT * FROM UserGameStats ORDER BY TotalPoints DESC");
             return ParseUserGameStatsList(result);
         }
 
@@ -688,26 +645,20 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 验证大闯关统计
+        // 验证大闯关统计（保持不变）
         // ============================================================
 
         public async Task<VerifyGameStat?> GetVerifyGameStatAsync(int userId)
         {
             if (!_tursoAvailable) return null;
-
-            var result = await _tursoService.QueryAsync(
-                $"SELECT * FROM VerifyGameStats WHERE UserId = {userId}"
-            );
+            var result = await _tursoService.QueryAsync($"SELECT * FROM VerifyGameStats WHERE UserId = {userId}");
             return ParseVerifyGameStat(result);
         }
 
         public async Task<List<VerifyGameStat>> GetAllVerifyGameStatsAsync()
         {
             if (!_tursoAvailable) return new List<VerifyGameStat>();
-
-            var result = await _tursoService.QueryAsync(
-                "SELECT * FROM VerifyGameStats ORDER BY TotalScore DESC"
-            );
+            var result = await _tursoService.QueryAsync("SELECT * FROM VerifyGameStats ORDER BY TotalScore DESC");
             return ParseVerifyGameStatList(result);
         }
 
@@ -747,7 +698,7 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 游戏会话相关
+        // 游戏会话相关（保持不变）
         // ============================================================
 
         public async Task AddGameSessionAsync(GameSession session)
@@ -773,10 +724,7 @@ namespace MyPersonalWebsite.Services
         public async Task<GameSession?> GetGameSessionAsync(string sessionId)
         {
             if (!_tursoAvailable) return null;
-
-            var result = await _tursoService.QueryAsync(
-                $"SELECT * FROM GameSessions WHERE SessionId = '{sessionId}'"
-            );
+            var result = await _tursoService.QueryAsync($"SELECT * FROM GameSessions WHERE SessionId = '{sessionId}'");
             return ParseGameSession(result);
         }
 
@@ -799,7 +747,7 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 答题日志相关
+        // 答题日志相关（保持不变）
         // ============================================================
 
         public async Task AddGameAnswerLogAsync(GameAnswerLog log)
@@ -824,15 +772,12 @@ namespace MyPersonalWebsite.Services
         public async Task<List<GameAnswerLog>> GetGameAnswerLogsAsync(string sessionId)
         {
             if (!_tursoAvailable) return new List<GameAnswerLog>();
-
-            var result = await _tursoService.QueryAsync(
-                $"SELECT * FROM GameAnswerLogs WHERE SessionId = '{sessionId}' ORDER BY Id ASC"
-            );
+            var result = await _tursoService.QueryAsync($"SELECT * FROM GameAnswerLogs WHERE SessionId = '{sessionId}' ORDER BY Id ASC");
             return ParseGameAnswerLogs(result);
         }
 
         // ============================================================
-        // 作弊事件相关
+        // 作弊事件相关（保持不变）
         // ============================================================
 
         public async Task AddCheatEventAsync(CheatEvent cheatEvent)
@@ -851,83 +796,82 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // ⭐ 资源申请相关 - 修复版本
+        // ⭐⭐ 资源申请相关 - 完整修复版 ⭐⭐
         // ============================================================
 
-    public async Task AddResourceRequestAsync(ResourceRequest request)
-{
-    if (!_tursoAvailable) return;
+        public async Task AddResourceRequestAsync(ResourceRequest request)
+        {
+            if (!_tursoAvailable) return;
 
-    // ⭐ 确保 OrderId 不为空
-    if (string.IsNullOrEmpty(request.OrderId))
-    {
-        request.OrderId = $"REQ_{DateTime.Now:yyyyMMddHHmmss}_{request.Id}_{new Random().Next(1000, 9999)}";
-        Console.WriteLine($"⚠️ OrderId 为空，已自动生成: {request.OrderId}");
-    }
+            // ⭐ 确保 OrderId 不为空
+            if (string.IsNullOrEmpty(request.OrderId))
+            {
+                request.OrderId = $"REQ_{DateTime.Now:yyyyMMddHHmmss}_{request.Id}_{new Random().Next(1000, 9999)}";
+                Console.WriteLine($"⚠️ OrderId 为空，已自动生成: {request.OrderId}");
+            }
 
-    Console.WriteLine($"💾 开始插入: Id={request.Id}, OrderId={request.OrderId}");
+            Console.WriteLine($"💾 开始插入: Id={request.Id}, OrderId={request.OrderId}, CharacterName={request.CharacterName}");
 
-    var sql = $@"INSERT INTO ResourceRequests (
-        Id, UserId, UserName, UserEmail, PersonName, Platform1, Platform2, PlatformOther,
-        CharacterName, ResourceType, CharacterSetting,
-        NovelPreference, ComicPreference, ImagePreference,
-        VerifyPlatform, VerifyAccountId, IsFollowVerified, FollowVerifiedAt, FollowVerifyError, VerifyStatus,
-        AgreeToBLContent, AgreeToTerms,
-        Description, ResourceName, RefundOption, RefundAmount, RefundDeadline, FileUrl,
-        OrderId, Amount, PaymentMethod, IsPaid, PaidAt, PaidNote, AdminPaidBy,
-        Status, CreatedAt, ProcessedAt,
-        FoundTypes, NotFoundTypes, AdminNote, AdminName,
-        IpAddress, UserAgent
-    ) VALUES (
-        {request.Id}, {request.UserId}, '{EscapeSql(request.UserName)}',
-        '{EscapeSql(request.UserEmail)}', '{EscapeSql(request.PersonName)}',
-        '{EscapeSql(request.Platform1)}', '{EscapeSql(request.Platform2)}',
-        {(string.IsNullOrEmpty(request.PlatformOther) ? "NULL" : $"'{EscapeSql(request.PlatformOther)}'")},
-        '{EscapeSql(request.CharacterName)}', '{request.ResourceType}',
-        '{request.CharacterSetting}',
-        '{request.NovelPreference}', '{request.ComicPreference}', '{request.ImagePreference}',
-        '{EscapeSql(request.VerifyPlatform)}', '{EscapeSql(request.VerifyAccountId)}',
-        {(request.IsFollowVerified ? 1 : 0)},
-        {(request.FollowVerifiedAt.HasValue ? $"'{request.FollowVerifiedAt.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
-        {(string.IsNullOrEmpty(request.FollowVerifyError) ? "NULL" : $"'{EscapeSql(request.FollowVerifyError)}'")},
-        '{request.VerifyStatus}',
-        {(request.AgreeToBLContent ? 1 : 0)}, {(request.AgreeToTerms ? 1 : 0)},
-        '{EscapeSql(request.Description)}', '{EscapeSql(request.ResourceName)}',
-        '{request.RefundOption}', {request.RefundAmount},
-        {(request.RefundDeadline.HasValue ? $"'{request.RefundDeadline.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
-        '{EscapeSql(request.FileUrl)}',
-        '{EscapeSql(request.OrderId)}', {request.Amount},
-        '{EscapeSql(request.PaymentMethod)}',
-        {(request.IsPaid ? 1 : 0)},
-        {(request.PaidAt.HasValue ? $"'{request.PaidAt.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
-        {(string.IsNullOrEmpty(request.PaidNote) ? "NULL" : $"'{EscapeSql(request.PaidNote)}'")},
-        {(string.IsNullOrEmpty(request.AdminPaidBy) ? "NULL" : $"'{EscapeSql(request.AdminPaidBy)}'")},
-        '{request.Status}', '{request.CreatedAt:yyyy-MM-dd HH:mm:ss}',
-        {(request.ProcessedAt.HasValue ? $"'{request.ProcessedAt.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
-        '{EscapeSql(request.FoundTypes)}', '{EscapeSql(request.NotFoundTypes)}',
-        '{EscapeSql(request.AdminNote)}', '{EscapeSql(request.AdminName)}',
-        '{EscapeSql(request.IpAddress)}', '{EscapeSql(request.UserAgent)}'
-    )";
+            var sql = $@"INSERT INTO ResourceRequests (
+                Id, UserId, UserName, UserEmail, PersonName, Platform1, Platform2, PlatformOther,
+                CharacterName, ResourceType, CharacterSetting,
+                NovelPreference, ComicPreference, ImagePreference,
+                VerifyPlatform, VerifyAccountId, IsFollowVerified, FollowVerifiedAt, FollowVerifyError, VerifyStatus,
+                AgreeToBLContent, AgreeToTerms,
+                Description, ResourceName, RefundOption, RefundAmount, RefundDeadline, FileUrl,
+                OrderId, Amount, PaymentMethod, IsPaid, PaidAt, PaidNote, AdminPaidBy,
+                Status, CreatedAt, ProcessedAt,
+                FoundTypes, NotFoundTypes, AdminNote, AdminName,
+                IpAddress, UserAgent
+            ) VALUES (
+                {request.Id}, {request.UserId}, '{EscapeSql(request.UserName)}',
+                '{EscapeSql(request.UserEmail)}', '{EscapeSql(request.PersonName)}',
+                '{EscapeSql(request.Platform1)}', '{EscapeSql(request.Platform2)}',
+                {(string.IsNullOrEmpty(request.PlatformOther) ? "NULL" : $"'{EscapeSql(request.PlatformOther)}'")},
+                '{EscapeSql(request.CharacterName)}', '{request.ResourceType}',
+                '{request.CharacterSetting}',
+                '{request.NovelPreference}', '{request.ComicPreference}', '{request.ImagePreference}',
+                '{EscapeSql(request.VerifyPlatform)}', '{EscapeSql(request.VerifyAccountId)}',
+                {(request.IsFollowVerified ? 1 : 0)},
+                {(request.FollowVerifiedAt.HasValue ? $"'{request.FollowVerifiedAt.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
+                {(string.IsNullOrEmpty(request.FollowVerifyError) ? "NULL" : $"'{EscapeSql(request.FollowVerifyError)}'")},
+                '{request.VerifyStatus}',
+                {(request.AgreeToBLContent ? 1 : 0)}, {(request.AgreeToTerms ? 1 : 0)},
+                '{EscapeSql(request.Description)}', '{EscapeSql(request.ResourceName)}',
+                '{request.RefundOption}', {request.RefundAmount},
+                {(request.RefundDeadline.HasValue ? $"'{request.RefundDeadline.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
+                '{EscapeSql(request.FileUrl)}',
+                '{EscapeSql(request.OrderId)}', {request.Amount},
+                '{EscapeSql(request.PaymentMethod)}',
+                {(request.IsPaid ? 1 : 0)},
+                {(request.PaidAt.HasValue ? $"'{request.PaidAt.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
+                {(string.IsNullOrEmpty(request.PaidNote) ? "NULL" : $"'{EscapeSql(request.PaidNote)}'")},
+                {(string.IsNullOrEmpty(request.AdminPaidBy) ? "NULL" : $"'{EscapeSql(request.AdminPaidBy)}'")},
+                '{request.Status}', '{request.CreatedAt:yyyy-MM-dd HH:mm:ss}',
+                {(request.ProcessedAt.HasValue ? $"'{request.ProcessedAt.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
+                '{EscapeSql(request.FoundTypes)}', '{EscapeSql(request.NotFoundTypes)}',
+                '{EscapeSql(request.AdminNote)}', '{EscapeSql(request.AdminName)}',
+                '{EscapeSql(request.IpAddress)}', '{EscapeSql(request.UserAgent)}'
+            )";
 
-    Console.WriteLine($"📝 SQL: {sql.Substring(0, Math.Min(500, sql.Length))}...");
+            Console.WriteLine($"📝 SQL 长度: {sql.Length} 字符");
 
-    var result = await _tursoService.ExecuteSqlAsync(sql);
-    
-    if (result)
-    {
-        Console.WriteLine($"✅ 资源申请已添加: #{request.Id}, 订单号: {request.OrderId}");
-    }
-    else
-    {
-        Console.WriteLine($"❌ 资源申请添加失败: #{request.Id}");
-        throw new Exception("数据库插入失败");
-    }
-}
+            var result = await _tursoService.ExecuteSqlAsync(sql);
+
+            if (result)
+            {
+                Console.WriteLine($"✅ 资源申请已添加: #{request.Id}, 订单号: {request.OrderId}");
+            }
+            else
+            {
+                Console.WriteLine($"❌ 资源申请添加失败: #{request.Id}");
+                throw new Exception("数据库插入失败");
+            }
+        }
 
         public async Task<ResourceRequest?> GetResourceRequestByIdAsync(int id)
         {
             if (!_tursoAvailable) return null;
-
             var result = await _tursoService.QueryAsync($"SELECT * FROM ResourceRequests WHERE Id = {id}");
             return ParseResourceRequest(result);
         }
@@ -935,40 +879,28 @@ namespace MyPersonalWebsite.Services
         public async Task<ResourceRequest?> GetResourceRequestByOrderIdAsync(string orderId)
         {
             if (!_tursoAvailable) return null;
-
-            var result = await _tursoService.QueryAsync(
-                $"SELECT * FROM ResourceRequests WHERE OrderId = '{EscapeSql(orderId)}'"
-            );
+            var result = await _tursoService.QueryAsync($"SELECT * FROM ResourceRequests WHERE OrderId = '{EscapeSql(orderId)}'");
             return ParseResourceRequest(result);
         }
 
         public async Task<List<ResourceRequest>> GetResourceRequestsByUserIdAsync(int userId)
         {
             if (!_tursoAvailable) return new List<ResourceRequest>();
-
-            var result = await _tursoService.QueryAsync(
-                $"SELECT * FROM ResourceRequests WHERE UserId = {userId} ORDER BY CreatedAt DESC"
-            );
+            var result = await _tursoService.QueryAsync($"SELECT * FROM ResourceRequests WHERE UserId = {userId} ORDER BY CreatedAt DESC");
             return ParseResourceRequestList(result);
         }
 
         public async Task<List<ResourceRequest>> GetPendingResourceRequestsAsync(int userId)
         {
             if (!_tursoAvailable) return new List<ResourceRequest>();
-
-            var result = await _tursoService.QueryAsync(
-                $"SELECT * FROM ResourceRequests WHERE UserId = {userId} AND (Status = 'pending' OR Status = 'processing')"
-            );
+            var result = await _tursoService.QueryAsync($"SELECT * FROM ResourceRequests WHERE UserId = {userId} AND (Status = 'pending' OR Status = 'processing')");
             return ParseResourceRequestList(result);
         }
 
         public async Task<List<ResourceRequest>> GetAllResourceRequestsAsync()
         {
             if (!_tursoAvailable) return new List<ResourceRequest>();
-
-            var result = await _tursoService.QueryAsync(
-                "SELECT * FROM ResourceRequests ORDER BY CreatedAt DESC"
-            );
+            var result = await _tursoService.QueryAsync("SELECT * FROM ResourceRequests ORDER BY CreatedAt DESC");
             return ParseResourceRequestList(result);
         }
 
@@ -1159,7 +1091,7 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 解析 User - 包含 IsRestricted 和 RestrictionReason
+        // 解析 User
         // ============================================================
 
         private User? ParseUserFromJson(string json)
@@ -1235,10 +1167,6 @@ namespace MyPersonalWebsite.Services
                 return null;
             }
         }
-
-        // ============================================================
-        // 解析 User List - 包含 IsRestricted 和 RestrictionReason
-        // ============================================================
 
         private List<User> ParseUserListFromJson(string json)
         {
@@ -1319,7 +1247,7 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // 其他解析方法（保持原有）
+        // 其他解析方法（保持不变）
         // ============================================================
 
         private List<Blog> ParseBlogListFromJson(string json)
@@ -1854,10 +1782,6 @@ namespace MyPersonalWebsite.Services
             }
             return list;
         }
-
-        // ============================================================
-        // 资源申请解析
-        // ============================================================
 
         private ResourceRequest? ParseResourceRequest(string json)
         {
