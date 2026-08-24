@@ -107,166 +107,219 @@ namespace MyPersonalWebsite.Controllers
         // ============================================================
         // 3. 提交资源申请 (POST)
         // ============================================================
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Submit(ResourceRequest request)
+       [HttpPost]
+[ValidateAntiForgeryToken]
+public async Task<IActionResult> Submit(ResourceRequest request)
+{
+    var userId = HttpContext.Session.GetInt32("UserId");
+    if (!userId.HasValue)
+    {
+        return RedirectToAction("Login", "Auth");
+    }
+
+    var user = await _dataSync.GetUserByIdAsync(userId.Value);
+    if (user == null || user.IsBanned)
+    {
+        TempData["Error"] = "账号不可用";
+        return RedirectToAction("Index", "Home");
+    }
+
+    // ============================================================
+    // 1. 验证平台选择
+    // ============================================================
+    var platforms = new List<string>();
+    if (!string.IsNullOrEmpty(request.Platform1)) platforms.Add(request.Platform1);
+    if (!string.IsNullOrEmpty(request.Platform2)) platforms.Add(request.Platform2);
+
+    if (platforms.Count == 0)
+    {
+        ModelState.AddModelError("", "请至少选择一个平台");
+        ViewBag.User = user;
+        return View(request);
+    }
+
+    if (platforms.Count > 2)
+    {
+        ModelState.AddModelError("", "最多选择2个平台");
+        ViewBag.User = user;
+        return View(request);
+    }
+
+    if (platforms.Contains("其他") && string.IsNullOrEmpty(request.PlatformOther))
+    {
+        ModelState.AddModelError("", "请填写其他平台名称");
+        ViewBag.User = user;
+        return View(request);
+    }
+
+    // ============================================================
+    // 2. 验证人物/CP名字
+    // ============================================================
+    if (string.IsNullOrEmpty(request.CharacterName) || request.CharacterName.Length < 2)
+    {
+        ModelState.AddModelError("", "请输入人物/CP名字（至少2个字符）");
+        ViewBag.User = user;
+        return View(request);
+    }
+
+    // ============================================================
+    // 3. 验证里克特量表
+    // ============================================================
+    if (request.NovelPreference == "不需要" &&
+        request.ComicPreference == "不需要" &&
+        request.ImagePreference == "不需要")
+    {
+        ModelState.AddModelError("", "小说、漫画、图片中至少有一项不能选择'不需要'");
+        ViewBag.User = user;
+        return View(request);
+    }
+
+    // ============================================================
+    // 4. 验证免责声明
+    // ============================================================
+    if (!request.AgreeToBLContent)
+    {
+        ModelState.AddModelError("", "请确认申请内容为男同性向（BL）内容");
+        ViewBag.User = user;
+        return View(request);
+    }
+
+    if (!request.AgreeToTerms)
+    {
+        ModelState.AddModelError("", "请阅读并同意完整免责声明");
+        ViewBag.User = user;
+        return View(request);
+    }
+
+    // ============================================================
+    // 5. 平台验证关注
+    // ============================================================
+    if (string.IsNullOrEmpty(request.VerifyPlatform))
+    {
+        ModelState.AddModelError("", "请选择需要验证的平台");
+        ViewBag.User = user;
+        return View(request);
+    }
+
+    if (string.IsNullOrEmpty(request.VerifyAccountId))
+    {
+        ModelState.AddModelError("", "请输入你的平台账号ID");
+        ViewBag.User = user;
+        return View(request);
+    }
+
+    var (isValid, message, displayName, verifyStatus) = await _platformVerifyService.VerifyFollowAsync(
+        request.VerifyPlatform,
+        request.VerifyAccountId
+    );
+
+    request.IsFollowVerified = isValid;
+    request.FollowVerifyError = isValid ? null : message;
+    request.FollowVerifiedAt = DateTime.Now;
+    request.VerifyStatus = verifyStatus;
+
+    if (verifyStatus == "rejected")
+    {
+        ModelState.AddModelError("", message);
+        ViewBag.User = user;
+        return View(request);
+    }
+
+    // ============================================================
+    // 6. ⭐⭐⭐ 保存申请 - 修复点 ⭐⭐⭐
+    // ============================================================
+    var now = DateTime.Now;
+    request.UserId = userId.Value;
+    request.UserName = user.Username;
+    request.UserEmail = user.Email;
+    request.Amount = 2.00m;
+    request.Status = "pending";
+    request.CreatedAt = now;
+    request.IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "";
+    request.UserAgent = Request.Headers["User-Agent"].ToString();
+
+    // ⭐ 先获取最大 ID
+    var maxIdResult = await _dataSync.QueryAsync("SELECT MAX(Id) as MaxId FROM ResourceRequests");
+    var maxId = ParseMaxId(maxIdResult);
+    request.Id = maxId + 1;
+
+    // ⭐ 生成订单号
+    request.OrderId = $"REQ_{DateTime.Now:yyyyMMddHHmmss}_{request.Id}_{new Random().Next(1000, 9999)}";
+
+    // ⭐ 执行插入
+    await _dataSync.AddResourceRequestAsync(request);
+
+    // ⭐ 验证是否保存成功
+    if (request.Id == 0)
+    {
+        Console.WriteLine("❌ 保存资源申请失败");
+        TempData["Error"] = "提交失败，请重试";
+        return View(request);
+    }
+
+    Console.WriteLine($"✅ 资源申请已保存，ID: {request.Id}, 订单号: {request.OrderId}");
+
+    // ============================================================
+    // 通知管理员
+    // ============================================================
+    try
+    {
+        await _emailService.SendResourceRequestNotificationAsync(request);
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"管理员通知邮件发送失败: {ex.Message}");
+    }
+
+    // ============================================================
+    // ⭐ 跳转到支付页面
+    // ============================================================
+    return RedirectToAction("Index", "Pay", new { id = request.Id });
+}
+
+// ⭐ 辅助方法：解析 MaxId
+private int ParseMaxId(string json)
+{
+    try
+    {
+        using var doc = JsonDocument.Parse(json);
+        var root = doc.RootElement;
+
+        if (root.TryGetProperty("results", out var results) && results.GetArrayLength() > 0)
         {
-            var userId = HttpContext.Session.GetInt32("UserId");
-            if (!userId.HasValue)
+            var firstResult = results[0];
+            if (firstResult.TryGetProperty("response", out var response) &&
+                response.TryGetProperty("result", out var result))
             {
-                return RedirectToAction("Login", "Auth");
+                if (result.TryGetProperty("rows", out var rows) && rows.GetArrayLength() > 0)
+                {
+                    var row = rows[0];
+                    if (row.ValueKind == JsonValueKind.Array && row.GetArrayLength() > 0)
+                    {
+                        var val = row[0];
+                        if (val.ValueKind == JsonValueKind.Object && val.TryGetProperty("value", out var v))
+                        {
+                            val = v;
+                        }
+                        if (val.ValueKind == JsonValueKind.Number)
+                        {
+                            return val.GetInt32();
+                        }
+                        if (val.ValueKind == JsonValueKind.String)
+                        {
+                            return int.TryParse(val.GetString(), out var parsed) ? parsed : 0;
+                        }
+                    }
+                }
             }
-
-            var user = await _dataSync.GetUserByIdAsync(userId.Value);
-            if (user == null || user.IsBanned)
-            {
-                TempData["Error"] = "账号不可用";
-                return RedirectToAction("Index", "Home");
-            }
-
-            // ============================================================
-            // 1. 验证平台选择
-            // ============================================================
-            var platforms = new List<string>();
-            if (!string.IsNullOrEmpty(request.Platform1)) platforms.Add(request.Platform1);
-            if (!string.IsNullOrEmpty(request.Platform2)) platforms.Add(request.Platform2);
-
-            if (platforms.Count == 0)
-            {
-                ModelState.AddModelError("", "请至少选择一个平台");
-                ViewBag.User = user;
-                return View(request);
-            }
-
-            if (platforms.Count > 2)
-            {
-                ModelState.AddModelError("", "最多选择2个平台");
-                ViewBag.User = user;
-                return View(request);
-            }
-
-            if (platforms.Contains("其他") && string.IsNullOrEmpty(request.PlatformOther))
-            {
-                ModelState.AddModelError("", "请填写其他平台名称");
-                ViewBag.User = user;
-                return View(request);
-            }
-
-            // ============================================================
-            // 2. 验证人物/CP名字
-            // ============================================================
-            if (string.IsNullOrEmpty(request.CharacterName) || request.CharacterName.Length < 2)
-            {
-                ModelState.AddModelError("", "请输入人物/CP名字（至少2个字符）");
-                ViewBag.User = user;
-                return View(request);
-            }
-
-            // ============================================================
-            // 3. 验证里克特量表
-            // ============================================================
-            if (request.NovelPreference == "不需要" &&
-                request.ComicPreference == "不需要" &&
-                request.ImagePreference == "不需要")
-            {
-                ModelState.AddModelError("", "小说、漫画、图片中至少有一项不能选择'不需要'");
-                ViewBag.User = user;
-                return View(request);
-            }
-
-            // ============================================================
-            // 4. 验证免责声明
-            // ============================================================
-            if (!request.AgreeToBLContent)
-            {
-                ModelState.AddModelError("", "请确认申请内容为男同性向（BL）内容");
-                ViewBag.User = user;
-                return View(request);
-            }
-
-            if (!request.AgreeToTerms)
-            {
-                ModelState.AddModelError("", "请阅读并同意完整免责声明");
-                ViewBag.User = user;
-                return View(request);
-            }
-
-            // ============================================================
-            // 5. ⭐ 平台验证关注（必填，自动验证账号真实性）
-            // ============================================================
-            if (string.IsNullOrEmpty(request.VerifyPlatform))
-            {
-                ModelState.AddModelError("", "请选择需要验证的平台");
-                ViewBag.User = user;
-                return View(request);
-            }
-
-            if (string.IsNullOrEmpty(request.VerifyAccountId))
-            {
-                ModelState.AddModelError("", "请输入你的平台账号ID");
-                ViewBag.User = user;
-                return View(request);
-            }
-
-            // 自动验证账号是否存在
-            var (isValid, message, displayName, verifyStatus) = await _platformVerifyService.VerifyFollowAsync(
-                request.VerifyPlatform,
-                request.VerifyAccountId
-            );
-
-            request.IsFollowVerified = isValid;
-            request.FollowVerifyError = isValid ? null : message;
-            request.FollowVerifiedAt = DateTime.Now;
-            request.VerifyStatus = verifyStatus;
-
-            // 如果账号不存在，拒绝提交
-            if (verifyStatus == "rejected")
-            {
-                ModelState.AddModelError("", message);
-                ViewBag.User = user;
-                return View(request);
-            }
-
-            // ============================================================
-            // 6. 检查是否有未处理的事项
-            // ============================================================
-            var pendingRequests = await _dataSync.GetPendingResourceRequestsAsync(userId.Value);
-            if (pendingRequests.Any())
-            {
-                TempData["Error"] = "您有未处理的资源申请，请等待管理员处理";
-                return RedirectToAction("History");
-            }
-
-            // ============================================================
-            // 保存申请
-            // ============================================================
-            var now = DateTime.Now;
-            request.UserId = userId.Value;
-            request.UserName = user.Username;
-            request.UserEmail = user.Email;
-            request.Amount = 2.00m;
-            request.Status = "pending";
-            request.CreatedAt = now;
-            request.IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "";
-            request.UserAgent = Request.Headers["User-Agent"].ToString();
-
-            await _dataSync.AddResourceRequestAsync(request);
-
-            // ============================================================
-            // 通知管理员
-            // ============================================================
-            try
-            {
-                await _emailService.SendResourceRequestNotificationAsync(request);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"管理员通知邮件发送失败: {ex.Message}");
-            }
-
-            // ⭐ 跳转到支付页面（使用 PayController）
-            return RedirectToAction("Index", "Pay", new { id = request.Id });
         }
+        return 0;
+    }
+    catch
+    {
+        return 0;
+    }
+}
 
         // ============================================================
         // 4. ⭐ 支付页面 - 已迁移到 PayController，保留以兼容旧链接
