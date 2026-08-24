@@ -31,7 +31,6 @@ namespace MyPersonalWebsite.Controllers
             {
                 _logger.LogInformation($"🔍 Pay/Index 被调用, id={id}");
 
-                // 检查用户是否登录
                 var userId = HttpContext.Session.GetInt32("UserId");
                 if (!userId.HasValue)
                 {
@@ -39,7 +38,6 @@ namespace MyPersonalWebsite.Controllers
                     return RedirectToAction("Login", "Auth");
                 }
 
-                // 如果没有ID，返回错误
                 if (string.IsNullOrEmpty(id))
                 {
                     _logger.LogWarning("⚠️ id 为空");
@@ -47,7 +45,6 @@ namespace MyPersonalWebsite.Controllers
                     return RedirectToAction("History", "Resource");
                 }
 
-                // ⭐ 尝试解析 ID
                 if (!int.TryParse(id, out var requestId) || requestId <= 0)
                 {
                     _logger.LogWarning($"⚠️ id 无效: {id}");
@@ -57,7 +54,6 @@ namespace MyPersonalWebsite.Controllers
 
                 _logger.LogInformation($"🔍 查询订单 ID: {requestId}");
 
-                // ⭐ 查询订单
                 var request = await _dataSync.GetResourceRequestByIdAsync(requestId);
 
                 if (request == null)
@@ -83,7 +79,6 @@ namespace MyPersonalWebsite.Controllers
                     return RedirectToAction("History", "Resource");
                 }
 
-                // 传递给视图
                 ViewBag.OrderId = request.OrderId;
                 ViewBag.Amount = request.Amount;
                 ViewBag.Description = request.ResourceName ?? "资源申请";
@@ -92,7 +87,6 @@ namespace MyPersonalWebsite.Controllers
                 ViewBag.RequestId = request.Id;
                 ViewBag.QRCodeUrl = "/images/payment/wechat_qr.jpg";
 
-                _logger.LogInformation($"✅ 返回支付视图, 订单: {request.OrderId}");
                 return View();
             }
             catch (Exception ex)
