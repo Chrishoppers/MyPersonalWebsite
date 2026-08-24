@@ -854,58 +854,58 @@ namespace MyPersonalWebsite.Services
         // ⭐ 资源申请相关 - 修复版本
         // ============================================================
 
-        public async Task AddResourceRequestAsync(ResourceRequest request)
-        {
-            if (!_tursoAvailable) return;
+       public async Task AddResourceRequestAsync(ResourceRequest request)
+{
+    if (!_tursoAvailable) return;
 
-            // ⭐ 注意：request.Id 必须在调用此方法之前已经设置好
-            // 不要在这里重新查询 MaxId
+    // ⭐ 注意：request.Id 必须在调用此方法之前已经设置好
+    // 不要再在这里查询 MaxId
 
-            var sql = $@"INSERT INTO ResourceRequests (
-                Id, UserId, UserName, UserEmail, PersonName, Platform1, Platform2, PlatformOther,
-                CharacterName, ResourceType, CharacterSetting,
-                NovelPreference, ComicPreference, ImagePreference,
-                VerifyPlatform, VerifyAccountId, IsFollowVerified, FollowVerifiedAt, FollowVerifyError, VerifyStatus,
-                AgreeToBLContent, AgreeToTerms,
-                Description, ResourceName, RefundOption, RefundAmount, RefundDeadline, FileUrl,
-                OrderId, Amount, PaymentMethod, IsPaid, PaidAt, PaidNote, AdminPaidBy,
-                Status, CreatedAt, ProcessedAt,
-                FoundTypes, NotFoundTypes, AdminNote, AdminName,
-                IpAddress, UserAgent
-            ) VALUES (
-                {request.Id}, {request.UserId}, '{EscapeSql(request.UserName)}',
-                '{EscapeSql(request.UserEmail)}', '{EscapeSql(request.PersonName)}',
-                '{EscapeSql(request.Platform1)}', '{EscapeSql(request.Platform2)}',
-                {(string.IsNullOrEmpty(request.PlatformOther) ? "NULL" : $"'{EscapeSql(request.PlatformOther)}'")},
-                '{EscapeSql(request.CharacterName)}', '{request.ResourceType}',
-                '{request.CharacterSetting}',
-                '{request.NovelPreference}', '{request.ComicPreference}', '{request.ImagePreference}',
-                '{EscapeSql(request.VerifyPlatform)}', '{EscapeSql(request.VerifyAccountId)}',
-                {(request.IsFollowVerified ? 1 : 0)},
-                {(request.FollowVerifiedAt.HasValue ? $"'{request.FollowVerifiedAt.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
-                {(string.IsNullOrEmpty(request.FollowVerifyError) ? "NULL" : $"'{EscapeSql(request.FollowVerifyError)}'")},
-                '{request.VerifyStatus}',
-                {(request.AgreeToBLContent ? 1 : 0)}, {(request.AgreeToTerms ? 1 : 0)},
-                '{EscapeSql(request.Description)}', '{EscapeSql(request.ResourceName)}',
-                '{request.RefundOption}', {request.RefundAmount},
-                {(request.RefundDeadline.HasValue ? $"'{request.RefundDeadline.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
-                '{EscapeSql(request.FileUrl)}',
-                '{EscapeSql(request.OrderId)}', {request.Amount},
-                '{EscapeSql(request.PaymentMethod)}',
-                {(request.IsPaid ? 1 : 0)},
-                {(request.PaidAt.HasValue ? $"'{request.PaidAt.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
-                {(string.IsNullOrEmpty(request.PaidNote) ? "NULL" : $"'{EscapeSql(request.PaidNote)}'")},
-                {(string.IsNullOrEmpty(request.AdminPaidBy) ? "NULL" : $"'{EscapeSql(request.AdminPaidBy)}'")},
-                '{request.Status}', '{request.CreatedAt:yyyy-MM-dd HH:mm:ss}',
-                {(request.ProcessedAt.HasValue ? $"'{request.ProcessedAt.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
-                '{EscapeSql(request.FoundTypes)}', '{EscapeSql(request.NotFoundTypes)}',
-                '{EscapeSql(request.AdminNote)}', '{EscapeSql(request.AdminName)}',
-                '{EscapeSql(request.IpAddress)}', '{EscapeSql(request.UserAgent)}'
-            )";
+    var sql = $@"INSERT INTO ResourceRequests (
+        Id, UserId, UserName, UserEmail, PersonName, Platform1, Platform2, PlatformOther,
+        CharacterName, ResourceType, CharacterSetting,
+        NovelPreference, ComicPreference, ImagePreference,
+        VerifyPlatform, VerifyAccountId, IsFollowVerified, FollowVerifiedAt, FollowVerifyError, VerifyStatus,
+        AgreeToBLContent, AgreeToTerms,
+        Description, ResourceName, RefundOption, RefundAmount, RefundDeadline, FileUrl,
+        OrderId, Amount, PaymentMethod, IsPaid, PaidAt, PaidNote, AdminPaidBy,
+        Status, CreatedAt, ProcessedAt,
+        FoundTypes, NotFoundTypes, AdminNote, AdminName,
+        IpAddress, UserAgent
+    ) VALUES (
+        {request.Id}, {request.UserId}, '{EscapeSql(request.UserName)}',
+        '{EscapeSql(request.UserEmail)}', '{EscapeSql(request.PersonName)}',
+        '{EscapeSql(request.Platform1)}', '{EscapeSql(request.Platform2)}',
+        {(string.IsNullOrEmpty(request.PlatformOther) ? "NULL" : $"'{EscapeSql(request.PlatformOther)}'")},
+        '{EscapeSql(request.CharacterName)}', '{request.ResourceType}',
+        '{request.CharacterSetting}',
+        '{request.NovelPreference}', '{request.ComicPreference}', '{request.ImagePreference}',
+        '{EscapeSql(request.VerifyPlatform)}', '{EscapeSql(request.VerifyAccountId)}',
+        {(request.IsFollowVerified ? 1 : 0)},
+        {(request.FollowVerifiedAt.HasValue ? $"'{request.FollowVerifiedAt.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
+        {(string.IsNullOrEmpty(request.FollowVerifyError) ? "NULL" : $"'{EscapeSql(request.FollowVerifyError)}'")},
+        '{request.VerifyStatus}',
+        {(request.AgreeToBLContent ? 1 : 0)}, {(request.AgreeToTerms ? 1 : 0)},
+        '{EscapeSql(request.Description)}', '{EscapeSql(request.ResourceName)}',
+        '{request.RefundOption}', {request.RefundAmount},
+        {(request.RefundDeadline.HasValue ? $"'{request.RefundDeadline.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
+        '{EscapeSql(request.FileUrl)}',
+        '{EscapeSql(request.OrderId)}', {request.Amount},
+        '{EscapeSql(request.PaymentMethod)}',
+        {(request.IsPaid ? 1 : 0)},
+        {(request.PaidAt.HasValue ? $"'{request.PaidAt.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
+        {(string.IsNullOrEmpty(request.PaidNote) ? "NULL" : $"'{EscapeSql(request.PaidNote)}'")},
+        {(string.IsNullOrEmpty(request.AdminPaidBy) ? "NULL" : $"'{EscapeSql(request.AdminPaidBy)}'")},
+        '{request.Status}', '{request.CreatedAt:yyyy-MM-dd HH:mm:ss}',
+        {(request.ProcessedAt.HasValue ? $"'{request.ProcessedAt.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
+        '{EscapeSql(request.FoundTypes)}', '{EscapeSql(request.NotFoundTypes)}',
+        '{EscapeSql(request.AdminNote)}', '{EscapeSql(request.AdminName)}',
+        '{EscapeSql(request.IpAddress)}', '{EscapeSql(request.UserAgent)}'
+    )";
 
-            await _tursoService.ExecuteSqlAsync(sql);
-            Console.WriteLine($"✅ 资源申请已添加: #{request.Id}, 订单号: {request.OrderId}");
-        }
+    await _tursoService.ExecuteSqlAsync(sql);
+    Console.WriteLine($"✅ 资源申请已添加: #{request.Id}, 订单号: {request.OrderId}");
+}
 
         public async Task<ResourceRequest?> GetResourceRequestByIdAsync(int id)
         {
