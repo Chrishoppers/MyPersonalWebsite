@@ -20,10 +20,11 @@ namespace MyPersonalWebsite.Controllers
 
         /// <summary>
         /// 支付页面 - 显示二维码和订单信息
-        /// 明确指定路由为 /Pay/Index/{id}
+        /// URL: /Pay/Index/{id}
         /// </summary>
         [HttpGet]
         [Route("Pay/Index/{id?}")]
+        [Route("Pay/{id?}")]
         public async Task<IActionResult> Index(string? id)
         {
             try
@@ -38,34 +39,35 @@ namespace MyPersonalWebsite.Controllers
                     return RedirectToAction("Login", "Auth");
                 }
 
-                // 如果没有ID，返回测试页面
+                // 如果没有ID，返回错误
                 if (string.IsNullOrEmpty(id))
                 {
-                    _logger.LogInformation("ℹ️ 没有ID，显示测试页面");
-                    ViewBag.OrderId = "TEST-ORDER-001";
-                    ViewBag.Amount = 2.00m;
-                    ViewBag.Description = "测试订单";
-                    ViewBag.QRCodeUrl = "/images/payment/wechat_qr.jpg";
-                    return View();
+                    _logger.LogWarning("⚠️ id 为空");
+                    TempData["Error"] = "无效的支付请求";
+                    return RedirectToAction("History", "Resource");
                 }
 
-                // 查找订单
-                ResourceRequest? request = null;
-                if (int.TryParse(id, out var requestId))
+                // ⭐ 尝试解析 ID
+                if (!int.TryParse(id, out var requestId) || requestId <= 0)
                 {
-                    request = await _dataSync.GetResourceRequestByIdAsync(requestId);
+                    _logger.LogWarning($"⚠️ id 无效: {id}");
+                    TempData["Error"] = "无效的支付请求";
+                    return RedirectToAction("History", "Resource");
                 }
-                else
-                {
-                    request = await _dataSync.GetResourceRequestByOrderIdAsync(id);
-                }
+
+                _logger.LogInformation($"🔍 查询订单 ID: {requestId}");
+
+                // ⭐ 查询订单
+                var request = await _dataSync.GetResourceRequestByIdAsync(requestId);
 
                 if (request == null)
                 {
-                    _logger.LogWarning($"⚠️ 订单不存在: {id}");
+                    _logger.LogWarning($"⚠️ 订单不存在: {requestId}");
                     TempData["Error"] = "订单不存在";
                     return RedirectToAction("History", "Resource");
                 }
+
+                _logger.LogInformation($"✅ 找到订单: {request.OrderId}, 用户: {request.UserId}");
 
                 if (request.UserId != userId.Value)
                 {
