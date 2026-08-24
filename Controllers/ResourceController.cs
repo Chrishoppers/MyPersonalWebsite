@@ -264,64 +264,27 @@ namespace MyPersonalWebsite.Controllers
                 Console.WriteLine($"管理员通知邮件发送失败: {ex.Message}");
             }
 
-            // ⭐ 跳转到支付页面
-            return RedirectToAction("Pay", new { id = request.Id });
+            // ⭐ 跳转到支付页面（使用 PayController）
+            return RedirectToAction("Index", "Pay", new { id = request.Id });
         }
 
         // ============================================================
-        // 4. ⭐ 支付页面
+        // 4. ⭐ 支付页面 - 已迁移到 PayController，保留以兼容旧链接
         // ============================================================
         [HttpGet]
-[Route("Pay/Index/{id?}")]
-public async Task<IActionResult> Pay(int? id)
-{
-    var userId = HttpContext.Session.GetInt32("UserId");
-    if (!userId.HasValue)
-    {
-        return RedirectToAction("Login", "Auth");
-    }
-
-    if (!id.HasValue)
-    {
-        TempData["Error"] = "无效的支付请求";
-        return RedirectToAction("History", "Resource");
-    }
-
-    var request = await _dataSync.GetResourceRequestByIdAsync(id.Value);
-    if (request == null || request.UserId != userId.Value)
-    {
-        return NotFound();
-    }
-
-    if (request.IsPaid)
-    {
-        TempData["Message"] = "该订单已支付";
-        return RedirectToAction("History", "Resource");
-    }
-
-    ViewBag.QRCodeUrl = "/images/payment/wechat_qr.jpg";
-    return View(request);
-}
-
-        // ============================================================
-        // 5. 检查支付状态 (AJAX)
-        // ============================================================
-        [HttpGet]
-        public async Task<IActionResult> CheckPayment(int requestId)
+        [Route("Resource/Pay/{id?}")]
+        public async Task<IActionResult> Pay(int? id)
         {
-            var userId = HttpContext.Session.GetInt32("UserId");
-            if (!userId.HasValue)
-                return Json(new { paid = false });
-
-            var request = await _dataSync.GetResourceRequestByIdAsync(requestId);
-            if (request == null || request.UserId != userId.Value)
-                return Json(new { paid = false });
-
-            return Json(new { paid = request.IsPaid });
+            // 重定向到新的支付页面
+            if (id.HasValue)
+            {
+                return RedirectToAction("Index", "Pay", new { id = id.Value });
+            }
+            return RedirectToAction("Index", "Pay");
         }
 
         // ============================================================
-        // 6. 验证关注 (AJAX)
+        // 5. 验证关注 (AJAX)
         // ============================================================
         [HttpPost]
         public async Task<IActionResult> VerifyFollow(string platform, string accountId)
@@ -344,7 +307,7 @@ public async Task<IActionResult> Pay(int? id)
         }
 
         // ============================================================
-        // 7. 历史记录
+        // 6. 历史记录
         // ============================================================
         public async Task<IActionResult> History()
         {
@@ -365,7 +328,7 @@ public async Task<IActionResult> Pay(int? id)
         }
 
         // ============================================================
-        // 8. 申请详情
+        // 7. 申请详情
         // ============================================================
         public async Task<IActionResult> Detail(int id)
         {
