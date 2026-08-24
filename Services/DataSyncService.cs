@@ -851,26 +851,15 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // ⭐ 资源申请相关
+        // ⭐ 资源申请相关 - 修复版本
         // ============================================================
 
         public async Task AddResourceRequestAsync(ResourceRequest request)
         {
             if (!_tursoAvailable) return;
 
-            var maxIdResult = await _tursoService.QueryAsync("SELECT MAX(Id) as MaxId FROM ResourceRequests");
-            var maxId = ParseMaxId(maxIdResult);
-            request.Id = maxId + 1;
-
-            if (string.IsNullOrEmpty(request.OrderId))
-            {
-                request.OrderId = $"REQ_{DateTime.Now:yyyyMMddHHmmss}_{request.Id}_{new Random().Next(1000, 9999)}";
-            }
-
-            if (string.IsNullOrEmpty(request.PaymentMethod))
-            {
-                request.PaymentMethod = "wechat";
-            }
+            // ⭐ 注意：request.Id 必须在调用此方法之前已经设置好
+            // 不要在这里重新查询 MaxId
 
             var sql = $@"INSERT INTO ResourceRequests (
                 Id, UserId, UserName, UserEmail, PersonName, Platform1, Platform2, PlatformOther,
@@ -1153,7 +1142,7 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // ⭐ 解析 User - 包含 IsRestricted 和 RestrictionReason
+        // 解析 User - 包含 IsRestricted 和 RestrictionReason
         // ============================================================
 
         private User? ParseUserFromJson(string json)
@@ -1231,7 +1220,7 @@ namespace MyPersonalWebsite.Services
         }
 
         // ============================================================
-        // ⭐ 解析 User List - 包含 IsRestricted 和 RestrictionReason
+        // 解析 User List - 包含 IsRestricted 和 RestrictionReason
         // ============================================================
 
         private List<User> ParseUserListFromJson(string json)
@@ -1848,6 +1837,10 @@ namespace MyPersonalWebsite.Services
             }
             return list;
         }
+
+        // ============================================================
+        // 资源申请解析
+        // ============================================================
 
         private ResourceRequest? ParseResourceRequest(string json)
         {
