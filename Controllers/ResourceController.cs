@@ -108,22 +108,34 @@ namespace MyPersonalWebsite.Controllers
         // ============================================================
         // 3. 提交资源申请 (POST)
         // ============================================================
-     [HttpPost]
+   [HttpPost]
 [ValidateAntiForgeryToken]
 public async Task<IActionResult> Submit(ResourceRequest request)
 {
+    Console.WriteLine("=========================================");
+    Console.WriteLine("🔍 Submit POST 被调用！");
+    Console.WriteLine($"🔍 当前用户ID: {HttpContext.Session.GetInt32("UserId")}");
+    Console.WriteLine($"🔍 CharacterName: {request.CharacterName}");
+    Console.WriteLine($"🔍 Platform1: {request.Platform1}");
+    Console.WriteLine($"🔍 Platform2: {request.Platform2}");
+    Console.WriteLine("=========================================");
+
     var userId = HttpContext.Session.GetInt32("UserId");
     if (!userId.HasValue)
     {
+        Console.WriteLine("❌ 用户未登录，跳转到 Login");
         return RedirectToAction("Login", "Auth");
     }
 
     var user = await _dataSync.GetUserByIdAsync(userId.Value);
     if (user == null || user.IsBanned)
     {
+        Console.WriteLine($"❌ 用户不可用: IsBanned={user?.IsBanned}");
         TempData["Error"] = "账号不可用";
         return RedirectToAction("Index", "Home");
     }
+
+    Console.WriteLine($"✅ 用户验证通过: {user.Username}");
 
     // ============================================================
     // 1. 验证平台选择
@@ -132,8 +144,11 @@ public async Task<IActionResult> Submit(ResourceRequest request)
     if (!string.IsNullOrEmpty(request.Platform1)) platforms.Add(request.Platform1);
     if (!string.IsNullOrEmpty(request.Platform2)) platforms.Add(request.Platform2);
 
+    Console.WriteLine($"📱 平台列表: {string.Join(", ", platforms)}");
+
     if (platforms.Count == 0)
     {
+        Console.WriteLine("❌ 平台选择为空");
         ModelState.AddModelError("", "请至少选择一个平台");
         ViewBag.User = user;
         return View(request);
@@ -141,6 +156,7 @@ public async Task<IActionResult> Submit(ResourceRequest request)
 
     if (platforms.Count > 2)
     {
+        Console.WriteLine("❌ 平台选择超过2个");
         ModelState.AddModelError("", "最多选择2个平台");
         ViewBag.User = user;
         return View(request);
@@ -148,6 +164,7 @@ public async Task<IActionResult> Submit(ResourceRequest request)
 
     if (platforms.Contains("其他") && string.IsNullOrEmpty(request.PlatformOther))
     {
+        Console.WriteLine("❌ 其他平台名称为空");
         ModelState.AddModelError("", "请填写其他平台名称");
         ViewBag.User = user;
         return View(request);
@@ -158,6 +175,7 @@ public async Task<IActionResult> Submit(ResourceRequest request)
     // ============================================================
     if (string.IsNullOrEmpty(request.CharacterName) || request.CharacterName.Length < 2)
     {
+        Console.WriteLine($"❌ 人物名字无效: {request.CharacterName}");
         ModelState.AddModelError("", "请输入人物/CP名字（至少2个字符）");
         ViewBag.User = user;
         return View(request);
@@ -170,6 +188,7 @@ public async Task<IActionResult> Submit(ResourceRequest request)
         request.ComicPreference == "不需要" &&
         request.ImagePreference == "不需要")
     {
+        Console.WriteLine("❌ 里克特量表全选不需要");
         ModelState.AddModelError("", "小说、漫画、图片中至少有一项不能选择'不需要'");
         ViewBag.User = user;
         return View(request);
@@ -180,6 +199,7 @@ public async Task<IActionResult> Submit(ResourceRequest request)
     // ============================================================
     if (!request.AgreeToBLContent)
     {
+        Console.WriteLine("❌ 未同意 BL 内容声明");
         ModelState.AddModelError("", "请确认申请内容为男同性向（BL）内容");
         ViewBag.User = user;
         return View(request);
@@ -187,6 +207,7 @@ public async Task<IActionResult> Submit(ResourceRequest request)
 
     if (!request.AgreeToTerms)
     {
+        Console.WriteLine("❌ 未同意免责声明");
         ModelState.AddModelError("", "请阅读并同意完整免责声明");
         ViewBag.User = user;
         return View(request);
@@ -197,6 +218,7 @@ public async Task<IActionResult> Submit(ResourceRequest request)
     // ============================================================
     if (string.IsNullOrEmpty(request.VerifyPlatform))
     {
+        Console.WriteLine("❌ 验证平台为空");
         ModelState.AddModelError("", "请选择需要验证的平台");
         ViewBag.User = user;
         return View(request);
@@ -204,10 +226,13 @@ public async Task<IActionResult> Submit(ResourceRequest request)
 
     if (string.IsNullOrEmpty(request.VerifyAccountId))
     {
+        Console.WriteLine("❌ 验证账号ID为空");
         ModelState.AddModelError("", "请输入你的平台账号ID");
         ViewBag.User = user;
         return View(request);
     }
+
+    Console.WriteLine($"🔍 开始验证关注: {request.VerifyPlatform} - {request.VerifyAccountId}");
 
     var (isValid, message, displayName, verifyStatus) = await _platformVerifyService.VerifyFollowAsync(
         request.VerifyPlatform,
@@ -219,34 +244,42 @@ public async Task<IActionResult> Submit(ResourceRequest request)
     request.FollowVerifiedAt = DateTime.Now;
     request.VerifyStatus = verifyStatus;
 
+    Console.WriteLine($"✅ 验证结果: isValid={isValid}, verifyStatus={verifyStatus}");
+
     if (verifyStatus == "rejected")
     {
+        Console.WriteLine($"❌ 验证被拒绝: {message}");
         ModelState.AddModelError("", message);
         ViewBag.User = user;
         return View(request);
     }
 
     // ============================================================
-    // 6. ⭐⭐⭐ 检查是否有未处理的申请 ⭐⭐⭐
+    // 6. ⭐ 检查是否有未处理的事项 - 已注释
     // ============================================================
-    //var pendingRequests = await _dataSync.GetPendingResourceRequestsAsync(userId.Value);
-   // if (pendingRequests.Any())
-  //  {
-   //     TempData["Warning"] = "您有未处理的资源申请，请等待管理员处理后再提交新的申请";
-   //     return RedirectToAction("History");
-  //  }
+    // var pendingRequests = await _dataSync.GetPendingResourceRequestsAsync(userId.Value);
+    // if (pendingRequests.Any())
+    // {
+    //     TempData["Warning"] = "您有未处理的资源申请，请等待管理员处理后再提交新的申请";
+    //     return RedirectToAction("History");
+    // }
 
     // ============================================================
-    // 7. ⭐⭐⭐ 保存申请 - 修复点 ⭐⭐⭐
+    // 7. ⭐⭐⭐ 保存申请 ⭐⭐⭐
     // ============================================================
+    Console.WriteLine("💾 开始保存申请...");
+
     var now = DateTime.Now;
     
-    // ⭐ 先生成 ID
+    // 获取最大 ID
     var maxIdResult = await _dataSync.QueryAsync("SELECT MAX(Id) as MaxId FROM ResourceRequests");
+    Console.WriteLine($"📊 MaxId 查询结果: {maxIdResult}");
+    
     var maxId = ParseMaxId(maxIdResult);
     var newId = maxId + 1;
     
-    // ⭐ 填充 request 对象
+    Console.WriteLine($"📊 新ID: {newId}");
+    
     request.Id = newId;
     request.UserId = userId.Value;
     request.UserName = user.Username;
@@ -256,39 +289,36 @@ public async Task<IActionResult> Submit(ResourceRequest request)
     request.CreatedAt = now;
     request.IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "";
     request.UserAgent = Request.Headers["User-Agent"].ToString();
-
-    // ⭐ 生成订单号
     request.OrderId = $"REQ_{DateTime.Now:yyyyMMddHHmmss}_{newId}_{new Random().Next(1000, 9999)}";
 
-    // ⭐ 执行插入
+    Console.WriteLine($"📋 订单号: {request.OrderId}");
+
     await _dataSync.AddResourceRequestAsync(request);
 
-    // ⭐ 验证是否保存成功
     if (request.Id == 0)
     {
-        Console.WriteLine("❌ 保存资源申请失败，ID 为 0");
+        Console.WriteLine("❌ 保存失败，ID 为 0");
         TempData["Error"] = "提交失败，请重试";
         return View(request);
     }
 
     Console.WriteLine($"✅ 资源申请已保存，ID: {request.Id}, 订单号: {request.OrderId}");
 
-    // ============================================================
-    // 8. 通知管理员
-    // ============================================================
+    // 通知管理员
     try
     {
         await _emailService.SendResourceRequestNotificationAsync(request);
-        Console.WriteLine($"✅ 管理员通知邮件已发送");
+        Console.WriteLine("✅ 管理员通知邮件已发送");
     }
     catch (Exception ex)
     {
-        Console.WriteLine($"管理员通知邮件发送失败: {ex.Message}");
+        Console.WriteLine($"❌ 管理员通知邮件发送失败: {ex.Message}");
     }
 
     // ============================================================
-    // 9. ⭐ 跳转到支付页面
+    // 8. ⭐ 跳转到支付页面
     // ============================================================
+    Console.WriteLine($"🚀 跳转到支付页面: /Pay/Index/{request.Id}");
     return RedirectToAction("Index", "Pay", new { id = request.Id });
 }
 
