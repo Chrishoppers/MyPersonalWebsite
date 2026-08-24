@@ -108,7 +108,7 @@ namespace MyPersonalWebsite.Controllers
         // ============================================================
         // 3. 提交资源申请 (POST)
         // ============================================================
-   [HttpPost]
+  [HttpPost]
 [ValidateAntiForgeryToken]
 public async Task<IActionResult> Submit(ResourceRequest request)
 {
@@ -255,7 +255,7 @@ public async Task<IActionResult> Submit(ResourceRequest request)
     }
 
     // ============================================================
-    // 6. ⭐ 检查是否有未处理的事项 - 已注释
+    // 6. ⭐ 检查是否有未处理的事项 - 暂时注释掉
     // ============================================================
     // var pendingRequests = await _dataSync.GetPendingResourceRequestsAsync(userId.Value);
     // if (pendingRequests.Any())
@@ -323,10 +323,13 @@ public async Task<IActionResult> Submit(ResourceRequest request)
 }
 
 // ⭐ 在 ResourceController 中添加这个辅助方法
+// ⭐ 辅助方法：解析 MaxId
 private int ParseMaxId(string json)
 {
     try
     {
+        Console.WriteLine($"🔍 ParseMaxId 输入: {json.Substring(0, Math.Min(200, json.Length))}...");
+        
         using var doc = JsonDocument.Parse(json);
         var root = doc.RootElement;
 
@@ -360,12 +363,12 @@ private int ParseMaxId(string json)
         }
         return 0;
     }
-    catch
+    catch (Exception ex)
     {
+        Console.WriteLine($"❌ ParseMaxId 异常: {ex.Message}");
         return 0;
     }
 }
-
         // ============================================================
         // 4. ⭐ 支付页面 - 已迁移到 PayController，保留以兼容旧链接
         // ============================================================
