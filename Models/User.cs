@@ -8,9 +8,7 @@ namespace MyPersonalWebsite.Models
         public int Id { get; set; }
         public string Username { get; set; } = string.Empty;
         public bool IsApproved { get; set; } = false;  // 管理员是否审核通过
-        // 在 User 类中添加
-public int? WarningCount { get; set; } = 0;
-public DateTime? LastWarningAt { get; set; }
+       
         public string? LoginToken { get; set; }
 public DateTime? LoginTokenExpiry { get; set; }
         public string Email { get; set; } = string.Empty;
