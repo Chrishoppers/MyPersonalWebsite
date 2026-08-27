@@ -2085,5 +2085,126 @@ namespace MyPersonalWebsite.Services
             }
             catch { return 0; }
         }
+        // ============================================================
+// 📋 用户行为日志
+// ============================================================
+
+/// <summary>
+/// 记录用户行为
+/// </summary>
+public async Task LogUserActivityAsync(UserActivityLog log)
+{
+    if (!_tursoAvailable) return;
+
+    var sql = $@"INSERT INTO UserActivityLogs (
+        UserId, Username, ActionType, ActionCategory, Description, Details,
+        IpAddress, UserAgent, RequestPath, Referer,
+        TargetId, TargetType, Status, CreatedAt
+    ) VALUES (
+        {log.UserId}, '{EscapeSql(log.Username)}', '{EscapeSql(log.ActionType)}',
+        '{EscapeSql(log.ActionCategory)}', '{EscapeSql(log.Description)}',
+        {(string.IsNullOrEmpty(log.Details) ? "NULL" : $"'{EscapeSql(log.Details)}'")},
+        {(string.IsNullOrEmpty(log.IpAddress) ? "NULL" : $"'{EscapeSql(log.IpAddress)}'")},
+        {(string.IsNullOrEmpty(log.UserAgent) ? "NULL" : $"'{EscapeSql(log.UserAgent)}'")},
+        {(string.IsNullOrEmpty(log.RequestPath) ? "NULL" : $"'{EscapeSql(log.RequestPath)}'")},
+        {(string.IsNullOrEmpty(log.Referer) ? "NULL" : $"'{EscapeSql(log.Referer)}'")},
+        {(log.TargetId.HasValue ? log.TargetId.Value.ToString() : "NULL")},
+        {(string.IsNullOrEmpty(log.TargetType) ? "NULL" : $"'{EscapeSql(log.TargetType)}'")},
+        '{log.Status}', '{log.CreatedAt:yyyy-MM-dd HH:mm:ss}'
+    )";
+
+    await _tursoService.ExecuteSqlAsync(sql);
+}
+
+/// <summary>
+/// 获取用户行为日志
+/// </summary>
+public async Task<List<UserActivityLog>> GetUserActivityLogsAsync(int userId, int limit = 100)
+{
+    if (!_tursoAvailable) return new List<UserActivityLog>();
+
+    var result = await _tursoService.QueryAsync(
+        $"SELECT * FROM UserActivityLogs WHERE UserId = {userId} ORDER BY CreatedAt DESC LIMIT {limit}"
+    );
+    return ParseUserActivityLogs(result);
+}
+
+/// <summary>
+/// 获取所有用户行为日志（管理员）
+/// </summary>
+public async Task<List<UserActivityLog>> GetAllUserActivityLogsAsync(
+    string? actionType = null, 
+    string? username = null, 
+    DateTime? from = null, 
+    DateTime? to = null,
+    int limit = 200)
+{
+    if (!_tursoAvailable) return new List<UserActivityLog>();
+
+    var conditions = new List<string>();
+    if (!string.IsNullOrEmpty(actionType)) 
+        conditions.Add($"ActionType = '{EscapeSql(actionType)}'");
+    if (!string.IsNullOrEmpty(username)) 
+        conditions.Add($"Username = '{EscapeSql(username)}'");
+    if (from.HasValue) 
+        conditions.Add($"CreatedAt >= '{from.Value:yyyy-MM-dd HH:mm:ss}'");
+    if (to.HasValue) 
+        conditions.Add($"CreatedAt <= '{to.Value:yyyy-MM-dd HH:mm:ss}'");
+
+    var whereClause = conditions.Any() ? $"WHERE {string.Join(" AND ", conditions)}" : "";
+    var sql = $"SELECT * FROM UserActivityLogs {whereClause} ORDER BY CreatedAt DESC LIMIT {limit}";
+
+    var result = await _tursoService.QueryAsync(sql);
+    return ParseUserActivityLogs(result);
+}
+
+/// <summary>
+/// 获取用户行为统计
+/// </summary>
+public async Task<UserActivityStats?> GetUserActivityStatsAsync(int userId)
+{
+    if (!_tursoAvailable) return null;
+
+    var result = await _tursoService.QueryAsync(
+        $"SELECT * FROM UserActivityStats WHERE UserId = {userId}"
+    );
+    return ParseUserActivityStats(result);
+}
+
+/// <summary>
+/// 更新用户行为统计
+/// </summary>
+public async Task UpdateUserActivityStatsAsync(UserActivityStats stats)
+{
+    if (!_tursoAvailable) return;
+
+    var sql = $@"INSERT OR REPLACE INTO UserActivityStats (
+        UserId, Username, TotalActions, LoginCount, LastLoginAt, LastActionAt,
+        ResourceSubmissions, MessagesPosted, BlogsPosted, ReportsSubmitted,
+        ViolationCount, WarningCount, RiskLevel, UpdatedAt
+    ) VALUES (
+        {stats.UserId}, '{EscapeSql(stats.Username)}', {stats.TotalActions},
+        {stats.LoginCount}, {(stats.LastLoginAt.HasValue ? $"'{stats.LastLoginAt.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
+        {(stats.LastActionAt.HasValue ? $"'{stats.LastActionAt.Value:yyyy-MM-dd HH:mm:ss}'" : "NULL")},
+        {stats.ResourceSubmissions}, {stats.MessagesPosted}, {stats.BlogsPosted},
+        {stats.ReportsSubmitted}, {stats.ViolationCount}, {stats.WarningCount},
+        '{stats.RiskLevel}', '{stats.UpdatedAt:yyyy-MM-dd HH:mm:ss}'
+    )";
+
+    await _tursoService.ExecuteSqlAsync(sql);
+}
+
+/// <summary>
+/// 获取所有用户行为统计（排行）
+/// </summary>
+public async Task<List<UserActivityStats>> GetAllUserActivityStatsAsync(int limit = 50)
+{
+    if (!_tursoAvailable) return new List<UserActivityStats>();
+
+    var result = await _tursoService.QueryAsync(
+        $"SELECT * FROM UserActivityStats ORDER BY TotalActions DESC, ViolationCount DESC LIMIT {limit}"
+    );
+    return ParseUserActivityStatsList(result);
+}
     }
 }
