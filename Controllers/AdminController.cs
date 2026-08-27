@@ -278,10 +278,7 @@ namespace MyPersonalWebsite.Controllers
             var notifications = await _dataSync.GetAllNotificationsAsync();
             var allRequests = await _dataSync.GetAllResourceRequestsAsync();
 
-            // 在 Dashboard 统计中添加
-var highRiskUsers = userStats.Count(s => s.RiskLevel == "high" || s.RiskLevel == "critical");
-ViewBag.HighRiskUsers = highRiskUsers;
-
+          
             // ============================================================
             // 用户统计（超级详细）
             // ============================================================
