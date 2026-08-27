@@ -1,11 +1,12 @@
 @model MyPersonalWebsite.Models.ResourceRequest
 @{
     ViewData["Title"] = "📋 申请详情";
+    var userId = Context.Session.GetInt32("UserId");
 }
 
 <style>
     .detail-container {
-        max-width: 700px;
+        max-width: 780px;
         margin: 0 auto;
         padding: 1rem 1.2rem;
     }
@@ -22,7 +23,10 @@
     .detail-container .header h1 {
         font-size: 1.6rem;
         font-weight: 800;
-        color: #fff;
+        background: linear-gradient(135deg, #8B5CF6 0%, #EC4899 50%, #F59E0B 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
         margin: 0;
     }
 
@@ -45,43 +49,50 @@
     .detail-card {
         background: rgba(255,255,255,0.02);
         border: 1px solid rgba(255,255,255,0.04);
-        border-radius: 20px;
-        padding: 1.5rem;
+        border-radius: 24px;
+        padding: 1.8rem 2rem;
+        position: relative;
+        overflow: hidden;
     }
 
-    .detail-row {
+    .detail-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(135deg, #8B5CF6, #EC4899, #F59E0B);
+        opacity: 0.3;
+    }
+
+    .detail-card .status-bar {
         display: flex;
-        padding: 0.6rem 0;
-        border-bottom: 1px solid rgba(255,255,255,0.02);
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        padding-bottom: 0.8rem;
+        border-bottom: 1px solid rgba(255,255,255,0.04);
+        margin-bottom: 1rem;
     }
 
-    .detail-row:last-child {
-        border-bottom: none;
+    .detail-card .status-bar .id {
+        color: rgba(255,255,255,0.1);
+        font-size: 0.7rem;
+        font-family: 'Courier New', monospace;
     }
 
-    .detail-row .label {
-        min-width: 120px;
-        color: rgba(255,255,255,0.2);
-        font-size: 0.8rem;
-        font-weight: 500;
-        flex-shrink: 0;
+    .detail-card .status-bar .badge-group {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
     }
 
-    .detail-row .value {
-        color: rgba(255,255,255,0.6);
-        font-size: 0.9rem;
-        word-break: break-all;
-    }
-
-    .detail-row .value .highlight {
-        color: #8B5CF6;
-        font-weight: 600;
-    }
-
-    .status-badge-large {
-        padding: 0.2rem 1rem;
+    .status-badge {
+        padding: 0.15rem 0.8rem;
         border-radius: 30px;
-        font-size: 0.85rem;
+        font-size: 0.7rem;
         font-weight: 600;
         display: inline-block;
     }
@@ -91,48 +102,178 @@
     .status-completed { background: rgba(40,167,69,0.08); color: #28a745; border: 1px solid rgba(40,167,69,0.04); }
     .status-rejected { background: rgba(220,53,69,0.08); color: #dc3545; border: 1px solid rgba(220,53,69,0.04); }
     .status-refunded { background: rgba(245,158,11,0.08); color: #F59E0B; border: 1px solid rgba(245,158,11,0.04); }
-    .status-paid { background: rgba(40,167,69,0.08); color: #28a745; border: 1px solid rgba(40,167,69,0.04); }
 
-    .file-link {
+    .status-verified { background: rgba(40,167,69,0.08); color: #28a745; border: 1px solid rgba(40,167,69,0.04); }
+    .status-manual { background: rgba(255,107,107,0.08); color: #ff6b6b; border: 1px solid rgba(255,107,107,0.04); animation: pulse-warning 1.5s ease-in-out infinite; }
+    .status-unverified { background: rgba(255,193,7,0.08); color: #ffc107; border: 1px solid rgba(255,193,7,0.04); }
+    .status-rejected-verify { background: rgba(220,53,69,0.08); color: #dc3545; border: 1px solid rgba(220,53,69,0.04); }
+
+    @@keyframes pulse-warning {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.3rem 1.5rem;
+    }
+
+    .info-item {
+        display: flex;
+        flex-direction: column;
+        padding: 0.4rem 0;
+        border-bottom: 1px solid rgba(255,255,255,0.02);
+    }
+
+    .info-item .label {
+        color: rgba(255,255,255,0.2);
+        font-size: 0.6rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        font-weight: 600;
+    }
+
+    .info-item .value {
+        color: rgba(255,255,255,0.7);
+        font-size: 0.9rem;
+        font-weight: 500;
+        margin-top: 0.05rem;
+        word-break: break-all;
+    }
+
+    .info-item .value .highlight {
         color: #8B5CF6;
-        text-decoration: none;
-        padding: 0.2rem 0.8rem;
-        border: 1px solid rgba(139,92,246,0.06);
-        border-radius: 30px;
-        background: rgba(139,92,246,0.04);
-        transition: all 0.3s ease;
-        display: inline-block;
-    }
-
-    .file-link:hover {
-        background: rgba(139,92,246,0.08);
-    }
-
-    .paid-badge {
-        display: inline-block;
-        padding: 0.15rem 0.8rem;
-        border-radius: 20px;
-        font-size: 0.7rem;
         font-weight: 600;
-        background: rgba(40,167,69,0.1);
+    }
+
+    .info-item .value .pink {
+        color: #EC4899;
+        font-weight: 600;
+    }
+
+    .info-item .value .gold {
+        color: #F59E0B;
+        font-weight: 600;
+    }
+
+    .info-item .value .green {
         color: #28a745;
-        border: 1px solid rgba(40,167,69,0.04);
-    }
-
-    .unpaid-badge {
-        display: inline-block;
-        padding: 0.15rem 0.8rem;
-        border-radius: 20px;
-        font-size: 0.7rem;
         font-weight: 600;
-        background: rgba(255,193,7,0.08);
-        color: #ffc107;
-        border: 1px solid rgba(255,193,7,0.04);
     }
 
+    .info-item.full-width {
+        grid-column: 1 / -1;
+    }
+
+    /* 偏好标签 */
+    .preference-tag {
+        display: inline-block;
+        padding: 0.05rem 0.6rem;
+        border-radius: 20px;
+        font-size: 0.6rem;
+        font-weight: 500;
+        margin-right: 0.2rem;
+    }
+
+    .preference-tag.love { background: rgba(236,72,153,0.08); color: #EC4899; border: 1px solid rgba(236,72,153,0.04); }
+    .preference-tag.story { background: rgba(79,172,254,0.08); color: #4facfe; border: 1px solid rgba(79,172,254,0.04); }
+    .preference-tag.action { background: rgba(245,158,11,0.08); color: #F59E0B; border: 1px solid rgba(245,158,11,0.04); }
+    .preference-tag.none { background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.04); }
+
+    /* 验证信息 */
+    .verify-section {
+        margin-top: 0.8rem;
+        padding: 0.8rem 1rem;
+        background: rgba(139,92,246,0.02);
+        border-radius: 12px;
+        border: 1px solid rgba(139,92,246,0.04);
+    }
+
+    .verify-section .verify-label {
+        color: rgba(255,255,255,0.15);
+        font-size: 0.55rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        font-weight: 600;
+    }
+
+    .verify-section .verify-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.3rem;
+        margin-top: 0.2rem;
+    }
+
+    .verify-section .verify-content .account {
+        color: rgba(255,255,255,0.5);
+        font-size: 0.85rem;
+    }
+
+    .verify-section .verify-content .account strong {
+        color: #fff;
+    }
+
+    /* 管理员备注 */
+    .admin-note {
+        margin-top: 0.8rem;
+        padding: 0.6rem 1rem;
+        background: rgba(139,92,246,0.03);
+        border-radius: 12px;
+        border-left: 3px solid #8B5CF6;
+        color: rgba(255,255,255,0.3);
+        font-size: 0.85rem;
+        font-style: italic;
+        grid-column: 1 / -1;
+    }
+
+    .admin-note .note-label {
+        font-style: normal;
+        color: rgba(255,255,255,0.08);
+        font-size: 0.55rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+    }
+
+    /* 资源名称突出显示 */
+    .resource-name-display {
+        background: linear-gradient(135deg, rgba(139,92,246,0.04), rgba(236,72,153,0.04));
+        border-radius: 16px;
+        padding: 1rem 1.5rem;
+        margin-bottom: 1rem;
+        border: 1px solid rgba(139,92,246,0.06);
+        text-align: center;
+        grid-column: 1 / -1;
+    }
+
+    .resource-name-display .name {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #fff;
+        background: linear-gradient(135deg, #8B5CF6, #EC4899);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .resource-name-display .sub {
+        color: rgba(255,255,255,0.08);
+        font-size: 0.6rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        margin-top: 0.05rem;
+    }
+
+    /* 响应式 */
     @@media (max-width: 640px) {
-        .detail-row { flex-direction: column; gap: 0.2rem; }
-        .detail-row .label { min-width: auto; }
+        .detail-card { padding: 1rem 1rem; }
+        .info-grid { grid-template-columns: 1fr; gap: 0.1rem; }
+        .detail-container .header h1 { font-size: 1.2rem; }
+        .detail-card .status-bar { flex-direction: column; align-items: stretch; }
+        .verify-section .verify-content { flex-direction: column; align-items: flex-start; }
+        .resource-name-display .name { font-size: 1.1rem; }
     }
 </style>
 
@@ -143,177 +284,173 @@
     </div>
 
     <div class="detail-card">
-        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.5rem;">
-            <span style="color:rgba(255,255,255,0.1);font-size:0.8rem;">#@Model.Id</span>
-            <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
-                <span class="status-badge-large @("status-" + Model.Status)">
+        <!-- 状态栏 -->
+        <div class="status-bar">
+            <span class="id">#@Model.Id</span>
+            <div class="badge-group">
+                <span class="status-badge @("status-" + Model.Status)">
                     @(Model.Status == "pending" ? "⏳ 待处理" :
-                      Model.Status == "paid" ? "💰 已付款" :
                       Model.Status == "processing" ? "🔄 处理中" :
                       Model.Status == "completed" ? "✅ 已完成" :
                       Model.Status == "rejected" ? "❌ 已拒绝" :
                       Model.Status == "refunded" ? "💰 已退款" : "❓ 未知")
                 </span>
-                @if (Model.IsPaid)
+                @if (!string.IsNullOrEmpty(Model.VerifyPlatform))
                 {
-                    <span class="paid-badge">✅ 已支付</span>
-                }
-                else
-                {
-                    <span class="unpaid-badge">⏳ 未支付</span>
+                    <span class="status-badge @(Model.VerifyStatus == "auto_verified" ? "status-verified" : Model.VerifyStatus == "manual_required" ? "status-manual" : "status-unverified")">
+                        @(Model.VerifyStatus == "auto_verified" ? "✅ 已验证" :
+                          Model.VerifyStatus == "manual_required" ? "⚠️ 待核验" :
+                          "⏳ 未验证")
+                    </span>
                 }
             </div>
         </div>
 
-        <div class="detail-row">
-            <span class="label">👤 申请人</span>
-            <span class="value">@Model.UserName</span>
-        </div>
-        <div class="detail-row">
-            <span class="label">📧 邮箱</span>
-            <span class="value">@Model.UserEmail</span>
-        </div>
-        <div class="detail-row">
-            <span class="label">📋 联系人</span>
-            <span class="value">@Model.PersonName</span>
-        </div>
-        <div class="detail-row">
-            <span class="label">📱 平台</span>
-            <span class="value">
-                @if (!string.IsNullOrEmpty(Model.Platform1))
-                {
-                    <span>@Model.Platform1</span>
-                    @if (!string.IsNullOrEmpty(Model.Platform2))
-                    {
-                        <span> + @Model.Platform2</span>
-                    }
-                    @if (!string.IsNullOrEmpty(Model.PlatformOther))
-                    {
-                        <span style="color:rgba(255,255,255,0.2);font-size:0.75rem;">（@Model.PlatformOther）</span>
-                    }
-                }
-                else
-                {
-                    <span style="color:rgba(255,255,255,0.2);">未选择</span>
-                }
-            </span>
-        </div>
-        <div class="detail-row">
-            <span class="label">📂 资源类型</span>
-            <span class="value">@Model.ResourceType</span>
-        </div>
-        <div class="detail-row">
-            <span class="label">📂 资源名称</span>
-            <span class="value"><strong style="color:#fff;">@Model.ResourceName</strong></span>
-        </div>
-        <div class="detail-row">
-            <span class="label">📝 备注</span>
-            <span class="value">@(string.IsNullOrEmpty(Model.Description) ? "无" : Model.Description)</span>
-        </div>
-        <div class="detail-row">
-            <span class="label">⚙️ 人物设定</span>
-            <span class="value"><span class="highlight">@Model.CharacterSetting</span></span>
-        </div>
-        <div class="detail-row">
-            <span class="label">📊 偏好</span>
-            <span class="value">
-                小说: <span class="highlight">@Model.NovelPreference</span>
-                · 漫画: <span class="highlight">@Model.ComicPreference</span>
-                · 图片: <span class="highlight">@Model.ImagePreference</span>
-            </span>
-        </div>
-        <div class="detail-row">
-            <span class="label">⏰ 申请时间</span>
-            <span class="value">@Model.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss")</span>
+        <!-- 资源名称（突出显示） -->
+        <div class="resource-name-display">
+            <div class="name">@(string.IsNullOrEmpty(Model.ResourceName) ? Model.CharacterName : Model.ResourceName)</div>
+            <div class="sub">📂 资源名称</div>
         </div>
 
-        @if (Model.ProcessedAt.HasValue)
-        {
-            <div class="detail-row">
-                <span class="label">⏰ 处理时间</span>
-                <span class="value">@Model.ProcessedAt.Value.ToString("yyyy-MM-dd HH:mm:ss")</span>
+        <!-- 信息网格 -->
+        <div class="info-grid">
+            <!-- 申请人 -->
+            <div class="info-item">
+                <span class="label">👤 申请人</span>
+                <span class="value"><strong style="color:#fff;">@Model.UserName</strong></span>
             </div>
-        }
 
-        <!-- ===== 支付信息 ===== -->
-        <div class="detail-row">
-            <span class="label">💰 支付状态</span>
-            <span class="value">
-                @if (Model.IsPaid)
-                {
-                    <span style="color:#28a745;">✅ 已支付</span>
-                    @if (Model.PaidAt.HasValue)
-                    {
-                        <span style="color:rgba(255,255,255,0.2);font-size:0.75rem;margin-left:0.5rem;">
-                            @Model.PaidAt.Value.ToString("yyyy-MM-dd HH:mm")
-                        </span>
-                    }
-                    if (!string.IsNullOrEmpty(Model.PaidNote))
-                    {
-                        <div style="color:rgba(255,255,255,0.15);font-size:0.7rem;margin-top:0.2rem;">
-                            📝 备注：@Model.PaidNote
-                        </div>
-                    }
-                }
-                else
-                {
-                    <span style="color:#ffc107;">⏳ 未支付</span>
-                    if (!string.IsNullOrEmpty(Model.OrderId))
-                    {
-                        <span style="color:rgba(255,255,255,0.15);font-size:0.75rem;margin-left:0.5rem;">
-                            订单号：<span style="font-family:monospace;">@Model.OrderId</span>
-                        </span>
-                    }
-                }
-            </span>
-        </div>
+            <!-- 邮箱 -->
+            <div class="info-item">
+                <span class="label">📧 邮箱</span>
+                <span class="value">@Model.UserEmail</span>
+            </div>
 
-        <!-- ===== 验证信息 ===== -->
-        @if (!string.IsNullOrEmpty(Model.VerifyPlatform) && !string.IsNullOrEmpty(Model.VerifyAccountId))
-        {
-            <div class="detail-row">
-                <span class="label">🔍 验证信息</span>
+            <!-- 联系人 -->
+            <div class="info-item">
+                <span class="label">📋 联系人</span>
+                <span class="value">@Model.PersonName</span>
+            </div>
+
+            <!-- 人物/CP -->
+            <div class="info-item">
+                <span class="label">📝 人物/CP</span>
+                <span class="value"><span class="highlight">@Model.CharacterName</span></span>
+            </div>
+
+            <!-- 平台 -->
+            <div class="info-item">
+                <span class="label">📱 平台</span>
                 <span class="value">
-                    <div>
-                        <strong style="color:#fff;">@Model.VerifyPlatform</strong>
-                        <span style="color:rgba(255,255,255,0.3);"> - </span>
-                        <span style="color:rgba(255,255,255,0.5);">@Model.VerifyAccountId</span>
-                    </div>
-                    <div style="font-size:0.75rem;color:rgba(255,255,255,0.2);margin-top:0.2rem;">
-                        @(Model.VerifyStatus == "auto_verified" ? "✅ 自动验证通过" :
-                          Model.VerifyStatus == "manual_required" ? "⚠️ 待人工核验" :
-                          Model.VerifyStatus == "rejected" ? "❌ 验证未通过" : "⏳ 未验证")
-                        @if (!string.IsNullOrEmpty(Model.FollowVerifyError))
+                    @if (!string.IsNullOrEmpty(Model.Platform1))
+                    {
+                        <span>@Model.Platform1</span>
+                        @if (!string.IsNullOrEmpty(Model.Platform2))
                         {
-                            <span style="display:block;color:rgba(255,255,255,0.1);">@Model.FollowVerifyError</span>
+                            <span> + @Model.Platform2</span>
                         }
-                    </div>
+                        @if (!string.IsNullOrEmpty(Model.PlatformOther))
+                        {
+                            <span style="color:rgba(255,255,255,0.2);font-size:0.75rem;">（@Model.PlatformOther）</span>
+                        }
+                    }
+                    else
+                    {
+                        <span style="color:rgba(255,255,255,0.15);">未选择</span>
+                    }
                 </span>
             </div>
-        }
 
-        <!-- ===== 文件 ===== -->
-        @if (!string.IsNullOrEmpty(Model.FileUrl))
-        {
-            <div class="detail-row">
-                <span class="label">📎 资源文件</span>
+            <!-- 资源类型 -->
+            <div class="info-item">
+                <span class="label">📂 资源类型</span>
+                <span class="value">@Model.ResourceType</span>
+            </div>
+
+            <!-- 人物设定 -->
+            <div class="info-item">
+                <span class="label">⚙️ 人物设定</span>
+                <span class="value"><span class="highlight">@Model.CharacterSetting</span></span>
+            </div>
+
+            <!-- 申请时间 -->
+            <div class="info-item">
+                <span class="label">⏰ 申请时间</span>
+                <span class="value" style="font-size:0.8rem;color:rgba(255,255,255,0.3);">@Model.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss")</span>
+            </div>
+
+            <!-- 处理时间 -->
+            @if (Model.ProcessedAt.HasValue)
+            {
+                <div class="info-item">
+                    <span class="label">⏰ 处理时间</span>
+                    <span class="value" style="font-size:0.8rem;color:rgba(255,255,255,0.3);">@Model.ProcessedAt.Value.ToString("yyyy-MM-dd HH:mm:ss")</span>
+                </div>
+            }
+
+            <!-- 偏好设置 -->
+            <div class="info-item full-width">
+                <span class="label">📊 偏好设置</span>
                 <span class="value">
-                    <a href="@Model.FileUrl" target="_blank" class="file-link">📥 下载文件</a>
+                    <span class="preference-tag @(Model.NovelPreference == "不需要" ? "none" : Model.NovelPreference == "纯爱" ? "love" : Model.NovelPreference == "剧情" ? "story" : "action")">
+                        📖 @Model.NovelPreference
+                    </span>
+                    <span class="preference-tag @(Model.ComicPreference == "不需要" ? "none" : Model.ComicPreference == "纯爱" ? "love" : Model.ComicPreference == "剧情" ? "story" : "action")">
+                        🎨 @Model.ComicPreference
+                    </span>
+                    <span class="preference-tag @(Model.ImagePreference == "不需要" ? "none" : Model.ImagePreference == "纯爱" ? "love" : Model.ImagePreference == "剧情" ? "story" : "action")">
+                        🖼️ @Model.ImagePreference
+                    </span>
                 </span>
             </div>
-        }
 
-        @if (!string.IsNullOrEmpty(Model.AdminNote))
-        {
-            <div class="detail-row">
-                <span class="label">📝 管理员备注</span>
-                <span class="value" style="color:rgba(255,255,255,0.3);font-style:italic;">@Model.AdminNote</span>
-            </div>
-        }
+            <!-- 验证信息 -->
+            @if (!string.IsNullOrEmpty(Model.VerifyPlatform) && !string.IsNullOrEmpty(Model.VerifyAccountId))
+            {
+                <div class="info-item full-width">
+                    <span class="label">🔍 验证信息</span>
+                    <span class="value">
+                        <div class="verify-section" style="margin-top:0;">
+                            <div class="verify-content">
+                                <span class="account">
+                                    <strong>@Model.VerifyPlatform</strong>
+                                    <span style="color:rgba(255,255,255,0.15);"> / </span>
+                                    @Model.VerifyAccountId
+                                </span>
+                                <span class="status-badge @(Model.VerifyStatus == "auto_verified" ? "status-verified" : Model.VerifyStatus == "manual_required" ? "status-manual" : "status-unverified")">
+                                    @(Model.VerifyStatus == "auto_verified" ? "✅ 已验证" :
+                                      Model.VerifyStatus == "manual_required" ? "⚠️ 待人工核验" :
+                                      "⏳ 未验证")
+                                </span>
+                            </div>
+                            @if (!string.IsNullOrEmpty(Model.FollowVerifyError))
+                            {
+                                <div style="font-size:0.7rem;color:rgba(255,255,255,0.15);margin-top:0.2rem;">
+                                    ⚠️ @Model.FollowVerifyError
+                                </div>
+                            }
+                        </div>
+                    </span>
+                </div>
+            }
 
-        <div class="detail-row" style="border-top:1px solid rgba(255,255,255,0.02);padding-top:0.8rem;margin-top:0.3rem;">
-            <span class="label" style="color:rgba(255,255,255,0.04);">🆔 申请ID</span>
-            <span class="value" style="color:rgba(255,255,255,0.04);font-size:0.7rem;font-family:'Courier New',monospace;">#@Model.Id</span>
+            <!-- 管理员备注 -->
+            @if (!string.IsNullOrEmpty(Model.AdminNote))
+            {
+                <div class="admin-note">
+                    <div class="note-label">📝 管理员备注</div>
+                    @Model.AdminNote
+                </div>
+            }
+
+            <!-- 处理状态 -->
+            @if (!string.IsNullOrEmpty(Model.AdminName))
+            {
+                <div class="info-item full-width" style="border-bottom:none;padding-top:0.2rem;">
+                    <span class="label">👨‍💼 处理人</span>
+                    <span class="value" style="font-size:0.8rem;color:rgba(255,255,255,0.15);">@Model.AdminName</span>
+                </div>
+            }
         </div>
     </div>
 </div>
