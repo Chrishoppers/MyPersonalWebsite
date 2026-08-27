@@ -2220,6 +2220,94 @@ public async Task<IActionResult> UnbanUser(int id)
                 return null;
             }
         }
+        // ============================================================
+// ⭐ 处理资源申请（管理员）
+// ============================================================
+
+[HttpGet]
+public async Task<IActionResult> ProcessResource(int id)
+{
+    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+    if (isAdmin != 1)
+    {
+        return RedirectToAction("Login", "Auth");
+    }
+
+    var request = await _dataSync.GetResourceRequestByIdAsync(id);
+    if (request == null)
+    {
+        return NotFound();
+    }
+
+    var adminName = HttpContext.Session.GetString("Username") ?? "管理员";
+    ViewBag.AdminName = adminName;
+    
+    return View(request);
+}
+
+[HttpPost]
+[ValidateAntiForgeryToken]
+public async Task<IActionResult> ProcessResource(ResourceRequest request, IFormFile? resourceFile)
+{
+    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+    if (isAdmin != 1)
+    {
+        return RedirectToAction("Login", "Auth");
+    }
+
+    var existing = await _dataSync.GetResourceRequestByIdAsync(request.Id);
+    if (existing == null)
+    {
+        return NotFound();
+    }
+
+    // 处理附件
+    byte[]? attachmentData = null;
+    string? attachmentName = null;
+
+    if (resourceFile != null && resourceFile.Length > 0)
+    {
+        using var memoryStream = new MemoryStream();
+        await resourceFile.CopyToAsync(memoryStream);
+        attachmentData = memoryStream.ToArray();
+        attachmentName = resourceFile.FileName;
+        Console.WriteLine($"📎 附件已读取: {attachmentName} ({attachmentData.Length} bytes)");
+    }
+
+    // 更新状态
+    existing.Status = request.Status;
+    existing.FoundTypes = request.FoundTypes ?? "";
+    existing.NotFoundTypes = request.NotFoundTypes ?? "";
+    existing.AdminNote = request.AdminNote ?? "";
+    existing.AdminName = HttpContext.Session.GetString("Username") ?? "管理员";
+    existing.ProcessedAt = DateTime.Now;
+
+    // 人工核验
+    if (existing.VerifyStatus == "manual_required")
+    {
+        var isFollowVerified = Request.Form["IsFollowVerified"].ToString();
+        if (isFollowVerified == "true")
+        {
+            existing.VerifyStatus = "auto_verified";
+            existing.IsFollowVerified = true;
+            existing.FollowVerifyError = null;
+        }
+        else
+        {
+            existing.VerifyStatus = "rejected";
+            existing.IsFollowVerified = false;
+            existing.FollowVerifyError = "管理员人工核验未通过";
+        }
+    }
+
+    await _dataSync.UpdateResourceRequestAsync(existing);
+
+    // 发送邮件（含附件）
+    await _emailService.SendResourceResultEmailAsync(existing, attachmentData, attachmentName);
+
+    TempData["Success"] = "✅ 资源已处理，邮件（含附件）已发送给用户";
+    return RedirectToAction("ResourceManagement");
+}
 
         // ============================================================
         // 辅助类
