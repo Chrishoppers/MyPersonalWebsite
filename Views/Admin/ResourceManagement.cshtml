@@ -36,7 +36,6 @@
     .stat-card.manual .num { color: #ff6b6b; }
     .stat-card.processed .num { color: #28a745; }
     .stat-card.total .num { color: #4facfe; }
-    .stat-card.payment .num { color: #07C160; }
 
     .section-title { font-size: 1rem; font-weight: 700; color: #fff; margin: 1.2rem 0 0.8rem; display: flex; align-items: center; gap: 0.5rem; }
     .section-title .count { font-size: 0.65rem; padding: 0.05rem 0.6rem; border-radius: 20px; background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.2); }
@@ -50,9 +49,8 @@
     .verify-auto { background: rgba(40,167,69,0.08); color: #28a745; border: 1px solid rgba(40,167,69,0.04); }
     .verify-manual { background: rgba(255,107,107,0.08); color: #ff6b6b; border: 1px solid rgba(255,107,107,0.04); animation: pulse-warning 1.5s ease-in-out infinite; }
     .verify-pending { background: rgba(255,193,7,0.06); color: #ffc107; border: 1px solid rgba(255,193,7,0.04); }
-    .verify-rejected { background: rgba(220,53,69,0.06); color: #dc3545; border: 1px solid rgba(220,53,69,0.04); }
 
-    @keyframes pulse-warning { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    @@keyframes pulse-warning { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
 
     .btn-process { padding: 0.2rem 1rem; border: 1px solid rgba(139,92,246,0.06); border-radius: 30px; background: rgba(139,92,246,0.04); color: #8B5CF6; text-decoration: none; font-size: 0.7rem; transition: all 0.3s ease; display: inline-block; }
     .btn-process:hover { background: rgba(139,92,246,0.08); }
@@ -66,16 +64,12 @@
     .btn-manual-verify.reject { background: rgba(220,53,69,0.08); color: #dc3545; }
     .btn-manual-verify.reject:hover { background: rgba(220,53,69,0.15); }
 
-    .btn-confirm-payment { padding: 0.2rem 0.8rem; border: none; border-radius: 20px; font-size: 0.6rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease; font-family: inherit; background: rgba(7,193,96,0.08); color: #07C160; border: 1px solid rgba(7,193,96,0.04); }
-    .btn-confirm-payment:hover { background: rgba(7,193,96,0.15); }
-
     .status-badge-sm { padding: 0.05rem 0.6rem; border-radius: 20px; font-size: 0.55rem; font-weight: 600; }
     .status-pending { background: rgba(255,193,7,0.06); color: #ffc107; border: 1px solid rgba(255,193,7,0.04); }
     .status-processing { background: rgba(79,172,254,0.06); color: #4facfe; border: 1px solid rgba(79,172,254,0.04); }
     .status-completed { background: rgba(40,167,69,0.06); color: #28a745; border: 1px solid rgba(40,167,69,0.04); }
     .status-rejected { background: rgba(220,53,69,0.06); color: #dc3545; border: 1px solid rgba(220,53,69,0.04); }
     .status-refunded { background: rgba(245,158,11,0.06); color: #F59E0B; border: 1px solid rgba(245,158,11,0.04); }
-    .status-paid { background: rgba(40,167,69,0.06); color: #28a745; border: 1px solid rgba(40,167,69,0.04); }
 
     .empty-state { text-align: center; padding: 2rem; color: rgba(255,255,255,0.06); font-size: 0.85rem; }
     .processed-list { max-height: 400px; overflow-y: auto; }
@@ -88,9 +82,9 @@
     .toast-msg.error { background: rgba(220,53,69,0.8); }
     .toast-msg.info { background: rgba(79,172,254,0.8); }
 
-    @keyframes slideUp { from { opacity: 0; transform: translateY(20px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+    @@keyframes slideUp { from { opacity: 0; transform: translateY(20px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
 
-    @media (max-width: 640px) {
+    @@media (max-width: 640px) {
         .request-item { flex-direction: column; align-items: stretch; }
         .request-item .right { display: flex; justify-content: space-between; align-items: center; }
         .stats-row { grid-template-columns: repeat(2, 1fr); }
@@ -341,37 +335,6 @@
         })
         .catch(function() {
             showToast('❌ 操作失败，请重试', 'error');
-        });
-    }
-
-    // ============================================================
-    // ⭐ 确认收款（已废弃，但保留以防万一）
-    // ============================================================
-    function confirmPayment(requestId) {
-        if (!confirm('确认已收到该订单的付款吗？')) return;
-
-        var note = prompt('请输入备注（可选）：', '');
-        if (note === null) return;
-
-        fetch('/Admin/ConfirmPayment', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'RequestVerificationToken': token
-            },
-            body: 'requestId=' + requestId + '&note=' + encodeURIComponent(note)
-        })
-        .then(function(r) { return r.json(); })
-        .then(function(data) {
-            if (data.success) {
-                showToast(data.message, 'success');
-                setTimeout(function() { location.reload(); }, 800);
-            } else {
-                showToast(data.message || '操作失败', 'error');
-            }
-        })
-        .catch(function() {
-            showToast('操作失败，请重试', 'error');
         });
     }
 </script>
