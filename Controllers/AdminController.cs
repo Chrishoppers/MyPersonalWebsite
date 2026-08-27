@@ -1432,86 +1432,84 @@ namespace MyPersonalWebsite.Controllers
         // 19. 封禁用户
         // ============================================================
 
-       [HttpPost]
-public async Task<IActionResult> BanUser(int id, int hours, string reason, string note)
-{
-    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-    if (isAdmin != 1)
-        return Json(new { success = false, message = "权限不足" });
+        [HttpPost]
+        public async Task<IActionResult> BanUser(int id, int hours, string reason, string note)
+        {
+            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+            if (isAdmin != 1)
+                return Json(new { success = false, message = "权限不足" });
 
-    var user = await _dataSync.GetUserByIdAsync(id);
-    if (user == null)
-        return Json(new { success = false, message = "用户不存在" });
+            var user = await _dataSync.GetUserByIdAsync(id);
+            if (user == null)
+                return Json(new { success = false, message = "用户不存在" });
 
-    if (user.IsAdmin)
-        return Json(new { success = false, message = "不能封禁管理员" });
+            if (user.IsAdmin)
+                return Json(new { success = false, message = "不能封禁管理员" });
 
-    var adminName = HttpContext.Session.GetString("Username") ?? "管理员";
+            var adminName = HttpContext.Session.GetString("Username") ?? "管理员";
 
-    user.IsBanned = true;
-    user.BanExpiry = hours > 0 ? DateTime.Now.AddHours(hours) : (DateTime?)null;
-    user.BanReason = reason;
-    user.BanNote = note;
-    user.BannedAt = DateTime.Now;
-    user.BannedBy = adminName;
-    user.BanCount += 1;
+            user.IsBanned = true;
+            user.BanExpiry = hours > 0 ? DateTime.Now.AddHours(hours) : (DateTime?)null;
+            user.BanReason = reason;
+            user.BanNote = note;
+            user.BannedAt = DateTime.Now;
+            user.BannedBy = adminName;
+            user.BanCount += 1;
 
-    await _dataSync.UpdateUserAsync(user);
+            await _dataSync.UpdateUserAsync(user);
 
-    try
-    {
-        // ✅ 修复：传入正确的参数 (email, username, reason)
-        await _emailService.SendBanNotificationAsync(
-            user.Email,      // 收件人邮箱
-            user.Username,   // 用户名
-            reason ?? "违反网站规定"  // 封禁原因
-        );
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"邮件发送失败: {ex.Message}");
-    }
+            try
+            {
+                await _emailService.SendBanNotificationAsync(
+                    user.Email,
+                    user.Username,
+                    reason ?? "违反网站规定"
+                );
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"邮件发送失败: {ex.Message}");
+            }
 
-    return Json(new { success = true, message = $"已封禁用户 {user.Username}" });
-}
+            return Json(new { success = true, message = $"已封禁用户 {user.Username}" });
+        }
 
         // ============================================================
         // 20. 解封用户
         // ============================================================
 
         [HttpPost]
-public async Task<IActionResult> UnbanUser(int id)
-{
-    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-    if (isAdmin != 1)
-        return Json(new { success = false, message = "权限不足" });
+        public async Task<IActionResult> UnbanUser(int id)
+        {
+            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+            if (isAdmin != 1)
+                return Json(new { success = false, message = "权限不足" });
 
-    var user = await _dataSync.GetUserByIdAsync(id);
-    if (user == null)
-        return Json(new { success = false, message = "用户不存在" });
+            var user = await _dataSync.GetUserByIdAsync(id);
+            if (user == null)
+                return Json(new { success = false, message = "用户不存在" });
 
-    user.IsBanned = false;
-    user.BanExpiry = null;
-    user.BanReason = null;
-    user.BanNote = null;
+            user.IsBanned = false;
+            user.BanExpiry = null;
+            user.BanReason = null;
+            user.BanNote = null;
 
-    await _dataSync.UpdateUserAsync(user);
+            await _dataSync.UpdateUserAsync(user);
 
-    try
-    {
-        // ✅ 修复：传入正确的参数 (email, username)
-        await _emailService.SendUnbanNotificationAsync(
-            user.Email,      // 收件人邮箱
-            user.Username    // 用户名
-        );
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"邮件发送失败: {ex.Message}");
-    }
+            try
+            {
+                await _emailService.SendUnbanNotificationAsync(
+                    user.Email,
+                    user.Username
+                );
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"邮件发送失败: {ex.Message}");
+            }
 
-    return Json(new { success = true, message = $"已解封用户 {user.Username}" });
-}
+            return Json(new { success = true, message = $"已解封用户 {user.Username}" });
+        }
 
         // ============================================================
         // 21. 删除用户
@@ -1898,6 +1896,13 @@ public async Task<IActionResult> UnbanUser(int id)
 
             await _dataSync.UpdateUserAsync(user);
 
+            // ⭐ 如果当前登录用户就是被操作的用户，更新 Session
+            var currentUserId = HttpContext.Session.GetInt32("UserId");
+            if (currentUserId.HasValue && currentUserId.Value == userId)
+            {
+                HttpContext.Session.SetInt32("IsRestricted", restricted ? 1 : 0);
+            }
+
             return Json(new
             {
                 success = true,
@@ -1917,22 +1922,23 @@ public async Task<IActionResult> UnbanUser(int id)
 
             var allRequests = await _dataSync.GetAllResourceRequestsAsync();
 
-            var pendingPaymentRequests = allRequests.Where(r => !r.IsPaid && r.Status != "rejected" && r.Status != "refunded").ToList();
-            var paidRequests = allRequests.Where(r => r.IsPaid && (r.Status == "paid" || r.Status == "pending")).ToList();
+            // ⭐ 不再需要待付款和已付款分类（支付功能已移除）
             var pendingRequests = allRequests.Where(r => r.Status == "pending" || r.Status == "processing").ToList();
             var manualVerifyRequests = allRequests.Where(r => r.VerifyStatus == "manual_required" && r.Status != "completed" && r.Status != "rejected").ToList();
             var processedRequests = allRequests.Where(r => r.Status == "completed" || r.Status == "rejected" || r.Status == "refunded").ToList();
 
-            ViewBag.PendingPaymentCount = pendingPaymentRequests.Count;
-            ViewBag.PendingPaymentRequests = pendingPaymentRequests;
-            ViewBag.PaidRequests = paidRequests;
             ViewBag.PendingCount = pendingRequests.Count;
-            ViewBag.ManualVerifyCount = manualVerifyRequests.Count;
-            ViewBag.ProcessedCount = processedRequests.Count;
-            ViewBag.TotalCount = allRequests.Count;
             ViewBag.PendingRequests = pendingRequests;
+            ViewBag.ManualVerifyCount = manualVerifyRequests.Count;
             ViewBag.ManualVerifyRequests = manualVerifyRequests;
+            ViewBag.ProcessedCount = processedRequests.Count;
             ViewBag.ProcessedRequests = processedRequests.Take(50).ToList();
+            ViewBag.TotalCount = allRequests.Count;
+
+            // ⭐ 保留空数据以兼容视图
+            ViewBag.PendingPaymentCount = 0;
+            ViewBag.PendingPaymentRequests = new List<ResourceRequest>();
+            ViewBag.PaidRequests = new List<ResourceRequest>();
 
             return View();
         }
@@ -2013,7 +2019,35 @@ public async Task<IActionResult> UnbanUser(int id)
             return Json(new { success = true, message = "已删除" });
         }
 
-        
+        [HttpPost]
+        public async Task<IActionResult> ConfirmPayment(int requestId, string? note)
+        {
+            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+            if (isAdmin != 1)
+                return Json(new { success = false, message = "权限不足" });
+
+            var request = await _dataSync.GetResourceRequestByIdAsync(requestId);
+            if (request == null)
+                return Json(new { success = false, message = "申请不存在" });
+
+            if (request.IsPaid)
+                return Json(new { success = false, message = "该订单已确认收款" });
+
+            var adminName = HttpContext.Session.GetString("Username") ?? "管理员";
+
+            await _dataSync.ConfirmPaymentAsync(requestId, adminName, note);
+
+            try
+            {
+                await _emailService.SendPaymentConfirmedEmailAsync(request);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"支付确认邮件发送失败: {ex.Message}");
+            }
+
+            return Json(new { success = true, message = $"✅ 已确认收款 #{request.OrderId}" });
+        }
 
         [HttpPost]
         public async Task<IActionResult> ManualVerifyFollow(int requestId, bool approved)
@@ -2220,7 +2254,6 @@ public async Task<IActionResult> UnbanUser(int id)
                 return null;
             }
         }
-       
 
         // ============================================================
         // 辅助类
