@@ -2013,35 +2013,7 @@ public async Task<IActionResult> UnbanUser(int id)
             return Json(new { success = true, message = "已删除" });
         }
 
-        [HttpPost]
-        public async Task<IActionResult> ConfirmPayment(int requestId, string? note)
-        {
-            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-            if (isAdmin != 1)
-                return Json(new { success = false, message = "权限不足" });
-
-            var request = await _dataSync.GetResourceRequestByIdAsync(requestId);
-            if (request == null)
-                return Json(new { success = false, message = "申请不存在" });
-
-            if (request.IsPaid)
-                return Json(new { success = false, message = "该订单已确认收款" });
-
-            var adminName = HttpContext.Session.GetString("Username") ?? "管理员";
-
-            await _dataSync.ConfirmPaymentAsync(requestId, adminName, note);
-
-            try
-            {
-                await _emailService.SendPaymentConfirmedEmailAsync(request);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"支付确认邮件发送失败: {ex.Message}");
-            }
-
-            return Json(new { success = true, message = $"✅ 已确认收款 #{request.OrderId}" });
-        }
+        
 
         [HttpPost]
         public async Task<IActionResult> ManualVerifyFollow(int requestId, bool approved)
