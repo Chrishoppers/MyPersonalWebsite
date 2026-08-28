@@ -288,6 +288,7 @@ namespace MyPersonalWebsite.Controllers
             request.Amount = 2.00m;
             request.Status = "pending";
             request.CreatedAt = now;
+            request.ResourceName = request.CharacterName;  // 使用人物/CP名字作为资源名称
             request.IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "";
             request.UserAgent = Request.Headers["User-Agent"].ToString();
             request.OrderId = $"REQ_{DateTime.Now:yyyyMMddHHmmss}_{newId}_{new Random().Next(1000, 9999)}";
