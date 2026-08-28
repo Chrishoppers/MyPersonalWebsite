@@ -575,7 +575,7 @@ namespace MyPersonalWebsite.Services
                     <p>您的资源申请已处理完成：</p>
 
                     <div style='background: #1a1a2e; padding: 15px; border-radius: 8px; margin: 10px 0; border: 1px solid #2a2a3e;'>
-                        <p><strong>👤 联系人：</strong>{request.PersonName}</p>
+                        
                         <p><strong>📱 平台：</strong>{request.Platform1}{(string.IsNullOrEmpty(request.Platform2) ? "" : " + " + request.Platform2)}</p>
                         <p><strong>📂 资源名称：</strong>{request.ResourceName}</p>
                         <p><strong>📊 状态：</strong>{(request.Status == "completed" ? "✅ 已完成" : request.Status == "rejected" ? "❌ 已拒绝" : request.Status == "refunded" ? "💰 已退款" : "⏳ 处理中")}</p>
