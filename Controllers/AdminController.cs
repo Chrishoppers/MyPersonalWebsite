@@ -1944,71 +1944,69 @@ namespace MyPersonalWebsite.Controllers
             return View();
         }
 
-        [HttpGet]
-        public async Task<IActionResult> ProcessResource(int id)
-        {
-            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-            if (isAdmin != 1) return RedirectToAction("Login", "Auth");
-
-            var request = await _dataSync.GetResourceRequestByIdAsync(id);
-            if (request == null) return NotFound();
-
-            var adminName = HttpContext.Session.GetString("Username") ?? "管理员";
-            ViewBag.AdminName = adminName;
-            return View(request);
-        }
-
         [HttpPost]
-        public async Task<IActionResult> ProcessResource(ResourceRequest request, IFormFile? resourceFile)
+public async Task<IActionResult> ProcessResource(ResourceRequest request, List<IFormFile>? resourceFiles)
+{
+    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+    if (isAdmin != 1) return RedirectToAction("Login", "Auth");
+
+    var existing = await _dataSync.GetResourceRequestByIdAsync(request.Id);
+    if (existing == null) return NotFound();
+
+    // ⭐ 收集所有附件（最多200个）
+    var attachments = new List<(byte[] Data, string Name)>();
+
+    if (resourceFiles != null && resourceFiles.Any())
+    {
+        // 限制最多200个文件
+        var files = resourceFiles.Take(200).ToList();
+        
+        foreach (var file in files)
         {
-            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-            if (isAdmin != 1) return RedirectToAction("Login", "Auth");
-
-            var existing = await _dataSync.GetResourceRequestByIdAsync(request.Id);
-            if (existing == null) return NotFound();
-
-            byte[]? attachmentData = null;
-            string? attachmentName = null;
-
-            if (resourceFile != null && resourceFile.Length > 0)
+            if (file.Length > 0)
             {
                 using var memoryStream = new MemoryStream();
-                await resourceFile.CopyToAsync(memoryStream);
-                attachmentData = memoryStream.ToArray();
-                attachmentName = resourceFile.FileName;
-                Console.WriteLine($"📎 附件已读取: {attachmentName} ({attachmentData.Length} bytes)");
+                await file.CopyToAsync(memoryStream);
+                attachments.Add((memoryStream.ToArray(), file.FileName));
+                Console.WriteLine($"📎 附件已读取: {file.FileName} ({file.Length} bytes)");
             }
-
-            existing.Status = request.Status;
-            existing.FoundTypes = request.FoundTypes ?? "";
-            existing.NotFoundTypes = request.NotFoundTypes ?? "";
-            existing.AdminNote = request.AdminNote ?? "";
-            existing.AdminName = HttpContext.Session.GetString("Username") ?? "管理员";
-            existing.ProcessedAt = DateTime.Now;
-
-            if (existing.VerifyStatus == "manual_required")
-            {
-                var isFollowVerified = Request.Form["IsFollowVerified"].ToString();
-                if (isFollowVerified == "true")
-                {
-                    existing.VerifyStatus = "auto_verified";
-                    existing.IsFollowVerified = true;
-                    existing.FollowVerifyError = null;
-                }
-                else
-                {
-                    existing.VerifyStatus = "rejected";
-                    existing.IsFollowVerified = false;
-                    existing.FollowVerifyError = "管理员人工核验未通过";
-                }
-            }
-
-            await _dataSync.UpdateResourceRequestAsync(existing);
-            await _emailService.SendResourceResultEmailAsync(existing, attachmentData, attachmentName);
-
-            TempData["Success"] = "✅ 资源已处理，邮件（含附件）已发送给用户";
-            return RedirectToAction("ResourceManagement");
         }
+    }
+
+    // 更新申请状态
+    existing.Status = request.Status;
+    existing.FoundTypes = request.FoundTypes ?? "";
+    existing.NotFoundTypes = request.NotFoundTypes ?? "";
+    existing.AdminNote = request.AdminNote ?? "";
+    existing.AdminName = HttpContext.Session.GetString("Username") ?? "管理员";
+    existing.ProcessedAt = DateTime.Now;
+
+    // 人工核验
+    if (existing.VerifyStatus == "manual_required")
+    {
+        var isFollowVerified = Request.Form["IsFollowVerified"].ToString();
+        if (isFollowVerified == "true")
+        {
+            existing.VerifyStatus = "auto_verified";
+            existing.IsFollowVerified = true;
+            existing.FollowVerifyError = null;
+        }
+        else
+        {
+            existing.VerifyStatus = "rejected";
+            existing.IsFollowVerified = false;
+            existing.FollowVerifyError = "管理员人工核验未通过";
+        }
+    }
+
+    await _dataSync.UpdateResourceRequestAsync(existing);
+    
+    // ⭐ 发送邮件（多个附件）
+    await _emailService.SendResourceResultEmailWithAttachmentsAsync(existing, attachments);
+
+    TempData["Success"] = $"✅ 资源已处理，{attachments.Count} 个附件已发送给用户";
+    return RedirectToAction("ResourceManagement");
+}
 
         [HttpPost]
         public async Task<IActionResult> DeleteResourceRequest(int id)
