@@ -165,23 +165,6 @@
         background: transparent;
     }
 
-    .likert-table input[type="radio"]:checked {
-        background: #8B5CF6;
-    }
-
-    .likert-table .radio-label {
-        display: inline-block;
-        padding: 0.1rem 0.3rem;
-        border-radius: 4px;
-        font-size: 0.7rem;
-        color: rgba(255,255,255,0.1);
-        transition: all 0.3s ease;
-    }
-
-    .likert-table input[type="radio"]:checked+.radio-label {
-        color: #8B5CF6;
-    }
-
     /* 平台选择 */
     .platform-grid {
         display: grid;
@@ -295,7 +278,29 @@
         color: #fff;
     }
 
-    /* 验证结果 */
+    .btn-disclaimer {
+        width: 100%;
+        padding: 0.8rem 1.2rem;
+        border: 2px solid rgba(139,92,246,0.08);
+        border-radius: 16px;
+        background: rgba(139,92,246,0.02);
+        color: rgba(255,255,255,0.3);
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-family: inherit;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+
+    .btn-disclaimer:hover {
+        border-color: rgba(139,92,246,0.15);
+        background: rgba(139,92,246,0.04);
+        color: rgba(255,255,255,0.5);
+    }
+
     .verify-result {
         margin-top: 0.3rem;
         font-size: 0.8rem;
@@ -333,19 +338,49 @@
         border: 1px solid rgba(79,172,254,0.04);
     }
 
+    .alert-warning {
+        padding: 0.8rem 1.2rem;
+        border-radius: 12px;
+        background: rgba(255,193,7,0.04);
+        border: 1px solid rgba(255,193,7,0.06);
+        color: rgba(255,193,7,0.4);
+        font-size: 0.85rem;
+        margin-bottom: 1rem;
+    }
+
+    .alert-success {
+        padding: 0.8rem 1.2rem;
+        border-radius: 12px;
+        background: rgba(40,167,69,0.04);
+        border: 1px solid rgba(40,167,69,0.06);
+        color: #28a745;
+        font-size: 0.85rem;
+        margin-bottom: 1rem;
+    }
+
+    .alert-danger {
+        padding: 0.8rem 1.2rem;
+        border-radius: 12px;
+        background: rgba(220,53,69,0.04);
+        border: 1px solid rgba(220,53,69,0.06);
+        color: #dc3545;
+        font-size: 0.85rem;
+        margin-bottom: 1rem;
+    }
+
     /* ===== 免责声明弹窗 ===== */
     .disclaimer-overlay {
         position: fixed;
         inset: 0;
-        background: rgba(0, 0, 0, 0.92);
+        background: rgba(0, 0, 0, 0.95);
         backdrop-filter: blur(30px);
         z-index: 9999;
         display: none;
         align-items: center;
         justify-content: center;
         padding: 1.5rem;
-        animation: modalFadeIn 0.4s ease;
         overflow-y: auto;
+        animation: modalFadeIn 0.4s ease;
     }
 
     .disclaimer-overlay.active {
@@ -364,224 +399,272 @@
     }
 
     .disclaimer-modal {
-        background: rgba(20, 20, 40, 0.98);
+        background: rgba(16, 16, 35, 0.98);
         border: 1px solid rgba(255, 255, 255, 0.04);
         border-radius: 28px;
-        max-width: 720px;
+        max-width: 780px;
         width: 100%;
-        max-height: 90vh;
+        max-height: 92vh;
         overflow-y: auto;
         padding: 2rem 2.2rem;
         box-shadow: 0 40px 120px rgba(0, 0, 0, 0.6);
+        position: relative;
     }
 
     .disclaimer-modal::-webkit-scrollbar {
         width: 4px;
     }
     .disclaimer-modal::-webkit-scrollbar-thumb {
-        background: rgba(139,92,246,0.15);
+        background: rgba(139, 92, 246, 0.15);
         border-radius: 10px;
     }
 
-    .disclaimer-modal .modal-title {
-        font-size: 1.5rem;
+    .modal-close-btn {
+        position: sticky;
+        top: 0;
+        float: right;
+        background: none;
+        border: none;
+        color: rgba(255, 255, 255, 0.08);
+        font-size: 1.8rem;
+        cursor: pointer;
+        transition: color 0.3s ease;
+        font-weight: 300;
+        z-index: 10;
+    }
+
+    .modal-close-btn:hover {
+        color: rgba(255, 255, 255, 0.25);
+    }
+
+    .disclaimer-header {
+        text-align: center;
+        margin-bottom: 1.5rem;
+        padding-right: 2rem;
+    }
+
+    .disclaimer-header .disclaimer-icon {
+        font-size: 3rem;
+        display: block;
+        margin-bottom: 0.2rem;
+    }
+
+    .disclaimer-header h2 {
+        font-size: 1.6rem;
         font-weight: 800;
-        background: linear-gradient(135deg, #8B5CF6, #EC4899);
+        background: linear-gradient(135deg, #8B5CF6, #EC4899, #F59E0B);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
-        margin-bottom: 0.2rem;
-        text-align: center;
+        margin-bottom: 0.1rem;
     }
 
-    .disclaimer-modal .modal-sub {
+    .disclaimer-header .disclaimer-sub {
         color: rgba(255, 255, 255, 0.15);
         font-size: 0.85rem;
-        margin-bottom: 1rem;
-        text-align: center;
     }
 
-    .disclaimer-modal .disclaimer-section {
+    .disclaimer-progress {
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+        margin-bottom: 1.2rem;
+        padding: 0.3rem 0;
+    }
+
+    .disclaimer-progress .progress-bar-track {
+        flex: 1;
+        height: 4px;
+        background: rgba(255, 255, 255, 0.04);
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    .disclaimer-progress .progress-bar-fill {
+        height: 100%;
+        border-radius: 10px;
+        background: linear-gradient(135deg, #8B5CF6, #EC4899);
+        transition: width 0.5s ease;
+        width: 0%;
+    }
+
+    .disclaimer-progress .progress-text {
+        font-size: 0.6rem;
+        color: rgba(255, 255, 255, 0.06);
+        font-weight: 600;
+        min-width: 32px;
+        text-align: right;
+        font-family: 'Courier New', monospace;
+    }
+
+    .disclaimer-section {
         background: rgba(255, 255, 255, 0.02);
-        border-radius: 14px;
-        padding: 0.8rem 1rem;
-        margin-bottom: 0.6rem;
+        border-radius: 16px;
+        padding: 1rem 1.2rem;
+        margin-bottom: 0.8rem;
         border: 1px solid rgba(255, 255, 255, 0.03);
+        transition: all 0.3s ease;
+        opacity: 0.3;
+        transform: scale(0.98);
     }
 
-    .disclaimer-modal .disclaimer-section .section-title {
+    .disclaimer-section.read {
+        opacity: 1;
+        transform: scale(1);
+        border-color: rgba(139, 92, 246, 0.06);
+        background: rgba(139, 92, 246, 0.02);
+    }
+
+    .disclaimer-section .section-title {
         color: rgba(255, 255, 255, 0.15);
         font-size: 0.6rem;
         text-transform: uppercase;
         letter-spacing: 0.08em;
         font-weight: 600;
         margin-bottom: 0.3rem;
-    }
-
-    .disclaimer-modal .disclaimer-section .item {
-        font-size: 0.75rem;
-        color: rgba(255, 255, 255, 0.25);
-        line-height: 1.8;
-        padding: 0.1rem 0;
         display: flex;
-        align-items: flex-start;
+        align-items: center;
         gap: 0.4rem;
     }
 
-    .disclaimer-modal .disclaimer-section .item .mark {
-        color: rgba(139, 92, 246, 0.2);
-        font-weight: 700;
-        flex-shrink: 0;
+    .disclaimer-section .section-title .section-icon {
+        font-size: 1rem;
     }
 
-    .disclaimer-modal .disclaimer-section .item strong {
-        color: rgba(255, 255, 255, 0.4);
+    .disclaimer-section .section-content p {
+        font-size: 0.78rem;
+        color: rgba(255, 255, 255, 0.3);
+        line-height: 1.8;
+        margin-bottom: 0.5rem;
+        padding-left: 0.5rem;
+        border-left: 2px solid rgba(255, 255, 255, 0.02);
+        padding-left: 0.8rem;
     }
 
-    .disclaimer-modal .disclaimer-section .item .highlight-pink {
-        color: #EC4899;
+    .disclaimer-section .section-content p strong {
+        color: rgba(255, 255, 255, 0.6);
     }
 
-    .disclaimer-modal .disclaimer-section .item .highlight-purple {
-        color: #8B5CF6;
+    .disclaimer-section .section-content ul {
+        margin: 0.3rem 0 0.5rem 1.5rem;
+        padding-left: 0.5rem;
+        list-style: none;
     }
 
-    .disclaimer-modal .disclaimer-check {
-        margin-top: 0.8rem;
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-        padding: 0.6rem 1rem;
-        background: rgba(40, 167, 69, 0.04);
-        border-radius: 12px;
-        border: 1px solid rgba(40, 167, 69, 0.04);
-    }
-
-    .disclaimer-modal .disclaimer-check .check-row {
-        display: flex;
-        align-items: flex-start;
-        gap: 0.6rem;
-    }
-
-    .disclaimer-modal .disclaimer-check input[type="checkbox"] {
-        width: 18px;
-        height: 18px;
-        accent-color: #8B5CF6;
-        cursor: pointer;
-        flex-shrink: 0;
-        margin-top: 0.1rem;
-    }
-
-    .disclaimer-modal .disclaimer-check label {
+    .disclaimer-section .section-content ul li {
+        font-size: 0.75rem;
         color: rgba(255, 255, 255, 0.2);
-        font-size: 0.8rem;
-        cursor: pointer;
-        line-height: 1.5;
+        line-height: 1.8;
+        padding: 0.05rem 0;
+        padding-left: 0.5rem;
     }
 
-    .disclaimer-modal .disclaimer-check label strong {
-        color: #8B5CF6;
+    .disclaimer-section .section-content ul li::before {
+        content: "• ";
+        color: rgba(139, 92, 246, 0.2);
     }
 
-    .disclaimer-modal .disclaimer-check label .highlight-pink {
+    .disclaimer-section .section-content .highlight-pink {
         color: #EC4899;
         font-weight: 600;
     }
 
-    .disclaimer-modal .modal-actions {
-        display: flex;
-        gap: 0.8rem;
-        margin-top: 1.2rem;
-        flex-wrap: wrap;
+    .disclaimer-section .section-content .highlight-purple {
+        color: #8B5CF6;
+        font-weight: 600;
     }
 
-    .disclaimer-modal .modal-actions .btn-disclaimer {
-        flex: 1;
-        padding: 0.7rem 1.5rem;
+    .disclaimer-section .section-content .highlight-gold {
+        color: #F59E0B;
+        font-weight: 600;
+    }
+
+    .disclaimer-section .section-content .highlight-green {
+        color: #28a745;
+        font-weight: 600;
+    }
+
+    .disclaimer-section .section-content .highlight-red {
+        color: #dc3545;
+        font-weight: 600;
+    }
+
+    .disclaimer-section .section-content .highlight-cyan {
+        color: #06B6D4;
+        font-weight: 600;
+    }
+
+    .disclaimer-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 1.2rem;
+        padding-top: 1rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.04);
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .disclaimer-footer .read-status {
+        font-size: 0.7rem;
+        color: rgba(255, 255, 255, 0.06);
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+
+    .disclaimer-footer .read-status.done {
+        color: rgba(40, 167, 69, 0.3);
+    }
+
+    .btn-disclaimer-confirm {
+        padding: 0.6rem 2.5rem;
         border: none;
         border-radius: 40px;
+        background: linear-gradient(135deg, #8B5CF6, #EC4899);
+        color: #fff;
         font-weight: 700;
         font-size: 0.9rem;
         cursor: pointer;
         transition: all 0.3s ease;
         font-family: inherit;
-        min-width: 120px;
+        opacity: 0.3;
+        pointer-events: none;
     }
 
-    .disclaimer-modal .modal-actions .btn-disclaimer.accept {
-        background: linear-gradient(135deg, #8B5CF6, #EC4899);
-        color: #fff;
+    .btn-disclaimer-confirm.enabled {
+        opacity: 1;
+        pointer-events: auto;
     }
 
-    .disclaimer-modal .modal-actions .btn-disclaimer.accept:hover {
+    .btn-disclaimer-confirm.enabled:hover {
         transform: translateY(-2px);
         box-shadow: 0 8px 40px rgba(108, 60, 225, 0.2);
     }
 
-    .disclaimer-modal .modal-actions .btn-disclaimer.accept:disabled {
-        opacity: 0.3;
-        cursor: not-allowed;
-        transform: none;
-    }
-
-    .disclaimer-modal .modal-actions .btn-disclaimer.reject {
-        background: rgba(255, 255, 255, 0.04);
-        color: rgba(255, 255, 255, 0.2);
+    .btn-disclaimer-close {
+        padding: 0.6rem 2rem;
         border: 1px solid rgba(255, 255, 255, 0.04);
-    }
-
-    .disclaimer-modal .modal-actions .btn-disclaimer.reject:hover {
-        background: rgba(255, 255, 255, 0.08);
-        color: rgba(255, 255, 255, 0.4);
-    }
-
-    .alert-warning {
-        padding: 0.8rem 1.2rem;
-        border-radius: 12px;
-        background: rgba(255, 193, 7, 0.04);
-        border: 1px solid rgba(255, 193, 7, 0.06);
-        color: rgba(255, 193, 7, 0.4);
+        border-radius: 40px;
+        background: rgba(255, 255, 255, 0.02);
+        color: rgba(255, 255, 255, 0.15);
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-family: inherit;
         font-size: 0.85rem;
-        margin-bottom: 1rem;
     }
 
-    .alert-success {
-        padding: 0.8rem 1.2rem;
-        border-radius: 12px;
-        background: rgba(40, 167, 69, 0.04);
-        border: 1px solid rgba(40, 167, 69, 0.06);
-        color: #28a745;
-        font-size: 0.85rem;
-        margin-bottom: 1rem;
+    .btn-disclaimer-close:hover {
+        background: rgba(255, 255, 255, 0.04);
+        color: rgba(255, 255, 255, 0.3);
     }
 
-    .alert-danger {
-        padding: 0.8rem 1.2rem;
-        border-radius: 12px;
-        background: rgba(220, 53, 69, 0.04);
-        border: 1px solid rgba(220, 53, 69, 0.06);
-        color: #dc3545;
-        font-size: 0.85rem;
-        margin-bottom: 1rem;
-    }
-
-    /* ⭐ 验证平台标签 */
-    .verify-platform-tag {
-        display: inline-block;
-        padding: 0.15rem 0.6rem;
-        border-radius: 20px;
+    .disclaimer-read-timer {
         font-size: 0.6rem;
-        font-weight: 600;
-        background: rgba(139,92,246,0.06);
-        color: #8B5CF6;
-        border: 1px solid rgba(139,92,246,0.04);
-        margin-top: 0.2rem;
-    }
-
-    .verify-platform-tag.verified {
-        background: rgba(40,167,69,0.06);
-        color: #28a745;
-        border-color: rgba(40,167,69,0.04);
+        color: rgba(255, 255, 255, 0.04);
+        margin-top: 0.3rem;
+        text-align: center;
+        font-family: 'Courier New', monospace;
     }
 
     @@media (max-width: 640px) {
@@ -612,9 +695,19 @@
         .disclaimer-modal {
             padding: 1.2rem;
         }
-        .disclaimer-modal .disclaimer-check .check-row {
+        .disclaimer-section {
+            padding: 0.8rem;
+        }
+        .disclaimer-footer {
             flex-direction: column;
-            gap: 0.2rem;
+            align-items: stretch;
+        }
+        .disclaimer-header h2 {
+            font-size: 1.2rem;
+        }
+        .btn-disclaimer-confirm {
+            width: 100%;
+            justify-content: center;
         }
     }
 
@@ -671,7 +764,7 @@
             </div>
 
             <!-- ============================================================
-            1. 平台选择（X、Pixiv、EhViewer、哔咔、其他）
+            1. 平台选择
             ============================================================ -->
             <div class="form-group">
                 <label>📱 平台选择 <span class="required">*</span> <span style="color:rgba(255,255,255,0.08);font-weight:400;font-size:0.7rem;">（最多选2项）</span></label>
@@ -737,7 +830,7 @@
             </div>
 
             <!-- ============================================================
-            5. 里克特量表（纯爱、肉、剧情、不需要）
+            5. 里克特量表
             ============================================================ -->
             <div class="form-group">
                 <label>📊 偏好设置 <span class="required">*</span></label>
@@ -779,7 +872,7 @@
             </div>
 
             <!-- ============================================================
-            6. ⭐⭐⭐ 平台验证关注（必填）⭐⭐⭐
+            6. 平台验证关注
             ============================================================ -->
             <div class="form-group">
                 <label>🔍 平台验证关注 <span class="required">*</span></label>
@@ -788,12 +881,10 @@
                         <label style="font-size:0.7rem;color:rgba(255,255,255,0.15);">选择平台</label>
                         <select id="VerifyPlatform" name="VerifyPlatform" required style="width:100%;padding:0.6rem 1rem;border-radius:12px;border:1px solid rgba(255,255,255,0.04);background:rgba(255,255,255,0.02);color:#fff;font-size:0.85rem;outline:none;font-family:inherit;">
                             <option value="">请选择平台</option>
-                            <option value="抖音">抖音</option>
-                            <option value="快手">快手</option>
-                            <option value="B站">B站</option>
-                            <option value="小红书">小红书</option>
-                            <option value="微博">微博</option>
-                            <option value="知乎">知乎</option>
+                            @foreach (var platform in supportedPlatforms)
+                            {
+                                <option value="@platform">@platform</option>
+                            }
                         </select>
                     </div>
                     <div>
@@ -812,33 +903,44 @@
             </div>
 
             <!-- ============================================================
-            7. 免责声明
+            7. ⭐ 完整免责声明
             ============================================================ -->
             <div class="form-group" style="margin-top:1rem;">
                 <label style="color:rgba(255,255,255,0.4);font-size:0.8rem;font-weight:500;margin-bottom:0.3rem;">
-                    📜 免责声明 <span class="required">*</span>
+                    📜 免责声明与用户协议 <span class="required">*</span>
                 </label>
-                <div style="background:rgba(255,255,255,0.02);border-radius:12px;padding:0.8rem 1rem;border:1px solid rgba(255,255,255,0.04);">
-                    <div style="color:rgba(255,255,255,0.15);font-size:0.8rem;line-height:1.6;margin-bottom:0.5rem;">
-                        <span style="color:#EC4899;font-weight:600;">⚠️ 重要声明：</span>
-                        我确认本申请涉及的内容为 <strong style="color:#EC4899;">男同性向（BL）内容</strong>，其他性向内容暂不受理。
-                    </div>
-                    <div style="display:flex;align-items:flex-start;gap:0.5rem;margin-top:0.3rem;">
-                        <input type="checkbox" id="AgreeToBLContent" name="AgreeToBLContent" value="true" style="margin-top:0.2rem;accent-color:#8B5CF6;" />
-                        <label for="AgreeToBLContent" style="color:rgba(255,255,255,0.2);font-size:0.8rem;cursor:pointer;">
-                            我已确认申请内容为 <strong style="color:#EC4899;">男同性向（BL）内容</strong>，其他性向内容暂不受理
-                        </label>
-                    </div>
-                    <div style="display:flex;align-items:flex-start;gap:0.5rem;margin-top:0.3rem;">
-                        <input type="checkbox" id="AgreeToTerms" name="AgreeToTerms" value="true" style="margin-top:0.2rem;accent-color:#8B5CF6;" />
-                        <label for="AgreeToTerms" style="color:rgba(255,255,255,0.2);font-size:0.8rem;cursor:pointer;">
-                            我已阅读并同意 <strong style="color:#8B5CF6;">完整免责声明</strong>（点击下方按钮查看）
-                        </label>
-                    </div>
-                    <button type="button" class="btn-verify" onclick="showFullDisclaimer()" style="margin-top:0.5rem;padding:0.3rem 1.2rem;font-size:0.7rem;background:rgba(139,92,246,0.06);color:#8B5CF6;border:none;border-radius:40px;cursor:pointer;font-family:inherit;">
-                        📋 查看完整免责声明
-                    </button>
+
+                <!-- 免责声明弹窗按钮 -->
+                <button type="button" class="btn-disclaimer" onclick="openFullDisclaimer()">
+                    <span style="font-size:1.2rem;">📜</span>
+                    点击阅读完整免责声明与用户协议
+                    <span style="font-size:0.7rem;color:rgba(255,255,255,0.06);">（必须阅读）</span>
+                </button>
+
+                <!-- 阅读状态 -->
+                <div id="disclaimerStatus" style="margin-top:0.5rem;padding:0.5rem 1rem;border-radius:12px;background:rgba(40,167,69,0.04);border:1px solid rgba(40,167,69,0.06);display:none;align-items:center;gap:0.5rem;">
+                    <span style="color:#28a745;">✅</span>
+                    <span style="color:rgba(255,255,255,0.3);font-size:0.85rem;">已阅读并同意免责声明与用户协议</span>
                 </div>
+
+                <!-- BL内容确认 -->
+                <div style="display:flex;align-items:flex-start;gap:0.5rem;margin-top:0.5rem;">
+                    <input type="checkbox" id="AgreeToBLContent" name="AgreeToBLContent" value="true" style="margin-top:0.2rem;accent-color:#8B5CF6;" />
+                    <label for="AgreeToBLContent" style="color:rgba(255,255,255,0.2);font-size:0.8rem;cursor:pointer;">
+                        我已确认申请内容为 <strong style="color:#EC4899;">男同性向（BL）内容</strong>
+                    </label>
+                </div>
+
+                <!-- 同意复选框（默认禁用，阅读完弹窗后自动启用） -->
+                <div style="display:flex;align-items:flex-start;gap:0.5rem;margin-top:0.3rem;opacity:0.3;pointer-events:none;transition:all 0.3s ease;" id="disclaimerCheckboxWrapper">
+                    <input type="checkbox" id="AgreeToTerms" name="AgreeToTerms" value="true" disabled style="margin-top:0.2rem;accent-color:#8B5CF6;" />
+                    <label for="AgreeToTerms" style="color:rgba(255,255,255,0.15);font-size:0.8rem;cursor:not-allowed;">
+                        我已阅读、理解并同意 <strong style="color:#8B5CF6;">完整免责声明与用户协议</strong>
+                        <span style="color:rgba(255,255,255,0.06);font-size:0.7rem;display:block;margin-top:0.1rem;">请先点击上方按钮阅读完整内容</span>
+                    </label>
+                </div>
+
+                <input type="hidden" id="AgreeToTermsHidden" name="AgreeToTerms" value="false" />
             </div>
 
             <!-- 提交按钮 -->
@@ -850,60 +952,222 @@
 </div>
 
 <!-- ============================================================
-完整免责声明弹窗
-============================================================ -->
+    ⭐ 完整免责声明弹窗
+    ============================================================ -->
 <div class="disclaimer-overlay" id="disclaimerOverlay">
     <div class="disclaimer-modal">
-        <div class="modal-title">📜 完整免责声明</div>
-        <div class="modal-sub">请仔细阅读以下条款，确认后提交</div>
+        <button class="modal-close-btn" onclick="closeDisclaimer()">✕</button>
 
-        <div class="disclaimer-section">
-            <div class="section-title">🏳️‍🌈 内容声明（重要）</div>
-            <div class="item"><span class="mark">•</span> 本资源申请服务仅受理 <strong class="highlight-pink">男同性向（BL）内容</strong></div>
-            <div class="item"><span class="mark">•</span> <strong class="highlight-pink">⚠️ 其他性向内容暂不受理</strong></div>
-            <div class="item"><span class="mark">•</span> 提交即代表你确认申请内容为男同性向（BL）内容</div>
+        <div class="disclaimer-header">
+            <span class="disclaimer-icon">📜</span>
+            <h2>免责声明与用户协议</h2>
+            <p class="disclaimer-sub">请仔细阅读以下所有条款，确认后勾选同意方可提交</p>
         </div>
 
-        <div class="disclaimer-section">
-            <div class="section-title">📋 服务说明</div>
-            <div class="item"><span class="mark">•</span> 当前平台为 <strong>Chris hopper 个人网站</strong></div>
-            <div class="item"><span class="mark">•</span> 所有操作 <strong style="color:#00FF88;">完全免费</strong></div>
-            <div class="item"><span class="mark">•</span> 资源需求由管理员 <strong>人工处理</strong></div>
-        </div>
-
-        <div class="disclaimer-section">
-            <div class="section-title">🔒 隐私声明</div>
-            <div class="item"><span class="mark">•</span> 数据仅用于 <strong>资源申请处理</strong></div>
-            <div class="item"><span class="mark">•</span> 不会分享给 <strong>任何第三方</strong></div>
-            <div class="item"><span class="mark">•</span> <strong style="color:#dc3545;">⚠️ 绝对不要泄露你的密码</strong></div>
-        </div>
-
-        <div class="disclaimer-section">
-            <div class="section-title">📄 版权声明</div>
-            <div class="item"><span class="mark">•</span> 资源仅限 <strong style="color:#F59E0B;">个人使用</strong></div>
-            <div class="item"><span class="mark">•</span> 版权问题由 <strong>申请人自行承担</strong></div>
-        </div>
-
-        <div class="disclaimer-check">
-            <div class="check-row">
-                <input type="checkbox" id="disclaimerBL" />
-                <label for="disclaimerBL">我已确认申请内容为 <strong class="highlight-pink">男同性向（BL）内容</strong></label>
+        <!-- 进度条 -->
+        <div class="disclaimer-progress">
+            <div class="progress-bar-track">
+                <div class="progress-bar-fill" id="disclaimerProgress" style="width:0%;"></div>
             </div>
-            <div class="check-row">
-                <input type="checkbox" id="disclaimerAll" />
-                <label for="disclaimerAll">我已阅读并同意以上 <strong>全部条款</strong></label>
+            <span class="progress-text" id="disclaimerProgressText">0%</span>
+        </div>
+
+        <!-- ===== 第一部分：基本声明 ===== -->
+        <div class="disclaimer-section" data-section="0">
+            <div class="section-title">
+                <span class="section-icon">📋</span> 第一部分：基本声明
+            </div>
+            <div class="section-content">
+                <p><strong>1.1 服务性质</strong><br>
+                本资源申请服务由 <strong>Chris hopper 个人网站</strong> 提供，旨在为用户提供资源需求的提交与处理服务。所有操作均为免费，不收取任何费用。</p>
+
+                <p><strong>1.2 服务范围</strong><br>
+                本服务仅受理 <strong style="color:#EC4899;">男同性向（BL）内容</strong> 的资源申请。其他性向内容暂不受理。</p>
+
+                <p><strong>1.3 服务对象</strong><br>
+                本服务仅面向 <strong>年满18周岁</strong> 的用户。如您未满18周岁，请在监护人指导下使用。</p>
+
+                <p><strong>1.4 服务时间</strong><br>
+                管理员将在 <strong>15日</strong> 内处理您的申请。休息日与法定节假日可能会有延迟，敬请谅解。</p>
             </div>
         </div>
 
-        <div class="modal-actions">
-            <button class="btn-disclaimer accept" id="disclaimerAcceptBtn" onclick="confirmDisclaimer()" disabled>✅ 确认并提交</button>
-            <button class="btn-disclaimer reject" onclick="closeDisclaimer()">✕ 取消</button>
+        <!-- ===== 第二部分：用户责任 ===== -->
+        <div class="disclaimer-section" data-section="1">
+            <div class="section-title">
+                <span class="section-icon">👤</span> 第二部分：用户责任
+            </div>
+            <div class="section-content">
+                <p><strong>2.1 信息真实性</strong><br>
+                用户保证提交的所有信息（包括但不限于姓名、邮箱、平台账号、人物名称等）均为 <strong>真实、准确、完整</strong> 的。虚假信息将导致申请被拒绝。</p>
+
+                <p><strong>2.2 内容合规性</strong><br>
+                用户确认申请内容为 <strong style="color:#EC4899;">男同性向（BL）内容</strong>，且不包含以下内容：</p>
+                <ul>
+                    <li>❌ 违法、违规或违反社会公德的内容</li>
+                    <li>❌ 侵犯他人版权、隐私权或其他合法权益的内容</li>
+                    <li>❌ 血腥、暴力、恐怖或令人不适的内容</li>
+                    <li>❌ 涉及未成年人的不当内容</li>
+                    <li>❌ 政治敏感或宗教极端内容</li>
+                    <li>❌ 广告、诈骗或恶意链接</li>
+                </ul>
+
+                <p><strong>2.3 平台关注义务</strong><br>
+                用户提交申请时须验证已关注指定平台账号。如未关注或关注后取消，申请将被拒绝。</p>
+
+                <p><strong>2.4 账号安全</strong><br>
+                用户需自行负责账号安全，不得将账号借给他人使用。因账号泄露导致的任何问题，由用户自行承担。</p>
+            </div>
         </div>
+
+        <!-- ===== 第三部分：平台责任 ===== -->
+        <div class="disclaimer-section" data-section="2">
+            <div class="section-title">
+                <span class="section-icon">🛡️</span> 第三部分：平台责任
+            </div>
+            <div class="section-content">
+                <p><strong>3.1 资源处理</strong><br>
+                管理员将根据用户提交的申请，在 <strong>15日</strong> 内尽力查找并提供相关资源。因资源稀缺性或版权限制，无法保证100%满足所有需求。</p>
+
+                <p><strong>3.2 服务质量</strong><br>
+                本平台 <strong>不保证</strong> 服务不会中断、及时、安全、无错误。因技术故障、网络问题等导致的延迟，平台不承担责任。</p>
+
+                <p><strong>3.3 第三方链接</strong><br>
+                本平台可能包含指向第三方网站的链接，平台对这些网站的内容、隐私政策等 <strong>不承担任何责任</strong>。</p>
+
+                <p><strong>3.4 数据安全</strong><br>
+                平台会采取合理措施保护用户数据安全，但 <strong>不保证</strong> 绝对安全。因不可抗力或第三方攻击导致的数据泄露，平台不承担责任。</p>
+            </div>
+        </div>
+
+        <!-- ===== 第四部分：知识产权 ===== -->
+        <div class="disclaimer-section" data-section="3">
+            <div class="section-title">
+                <span class="section-icon">©️</span> 第四部分：知识产权
+            </div>
+            <div class="section-content">
+                <p><strong>4.1 用户内容</strong><br>
+                用户提交的内容（包括但不限于文字、图片、链接等）的知识产权归用户所有。用户授予平台 <strong>非独占、免费、全球范围内</strong> 的使用权，用于处理申请。</p>
+
+                <p><strong>4.2 平台内容</strong><br>
+                本平台的所有内容（包括但不限于文字、图片、标识、设计等）的知识产权归 <strong>Chris hopper 个人网站</strong> 所有。</p>
+
+                <p><strong>4.3 资源版权</strong><br>
+                本平台提供的资源仅供用户 <strong>个人使用</strong>，不得用于商业用途。用户应遵守资源原作者的版权声明。因用户使用资源产生的版权纠纷，由用户自行承担。</p>
+
+                <p><strong>4.4 侵权处理</strong><br>
+                如用户认为平台内容侵犯了其知识产权，请提供相关证明材料联系管理员，平台将在核实后 <strong>24小时内</strong> 处理。</p>
+            </div>
+        </div>
+
+        <!-- ===== 第五部分：隐私政策 ===== -->
+        <div class="disclaimer-section" data-section="4">
+            <div class="section-title">
+                <span class="section-icon">🔒</span> 第五部分：隐私政策
+            </div>
+            <div class="section-content">
+                <p><strong>5.1 数据收集</strong><br>
+                平台收集用户提供的 <strong>用户名、邮箱、平台账号</strong> 等信息，仅用于资源申请的处理。</p>
+
+                <p><strong>5.2 数据使用</strong><br>
+                用户数据仅用于 <strong>资源申请处理</strong>，不会用于其他任何商业目的。</p>
+
+                <p><strong>5.3 数据共享</strong><br>
+                平台 <strong>不会</strong> 将用户数据分享给任何第三方，法律法规另有规定的除外。</p>
+
+                <p><strong>5.4 数据存储</strong><br>
+                用户数据将安全存储在数据库中，申请处理完成后会 <strong>定期清理</strong>，不会长期保留。</p>
+
+                <p><strong>5.5 用户权利</strong><br>
+                用户有权随时 <strong>查看、修改、删除</strong> 自己的数据。如需删除账号，请联系管理员。</p>
+            </div>
+        </div>
+
+        <!-- ===== 第六部分：账户管理措施 ===== -->
+        <div class="disclaimer-section" data-section="5">
+            <div class="section-title">
+                <span class="section-icon">⚖️</span> 第六部分：账户管理措施
+            </div>
+            <div class="section-content">
+                <p><strong>6.1 违反规则的处理</strong><br>
+                如用户违反本协议的任何条款，平台有权采取以下措施：</p>
+                <ul>
+                    <li><strong style="color:#F59E0B;">⚠️ 首次违规：</strong> 发出书面警告，限制部分功能</li>
+                    <li><strong style="color:#F59E0B;">⚠️ 二次违规：</strong> 暂停账号 7-30 天，取消所有待处理申请</li>
+                    <li><strong style="color:#dc3545;">🚫 三次违规：</strong> 永久封禁账号，删除所有数据</li>
+                </ul>
+
+                <p><strong>6.2 虚假信息</strong><br>
+                提交虚假信息（包括但不限于虚假账号、虚假身份、虚假申请内容）将导致 <strong>立即永久封禁</strong>，且不另行通知。</p>
+
+                <p><strong>6.3 恶意行为</strong><br>
+                以下行为将导致 <strong>立即永久封禁</strong>：</p>
+                <ul>
+                    <li>❌ 恶意攻击、辱骂或骚扰管理员或其他用户</li>
+                    <li>❌ 多次提交恶意、虚假或违规内容</li>
+                    <li>❌ 利用平台漏洞进行非法操作</li>
+                    <li>❌ 冒充他人身份进行申请</li>
+                    <li>❌ 在平台发布违法、违规或有害信息</li>
+                </ul>
+
+                <p><strong>6.4 申诉机制</strong><br>
+                如用户认为账号被封禁有误，可通过邮箱 <strong style="color:#8B5CF6;">chris-hopper@qq.com</strong> 联系管理员进行申诉。管理员将在 <strong>7个工作日内</strong> 处理申诉。</p>
+
+                <p><strong>6.5 账号恢复</strong><br>
+                被暂停的账号在处罚期满后，用户可联系管理员申请恢复。经审核无再次违规风险后，可恢复账号使用。</p>
+
+                <p><strong>6.6 最终解释权</strong><br>
+                本平台保留对本协议所有条款的 <strong>最终解释权</strong>，以及根据实际情况 <strong>修改、补充</strong> 本协议的权利。修改后的协议将在平台公布，用户继续使用即视为同意修改后的协议。</p>
+            </div>
+        </div>
+
+        <!-- ===== 第七部分：免责条款 ===== -->
+        <div class="disclaimer-section" data-section="6">
+            <div class="section-title">
+                <span class="section-icon">⚠️</span> 第七部分：免责条款
+            </div>
+            <div class="section-content">
+                <p><strong>7.1 资源质量</strong><br>
+                本平台提供的资源 <strong>按现状</strong> 提供，不保证资源的质量、完整性、适用性。用户自行承担使用资源的风险。</p>
+
+                <p><strong>7.2 间接损失</strong><br>
+                平台 <strong>不承担</strong> 因使用本服务而产生的任何间接、附带、特殊、惩罚性损失或损害。</p>
+
+                <p><strong>7.3 外部因素</strong><br>
+                因不可抗力（包括但不限于自然灾害、战争、政府行为、网络故障、黑客攻击等）导致的服务中断或数据丢失，平台不承担责任。</p>
+
+                <p><strong>7.4 用户行为</strong><br>
+                用户因自身行为（包括但不限于违反法律法规、侵犯他人权益等）而产生的任何法律责任，由用户 <strong>自行承担</strong>，平台不承担连带责任。</p>
+
+                <p><strong>7.5 第三方服务</strong><br>
+                平台可能使用第三方服务（如邮件服务、云存储等），这些服务由第三方提供，平台不对第三方服务的问题承担责任。</p>
+
+                <p><strong>7.6 法律适用</strong><br>
+                本协议的解释、效力及争议解决均适用 <strong>中华人民共和国法律</strong>。因本协议产生的争议，双方应友好协商解决；协商不成的，任何一方均可向平台所在地有管辖权的人民法院提起诉讼。</p>
+            </div>
+        </div>
+
+        <!-- 弹窗底部 -->
+        <div class="disclaimer-footer">
+            <div class="read-status" id="readStatus">
+                <span>📖</span> 已阅读 <span id="readCount">0</span>/7 章节
+            </div>
+            <div style="display:flex;gap:0.8rem;flex-wrap:wrap;">
+                <button class="btn-disclaimer-close" onclick="closeDisclaimer()">✕ 关闭</button>
+                <button class="btn-disclaimer-confirm" id="disclaimerConfirmBtn" onclick="confirmDisclaimer()">
+                    ✅ 我已阅读并同意
+                </button>
+            </div>
+        </div>
+
+        <div class="disclaimer-read-timer" id="disclaimerTimer"></div>
     </div>
 </div>
 
 <script>
     var selectedPlatforms = [];
+    var disclaimerReadSections = new Set();
+    var totalSections = 7;
 
     // ============================================================
     // 1. 平台选择
@@ -938,7 +1202,7 @@
     }
 
     // ============================================================
-    // 2. 平台验证关注（自动验证账号真实性）
+    // 2. 平台验证关注
     // ============================================================
     function verifyFollow() {
         var platform = document.getElementById('VerifyPlatform').value;
@@ -1010,40 +1274,122 @@
     }
 
     // ============================================================
-    // 3. 免责声明弹窗
+    // 3. ⭐ 完整免责声明弹窗
     // ============================================================
-    function showFullDisclaimer() {
+    var disclaimerStartTime = null;
+    var disclaimerTimerInterval = null;
+
+    function openFullDisclaimer() {
         document.getElementById('disclaimerOverlay').classList.add('active');
-        document.getElementById('disclaimerBL').checked = false;
-        document.getElementById('disclaimerAll').checked = false;
-        document.getElementById('disclaimerAcceptBtn').disabled = true;
         document.body.style.overflow = 'hidden';
+        disclaimerStartTime = Date.now();
+        disclaimerReadSections.clear();
+        updateDisclaimerProgress();
+
+        // 重置所有章节为未读
+        document.querySelectorAll('.disclaimer-section').forEach(function(el) {
+            el.classList.remove('read');
+        });
+
+        // 禁用确认按钮
+        document.getElementById('disclaimerConfirmBtn').classList.remove('enabled');
+
+        // 重置计时器
+        if (disclaimerTimerInterval) {
+            clearInterval(disclaimerTimerInterval);
+        }
+        document.getElementById('disclaimerTimer').textContent = '⏱ 请阅读所有章节...';
+
+        // 滚动到顶部
+        document.querySelector('.disclaimer-modal').scrollTop = 0;
     }
 
     function closeDisclaimer() {
         document.getElementById('disclaimerOverlay').classList.remove('active');
         document.body.style.overflow = '';
+        if (disclaimerTimerInterval) {
+            clearInterval(disclaimerTimerInterval);
+            disclaimerTimerInterval = null;
+        }
     }
 
-    document.getElementById('disclaimerBL').addEventListener('change', function() {
-        updateDisclaimerBtn();
+    // 监听滚动检测阅读进度
+    document.querySelector('.disclaimer-modal').addEventListener('scroll', function() {
+        checkReadSections();
     });
 
-    document.getElementById('disclaimerAll').addEventListener('change', function() {
-        updateDisclaimerBtn();
-    });
+    function checkReadSections() {
+        var sections = document.querySelectorAll('.disclaimer-section');
+        var modal = document.querySelector('.disclaimer-modal');
+        var modalTop = modal.scrollTop;
+        var modalHeight = modal.clientHeight;
 
-    function updateDisclaimerBtn() {
-        var blChecked = document.getElementById('disclaimerBL').checked;
-        var allChecked = document.getElementById('disclaimerAll').checked;
-        document.getElementById('disclaimerAcceptBtn').disabled = !(blChecked && allChecked);
+        sections.forEach(function(section, index) {
+            var rect = section.getBoundingClientRect();
+            var modalRect = modal.getBoundingClientRect();
+            
+            // 计算section在模态框中的可见比例
+            var visibleTop = Math.max(0, rect.top - modalRect.top);
+            var visibleBottom = Math.min(modalHeight, rect.bottom - modalRect.top);
+            var visibleHeight = Math.max(0, visibleBottom - visibleTop);
+            var ratio = visibleHeight / rect.height;
+
+            // 如果可见比例超过60%，标记为已读
+            if (ratio > 0.6) {
+                if (!disclaimerReadSections.has(index)) {
+                    disclaimerReadSections.add(index);
+                    section.classList.add('read');
+                    updateDisclaimerProgress();
+                }
+            }
+        });
+    }
+
+    function updateDisclaimerProgress() {
+        var count = disclaimerReadSections.size;
+        var percent = Math.min(100, Math.round((count / totalSections) * 100));
+        
+        document.getElementById('disclaimerProgress').style.width = percent + '%';
+        document.getElementById('disclaimerProgressText').textContent = percent + '%';
+        document.getElementById('readCount').textContent = count;
+
+        // 如果全部读完，启用确认按钮
+        var confirmBtn = document.getElementById('disclaimerConfirmBtn');
+        if (count >= totalSections) {
+            confirmBtn.classList.add('enabled');
+            document.getElementById('readStatus').classList.add('done');
+            document.getElementById('disclaimerTimer').textContent = '✅ 已阅读全部章节，可点击确认';
+        } else {
+            confirmBtn.classList.remove('enabled');
+            document.getElementById('disclaimerTimer').textContent = '⏱ 请继续阅读... (' + count + '/' + totalSections + ')';
+        }
     }
 
     function confirmDisclaimer() {
-        document.getElementById('AgreeToBLContent').checked = true;
-        document.getElementById('AgreeToTerms').checked = true;
+        var confirmBtn = document.getElementById('disclaimerConfirmBtn');
+        if (!confirmBtn.classList.contains('enabled')) {
+            return;
+        }
+
+        // 标记已阅读
+        document.getElementById('disclaimerStatus').style.display = 'flex';
+        
+        // 启用复选框
+        var checkboxWrapper = document.getElementById('disclaimerCheckboxWrapper');
+        checkboxWrapper.style.opacity = '1';
+        checkboxWrapper.style.pointerEvents = 'auto';
+        
+        var checkbox = document.getElementById('AgreeToTerms');
+        checkbox.disabled = false;
+        checkbox.checked = true;
+        
+        document.getElementById('AgreeToTermsHidden').value = 'true';
+        
+        // 关闭弹窗
         closeDisclaimer();
-        submitForm();
+        
+        // 滚动到提交按钮
+        document.getElementById('submitBtn').scrollIntoView({ behavior: 'smooth' });
     }
 
     // 点击外部关闭弹窗
@@ -1068,7 +1414,8 @@
         }
 
         if (!termsChecked) {
-            alert('请阅读并同意完整免责声明');
+            alert('请先阅读并同意完整免责声明与用户协议');
+            openFullDisclaimer();
             return;
         }
 
@@ -1110,7 +1457,7 @@
             return;
         }
 
-        // ⭐ 验证平台验证是否已完成
+        // 验证平台验证是否已完成
         var verifyPlatform = document.getElementById('VerifyPlatform').value;
         var verifyAccountId = document.getElementById('VerifyAccountId').value.trim();
         var isVerified = document.getElementById('IsFollowVerified').value === 'true';
@@ -1135,4 +1482,17 @@
         btn.textContent = '⏳ 提交中...';
         document.getElementById('resourceForm').submit();
     }
+
+    // 检测BL内容复选框变化
+    document.getElementById('AgreeToBLContent').addEventListener('change', function() {
+        if (!this.checked) {
+            document.getElementById('AgreeToTerms').checked = false;
+            document.getElementById('AgreeToTermsHidden').value = 'false';
+        }
+    });
+
+    // 检测同意复选框变化
+    document.getElementById('AgreeToTerms').addEventListener('change', function() {
+        document.getElementById('AgreeToTermsHidden').value = this.checked ? 'true' : 'false';
+    });
 </script>
