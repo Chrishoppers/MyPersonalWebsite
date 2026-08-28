@@ -258,12 +258,12 @@ namespace MyPersonalWebsite.Controllers
             // ============================================================
             // 6. 检查是否有未处理的事项 - 暂时注释掉
             // ============================================================
-            // var pendingRequests = await _dataSync.GetPendingResourceRequestsAsync(userId.Value);
-            // if (pendingRequests.Any())
-            // {
-            //     TempData["Warning"] = "您有未处理的资源申请，请等待管理员处理后再提交新的申请";
-            //     return RedirectToAction("History");
-            // }
+             var pendingRequests = await _dataSync.GetPendingResourceRequestsAsync(userId.Value);
+            if (pendingRequests.Any())
+            {
+                 TempData["Warning"] = "您有未处理的资源申请，请等待管理员处理后再提交新的申请";
+                 return RedirectToAction("History");
+             }
 
             // ============================================================
             // 7. ⭐⭐⭐ 保存申请 ⭐⭐⭐
