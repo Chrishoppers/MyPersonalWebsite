@@ -1915,6 +1915,10 @@ namespace MyPersonalWebsite.Controllers
         // ⭐ 资源管理
         // ============================================================
 
+              // ============================================================
+        // ⭐ 资源管理
+        // ============================================================
+
         [HttpGet]
         public async Task<IActionResult> ResourceManagement()
         {
@@ -1923,7 +1927,6 @@ namespace MyPersonalWebsite.Controllers
 
             var allRequests = await _dataSync.GetAllResourceRequestsAsync();
 
-            // ⭐ 不再需要待付款和已付款分类（支付功能已移除）
             var pendingRequests = allRequests.Where(r => r.Status == "pending" || r.Status == "processing").ToList();
             var manualVerifyRequests = allRequests.Where(r => r.VerifyStatus == "manual_required" && r.Status != "completed" && r.Status != "rejected").ToList();
             var processedRequests = allRequests.Where(r => r.Status == "completed" || r.Status == "rejected" || r.Status == "refunded").ToList();
@@ -1936,7 +1939,7 @@ namespace MyPersonalWebsite.Controllers
             ViewBag.ProcessedRequests = processedRequests.Take(50).ToList();
             ViewBag.TotalCount = allRequests.Count;
 
-            // ⭐ 保留空数据以兼容视图
+            // 兼容旧视图（支付相关已移除）
             ViewBag.PendingPaymentCount = 0;
             ViewBag.PendingPaymentRequests = new List<ResourceRequest>();
             ViewBag.PaidRequests = new List<ResourceRequest>();
@@ -1944,69 +1947,84 @@ namespace MyPersonalWebsite.Controllers
             return View();
         }
 
+        // ⭐ GET - 显示处理页面
+        [HttpGet]
+        public async Task<IActionResult> ProcessResource(int id)
+        {
+            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+            if (isAdmin != 1) return RedirectToAction("Login", "Auth");
+
+            var request = await _dataSync.GetResourceRequestByIdAsync(id);
+            if (request == null) return NotFound();
+
+            ViewBag.AdminName = HttpContext.Session.GetString("Username") ?? "管理员";
+            return View(request);
+        }
+
+        // ⭐ POST - 提交处理（支持多个附件）
         [HttpPost]
-public async Task<IActionResult> ProcessResource(ResourceRequest request, List<IFormFile>? resourceFiles)
-{
-    var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
-    if (isAdmin != 1) return RedirectToAction("Login", "Auth");
-
-    var existing = await _dataSync.GetResourceRequestByIdAsync(request.Id);
-    if (existing == null) return NotFound();
-
-    // ⭐ 收集所有附件（最多200个）
-    var attachments = new List<(byte[] Data, string Name)>();
-
-    if (resourceFiles != null && resourceFiles.Any())
-    {
-        // 限制最多200个文件
-        var files = resourceFiles.Take(200).ToList();
-        
-        foreach (var file in files)
+        public async Task<IActionResult> ProcessResource(ResourceRequest request, List<IFormFile>? resourceFiles)
         {
-            if (file.Length > 0)
+            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+            if (isAdmin != 1) return RedirectToAction("Login", "Auth");
+
+            var existing = await _dataSync.GetResourceRequestByIdAsync(request.Id);
+            if (existing == null) return NotFound();
+
+            // ⭐ 收集所有附件（最多200个）
+            var attachments = new List<(byte[] Data, string Name)>();
+
+            if (resourceFiles != null && resourceFiles.Any())
             {
-                using var memoryStream = new MemoryStream();
-                await file.CopyToAsync(memoryStream);
-                attachments.Add((memoryStream.ToArray(), file.FileName));
-                Console.WriteLine($"📎 附件已读取: {file.FileName} ({file.Length} bytes)");
+                // 限制最多200个文件
+                var files = resourceFiles.Take(200).ToList();
+                
+                foreach (var file in files)
+                {
+                    if (file.Length > 0)
+                    {
+                        using var memoryStream = new MemoryStream();
+                        await file.CopyToAsync(memoryStream);
+                        attachments.Add((memoryStream.ToArray(), file.FileName));
+                        Console.WriteLine($"📎 附件已读取: {file.FileName} ({file.Length} bytes)");
+                    }
+                }
             }
+
+            // 更新申请状态
+            existing.Status = request.Status;
+            existing.FoundTypes = request.FoundTypes ?? "";
+            existing.NotFoundTypes = request.NotFoundTypes ?? "";
+            existing.AdminNote = request.AdminNote ?? "";
+            existing.AdminName = HttpContext.Session.GetString("Username") ?? "管理员";
+            existing.ProcessedAt = DateTime.Now;
+
+            // 人工核验
+            if (existing.VerifyStatus == "manual_required")
+            {
+                var isFollowVerified = Request.Form["IsFollowVerified"].ToString();
+                if (isFollowVerified == "true")
+                {
+                    existing.VerifyStatus = "auto_verified";
+                    existing.IsFollowVerified = true;
+                    existing.FollowVerifyError = null;
+                }
+                else
+                {
+                    existing.VerifyStatus = "rejected";
+                    existing.IsFollowVerified = false;
+                    existing.FollowVerifyError = "管理员人工核验未通过";
+                }
+            }
+
+            await _dataSync.UpdateResourceRequestAsync(existing);
+            
+            // ⭐ 发送邮件（多个附件）
+            await _emailService.SendResourceResultEmailWithAttachmentsAsync(existing, attachments);
+
+            TempData["Success"] = $"✅ 资源已处理，{attachments.Count} 个附件已发送给用户";
+            return RedirectToAction("ResourceManagement");
         }
-    }
-
-    // 更新申请状态
-    existing.Status = request.Status;
-    existing.FoundTypes = request.FoundTypes ?? "";
-    existing.NotFoundTypes = request.NotFoundTypes ?? "";
-    existing.AdminNote = request.AdminNote ?? "";
-    existing.AdminName = HttpContext.Session.GetString("Username") ?? "管理员";
-    existing.ProcessedAt = DateTime.Now;
-
-    // 人工核验
-    if (existing.VerifyStatus == "manual_required")
-    {
-        var isFollowVerified = Request.Form["IsFollowVerified"].ToString();
-        if (isFollowVerified == "true")
-        {
-            existing.VerifyStatus = "auto_verified";
-            existing.IsFollowVerified = true;
-            existing.FollowVerifyError = null;
-        }
-        else
-        {
-            existing.VerifyStatus = "rejected";
-            existing.IsFollowVerified = false;
-            existing.FollowVerifyError = "管理员人工核验未通过";
-        }
-    }
-
-    await _dataSync.UpdateResourceRequestAsync(existing);
-    
-    // ⭐ 发送邮件（多个附件）
-    await _emailService.SendResourceResultEmailWithAttachmentsAsync(existing, attachments);
-
-    TempData["Success"] = $"✅ 资源已处理，{attachments.Count} 个附件已发送给用户";
-    return RedirectToAction("ResourceManagement");
-}
 
         [HttpPost]
         public async Task<IActionResult> DeleteResourceRequest(int id)
@@ -2074,7 +2092,47 @@ public async Task<IActionResult> ProcessResource(ResourceRequest request, List<I
 
             return Json(new { success = true, message = approved ? "✅ 已通过人工核验" : "❌ 已拒绝" });
         }
+        [HttpPost]
+        public async Task<IActionResult> DeleteResourceRequest(int id)
+        {
+            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+            if (isAdmin != 1) return Json(new { success = false, message = "权限不足" });
 
+            await _dataSync.DeleteResourceRequestAsync(id);
+            return Json(new { success = true, message = "已删除" });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ConfirmPayment(int requestId, string? note)
+        {
+            var isAdmin = HttpContext.Session.GetInt32("IsAdmin") ?? 0;
+            if (isAdmin != 1)
+                return Json(new { success = false, message = "权限不足" });
+
+            var request = await _dataSync.GetResourceRequestByIdAsync(requestId);
+            if (request == null)
+                return Json(new { success = false, message = "申请不存在" });
+
+            if (request.IsPaid)
+                return Json(new { success = false, message = "该订单已确认收款" });
+
+            var adminName = HttpContext.Session.GetString("Username") ?? "管理员";
+
+            await _dataSync.ConfirmPaymentAsync(requestId, adminName, note);
+
+            try
+            {
+                await _emailService.SendPaymentConfirmedEmailAsync(request);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"支付确认邮件发送失败: {ex.Message}");
+            }
+
+            return Json(new { success = true, message = $"✅ 已确认收款 #{request.OrderId}" });
+        }
+
+       
         // ============================================================
         // 辅助方法
         // ============================================================
