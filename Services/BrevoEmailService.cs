@@ -547,7 +547,7 @@ namespace MyPersonalWebsite.Services
         public async Task SendResourceResultEmailAsync(ResourceRequest request, byte[]? attachmentData = null, string? attachmentName = null)
         {
             var timestamp = DateTime.Now.ToString("yyyyMMddHHmm");
-           var subject = $"【{request.ResourceName}】资源内容-{timestamp}";
+           var subject = $"{request.ResourceName}资源内容-{timestamp}";
 
             var foundTypes = string.IsNullOrEmpty(request.FoundTypes) ? "无" : request.FoundTypes;
             var notFoundTypes = string.IsNullOrEmpty(request.NotFoundTypes) ? "无" : request.NotFoundTypes;
