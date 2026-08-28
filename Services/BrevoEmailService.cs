@@ -729,5 +729,116 @@ namespace MyPersonalWebsite.Services
 
             await SendEmailAsync(toEmail, "【Chris hopper 个人网站】✅ 账户解封通知", html);
         }
+        public async Task<bool> SendEmailWithAttachmentsAsync(
+    string to,
+    string subject,
+    string htmlContent,
+    List<(byte[] Data, string Name)>? attachments = null)
+{
+    try
+    {
+        if (string.IsNullOrEmpty(_apiKey))
+        {
+            Console.WriteLine("⚠️ Brevo API Key 未配置");
+            return false;
+        }
+
+        var attachmentList = new List<object>();
+        if (attachments != null && attachments.Any())
+        {
+            // 限制最多200个附件
+            var limited = attachments.Take(200).ToList();
+            foreach (var (data, name) in limited)
+            {
+                attachmentList.Add(new
+                {
+                    content = Convert.ToBase64String(data),
+                    name = name
+                });
+            }
+        }
+
+        var requestPayload = new
+        {
+            sender = new { email = "chris@chris-hopper.org", name = "Chris hopper 个人网站" },
+            to = new[] { new { email = to } },
+            subject = subject,
+            htmlContent = htmlContent,
+            attachment = attachmentList.Any() ? attachmentList : null
+        };
+
+        var options = new JsonSerializerOptions
+        {
+            DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
+        };
+
+        var json = JsonSerializer.Serialize(requestPayload, options);
+        var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+        _httpClient.DefaultRequestHeaders.Clear();
+        _httpClient.DefaultRequestHeaders.Add("api-key", _apiKey);
+
+        var response = await _httpClient.PostAsync("https://api.brevo.com/v3/smtp/email", content);
+        var responseBody = await response.Content.ReadAsStringAsync();
+
+        if (response.IsSuccessStatusCode)
+        {
+            Console.WriteLine($"✅ 邮件发送成功: {to}, 附件数: {attachmentList.Count}");
+            return true;
+        }
+        else
+        {
+            Console.WriteLine($"❌ 邮件发送失败 ({response.StatusCode}): {responseBody}");
+            return false;
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"❌ 邮件发送异常: {ex.Message}");
+        return false;
+    }
+}
+        public async Task SendResourceResultEmailWithAttachmentsAsync(
+    ResourceRequest request, 
+    List<(byte[] Data, string Name)>? attachments)
+{
+    var timestamp = DateTime.Now.ToString("yyyyMMddHHmm");
+    var subject = $"【{request.PersonName}】资源内容-{timestamp}";
+
+    var foundTypes = string.IsNullOrEmpty(request.FoundTypes) ? "无" : request.FoundTypes;
+    var notFoundTypes = string.IsNullOrEmpty(request.NotFoundTypes) ? "无" : request.NotFoundTypes;
+
+    var attachmentInfo = attachments != null && attachments.Any() 
+        ? $"<p style='color: #8B5CF6;'>📎 附件数量：{attachments.Count} 个</p>" 
+        : "<p style='color: rgba(255,255,255,0.1);'>📎 无附件</p>";
+
+    var html = $@"
+        <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #2a2a3e; border-radius: 16px; background: #0a0a0f; color: #e0e0e0;'>
+            <h2 style='color: #8B5CF6;'>📦 资源处理结果</h2>
+            <p>您好 <strong>{request.UserName}</strong>！</p>
+            <p>您的资源申请已处理完成：</p>
+
+            <div style='background: #1a1a2e; padding: 15px; border-radius: 8px; margin: 10px 0; border: 1px solid #2a2a3e;'>
+                <p><strong>👤 联系人：</strong>{request.PersonName}</p>
+                <p><strong>📱 平台：</strong>{request.Platform1}{(string.IsNullOrEmpty(request.Platform2) ? "" : " + " + request.Platform2)}</p>
+                <p><strong>📂 资源名称：</strong>{request.ResourceName}</p>
+                <p><strong>📊 状态：</strong>{(request.Status == "completed" ? "✅ 已完成" : request.Status == "rejected" ? "❌ 已拒绝" : request.Status == "refunded" ? "💰 已退款" : "⏳ 处理中")}</p>
+            </div>
+
+            <div style='background: #1a1a2e; padding: 15px; border-radius: 8px; margin: 10px 0; border: 1px solid #2a2a3e;'>
+                <p><strong>✅ 已找到类型：</strong><span style='color: #00FF88;'>{foundTypes}</span></p>
+                <p><strong>❌ 未找到类型：</strong><span style='color: #dc3545;'>{notFoundTypes}</span></p>
+                {attachmentInfo}
+                {(string.IsNullOrEmpty(request.AdminNote) ? "" : $@"<p><strong>📝 管理员备注：</strong>{request.AdminNote}</p>")}
+            </div>
+
+            <p style='color: #888; font-size: 14px;'>⏰ 处理时间：{request.ProcessedAt:yyyy-MM-dd HH:mm:ss}</p>
+
+            <hr style='border: none; border-top: 1px solid #2a2a3e;'>
+            <p style='color: #555; font-size: 12px;'>此邮件为系统发送，请勿回复</p>
+        </div>";
+
+    await SendEmailWithAttachmentsAsync(request.UserEmail, subject, html, attachments);
+}
     }
 }
