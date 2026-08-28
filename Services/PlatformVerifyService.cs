@@ -16,7 +16,7 @@ namespace MyPersonalWebsite.Services
         private readonly Dictionary<string, string> _myAccounts = new()
         {
             { "抖音", "chris_hopper" },
-            { "快手", "chris_hopper" },
+            { "快手", "Chris_hopper" },
             { "B站", "chris_hopper" },
             { "小红书", "chris_hopper" },
             { "微博", "chris_hopper" },
