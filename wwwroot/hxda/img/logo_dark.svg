@@ -1,0 +1,88 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" width="468" height="60" viewBox="0 0 468 60" shape-rendering="crispEdges">
+  <defs>
+    <linearGradient id="bannerGradDark" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#3a0a0a"/>
+      <stop offset="45%" stop-color="#2a0505"/>
+      <stop offset="50%" stop-color="#1a0000"/>
+      <stop offset="100%" stop-color="#000000"/>
+    </linearGradient>
+    <radialGradient id="faceGrad" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#600" stop-opacity="0.6"/>
+      <stop offset="70%" stop-color="#300" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#000" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- 底色 -->
+  <rect width="468" height="60" fill="url(#bannerGradDark)"/>
+
+  <!-- 顶部暗红高光 -->
+  <rect x="0" y="0" width="468" height="1" fill="#6a1a1a"/>
+  <rect x="0" y="59" width="468" height="1" fill="#000"/>
+
+  <!-- 左侧：模糊的脸轮廓（替代「回」印章） -->
+  <rect x="16" y="14" width="32" height="32" fill="none" stroke="#500" stroke-width="1.5"/>
+  <!-- 眼睛 -->
+  <circle cx="25" cy="28" r="2" fill="#800" opacity="0.8"/>
+  <circle cx="39" cy="28" r="2" fill="#800" opacity="0.8"/>
+  <!-- 嘴 -->
+  <path d="M 24 38 Q 32 42 40 38" stroke="#800" stroke-width="1.2" fill="none" opacity="0.7"/>
+  <!-- 模糊光晕 -->
+  <circle cx="32" cy="30" r="18" fill="url(#faceGrad)"/>
+
+  <!-- 主标题（暗红） -->
+  <text x="60" y="27"
+        font-family="SimSun, 宋体, serif"
+        font-size="20"
+        font-weight="bold"
+        fill="#8a1a1a"
+        stroke="#000"
+        stroke-width="0.3">回 响 档 案</text>
+
+  <!-- 副标题（暗） -->
+  <text x="60" y="46"
+        font-family="SimSun, 宋体, serif"
+        font-size="11"
+        fill="#5a1a1a"
+        letter-spacing="2">失物招领 · 留言簿</text>
+
+  <!-- 右侧分隔线（暗红） -->
+  <line x1="290" y1="14" x2="290" y2="46" stroke="#3a0a0a" stroke-width="1"/>
+
+  <!-- 右侧信息块（暗） -->
+  <text x="302" y="24"
+        font-family="SimSun, 宋体, serif"
+        font-size="10"
+        fill="#5a1a1a"
+        letter-spacing="1">ECHO ARCHIVE</text>
+  <text x="302" y="37"
+        font-family="SimSun, 宋体, serif"
+        font-size="9"
+        fill="#4a1a1a">BBS SYSTEM v1.0</text>
+  <text x="302" y="49"
+        font-family="SimSun, 宋体, serif"
+        font-size="8"
+        fill="#3a0a0a">EST. 永 远</text>
+
+  <!-- 节点标记（暗红） -->
+  <text x="440" y="20"
+        font-family="SimSun, 宋体, serif"
+        font-size="8"
+        fill="#3a0a0a"
+        text-anchor="middle">节点</text>
+  <text x="440" y="32"
+        font-family="SimSun, 宋体, serif"
+        font-size="11"
+        font-weight="bold"
+        fill="#6a1a1a"
+        text-anchor="middle">8/∞</text>
+
+  <!-- ⭐ 隐藏的 43（暗红，比主 Logo 更明显） -->
+  <text x="454" y="55"
+        font-family="SimSun, 宋体, serif"
+        font-size="8"
+        font-weight="bold"
+        fill="#8a0000"
+        opacity="0.9"
+        text-anchor="end">43</text>
+</svg>

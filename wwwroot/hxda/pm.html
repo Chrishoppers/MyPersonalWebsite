@@ -1,0 +1,357 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+    <title>回响档案｜与林默的对话</title>
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="css/main.css">
+    <style>
+        html, body {
+            min-height: 100vh;
+            background: #d8d8d8;
+        }
+
+        .pm-page {
+            max-width: 700px;
+            margin: 30px auto;
+            padding: 0 10px;
+        }
+
+        .pm-topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 14px;
+            background: #1a3a6b;
+            color: #fff;
+            font-size: 12px;
+            font-family: "SimSun", "宋体", serif;
+        }
+
+            .pm-topbar a {
+                color: #ffd;
+                text-decoration: none;
+                margin-right: 12px;
+            }
+
+                .pm-topbar a:hover {
+                    text-decoration: underline;
+                }
+
+        .pm-window {
+            background: #f4f4f4;
+            border: 2px solid #888;
+            display: flex;
+            flex-direction: column;
+            height: 70vh;
+            min-height: 480px;
+        }
+
+        .pm-title {
+            background: #1a3a6b;
+            background-image: linear-gradient(to bottom, #4a6fa5 0%, #1a3a6b 100%);
+            color: #fff;
+            padding: 8px 14px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+            border-bottom: 1px solid #0d1b3e;
+        }
+
+            .pm-title .who {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+                .pm-title .who .avatar {
+                    width: 24px;
+                    height: 24px;
+                    border-radius: 50%;
+                    background: #c33;
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 12px;
+                    overflow: hidden;
+                }
+
+                    .pm-title .who .avatar img {
+                        width: 24px;
+                        height: 24px;
+                        border-radius: 50%;
+                        object-fit: cover;
+                        display: block;
+                    }
+
+            .pm-title .status {
+                font-size: 11px;
+                font-weight: normal;
+                color: #cfd;
+            }
+
+                .pm-title .status.warn {
+                    color: #fc6;
+                }
+
+                .pm-title .status.danger {
+                    color: #f99;
+                }
+
+        .pm-header {
+            background: #e8e8e8;
+            padding: 6px 14px;
+            font-size: 11px;
+            color: #666;
+            border-bottom: 1px solid #ccc;
+            line-height: 1.6;
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .pm-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 14px 18px;
+            background: #fafafa;
+            font-size: 13px;
+            line-height: 1.9;
+        }
+
+            .pm-body::-webkit-scrollbar {
+                width: 6px;
+            }
+
+            .pm-body::-webkit-scrollbar-thumb {
+                background: #ccc;
+                border-radius: 3px;
+            }
+
+        .pm-msg {
+            margin-bottom: 12px;
+            word-break: break-word;
+            animation: msgIn 0.3s ease;
+        }
+
+        @keyframes msgIn {
+            from {
+                opacity: 0;
+                transform: translateY(4px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .pm-msg .who {
+            font-weight: bold;
+            color: #1a3a6b;
+            margin-right: 6px;
+            font-size: 12px;
+        }
+
+        .pm-msg.from-lin .who {
+            color: #a00;
+        }
+
+        .pm-msg.from-me {
+            text-align: right;
+        }
+
+            .pm-msg.from-me .who {
+                color: #666;
+                display: block;
+                margin-bottom: 2px;
+            }
+
+            .pm-msg.from-me .txt {
+                display: inline-block;
+                background: #e0e8f0;
+                padding: 6px 12px;
+                border-radius: 4px;
+                text-align: left;
+                max-width: 80%;
+            }
+
+        .pm-msg.from-lin .txt {
+            display: inline-block;
+            background: #f0e0e0;
+            padding: 6px 12px;
+            border-radius: 4px;
+            max-width: 80%;
+        }
+
+        .pm-msg .time {
+            font-size: 10px;
+            color: #999;
+            margin-left: 6px;
+        }
+
+        .pm-msg.from-me .time {
+            display: block;
+            margin-top: 2px;
+            margin-left: 0;
+        }
+
+        .pm-typing {
+            padding: 0 18px 6px;
+            font-size: 11px;
+            color: #999;
+            font-style: italic;
+            min-height: 18px;
+        }
+
+            .pm-typing .dot {
+                display: inline-block;
+                animation: typingDot 1.2s infinite;
+            }
+
+                .pm-typing .dot:nth-child(2) {
+                    animation-delay: 0.2s;
+                }
+
+                .pm-typing .dot:nth-child(3) {
+                    animation-delay: 0.4s;
+                }
+
+        @keyframes typingDot {
+            0%, 60%, 100% {
+                opacity: 0.3;
+            }
+
+            30% {
+                opacity: 1;
+            }
+        }
+
+        .pm-input {
+            border-top: 1px solid #ccc;
+            background: #eee;
+            padding: 8px 12px;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+            .pm-input input {
+                flex: 1;
+                padding: 8px 12px;
+                border: 1px solid #888;
+                background: #fff;
+                font-family: inherit;
+                font-size: 13px;
+                outline: none;
+            }
+
+                .pm-input input:focus {
+                    outline: 1px solid #1a3a6b;
+                }
+
+                .pm-input input:disabled {
+                    background: #ddd;
+                    color: #888;
+                }
+
+        .pm-archived-banner {
+            background: #a00;
+            color: #fff;
+            text-align: center;
+            padding: 6px;
+            font-size: 12px;
+            display: none;
+        }
+
+            .pm-archived-banner.show {
+                display: block;
+            }
+
+        .pm-bottom {
+            text-align: center;
+            padding: 14px;
+        }
+
+            .pm-bottom a {
+                display: inline-block;
+                padding: 6px 20px;
+                border: 2px outset #bbb;
+                background: #e6e6e6;
+                color: #333;
+                text-decoration: none;
+                font-size: 12px;
+            }
+
+                .pm-bottom a:hover {
+                    background: #f0f0f0;
+                    text-decoration: none;
+                }
+    </style>
+</head>
+<body>
+
+    <div class="pm-page">
+
+        <div class="pm-topbar">
+            <div>
+                <a href="post.html?id=1">← 返回帖子</a>
+                <a href="bbs.html">返回论坛</a>
+            </div>
+            <div>回响档案 · 私信</div>
+        </div>
+
+        <div class="pm-window">
+
+            <div class="pm-title">
+                <div class="who">
+                    <span class="avatar">
+                        <img src="img/avatar_lin.png" alt=""
+                             onerror="this.style.display='none';this.parentNode.textContent='林';">
+                    </span>
+                    <span>与 林默 的对话</span>
+                </div>
+                <span class="status" id="pmStatus">对方在线</span>
+            </div>
+
+            <div class="pm-header">
+                <span>最后活跃：<b>2019-02-14 23:47</b></span>
+                <span id="pmStageInfo">阶段 1</span>
+            </div>
+
+            <div class="pm-archived-banner" id="pmArchivedBanner">
+                ⚠ 当前对话已归档。节点 8。
+            </div>
+
+            <div class="pm-body" id="pmBody"></div>
+
+            <div class="pm-typing" id="pmTyping"></div>
+
+            <div class="pm-input">
+                <input type="text" id="pmInput"
+                       placeholder="输入消息..."
+                       autocomplete="off" maxlength="200">
+                <button class="old-btn old-btn-primary" id="pmSend">发送</button>
+            </div>
+
+        </div>
+
+        <div class="pm-bottom">
+            <a href="bbs.html">← 返回论坛首页</a>
+        </div>
+
+    </div>
+
+    <script src="js/storage.js"></script>
+    <script src="js/fullscreen.js"></script>
+    <script src="js/tracker.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/horror.js"></script>
+    <script src="js/pm.js"></script>
+
+</body>
+</html>

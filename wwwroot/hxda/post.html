@@ -1,0 +1,650 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+    <title>回响档案｜帖子</title>
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="css/main.css">
+    <style>
+        .post-detail {
+            max-width: 760px;
+            margin: 20px auto;
+            background: #fff;
+            border: 1px solid #aaa;
+        }
+
+            .post-detail .post-head {
+                background: #e0e0e0;
+                background-image: linear-gradient(to bottom, #f4f4f4 0%, #e0e0e0 100%);
+                border-bottom: 1px solid #aaa;
+                padding: 10px 16px;
+                font-size: 14px;
+                font-weight: bold;
+                color: #1a3a6b;
+            }
+
+            .post-detail .post-meta {
+                font-size: 11px;
+                color: #888;
+                padding: 6px 16px;
+                background: #fafafa;
+                border-bottom: 1px dashed #ddd;
+            }
+
+            .post-detail .post-body {
+                padding: 16px 20px;
+                font-size: 13px;
+                line-height: 2;
+                color: #333;
+                white-space: pre-wrap;
+            }
+
+        .attachment-area {
+            padding: 10px 20px 16px;
+            border-top: 1px dashed #eee;
+            background: #fafafa;
+        }
+
+            .attachment-area .att-label {
+                font-size: 11px;
+                color: #888;
+                margin-bottom: 6px;
+            }
+
+        .attachment-thumb {
+            display: inline-block;
+            border: 1px solid #888;
+            padding: 3px;
+            background: #f4f4f4;
+            cursor: pointer;
+            margin-right: 10px;
+            vertical-align: top;
+        }
+
+            .attachment-thumb:hover {
+                border-color: #1a3a6b;
+            }
+
+            .attachment-thumb img {
+                display: block;
+                max-width: 200px;
+                max-height: 150px;
+            }
+
+            .attachment-thumb .att-name {
+                font-size: 11px;
+                color: #666;
+                text-align: center;
+                margin-top: 3px;
+                max-width: 200px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+
+        .audio-att {
+            display: inline-block;
+            padding: 6px 14px;
+            border: 1px solid #888;
+            background: #f4f4f4;
+            cursor: pointer;
+            font-size: 12px;
+            color: #1a3a6b;
+            margin-top: 6px;
+        }
+
+            .audio-att:hover {
+                background: #fff8d0;
+            }
+
+            .audio-att::before {
+                content: '🔊 ';
+            }
+
+        .replies {
+            border-top: 1px solid #aaa;
+        }
+
+        .replies-title {
+            background: #e0e0e0;
+            background-image: linear-gradient(to bottom, #f4f4f4 0%, #e0e0e0 100%);
+            border-bottom: 1px solid #aaa;
+            padding: 8px 16px;
+            font-size: 12px;
+            font-weight: bold;
+            color: #1a3a6b;
+        }
+
+        .reply {
+            padding: 10px 16px;
+            border-bottom: 1px dashed #ddd;
+            font-size: 12px;
+            line-height: 1.9;
+        }
+
+            .reply:last-child {
+                border-bottom: none;
+            }
+
+        .reply-floor {
+            color: #1a3a6b;
+            font-weight: bold;
+        }
+
+        .reply-who {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .reply-time {
+            color: #999;
+            font-size: 11px;
+            margin-left: 8px;
+        }
+
+        .reply-content {
+            margin-top: 4px;
+        }
+
+        .reply-anomaly {
+            color: #a00;
+        }
+
+        .tt {
+            position: relative;
+            border-bottom: 1px dotted #a00;
+            cursor: help;
+            color: #a00;
+            font-weight: bold;
+        }
+
+        .post4-placeholder {
+            text-align: center;
+            padding: 40px 20px;
+            color: #888;
+            font-size: 13px;
+        }
+
+        .back-to-bbs-bottom {
+            text-align: center;
+            padding: 14px;
+        }
+
+            .back-to-bbs-bottom a {
+                display: inline-block;
+                padding: 6px 20px;
+                border: 2px outset #bbb;
+                background: #e6e6e6;
+                color: #333;
+                text-decoration: none;
+                font-size: 12px;
+                font-family: inherit;
+            }
+
+                .back-to-bbs-bottom a:hover {
+                    background: #f0f0f0;
+                    text-decoration: none;
+                }
+    </style>
+</head>
+<body>
+
+    <div class="forum-wrap" style="min-height: auto;">
+
+        <div class="forum-head">
+            <div class="head-logo"></div>
+            <div class="head-right">
+                <div class="user-info" id="userInfo">游客</div>
+                <div>最后更新：2019-03-01 00:00</div>
+            </div>
+        </div>
+
+        <div class="forum-nav">
+            <a href="bbs.html">← 返回论坛</a>
+            <a href="bbs.html">首页</a>
+            <a href="about.html">关于本站</a>
+        </div>
+
+        <div class="forum-notice">
+            本站数据于 2019 年 3 月后不再更新。感谢各位十年来的陪伴。——站长
+        </div>
+
+        <div class="post-detail" id="postDetail">
+            <div style="padding:40px;text-align:center;color:#888;">加载中...</div>
+        </div>
+
+        <div class="back-to-bbs-bottom">
+            <a href="bbs.html">← 返回论坛首页</a>
+        </div>
+
+    </div>
+
+    <div class="overlay" id="viewerOverlay">
+        <div class="overlay-box" style="max-width:720px;">
+            <div class="overlay-title">
+                <span id="viewerFileName">notebook_default.jpg</span>
+                <span class="x" id="viewerClose">✕</span>
+            </div>
+            <div class="overlay-body" style="padding:0;background:#000;text-align:center;">
+                <div id="viewerImageWrap"
+                     style="background:#000;min-height:320px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;">
+                    <img id="viewerImage"
+                         src=""
+                         style="max-width:100%;max-height:400px;transition:filter 0.3s,transform 0.3s;"
+                         alt="">
+                </div>
+                <div style="padding:14px 20px;background:#222;text-align:left;">
+                    <div style="margin-bottom:6px;">
+                        <label style="display:inline-block;width:50px;color:#999;">亮度</label>
+                        <input type="range" id="ctrlBright" min="0" max="100" value="50" style="width:70%;">
+                    </div>
+                    <div style="margin-bottom:6px;">
+                        <label style="display:inline-block;width:50px;color:#999;">对比</label>
+                        <input type="range" id="ctrlContrast" min="0" max="100" value="50" style="width:70%;">
+                    </div>
+                    <div style="margin-bottom:10px;">
+                        <label style="display:inline-block;width:50px;color:#999;">缩放</label>
+                        <input type="range" id="ctrlScale" min="50" max="200" value="100" style="width:70%;">
+                    </div>
+                    <div style="text-align:center;">
+                        <button class="old-btn" id="btnInvert">反色</button>
+                        <button class="old-btn" id="btnRotate">旋转</button>
+                        <button class="old-btn" id="btnFileInfo">文件信息</button>
+                    </div>
+                </div>
+                <div id="viewerInfo" style="display:none;padding:12px 20px;background:#111;color:#888;font-size:11px;text-align:left;font-family:'Courier New',monospace;line-height:1.8;"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="overlay" id="audioOverlay">
+        <div class="overlay-box" style="max-width:480px;">
+            <div class="overlay-title">
+                <span>笔记本第43页录音.wav</span>
+                <span class="x" id="audioClose">✕</span>
+            </div>
+            <div class="overlay-body" style="padding:20px;background:#1a1a1a;color:#ddd;text-align:center;">
+                <div style="margin-bottom:16px;">
+                    <div style="display:flex;justify-content:space-between;font-size:11px;color:#666;margin-bottom:6px;">
+                        <span id="audioCur">00:00</span>
+                        <span>00:43</span>
+                    </div>
+                    <div id="audioTrack"
+                         style="height:6px;background:#333;border-radius:3px;cursor:pointer;position:relative;">
+                        <div id="audioFill"
+                             style="height:100%;background:#888;border-radius:3px;width:0%;"></div>
+                    </div>
+                </div>
+
+                <div style="margin-bottom:12px;">
+                    <button class="old-btn" id="btnPlay">▶ 播放</button>
+                    <button class="old-btn" id="btnPause">⏸ 暂停</button>
+                </div>
+
+                <div style="margin-bottom:12px;">
+                    <button class="old-btn" id="btnSpeed05">0.5x</button>
+                    <button class="old-btn" id="btnSpeed1">1x</button>
+                    <button class="old-btn" id="btnSpeed15">1.5x</button>
+                    <button class="old-btn" id="btnSpeed2">2x</button>
+                </div>
+
+                <div>
+                    <button class="old-btn" id="btnReverse" style="background:#333;color:#ddd;border-color:#555;">反向播放</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/storage.js"></script>
+    <script src="js/fullscreen.js"></script>
+    <script src="js/tracker.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/horror.js"></script>
+    <script src="js/explore.js"></script>
+    <script src="js/viewer.js"></script>
+
+    <script>
+(function () {
+
+            'use strict';
+
+            function escapeHtml(s) {
+                var d = document.createElement('div');
+                d.textContent = String(s);
+                return d.innerHTML;
+            }
+
+            var params = new URLSearchParams(window.location.search);
+            var id = params.get('id') || '1';
+            var playerName = Store.get('visitor_name', '');
+            var refreshCount = Store.get('refresh_count', 0);
+
+            var POSTS = {
+                '1': {
+                    title: '寻物：一本黑色皮面笔记本',
+                    author: '林默',
+                    time: '2009-03-17 14:23',
+                    body:
+                        '我在 2009 年 3 月 15 日丢了一本笔记本。\n' +
+                        '黑色皮面，A5 大小，封面内侧写了一个"回"字。\n' +
+                        '如果有人见过，请联系我。\n' +
+                        '我不是为了拿回来，只是想知道里面写了什么。\n' +
+                        '因为那本本子不是我写的。\n' +
+                        '\n' +
+                        '如果你找到了，<b>不要翻开第43页。</b>',
+                    attachment: {
+                        type: 'image',
+                        name: 'notebook_default.jpg',
+                        src: 'img/notebook_default.jpg'
+                    },
+                    audioAttachment: {
+                        name: '笔记本第43页录音.wav'
+                    },
+                    replies: [
+                        ['访客', '帮你顶一下', '2009-03-17 15:01'],
+                        ['匿名', '黑色皮面笔记本？我好像在旧货市场见过', '2009-04-02 09:17'],
+                        ['林默', '哪个旧货市场？', '2009-04-02 10:33'],
+                        ['匿名', '记不清了。但那个本子有点怪。', '2009-04-02 11:02'],
+                        ['林默', '怎么怪？', '2009-04-02 11:45'],
+                        ['匿名', '翻开的时候，里面有字在动。', '2009-04-02 12:01'],
+                        ['林默', '什么意思？', '2009-04-02 12:30'],
+                        ['匿名', '我合上了。没敢再看。', '2009-04-02 12:47'],
+                        ['访客', '楼主还在吗？', '2009-05-12 03:22'],
+                        ['林默', '在。我一直在找。', '2009-05-12 08:15'],
+                        ['匿名', '别找了。那本本子不干净。', '2009-06-01 23:47'],
+                        ['林默', '什么意思？', '2009-06-02 07:33'],
+                        ['匿名', '我朋友也捡到过一本。他看了第43页。', '2009-06-02 07:35'],
+                        ['林默', '然后呢？', '2009-06-02 07:40'],
+                        ['匿名', '然后他就没再上过线。', '2009-06-02 07:42'],
+                        ['林默', '你朋友叫什么？', '2009-06-02 07:45'],
+                        ['匿名', '我忘了。我好像忘了很多事。', '2009-06-02 07:50'],
+                        ['访客', '这个帖子怎么回事？', '2010-01-15 14:22'],
+                        ['林默', '我也想知道。', '2010-01-15 14:30'],
+                        ['匿名', '楼主你还在吗？', '2015-09-09 09:09'],
+                        ['林默', '在。', '2015-09-09 09:10'],
+                        ['匿名', '十年了。', '2019-02-14 23:46'],
+                        ['林默', '它开始自己写留言了。', '2019-02-14 23:47']
+                    ]
+                },
+                '2': {
+                    title: '有人认识一个叫"阿回"的人吗？',
+                    author: '访客',
+                    time: '2019-01-03 02:11',
+                    body:
+                        '我在整理旧物的时候发现了一本笔记本。\n' +
+                        '黑色皮面，封面内侧写了一个"回"字。\n' +
+                        '里面夹了一张纸条，上面写着："我叫阿回。我不知道我是谁。"\n' +
+                        '有人认识阿回吗？',
+                    replies: [
+                        ['访客', '阿回是版主吧？', '2019-01-03 02:15'],
+                        ['匿名', '阿回不在了。', '2019-01-03 02:19']
+                    ]
+                },
+                '3': {
+                    title: '置顶：本版留言格式说明',
+                    author: '版主',
+                    time: '2009-11-01 00:00',
+                    body:
+                        '本版为失物招领与留言簿。\n' +
+                        '请按以下格式留言：\n' +
+                        '\n' +
+                        '称呼：______（<span class="tt" id="tt-liukong">可以留空</span>）\n' +
+                        '内容：______\n' +
+                        '\n' +
+                        '注意：留空称呼者不归档。\n' +
+                        '注意：<span class="tt" id="tt-yourenma">不要回答"有人吗"</span>。\n' +
+                        '注意：<span class="tt" id="tt-buhuitou">不要回头</span>。',
+                    replies: []
+                },
+                '4': {
+                    title: '（无标题）',
+                    author: '未知',
+                    time: '2009-11-01 00:00',
+                    body: '有人吗。',
+                    replies: [],
+                    special: 'post4'
+                }
+            };
+
+            var detailEl = document.getElementById('postDetail');
+
+            if (!POSTS[id]) {
+                detailEl.innerHTML =
+                    '<div class="post4-placeholder">此帖不存在。</div>' +
+                    '<div style="text-align:center;padding:20px;">' +
+                    '<a href="bbs.html" style="color:#1a3a6b;">← 返回论坛</a>' +
+                    '</div>';
+            } else {
+                renderPost(POSTS[id], id);
+            }
+
+            function renderPost(p, id) {
+
+                var html = '';
+
+                html += '<div class="post-head">' + escapeHtml(p.title) + '</div>';
+
+                html += '<div class="post-meta">';
+                if (p.author === '林默') {
+                    html += '发帖人：' +
+                        '<img src="img/avatar_lin.png" style="width:20px;height:20px;border-radius:50%;vertical-align:middle;margin-right:4px;border:1px solid #888;" onerror="this.style.display=\'none\'">' +
+                        '<a href="pm.html" id="sendPMLink" style="color:#1a3a6b;">林默</a>';
+                } else {
+                    html += '发帖人：' + escapeHtml(p.author);
+                }
+                html += '　' + escapeHtml(p.time) + '</div>';
+
+                html += '<div class="post-body">' + p.body.replace(/\n/g, '<br>') + '</div>';
+
+                if (p.attachment && p.attachment.type === 'image') {
+                    html += '<div class="attachment-area">';
+                    html += '<div class="att-label">附件：</div>';
+                    html +=
+                        '<div class="attachment-thumb" id="attImage" data-src="' + p.attachment.src + '">' +
+                        '  <img src="' + p.attachment.src + '" alt="' + p.attachment.name + '" ' +
+                        '       onerror="this.style.display=\'none\';this.parentNode.insertAdjacentHTML(\'beforeend\',\'<div style=&quot;width:200px;height:150px;background:#ddd;display:flex;align-items:center;justify-content:center;color:#666;font-size:11px;&quot;>图片未提供<br>（仍可点击）</div>\')">' +
+                        '  <div class="att-name">' + p.attachment.name + '</div>' +
+                        '</div>';
+                    html += '</div>';
+                }
+
+                if (p.audioAttachment) {
+                    if (!p.attachment) {
+                        html += '<div class="attachment-area">';
+                        html += '<div class="att-label">附件：</div>';
+                    }
+                    html +=
+                        '<div class="audio-att" id="attAudio">' +
+                        escapeHtml(p.audioAttachment.name) +
+                        '</div>';
+                    if (!p.attachment) {
+                        html += '</div>';
+                    }
+                }
+
+                if (p.replies && p.replies.length) {
+                    html += '<div class="replies">';
+                    html += '<div class="replies-title">回复列表（共 ' + p.replies.length + ' 条）</div>';
+
+                    p.replies.forEach(function (r, i) {
+                        var content = escapeHtml(r[1]);
+
+                        if (id === '1' && i === 22) {
+                            if (refreshCount >= 1) {
+                                content += '<br><span class="reply-anomaly">它写的是你的名字。</span>';
+                            }
+                            if (refreshCount >= 2) {
+                                content += '<br><span class="reply-anomaly">' + escapeHtml(playerName || '无名') + '</span>';
+                            }
+                            if (refreshCount >= 3) {
+                                content += '<br><span class="reply-anomaly">你来了。</span>';
+                            }
+                        }
+
+                        if (id === '2' && i === 0) {
+                            if (refreshCount === 1) {
+                                content = '阿回不在了。';
+                            } else if (refreshCount === 2) {
+                                content = '阿回在你后面。';
+                            } else if (refreshCount >= 3) {
+                                content = '阿回是版主吧？。';
+                            }
+                        }
+
+                        html += '<div class="reply" data-floor="' + (i + 1) + '">';
+                        html += '<span class="reply-floor">#' + (i + 1) + '</span> ';
+                        html += '<span class="reply-who">' + escapeHtml(r[0]) + '</span>';
+                        html += '<span class="reply-time">' + escapeHtml(r[2]) + '</span>';
+                        html += '<div class="reply-content">' + content + '</div>';
+                        html += '</div>';
+                    });
+
+                    html += '</div>';
+                }
+
+                detailEl.innerHTML = html;
+
+                var attImage = document.getElementById('attImage');
+                if (attImage) {
+                    attImage.addEventListener('click', function () {
+                        var src = this.dataset.src || 'img/notebook_default.jpg';
+                        if (window.ViewerHelper) {
+                            window.ViewerHelper.openImage('notebook_default.jpg', src);
+                        }
+                    });
+                }
+
+                var attAudio = document.getElementById('attAudio');
+                if (attAudio) {
+                    attAudio.addEventListener('click', function () {
+                        if (window.ViewerHelper) {
+                            window.ViewerHelper.openAudio();
+                        }
+                    });
+                }
+
+                if (id === '3') {
+                    var tt1 = document.getElementById('tt-liukong');
+                    var tt2 = document.getElementById('tt-yourenma');
+                    var tt3 = document.getElementById('tt-buhuitou');
+
+                    if (tt1) {
+                        tt1.title = '留空者不被归档。但留空者也不被忘记。';
+                        tt1.addEventListener('mouseenter', function () {
+                            Store.set('tooltip_liukong_seen', true);
+                            addAttention(1);
+                        });
+                    }
+                    if (tt2) {
+                        tt2.title = '已经回答了 7 次。你是第 8 个。';
+                        tt2.addEventListener('mouseenter', function () {
+                            Store.set('tooltip_yourenma_seen', true);
+                            addAttention(1);
+                        });
+                    }
+                    if (tt3) {
+                        tt3.title = '你已经回头了。你在看这句话的时候，就回头了。';
+                        tt3.addEventListener('mouseenter', function () {
+                            Store.set('tooltip_buhuitou_seen', true);
+                            Store.set('discovered_page43', true);
+                            addAttention(1);
+                        });
+                    }
+
+                    Store.set('read_post_3', true);
+                }
+
+                if (id === '4' && p.special === 'post4') {
+
+                    var adminUrl = params.get('admin');
+
+                    if (adminUrl === 'true') {
+                        Store.set('post4_admin_url', true);
+                        setTimeout(function () {
+                            uiAlert(
+                                '隐藏入口',
+                                '你找到了隐藏入口。\n' +
+                                '但你不是管理员。\n' +
+                                '你只是访客。\n' +
+                                '访客不能被归档。\n' +
+                                '但访客可以被记住。'
+                            );
+                        }, 800);
+                    } else {
+                        setTimeout(function () {
+                            uiPopup(
+                                '需要权限',
+                                '此帖内容需要管理员权限。\n' +
+                                '您不是管理员。\n' +
+                                '但您可以成为管理员。\n' +
+                                '输入指令：become admin',
+                                [{
+                                    text: '确定',
+                                    primary: true,
+                                    onClick: function () {
+                                        Store.set('become_admin_hint', true);
+                                        Store.set('discovered_become_admin', true);
+                                    }
+                                }]
+                            );
+                        }, 2000);
+                    }
+
+                    Store.set('read_post_4', true);
+                    Store.set('post4_visited', true);
+                }
+
+                if (id === '1') Store.set('read_post_1', true);
+                if (id === '2') Store.set('read_post_2', true);
+
+                if (id === '2') {
+                    var replies = detailEl.querySelectorAll('.reply');
+                    if (replies[1]) {
+                        replies[1].title = '最后编辑：2019-01-03 02:19 / 编辑者：阿回';
+                    }
+                }
+
+                var sendPMLink = document.getElementById('sendPMLink');
+                if (sendPMLink) {
+                    sendPMLink.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        window.location.href = 'pm.html';
+                    });
+                }
+            }
+
+            (function () {
+                var userInfo = document.getElementById('userInfo');
+                if (userInfo) {
+                    var name = Store.get('visitor_name', '');
+                    if (name) {
+                        userInfo.innerHTML = '<b>' + escapeHtml(name) + '</b>';
+                    }
+                }
+            })();
+
+            if (window.FullscreenHelper && !window.FullscreenHelper.isMobile) {
+                var fsBtn = document.createElement('button');
+                fsBtn.textContent = '⛶';
+                fsBtn.title = '进入全屏';
+                fsBtn.style.cssText =
+                    'position:fixed;bottom:14px;left:18px;' +
+                    'color:#666;font-family:monospace;font-size:14px;' +
+                    'cursor:pointer;background:none;border:none;padding:4px 8px;' +
+                    'z-index:99998;';
+                fsBtn.addEventListener('click', function () {
+                    if (window.FullscreenHelper.isInFullscreen()) {
+                        window.FullscreenHelper.exit();
+                    } else {
+                        window.FullscreenHelper.request();
+                    }
+                });
+                document.body.appendChild(fsBtn);
+            }
+
+})();
+    </script>
+
+</body>
+</html>

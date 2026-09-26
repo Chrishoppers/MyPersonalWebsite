@@ -1,0 +1,87 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" width="468" height="60" viewBox="0 0 468 60" shape-rendering="crispEdges">
+  <defs>
+    <linearGradient id="bannerGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#4a6fa5"/>
+      <stop offset="45%" stop-color="#2a4a7b"/>
+      <stop offset="50%" stop-color="#1a3a6b"/>
+      <stop offset="100%" stop-color="#0d1b3e"/>
+    </linearGradient>
+    <linearGradient id="stampGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#c33"/>
+      <stop offset="100%" stop-color="#800"/>
+    </linearGradient>
+  </defs>
+
+  <!-- 底色 -->
+  <rect width="468" height="60" fill="url(#bannerGrad)"/>
+
+  <!-- 顶部高光 -->
+  <rect x="0" y="0" width="468" height="1" fill="#6a8fc5"/>
+  <!-- 底部暗边 -->
+  <rect x="0" y="59" width="468" height="1" fill="#0a1a3a"/>
+
+  <!-- 左侧印章「回」 -->
+  <rect x="16" y="14" width="32" height="32" fill="none" stroke="url(#stampGrad)" stroke-width="1.5"/>
+  <rect x="18" y="16" width="28" height="28" fill="none" stroke="#c33" stroke-width="0.5" opacity="0.5"/>
+  <text x="32" y="38"
+        font-family="SimSun, 宋体, serif"
+        font-size="22"
+        font-weight="bold"
+        fill="#c33"
+        text-anchor="middle">回</text>
+
+  <!-- 主标题 -->
+  <text x="60" y="27"
+        font-family="SimSun, 宋体, serif"
+        font-size="20"
+        font-weight="bold"
+        fill="#fff"
+        stroke="#0d1b3e"
+        stroke-width="0.3">回 响 档 案</text>
+
+  <!-- 副标题 -->
+  <text x="60" y="46"
+        font-family="SimSun, 宋体, serif"
+        font-size="11"
+        fill="#b8d4f0"
+        letter-spacing="2">失物招领 · 留言簿</text>
+
+  <!-- 右侧分隔线 -->
+  <line x1="290" y1="14" x2="290" y2="46" stroke="#4a6fa5" stroke-width="1"/>
+
+  <!-- 右侧信息块 -->
+  <text x="302" y="24"
+        font-family="SimSun, 宋体, serif"
+        font-size="10"
+        fill="#8ab0d8"
+        letter-spacing="1">ECHO ARCHIVE</text>
+  <text x="302" y="37"
+        font-family="SimSun, 宋体, serif"
+        font-size="9"
+        fill="#6a8ab0">BBS SYSTEM v0.9</text>
+  <text x="302" y="49"
+        font-family="SimSun, 宋体, serif"
+        font-size="8"
+        fill="#4a6a90">EST. 2009.11.01</text>
+
+  <!-- 节点标记 -->
+  <text x="440" y="20"
+        font-family="SimSun, 宋体, serif"
+        font-size="8"
+        fill="#3a5a80"
+        text-anchor="middle">节点</text>
+  <text x="440" y="32"
+        font-family="SimSun, 宋体, serif"
+        font-size="11"
+        font-weight="bold"
+        fill="#5a7aa0"
+        text-anchor="middle">7/∞</text>
+
+  <!-- ⭐ 隐藏的 43（右下角极淡） -->
+  <text x="454" y="55"
+        font-family="SimSun, 宋体, serif"
+        font-size="7"
+        fill="#1a3a6b"
+        opacity="0.7"
+        text-anchor="end">43</text>
+</svg>

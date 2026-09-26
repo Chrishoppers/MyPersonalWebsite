@@ -1,0 +1,236 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+    <title>第43页</title>
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            background: #000;
+            color: #eee;
+            font-family: "SimSun", "宋体", serif;
+            font-size: 20px;
+            line-height: 2;
+            min-height: 100vh;
+        }
+
+            body.page43-page {
+                background-color: #000;
+                background-image: url('img/page43.jpg');
+                background-size: cover;
+                background-position: center top;
+                background-repeat: no-repeat;
+                background-attachment: fixed;
+            }
+
+                body.page43-page::before {
+                    content: '';
+                    position: fixed;
+                    inset: 0;
+                    background: rgba(0, 0, 0, 0.85);
+                    z-index: 0;
+                    pointer-events: none;
+                }
+
+        #wrap {
+            position: relative;
+            z-index: 1;
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 22vh 24px 40vh;
+        }
+
+        #top {
+            letter-spacing: 0.2em;
+            color: #eee;
+        }
+
+        #ask {
+            display: none;
+            margin-top: 40vh;
+        }
+
+            #ask .q {
+                margin-bottom: 14px;
+                color: #ccc;
+                font-size: 18px;
+            }
+
+        #answer {
+            width: 100%;
+            padding: 10px 14px;
+            background: #111;
+            color: #eee;
+            border: 1px solid #333;
+            font-family: inherit;
+            font-size: 18px;
+            outline: none;
+        }
+
+            #answer:focus {
+                border-color: #666;
+            }
+
+        #submit {
+            margin-top: 14px;
+            padding: 8px 28px;
+            background: #222;
+            color: #eee;
+            border: 2px outset #555;
+            font-family: inherit;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+            #submit:hover {
+                background: #333;
+            }
+
+            #submit:active {
+                border-style: inset;
+            }
+
+        #fsBtn {
+            position: fixed;
+            bottom: 14px;
+            left: 18px;
+            color: #444;
+            font-family: monospace;
+            font-size: 14px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            padding: 4px 8px;
+            z-index: 99998;
+        }
+
+            #fsBtn:hover {
+                color: #888;
+            }
+    </style>
+</head>
+<body class="page43-page">
+
+    <div id="wrap">
+        <div id="top">不要回头。</div>
+        <div id="ask">
+            <div class="q">回答：有人吗？</div>
+            <input id="answer" autocomplete="off">
+            <button id="submit">提交</button>
+        </div>
+    </div>
+
+    <button id="fsBtn" title="进入全屏">⛶</button>
+
+    <script src="js/storage.js"></script>
+    <script src="js/fullscreen.js"></script>
+    <script src="js/tracker.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/endings.js"></script>
+
+    <script>
+(function () {
+
+            'use strict';
+
+            var params = new URLSearchParams(window.location.search);
+
+            if (params.get('remembered')) { endingRemembered(); return; }
+            if (params.get('lookback'))   { endingLookback();   return; }
+            if (params.get('archive'))    { endingArchive();    return; }
+            if (params.get('refused'))    { endingRefused();    return; }
+            if (params.get('together'))   { endingTogether();   return; }
+            if (params.get('disconnect')) { endingDisconnect(); return; }
+            if (params.get('true'))       { endingTrue();       return; }
+
+            Store.set('clicked_page43', true);
+            addAttention(3);
+
+            var ask = document.getElementById('ask');
+            var answerEl = document.getElementById('answer');
+            var submitBtn = document.getElementById('submit');
+
+            setTimeout(function () {
+                ask.style.display = 'block';
+                setTimeout(function () { answerEl.focus(); }, 200);
+            }, 3000);
+
+            var hasScrolledDown = false;
+            window.addEventListener('scroll', function () {
+                if (window.scrollY > 120) hasScrolledDown = true;
+            });
+
+            var lastY = window.scrollY;
+            window.addEventListener('scroll', function () {
+                if (window.scrollY < lastY - 30 && lastY > 120) {
+                    Store.set('ending_lookback', true);
+                    endingLookback();
+                    return;
+                }
+                lastY = window.scrollY;
+            });
+
+            function handleSubmit() {
+                var v = (answerEl.value || '').trim();
+
+                if (v === '有人吗') {
+                    Store.set('ending_remembered', true);
+                    endingRemembered();
+                }
+                else if (v === '没有人') {
+                    if (isTrueEndingReady()) {
+                        Store.set('ending_true', true);
+                        endingTrue();
+                    } else {
+                        Store.set('ending_refused', true);
+                        endingRefused();
+                    }
+                }
+                else if (v === '') {
+                    Store.set('ending_refused', true);
+                    endingRefused();
+                }
+                else {
+                    Store.set('ending_archive', true);
+                    endingArchive();
+                }
+            }
+
+            submitBtn.addEventListener('click', handleSubmit);
+
+            answerEl.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter') handleSubmit();
+            });
+
+            function isTrueEndingReady() {
+                var checks = [
+                    Store.get('visitor_name', '') === '',
+                    Store.get('read_post_1', false),
+                    Store.get('found_node7', false),
+                    Store.get('read_nodes', false),
+                    Store.get('reverse_audio', false),
+                    Store.get('discovered_whoami', false),
+                    Store.get('pm_lin_said_comein', false),
+                    Store.get('pm_ended', false)
+                ];
+                return checks.every(function (c) { return c === true; });
+            }
+
+            document.getElementById('fsBtn').addEventListener('click', function () {
+                if (window.FullscreenHelper) {
+                    if (window.FullscreenHelper.isInFullscreen()) {
+                        window.FullscreenHelper.exit();
+                    } else {
+                        window.FullscreenHelper.request();
+                    }
+                }
+            });
+
+})();
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,204 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+    <title>∞</title>
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            background: #fff;
+            color: #000;
+            font-family: "SimSun", "宋体", serif;
+            font-size: 18px;
+            line-height: 2.4;
+        }
+
+        #stream {
+            padding: 20px 10vw;
+        }
+
+        .line {
+            white-space: pre-wrap;
+        }
+
+        .tail {
+            padding: 40px 10vw;
+            color: #999;
+            font-size: 14px;
+            line-height: 2.2;
+            display: none;
+        }
+
+            .tail.show {
+                display: block;
+            }
+
+            .tail .back-btn {
+                display: inline-block;
+                margin-top: 16px;
+                padding: 6px 20px;
+                background: #e6e6e6;
+                border: 2px outset #bbb;
+                color: #222;
+                text-decoration: none;
+                font-family: inherit;
+                font-size: 13px;
+            }
+
+                .tail .back-btn:hover {
+                    background: #f0f0f0;
+                    text-decoration: none;
+                }
+
+        #fsBtn {
+            position: fixed;
+            bottom: 14px;
+            left: 18px;
+            color: #bbb;
+            font-family: monospace;
+            font-size: 14px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            padding: 4px 8px;
+            z-index: 99998;
+        }
+
+            #fsBtn:hover {
+                color: #666;
+            }
+    </style>
+</head>
+<body>
+
+    <div id="stream"></div>
+
+    <div class="tail" id="tail">
+        你赢了。暂时。
+        <br>
+        <a href="bbs.html" class="back-btn">← 返回论坛</a>
+    </div>
+
+    <button id="fsBtn" title="进入全屏">⛶</button>
+
+    <script src="js/storage.js"></script>
+    <script src="js/fullscreen.js"></script>
+    <script src="js/tracker.js"></script>
+
+    <script>
+(function () {
+
+            'use strict';
+
+            var stream = document.getElementById('stream');
+            var tail = document.getElementById('tail');
+
+            var loaded = 0;
+            var userBlockCount = 0;
+            var autoScrollOn = true;
+            var scrollLocked = false;
+            var lastY = window.scrollY;
+
+            Store.set('infinity_opened', true);
+            addAttention(3);
+
+            function appendBlock() {
+                for (var i = 0; i < 20; i++) {
+                    var div = document.createElement('div');
+                    div.className = 'line';
+                    div.textContent = '有人吗。';
+                    stream.appendChild(div);
+                }
+                loaded += 20;
+            }
+
+            appendBlock();
+            appendBlock();
+            appendBlock();
+
+            function checkBottom() {
+                if (scrollLocked) return;
+                var nearBottom =
+                    window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 200;
+                if (nearBottom) {
+                    appendBlock();
+                }
+            }
+
+            window.addEventListener('scroll', function () {
+                checkBottom();
+
+                if (autoScrollOn && window.scrollY < lastY - 40) {
+                    userBlockCount++;
+                    Store.set('infinity_block_count', userBlockCount);
+
+                    if (userBlockCount >= 3) {
+                        lockScroll();
+                    }
+                }
+
+                lastY = window.scrollY;
+            });
+
+            var autoTimer = setInterval(function () {
+                if (scrollLocked) return;
+                if (!autoScrollOn) return;
+                window.scrollBy({ top: 40, behavior: 'auto' });
+            }, 400);
+
+            function lockScroll() {
+                scrollLocked = true;
+                clearInterval(autoTimer);
+
+                tail.classList.add('show');
+
+                setTimeout(function () {
+                    tail.scrollIntoView({ behavior: 'smooth', block: 'end' });
+                }, 300);
+            }
+
+            var observer = new MutationObserver(function () {
+                checkBottom();
+            });
+            observer.observe(stream, { childList: true });
+
+            document.addEventListener('keydown', function (e) {
+                if (scrollLocked) return;
+                if (e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === ' ') {
+                    checkBottom();
+                }
+            });
+
+            var touchStartY = 0;
+            document.addEventListener('touchstart', function (e) {
+                touchStartY = e.touches[0].clientY;
+            });
+            document.addEventListener('touchend', function (e) {
+                var dy = touchStartY - e.changedTouches[0].clientY;
+                if (dy > 60) checkBottom();
+            });
+
+            document.getElementById('fsBtn').addEventListener('click', function () {
+                if (window.FullscreenHelper) {
+                    if (window.FullscreenHelper.isInFullscreen()) {
+                        window.FullscreenHelper.exit();
+                    } else {
+                        window.FullscreenHelper.request();
+                    }
+                }
+            });
+
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape') {
+                    window.location.href = 'bbs.html';
+                }
+            });
+
+})();
+    </script>
+
+</body>
+</html>

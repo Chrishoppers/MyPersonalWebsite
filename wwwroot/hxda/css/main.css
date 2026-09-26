@@ -1,0 +1,1636 @@
+﻿/* ============================================================
+   回响档案 · 2009 中文论坛视觉系统 v2
+   参考：Discuz! 6.1 / 7.0 默认皮肤
+   特点：1px 边框拼接 / 纯色渐变条 / 12px 宋体 / 2px outset 按钮
+   文件：wwwroot/hxda/css/main.css
+   ============================================================ */
+
+/* ============================================================
+   0. 全局重置
+   ============================================================ */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    overflow-y: scroll;
+    background: #d8d8d8;
+}
+
+body {
+    background: #d8d8d8;
+    font-family: "SimSun", "宋体", "新宋体", "NSimSun", "MS Song", serif;
+    font-size: 12px;
+    line-height: 1.6;
+    color: #333;
+    text-align: center;
+    -webkit-font-smoothing: none;
+    -moz-osx-font-smoothing: grayscale;
+    font-smooth: never;
+    text-rendering: optimizeSpeed;
+    padding: 8px 0;
+}
+
+a {
+    color: #1a3a6b;
+    text-decoration: none;
+}
+
+    a:hover {
+        color: #c00;
+        text-decoration: underline;
+    }
+
+img {
+    border: 0;
+    vertical-align: middle;
+}
+
+hr {
+    border: none;
+    border-top: 1px dashed #aaa;
+    margin: 12px 0;
+}
+
+/* ============================================================
+   1. 主容器（960 宽 + 1px 双层边框）
+   ============================================================ */
+.forum-wrap {
+    width: 960px;
+    max-width: 98vw;
+    margin: 0 auto;
+    background: #fff;
+    border: 1px solid #999;
+    text-align: left;
+    position: relative;
+}
+
+/* ============================================================
+   2. 页头（三栏结构 + 纯色深蓝渐变条）
+   ============================================================ */
+.forum-head {
+    display: flex;
+    align-items: stretch;
+    height: 72px;
+    background: #1a3a6b;
+    background-image: linear-gradient(to bottom, #4a6fa5 0%, #2a4a7b 48%, #1a3a6b 52%, #0d1b3e 100%);
+    border-bottom: 1px solid #000;
+    border-top: 1px solid #6a8fc5;
+    position: relative;
+    overflow: hidden;
+}
+
+    .forum-head .head-logo {
+        width: 468px;
+        height: 60px;
+        margin: 6px 10px;
+        background: url('../img/logo.svg') no-repeat center center;
+        background-size: contain;
+        flex-shrink: 0;
+        position: relative;
+    }
+
+body[data-attention-level="high"] .forum-head .head-logo::after,
+body[data-attention-level="very-high"] .forum-head .head-logo::after,
+body[data-attention-level="extreme"] .forum-head .head-logo::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: url('../img/logo_dark.svg') no-repeat center center;
+    background-size: contain;
+    animation: logoDarkFlicker 8s ease-in-out infinite;
+    pointer-events: none;
+}
+
+@keyframes logoDarkFlicker {
+    0%, 93%, 100% {
+        opacity: 0;
+    }
+
+    94% {
+        opacity: 1;
+    }
+
+    95% {
+        opacity: 0;
+    }
+
+    96% {
+        opacity: 0.8;
+    }
+
+    97% {
+        opacity: 0;
+    }
+}
+
+.forum-head .head-right {
+    flex: 1;
+    padding: 8px 14px;
+    color: #cfd;
+    font-size: 11px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+    line-height: 1.6;
+}
+
+    .forum-head .head-right .user-info {
+        color: #ffd;
+        font-size: 12px;
+    }
+
+        .forum-head .head-right .user-info a {
+            color: #ffd;
+        }
+
+    .forum-head .head-right b {
+        color: #fff;
+    }
+
+    .forum-head .head-right .user-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        vertical-align: middle;
+        margin-right: 6px;
+    }
+
+/* ============================================================
+   3. 导航条（纯色渐变 + 1px 分隔线）
+   ============================================================ */
+.forum-nav {
+    background: #e0e0e0;
+    background-image: linear-gradient(to bottom, #f4f4f4 0%, #e0e0e0 50%, #d8d8d8 51%, #cfcfcf 100%);
+    border-bottom: 1px solid #aaa;
+    padding: 0;
+    display: flex;
+    font-size: 12px;
+    height: 28px;
+    align-items: stretch;
+}
+
+    .forum-nav a {
+        padding: 0 14px;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        color: #1a3a6b;
+        border-right: 1px solid #bbb;
+        position: relative;
+    }
+
+        .forum-nav a:first-child {
+            border-left: 1px solid #bbb;
+        }
+
+        .forum-nav a:hover {
+            background: #fff;
+            text-decoration: none;
+        }
+
+        .forum-nav a.active {
+            background: #fff;
+            font-weight: bold;
+            border-bottom: 1px solid #fff;
+            margin-bottom: -1px;
+        }
+
+/* ============================================================
+   4. 公告条
+   ============================================================ */
+.forum-notice {
+    background: #fffce8;
+    border-bottom: 1px solid #d8c878;
+    padding: 6px 14px;
+    font-size: 12px;
+    color: #665500;
+    position: relative;
+}
+
+    .forum-notice::before {
+        content: '📢 ';
+        margin-right: 2px;
+    }
+
+/* ============================================================
+   5. 统计条
+   ============================================================ */
+.forum-stats {
+    background: #efefef;
+    border-bottom: 1px solid #ddd;
+    padding: 5px 14px;
+    font-size: 11px;
+    color: #666;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+    .forum-stats .stat-item {
+        display: inline-block;
+        margin-right: 16px;
+    }
+
+        .forum-stats .stat-item b {
+            color: #1a3a6b;
+        }
+
+/* ============================================================
+   6. 帖子列表（真表格 + 1px 边框）
+   ============================================================ */
+.post-table {
+    width: calc(100% - 16px);
+    margin: 8px;
+    border-collapse: collapse;
+    border: 1px solid #aaa;
+    background: #fff;
+    font-size: 12px;
+}
+
+    .post-table thead th {
+        background: #e0e0e0;
+        background-image: linear-gradient(to bottom, #f4f4f4 0%, #e0e0e0 50%, #d8d8d8 51%, #cfcfcf 100%);
+        border-bottom: 1px solid #aaa;
+        border-right: 1px solid #bbb;
+        padding: 6px 10px;
+        text-align: left;
+        font-weight: bold;
+        color: #1a3a6b;
+        font-size: 12px;
+        white-space: nowrap;
+    }
+
+        .post-table thead th:last-child {
+            border-right: none;
+        }
+
+    .post-table tbody td {
+        padding: 6px 10px;
+        border-bottom: 1px solid #ddd;
+        font-size: 12px;
+        vertical-align: middle;
+    }
+
+    .post-table tbody tr:nth-child(even) td {
+        background: #f8f8f8;
+    }
+
+    .post-table tbody tr:hover td {
+        background: #fff8d0;
+    }
+
+    .post-table .col-icon {
+        width: 22px;
+        text-align: center;
+    }
+
+    .post-table .col-title {
+        font-size: 12px;
+    }
+
+        .post-table .col-title a {
+            font-size: 12px;
+            color: #1a3a6b;
+        }
+
+            .post-table .col-title a:hover {
+                color: #c00;
+            }
+
+.thread-icon {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    background: #1a3a6b;
+    color: #fff;
+    font-size: 10px;
+    line-height: 16px;
+    text-align: center;
+    font-family: "Courier New", monospace;
+}
+
+    .thread-icon.hot {
+        background: #c33;
+    }
+
+    .thread-icon.sticky {
+        background: #c80;
+    }
+
+    .thread-icon.locked {
+        background: #888;
+    }
+
+    .thread-icon.unknown {
+        background: #111;
+        animation: unknownPulse 2.5s ease-in-out infinite;
+    }
+
+@keyframes unknownPulse {
+    0%, 100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.25;
+    }
+}
+
+/* ============================================================
+   7. 分页
+   ============================================================ */
+.forum-pager {
+    text-align: center;
+    padding: 10px;
+    font-size: 12px;
+    background: #f4f4f4;
+    border-top: 1px solid #ddd;
+}
+
+    .forum-pager a,
+    .forum-pager span {
+        display: inline-block;
+        padding: 2px 9px;
+        margin: 0 2px;
+        border: 1px solid #bbb;
+        background: #fff;
+        background-image: linear-gradient(to bottom, #fff 0%, #eee 100%);
+        color: #1a3a6b;
+        text-decoration: none;
+        cursor: pointer;
+        font-size: 12px;
+    }
+
+    .forum-pager .current {
+        background: #1a3a6b;
+        background-image: linear-gradient(to bottom, #4a6fa5 0%, #1a3a6b 100%);
+        color: #fff;
+        border-color: #0d1b3e;
+        font-weight: bold;
+    }
+
+    .forum-pager a:hover {
+        background: #fff8d0;
+        text-decoration: none;
+    }
+
+/* ============================================================
+   8. 底部
+   ============================================================ */
+.forum-footer {
+    background: #ececec;
+    border-top: 1px solid #bbb;
+    padding: 12px;
+    text-align: center;
+    font-size: 11px;
+    color: #888;
+    line-height: 2;
+}
+
+    .forum-footer a {
+        color: #1a3a6b;
+        margin: 0 8px;
+    }
+
+/* ============================================================
+   9. 按钮（2px outset/inset 经典风格）
+   ============================================================ */
+.old-btn {
+    display: inline-block;
+    padding: 4px 16px;
+    background: #e6e6e6;
+    border: 2px outset #bbb;
+    border-radius: 0;
+    font-family: inherit;
+    font-size: 12px;
+    color: #222;
+    cursor: pointer;
+    text-align: center;
+    line-height: 1.4;
+    user-select: none;
+}
+
+    .old-btn:hover {
+        background: #f0f0f0;
+    }
+
+    .old-btn:active {
+        border-style: inset;
+    }
+
+    .old-btn:disabled {
+        color: #999;
+        cursor: not-allowed;
+        background: #eee;
+        border-color: #ccc;
+    }
+
+.old-btn-primary {
+    background: #1a3a6b;
+    border: 2px outset #4a6fa5;
+    color: #fff;
+}
+
+    .old-btn-primary:hover {
+        background: #2a4a7b;
+    }
+
+.old-btn-danger {
+    background: #a00;
+    border: 2px outset #c33;
+    color: #fff;
+}
+
+    .old-btn-danger:hover {
+        background: #c00;
+    }
+
+/* ============================================================
+   10. 访客登记页
+   ============================================================ */
+.welcome-box {
+    width: 600px;
+    max-width: 94vw;
+    margin: 60px auto;
+    background: #f4f4f4;
+    border: 2px solid #888;
+    text-align: left;
+    animation: boxIn 0.6s ease;
+}
+
+@keyframes boxIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.welcome-title {
+    background: #1a3a6b;
+    background-image: linear-gradient(to bottom, #4a6fa5 0%, #1a3a6b 100%);
+    color: #fff;
+    padding: 8px 14px;
+    font-weight: bold;
+    font-size: 14px;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid #0d1b3e;
+}
+
+.welcome-body {
+    padding: 18px 24px 24px;
+    line-height: 1.9;
+    font-size: 13px;
+}
+
+    .welcome-body label {
+        display: inline-block;
+        min-width: 76px;
+        font-weight: bold;
+        color: #333;
+    }
+
+    .welcome-body input[type="text"],
+    .welcome-body input[type="email"],
+    .welcome-body input[type="password"] {
+        padding: 4px 8px;
+        border: 1px solid #888;
+        background: #fff;
+        font-family: inherit;
+        font-size: 13px;
+        width: 240px;
+        max-width: 70%;
+    }
+
+    .welcome-body input:focus {
+        outline: 1px solid #1a3a6b;
+    }
+
+    .welcome-body img#captcha {
+        vertical-align: middle;
+        border: 1px solid #888;
+        margin-right: 6px;
+        cursor: pointer;
+    }
+
+.tiny {
+    font-size: 11px;
+    color: #999;
+    margin-top: 3px;
+    line-height: 1.5;
+}
+
+.msg {
+    margin-top: 12px;
+    color: #a00;
+    font-weight: bold;
+    min-height: 20px;
+    font-size: 13px;
+}
+
+/* ============================================================
+   11. 抖动
+   ============================================================ */
+.shake {
+    animation: shake 0.5s cubic-bezier(.36, .07, .19, .97) both;
+}
+
+@keyframes shake {
+    10%, 90% {
+        transform: translateX(-2px);
+    }
+
+    20%, 80% {
+        transform: translateX(4px);
+    }
+
+    30%, 50%, 70% {
+        transform: translateX(-6px);
+    }
+
+    40%, 60% {
+        transform: translateX(6px);
+    }
+}
+
+/* ============================================================
+   12. 帖子详情
+   ============================================================ */
+.post-detail {
+    max-width: 760px;
+    margin: 20px auto;
+    background: #fff;
+    border: 1px solid #aaa;
+    padding: 0;
+    text-align: left;
+}
+
+    .post-detail .post-head {
+        background: #e0e0e0;
+        background-image: linear-gradient(to bottom, #f4f4f4 0%, #e0e0e0 100%);
+        border-bottom: 1px solid #aaa;
+        padding: 8px 16px;
+        font-size: 13px;
+        font-weight: bold;
+        color: #1a3a6b;
+    }
+
+    .post-detail .post-body {
+        padding: 16px 20px;
+        font-size: 13px;
+        line-height: 2;
+        color: #333;
+        white-space: pre-wrap;
+    }
+
+    .post-detail .post-meta {
+        font-size: 11px;
+        color: #888;
+        padding: 6px 16px;
+        background: #fafafa;
+        border-bottom: 1px dashed #ddd;
+    }
+
+.reply {
+    padding: 10px 16px;
+    border-bottom: 1px dashed #ddd;
+    font-size: 12px;
+    line-height: 1.9;
+}
+
+    .reply:last-child {
+        border-bottom: none;
+    }
+
+.reply-floor {
+    color: #1a3a6b;
+    font-weight: bold;
+}
+
+.reply-time {
+    color: #999;
+    font-size: 11px;
+}
+
+.attachment-thumb {
+    display: inline-block;
+    border: 1px solid #888;
+    padding: 3px;
+    background: #f4f4f4;
+    cursor: pointer;
+    margin: 8px 0;
+}
+
+    .attachment-thumb img {
+        display: block;
+        max-width: 280px;
+        max-height: 200px;
+    }
+
+.attachment-info {
+    font-size: 11px;
+    color: #666;
+    margin-top: 4px;
+}
+
+/* ============================================================
+   13. 通用弹窗
+   ============================================================ */
+.overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 99990;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+    .overlay.active {
+        display: flex;
+    }
+
+.overlay-box {
+    background: #f4f4f4;
+    border: 2px solid #888;
+    max-width: 520px;
+    width: 100%;
+    max-height: 90vh;
+    overflow: hidden;
+    font-family: inherit;
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+}
+
+.overlay-title {
+    background: #1a3a6b;
+    background-image: linear-gradient(to bottom, #4a6fa5 0%, #1a3a6b 100%);
+    color: #fff;
+    padding: 7px 14px;
+    font-weight: bold;
+    font-size: 13px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #0d1b3e;
+}
+
+    .overlay-title .x {
+        cursor: pointer;
+        width: 18px;
+        height: 18px;
+        line-height: 16px;
+        text-align: center;
+        background: #a00;
+        border: 2px outset #c33;
+        color: #fff;
+        font-size: 11px;
+        user-select: none;
+    }
+
+        .overlay-title .x:hover {
+            background: #c00;
+        }
+
+.overlay-body {
+    padding: 16px 20px;
+    font-size: 13px;
+    line-height: 1.9;
+    flex: 1;
+    overflow-y: auto;
+    background: #fff;
+    white-space: pre-wrap;
+}
+
+    .overlay-body input[type="text"],
+    .overlay-body input[type="email"],
+    .overlay-body input[type="password"],
+    .overlay-body textarea {
+        width: 100%;
+        padding: 6px 10px;
+        border: 1px solid #888;
+        background: #fff;
+        font-family: inherit;
+        font-size: 13px;
+    }
+
+.overlay-footer {
+    padding: 10px 20px;
+    border-top: 1px solid #ccc;
+    text-align: right;
+    background: #ececec;
+}
+
+    .overlay-footer .old-btn {
+        margin-left: 8px;
+    }
+
+/* ============================================================
+   14. 深色模式（注意值 21+）
+   ============================================================ */
+body.dark-mode {
+    background: #050505;
+    color: #888;
+}
+
+    body.dark-mode .forum-wrap {
+        background: #0a0a0a;
+        border-color: #222;
+    }
+
+    body.dark-mode .forum-head {
+        background: #1a0000;
+        background-image: linear-gradient(to bottom, #3a0a0a 0%, #1a0000 48%, #0d0000 52%, #000 100%);
+    }
+
+    body.dark-mode .forum-nav {
+        background: #0a0a0a;
+        background-image: linear-gradient(to bottom, #151515 0%, #0a0a0a 100%);
+        border-color: #222;
+    }
+
+        body.dark-mode .forum-nav a {
+            color: #6a6;
+            border-color: #1a1a1a;
+        }
+
+    body.dark-mode .forum-notice {
+        background: #0a0a00;
+        color: #aa6;
+        border-color: #333;
+    }
+
+    body.dark-mode .forum-stats {
+        background: #0a0a0a;
+        color: #555;
+        border-color: #1a1a1a;
+    }
+
+    body.dark-mode .post-table {
+        background: #0a0a0a;
+        border-color: #222;
+    }
+
+        body.dark-mode .post-table thead th {
+            background: #151515;
+            background-image: linear-gradient(to bottom, #1a1a1a 0%, #151515 100%);
+            color: #6a6;
+            border-color: #222;
+        }
+
+        body.dark-mode .post-table tbody td {
+            border-color: #151515;
+            color: #888;
+        }
+
+        body.dark-mode .post-table tbody tr:nth-child(even) td {
+            background: #0f0f0f;
+        }
+
+        body.dark-mode .post-table tbody tr:hover td {
+            background: #1a0505;
+        }
+
+        body.dark-mode .post-table .col-title a {
+            color: #6a6;
+        }
+
+    body.dark-mode .forum-pager {
+        background: #0a0a0a;
+        border-color: #1a1a1a;
+    }
+
+        body.dark-mode .forum-pager a {
+            background: #151515;
+            color: #6a6;
+            border-color: #222;
+        }
+
+    body.dark-mode .forum-footer {
+        background: #080808;
+        color: #444;
+        border-color: #151515;
+    }
+
+    body.dark-mode .overlay-box {
+        background: #0a0a0a;
+        border-color: #333;
+    }
+
+    body.dark-mode .overlay-body {
+        background: #0f0f0f;
+        color: #888;
+    }
+
+    body.dark-mode .overlay-footer {
+        background: #151515;
+        border-color: #222;
+    }
+
+    body.dark-mode .old-btn {
+        background: #1a1a1a;
+        color: #888;
+        border-color: #444;
+    }
+
+        body.dark-mode .old-btn:hover {
+            background: #222;
+        }
+
+/* ============================================================
+   15. 恐怖氛围
+   ============================================================ */
+.horror-scanlines {
+    position: fixed;
+    inset: 0;
+    z-index: 9997;
+    pointer-events: none;
+    background: repeating-linear-gradient( 0deg, rgba(0, 0, 0, 0.08) 0px, rgba(0, 0, 0, 0.08) 1px, transparent 1px, transparent 3px );
+    mix-blend-mode: multiply;
+    opacity: 0.4;
+}
+
+.horror-vignette {
+    position: fixed;
+    inset: 0;
+    z-index: 9996;
+    pointer-events: none;
+    background: radial-gradient( circle at 50% 50%, transparent 0%, transparent 45%, rgba(0, 0, 0, 0.12) 75%, rgba(0, 0, 0, 0.4) 100% );
+    transition: background 0.4s ease;
+}
+
+body.attention-drift {
+    animation: attentionDrift 45s ease-in-out infinite;
+}
+
+@keyframes attentionDrift {
+    0%, 100% {
+        transform: translate(0, 0);
+    }
+
+    25% {
+        transform: translate(0.5px, -0.5px);
+    }
+
+    50% {
+        transform: translate(-0.3px, 0.3px);
+    }
+
+    75% {
+        transform: translate(0.2px, 0.5px);
+    }
+}
+
+body.attention-critical {
+    animation: criticalFlicker 8s linear infinite;
+}
+
+@keyframes criticalFlicker {
+    0%, 91%, 100% {
+        opacity: 1;
+    }
+
+    92% {
+        opacity: 0.95;
+    }
+
+    93% {
+        opacity: 1;
+    }
+
+    96% {
+        opacity: 0.93;
+    }
+
+    97% {
+        opacity: 1;
+    }
+}
+
+body[data-attention-level="high"] {
+    filter: brightness(0.95);
+}
+
+body[data-attention-level="very-high"] {
+    filter: brightness(0.88);
+}
+
+body[data-attention-level="extreme"] {
+    filter: brightness(0.8) contrast(1.05);
+}
+
+body.attention-breathing {
+    animation: attentionBreathing 6s ease-in-out infinite;
+}
+
+@keyframes attentionBreathing {
+    0%, 100% {
+        filter: brightness(1);
+    }
+
+    50% {
+        filter: brightness(0.97);
+    }
+}
+
+#horrorTrailCanvas {
+    pointer-events: none;
+}
+
+/* ============================================================
+   16. 终端
+   ============================================================ */
+body.terminal {
+    background: #000;
+    color: #0f0;
+    font-family: "Courier New", monospace;
+    font-size: 15px;
+    padding: 24px;
+    min-height: 100vh;
+    line-height: 1.7;
+    text-align: left;
+}
+
+    body.terminal input {
+        background: transparent;
+        border: none;
+        color: #0f0;
+        font-family: inherit;
+        font-size: inherit;
+        outline: none;
+        width: 70%;
+    }
+
+    body.terminal .err {
+        color: #f44;
+    }
+
+    body.terminal .warn {
+        color: #fc0;
+    }
+
+/* ============================================================
+   17. 404 页
+   ============================================================ */
+.e404-box {
+    width: 560px;
+    max-width: 94vw;
+    margin: 80px auto;
+    background: #f4f4f4;
+    border: 2px solid #888;
+    font-family: inherit;
+    padding: 30px 36px;
+    text-align: left;
+}
+
+    .e404-box h1 {
+        color: #1a3a6b;
+        font-size: 20px;
+        margin: 0 0 14px;
+        border-bottom: 1px dashed #aaa;
+        padding-bottom: 10px;
+    }
+
+    .e404-box .path {
+        font-family: "Courier New", monospace;
+        color: #a00;
+        font-size: 13px;
+        margin-bottom: 16px;
+    }
+
+    .e404-box .msg {
+        font-size: 14px;
+        line-height: 2;
+        white-space: pre-wrap;
+        color: #333;
+        margin-bottom: 20px;
+    }
+
+/* ============================================================
+   18. 私信
+   ============================================================ */
+.pm-window {
+    width: 640px;
+    max-width: 96vw;
+    margin: 30px auto;
+    background: #f4f4f4;
+    border: 2px solid #888;
+    font-family: inherit;
+    display: flex;
+    flex-direction: column;
+    height: 78vh;
+    min-height: 480px;
+    text-align: left;
+}
+
+.pm-title {
+    background: #1a3a6b;
+    background-image: linear-gradient(to bottom, #4a6fa5 0%, #1a3a6b 100%);
+    color: #fff;
+    padding: 8px 14px;
+    font-weight: bold;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+}
+
+    .pm-title .status {
+        font-size: 11px;
+        font-weight: normal;
+        color: #cfd;
+    }
+
+        .pm-title .status.warn {
+            color: #fc6;
+        }
+
+        .pm-title .status.danger {
+            color: #f99;
+        }
+
+    .pm-title .who {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+        .pm-title .who .avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #c33;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            overflow: hidden;
+        }
+
+            .pm-title .who .avatar img {
+                width: 24px;
+                height: 24px;
+                border-radius: 50%;
+                object-fit: cover;
+            }
+
+.pm-header {
+    background: #e8e8e8;
+    padding: 6px 14px;
+    font-size: 11px;
+    color: #666;
+    border-bottom: 1px solid #ccc;
+    line-height: 1.6;
+}
+
+.pm-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 14px 18px;
+    background: #fafafa;
+    font-size: 13px;
+    line-height: 1.9;
+}
+
+.pm-msg {
+    margin-bottom: 10px;
+    word-break: break-word;
+}
+
+    .pm-msg .who {
+        font-weight: bold;
+        color: #1a3a6b;
+        margin-right: 6px;
+    }
+
+    .pm-msg.from-lin .who {
+        color: #a00;
+    }
+
+    .pm-msg.from-me {
+        text-align: right;
+    }
+
+        .pm-msg.from-me .who {
+            color: #666;
+        }
+
+        .pm-msg.from-me .txt {
+            display: inline-block;
+            background: #e0e8f0;
+            padding: 4px 10px;
+            border-radius: 4px;
+            text-align: left;
+            max-width: 80%;
+        }
+
+    .pm-msg.from-lin .txt {
+        display: inline-block;
+        background: #f0e0e0;
+        padding: 4px 10px;
+        border-radius: 4px;
+        max-width: 80%;
+    }
+
+    .pm-msg .time {
+        font-size: 10px;
+        color: #999;
+        margin-left: 6px;
+    }
+
+.pm-input {
+    border-top: 1px solid #ccc;
+    background: #eee;
+    padding: 8px 12px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+    .pm-input input {
+        flex: 1;
+        padding: 6px 10px;
+        border: 1px solid #888;
+        background: #fff;
+        font-family: inherit;
+        font-size: 13px;
+    }
+
+        .pm-input input:disabled {
+            background: #ddd;
+            color: #888;
+        }
+
+.pm-archived-banner {
+    background: #a00;
+    color: #fff;
+    text-align: center;
+    padding: 4px;
+    font-size: 12px;
+    display: none;
+}
+
+    .pm-archived-banner.show {
+        display: block;
+    }
+
+/* ============================================================
+   19. 归档者页
+   ============================================================ */
+.node-box {
+    width: 720px;
+    max-width: 96vw;
+    margin: 30px auto;
+    background: #f4f4f4;
+    border: 2px solid #888;
+    font-family: inherit;
+    padding: 20px 26px 26px;
+    transition: background 1s ease, border-color 1s ease;
+    text-align: left;
+}
+
+body.deep-dark .node-box {
+    background: #141414;
+    border-color: #444;
+}
+
+.node-card {
+    display: flex;
+    gap: 14px;
+    padding: 12px 14px;
+    border: 1px solid #ccc;
+    background: #fafafa;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+    .node-card:hover {
+        background: #eee;
+        border-color: #888;
+    }
+
+body.deep-dark .node-card {
+    background: #1a1a1a;
+    border-color: #333;
+    color: #888;
+}
+
+.node-card.read {
+    opacity: 0.55;
+}
+
+.node-card.expanded {
+    border-color: #1a3a6b;
+    background: #fff;
+}
+
+body.deep-dark .node-card.expanded {
+    background: #101010;
+    border-color: #6a6;
+}
+
+.node-card .avatar {
+    width: 60px;
+    height: 60px;
+    background: #ddd;
+    border: 1px solid #888;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    color: #666;
+    overflow: hidden;
+}
+
+    .node-card .avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+
+.node-card .info {
+    flex: 1;
+    min-width: 0;
+}
+
+    .node-card .info .who {
+        font-weight: bold;
+        color: #1a3a6b;
+        font-size: 14px;
+        margin-bottom: 4px;
+    }
+
+body.deep-dark .node-card .info .who {
+    color: #6a6;
+}
+
+.node-card .info .msg {
+    color: #444;
+    font-size: 13px;
+    line-height: 1.7;
+    margin-bottom: 4px;
+    word-break: break-word;
+}
+
+body.deep-dark .node-card .info .msg {
+    color: #888;
+}
+
+.node-card .info .time {
+    font-size: 11px;
+    color: #999;
+}
+
+.node-card .side-hint {
+    font-family: "Courier New", monospace;
+    font-size: 10px;
+    color: #999;
+    flex-shrink: 0;
+    text-align: right;
+}
+
+.node-detail {
+    display: none;
+    padding: 12px 16px;
+    background: #fff;
+    border: 1px solid #ccc;
+    border-top: none;
+    font-size: 13px;
+    line-height: 2;
+    white-space: pre-wrap;
+    color: #333;
+    font-family: "SimSun", "宋体", serif;
+    margin-bottom: 8px;
+}
+
+.node-card.expanded + .node-detail {
+    display: block;
+}
+
+body.deep-dark .node-detail {
+    background: #111;
+    border-color: #333;
+    color: #888;
+}
+
+/* ============================================================
+   20. 无限页
+   ============================================================ */
+body.infinity {
+    background: #fff;
+    color: #000;
+    font-family: "SimSun", "宋体", serif;
+    font-size: 18px;
+}
+
+    body.infinity #stream {
+        padding: 20px 10vw;
+        line-height: 2.4;
+    }
+
+    body.infinity .line {
+        white-space: pre-wrap;
+    }
+
+    body.infinity .tail {
+        padding: 40px 10vw;
+        color: #999;
+        font-size: 14px;
+    }
+
+/* ============================================================
+   21. 工具类
+   ============================================================ */
+.center {
+    text-align: center;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.mb-0 {
+    margin-bottom: 0;
+}
+
+.mt-1 {
+    margin-top: 8px;
+}
+
+.mt-2 {
+    margin-top: 16px;
+}
+
+/* ============================================================
+   22. 页面背景（使用你做的图）
+   ============================================================ */
+body.welcome-page {
+    background-image: url('../img/welcome_bg.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+}
+
+body.page404-page {
+    background-image: url('../img/404_bg.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+}
+
+body.terminal-page {
+    background-image: url('../img/terminal_bg.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    background-color: #000;
+}
+
+body.page43-page {
+    background-color: #000;
+    background-image: url('../img/page43.jpg');
+    background-size: cover;
+    background-position: center top;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+}
+
+    body.page43-page::before {
+        content: '';
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.85);
+        z-index: 0;
+        pointer-events: none;
+    }
+
+/* ============================================================
+   23. 头像
+   ============================================================ */
+.avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+    display: block;
+}
+
+.forum-head .head-right .user-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    vertical-align: middle;
+    margin-right: 6px;
+}
+
+/* ============================================================
+   24. 结局背景
+   ============================================================ */
+.ending-bg-white,
+.ending-bg-lookback,
+.ending-bg-remembered,
+.ending-bg-archive {
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.ending-bg-white {
+    background-image: url('../img/white_page.jpg');
+    background-color: #fff;
+}
+
+.ending-bg-lookback {
+    background-image: url('../img/look_back.jpg');
+    background-color: #000;
+}
+
+.ending-bg-remembered {
+    background-image: url('../img/remembered.jpg');
+    background-color: #000;
+}
+
+.ending-bg-archive {
+    background-image: url('../img/archive_full.jpg');
+    background-color: #000;
+}
+
+/* ============================================================
+   25. 图片查看器叠加手图
+   ============================================================ */
+.viewer-hand-overlay {
+    position: absolute;
+    inset: 0;
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+    z-index: 10;
+}
+
+    .viewer-hand-overlay.show {
+        opacity: 1;
+    }
+
+/* ============================================================
+   26. 全屏提示条
+   ============================================================ */
+.fullscreen-hint {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #1a3a6b;
+    color: #fff;
+    text-align: center;
+    padding: 6px 14px;
+    font-size: 11px;
+    font-family: "SimSun", "宋体", serif;
+    z-index: 99999;
+    display: none;
+    border-top: 2px solid #0d1b3e;
+}
+
+    .fullscreen-hint.show {
+        display: block;
+        animation: hintSlideUp 0.4s ease;
+    }
+
+@keyframes hintSlideUp {
+    from {
+        transform: translateY(100%);
+    }
+
+    to {
+        transform: translateY(0);
+    }
+}
+
+.fullscreen-hint .hint-btn {
+    display: inline-block;
+    margin-left: 10px;
+    padding: 2px 12px;
+    background: #4a6fa5;
+    color: #fff;
+    border: 2px outset #6a8fc5;
+    cursor: pointer;
+    font-size: 11px;
+    font-family: inherit;
+}
+
+    .fullscreen-hint .hint-btn:hover {
+        background: #5a7fb5;
+    }
+
+/* ============================================================
+   27. 响应式
+   ============================================================ */
+@media (max-width: 1000px) {
+    .forum-wrap {
+        width: 98vw;
+        margin: 4px auto;
+    }
+
+    .forum-head .head-logo {
+        width: 320px;
+    }
+}
+
+@media (max-width: 768px) {
+    .forum-head {
+        height: 56px;
+    }
+
+        .forum-head .head-logo {
+            width: 220px;
+            height: 44px;
+            margin: 6px 8px;
+        }
+
+        .forum-head .head-right {
+            font-size: 10px;
+            padding: 4px 8px;
+        }
+
+    .forum-nav {
+        height: auto;
+        flex-wrap: wrap;
+    }
+
+        .forum-nav a {
+            padding: 6px 10px;
+            font-size: 11px;
+        }
+
+    .post-table {
+        font-size: 11px;
+    }
+
+        .post-table thead th,
+        .post-table tbody td {
+            padding: 5px 6px;
+        }
+
+    .welcome-box {
+        margin: 20px auto;
+        padding: 0;
+    }
+
+    .welcome-body {
+        padding: 14px 16px 18px;
+    }
+
+        .welcome-body input {
+            width: 100%;
+            max-width: 100%;
+        }
+
+    .overlay-box {
+        max-width: 96vw;
+    }
+
+    .pm-window {
+        height: auto;
+        min-height: 0;
+    }
+}
+
+@media (max-width: 480px) {
+    .forum-head .head-logo {
+        width: 160px;
+        height: 36px;
+    }
+
+    .forum-head .head-right .user-info {
+        font-size: 10px;
+    }
+
+    .fullscreen-hint {
+        font-size: 10px;
+        padding: 4px 8px;
+    }
+}

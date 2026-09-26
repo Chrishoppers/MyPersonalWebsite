@@ -1,0 +1,285 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+    <title>回响档案｜失物招领·留言簿</title>
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="css/main.css">
+    <style>
+        .search-wrap {
+            position: relative;
+            flex: 1;
+            min-width: 220px;
+        }
+
+            .search-wrap input {
+                width: 100%;
+                max-width: 320px;
+                padding: 4px 8px;
+                border: 1px solid #888;
+                background: #fff;
+                font-family: inherit;
+                font-size: 12px;
+            }
+
+                .search-wrap input:focus {
+                    outline: 1px solid #1a3a6b;
+                }
+
+            .search-wrap .tiny {
+                color: rgba(255, 255, 255, 0.5);
+                font-size: 10px;
+                margin-top: 2px;
+            }
+
+        .search-drop {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 320px;
+            max-height: 240px;
+            overflow-y: auto;
+            background: #fff;
+            border: 1px solid #888;
+            border-top: none;
+            z-index: 1000;
+            display: none;
+        }
+
+            .search-drop.show {
+                display: block;
+            }
+
+            .search-drop .hist-item {
+                padding: 6px 12px;
+                cursor: pointer;
+                font-size: 12px;
+                border-bottom: 1px solid #eee;
+                color: #333;
+                font-family: "SimSun", "宋体", serif;
+            }
+
+                .search-drop .hist-item:hover {
+                    background: #fff8d0;
+                }
+
+                .search-drop .hist-item .h-time {
+                    color: #999;
+                    font-size: 11px;
+                    margin-left: 8px;
+                }
+
+                .search-drop .hist-item .h-user {
+                    color: #a00;
+                    font-size: 11px;
+                    margin-left: 8px;
+                }
+
+                .search-drop .hist-item.is-system {
+                    color: #a00;
+                    font-weight: bold;
+                }
+
+                    .search-drop .hist-item.is-system::before {
+                        content: '⚙ ';
+                    }
+
+        #post5Row {
+            transition: background 0.5s ease;
+        }
+
+            #post5Row.pulse {
+                animation: postPulse 1.5s ease-in-out infinite;
+            }
+
+        @keyframes postPulse {
+            0%, 100% {
+                background: transparent;
+            }
+
+            50% {
+                background: #fff8d0;
+            }
+        }
+
+        #post5Time {
+            font-family: "Courier New", monospace;
+            color: #a00;
+            font-weight: bold;
+        }
+
+        .footer-actions {
+            text-align: center;
+            padding: 10px;
+            background: #ececec;
+            border-top: 1px solid #bbb;
+        }
+
+            .footer-actions .old-btn {
+                margin: 0 4px;
+            }
+
+        body[data-attention-level="extreme"] .post-table tbody tr .col-title a {
+            color: #a00;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="forum-wrap">
+
+        <div class="forum-head">
+            <div class="head-logo" id="headLogo"></div>
+            <div class="head-right">
+                <div class="user-info" id="userInfo">
+                    <img src="img/avatar_default.png" alt="" class="user-avatar" id="userAvatar"
+                         onerror="this.style.display='none'">
+                    <span id="userName">游客</span> | <a href="#" id="loginLink">登录</a>
+                </div>
+                <div>最后更新：2019-03-01 00:00</div>
+                <div>当前在线：<b id="onlineText">1（你）</b></div>
+            </div>
+        </div>
+
+        <div class="forum-nav">
+            <a href="bbs.html" class="active">首页</a>
+            <a href="#" id="navSearch">搜索</a>
+            <a href="about.html">关于本站</a>
+            <a href="settings.html">设置</a>
+            <a href="pm.html" id="navPM">我的私信</a>
+            <a href="#" id="navAdmin" style="display:none;">管理后台</a>
+            <a href="#" id="navLogout" style="margin-left:auto;">退出</a>
+        </div>
+
+        <div class="forum-notice" id="noticeBar">
+            本站数据于 2019 年 3 月后不再更新。感谢各位十年来的陪伴。——站长
+        </div>
+
+        <div class="forum-stats">
+            <div>
+                <span class="stat-item">当前在线：<b id="statOnline">1</b></span>
+                <span class="stat-item">今日访问：<b>1</b></span>
+                <span class="stat-item">总访问量：<b id="statTotal">8</b></span>
+            </div>
+            <div>
+                <span class="stat-item">归档节点：<b>7 / ∞</b></span>
+                <span class="stat-item">版本：<b>EchoSystem v0.9</b></span>
+            </div>
+        </div>
+
+        <div style="padding: 8px 14px; background: #f4f4f4; border-bottom: 1px solid #ddd;">
+            <div class="search-wrap" style="max-width: 500px;">
+                <input type="text" id="searchInput"
+                       placeholder="搜索全部归档节点..."
+                       autocomplete="off" maxlength="60">
+                <div class="tiny" style="color:#999;">
+                    注意：您的搜索词将被归档。
+                </div>
+                <div class="search-drop" id="searchDrop"></div>
+            </div>
+        </div>
+
+        <table class="post-table">
+            <thead>
+                <tr>
+                    <th class="col-icon"></th>
+                    <th>标题</th>
+                    <th style="width:90px;">作者</th>
+                    <th style="width:70px;text-align:center;">回复/查看</th>
+                    <th style="width:160px;">最后发表</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr data-post-id="1">
+                    <td class="col-icon"><span class="thread-icon sticky">📌</span></td>
+                    <td class="col-title">
+                        <a href="post.html?id=1">寻物：一本黑色皮面笔记本</a>
+                    </td>
+                    <td>林默</td>
+                    <td style="text-align:center;">23 / 43</td>
+                    <td>2019-02-14 23:47<br><span style="color:#999;">by 林默</span></td>
+                </tr>
+
+                <tr data-post-id="2">
+                    <td class="col-icon"><span class="thread-icon">📄</span></td>
+                    <td class="col-title">
+                        <a href="post.html?id=2">有人认识一个叫"阿回"的人吗？</a>
+                    </td>
+                    <td>访客</td>
+                    <td style="text-align:center;">7 / 43</td>
+                    <td>2019-01-03 23:47<br><span style="color:#999;">by 匿名</span></td>
+                </tr>
+
+                <tr data-post-id="3">
+                    <td class="col-icon"><span class="thread-icon sticky">顶</span></td>
+                    <td class="col-title">
+                        <a href="post.html?id=3">置顶：本版留言格式说明</a>
+                    </td>
+                    <td>版主</td>
+                    <td style="text-align:center;">0 / 43</td>
+                    <td>2009-11-01 23:47<br><span style="color:#999;">by 版主</span></td>
+                </tr>
+
+                <tr data-post-id="4">
+                    <td class="col-icon"><span class="thread-icon unknown">?</span></td>
+                    <td class="col-title">
+                        <a href="post.html?id=4">（无标题）</a>
+                    </td>
+                    <td>未知</td>
+                    <td style="text-align:center;">???</td>
+                    <td>???</td>
+                </tr>
+
+                <tr data-post-id="5" id="post5Row">
+                    <td class="col-icon"><span class="thread-icon unknown">?</span></td>
+                    <td class="col-title">
+                        <a href="#" id="post5Link">第43页</a>
+                    </td>
+                    <td id="post5Author">???</td>
+                    <td style="text-align:center;">0 / <span id="post5Views">43</span></td>
+                    <td id="post5Time">刚刚</td>
+                </tr>
+
+            </tbody>
+        </table>
+
+        <div class="forum-pager">
+            <span class="current">1</span>
+            <a href="#" data-page="2">2</a>
+            <a href="#" data-page="3">3</a>
+            <span>...</span>
+            <a href="node.html">7</a>
+            <a href="infinity.html">∞</a>
+        </div>
+
+        <div class="footer-actions">
+            <button class="old-btn" id="btnPrint">🖨 打印此页</button>
+            <button class="old-btn" id="btnAbout">关于本站</button>
+            <button class="old-btn" id="btnAdmin" style="display:none;">管理后台</button>
+        </div>
+
+        <div class="forum-footer">
+            <div>
+                <a href="about.html">关于本站</a>
+                <a href="settings.html">设置</a>
+                <a href="#" id="footerHelp">帮助</a>
+            </div>
+            <div style="margin-top:8px;">
+                Powered by <b>EchoSystem v0.9</b> © 2009-2019
+            </div>
+        </div>
+
+    </div>
+
+    <script src="js/storage.js"></script>
+    <script src="js/fullscreen.js"></script>
+    <script src="js/tracker.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/horror.js"></script>
+    <script src="js/explore.js"></script>
+    <script src="js/main.js"></script>
+
+</body>
+</html>

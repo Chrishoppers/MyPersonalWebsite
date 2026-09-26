@@ -1,0 +1,651 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+    <title>管理后台</title>
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="css/main.css">
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            background: #000;
+            color: #0f0;
+            font-family: "Courier New", monospace;
+            font-size: 14px;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        #termWrap {
+            position: fixed;
+            inset: 0;
+            padding: 20px 24px 80px 24px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            line-height: 1.7;
+            font-size: 14px;
+        }
+
+            #termWrap::-webkit-scrollbar {
+                width: 4px;
+            }
+
+            #termWrap::-webkit-scrollbar-thumb {
+                background: rgba(0, 255, 0, 0.2);
+                border-radius: 4px;
+            }
+
+        .line {
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+            .line.cmd {
+                color: #0f0;
+            }
+
+            .line.err {
+                color: #f44;
+            }
+
+            .line.warn {
+                color: #fc0;
+            }
+
+            .line.sys {
+                color: #0aa;
+            }
+
+            .line.dim {
+                color: #060;
+            }
+
+            .line.big {
+                color: #fff;
+                font-weight: bold;
+            }
+
+        #prompt {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+            #prompt .arrow {
+                color: #0f0;
+                flex-shrink: 0;
+            }
+
+        #termInput {
+            flex: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: #0f0;
+            font-family: inherit;
+            font-size: inherit;
+            caret-color: #0f0;
+        }
+
+            #termInput::placeholder {
+                color: #060;
+            }
+
+        .term-scanlines {
+            position: fixed;
+            inset: 0;
+            z-index: 10;
+            pointer-events: none;
+            background: repeating-linear-gradient( 0deg, rgba(0, 255, 0, 0.03) 0px, rgba(0, 255, 0, 0.03) 1px, transparent 1px, transparent 3px );
+            mix-blend-mode: screen;
+            opacity: 0.6;
+        }
+
+        #termToolbar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 8px 24px;
+            background: rgba(0, 10, 0, 0.9);
+            border-top: 1px solid #060;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+            z-index: 100;
+            font-size: 11px;
+        }
+
+            #termToolbar button {
+                background: #111;
+                color: #0f0;
+                border: 1px solid #060;
+                padding: 4px 12px;
+                cursor: pointer;
+                font-family: inherit;
+                font-size: 11px;
+            }
+
+                #termToolbar button:hover {
+                    background: #0a1a0a;
+                    color: #0f0;
+                }
+
+            #termToolbar .info {
+                color: #060;
+                margin-left: auto;
+            }
+    </style>
+</head>
+<body class="terminal-page">
+
+    <div class="term-scanlines"></div>
+
+    <div id="termWrap">
+        <div id="termBody"></div>
+        <div id="prompt">
+            <span class="arrow">&gt;</span>
+            <input id="termInput" autocomplete="off" spellcheck="false" autofocus>
+        </div>
+    </div>
+
+    <div id="termToolbar">
+        <button id="btnBack">← 返回论坛</button>
+        <button id="btnReset">重置存档</button>
+        <button id="btnMute">切换音效</button>
+        <span class="info" id="toolbarInfo"></span>
+    </div>
+
+    <script src="js/storage.js"></script>
+    <script src="js/fullscreen.js"></script>
+    <script src="js/tracker.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/horror.js"></script>
+
+    <script>
+(function () {
+
+            'use strict';
+
+            var termBody  = document.getElementById('termBody');
+            var termWrap  = document.getElementById('termWrap');
+            var termInput = document.getElementById('termInput');
+            var toolbarInfo = document.getElementById('toolbarInfo');
+
+            var cmdHistory = Store.get('terminal_history', []);
+            var histPtr = cmdHistory.length;
+
+            function out(text, cls) {
+                var d = document.createElement('div');
+                d.className = 'line' + (cls ? ' ' + cls : '');
+                d.textContent = text;
+                termBody.appendChild(d);
+                termWrap.scrollTop = termWrap.scrollHeight;
+            }
+            function outHTML(html, cls) {
+                var d = document.createElement('div');
+                d.className = 'line' + (cls ? ' ' + cls : '');
+                d.innerHTML = html;
+                termBody.appendChild(d);
+                termWrap.scrollTop = termWrap.scrollHeight;
+            }
+            function escapeHtml(s) {
+                var d = document.createElement('div');
+                d.textContent = String(s);
+                return d.innerHTML;
+            }
+
+            out('EchoSystem v0.9 — 归档管理终端', 'sys');
+            out('');
+            out('系统状态：运行中');
+            out('已运行：13 年 4 个月 7 天 2 小时 19 分');
+            out('归档节点：7/∞');
+            out('当前待处理：1');
+            out('待处理对象：你');
+            out('');
+            out('输入指令。可用：help', 'dim');
+            out('');
+
+            function getDiscovered() {
+                return {
+                    help:        true,
+                    list:        Store.get('discovered_list', false),
+                    read:        Store.get('discovered_read', false),
+                    whoami:      Store.get('discovered_whoami', false),
+                    disconnect:  Store.get('discovered_disconnect', false),
+                    connect:     Store.get('discovered_connect', false),
+                    override:    Store.get('discovered_override', false),
+                    page43:      Store.get('discovered_page43', false),
+                    takeover:    Store.get('discovered_takeover', false),
+                    becomeAdmin: Store.get('discovered_become_admin', false)
+                };
+            }
+
+            function updateToolbarInfo() {
+                var a = Store.get('attention', 0);
+                var name = Store.get('visitor_name', '') || '无名';
+                toolbarInfo.textContent = '注意值：' + a + ' ｜ 称呼：' + name;
+            }
+            updateToolbarInfo();
+            setInterval(updateToolbarInfo, 3000);
+
+            function doHelp() {
+                var d = getDiscovered();
+                var hc = Store.get('terminal_help_count', 0) + 1;
+                Store.set('terminal_help_count', hc);
+
+                out('可用指令：');
+                out('  help          — 显示此列表');
+                if (d.list)        out('  list          — 列出所有归档节点');
+                if (d.read)        out('  read [编号]   — 读取指定归档');
+                if (d.whoami)      out('  whoami        — 显示当前访问者');
+                if (d.disconnect)  out('  disconnect    — 断开连接');
+                if (d.connect)     out('  connect       — 接听（不推荐）');
+                if (d.override)    out('  override allow-unreceived — 系统覆写（需要无称呼访问者）');
+                if (d.page43)      out('  page43        — 打开第43页');
+                if (d.takeover)    out('  我接替         — 接替归档者位置');
+
+                if (hc === 2) out('你已经知道了。', 'dim');
+                if (hc >= 3) out('你还在问。', 'dim');
+            }
+
+            function doList() {
+                var lc = Store.get('terminal_list_count', 0) + 1;
+                Store.set('terminal_list_count', lc);
+                Store.set('discovered_list', true);
+                Store.set('discovered_read', true);
+
+                out('节点 1：系统   | 2009-11-01 00:00 | 已归档');
+                out('节点 2：匿名   | 2010-04-17 03:13 | 已归档');
+                out('节点 3：学生   | 2012-09-09 23:59 | 已归档');
+                out('节点 4：护士   | 2014-12-24 00:00 | 已归档');
+                out('节点 5：司机   | 2016-06-06 06:06 | 已归档');
+                out('节点 6：小孩   | 2018-01-01 01:01 | 已归档');
+                out('节点 7：阿回   | 2019-02-14 23:47 | 未归档');
+                out('节点 8：——     | ——               | 等待中');
+
+                if (Store.get('read_nodes', false)) out('你已经读完了。', 'dim');
+                if (lc >= 5) out('你在找什么？', 'warn');
+            }
+
+            var NODE_CONTENT = {
+                1: '系统是第一个留言者。\n系统是第一个被归档的人。\n系统不是人。',
+                2: '匿名者没有留下名字。\n匿名者没有被归档。\n但匿名者也没有离开。',
+                3: '学生第二天要考试。\n学生没有去考试。\n学生留在了这里。',
+                4: '护士值夜班。\n护士听到病房有人按铃。\n护士去了。病房没有人。\n但铃一直在响。',
+                5: '司机开夜班车。\n后视镜里多了一个人。\n司机不敢回头。\n司机开到了现在。',
+                6: '小孩在玩捉迷藏。\n小孩数到一百。\n小孩开始找。\n小孩找到了所有人。\n除了一个。\n那个一直在数。',
+                7: '我叫阿回。\n我不知道我是谁。\n我只记得有人在一本笔记本里写下了我的名字。\n如果你在读这段话，请告诉林默：\n第43页的那句话是——\n"不要回头。"'
+            };
+
+            function doRead(arg) {
+                if (!arg) { out('请指定编号。例如：read 7', 'err'); return; }
+                if (!/^\d+$/.test(arg)) { out('无效编号。', 'err'); return; }
+
+                var n = parseInt(arg, 10);
+
+                if (n === 0) { out('没有这个节点。', 'err'); return; }
+
+                if (n === 43) {
+                    out('你找到了第43页。但它不在这里。', 'warn');
+                    termWrap.style.background = '#0f0';
+                    setTimeout(function () { termWrap.style.background = ''; }, 60);
+                    return;
+                }
+                if (n === 8) { out('节点8未创建。除非你愿意。', 'warn'); return; }
+                if (n < 1 || n > 7) { out('无效编号。', 'err'); return; }
+
+                if (n === 7) {
+                    var readArr = Store.get('node_read', []);
+                    var readOthers = readArr.filter(function (x) { return x !== 7 && x <= 7; }).length;
+
+                    if (readOthers < 6) {
+                        var warnCount = Store.get('read7_warn_count', 0) + 1;
+                        Store.set('read7_warn_count', warnCount);
+
+                        if (warnCount === 1) {
+                            out('你还没有读完归档。');
+                            out('先读完其他节点。');
+                            out('或者，你可以直接读。');
+                            out('但不推荐。');
+                            return;
+                        } else if (warnCount === 2) {
+                            out('你确定吗？', 'warn');
+                            return;
+                        } else {
+                            out('好。', 'warn');
+                        }
+                    }
+                }
+
+                out(NODE_CONTENT[n]);
+
+                var arr = Store.get('node_read', []);
+                if (arr.indexOf(n) === -1) {
+                    arr.push(n);
+                    Store.set('node_read', arr);
+                    Store.set('node_read_count', arr.length);
+                    Store.set('discovered_read', true);
+                    addAttention(2);
+                }
+
+                if (n === 7) {
+                    Store.set('found_node7', true);
+                    Store.set('seen_source_code', true);
+                }
+
+                var realCount = arr.filter(function (x) { return x <= 7; }).length;
+                if (realCount >= 7) {
+                    Store.set('read_nodes', true);
+                    Store.set('discovered_takeover', true);
+                    out('');
+                    out('你已经读完了所有归档。', 'warn');
+                    out('如果你愿意，可以输入：我接替', 'dim');
+                }
+            }
+
+            function doWhoami() {
+                var wc = Store.get('terminal_whoami_count', 0) + 1;
+                Store.set('terminal_whoami_count', wc);
+
+                var arr = Store.get('node_read', []);
+                if (arr.indexOf(7) === -1) {
+                    out('你还没有读完归档。输入 read 7。', 'warn');
+                    return;
+                }
+
+                Store.set('discovered_whoami', true);
+                Store.set('discovered_disconnect', true);
+                Store.set('discovered_connect', true);
+
+                out('当前访问者：阅读者。');
+                out('备注：阅读者是唯一不被归档的身份。');
+                out('但你不是阅读者。');
+                out('你是第43页的内容。');
+                out('你以为你在看档案。');
+                out('其实是档案在写你。');
+
+                if (wc === 2) out('你已经问过了。', 'dim');
+                if (wc >= 3) out('你还在问。', 'dim');
+
+                var hasName = Store.get('visitor_name', '') !== '';
+                if (!hasName && Store.get('pm_lin_said_override', false)) {
+                    Store.set('discovered_override', true);
+                    out('');
+                    out('检测到无称呼访问者。', 'sys');
+                    out('新指令已解锁：override allow-unreceived', 'sys');
+                }
+            }
+
+            function doDisconnect() {
+                if (!Store.get('discovered_disconnect', false)) {
+                    out('你还不了解自己。输入 whoami 先。', 'err');
+                    return;
+                }
+                out('连接已断开。');
+                out('你没有接听。');
+                out('阿回没有被释放。');
+                out('但你离开了。');
+                Store.set('ending_disconnect', true);
+                setTimeout(function () {
+                    window.location.href = 'page43.html?disconnect=1';
+                }, 2000);
+            }
+
+            function doConnect() {
+                if (!Store.get('discovered_connect', false)) {
+                    out('你还不了解自己。输入 whoami 先。', 'err');
+                    return;
+                }
+                if (!Store.get('read_nodes', false)) { out('你还没准备好。', 'warn'); return; }
+                if (Store.get('ending_archive', false)) { out('太晚了。你已经在了。', 'err'); return; }
+
+                out('接听中……', 'warn');
+                out('归档中……', 'warn');
+                out('完成。', 'warn');
+
+                Store.set('ending_archive', true);
+                setTimeout(function () {
+                    window.location.href = 'page43.html?archive=1';
+                }, 2000);
+            }
+
+            function doOverride() {
+                var hasName = Store.get('visitor_name', '') !== '';
+                if (hasName) { out('你不是无称呼访问者。此指令不可用。', 'err'); return; }
+                if (!Store.get('discovered_whoami', false)) { out('你不知道自己是谁。输入 whoami。', 'err'); return; }
+                if (!Store.get('read_nodes', false)) { out('你还没有读完归档。', 'err'); return; }
+                if (!Store.get('pm_lin_said_override', false)) { out('你不知道这个指令。继续和 林默 对话。', 'err'); return; }
+
+                showOverridePopup();
+            }
+
+            function showOverridePopup() {
+                Store.set('override_active', true);
+                Store.set('override_start_time', Date.now());
+
+                var old = document.getElementById('overridePopup');
+                if (old) old.remove();
+
+                var d = document.createElement('div');
+                d.id = 'overridePopup';
+                d.style.cssText =
+                    'position:fixed;inset:0;background:#fff;z-index:999999;' +
+                    'display:flex;align-items:center;justify-content:center;' +
+                    'font-family:SimSun,serif;color:#222;';
+
+                d.innerHTML =
+                    '<div style="max-width:560px;width:90%;line-height:2;text-align:center;">' +
+                    '  <div style="font-size:18px;font-weight:bold;margin-bottom:20px;">系统覆写指令已接受。</div>' +
+                    '  <div style="font-size:14px;color:#555;text-align:left;white-space:pre-wrap;font-family:Courier New,monospace;">' +
+                    '权限：无称呼访问者。\n' +
+                    '归档程序终止。\n' +
+                    '节点7：未归档。\n' +
+                    '节点8：未创建。\n' +
+                    '本档案将在 30 秒后关闭。\n' +
+                    '关闭原因：无称呼访问者不可归档。\n\n' +
+                    '倒计时：<span id="overrideCountdown" style="color:#a00;font-weight:bold;">30</span>' +
+                    '  </div>' +
+                    '  <div style="margin-top:24px;">' +
+                    '    <input id="overrideInput" placeholder="输入..." autocomplete="off" ' +
+                    '           style="width:70%;padding:8px 12px;border:1px solid #888;font-family:inherit;font-size:15px;text-align:center;">' +
+                    '  </div>' +
+                    '  <div style="margin-top:10px;font-size:12px;color:#999;">提示：你现在可以输入一句话。</div>' +
+                    '</div>';
+
+                document.body.appendChild(d);
+
+                var inp = d.querySelector('#overrideInput');
+                var cnt = d.querySelector('#overrideCountdown');
+                inp.focus();
+
+                var n = 30;
+                var t = setInterval(function () {
+                    n--;
+                    cnt.textContent = n;
+                    if (n <= 0) {
+                        clearInterval(t);
+                        d.remove();
+                        Store.set('ending_refused', true);
+                        window.location.href = 'page43.html?refused=1';
+                    }
+                }, 1000);
+
+                inp.addEventListener('keydown', function (e) {
+                    if (e.key === 'Enter') {
+                        var v = inp.value.trim();
+                        clearInterval(t);
+                        d.remove();
+                        Store.set('override_active', false);
+
+                        if (v === '没有人') {
+                            Store.set('ending_true', true);
+                            window.location.href = 'page43.html?true=1';
+                        } else {
+                            Store.set('ending_refused', true);
+                            window.location.href = 'page43.html?refused=1';
+                        }
+                    }
+                });
+            }
+
+            function doPage43() {
+                var arr = Store.get('node_read', []);
+                if (arr.indexOf(7) === -1) {
+                    out('第43页还没有对你打开。', 'err');
+                    return;
+                }
+                if (Store.get('clicked_page43', false)) out('你已经在了。', 'dim');
+                Store.set('clicked_page43', true);
+                window.location.href = 'page43.html';
+            }
+
+            function doTakeover() {
+                if (!Store.get('read_nodes', false)) { out('你还没准备好。', 'err'); return; }
+                if (!Store.get('discovered_whoami', false)) { out('你还不了解自己。', 'err'); return; }
+
+                out('接替中……', 'warn');
+                out('你是它了。', 'warn');
+
+                Store.set('ending_together', true);
+                setTimeout(function () {
+                    window.location.href = 'page43.html?together=1';
+                }, 2000);
+            }
+
+            function doBecomeAdmin() {
+                out('你已经是管理员了。');
+                out('或者说，你已经是档案的一部分了。');
+            }
+
+            function doInvalid(cmd) {
+                var ic = Store.get('terminal_invalid_count', 0) + 1;
+                Store.set('terminal_invalid_count', ic);
+
+                if (ic < 3) {
+                    out('无效指令。', 'err');
+                    out('输入 help 查看可用指令。', 'dim');
+                } else if (ic === 3) {
+                    out('你在找什么？', 'warn');
+                    out('这里没有你要找的东西。');
+                    out('或者，有。');
+                    out('但你不应该找。');
+                } else if (ic < 5) {
+                    out('无效指令。', 'err');
+                } else if (ic === 5) {
+                    out('停下来。', 'warn');
+                    out('输入 help。');
+                    out('最后一次。');
+                } else {
+                    out('好。', 'err');
+                    out('你不想听话。');
+                    out('那就不要怪它。', 'err');
+                    addAttention(10);
+                }
+            }
+
+            function runCommand(raw) {
+                var cmd = raw.trim();
+                if (!cmd) return;
+
+                outHTML('<span class="cmd">&gt; ' + escapeHtml(cmd) + '</span>');
+
+                var lower = cmd.toLowerCase();
+
+                if (lower === 'help') return doHelp();
+                if (lower === 'list') return doList();
+                if (lower.startsWith('read ')) return doRead(cmd.slice(5).trim());
+                if (lower === 'read') return out('请指定编号。例如：read 7', 'err');
+                if (lower === 'whoami') return doWhoami();
+                if (lower === 'disconnect') return doDisconnect();
+                if (lower === 'connect') return doConnect();
+                if (lower === 'override allow-unreceived') return doOverride();
+                if (lower === 'page43') return doPage43();
+                if (lower === '我接替') return doTakeover();
+                if (lower === 'become admin') return doBecomeAdmin();
+
+                return doInvalid(cmd);
+            }
+
+            termInput.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter') {
+                    var v = termInput.value;
+                    termInput.value = '';
+
+                    if (v.trim()) {
+                        cmdHistory.push(v);
+                        if (cmdHistory.length > 100) cmdHistory.shift();
+                        Store.set('terminal_history', cmdHistory);
+                        histPtr = cmdHistory.length;
+                    }
+
+                    runCommand(v);
+                    out('');
+                } else if (e.key === 'ArrowUp') {
+                    if (histPtr > 0) {
+                        histPtr--;
+                        termInput.value = cmdHistory[histPtr];
+                    }
+                    e.preventDefault();
+                } else if (e.key === 'ArrowDown') {
+                    if (histPtr < cmdHistory.length - 1) {
+                        histPtr++;
+                        termInput.value = cmdHistory[histPtr];
+                    } else {
+                        histPtr = cmdHistory.length;
+                        termInput.value = '';
+                    }
+                    e.preventDefault();
+                }
+            });
+
+            termInput.focus();
+            document.addEventListener('click', function () { termInput.focus(); });
+
+            document.getElementById('btnBack').addEventListener('click', function () {
+                window.location.href = 'bbs.html';
+            });
+
+            document.getElementById('btnReset').addEventListener('click', function () {
+                uiConfirm('重置存档', '确定要清空所有记录吗？\n这会删除你的名字、注意值、所有进度。', function () {
+                    Store.reset();
+                    window.location.href = 'index.html';
+                });
+            });
+
+            document.getElementById('btnMute').addEventListener('click', function () {
+                if (window.HorrorAudio) {
+                    if (window.HorrorAudio.isEnabled()) {
+                        window.HorrorAudio.disable();
+                        out('音效已关闭。', 'dim');
+                    } else {
+                        window.HorrorAudio.enable();
+                        out('音效已开启。', 'dim');
+                    }
+                }
+            });
+
+            if (window.FullscreenHelper && !window.FullscreenHelper.isMobile) {
+                var fsBtn = document.createElement('button');
+                fsBtn.textContent = '⛶ 全屏';
+                fsBtn.style.cssText = 'background:#111;color:#0f0;border:1px solid #060;padding:4px 12px;cursor:pointer;font-family:inherit;font-size:11px;';
+                fsBtn.addEventListener('click', function () {
+                    if (window.FullscreenHelper.isInFullscreen()) {
+                        window.FullscreenHelper.exit();
+                    } else {
+                        window.FullscreenHelper.request();
+                    }
+                });
+                document.getElementById('termToolbar').insertBefore(fsBtn, toolbarInfo);
+            }
+
+            addAttention(1);
+
+})();
+    </script>
+
+</body>
+</html>

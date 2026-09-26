@@ -1,0 +1,449 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+    <title>回响档案｜页面校验</title>
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="css/main.css">
+    <style>
+        .verify-window {
+            width: 760px;
+            max-width: 96vw;
+            margin: 30px auto;
+            background: #ececec;
+            border: 2px outset #bbb;
+            font-family: "SimSun", "宋体", serif;
+        }
+
+        .verify-titlebar {
+            background: #1a3a6b;
+            background-image: linear-gradient(to bottom, #4a6fa5 0%, #1a3a6b 100%);
+            color: #fff;
+            padding: 6px 12px;
+            font-weight: bold;
+            font-size: 13px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #0d1b3e;
+        }
+
+            .verify-titlebar .x {
+                cursor: pointer;
+                width: 20px;
+                height: 20px;
+                background: #a00;
+                text-align: center;
+                line-height: 18px;
+                border: 2px outset #c33;
+                color: #fff;
+                font-size: 11px;
+            }
+
+                .verify-titlebar .x:hover {
+                    background: #c00;
+                }
+
+        .verify-tabs {
+            background: #d4d0c8;
+            padding: 4px 6px 0;
+            border-bottom: 1px solid #999;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2px;
+        }
+
+            .verify-tabs button {
+                padding: 5px 14px;
+                background: #d4d0c8;
+                border: 2px outset #eee;
+                border-bottom: none;
+                cursor: pointer;
+                font-family: inherit;
+                font-size: 12px;
+                color: #333;
+            }
+
+                .verify-tabs button.active {
+                    background: #ececec;
+                    border: 2px inset #aaa;
+                    margin-bottom: -1px;
+                    font-weight: bold;
+                }
+
+                .verify-tabs button:hover:not(.active) {
+                    background: #e0dcd4;
+                }
+
+        .verify-content {
+            padding: 14px 18px;
+            font-size: 12px;
+            line-height: 1.9;
+            min-height: 320px;
+            max-height: 60vh;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            font-family: "Courier New", monospace;
+            color: #222;
+            background: #ececec;
+        }
+
+            .verify-content .h {
+                color: #1a3a6b;
+                font-weight: bold;
+                font-family: "SimSun", "宋体", serif;
+                border-bottom: 1px solid #ccc;
+                padding-bottom: 4px;
+                margin-bottom: 8px;
+            }
+
+            .verify-content .k {
+                color: #666;
+            }
+
+            .verify-content .v {
+                color: #000;
+            }
+
+            .verify-content .hl {
+                color: #a00;
+                font-weight: bold;
+            }
+
+            .verify-content .comment {
+                color: #888;
+                font-style: italic;
+            }
+
+            .verify-content .info-box {
+                background: #fff;
+                border: 1px solid #888;
+                padding: 8px 12px;
+                margin-top: 8px;
+                font-family: "SimSun", "宋体", serif;
+                color: #222;
+            }
+
+        .verify-actions {
+            padding: 10px 18px;
+            border-top: 1px solid #aaa;
+            background: #e0ddd6;
+            text-align: right;
+        }
+
+            .verify-actions .old-btn {
+                padding: 4px 16px;
+                font-size: 12px;
+                margin-left: 8px;
+            }
+    </style>
+</head>
+<body>
+
+    <div class="forum-wrap" style="min-height: auto;">
+
+        <div class="forum-head">
+            <div class="head-logo"></div>
+            <div class="head-right">
+                <div class="user-info" id="userInfo">游客</div>
+                <div>最后更新：2019-03-01 00:00</div>
+            </div>
+        </div>
+
+        <div class="forum-nav">
+            <a href="bbs.html">← 返回论坛</a>
+            <a href="bbs.html">首页</a>
+            <a href="about.html">关于本站</a>
+            <a href="verify.html" class="active">页面校验</a>
+        </div>
+
+        <div class="forum-notice">
+            本站数据于 2019 年 3 月后不再更新。感谢各位十年来的陪伴。——站长
+        </div>
+
+        <div class="verify-window" id="verifyWindow">
+
+            <div class="verify-titlebar">
+                <span>📄 页面属性</span>
+                <span class="x" id="verifyClose">✕</span>
+            </div>
+
+            <div class="verify-tabs" id="verifyTabs">
+                <button data-tab="basic" class="active">基本信息</button>
+                <button data-tab="source">HTML源代码</button>
+                <button data-tab="file">文件信息</button>
+                <button data-tab="audio">音频诊断</button>
+                <button data-tab="adv">高级诊断</button>
+            </div>
+
+            <div class="verify-content" id="verifyContent"></div>
+
+            <div class="verify-actions">
+                <button class="old-btn old-btn-primary" id="verifyOk">确定</button>
+                <button class="old-btn" id="verifyCancel">取消</button>
+            </div>
+
+        </div>
+
+        <div style="text-align:center;padding:14px;">
+            <a href="bbs.html" style="display:inline-block;padding:6px 20px;border:2px outset #bbb;background:#e6e6e6;color:#333;text-decoration:none;font-size:12px;">
+                ← 返回论坛首页
+            </a>
+        </div>
+
+    </div>
+
+    <script src="js/storage.js"></script>
+    <script src="js/fullscreen.js"></script>
+    <script src="js/tracker.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/horror.js"></script>
+
+    <script>
+(function () {
+
+                    'use strict';
+
+                    function escapeHtml(s) {
+                        var d = document.createElement('div');
+                        d.textContent = String(s);
+                        return d.innerHTML;
+                    }
+
+                    (function () {
+                        var userInfo = document.getElementById('userInfo');
+                        if (userInfo) {
+                            var name = Store.get('visitor_name', '');
+                            if (name) userInfo.innerHTML = '<b>' + escapeHtml(name) + '</b>';
+                        }
+                    })();
+
+                    if (window.FullscreenHelper && !window.FullscreenHelper.isMobile) {
+                        var fsBtn = document.createElement('button');
+                        fsBtn.textContent = '⛶';
+                        fsBtn.title = '进入全屏';
+                        fsBtn.style.cssText =
+                            'position:fixed;bottom:14px;left:18px;' +
+                            'color:#666;font-family:monospace;font-size:14px;' +
+                            'cursor:pointer;background:none;border:none;padding:4px 8px;' +
+                            'z-index:99998;';
+                        fsBtn.addEventListener('click', function () {
+                            if (window.FullscreenHelper.isInFullscreen()) {
+                                window.FullscreenHelper.exit();
+                            } else {
+                                window.FullscreenHelper.request();
+                            }
+                        });
+                        document.body.appendChild(fsBtn);
+                    }
+
+                    var oc = Store.get('verify_opened_count', 0) + 1;
+                    Store.set('verify_opened_count', oc);
+
+                    var content = document.getElementById('verifyContent');
+                    var tabs = document.querySelectorAll('.verify-tabs button');
+
+                    var currentTab = 'basic';
+
+                    tabs.forEach(function (t) {
+                        t.addEventListener('click', function () {
+                            currentTab = t.dataset.tab;
+                            tabs.forEach(function (x) { x.classList.remove('active'); });
+                            t.classList.add('active');
+                            renderTab(currentTab);
+                        });
+                    });
+
+                    document.getElementById('verifyClose').addEventListener('click', function () {
+                        window.location.href = 'bbs.html';
+                    });
+                    document.getElementById('verifyCancel').addEventListener('click', function () {
+                        window.location.href = 'bbs.html';
+                    });
+                    document.getElementById('verifyOk').addEventListener('click', function () {
+                        window.location.href = 'bbs.html';
+                    });
+
+                    function renderTab(tab) {
+                        if (tab === 'basic')   return renderBasic();
+                        if (tab === 'source')  return renderSource();
+                        if (tab === 'file')    return renderFile();
+                        if (tab === 'audio')   return renderAudio();
+                        if (tab === 'adv')     return renderAdv();
+                    }
+
+                    function renderBasic() {
+                        var name = Store.get('visitor_name', '') || '无名';
+                        var visits = Store.get('visited', 0);
+                        var stay = Store.get('stay_seconds', 0);
+                        var min = Math.floor(stay / 60);
+                        var sec = stay % 60;
+
+                        content.innerHTML =
+                            '<div class="h">基本信息</div>' +
+                            '<span class="k">页面标题：</span><span class="v">回响档案｜失物招领·留言簿</span>\n' +
+                            '<span class="k">页面地址：</span><span class="v">huixiang-dangan.net/bbs/</span>\n' +
+                            '<span class="k">建站时间：</span><span class="v">2009-11-01 00:00</span>\n' +
+                            '<span class="k">最后更新：</span><span class="v">2019-03-01 00:00</span>\n' +
+                            '<span class="k">当前版本：</span><span class="v">EchoSystem v0.9</span>\n' +
+                            '<span class="k">归档节点：</span><span class="v">7 / ∞</span>\n' +
+                            '<span class="k">当前在线：</span><span class="v">1（你）</span>\n' +
+                            '<span class="k">您的称呼：</span><span class="v">' + escapeHtml(name) + '</span>\n' +
+                            '<span class="k">您的访问次数：</span><span class="v">' + visits + '</span>\n' +
+                            '<span class="k">您的停留时间：</span><span class="v">' + min + '分' + sec + '秒</span>';
+                    }
+
+                    function renderSource() {
+                        Store.set('verify_seen_source', true);
+
+                        content.innerHTML =
+                            '<div class="h">HTML源代码</div>' +
+                            '<span class="comment">&lt;!-- 节点7：归档完成。等待下一位。 --&gt;</span>\n' +
+                            '<span class="comment">&lt;!-- 下一节点：无名者。 --&gt;</span>\n' +
+                            '<span class="comment">&lt;!-- 如果你能看到这里，说明你不是留言者。 --&gt;</span>\n' +
+                            '<span class="comment">&lt;!-- 你是阅读者。 --&gt;</span>\n' +
+                            '<span class="comment">&lt;!-- 但阅读者也会被归档。 --&gt;</span>\n' +
+                            '<span class="comment">&lt;!-- 第43页：不要回头。 --&gt;</span>\n' +
+                            '<span class="comment">&lt;!-- EchoSystem v0.9 --&gt;</span>\n' +
+                            '\n' +
+                            '<span class="k">&lt;html&gt;</span>\n' +
+                            '<span class="k">&lt;head&gt;</span>\n' +
+                            '  <span class="k">&lt;title&gt;</span>回响档案｜失物招领·留言簿<span class="k">&lt;/title&gt;</span>\n' +
+                            '<span class="k">&lt;/head&gt;</span>\n' +
+                            '<span class="k">&lt;body&gt;</span>\n' +
+                            '  ...\n' +
+                            '<span class="k">&lt;/body&gt;</span>\n' +
+                            '<span class="k">&lt;/html&gt;</span>\n' +
+                            '\n' +
+                            '<span class="hl">&lt;!-- 第43页的内容：你是第43页。 --&gt;</span>';
+
+                        content.addEventListener('mouseup', function () {
+                            var sel = String(window.getSelection() || '');
+                            if ((sel.indexOf('第43页') !== -1 || sel.indexOf('43') !== -1) && !Store.get('found_node7', false)) {
+                                content.innerHTML += '\n\n<span class="comment">&lt;!-- 已标记节点 7 --&gt;</span>';
+                                Store.set('found_node7', true);
+                                Store.set('seen_source_code', true);
+                                addAttention(2);
+                            }
+                        });
+                    }
+
+                    function renderFile() {
+                        Store.set('verify_seen_file_info', true);
+
+                        content.innerHTML =
+                            '<div class="h">文件信息</div>' +
+                            '<span class="k">文件名：</span><span class="v">index.html</span>\n' +
+                            '<span class="k">创建时间：</span><span class="v">2009-11-01 00:00</span>\n' +
+                            '<span class="k">修改时间：</span><span class="v">2019-03-01 00:00</span>\n' +
+                            '<span class="k">文件大小：</span><span class="v">43 KB</span>\n' +
+                            '<span class="k">编码：</span><span class="v">UTF-8</span>\n' +
+                            '<span class="k">备注：</span><span class="v">节点 1</span>\n' +
+                            '\n' +
+                            '<button class="old-btn" id="btnImgInfo">查看图片文件信息</button>' +
+                            '<div class="info-box" id="imgInfoBox" style="display:none;">' +
+                            '  <b>文件名：</b>notebook_default.jpg<br>' +
+                            '  <b>拍摄设备：</b>EchoSystem v0.9<br>' +
+                            '  <b>创建时间：</b>2009-11-01 00:00<br>' +
+                            '  <b>分辨率：</b>1024x768<br>' +
+                            '  <b>备注：</b>节点 1' +
+                            '</div>';
+
+                        var btn = document.getElementById('btnImgInfo');
+                        var infoBox = document.getElementById('imgInfoBox');
+                        if (btn && infoBox) {
+                            btn.addEventListener('click', function () {
+                                infoBox.style.display = infoBox.style.display === 'block' ? 'none' : 'block';
+                            });
+                        }
+                    }
+
+                    function renderAudio() {
+                        Store.set('verify_seen_audio_diag', true);
+
+                        content.innerHTML =
+                            '<div class="h">音频诊断</div>' +
+                            'rain.wav — 正常\n' +
+                            'fan.wav — 正常\n' +
+                            'heartbeat.wav — 正常\n' +
+                            'whisper_forward.wav — 正常\n' +
+                            'whisper_reverse.wav — 正常\n' +
+                            '\n' +
+                            '<button class="old-btn" id="btnReversePlay">反向播放</button>' +
+                            '<div id="audioDiagStatus" style="margin-top:8px;color:#a00;white-space:pre-wrap;font-family:SimSun,serif;font-size:12px;"></div>';
+
+                        var btn = document.getElementById('btnReversePlay');
+                        var status = document.getElementById('audioDiagStatus');
+
+                        if (btn) {
+                            btn.addEventListener('click', function () {
+                                try {
+                                    new Audio('audio/whisper_reverse.wav').play().catch(function () {});
+                                } catch (e) {}
+
+                                Store.set('reverse_audio', true);
+                                Store.set('verify_reverse_played', true);
+                                addAttention(2);
+
+                                if (status) {
+                                    status.textContent = '不要留名。\n不要回头。\n不要回答。';
+                                }
+                            });
+                        }
+                    }
+
+                    function renderAdv() {
+                        Store.set('verify_seen_advanced', true);
+
+                        var ua = navigator.userAgent;
+                        var lang = navigator.language || '';
+                        var tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+                        var w = screen.width;
+                        var h = screen.height;
+                        var isMobile = /Mobi|Android|iPad|iPhone/i.test(ua);
+                        var device = isMobile ? '手机 / 平板' : '桌面';
+
+                        var attention = Store.get('attention', 0);
+
+                        var archived =
+                            Store.get('ending_archive', false) ? '已归档' :
+                            Store.get('ending_remembered', false) ? '归档中' :
+                            '未归档';
+
+                        content.innerHTML =
+                            '<div class="h">高级诊断</div>' +
+                            '<span class="k">浏览器：</span><span class="v">' + escapeHtml(ua) + '</span>\n' +
+                            '<span class="k">操作系统：</span><span class="v">' + (isMobile ? '移动端' : '桌面端') + '</span>\n' +
+                            '<span class="k">屏幕分辨率：</span><span class="v">' + w + '×' + h + '</span>\n' +
+                            '<span class="k">时区：</span><span class="v">' + escapeHtml(tz) + '</span>\n' +
+                            '<span class="k">语言：</span><span class="v">' + escapeHtml(lang) + '</span>\n' +
+                            '<span class="k">设备类型：</span><span class="v">' + device + '</span>\n' +
+                            '<span class="k">注意值：</span><span class="v hl">' + attention + '</span>\n' +
+                            '<span class="k">归档状态：</span><span class="v hl">' + archived + '</span>\n' +
+                            '\n' +
+                            '<span class="comment">以上信息仅用于本地显示。不会上传。</span>';
+                    }
+
+                    renderTab('basic');
+
+                    document.addEventListener('keydown', function (e) {
+                        var list = ['basic', 'source', 'file', 'audio', 'adv'];
+                        var i = list.indexOf(currentTab);
+
+                        if (e.key === 'ArrowRight' && i < list.length - 1) {
+                            document.querySelector('.verify-tabs button[data-tab="' + list[i + 1] + '"]').click();
+                        }
+                        if (e.key === 'ArrowLeft' && i > 0) {
+                            document.querySelector('.verify-tabs button[data-tab="' + list[i - 1] + '"]').click();
+                        }
+                        if (e.key === 'Escape') {
+                            window.location.href = 'bbs.html';
+                        }
+                    });
+
+})();
+    </script>
+
+</body>
+</html>

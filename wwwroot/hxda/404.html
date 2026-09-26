@@ -1,0 +1,511 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+    <title>404 · 回响档案</title>
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="css/main.css">
+    <style>
+        html, body {
+            min-height: 100vh;
+            background: #d8d8d8;
+        }
+
+        .e404-box {
+            width: 620px;
+            max-width: 94vw;
+            margin: 60px auto;
+            background: #f4f4f4;
+            border: 2px solid #888;
+            font-family: "SimSun", "宋体", serif;
+        }
+
+        .e404-head {
+            background: #1a3a6b;
+            background-image: linear-gradient(to bottom, #4a6fa5 0%, #1a3a6b 100%);
+            color: #fff;
+            padding: 8px 16px;
+            font-weight: bold;
+            font-size: 14px;
+            border-bottom: 1px solid #0d1b3e;
+        }
+
+        .e404-body {
+            padding: 26px 30px;
+        }
+
+        .e404-path {
+            font-family: "Courier New", monospace;
+            color: #a00;
+            font-size: 12px;
+            margin-bottom: 16px;
+            padding: 4px 10px;
+            background: #fff;
+            border: 1px solid #ddd;
+            display: inline-block;
+        }
+
+        .e404-msg {
+            font-size: 14px;
+            line-height: 2.2;
+            white-space: pre-wrap;
+            color: #333;
+            margin-bottom: 22px;
+            min-height: 60px;
+        }
+
+        .e404-extra {
+            margin-bottom: 16px;
+        }
+
+            .e404-extra input[type="text"] {
+                width: 100%;
+                padding: 6px 10px;
+                border: 1px solid #888;
+                background: #fff;
+                font-family: inherit;
+                font-size: 13px;
+            }
+
+        .e404-btns {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+            .e404-btns .old-btn {
+                padding: 6px 22px;
+            }
+    </style>
+</head>
+<body class="page404-page">
+
+    <div class="e404-box" id="e404Box">
+        <div class="e404-head" id="e404Title">页面不存在</div>
+        <div class="e404-body">
+            <div class="e404-path" id="e404Path"></div>
+            <div class="e404-msg" id="e404Msg">加载中...</div>
+            <div class="e404-extra" id="e404Extra"></div>
+            <div class="e404-btns" id="e404Btns"></div>
+        </div>
+    </div>
+
+    <script src="js/storage.js"></script>
+    <script src="js/fullscreen.js"></script>
+    <script src="js/tracker.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/horror.js"></script>
+
+    <script>
+(function () {
+
+            'use strict';
+
+            var titleEl  = document.getElementById('e404Title');
+            var pathEl   = document.getElementById('e404Path');
+            var msgEl    = document.getElementById('e404Msg');
+            var extraEl  = document.getElementById('e404Extra');
+            var btnsEl   = document.getElementById('e404Btns');
+
+            var params = new URLSearchParams(window.location.search);
+            var rawPath = params.get('path') || '';
+            if (!rawPath) {
+                var pathParts = window.location.pathname.split('/').filter(Boolean);
+                rawPath = pathParts[pathParts.length - 1] || '';
+                if (rawPath === '404.html' && pathParts.length > 1) {
+                    rawPath = pathParts[pathParts.length - 2];
+                }
+            }
+
+            var key = rawPath.replace(/^\/?bbs\//, '').replace(/^\/?/, '').replace(/\/?$/, '');
+
+            pathEl.textContent = '路径：/bbs/' + key;
+
+            var visited = Store.get('visited_404', []);
+            visited.push(key || 'unknown');
+            Store.set('visited_404', visited);
+            Store.set('visited_404_count', Store.get('visited_404_count', 0) + 1);
+
+            function escapeHtml(s) {
+                var d = document.createElement('div');
+                d.textContent = String(s);
+                return d.innerHTML;
+            }
+
+            function addBtn(text, cb, primary) {
+                var b = document.createElement('button');
+                b.className = 'old-btn' + (primary ? ' old-btn-primary' : '');
+                b.textContent = text;
+                b.addEventListener('click', cb);
+                btnsEl.appendChild(b);
+                return b;
+            }
+
+            function clearButtons() {
+                btnsEl.innerHTML = '';
+            }
+
+            if (key === '43' || key === '43.html') {
+                titleEl.textContent = '404 · 43';
+                msgEl.textContent =
+                    '页面不存在。\n' +
+                    '但第43页存在。\n' +
+                    '你想看吗？';
+
+                clearButtons();
+                addBtn('是', function () {
+                    window.location.href = 'page43.html';
+                }, true);
+                addBtn('否', function () {
+                    window.location.href = 'bbs.html';
+                });
+            }
+
+            else if (key === 'ahui' || key === 'ahui.html') {
+                titleEl.textContent = '404 · 阿回';
+                msgEl.textContent =
+                    '阿回不存在。\n' +
+                    '但它在等你。\n' +
+                    '\n' +
+                    '你想说什么？';
+
+                extraEl.innerHTML = '<input type="text" id="ahuiInput" placeholder="输入你想说的话..." autocomplete="off">';
+                clearButtons();
+
+                addBtn('提交', function () {
+                    var inp = document.getElementById('ahuiInput');
+                    var v = (inp ? inp.value : '').trim();
+
+                    if (v === '有人吗') {
+                        msgEl.textContent =
+                            '有人。\n' +
+                            '一直都在。\n' +
+                            '现在你也是了。';
+                        extraEl.innerHTML = '';
+                        clearButtons();
+                        addBtn('确定', function () {
+                            Store.set('ending_remembered', true);
+                            window.location.href = 'page43.html?remembered=1';
+                        }, true);
+                    }
+                    else if (v === '没有人') {
+                        if (Store.get('ahui_said_noone', false)) {
+                            msgEl.textContent = '好。';
+                            extraEl.innerHTML = '';
+                            clearButtons();
+                            addBtn('确定', function () {
+                                Store.set('online_override', 'none');
+                                window.location.href = 'bbs.html';
+                            }, true);
+                        } else {
+                            Store.set('ahui_said_noone', true);
+                            msgEl.textContent =
+                                '你确定吗？\n' +
+                                '它等了十年。';
+                            if (inp) inp.value = '';
+                        }
+                    }
+                    else {
+                        msgEl.textContent = '……';
+                        if (inp) inp.value = '';
+                    }
+                }, true);
+
+                addBtn('返回', function () {
+                    window.location.href = 'bbs.html';
+                });
+
+                setTimeout(function () {
+                    var inp = document.getElementById('ahuiInput');
+                    if (inp) {
+                        inp.focus();
+                        inp.addEventListener('keydown', function (e) {
+                            if (e.key === 'Enter') btnsEl.querySelector('button').click();
+                        });
+                    }
+                }, 100);
+            }
+
+            else if (key === 'lin' || key === 'lin.html') {
+                titleEl.textContent = '404 · 林默';
+                msgEl.textContent =
+                    '林默最后访问时间：2019-02-14 23:47。\n' +
+                    '他还在等。\n' +
+                    '\n' +
+                    '你想留言吗？';
+
+                extraEl.innerHTML = '<input type="text" id="linInput" placeholder="输入留言..." autocomplete="off">';
+                clearButtons();
+
+                addBtn('提交', function () {
+                    var inp = document.getElementById('linInput');
+                    var v = (inp ? inp.value : '').trim();
+
+                    if (v) {
+                        msgEl.textContent =
+                            '你的留言已提交。\n' +
+                            '审核通过后将显示。\n' +
+                            '\n' +
+                            '审核结果：已归档。\n' +
+                            '归档编号：节点 8。';
+                        extraEl.innerHTML = '';
+                        clearButtons();
+                        addBtn('确定', function () {
+                            window.location.href = 'bbs.html';
+                        }, true);
+                    } else {
+                        msgEl.textContent = '你没有留下什么。\n但你来过了。';
+                    }
+                }, true);
+
+                addBtn('返回', function () {
+                    window.location.href = 'bbs.html';
+                });
+
+                setTimeout(function () {
+                    var inp = document.getElementById('linInput');
+                    if (inp) {
+                        inp.focus();
+                        inp.addEventListener('keydown', function (e) {
+                            if (e.key === 'Enter') btnsEl.querySelector('button').click();
+                        });
+                    }
+                }, 100);
+            }
+
+            else if (key === 'system' || key === 'system.html') {
+                titleEl.textContent = '404 · 系统';
+                msgEl.textContent =
+                    '系统不存在。\n' +
+                    '系统一直都在。\n' +
+                    '\n' +
+                    '你找系统做什么？';
+
+                extraEl.innerHTML = '<input type="text" id="systemInput" placeholder="输入内容..." autocomplete="off">';
+                clearButtons();
+
+                addBtn('提交', function () {
+                    var inp = document.getElementById('systemInput');
+                    var v = (inp ? inp.value : '').trim();
+
+                    if (v === 'help') {
+                        msgEl.textContent =
+                            '没有帮助。\n' +
+                            '只有节点。';
+                    }
+                    else if (v === 'exit') {
+                        if (Store.get('system_said_exit', false)) {
+                            msgEl.textContent = '你不确定。';
+                            extraEl.innerHTML = '';
+                            clearButtons();
+                            setTimeout(function () {
+                                window.location.href = 'bbs.html';
+                            }, 2000);
+                        } else {
+                            Store.set('system_said_exit', true);
+                            msgEl.textContent =
+                                '你确定要退出？\n' +
+                                '退出后无法回来。';
+                        }
+                    }
+                    else {
+                        msgEl.textContent = '……';
+                    }
+
+                    if (inp) inp.value = '';
+                }, true);
+
+                addBtn('返回', function () {
+                    window.location.href = 'bbs.html';
+                });
+
+                setTimeout(function () {
+                    var inp = document.getElementById('systemInput');
+                    if (inp) {
+                        inp.focus();
+                        inp.addEventListener('keydown', function (e) {
+                            if (e.key === 'Enter') btnsEl.querySelector('button').click();
+                        });
+                    }
+                }, 100);
+            }
+
+            else if (/^node[1-7]$/.test(key) || /^node[1-7]\.html$/.test(key)) {
+                var n = parseInt(key.replace('node', '').replace('.html', ''), 10);
+                renderNode404(n);
+            }
+
+            else if (key === '8' || key === '8.html') {
+                titleEl.textContent = '404 · 节点 8';
+                msgEl.textContent =
+                    '节点 8：未归档。\n' +
+                    '留言：等待中。\n' +
+                    '时间：现在。\n' +
+                    '\n' +
+                    '你确定要进来吗？';
+
+                clearButtons();
+                addBtn('是', function () {
+                    Store.set('ending_archive', true);
+                    window.location.href = 'page43.html?archive=1';
+                }, true);
+                addBtn('否', function () {
+                    window.location.href = 'bbs.html';
+                });
+            }
+
+            else if (key === '∞' || key === 'infinity' || key === 'infinity.html') {
+                titleEl.textContent = '404 · 无限';
+                msgEl.textContent =
+                    '无限节点。\n' +
+                    '无限留言。\n' +
+                    '无限等待。\n' +
+                    '\n' +
+                    '你已经在这里了。\n' +
+                    '你只是刚刚发现。';
+
+                clearButtons();
+                addBtn('继续', function () {
+                    window.location.href = 'infinity.html';
+                }, true);
+                addBtn('返回', function () {
+                    window.location.href = 'bbs.html';
+                });
+            }
+
+            else {
+                titleEl.textContent = '404 · 页面不存在';
+                msgEl.textContent =
+                    '页面不存在。\n' +
+                    '但档案存在。\n' +
+                    '你确定要回去吗？';
+
+                clearButtons();
+                addBtn('返回论坛', function () {
+                    window.location.href = 'bbs.html';
+                }, true);
+            }
+
+            function renderNode404(n) {
+
+                var NODES = {
+                    1: '节点 1：系统。\n' +
+                       '留言："有人吗。"\n' +
+                       '时间：2009-11-01 00:00。\n' +
+                       '\n' +
+                       '系统是第一个留言者。\n' +
+                       '系统是第一个被归档的人。\n' +
+                       '系统不是人。',
+
+                    2: '节点 2：匿名。\n' +
+                       '留言："有人吗。"\n' +
+                       '时间：2010-04-17 03:13。\n' +
+                       '\n' +
+                       '匿名者没有留下名字。\n' +
+                       '匿名者没有被归档。\n' +
+                       '但匿名者也没有离开。',
+
+                    3: '节点 3：学生。\n' +
+                       '留言："有人吗。"\n' +
+                       '时间：2012-09-09 23:59。\n' +
+                       '\n' +
+                       '学生第二天要考试。\n' +
+                       '学生没有去考试。\n' +
+                       '学生留在了这里。',
+
+                    4: '节点 4：护士。\n' +
+                       '留言："有人吗。"\n' +
+                       '时间：2014-12-24 00:00。\n' +
+                       '\n' +
+                       '护士值夜班。\n' +
+                       '护士听到病房有人按铃。\n' +
+                       '护士去了。病房没有人。\n' +
+                       '但铃一直在响。',
+
+                    5: '节点 5：司机。\n' +
+                       '留言："有人吗。"\n' +
+                       '时间：2016-06-06 06:06。\n' +
+                       '\n' +
+                       '司机开夜班车。\n' +
+                       '后视镜里多了一个人。\n' +
+                       '司机不敢回头。\n' +
+                       '司机开到了现在。',
+
+                    6: '节点 6：小孩。\n' +
+                       '留言："有人吗。"\n' +
+                       '时间：2018-01-01 01:01。\n' +
+                       '\n' +
+                       '小孩在玩捉迷藏。\n' +
+                       '小孩数到一百。\n' +
+                       '小孩开始找。\n' +
+                       '小孩找到了所有人。\n' +
+                       '除了一个。\n' +
+                       '那个一直在数。',
+
+                    7: '节点 7：阿回。\n' +
+                       '留言："我叫阿回。我不知道我是谁。"\n' +
+                       '时间：2019-02-14 23:47。\n' +
+                       '\n' +
+                       '阿回是林默弄丢的笔记本。\n' +
+                       '但笔记本不是林默写的。\n' +
+                       '阿回不是人。\n' +
+                       '阿回也不是系统。\n' +
+                       '阿回是第一个回答"有人吗"的人。'
+                };
+
+                titleEl.textContent = '404 · 节点 ' + n;
+                msgEl.textContent = NODES[n] || '此节点不存在。';
+
+                var arr = Store.get('node_read', []);
+                if (arr.indexOf(n) === -1) {
+                    arr.push(n);
+                    Store.set('node_read', arr);
+                    Store.set('node_read_count', arr.length);
+                    addAttention(2);
+                }
+
+                if (n >= 1 && n <= 7) {
+                    var img = document.createElement('img');
+                    img.src = 'img/node' + n + '.jpg';
+                    img.style.cssText =
+                        'width:80px;height:80px;border-radius:50%;' +
+                        'border:2px solid #888;object-fit:cover;' +
+                        'margin:0 auto 16px;display:block;';
+                    img.onerror = function () { this.style.display = 'none'; };
+                    msgEl.parentNode.insertBefore(img, msgEl);
+                }
+
+                clearButtons();
+                addBtn('返回论坛', function () {
+                    window.location.href = 'bbs.html';
+                }, true);
+                addBtn('查看归档者', function () {
+                    window.location.href = 'node.html';
+                });
+            }
+
+            if (window.FullscreenHelper && !window.FullscreenHelper.isMobile) {
+                var fsBtn = document.createElement('button');
+                fsBtn.textContent = '⛶';
+                fsBtn.title = '进入全屏';
+                fsBtn.style.cssText =
+                    'position:fixed;bottom:14px;left:18px;' +
+                    'color:#666;font-family:monospace;font-size:14px;' +
+                    'cursor:pointer;background:none;border:none;padding:4px 8px;' +
+                    'z-index:99998;';
+                fsBtn.addEventListener('click', function () {
+                    if (window.FullscreenHelper.isInFullscreen()) {
+                        window.FullscreenHelper.exit();
+                    } else {
+                        window.FullscreenHelper.request();
+                    }
+                });
+                document.body.appendChild(fsBtn);
+            }
+
+})();
+    </script>
+
+</body>
+</html>
