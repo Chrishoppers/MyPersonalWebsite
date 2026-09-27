@@ -1,7 +1,7 @@
 ﻿/* ============================================================
    回响档案 · 启动门禁
    文件：wwwroot/hxda/js/gate.js
-   依赖：storage.js、fullscreen.js、ui.js
+   依赖：storage.js、fullscreen.js、ui.js、audio.js
    ============================================================ */
 
 (function () {
@@ -92,10 +92,10 @@
         if (shouldBlockOrientation()) {
             showOrientationBlock();
         } else {
+            var block = document.getElementById('orientationBlock');
+            var wasBlocked = block && block.classList.contains('active');
             hideOrientationBlock();
-            if (document.getElementById('orientationBlock').classList.contains('active')) {
-                resumeStep();
-            }
+            if (wasBlocked) resumeStep();
         }
     }
 
@@ -142,6 +142,7 @@
 
             document.getElementById('btnTimeNext').addEventListener('click', function () {
                 Store.set('gate_time_passed', true);
+                if (window.GameAudio) GameAudio.once('click', { volume: 0.15 });
                 goMic();
             });
             document.getElementById('btnTimeHome').addEventListener('click', function () {
@@ -291,6 +292,8 @@
         Store.set('gate_mic_passed', true);
         Store.set('gate_mic_test_count', Store.get('gate_mic_test_count', 0) + 1);
 
+        if (window.GameAudio) GameAudio.once('click', { volume: 0.15 });
+
         document.getElementById('micStatus').textContent = '检测通过。麦克风已关闭。';
         document.getElementById('micFill').style.background = '#0a0';
 
@@ -373,6 +376,7 @@
         });
 
         nextBtn.addEventListener('click', function () {
+            if (window.GameAudio) GameAudio.once('click', { volume: 0.15 });
             goSign();
         });
 
@@ -479,6 +483,7 @@
             Store.set('gate_signature_drawn', true);
             Store.set('gate_signature_date', new Date().toISOString());
             Store.set('gate_passed', true);
+            if (window.GameAudio) GameAudio.once('page_turn', { volume: 0.3 });
             goPass();
         });
 
@@ -557,11 +562,10 @@
         if (code === CONFIG.ADMIN_CODE) {
             Store.set('admin_logged_in', true);
             Store.set('gate_time_passed', true);
-            Store.set('gate_mic_passed', true);
-            Store.set('gate_read_done', true);
-            Store.set('gate_passed', true);
-            alert('管理员已登录。\n全部门禁已跳过，正在进入档案。');
-            window.location.href = 'welcome.html';
+            alert('管理员已登录。\n时间限制已解除。\n请继续完成麦克风检测。');
+
+            /* 不跳转，直接进入麦克风检测 */
+            goMic();
         } else {
             alert('密码错误。');
         }
@@ -573,10 +577,7 @@
     document.addEventListener('DOMContentLoaded', function () {
         initHiddenAdminEntry();
 
-        if (Store.get('gate_passed', false)) {
-            window.location.href = 'welcome.html';
-            return;
-        }
+        
 
         if (shouldBlockOrientation()) {
             showOrientationBlock();
