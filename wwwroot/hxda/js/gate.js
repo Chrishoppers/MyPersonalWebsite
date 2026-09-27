@@ -2,6 +2,7 @@
    回响档案 · 启动门禁
    文件：wwwroot/hxda/js/gate.js
    依赖：storage.js、fullscreen.js、ui.js、audio.js
+   方案 B：每次打开 gate 都重新走门禁
    ============================================================ */
 
 (function () {
@@ -362,6 +363,23 @@
             }
         });
 
+        /* 诡异低语：滚动到附近浮现，离开后消失 */
+        var whispers = scrollEl.querySelectorAll('.gate-whisper');
+        if (whispers.length && window.IntersectionObserver) {
+            var whisperObserver = new IntersectionObserver(function (entries) {
+                entries.forEach(function (entry) {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('show');
+                    } else {
+                        entry.target.classList.remove('show');
+                    }
+                });
+            }, { root: scrollEl, threshold: 0.5 });
+            whispers.forEach(function (w) { whisperObserver.observe(w); });
+        } else {
+            whispers.forEach(function (w) { w.classList.add('show'); });
+        }
+
         checksEl.addEventListener('change', function () {
             var all = checksEl.querySelectorAll('input');
             var checked = checksEl.querySelectorAll('input:checked');
@@ -573,11 +591,27 @@
 
     /* ============================================================
        初始化
+       方案 B：每次打开 gate 都重新走门禁
        ============================================================ */
     document.addEventListener('DOMContentLoaded', function () {
-        initHiddenAdminEntry();
 
-        
+        /* --- 每次进入 gate 都从头开始 --- */
+        Store.set('gate_time_passed', false);
+        Store.set('gate_mic_passed', false);
+        Store.set('gate_read_done', false);
+        Store.set('gate_read_scrolled', false);
+        Store.set('gate_read_checked', []);
+        Store.set('gate_signature_name', '');
+        Store.set('gate_signature_drawn', false);
+        Store.set('gate_passed', false);
+
+        /* --- 重置注意值（A+B 方案） --- */
+        Store.set('attention', 0);
+        Store.set('refresh_count', 0);
+        Store.set('tab_switches', 0);
+        Store.set('attention_level_shown', 0);
+
+        initHiddenAdminEntry();
 
         if (shouldBlockOrientation()) {
             showOrientationBlock();
