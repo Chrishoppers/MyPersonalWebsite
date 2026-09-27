@@ -1,8 +1,56 @@
 ﻿/* ============================================================
    回响档案 · 7 个结局演出
    文件：wwwroot/hxda/js/endings.js
+   依赖：storage.js、audio.js
    ============================================================ */
 
+/* ============================================================
+   结局后清理：保留结局标记，清掉过程数据
+   ============================================================ */
+function endingCleanupAndExit(delayMs) {
+    delayMs = delayMs || 1500;
+
+    setTimeout(function () {
+
+        /* --- 要保留的键 --- */
+        var KEEP = [
+            'visitor_name',
+            'admin_logged_in',
+            'online_override',
+            'ending_all_seen',
+            'ending_archive',
+            'ending_lookback',
+            'ending_disconnect',
+            'ending_refused',
+            'ending_remembered',
+            'ending_together',
+            'ending_true'
+        ];
+
+        var kept = {};
+        KEEP.forEach(function (k) {
+            try { kept[k] = Store.get(k, undefined); } catch (e) { }
+        });
+
+        /* --- 全部清空 --- */
+        try { Store.reset(); } catch (e) { }
+
+        /* --- 恢复保留项 --- */
+        Object.keys(kept).forEach(function (k) {
+            if (kept[k] !== undefined) {
+                try { Store.set(k, kept[k]); } catch (e) { }
+            }
+        });
+
+        /* --- 退出到开场 --- */
+        window.location.href = 'index.html';
+
+    }, delayMs);
+}
+
+/* ============================================================
+   通用：全屏结局文本
+   ============================================================ */
 function endingShowFullscreen(text, className, autoReturn, delaySec) {
     var d = document.createElement('div');
     d.className = className || 'ending-center';
@@ -36,8 +84,8 @@ function endingShowFullscreen(text, className, autoReturn, delaySec) {
 
             var btn = document.createElement('a');
             btn.className = 'ending-return-btn';
-            btn.href = 'bbs.html';
-            btn.textContent = '返回论坛';
+            btn.href = 'index.html';
+            btn.textContent = '返回';
             btn.style.cssText =
                 'display:inline-block;margin-top:32px;' +
                 'padding:8px 32px;' +
@@ -54,7 +102,7 @@ function endingShowFullscreen(text, className, autoReturn, delaySec) {
 
     if (delaySec && delaySec > 0) {
         setTimeout(function () {
-            window.location.href = 'bbs.html';
+            endingCleanupAndExit(0);
         }, delaySec * 1000);
     }
 
@@ -105,6 +153,8 @@ function endingFlashBlack(ms) {
 function endingArchive() {
     Store.set('ending_archive', true);
     endingPush('archive');
+
+    if (window.GameAudio) GameAudio.fadeIn('heartbeat', 2000, 0.25);
 
     endingClearAll();
 
@@ -165,7 +215,8 @@ function endingArchive() {
         setTimeout(function () {
             Store.set('online_override', 'archive');
             Store.set('post5_clicked', true);
-            window.location.href = 'bbs.html';
+            if (window.GameAudio) GameAudio.fadeOut('heartbeat', 1200);
+            endingCleanupAndExit(1500);
         }, 3500);
     }
 }
@@ -174,9 +225,10 @@ function endingArchive() {
    结局 2：回头
    ============================================================ */
 function endingLookback() {
-    if (window.GameAudio) GameAudio.once('knock', { volume: 0.5 });
     Store.set('ending_lookback', true);
     endingPush('lookback');
+
+    if (window.GameAudio) GameAudio.once('knock', { volume: 0.5 });
 
     endingClearAll();
 
@@ -220,7 +272,7 @@ function endingLookback() {
         Store.set('online_override', 'it');
 
         setTimeout(function () {
-            window.location.href = 'bbs.html';
+            endingCleanupAndExit(0);
         }, 5000);
     }
 }
@@ -229,9 +281,10 @@ function endingLookback() {
    结局 3：断开
    ============================================================ */
 function endingDisconnect() {
-    if (window.GameAudio) GameAudio.once('phone_ring', { volume: 0.5 });
     Store.set('ending_disconnect', true);
     endingPush('disconnect');
+
+    if (window.GameAudio) GameAudio.once('phone_ring', { volume: 0.5 });
 
     endingClearAll();
 
@@ -298,7 +351,7 @@ function endingRefused() {
         document.body.appendChild(d);
 
         setTimeout(function () {
-            window.location.href = 'bbs.html';
+            endingCleanupAndExit(0);
         }, 8000);
     }
 }
@@ -309,6 +362,8 @@ function endingRefused() {
 function endingRemembered() {
     Store.set('ending_remembered', true);
     endingPush('remembered');
+
+    if (window.GameAudio) GameAudio.fadeIn('heartbeat', 2000, 0.2);
 
     endingClearAll();
 
@@ -334,7 +389,8 @@ function endingRemembered() {
         setTimeout(function () {
             Store.set('online_override', 'remembered');
             Store.set('post5_clicked', true);
-            window.location.href = 'bbs.html';
+            if (window.GameAudio) GameAudio.fadeOut('heartbeat', 1200);
+            endingCleanupAndExit(1500);
         }, 2200);
     });
 
@@ -371,9 +427,10 @@ function endingTogether() {
    真结局：空白页
    ============================================================ */
 function endingTrue() {
-    if (window.GameAudio) GameAudio.fadeIn('heartbeat', 2000, 0.25);
     Store.set('ending_true', true);
     endingPush('true');
+
+    if (window.GameAudio) GameAudio.fadeIn('heartbeat', 2000, 0.25);
 
     endingClearAll();
 
@@ -436,9 +493,9 @@ function endingTrue() {
                 final.textContent = '你刚才检查了书签，对吗？\n\n你回来了。';
 
                 setTimeout(function () {
-                    if (window.GameAudio) GameAudio.fadeOut('heartbeat', 1500);
                     Store.set('online_override', 'true_end');
-                    window.location.href = 'bbs.html';
+                    if (window.GameAudio) GameAudio.fadeOut('heartbeat', 1500);
+                    endingCleanupAndExit(0);
                 }, 5000);
             }, 4000);
         }, 5000);
