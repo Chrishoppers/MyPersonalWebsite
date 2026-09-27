@@ -164,6 +164,7 @@
     <script src="js/tracker.js"></script>
     <script src="js/ui.js"></script>
     <script src="js/horror.js"></script>
+    <script src="js/audio.js"></script>
 
     <script>
 (function () {
@@ -171,6 +172,11 @@
             'use strict';
 
             var termBody  = document.getElementById('termBody');
+
+            if (window.GameAudio) GameAudio.fadeIn('static', 1500, 0.05);
+            window.addEventListener('beforeunload', function () {
+                if (window.GameAudio) GameAudio.fadeOut('static', 800);
+            });
             var termWrap  = document.getElementById('termWrap');
             var termInput = document.getElementById('termInput');
             var toolbarInfo = document.getElementById('toolbarInfo');
@@ -476,19 +482,22 @@
 
                 inp.addEventListener('keydown', function (e) {
                     if (e.key === 'Enter') {
-                        var v = inp.value.trim();
-                        clearInterval(t);
-                        d.remove();
-                        Store.set('override_active', false);
+                            var v = inp.value.trim();
+                            clearInterval(t);
+                            d.remove();
+                            Store.set('override_active', false);
 
-                        if (v === '没有人') {
-                            Store.set('ending_true', true);
-                            window.location.href = 'page43.html?true=1';
-                        } else {
-                            Store.set('ending_refused', true);
-                            window.location.href = 'page43.html?refused=1';
+                            if (window.GameAudio) GameAudio.once('keyboard', { volume: 0.2 });
+
+                            if (v === '没有人') {
+                                Store.set('ending_true', true);
+                                window.location.href = 'page43.html?true=1';
+                            } else {
+                                if (window.GameAudio) GameAudio.once('click', { volume: 0.15 });
+                                Store.set('ending_refused', true);
+                                window.location.href = 'page43.html?refused=1';
+                            }
                         }
-                    }
                 });
             }
 

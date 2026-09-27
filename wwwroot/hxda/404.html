@@ -96,6 +96,7 @@
     <script src="js/tracker.js"></script>
     <script src="js/ui.js"></script>
     <script src="js/horror.js"></script>
+    <script src="js/audio.js"></script>
 
     <script>
 (function () {
@@ -184,6 +185,7 @@
                             '现在你也是了。';
                         extraEl.innerHTML = '';
                         clearButtons();
+                        if (window.GameAudio) GameAudio.once('knock', { volume: 0.4 });
                         addBtn('确定', function () {
                             Store.set('ending_remembered', true);
                             window.location.href = 'page43.html?remembered=1';

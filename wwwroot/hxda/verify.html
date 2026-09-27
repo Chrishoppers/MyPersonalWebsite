@@ -379,7 +379,12 @@
                         if (btn) {
                             btn.addEventListener('click', function () {
                                 try {
-                                    new Audio('audio/whisper_reverse.wav').play().catch(function () {});
+                                    if (window.GameAudio) {
+                                        GameAudio.fadeIn('whisper_reverse', 400, 0.6);
+                                    }
+                                    else {
+                                        new Audio('audio/whisper_reverse.wav').play().catch(function () {});
+                                    }
                                 } catch (e) {}
 
                                 Store.set('reverse_audio', true);

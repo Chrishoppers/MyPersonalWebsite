@@ -174,6 +174,7 @@ function endingArchive() {
    结局 2：回头
    ============================================================ */
 function endingLookback() {
+    if (window.GameAudio) GameAudio.once('knock', { volume: 0.5 });
     Store.set('ending_lookback', true);
     endingPush('lookback');
 
@@ -228,6 +229,7 @@ function endingLookback() {
    结局 3：断开
    ============================================================ */
 function endingDisconnect() {
+    if (window.GameAudio) GameAudio.once('phone_ring', { volume: 0.5 });
     Store.set('ending_disconnect', true);
     endingPush('disconnect');
 
@@ -369,6 +371,7 @@ function endingTogether() {
    真结局：空白页
    ============================================================ */
 function endingTrue() {
+    if (window.GameAudio) GameAudio.fadeIn('heartbeat', 2000, 0.25);
     Store.set('ending_true', true);
     endingPush('true');
 
@@ -433,6 +436,7 @@ function endingTrue() {
                 final.textContent = '你刚才检查了书签，对吗？\n\n你回来了。';
 
                 setTimeout(function () {
+                    if (window.GameAudio) GameAudio.fadeOut('heartbeat', 1500);
                     Store.set('online_override', 'true_end');
                     window.location.href = 'bbs.html';
                 }, 5000);

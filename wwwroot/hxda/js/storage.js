@@ -154,7 +154,19 @@
         attention_popup_close_count: 0,
         pm_blur_count: 0,
         ahui_said_noone: false,
-        system_said_exit: false
+        system_said_exit: false,
+        gate_time_passed: false,
+        gate_mic_passed: false,
+        gate_mic_db: 0,
+        gate_mic_test_count: 0,
+        gate_read_done: false,
+        gate_read_scrolled: false,
+        gate_read_checked: [],
+        gate_signature_name: '',
+        gate_signature_drawn: false,
+        gate_signature_date: '',
+        gate_passed: false,
+        admin_logged_in: false,
     };
 
     Object.keys(DEFAULTS).forEach(function (k) {

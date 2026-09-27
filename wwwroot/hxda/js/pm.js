@@ -113,6 +113,10 @@
         if (!skipStore) Store.set('pm_messages', pmMessages);
 
         renderMessages();
+
+        if (role === 'lin' && window.GameAudio) {
+            GameAudio.once('knock', { volume: 0.3 });
+        }
     }
 
     function showTyping() {
@@ -137,6 +141,7 @@
 
         inputEl.value = '';
         addMessage('me', text);
+        if (window.GameAudio) GameAudio.once('click', { volume: 0.12 });
         Store.set('pm_last_active', Date.now());
 
         recordSharedInfo(text);
@@ -498,6 +503,10 @@
         if (Math.random() < 0.4) {
             var opts = ['你刚才走了。', '你去哪了？', '你回来了。', '我一直在。'];
             addMessage('lin', opts[Math.floor(Math.random() * opts.length)]);
+        }
+
+        if (Math.random() < 0.3 && window.GameAudio) {
+            GameAudio.once('breath', { volume: 0.25 });
         }
     });
 

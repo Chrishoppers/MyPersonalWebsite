@@ -229,10 +229,8 @@
             <div class="overlay-body" style="padding:0;background:#000;text-align:center;">
                 <div id="viewerImageWrap"
                      style="background:#000;min-height:320px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;">
-                    <img id="viewerImage"
-                         src=""
-                         style="max-width:100%;max-height:400px;transition:filter 0.3s,transform 0.3s;"
-                         alt="">
+                    <img id="viewerImage" src=""
+                         style="max-width:100%;max-height:400px;transition:filter 0.3s,transform 0.3s;" alt="">
                 </div>
                 <div style="padding:14px 20px;background:#222;text-align:left;">
                     <div style="margin-bottom:6px;">
@@ -253,7 +251,8 @@
                         <button class="old-btn" id="btnFileInfo">文件信息</button>
                     </div>
                 </div>
-                <div id="viewerInfo" style="display:none;padding:12px 20px;background:#111;color:#888;font-size:11px;text-align:left;font-family:'Courier New',monospace;line-height:1.8;"></div>
+                <div id="viewerInfo"
+                     style="display:none;padding:12px 20px;background:#111;color:#888;font-size:11px;text-align:left;font-family:'Courier New',monospace;line-height:1.8;"></div>
             </div>
         </div>
     </div>
@@ -261,7 +260,7 @@
     <div class="overlay" id="audioOverlay">
         <div class="overlay-box" style="max-width:480px;">
             <div class="overlay-title">
-                <span>笔记本第43页录音.wav</span>
+                <span>笔记本第43页录音.mp3</span>
                 <span class="x" id="audioClose">✕</span>
             </div>
             <div class="overlay-body" style="padding:20px;background:#1a1a1a;color:#ddd;text-align:center;">
@@ -270,25 +269,20 @@
                         <span id="audioCur">00:00</span>
                         <span>00:43</span>
                     </div>
-                    <div id="audioTrack"
-                         style="height:6px;background:#333;border-radius:3px;cursor:pointer;position:relative;">
-                        <div id="audioFill"
-                             style="height:100%;background:#888;border-radius:3px;width:0%;"></div>
+                    <div id="audioTrack" style="height:6px;background:#333;border-radius:3px;cursor:pointer;position:relative;">
+                        <div id="audioFill" style="height:100%;background:#888;border-radius:3px;width:0%;"></div>
                     </div>
                 </div>
-
                 <div style="margin-bottom:12px;">
                     <button class="old-btn" id="btnPlay">▶ 播放</button>
                     <button class="old-btn" id="btnPause">⏸ 暂停</button>
                 </div>
-
                 <div style="margin-bottom:12px;">
                     <button class="old-btn" id="btnSpeed05">0.5x</button>
                     <button class="old-btn" id="btnSpeed1">1x</button>
                     <button class="old-btn" id="btnSpeed15">1.5x</button>
                     <button class="old-btn" id="btnSpeed2">2x</button>
                 </div>
-
                 <div>
                     <button class="old-btn" id="btnReverse" style="background:#333;color:#ddd;border-color:#555;">反向播放</button>
                 </div>
@@ -297,6 +291,7 @@
     </div>
 
     <script src="js/storage.js"></script>
+    <script src="js/audio.js"></script>
     <script src="js/fullscreen.js"></script>
     <script src="js/tracker.js"></script>
     <script src="js/ui.js"></script>
@@ -306,7 +301,6 @@
 
     <script>
 (function () {
-
             'use strict';
 
             function escapeHtml(s) {
@@ -333,14 +327,8 @@
                         '因为那本本子不是我写的。\n' +
                         '\n' +
                         '如果你找到了，<b>不要翻开第43页。</b>',
-                    attachment: {
-                        type: 'image',
-                        name: 'notebook_default.jpg',
-                        src: 'img/notebook_default.jpg'
-                    },
-                    audioAttachment: {
-                        name: '笔记本第43页录音.wav'
-                    },
+                    attachment: { type: 'image', name: 'notebook_default.jpg', src: 'img/notebook_default.jpg' },
+                    audioAttachment: { name: '笔记本第43页录音.mp3' },
                     replies: [
                         ['访客', '帮你顶一下', '2009-03-17 15:01'],
                         ['匿名', '黑色皮面笔记本？我好像在旧货市场见过', '2009-04-02 09:17'],
@@ -404,10 +392,125 @@
                     body: '有人吗。',
                     replies: [],
                     special: 'post4'
+                },
+                '5': {
+                    title: '寻物：一把黑色折叠伞（已找到）',
+                    author: '阿杰',
+                    time: '2011-06-12 14:22',
+                    body:
+                        '昨天下午在图书馆三楼丢了一把黑色折叠伞。\n' +
+                        '伞柄上有一道划痕。\n' +
+                        '今天早上在失物招领处找到了。\n' +
+                        '谢谢大家。',
+                    replies: [
+                        ['路人甲', '恭喜找到', '2011-06-12 15:01'],
+                        ['阿杰', '谢谢', '2011-06-12 15:20'],
+                        ['路人乙', '这个论坛还挺有人情味的', '2011-06-12 18:33'],
+                        ['阿杰', '是啊，我在这待了好几年了', '2011-06-12 19:10']
+                    ]
+                },
+                '6': {
+                    title: '新人报到，请大家多关照',
+                    author: '小夏',
+                    time: '2012-03-08 21:05',
+                    body:
+                        '大家好，我是小夏。\n' +
+                        '今天刚注册，看到这个论坛挺有意思的。\n' +
+                        '以后会常来。',
+                    replies: [
+                        ['版主', '欢迎欢迎', '2012-03-08 21:10'],
+                        ['路人甲', '欢迎新人', '2012-03-08 21:15'],
+                        ['小夏', '谢谢大家', '2012-03-08 21:30'],
+                        ['匿名', '又是一个新面孔', '2012-03-08 22:01'],
+                        ['小夏', '以后请多指教', '2012-03-08 22:20'],
+                        ['路人乙', '有什么不懂的可以问我', '2012-03-09 09:12'],
+                        ['小夏', '好的，谢谢', '2012-03-09 09:30']
+                    ]
+                },
+                '7': {
+                    title: '有人捡到一串钥匙吗？（附图）',
+                    author: '老周',
+                    time: '2013-09-21 08:40',
+                    body:
+                        '昨晚在公交车站丢了一串钥匙。\n' +
+                        '上面有一个小熊挂件。\n' +
+                        '如果有好心人捡到，麻烦联系我。',
+                    replies: [
+                        ['匿名', '好像在哪个帖子见过类似的', '2013-09-22 10:11'],
+                        ['老周', '真的吗？哪个帖子？', '2013-09-22 10:30']
+                    ]
+                },
+                '8': {
+                    title: '【灌水】今天下雨了，想起以前的事',
+                    author: '匿名',
+                    time: '2014-05-30 23:11',
+                    body:
+                        '今天是五月三十号。\n' +
+                        '下雨。\n' +
+                        '想起十年前这个时候，我也在这个论坛里。\n' +
+                        '那时候人还挺多的。',
+                    replies: [
+                        ['路人甲', '十年前我也在', '2014-05-31 09:02'],
+                        ['匿名', '时间过得真快', '2014-05-31 09:15'],
+                        ['路人乙', '楼主是老用户了吧', '2014-06-01 14:22'],
+                        ['匿名', '算是吧。看着论坛一点点冷清下来', '2014-06-01 15:01'],
+                        ['路人甲', '论坛会一直在的', '2014-06-01 15:20'],
+                        ['匿名', '希望吧', '2014-06-01 15:33'],
+                        ['路人乙', '楼主还在吗', '2015-01-01 00:00'],
+                        ['匿名', '在', '2015-01-01 00:01'],
+                        ['路人乙', '新年快乐', '2015-01-01 00:02'],
+                        ['匿名', '新年快乐', '2015-01-01 00:03']
+                    ]
+                },
+                '9': {
+                    title: '请问怎么修改头像？',
+                    author: '小林',
+                    time: '2015-11-02 10:33',
+                    body:
+                        '在设置里找了一圈没找到。\n' +
+                        '是我看漏了吗？',
+                    replies: [
+                        ['版主', '个人中心 → 修改资料 → 头像', '2015-11-02 10:45'],
+                        ['小林', '找到了，谢谢', '2015-11-02 10:50'],
+                        ['小林', '不过好像上传不成功', '2015-11-02 11:02']
+                    ]
+                },
+                '10': {
+                    title: '版规补充：请勿在本版发布无关内容',
+                    author: '版主',
+                    time: '2016-01-15 09:00',
+                    body:
+                        '近期发现部分用户在本版发布与失物招领无关的内容。\n' +
+                        '请遵守版规。\n' +
+                        '违者将按情节处理。',
+                    replies: []
+                },
+                '11': {
+                    title: '有没有人记得这个论坛以前叫什么？',
+                    author: '路过',
+                    time: '2017-08-19 16:47',
+                    body:
+                        '我大概是 2010 年注册的。\n' +
+                        '记得那时候论坛名字好像不是现在这个。\n' +
+                        '有老用户记得吗？',
+                    replies: [
+                        ['匿名', '不记得了', '2017-08-19 18:02'],
+                        ['路人甲', '我也记得改过名', '2017-08-20 09:33'],
+                        ['路过', '想不起来改成了什么', '2017-08-20 10:15'],
+                        ['匿名', '好像和"回响"有关', '2017-08-20 23:47']
+                    ]
                 }
             };
 
             var detailEl = document.getElementById('postDetail');
+
+            GameAudio.once('page_turn', { volume: 0.35 });
+
+            document.addEventListener('click', function (e) {
+                if (e.target.closest('#attImage') || e.target.closest('#attAudio')) {
+                    GameAudio.once('click', { volume: 0.15 });
+                }
+            });
 
             if (!POSTS[id]) {
                 detailEl.innerHTML =
@@ -420,11 +523,8 @@
             }
 
             function renderPost(p, id) {
-
                 var html = '';
-
                 html += '<div class="post-head">' + escapeHtml(p.title) + '</div>';
-
                 html += '<div class="post-meta">';
                 if (p.author === '林默') {
                     html += '发帖人：' +
@@ -434,7 +534,6 @@
                     html += '发帖人：' + escapeHtml(p.author);
                 }
                 html += '　' + escapeHtml(p.time) + '</div>';
-
                 html += '<div class="post-body">' + p.body.replace(/\n/g, '<br>') + '</div>';
 
                 if (p.attachment && p.attachment.type === 'image') {
@@ -454,13 +553,8 @@
                         html += '<div class="attachment-area">';
                         html += '<div class="att-label">附件：</div>';
                     }
-                    html +=
-                        '<div class="audio-att" id="attAudio">' +
-                        escapeHtml(p.audioAttachment.name) +
-                        '</div>';
-                    if (!p.attachment) {
-                        html += '</div>';
-                    }
+                    html += '<div class="audio-att" id="attAudio">' + escapeHtml(p.audioAttachment.name) + '</div>';
+                    if (!p.attachment) { html += '</div>'; }
                 }
 
                 if (p.replies && p.replies.length) {
@@ -471,25 +565,15 @@
                         var content = escapeHtml(r[1]);
 
                         if (id === '1' && i === 22) {
-                            if (refreshCount >= 1) {
-                                content += '<br><span class="reply-anomaly">它写的是你的名字。</span>';
-                            }
-                            if (refreshCount >= 2) {
-                                content += '<br><span class="reply-anomaly">' + escapeHtml(playerName || '无名') + '</span>';
-                            }
-                            if (refreshCount >= 3) {
-                                content += '<br><span class="reply-anomaly">你来了。</span>';
-                            }
+                            if (refreshCount >= 1) { content += '<br><span class="reply-anomaly">它写的是你的名字。</span>'; }
+                            if (refreshCount >= 2) { content += '<br><span class="reply-anomaly">' + escapeHtml(playerName || '无名') + '</span>'; }
+                            if (refreshCount >= 3) { content += '<br><span class="reply-anomaly">你来了。</span>'; }
                         }
 
                         if (id === '2' && i === 0) {
-                            if (refreshCount === 1) {
-                                content = '阿回不在了。';
-                            } else if (refreshCount === 2) {
-                                content = '阿回在你后面。';
-                            } else if (refreshCount >= 3) {
-                                content = '阿回是版主吧？。';
-                            }
+                            if (refreshCount === 1) { content = '阿回不在了。'; }
+                            else if (refreshCount === 2) { content = '阿回在你后面。'; }
+                            else if (refreshCount >= 3) { content = '阿回是版主吧？。'; }
                         }
 
                         html += '<div class="reply" data-floor="' + (i + 1) + '">';
@@ -509,18 +593,14 @@
                 if (attImage) {
                     attImage.addEventListener('click', function () {
                         var src = this.dataset.src || 'img/notebook_default.jpg';
-                        if (window.ViewerHelper) {
-                            window.ViewerHelper.openImage('notebook_default.jpg', src);
-                        }
+                        if (window.ViewerHelper) { window.ViewerHelper.openImage('notebook_default.jpg', src); }
                     });
                 }
 
                 var attAudio = document.getElementById('attAudio');
                 if (attAudio) {
                     attAudio.addEventListener('click', function () {
-                        if (window.ViewerHelper) {
-                            window.ViewerHelper.openAudio();
-                        }
+                        if (window.ViewerHelper) { window.ViewerHelper.openAudio(); }
                     });
                 }
 
@@ -556,41 +636,33 @@
                 }
 
                 if (id === '4' && p.special === 'post4') {
-
                     var adminUrl = params.get('admin');
-
                     if (adminUrl === 'true') {
                         Store.set('post4_admin_url', true);
                         setTimeout(function () {
-                            uiAlert(
-                                '隐藏入口',
+                            uiAlert('隐藏入口',
                                 '你找到了隐藏入口。\n' +
                                 '但你不是管理员。\n' +
                                 '你只是访客。\n' +
                                 '访客不能被归档。\n' +
-                                '但访客可以被记住。'
-                            );
+                                '但访客可以被记住。');
                         }, 800);
                     } else {
                         setTimeout(function () {
-                            uiPopup(
-                                '需要权限',
+                            uiPopup('需要权限',
                                 '此帖内容需要管理员权限。\n' +
                                 '您不是管理员。\n' +
                                 '但您可以成为管理员。\n' +
                                 '输入指令：become admin',
                                 [{
-                                    text: '确定',
-                                    primary: true,
+                                    text: '确定', primary: true,
                                     onClick: function () {
                                         Store.set('become_admin_hint', true);
                                         Store.set('discovered_become_admin', true);
                                     }
-                                }]
-                            );
+                                }]);
                         }, 2000);
                     }
-
                     Store.set('read_post_4', true);
                     Store.set('post4_visited', true);
                 }
@@ -618,9 +690,7 @@
                 var userInfo = document.getElementById('userInfo');
                 if (userInfo) {
                     var name = Store.get('visitor_name', '');
-                    if (name) {
-                        userInfo.innerHTML = '<b>' + escapeHtml(name) + '</b>';
-                    }
+                    if (name) { userInfo.innerHTML = '<b>' + escapeHtml(name) + '</b>'; }
                 }
             })();
 
@@ -628,21 +698,13 @@
                 var fsBtn = document.createElement('button');
                 fsBtn.textContent = '⛶';
                 fsBtn.title = '进入全屏';
-                fsBtn.style.cssText =
-                    'position:fixed;bottom:14px;left:18px;' +
-                    'color:#666;font-family:monospace;font-size:14px;' +
-                    'cursor:pointer;background:none;border:none;padding:4px 8px;' +
-                    'z-index:99998;';
+                fsBtn.style.cssText = 'position:fixed;bottom:14px;left:18px;color:#666;font-family:monospace;font-size:14px;cursor:pointer;background:none;border:none;padding:4px 8px;z-index:99998;';
                 fsBtn.addEventListener('click', function () {
-                    if (window.FullscreenHelper.isInFullscreen()) {
-                        window.FullscreenHelper.exit();
-                    } else {
-                        window.FullscreenHelper.request();
-                    }
+                    if (window.FullscreenHelper.isInFullscreen()) { window.FullscreenHelper.exit(); }
+                    else { window.FullscreenHelper.request(); }
                 });
                 document.body.appendChild(fsBtn);
             }
-
 })();
     </script>
 

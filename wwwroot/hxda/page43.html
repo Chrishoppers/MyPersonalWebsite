@@ -129,6 +129,7 @@
     <script src="js/fullscreen.js"></script>
     <script src="js/tracker.js"></script>
     <script src="js/ui.js"></script>
+    <script src="js/audio.js"></script>
     <script src="js/endings.js"></script>
 
     <script>
@@ -158,6 +159,16 @@
                 setTimeout(function () { answerEl.focus(); }, 200);
             }, 3000);
 
+            if (window.GameAudio) GameAudio.fadeIn('heartbeat', 2000, 0.2);
+            window.addEventListener('beforeunload', function () {
+                if (window.GameAudio) GameAudio.fadeOut('heartbeat', 800);
+            });
+            window.addEventListener('scroll', function () {
+                if (Math.random() < 0.05 && window.GameAudio) {
+                    GameAudio.once('breath', { volume: 0.2 });
+                }
+            });
+
             var hasScrolledDown = false;
             window.addEventListener('scroll', function () {
                 if (window.scrollY > 120) hasScrolledDown = true;
@@ -178,6 +189,7 @@
 
                 if (v === '有人吗') {
                     Store.set('ending_remembered', true);
+                    if (window.GameAudio) GameAudio.once('phone_ring', { volume: 0.4 });
                     endingRemembered();
                 }
                 else if (v === '没有人') {

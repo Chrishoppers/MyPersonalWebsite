@@ -313,9 +313,13 @@
                 if (audio) {
                     try { audio.pause(); } catch (e) { }
                 }
-                audio = new Audio('audio/whisper_reverse.wav');
-                audio.volume = 0.6;
-                audio.play().catch(function () { });
+                if (window.GameAudio) {
+                    GameAudio.fadeIn('whisper_reverse', 400, 0.6);
+                } else {
+                    audio = new Audio('audio/whisper_reverse.mp3');
+                    audio.volume = 0.6;
+                    audio.play().catch(function () { });
+                }
             } catch (e) { }
 
             if (cnt >= 3) {

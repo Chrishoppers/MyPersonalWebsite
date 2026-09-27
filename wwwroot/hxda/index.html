@@ -3,344 +3,455 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
-    <title>回响档案</title>
+    <title>回响档案｜访客登记</title>
     <link rel="icon" href="favicon.ico" type="image/x-icon">
     <link rel="stylesheet" href="css/main.css">
     <style>
         html, body {
-            margin: 0;
-            padding: 0;
-            height: 100%;
-            background: #000;
-            overflow: hidden;
+            background: #d8d8d8;
+            min-height: 100vh;
         }
 
-        #intro {
-            position: fixed;
-            inset: 0;
-            background: #000;
-            color: #ccc;
-            font-family: "SimSun", "宋体", serif;
-            font-size: 18px;
-            line-height: 2;
-            padding: 12vh 10vw;
-            white-space: pre-wrap;
-            overflow: hidden;
-            transition: opacity 2s ease;
-            z-index: 1;
+            body::before {
+                content: '';
+                position: fixed;
+                inset: 0;
+                z-index: -1;
+                pointer-events: none;
+                background-image: linear-gradient(rgba(180,180,180,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(180,180,180,0.3) 1px, transparent 1px);
+                background-size: 40px 40px;
+                transition: transform 60s linear;
+            }
+
+            body.bg-spin::before {
+                animation: bgSpin 60s linear infinite;
+            }
+
+        @keyframes bgSpin {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
         }
 
-            #intro .ch {
-                opacity: 0;
-                transition: opacity 0.08s;
-            }
-
-            #intro.fade {
-                opacity: 0;
-            }
-
-        #skipBtn {
-            position: fixed;
-            bottom: 14px;
-            right: 18px;
-            color: #333;
-            font-family: "SimSun", "宋体", serif;
+        .top-warning {
+            background: #a00;
+            color: #fff;
+            text-align: center;
+            padding: 6px 14px;
             font-size: 12px;
-            cursor: pointer;
-            background: none;
-            border: none;
-            z-index: 10;
-            padding: 6px 12px;
-            letter-spacing: 2px;
-            transition: color 0.3s;
+            font-family: "SimSun", "宋体", serif;
+            display: none;
         }
 
-            #skipBtn:hover {
-                color: #666;
+            .top-warning.show {
+                display: block;
             }
+
+        #captchaImg {
+            display: inline-block;
+            vertical-align: middle;
+            border: 1px solid #888;
+            margin-right: 6px;
+            cursor: pointer;
+            width: 120px;
+            height: 40px;
+            background: #e8e8e8;
+        }
+
+        .tiny-hidden {
+            font-size: 11px;
+            color: #999;
+            margin-top: 8px;
+            line-height: 1.5;
+            opacity: 0;
+            transition: opacity 1s ease;
+        }
+
+            .tiny-hidden.show {
+                opacity: 1;
+            }
+
+        #idleHint {
+            font-size: 12px;
+            color: #a00;
+            margin-top: 4px;
+            font-style: italic;
+        }
+
+        .captcha-hint {
+            font-size: 10px;
+            color: #999;
+            margin-top: 4px;
+            line-height: 1.5;
+        }
+
+        .tiny#nameTiny {
+            font-size: 9px;
+            color: transparent;
+            margin-top: 3px;
+            line-height: 1.4;
+            user-select: none;
+            transition: color 0.6s ease;
+        }
+
+            .tiny#nameTiny:hover {
+                color: rgba(150, 150, 150, 0.4);
+            }
+
+        .shake-input {
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+        @keyframes shake {
+            10%, 90% {
+                transform: translateX(-2px);
+            }
+
+            20%, 80% {
+                transform: translateX(4px);
+            }
+
+            30%, 50%, 70% {
+                transform: translateX(-6px);
+            }
+
+            40%, 60% {
+                transform: translateX(6px);
+            }
+        }
+
+        .corner-43 {
+            position: fixed;
+            bottom: 6px;
+            right: 8px;
+            font-family: "SimSun", "宋体", serif;
+            font-size: 9px;
+            color: rgba(120, 120, 120, 0.4);
+            pointer-events: none;
+            user-select: none;
+        }
 
         #fsBtn {
             position: fixed;
             bottom: 14px;
             left: 18px;
-            color: #222;
+            color: #666;
             font-family: monospace;
-            font-size: 16px;
+            font-size: 14px;
             cursor: pointer;
             background: none;
             border: none;
-            z-index: 10;
-            padding: 6px 10px;
-            transition: color 0.3s;
+            padding: 4px 8px;
         }
 
             #fsBtn:hover {
-                color: #555;
+                color: #333;
             }
-
-        .horror-scanlines {
-            position: fixed;
-            inset: 0;
-            z-index: 9997;
-            pointer-events: none;
-            background: repeating-linear-gradient( 0deg, rgba(0, 0, 0, 0.08) 0px, rgba(0, 0, 0, 0.08) 1px, transparent 1px, transparent 3px );
-            mix-blend-mode: multiply;
-            opacity: 0.5;
-        }
-
-        .horror-vignette {
-            position: fixed;
-            inset: 0;
-            z-index: 9996;
-            pointer-events: none;
-            background: radial-gradient( circle at 50% 50%, transparent 0%, transparent 40%, rgba(0, 0, 0, 0.3) 75%, rgba(0, 0, 0, 0.6) 100% );
-        }
-
-        .noise-layer {
-            position: fixed;
-            inset: 0;
-            z-index: 9995;
-            pointer-events: none;
-            opacity: 0.03;
-            background-image: radial-gradient(rgba(255, 255, 255, 0.5) 1px, transparent 1px), radial-gradient(rgba(255, 255, 255, 0.3) 1px, transparent 1px);
-            background-size: 3px 3px, 7px 7px;
-            background-position: 0 0, 2px 2px;
-            mix-blend-mode: screen;
-            animation: noiseShift 1s steps(4) infinite;
-        }
-
-        @keyframes noiseShift {
-            0% {
-                background-position: 0 0, 2px 2px;
-            }
-
-            25% {
-                background-position: 1px 2px, 3px 1px;
-            }
-
-            50% {
-                background-position: 2px 1px, 1px 3px;
-            }
-
-            75% {
-                background-position: 1px 3px, 2px 1px;
-            }
-
-            100% {
-                background-position: 0 0, 2px 2px;
-            }
-        }
     </style>
 </head>
-<body>
+<body class="welcome-page">
 
-    <div id="intro"></div>
+    <div class="top-warning" id="topWarning">
+        你刷新了 5 次。你在找什么？
+    </div>
 
-    <div class="horror-scanlines"></div>
-    <div class="horror-vignette"></div>
-    <div class="noise-layer"></div>
+    <div class="welcome-box" id="welcomeBox">
 
-    <button id="skipBtn">跳过 »</button>
+        <div style="text-align:center;padding:14px 0 6px;">
+            <img src="img/avatar_system.png" alt=""
+                 style="width:48px;height:48px;border-radius:50%;border:1px solid #888;background:#fff;"
+                 onerror="this.style.display='none'">
+        </div>
+
+        <div class="welcome-title">回响档案｜失物招领·留言簿</div>
+        <div class="welcome-body">
+
+            <p style="line-height:2;">
+                欢迎访问回响档案。<br>
+                本站为失物招领与留言簿。<br>
+                自2019年3月后不再更新。<br>
+                感谢各位十年来的陪伴。
+            </p>
+
+            <hr>
+
+            <div>
+                <label>访客登记：</label>
+                <input type="text" id="nameInput" maxlength="20"
+                       placeholder="您的称呼" autocomplete="off">
+                <div class="tiny" id="nameTiny">（可以留空）</div>
+                <div id="idleHint" style="display:none;">你叫什么？</div>
+            </div>
+
+            <hr>
+
+            <div id="captchaWrap">
+                <label>验证码：</label>
+                <div style="margin-top:6px;">
+                    <img id="captchaImg" alt="验证码">
+                    <input type="text" id="captchaInput" maxlength="10"
+                           placeholder="请输入验证码" autocomplete="off">
+                </div>
+                <div class="captcha-hint">
+                    注意：验证码内容与您的称呼无关。但您的称呼会被归档。
+                </div>
+            </div>
+
+            <hr>
+
+            <button class="old-btn old-btn-primary" id="enterBtn">进入论坛</button>
+            <div class="msg" id="msg"></div>
+
+            <div class="tiny-hidden" id="tinyHidden">
+                如果您能看到这行字，说明您已经停留了3秒。它开始记得您了。
+            </div>
+
+        </div>
+    </div>
+
+    <div class="corner-43">43</div>
+
     <button id="fsBtn" title="进入全屏">⛶</button>
 
     <script src="js/storage.js"></script>
+    <script src="js/audio.js"></script>
     <script src="js/fullscreen.js"></script>
+    <script src="js/tracker.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/horror.js"></script>
     <script>
 (function () {
 
-            'use strict';
+                    'use strict';
 
-            var NORMAL_TEXT =
-                '凌晨 2:47。\n' +
-                '你在一台旧笔记本上整理浏览器书签。窗外在下雨，手机没电，房间里只有风扇声。\n' +
-                '你发现一个早就忘记来源的书签：\n' +
-                'huixiang-dangan.net/bbs/\n' +
-                '备注只有一句话：\n' +
-                '"别删，等我回来。"\n' +
-                '\n' +
-                '你想不起来这是谁留的。\n' +
-                '你点开了它。';
+                    var box         = document.getElementById('welcomeBox');
+                    var nameInput   = document.getElementById('nameInput');
+                    var nameTiny    = document.getElementById('nameTiny');
+                    var captchaImg  = document.getElementById('captchaImg');
+                    var captchaWrap = document.getElementById('captchaWrap');
+                    var capInput    = document.getElementById('captchaInput');
+                    var enterBtn    = document.getElementById('enterBtn');
+                    var msgEl       = document.getElementById('msg');
+                    var idleHint    = document.getElementById('idleHint');
+                    var tinyHidden  = document.getElementById('tinyHidden');
+                    var topWarning  = document.getElementById('topWarning');
 
-            var TRUE_ENDING_TEXT =
-                '凌晨 2:47。\n' +
-                '我在一台旧笔记本上整理浏览器书签。\n' +
-                '我想不起来这是谁留的。\n' +
-                '我点开了它。';
+                    var wrongCaptchaCount = 0;
+                    var idleTimer = null;
 
-            var text = NORMAL_TEXT;
-            var isTrueEnding = false;
+                    var CAPTCHAS = {
+                        '有人吗':   'img/captcha_1.png',
+                        '你叫什么': 'img/captcha_2.png',
+                        '不要回头': 'img/captcha_3.png'
+                    };
 
-            try {
-                if (Store.get('ending_true', false)) {
-                    text = TRUE_ENDING_TEXT;
-                    isTrueEnding = true;
-                }
-            } catch (e) {}
+                    var currentCaptcha = '有人吗';
 
-            var audioRain = null;
-            var audioFan = null;
-
-            function startAmbient() {
-                try {
-                    audioRain = new Audio('audio/rain.wav');
-                    audioRain.loop = true;
-                    audioRain.volume = 0.1;
-                    audioRain.play().catch(function () {});
-                } catch (e) {}
-                try {
-                    audioFan = new Audio('audio/fan.wav');
-                    audioFan.loop = true;
-                    audioFan.volume = 0.05;
-                    audioFan.play().catch(function () {});
-                } catch (e) {}
-            }
-
-            function stopAmbient() {
-                try {
-                    if (audioRain) { audioRain.pause(); audioRain = null; }
-                } catch (e) {}
-                try {
-                    if (audioFan) { audioFan.pause(); audioFan = null; }
-                } catch (e) {}
-            }
-
-            var introEl = document.getElementById('intro');
-            var index = 0;
-            var startTime = Date.now();
-
-            function type() {
-                if (index < text.length) {
-                    var ch = document.createElement('span');
-                    ch.className = 'ch';
-
-                    if (text[index] === '\n') {
-                        ch.innerHTML = '<br>';
-                    } else {
-                        ch.textContent = text[index];
+                    function setCaptcha(text) {
+                        currentCaptcha = text;
+                        captchaImg.src = CAPTCHAS[text];
+                        captchaImg.alt = text;
                     }
 
-                    introEl.appendChild(ch);
+                    (function initCaptcha() {
+                        var rc = Store.get('refresh_count', 0);
+                        if (rc >= 3) {
+                            setCaptcha('不要回头');
+                        } else {
+                            setCaptcha('有人吗');
+                        }
+                    })();
 
-                    requestAnimationFrame(function () {
-                        ch.style.opacity = 1;
+                    GameAudio.once('welcome_chime', { volume: 0.2 });
+
+                    setTimeout(function () {
+                        tinyHidden.classList.add('show');
+                    }, 3000);
+
+                    nameTiny.title = '留空者不被归档。但留空者也不被忘记。';
+                    captchaImg.title = '验证码内容与您的称呼无关。但您的称呼会被归档。';
+
+                    if (Store.get('refresh_count', 0) >= 5) {
+                        topWarning.classList.add('show');
+                    }
+
+                    if (new URLSearchParams(window.location.search).get('skip') === 'true') {
+                        msgEl.textContent = '你想跳过登记。可以。但你会被记住。';
+                        try {
+                            Store.set('visitor_name', '');
+                            var a = Store.get('attention', 0) + 10;
+                            Store.set('attention', a);
+                        } catch (e) {}
+                        box.classList.add('shake');
+                        setTimeout(function () {
+                            window.location.href = 'bbs.html';
+                        }, 2000);
+                        return;
+                    }
+
+                    nameInput.addEventListener('blur', function () {
+                        if (nameInput.value.trim() === '' && currentCaptcha === '有人吗') {
+                            setCaptcha('你叫什么');
+                        }
                     });
 
-                    index++;
+                    nameInput.addEventListener('input', function () {
+                        document.body.style.transition = 'none';
+                        document.body.style.background = '#c8c8c8';
+                        setTimeout(function () {
+                            document.body.style.background = '';
+                            document.body.style.transition = '';
+                        }, 60);
 
-                    var lastCh = text[index - 1];
-                    var delay = 50;
-                    if (lastCh === '。' || lastCh === '，' || lastCh === '：') delay = 300;
-                    else if (lastCh === '\n') delay = 600;
+                        if (nameInput.value.length > 10) {
+                            document.body.classList.add('bg-spin');
+                            if (!window._staticPlayed) {
+                                window._staticPlayed = true;
+                                GameAudio.fadeIn('static', 800, 0.08);
+                                setTimeout(function () {
+                                    GameAudio.fadeOut('static', 1000);
+                                }, 3000);
+                            }
+                        } else {
+                            document.body.classList.remove('bg-spin');
+                        }
 
-                    setTimeout(type, delay);
+                        resetIdleTimer();
+                    });
 
-                } else {
-                    setTimeout(function () {
-                        introEl.classList.add('fade');
+                    function resetIdleTimer() {
+                        clearTimeout(idleTimer);
+                        idleHint.style.display = 'none';
+
+                        idleTimer = setTimeout(function () {
+                            if (nameInput.value.trim() === '') {
+                                idleHint.style.display = 'block';
+                            }
+                        }, 30000);
+                    }
+
+                    nameInput.addEventListener('focus', resetIdleTimer);
+                    resetIdleTimer();
+
+                    var BLOCKED_NAMES = {
+                        'admin':    '此称呼已被占用。请使用其他称呼。',
+                        'system':   '此称呼已被占用。请使用其他称呼。',
+                        '阿回':     '此称呼属于已归档节点。请勿使用。',
+                        '林默':     '此称呼属于已归档节点。请勿使用。',
+                        '有人吗':   '这不是名字。这是问题。请重新输入。'
+                    };
+
+                    function validateAndSubmit() {
+
+                        var rawName = nameInput.value;
+                        var name    = rawName.trim();
+                        var cap     = capInput.value.trim();
+
+                        if (BLOCKED_NAMES[name]) {
+                            nameInput.value = '';
+                            msgEl.textContent = BLOCKED_NAMES[name];
+                            nameInput.classList.add('shake-input');
+                            setTimeout(function () {
+                                nameInput.classList.remove('shake-input');
+                            }, 500);
+                            return;
+                        }
+
+                        if (/<[^>]+>/.test(rawName)) {
+                            nameInput.value = '';
+                            msgEl.textContent = '无法归档。请使用正常称呼。';
+                            nameInput.classList.add('shake-input');
+                            setTimeout(function () {
+                                nameInput.classList.remove('shake-input');
+                            }, 500);
+                            return;
+                        }
+
+                        if (name === '没有人') {
+                            Store.set('visitor_name', '');
+                            msgEl.textContent = '好。你不需要名字。';
+                            setTimeout(function () {
+                                window.location.href = 'bbs.html';
+                            }, 1200);
+                            return;
+                        }
+
+                        var captchaGone = (wrongCaptchaCount >= 3);
+
+                        if (!captchaGone && cap !== currentCaptcha) {
+                            wrongCaptchaCount++;
+                            box.classList.add('shake');
+                            setTimeout(function () {
+                                box.classList.remove('shake');
+                            }, 500);
+
+                            msgEl.textContent = '验证码错误。请重新输入。';
+                            capInput.value = '';
+
+                            if (wrongCaptchaCount >= 3) {
+                                captchaWrap.style.display = 'none';
+                                msgEl.textContent = '无法验证。请留名。';
+                            }
+                            return;
+                        }
+
+                        Store.set('visitor_name', name);
+
+                        if (name === '') {
+                            msgEl.textContent = '无法归档无名者。请继续。';
+                        } else {
+                            msgEl.textContent = '欢迎，' + name + '。您的访问已被归档。';
+                        }
+
+                        box.style.transition = 'background 0.5s';
+                        box.style.background = '#e8e8e8';
 
                         setTimeout(function () {
-                            stopAmbient();
+                            window.location.href = 'bbs.html';
+                        }, 1500);
+                    }
 
-                            if (isTrueEnding) {
-                                showTrueEndingQuestion();
-                            } else {
-                                window.location.href = 'welcome.html';
+                    enterBtn.addEventListener('click', validateAndSubmit);
+
+                    [nameInput, capInput].forEach(function (el) {
+                        el.addEventListener('keydown', function (e) {
+                            if (e.key === 'Enter') {
+                                e.preventDefault();
+                                validateAndSubmit();
                             }
-                        }, 2000);
-                    }, 2000);
-                }
-            }
+                        });
+                    });
 
-            function showTrueEndingQuestion() {
-                introEl.classList.remove('fade');
-                introEl.style.opacity = '1';
-                introEl.innerHTML = '';
-                introEl.style.padding = '20vh 10vw';
-                introEl.style.textAlign = 'left';
+                    captchaImg.addEventListener('click', function () {
+                        if (wrongCaptchaCount >= 3) return;
+                        captchaImg.style.transition = 'transform 0.1s';
+                        captchaImg.style.transform = 'scale(0.95)';
+                        setTimeout(function () {
+                            captchaImg.style.transform = '';
+                        }, 100);
+                    });
 
-                var line1 = document.createElement('div');
-                line1.style.cssText = 'margin-bottom:24px;color:#ccc;font-size:18px;line-height:2;';
-                line1.textContent = '你现在想起来了吗？';
-                introEl.appendChild(line1);
+                    document.getElementById('fsBtn').addEventListener('click', function () {
+                        if (window.FullscreenHelper) {
+                            if (window.FullscreenHelper.isInFullscreen()) {
+                                window.FullscreenHelper.exit();
+                            } else {
+                                window.FullscreenHelper.request();
+                            }
+                        }
+                    });
 
-                var btnWrap = document.createElement('div');
-                btnWrap.style.cssText = 'display:flex;gap:16px;';
+                    idleHint.addEventListener('click', function () {
+                        nameInput.focus();
+                    });
 
-                var yesBtn = document.createElement('button');
-                yesBtn.textContent = '是';
-                yesBtn.style.cssText =
-                    'padding:6px 28px;background:#222;color:#ccc;border:1px solid #555;' +
-                    'font-family:inherit;font-size:16px;cursor:pointer;';
-                yesBtn.addEventListener('click', function () {
-                    line1.textContent = '你撒谎。';
-                    btnWrap.remove();
-                    setTimeout(function () { window.location.href = 'welcome.html'; }, 2500);
-                });
-
-                var noBtn = document.createElement('button');
-                noBtn.textContent = '否';
-                noBtn.style.cssText =
-                    'padding:6px 28px;background:#222;color:#ccc;border:1px solid #555;' +
-                    'font-family:inherit;font-size:16px;cursor:pointer;';
-                noBtn.addEventListener('click', function () {
-                    line1.textContent = '好。继续。';
-                    btnWrap.remove();
-                    setTimeout(function () { window.location.href = 'welcome.html'; }, 2500);
-                });
-
-                btnWrap.appendChild(yesBtn);
-                btnWrap.appendChild(noBtn);
-                introEl.appendChild(btnWrap);
-
-                setTimeout(function () {
-                    if (document.body.contains(btnWrap)) {
-                        btnWrap.remove();
-                        var hint = document.createElement('div');
-                        hint.style.cssText =
-                            'margin-top:32px;color:#888;font-size:14px;line-height:2;max-width:600px;';
-                        hint.textContent =
-                            '我知道你在想什么。你想不起来。因为这不是你留的。是它留给你。';
-                        introEl.appendChild(hint);
-                        setTimeout(function () { window.location.href = 'welcome.html'; }, 5000);
-                    }
-                }, 30000);
-            }
-
-            document.getElementById('skipBtn').addEventListener('click', function () {
-                stopAmbient();
-                try {
-                    Store.set('visitor_name', '');
-                    var a = Store.get('attention', 0) + 10;
-                    Store.set('attention', a);
-                } catch (e) {}
-                window.location.href = 'welcome.html?skip=true';
-            });
-
-            document.getElementById('fsBtn').addEventListener('click', function () {
-                if (window.FullscreenHelper) {
-                    if (window.FullscreenHelper.isInFullscreen()) {
-                        window.FullscreenHelper.exit();
-                    } else {
-                        window.FullscreenHelper.request();
-                    }
-                }
-            });
-
-            document.addEventListener('keydown', function (e) {
-                if (e.key === ' ' || e.key === 'Escape' || e.key === 'Enter') {
-                    if (Date.now() - startTime < 3000) return;
-                    document.getElementById('skipBtn').click();
-                }
-            });
-
-            setTimeout(function () {
-                startAmbient();
-                type();
-            }, 300);
-
-            window.addEventListener('beforeunload', function () {
-                stopAmbient();
-            });
+                    window.addEventListener('beforeunload', function () {
+                        clearTimeout(idleTimer);
+                    });
 
 })();
     </script>

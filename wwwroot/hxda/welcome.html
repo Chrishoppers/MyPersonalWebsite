@@ -89,6 +89,19 @@
             line-height: 1.5;
         }
 
+        .tiny#nameTiny {
+            font-size: 9px;
+            color: transparent;
+            margin-top: 3px;
+            line-height: 1.4;
+            user-select: none;
+            transition: color 0.6s ease;
+        }
+
+            .tiny#nameTiny:hover {
+                color: rgba(150, 150, 150, 0.4);
+            }
+
         .shake-input {
             animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
         }
@@ -117,34 +130,15 @@
             right: 8px;
             font-family: "SimSun", "宋体", serif;
             font-size: 9px;
-            color: rgba(120, 120, 120, 0.4);
+            color: rgba(120,120,120,0.4);
             pointer-events: none;
             user-select: none;
         }
 
-        #skipBtn {
-            position: fixed;
-            bottom: 14px;
-            left: 18px;
-            color: #666;
-            font-family: "SimSun", "宋体", serif;
-            font-size: 11px;
-            cursor: pointer;
-            background: none;
-            border: none;
-            padding: 4px 8px;
-            letter-spacing: 1px;
-        }
-
-            #skipBtn:hover {
-                color: #333;
-                text-decoration: underline;
-            }
-
         #fsBtn {
             position: fixed;
             bottom: 14px;
-            left: 88px;
+            left: 18px;
             color: #666;
             font-family: monospace;
             font-size: 14px;
@@ -161,12 +155,9 @@
 </head>
 <body class="welcome-page">
 
-    <div class="top-warning" id="topWarning">
-        你刷新了 5 次。你在找什么？
-    </div>
+    <div class="top-warning" id="topWarning">你刷新了 5 次。你在找什么？</div>
 
     <div class="welcome-box" id="welcomeBox">
-
         <div style="text-align:center;padding:14px 0 6px;">
             <img src="img/avatar_system.png" alt=""
                  style="width:48px;height:48px;border-radius:50%;border:1px solid #888;background:#fff;"
@@ -187,8 +178,7 @@
 
             <div>
                 <label>访客登记：</label>
-                <input type="text" id="nameInput" maxlength="20"
-                       placeholder="您的称呼" autocomplete="off">
+                <input type="text" id="nameInput" maxlength="20" placeholder="您的称呼" autocomplete="off">
                 <div class="tiny" id="nameTiny">（可以留空）</div>
                 <div id="idleHint" style="display:none;">你叫什么？</div>
             </div>
@@ -199,12 +189,9 @@
                 <label>验证码：</label>
                 <div style="margin-top:6px;">
                     <img id="captchaImg" alt="验证码">
-                    <input type="text" id="captchaInput" maxlength="10"
-                           placeholder="请输入验证码" autocomplete="off">
+                    <input type="text" id="captchaInput" maxlength="10" placeholder="请输入验证码" autocomplete="off">
                 </div>
-                <div class="captcha-hint">
-                    注意：验证码内容与您的称呼无关。但您的称呼会被归档。
-                </div>
+                <div class="captcha-hint">注意：验证码内容与您的称呼无关。但您的称呼会被归档。</div>
             </div>
 
             <hr>
@@ -220,18 +207,16 @@
     </div>
 
     <div class="corner-43">43</div>
-
-    <button id="skipBtn">跳过 »</button>
     <button id="fsBtn" title="进入全屏">⛶</button>
 
     <script src="js/storage.js"></script>
+    <script src="js/audio.js"></script>
     <script src="js/fullscreen.js"></script>
     <script src="js/tracker.js"></script>
     <script src="js/ui.js"></script>
     <script src="js/horror.js"></script>
     <script>
 (function () {
-
             'use strict';
 
             var box         = document.getElementById('welcomeBox');
@@ -248,7 +233,6 @@
 
             var wrongCaptchaCount = 0;
             var idleTimer = null;
-            var inputStartTime = Date.now();
 
             var CAPTCHAS = {
                 '有人吗':   'img/captcha_1.png',
@@ -266,31 +250,18 @@
 
             (function initCaptcha() {
                 var rc = Store.get('refresh_count', 0);
-                if (rc >= 3) {
-                    setCaptcha('不要回头');
-                } else {
-                    setCaptcha('有人吗');
-                }
+                if (rc >= 3) { setCaptcha('不要回头'); }
+                else { setCaptcha('有人吗'); }
             })();
 
-            (function playChime() {
-                try {
-                    var chime = new Audio('audio/welcome_chime.wav');
-                    chime.volume = 0.2;
-                    chime.play().catch(function () {});
-                } catch (e) {}
-            })();
+            GameAudio.once('welcome_chime', { volume: 0.2 });
 
-            setTimeout(function () {
-                tinyHidden.classList.add('show');
-            }, 3000);
+            setTimeout(function () { tinyHidden.classList.add('show'); }, 3000);
 
             nameTiny.title = '留空者不被归档。但留空者也不被忘记。';
             captchaImg.title = '验证码内容与您的称呼无关。但您的称呼会被归档。';
 
-            if (Store.get('refresh_count', 0) >= 5) {
-                topWarning.classList.add('show');
-            }
+            if (Store.get('refresh_count', 0) >= 5) { topWarning.classList.add('show'); }
 
             if (new URLSearchParams(window.location.search).get('skip') === 'true') {
                 msgEl.textContent = '你想跳过登记。可以。但你会被记住。';
@@ -300,9 +271,7 @@
                     Store.set('attention', a);
                 } catch (e) {}
                 box.classList.add('shake');
-                setTimeout(function () {
-                    window.location.href = 'bbs.html';
-                }, 2000);
+                setTimeout(function () { window.location.href = 'bbs.html'; }, 2000);
                 return;
             }
 
@@ -322,6 +291,11 @@
 
                 if (nameInput.value.length > 10) {
                     document.body.classList.add('bg-spin');
+                    if (!window._staticPlayed) {
+                        window._staticPlayed = true;
+                        GameAudio.fadeIn('static', 800, 0.08);
+                        setTimeout(function () { GameAudio.fadeOut('static', 1000); }, 3000);
+                    }
                 } else {
                     document.body.classList.remove('bg-spin');
                 }
@@ -332,11 +306,8 @@
             function resetIdleTimer() {
                 clearTimeout(idleTimer);
                 idleHint.style.display = 'none';
-
                 idleTimer = setTimeout(function () {
-                    if (nameInput.value.trim() === '') {
-                        idleHint.style.display = 'block';
-                    }
+                    if (nameInput.value.trim() === '') { idleHint.style.display = 'block'; }
                 }, 30000);
             }
 
@@ -352,7 +323,6 @@
             };
 
             function validateAndSubmit() {
-
                 var rawName = nameInput.value;
                 var name    = rawName.trim();
                 var cap     = capInput.value.trim();
@@ -361,9 +331,7 @@
                     nameInput.value = '';
                     msgEl.textContent = BLOCKED_NAMES[name];
                     nameInput.classList.add('shake-input');
-                    setTimeout(function () {
-                        nameInput.classList.remove('shake-input');
-                    }, 500);
+                    setTimeout(function () { nameInput.classList.remove('shake-input'); }, 500);
                     return;
                 }
 
@@ -371,18 +339,14 @@
                     nameInput.value = '';
                     msgEl.textContent = '无法归档。请使用正常称呼。';
                     nameInput.classList.add('shake-input');
-                    setTimeout(function () {
-                        nameInput.classList.remove('shake-input');
-                    }, 500);
+                    setTimeout(function () { nameInput.classList.remove('shake-input'); }, 500);
                     return;
                 }
 
                 if (name === '没有人') {
                     Store.set('visitor_name', '');
                     msgEl.textContent = '好。你不需要名字。';
-                    setTimeout(function () {
-                        window.location.href = 'bbs.html';
-                    }, 1200);
+                    setTimeout(function () { window.location.href = 'bbs.html'; }, 1200);
                     return;
                 }
 
@@ -391,9 +355,7 @@
                 if (!captchaGone && cap !== currentCaptcha) {
                     wrongCaptchaCount++;
                     box.classList.add('shake');
-                    setTimeout(function () {
-                        box.classList.remove('shake');
-                    }, 500);
+                    setTimeout(function () { box.classList.remove('shake'); }, 500);
 
                     msgEl.textContent = '验证码错误。请重新输入。';
                     capInput.value = '';
@@ -407,28 +369,20 @@
 
                 Store.set('visitor_name', name);
 
-                if (name === '') {
-                    msgEl.textContent = '无法归档无名者。请继续。';
-                } else {
-                    msgEl.textContent = '欢迎，' + name + '。您的访问已被归档。';
-                }
+                if (name === '') { msgEl.textContent = '无法归档无名者。请继续。'; }
+                else { msgEl.textContent = '欢迎，' + name + '。您的访问已被归档。'; }
 
                 box.style.transition = 'background 0.5s';
                 box.style.background = '#e8e8e8';
 
-                setTimeout(function () {
-                    window.location.href = 'bbs.html';
-                }, 1500);
+                setTimeout(function () { window.location.href = 'bbs.html'; }, 1500);
             }
 
             enterBtn.addEventListener('click', validateAndSubmit);
 
             [nameInput, capInput].forEach(function (el) {
                 el.addEventListener('keydown', function (e) {
-                    if (e.key === 'Enter') {
-                        e.preventDefault();
-                        validateAndSubmit();
-                    }
+                    if (e.key === 'Enter') { e.preventDefault(); validateAndSubmit(); }
                 });
             });
 
@@ -436,36 +390,19 @@
                 if (wrongCaptchaCount >= 3) return;
                 captchaImg.style.transition = 'transform 0.1s';
                 captchaImg.style.transform = 'scale(0.95)';
-                setTimeout(function () {
-                    captchaImg.style.transform = '';
-                }, 100);
+                setTimeout(function () { captchaImg.style.transform = ''; }, 100);
             });
 
             document.getElementById('fsBtn').addEventListener('click', function () {
                 if (window.FullscreenHelper) {
-                    if (window.FullscreenHelper.isInFullscreen()) {
-                        window.FullscreenHelper.exit();
-                    } else {
-                        window.FullscreenHelper.request();
-                    }
+                    if (window.FullscreenHelper.isInFullscreen()) { window.FullscreenHelper.exit(); }
+                    else { window.FullscreenHelper.request(); }
                 }
             });
 
-            document.getElementById('skipBtn').addEventListener('click', function () {
-                Store.set('visitor_name', '');
-                var a = Store.get('attention', 0) + 10;
-                Store.set('attention', a);
-                window.location.href = 'bbs.html';
-            });
+            idleHint.addEventListener('click', function () { nameInput.focus(); });
 
-            idleHint.addEventListener('click', function () {
-                nameInput.focus();
-            });
-
-            window.addEventListener('beforeunload', function () {
-                clearTimeout(idleTimer);
-            });
-
+            window.addEventListener('beforeunload', function () { clearTimeout(idleTimer); });
 })();
     </script>
 </body>

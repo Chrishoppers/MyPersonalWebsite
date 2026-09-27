@@ -1,0 +1,379 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+    <title>回响档案｜环境测试</title>
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="css/main.css">
+    <style>
+        html, body {
+            min-height: 100vh;
+            background: #d8d8d8;
+        }
+
+        .gate-wrap {
+            width: 720px;
+            max-width: 96vw;
+            margin: 40px auto;
+        }
+
+        .gate-box {
+            background: #f4f4f4;
+            border: 2px solid #888;
+            font-family: "SimSun", "宋体", serif;
+        }
+
+        .gate-head {
+            background: #1a3a6b;
+            background-image: linear-gradient(to bottom, #4a6fa5 0%, #1a3a6b 100%);
+            color: #fff;
+            padding: 8px 14px;
+            font-weight: bold;
+            font-size: 14px;
+            border-bottom: 1px solid #0d1b3e;
+        }
+
+        .gate-body {
+            padding: 18px 22px;
+            font-size: 13px;
+            line-height: 2;
+            color: #333;
+        }
+
+            .gate-body p {
+                margin: 4px 0;
+            }
+
+        .gate-ok {
+            color: #060;
+            font-weight: bold;
+        }
+
+        .gate-warn {
+            color: #a00;
+            font-weight: bold;
+        }
+
+        .gate-tiny {
+            font-size: 11px;
+            color: #999;
+        }
+
+        .gate-actions {
+            margin-top: 14px;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .gate-scroll {
+            max-height: 42vh;
+            overflow-y: auto;
+            padding: 14px 18px;
+            background: #fafafa;
+            border-bottom: 1px solid #ccc;
+            font-size: 12px;
+            line-height: 1.9;
+            color: #333;
+        }
+
+            .gate-scroll h3 {
+                font-size: 13px;
+                color: #1a3a6b;
+                margin: 12px 0 6px;
+                border-bottom: 1px dashed #ccc;
+                padding-bottom: 4px;
+            }
+
+                .gate-scroll h3:first-child {
+                    margin-top: 0;
+                }
+
+            .gate-scroll p {
+                margin: 4px 0;
+            }
+
+            .gate-scroll ul {
+                margin: 4px 0 8px 20px;
+            }
+
+            .gate-scroll li {
+                margin: 2px 0;
+            }
+
+            .gate-scroll .danger {
+                color: #a00;
+                font-weight: bold;
+            }
+
+        .gate-check {
+            display: block;
+            padding: 5px 0;
+            font-size: 12px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+            .gate-check input {
+                margin-right: 6px;
+            }
+
+        #signCanvas {
+            touch-action: none;
+        }
+
+        #adminDot {
+            position: fixed;
+            bottom: 8px;
+            right: 10px;
+            font-size: 10px;
+            color: rgba(120, 120, 120, 0.18);
+            cursor: default;
+            user-select: none;
+            font-family: "SimSun", "宋体", serif;
+            padding: 6px 10px;
+            transition: color 0.6s;
+            z-index: 10;
+        }
+
+            #adminDot:hover {
+                color: rgba(120, 120, 120, 0.3);
+            }
+
+        .gate-home-link {
+            position: fixed;
+            bottom: 10px;
+            left: 12px;
+            font-size: 11px;
+            color: rgba(120, 120, 120, 0.55);
+            text-decoration: none;
+            font-family: "SimSun", "宋体", serif;
+            padding: 4px 8px;
+            transition: color 0.3s;
+            z-index: 10;
+        }
+
+            .gate-home-link:hover {
+                color: #1a3a6b;
+                text-decoration: underline;
+            }
+
+        .orientation-block {
+            position: fixed;
+            inset: 0;
+            background: #000;
+            color: #eee;
+            z-index: 999999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            font-family: "SimSun", "宋体", serif;
+            padding: 30px;
+        }
+
+            .orientation-block.active {
+                display: flex;
+            }
+
+        .orientation-box {
+            max-width: 320px;
+        }
+
+        .orientation-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+            animation: rotateHint 2s ease-in-out infinite;
+        }
+
+        @keyframes rotateHint {
+            0%, 100% {
+                transform: rotate(0deg);
+            }
+
+            50% {
+                transform: rotate(90deg);
+            }
+        }
+
+        .orientation-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #fff;
+            margin-bottom: 14px;
+            letter-spacing: 0.1em;
+        }
+
+        .orientation-text {
+            font-size: 14px;
+            line-height: 2;
+            color: #aaa;
+            margin-bottom: 16px;
+        }
+
+        .orientation-tiny {
+            font-size: 11px;
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .orientation-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+            .orientation-actions button {
+                padding: 6px 18px;
+                background: #222;
+                color: #ccc;
+                border: 1px solid #555;
+                font-family: inherit;
+                font-size: 13px;
+                cursor: pointer;
+            }
+
+                .orientation-actions button:hover {
+                    background: #333;
+                }
+    </style>
+</head>
+<body>
+
+    <div class="gate-wrap" id="gateWrap">
+
+        <section id="stepTime"></section>
+        <section id="stepMic"></section>
+        <section id="stepNotice"></section>
+        <section id="stepSign"></section>
+        <section id="stepPass"></section>
+
+    </div>
+
+    <a href="index.html" class="gate-home-link">← 返回首页</a>
+    <div id="adminDot">·</div>
+
+    <div id="orientationBlock" class="orientation-block">
+        <div class="orientation-box">
+            <div class="orientation-icon">📱↻</div>
+            <div class="orientation-title">请横屏</div>
+            <div class="orientation-text">
+                档案需要横屏访问。<br>
+                请将手机横过来，或使用电脑 / 平板。
+            </div>
+            <div class="orientation-tiny">
+                竖屏会导致部分内容无法显示。
+            </div>
+            <div class="orientation-actions">
+                <button id="btnOrientationHome">返回首页</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+            var NOTICE_BODY_HTML = ''
+                + '<h3>一、光敏性癫痫警告</h3>'
+                + '<p>本游戏包含页面闪烁、快速颜色反转、画面抖动、噪点、突然变黑/变白、扫描线等视觉元素。</p>'
+                + '<p>如果你或你的家人有光敏性癫痫病史，请不要测试本游戏。</p>'
+                + '<p>如果出现头晕、眼花、抽搐、意识模糊、恶心、头痛，请立即停止。</p>'
+                + '<h3>二、心理健康警告</h3>'
+                + '<p>本游戏包含被监视感、被记录感、记忆污染、身份混淆、孤独感、循环感、宿命感等心理恐怖元素。</p>'
+                + '<p>如果你有焦虑症、抑郁症、精神分裂症、偏执型人格障碍、解离性身份障碍、PTSD，请不要测试。</p>'
+                + '<p>如果出现严重焦虑、恐慌、呼吸困难、心跳加速、感到失控、分不清游戏和现实，请立即停止。</p>'
+                + '<h3>三、心脏健康警告</h3>'
+                + '<p>本游戏包含突然音效、突然画面变化、心跳声、低频震动音。</p>'
+                + '<p>如果你有心脏病、高血压、心律不齐、心脏起搏器，请不要测试。</p>'
+                + '<h3>四、年龄限制</h3>'
+                + '<p>本游戏适合 16 岁以上玩家。16 岁以下请在家长陪同下测试。12 岁以下请不要测试。</p>'
+                + '<h3>五、听力保护警告</h3>'
+                + '<p>本游戏包含突然音效、高频/低频声音、反向音频、白噪音、心跳声。</p>'
+                + '<p>请不要将音量调到最大。使用耳机时尤其注意音量。如果感到耳鸣，立即停止。</p>'
+                + '<h3>六、视觉疲劳警告</h3>'
+                + '<p>请每 20 分钟休息一次，休息时看远处，保持屏幕距离 50cm 以上，保持环境光线充足。</p>'
+                + '<h3>七、隐私与数据须知</h3>'
+                + '<p>本游戏只在本地存储数据，不会收集个人信息、IP、位置、设备信息、浏览历史，不调用摄像头，不上传任何数据。</p>'
+                + '<p>本游戏会在 localStorage 中存储游戏进度、输入内容、搜索记录、结局记录。这些数据只存在于你的浏览器中。</p>'
+                + '<p><b>关于麦克风：</b></p>'
+                + '<ul>'
+                + '<li>本游戏在“环境测试”环节会请求麦克风权限。</li>'
+                + '<li>麦克风仅用于检测环境分贝值。</li>'
+                + '<li>麦克风音频不会被录制、保存、上传或分析内容。</li>'
+                + '<li>分贝检测完成后，麦克风会立即关闭。</li>'
+                + '<li>你可以随时在浏览器设置中撤销麦克风权限。</li>'
+                + '<li>如果你不希望通过麦克风检测，你将无法进入游戏。</li>'
+                + '</ul>'
+                + '<p><b>关于私信：</b></p>'
+                + '<ul>'
+                + '<li>私信功能会将你的消息发送到 DeepSeek API。</li>'
+                + '<li>DeepSeek 的隐私政策适用。</li>'
+                + '<li>不要发送任何个人敏感信息。</li>'
+                + '</ul>'
+                + '<h3>八、内测保密须知</h3>'
+                + '<p class="danger">当前为内测版本，不代表最终品质。</p>'
+                + '<p class="danger">严禁将本测试内容外传、录屏、截图、公开讨论或用于任何商业用途。</p>'
+                + '<p class="danger">一经发现外传，开发者有权终止测试资格，并保留追究责任的权利。</p>'
+                + '<p>请勿与其他测试者讨论，每个人的体验可能不同。</p>'
+                + '<h3>九、测试环境须知</h3>'
+                + '<p>必须使用电脑或平板，使用 Chrome/Firefox/Edge/Safari 最新版，使用耳机，安静环境。</p>'
+                + '<p>测试时长为 <b>10-30 分钟</b>，请准备一段不被打扰的时间。</p>'
+                + '<p>禁止：看源代码（除非卡住超过 10 分钟）、使用 F12、录屏、翻译插件、阅读模式、隐私模式、广告拦截插件、多标签同时打开。</p>'
+                + '<h3>十、测试流程须知</h3>'
+                + '<p>第一步：直接进入，不要问“这是什么”。</p>'
+                + '<p>第二步：按照页面提示操作，不要跳过、不要快速点击、不要试图“通关”。</p>'
+                + '<p>第三步：记录异常。如果遇到页面显示异常、音频异常、按钮无法点击、页面卡顿、内容和你预期的不一样，记下来。</p>'
+                + '<p>第四步：完成至少一遍完整流程。</p>'
+                + '<p>第五步：填写反馈。描述你的感受，不要只描述你看到了什么。</p>'
+                + '<h3>十一、测试者必须知道的规则</h3>'
+                + '<p>规则一：不要跳过任何内容。</p>'
+                + '<p>规则二：不要快速点击。</p>'
+                + '<p>规则三：不要试图“通关”。</p>'
+                + '<p>规则四：不要看源代码（除非卡住超过 10 分钟）。</p>'
+                + '<p>规则五：不要和其他测试者讨论。</p>'
+                + '<p>规则六：不要录屏或截图。</p>'
+                + '<p>规则七：不要使用翻译插件。</p>'
+                + '<p>规则八：不要使用阅读模式。</p>'
+                + '<p>规则九：不要使用隐私模式。</p>'
+                + '<p>规则十：如果感到不适，立即停止。</p>'
+                + '<h3>十二、可能遇到的情况</h3>'
+                + '<p>正常情况：页面正常加载、音频正常播放、按钮正常点击、内容正常显示、私信正常回复。</p>'
+                + '<p>异常情况（需要记录）：页面加载缓慢、音频不播放、按钮无反应、内容显示错误、私信无回复、页面卡顿、页面崩溃、浏览器报错。</p>'
+                + '<p>恐怖情况（需要感受）：你觉得“不对”“奇怪”“被知道”“被看着”“被记住”“被归档”“自己不是自己”。</p>'
+                + '<p>卡关情况（需要记录）：如果卡关超过 10 分钟，可以查看源代码、使用 F12、联系开发者，但请记录你卡在哪里。</p>'
+                + '<h3>十三、反馈要求</h3>'
+                + '<p>必须反馈：测试时长、触发结局数量、触发结局名称、是否触发真结局、是否卡关、卡关位置、是否使用 F12、是否查看源代码。</p>'
+                + '<p>建议反馈：第一次感到“不对”的时刻、最恐怖的时刻、最不恐怖的时刻、是否感到被“它”知道、是否感到不安、是否想继续玩。</p>'
+                + '<h3>十四、测试者签名确认</h3>'
+                + '<p>我已阅读并理解以上所有注意事项。我确认：</p>'
+                + '<ul>'
+                + '<li>我没有光敏性癫痫病史</li>'
+                + '<li>我没有心脏病史</li>'
+                + '<li>我没有严重心理疾病史</li>'
+                + '<li>我年龄在 16 岁以上</li>'
+                + '<li>我已了解听力保护要求</li>'
+                + '<li>我已了解视觉疲劳警告</li>'
+                + '<li>我已了解隐私与数据须知</li>'
+                + '<li>我已了解内测保密须知</li>'
+                + '<li>我已了解测试环境要求</li>'
+                + '<li>我已了解测试流程</li>'
+                + '<li>我已了解测试规则</li>'
+                + '<li>我自愿参与本次测试</li>'
+                + '<li>我同意填写反馈表</li>'
+                + '<li>我同意开发者使用我的反馈</li>'
+                + '<li>我知道如果感到不适，应立即停止</li>'
+                + '</ul>'
+                + '<p>请在下方逐条勾选并签名。</p>';
+    </script>
+
+    <script src="js/storage.js"></script>
+        <script src="js/audio.js"></script>
+    <script src="js/fullscreen.js"></script>
+    <script src="js/tracker.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/horror.js"></script>
+    <script src="js/gate.js"></script>
+
+</body>
+</html>
