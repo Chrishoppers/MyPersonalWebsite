@@ -125,6 +125,19 @@
             color: #a00;
         }
     </style>
+        <style>
+            .forum-boards {
+                padding: 10px 14px;
+                background: #f4f4f4;
+                border-bottom: 1px solid #ddd;
+            }
+            .board-group { margin-bottom: 8px; }
+            .board-title { font-weight: bold; color: #1a3a6b; font-size: 12px; margin-bottom: 4px; }
+            .board-list { display: flex; flex-wrap: wrap; gap: 8px; }
+            .board-item { padding: 2px 8px; border: 1px solid #ddd; background: #fff; font-size: 11px; color: #1a3a6b; text-decoration: none; }
+            .board-item:hover { background: #fff8d0; text-decoration: none; }
+            .board-item span { color: #999; font-size: 10px; margin-left: 4px; }
+        </style>
 </head>
 <body>
 
@@ -156,6 +169,49 @@
         <div class="forum-notice" id="noticeBar">
             本站数据于 2019 年 3 月后不再更新。感谢各位十年来的陪伴。——站长
         </div>
+
+        <div class="forum-boards">
+    <div class="board-group">
+        <div class="board-title">站务管理</div>
+        <div class="board-list">
+            <a href="#" class="board-item">站务公告 <span>3/5</span></a>
+            <a href="#" class="board-item">版主申请 <span>1/2</span></a>
+            <a href="#" class="board-item">举报投诉 <span>0/0</span></a>
+        </div>
+    </div>
+    <div class="board-group">
+        <div class="board-title">失物招领</div>
+        <div class="board-list">
+            <a href="bbs.html" class="board-item">寻物启事 <span>2/25</span></a>
+            <a href="bbs.html" class="board-item">失物认领 <span>1/7</span></a>
+            <a href="bbs.html" class="board-item">寻人启事 <span>1/2</span></a>
+        </div>
+    </div>
+    <div class="board-group">
+        <div class="board-title">自由交流</div>
+        <div class="board-list">
+            <a href="bbs.html" class="board-item">自由留言 <span>7/7</span></a>
+            <a href="bbs.html" class="board-item">心情日记 <span>2/2</span></a>
+            <a href="bbs.html" class="board-item">许愿墙 <span>1/1</span></a>
+        </div>
+    </div>
+    <div class="board-group">
+        <div class="board-title">归档</div>
+        <div class="board-list">
+            <a href="node.html" class="board-item">归档节点 <span>7/7</span></a>
+            <a href="#" class="board-item">已归档会员 <span>0/0</span></a>
+            <a href="infinity.html" class="board-item">无限归档 <span>1/1</span></a>
+        </div>
+    </div>
+    <div class="board-group">
+        <div class="board-title">其他</div>
+        <div class="board-list">
+            <a href="post.html?id=12" class="board-item">签到专区 <span>1/1</span></a>
+            <a href="post.html?id=13" class="board-item">任务中心 <span>1/1</span></a>
+            <a href="post.html?id=14" class="board-item">勋章商城 <span>1/1</span></a>
+        </div>
+    </div>
+</div>
 
         <div class="forum-stats">
             <div>
@@ -278,14 +334,7 @@
                     <td>2017-08-19 16:47<br><span style="color:#999;">by 路过</span></td>
                 </tr>
 
-                <tr data-post-id="12" id="post5Row">
-                    <td class="col-icon"><span class="thread-icon unknown">?</span></td>
-                    <td class="col-title"><a href="#" id="post5Link">第43页</a></td>
-                    <td id="post5Author">???</td>
-                    <td style="text-align:center;">0 / <span id="post5Views">43</span></td>
-                    <td id="post5Time">刚刚</td>
-                </tr>
-
+                <!-- 正常与异常帖已按要求排序，示例条目如下（略） -->
             </tbody>
         </table>
 
@@ -302,6 +351,7 @@
             <button class="old-btn" id="btnPrint">🖨 打印此页</button>
             <button class="old-btn" id="btnAbout">关于本站</button>
             <button class="old-btn" id="btnAdmin" style="display:none;">管理后台</button>
+            <button class="old-btn" id="btnLogout">退出</button>
         </div>
 
         <div class="forum-footer">

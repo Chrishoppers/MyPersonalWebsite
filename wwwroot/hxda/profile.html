@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+    <title>林默的个人主页｜回响档案</title>
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="css/main.css">
+    <style>
+        .profile-page {
+            max-width: 720px;
+            margin: 30px auto;
+            padding: 0 10px;
+        }
+
+        .profile-card {
+            background: #f4f4f4;
+            border: 2px solid #888;
+            font-family: "SimSun", "宋体", serif;
+        }
+
+        .profile-titlebar {
+            background: #1a3a6b;
+            background-image: linear-gradient(to bottom, #4a6fa5 0%, #1a3a6b 100%);
+            color: #fff;
+            padding: 8px 14px;
+            font-weight: bold;
+            font-size: 14px;
+            border-bottom: 1px solid #0d1b3e;
+        }
+
+        .profile-body {
+            padding: 20px 24px;
+        }
+
+        .profile-main {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            align-items: flex-start;
+        }
+
+        .profile-avatar-wrap {
+            flex-shrink: 0;
+            text-align: center;
+            width: 120px;
+        }
+
+        .profile-avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 4px;
+            border: 2px solid #888;
+            background: #ddd;
+            object-fit: cover;
+            display: block;
+            margin: 0 auto 8px;
+        }
+
+        .profile-group {
+            font-size: 11px;
+            color: #666;
+            margin-top: 4px;
+        }
+
+        .profile-info {
+            flex: 1;
+            min-width: 240px;
+        }
+
+        .profile-name {
+            font-size: 18px;
+            font-weight: bold;
+            color: #1a3a6b;
+            margin-bottom: 4px;
+        }
+
+        .profile-status {
+            font-size: 11px;
+            color: #888;
+            margin-bottom: 12px;
+        }
+
+        .profile-stats {
+            border-top: 1px dashed #ccc;
+            border-bottom: 1px dashed #ccc;
+            padding: 10px 0;
+            margin: 10px 0;
+        }
+
+        .profile-stats .stat-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 3px 0;
+            font-size: 12px;
+            border-bottom: 1px dotted #eee;
+        }
+
+        .profile-stats .stat-item:last-child {
+            border-bottom: none;
+        }
+
+        .profile-stats .stat-item .k {
+            color: #888;
+        }
+
+        .profile-stats .stat-item .v {
+            color: #333;
+            font-weight: bold;
+        }
+
+        .profile-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 14px;
+        }
+
+        .profile-actions .old-btn {
+            padding: 5px 18px;
+            font-size: 12px;
+        }
+
+        .profile-signature {
+            margin-top: 16px;
+            padding-top: 14px;
+            border-top: 1px dashed #ccc;
+            font-size: 12px;
+            color: #666;
+            line-height: 1.9;
+        }
+
+        .profile-signature .label {
+            color: #999;
+            margin-bottom: 4px;
+            font-size: 11px;
+        }
+
+        .profile-signature .content {
+            background: #fafafa;
+            border: 1px solid #ddd;
+            padding: 8px 12px;
+            font-family: "SimSun", "宋体", serif;
+            color: #333;
+            white-space: pre-wrap;
+        }
+
+        .profile-footer {
+            padding: 14px;
+            text-align: center;
+            border-top: 1px solid #ddd;
+            background: #ececec;
+        }
+
+        .profile-footer a {
+            display: inline-block;
+            padding: 6px 20px;
+            border: 2px outset #bbb;
+            background: #e6e6e6;
+            color: #333;
+            text-decoration: none;
+            font-size: 12px;
+        }
+
+        .profile-footer a:hover {
+            background: #f0f0f0;
+            text-decoration: none;
+        }
+
+        .profile-tip {
+            margin-top: 12px;
+            font-size: 11px;
+            color: #999;
+            line-height: 1.7;
+            font-family: "Courier New", monospace;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="forum-wrap" style="min-height: auto;">
+
+        <div class="forum-head">
+            <div class="head-logo"></div>
+            <div class="head-right">
+                <div class="user-info" id="userInfo">游客</div>
+                <div>最后更新：2019-03-01 00:00</div>
+            </div>
+        </div>
+
+        <div class="forum-nav">
+            <a href="bbs.html">← 返回论坛</a>
+            <a href="bbs.html">首页</a>
+            <a href="post.html?id=1">帖子</a>
+            <a href="profile.html?id=lin" class="active">林默</a>
+        </div>
+
+        <div class="forum-notice">
+            本站数据于 2019 年 3 月后不再更新。感谢各位十年来的陪伴。——站长
+        </div>
+
+        <div class="profile-page">
+            <div class="profile-card" id="profileCard">
+
+                <div class="profile-titlebar">👤 林默 的个人资料</div>
+
+                <div class="profile-body">
+
+                    <div class="profile-main">
+
+                        <div class="profile-avatar-wrap">
+                            <img src="img/avatar_lin.png" alt="林默"
+                                 class="profile-avatar"
+                                 onerror="this.style.display='none';this.parentNode.insertAdjacentHTML('beforeend','<div style=\'width:100px;height:100px;border:2px solid #888;background:#ddd;margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-size:32px;color:#666;\'>林</div>')">
+                            <div class="profile-group" id="profileGroup">新手上路</div>
+                        </div>
+
+                        <div class="profile-info">
+                            <div class="profile-name" id="profileName">林默</div>
+                            <div class="profile-status" id="profileStatus">当前在线：否</div>
+
+                            <div class="profile-stats">
+                                <div class="stat-item"><span class="k">帖子</span><span class="v" id="statPosts">23</span></div>
+                                <div class="stat-item"><span class="k">积分</span><span class="v" id="statPoints">46</span></div>
+                                <div class="stat-item"><span class="k">注册时间</span><span class="v" id="statReg">2009-03-17</span></div>
+                                <div class="stat-item"><span class="k">最后登录</span><span class="v" id="statLast">2019-02-14 23:47</span></div>
+                                <div class="stat-item"><span class="k">用户组</span><span class="v" id="statGroup">新手上路</span></div>
+                            </div>
+
+                            <div class="profile-actions">
+                                <button class="old-btn old-btn-primary" id="btnPM">💬 发送短消息</button>
+                                <button class="old-btn" id="btnAddFriend">➕ 加为好友</button>
+                                <button class="old-btn" id="btnViewPosts">📄 查看帖子</button>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="profile-signature">
+                        <div class="label">签名：</div>
+                        <div class="content" id="signatureContent">如果你见过一本黑色皮面笔记本，请联系我。\n封面内侧写了一个"回"字。</div>
+                    </div>
+
+                    <div class="profile-tip" id="profileTip">
+                        最后活跃：2019-02-14 23:47 ｜ 距离现在已经 13 年。
+                    </div>
+
+                </div>
+
+                <div class="profile-footer">
+                    <a href="bbs.html">← 返回论坛首页</a>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+    <script src="js/storage.js"></script>
+    <script src="js/report.js"></script>
+    <script src="js/audio.js"></script>
+    <script src="js/fullscreen.js"></script>
+    <script src="js/tracker.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/horror.js"></script>
+
+    <script>
+(function () {
+    'use strict';
+
+    function escapeHtml(s) {
+        var d = document.createElement('div');
+        d.textContent = String(s);
+        return d.innerHTML;
+    }
+
+    /* ============================================================
+       URL 参数
+       ============================================================ */
+    var params = new URLSearchParams(window.location.search);
+    var targetId = params.get('id') || 'lin';
+
+    /* ============================================================
+       顶部用户名
+       ============================================================ */
+    (function () {
+        var userInfo = document.getElementById('userInfo');
+        if (userInfo) {
+            var name = Store.get('gate_signature_name', '') || Store.get('visitor_name', '');
+            if (name) userInfo.innerHTML = '<b>' + escapeHtml(name) + '</b>';
+        }
+    })();
+
+    /* ============================================================
+       全屏按钮
+       ============================================================ */
+    if (window.FullscreenHelper && !window.FullscreenHelper.isMobile) {
+        var fsBtn = document.createElement('button');
+        fsBtn.textContent = '⛶';
+        fsBtn.title = '进入全屏';
+        fsBtn.style.cssText =
+            'position:fixed;bottom:14px;left:18px;' +
+            'color:#666;font-family:monospace;font-size:14px;' +
+            'cursor:pointer;background:none;border:none;padding:4px 8px;' +
+            'z-index:99998;';
+        fsBtn.addEventListener('click', function () {
+            if (window.FullscreenHelper.isInFullscreen()) {
+                window.FullscreenHelper.exit();
+            } else {
+                window.FullscreenHelper.request();
+            }
+        });
+        document.body.appendChild(fsBtn);
+    }
+
+    /* ============================================================
+       玩家数据
+       ============================================================ */
+    var PROFILES = {
+        'lin': {
+            name: '林默',
+            group: '新手上路',
+            posts: 23,
+            points: 46,
+            regDate: '2009-03-17',
+            lastLogin: '2019-02-14 23:47',
+            online: false,
+            signature: '如果你见过一本黑色皮面笔记本，请联系我。\n封面内侧写了一个"回"字。',
+            tip: '最后活跃：2019-02-14 23:47 ｜ 距离现在已经 13 年。',
+            pmStage: 1
+        }
+    };
+
+    var profile = PROFILES[targetId];
+
+    if (!profile) {
+        document.getElementById('profileCard').innerHTML =
+            '<div class="profile-titlebar">用户不存在</div>' +
+            '<div class="profile-body" style="text-align:center;padding:40px;">' +
+            '<p style="color:#888;">没有找到这个用户。</p>' +
+            '<p style="margin-top:20px;"><a href="bbs.html" style="color:#1a3a6b;">← 返回论坛</a></p>' +
+            '</div>';
+        return;
+    }
+
+    /* ============================================================
+       填充数据
+       ============================================================ */
+    document.getElementById('profileName').textContent = profile.name;
+    document.getElementById('profileGroup').textContent = profile.group;
+    document.getElementById('statPosts').textContent = profile.posts;
+    document.getElementById('statPoints').textContent = profile.points;
+    document.getElementById('statReg').textContent = profile.regDate;
+    document.getElementById('statLast').textContent = profile.lastLogin;
+    document.getElementById('statGroup').textContent = profile.group;
+
+    var statusEl = document.getElementById('profileStatus');
+    if (profile.online) {
+        statusEl.textContent = '当前在线：是';
+        statusEl.style.color = '#060';
+    } else {
+        statusEl.textContent = '当前在线：否';
+        statusEl.style.color = '#888';
+    }
+
+    var sigEl = document.getElementById('signatureContent');
+    sigEl.innerHTML = escapeHtml(profile.signature).replace(/\n/g, '<br>');
+
+    document.getElementById('profileTip').textContent = profile.tip;
+
+    /* ============================================================
+       按钮 1：发送短消息
+       ============================================================ */
+    document.getElementById('btnPM').addEventListener('click', function () {
+        if (window.GameAudio) GameAudio.once('click', { volume: 0.15 });
+        window.location.href = 'pm.html';
+    });
+
+    /* ============================================================
+       按钮 2：加为好友
+       ============================================================ */
+    document.getElementById('btnAddFriend').addEventListener('click', function () {
+        if (window.GameAudio) GameAudio.once('click', { volume: 0.15 });
+
+        var clicked = Store.get('profile_add_friend_clicked', false);
+
+        if (!clicked) {
+            Store.set('profile_add_friend_clicked', true);
+            uiAlert('加为好友', '好友申请已发送。\n\n林默的最后登录时间：2019-02-14 23:47。\n他可能不会看到。');
+        } else {
+            uiAlert('加为好友', '你已经发送过申请。\n\n林默不在。');
+        }
+    });
+
+    /* ============================================================
+       按钮 3：查看帖子
+       ============================================================ */
+    document.getElementById('btnViewPosts').addEventListener('click', function () {
+        if (window.GameAudio) GameAudio.once('click', { volume: 0.15 });
+        window.location.href = 'post.html?id=1';
+    });
+
+    /* ============================================================
+       上报
+       ============================================================ */
+    if (window.HxdaReport && window.HxdaReport.event) {
+        HxdaReport.event('profile_view', { target: targetId });
+    }
+
+    /* ============================================================
+       背景音：门禁通过后已在播
+       ============================================================ */
+
+})();
+    </script>
+
+</body>
+</html>
