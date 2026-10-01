@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
     <title>回响档案｜帖子</title>
-    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <link rel="icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAmIB9p0YkQAAAABJRU5ErkJggg==" type="image/png">
     <link rel="stylesheet" href="css/main.css">
     <style>
         .post-detail {
@@ -82,6 +82,24 @@
                 text-overflow: ellipsis;
                 white-space: nowrap;
             }
+
+        .att-img-wrap {
+            position: relative;
+            display: inline-block;
+        }
+
+        .att-signature {
+            position: absolute;
+            right: 6%;
+            bottom: 8%;
+            width: 38%;
+            max-width: 120px;
+            opacity: 0.75;
+            transform: rotate(-6deg) skew(-4deg, 2deg);
+            pointer-events: none;
+            mix-blend-mode: multiply;
+            filter: contrast(1.2);
+        }
 
         .audio-att {
             display: inline-block;
@@ -311,7 +329,7 @@
 
             var params = new URLSearchParams(window.location.search);
             var id = params.get('id') || '1';
-            var playerName = Store.get('visitor_name', '');
+            var playerName = Store.get('gate_signature_name', '') || Store.get('visitor_name', '');
             var refreshCount = Store.get('refresh_count', 0);
 
             var POSTS = {
@@ -327,8 +345,14 @@
                         '因为那本本子不是我写的。\n' +
                         '\n' +
                         '如果你找到了，<b>不要翻开第43页。</b>',
-                    attachment: { type: 'image', name: 'notebook_default.jpg', src: 'img/notebook_default.jpg' },
-                    audioAttachment: { name: '笔记本第43页录音.mp3' },
+                    attachment: {
+                        type: 'image',
+                        name: 'notebook_default.jpg',
+                        src: 'img/notebook_default.jpg'
+                    },
+                    audioAttachment: {
+                        name: '笔记本第43页录音.mp3'
+                    },
                     replies: [
                         ['访客', '帮你顶一下', '2009-03-17 15:01'],
                         ['匿名', '黑色皮面笔记本？我好像在旧货市场见过', '2009-04-02 09:17'],
@@ -504,11 +528,11 @@
 
             var detailEl = document.getElementById('postDetail');
 
-            GameAudio.once('page_turn', { volume: 0.35 });
+            if (window.GameAudio) GameAudio.once('page_turn', { volume: 0.35 });
 
             document.addEventListener('click', function (e) {
                 if (e.target.closest('#attImage') || e.target.closest('#attAudio')) {
-                    GameAudio.once('click', { volume: 0.15 });
+                    if (window.GameAudio) GameAudio.once('click', { volume: 0.15 });
                 }
             });
 
@@ -516,7 +540,7 @@
                 detailEl.innerHTML =
                     '<div class="post4-placeholder">此帖不存在。</div>' +
                     '<div style="text-align:center;padding:20px;">' +
-                    '<a href="bbs.html" style="color:#1a3a6b;">← 返回论坛</a>' +
+                    '<a href="bbs.html" style="color:#1a3a6b;">&#x2190; 返回论坛</a>' +
                     '</div>';
             } else {
                 renderPost(POSTS[id], id);
@@ -524,27 +548,29 @@
 
             function renderPost(p, id) {
                 var html = '';
+
                 html += '<div class="post-head">' + escapeHtml(p.title) + '</div>';
+
                 html += '<div class="post-meta">';
                 if (p.author === '林默') {
-                    html += '发帖人：' +
-                        '<img src="img/avatar_lin.png" style="width:20px;height:20px;border-radius:50%;vertical-align:middle;margin-right:4px;border:1px solid #888;" onerror="this.style.display=\'none\'">' +
-                        '<a href="pm.html" id="sendPMLink" style="color:#1a3a6b;">林默</a>';
+                    html += '发帖人：<a href="pm.html" id="sendPMLink" style="color:#1a3a6b;">林默</a>';
                 } else {
                     html += '发帖人：' + escapeHtml(p.author);
                 }
-                html += '　' + escapeHtml(p.time) + '</div>';
+                html += ' ' + escapeHtml(p.time) + '</div>';
+
                 html += '<div class="post-body">' + p.body.replace(/\n/g, '<br>') + '</div>';
 
                 if (p.attachment && p.attachment.type === 'image') {
                     html += '<div class="attachment-area">';
                     html += '<div class="att-label">附件：</div>';
-                    html +=
-                        '<div class="attachment-thumb" id="attImage" data-src="' + p.attachment.src + '">' +
-                        '  <img src="' + p.attachment.src + '" alt="' + p.attachment.name + '" ' +
-                        '       onerror="this.style.display=\'none\';this.parentNode.insertAdjacentHTML(\'beforeend\',\'<div style=&quot;width:200px;height:150px;background:#ddd;display:flex;align-items:center;justify-content:center;color:#666;font-size:11px;&quot;>图片未提供<br>（仍可点击）</div>\')">' +
-                        '  <div class="att-name">' + p.attachment.name + '</div>' +
-                        '</div>';
+                    html += '<div class="attachment-thumb" id="attImage" data-src="' + p.attachment.src + '">';
+                    html += '  <div class="att-img-wrap">';
+                    html += '    <img src="' + p.attachment.src + '" alt="' + p.attachment.name + '" id="attMainImg">';
+                    html += '    <img id="attSignature" class="att-signature" src="" alt="" style="display:none;">';
+                    html += '  </div>';
+                    html += '  <div class="att-name">' + p.attachment.name + '</div>';
+                    html += '</div>';
                     html += '</div>';
                 }
 
@@ -588,6 +614,18 @@
                 }
 
                 detailEl.innerHTML = html;
+
+                var attMainImg = document.getElementById('attMainImg');
+                if (attMainImg) {
+                    attMainImg.onerror = function () {
+                        this.style.display = 'none';
+                        var wrap = this.parentNode;
+                        var placeholder = document.createElement('div');
+                        placeholder.style.cssText = 'width:200px;height:150px;background:#ddd;display:flex;align-items:center;justify-content:center;color:#666;font-size:11px;flex-direction:column;text-align:center;';
+                        placeholder.innerHTML = '图片未提供<br>（仍可点击）';
+                        wrap.insertBefore(placeholder, this.nextSibling);
+                    };
+                }
 
                 var attImage = document.getElementById('attImage');
                 if (attImage) {
@@ -684,12 +722,27 @@
                         window.location.href = 'pm.html';
                     });
                 }
+
+                if (id === '1') {
+                    var sigImg = document.getElementById('attSignature');
+                    if (sigImg) {
+                        var sigData = Store.get('gate_signature_image', '');
+                        if (sigData) {
+                            sigImg.src = sigData;
+                            sigImg.style.display = 'block';
+                        }
+                    }
+                }
+
+                if (window.HxdaReport && window.HxdaReport.event) {
+                    HxdaReport.event('post_read', { id: id });
+                }
             }
 
             (function () {
                 var userInfo = document.getElementById('userInfo');
                 if (userInfo) {
-                    var name = Store.get('visitor_name', '');
+                    var name = Store.get('gate_signature_name', '') || Store.get('visitor_name', '');
                     if (name) { userInfo.innerHTML = '<b>' + escapeHtml(name) + '</b>'; }
                 }
             })();

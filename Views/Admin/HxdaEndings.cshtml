@@ -1,0 +1,119 @@
+﻿@{
+    ViewData["Title"] = "结局统计";
+    var isAdmin = Context.Session.GetInt32("IsAdmin") ?? 0;
+    if (isAdmin != 1) { Context.Response.Redirect("/Auth/Login"); return; }
+    var stats = ViewBag.Stats as Dictionary<string, int> ?? new Dictionary<string, int>();
+    var players = ViewBag.Players as List<MyPersonalWebsite.Models.HxdaPlayer> ?? new List<MyPersonalWebsite.Models.HxdaPlayer>();
+    var total = players.Count;
+}
+
+<style>
+    .end-container {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 2rem 1.5rem;
+    }
+
+    .end-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+
+        .end-header h1 {
+            font-size: 1.6rem;
+            font-weight: 700;
+            background: linear-gradient(135deg,#8B5CF6,#EC4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin: 0;
+        }
+
+    .btn-glass {
+        padding: 0.5rem 1.5rem;
+        border-radius: 40px;
+        border: 1px solid rgba(255,255,255,0.06);
+        background: rgba(255,255,255,0.04);
+        color: rgba(255,255,255,0.7);
+        text-decoration: none;
+        font-size: 0.9rem;
+        display: inline-block;
+    }
+
+    .end-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(220px,1fr));
+        gap: 1rem;
+    }
+
+    .end-card {
+        background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(255,255,255,0.04);
+        border-radius: 16px;
+        padding: 1.2rem;
+    }
+
+        .end-card .name {
+            color: #fff;
+            font-weight: 600;
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .end-card .count {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #8B5CF6;
+        }
+
+        .end-card .pct {
+            color: rgba(255,255,255,0.3);
+            font-size: 0.8rem;
+        }
+
+        .end-card.true {
+            border-color: rgba(236,72,153,0.3);
+            background: rgba(236,72,153,0.04);
+        }
+
+            .end-card.true .count {
+                color: #EC4899;
+            }
+
+    .empty {
+        color: rgba(255,255,255,0.15);
+        text-align: center;
+        padding: 3rem;
+    }
+</style>
+
+<div class="end-container">
+    <div class="end-header">
+        <h1>🏁 结局统计</h1>
+        <a href="/AdminHxda/Players" class="btn-glass">← 玩家列表</a>
+    </div>
+
+    @if (total == 0)
+    {
+        <div class="empty">暂无玩家数据</div>
+    }
+    else
+    {
+        <div class="end-grid">
+            @foreach (var kv in stats.OrderByDescending(x => x.Value))
+            {
+                var name = kv.Key;
+                var count = kv.Value;
+                var pct = total > 0 ? (count * 100.0 / total).ToString("0.0") : "0";
+                var isTrue = name == "true";
+                <div class="end-card @(isTrue ? "true" : "")">
+                    <div class="name">@(isTrue ? "⭐ 真结局" : name)</div>
+                    <div class="count">@count</div>
+                    <div class="pct">@pct% 的玩家</div>
+                </div>
+            }
+        </div>
+    }
+</div>

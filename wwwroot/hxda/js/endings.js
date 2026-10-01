@@ -154,6 +154,11 @@ function endingArchive() {
     Store.set('ending_archive', true);
     endingPush('archive');
 
+    /* 新增上报 */
+    if (window.HxdaReport && window.HxdaReport.event) {
+        HxdaReport.event('ending', { name: 'archive' });
+    }
+
     if (window.GameAudio) GameAudio.fadeIn('heartbeat', 2000, 0.25);
 
     endingClearAll();
@@ -228,6 +233,11 @@ function endingLookback() {
     Store.set('ending_lookback', true);
     endingPush('lookback');
 
+    /* 新增上报 */
+    if (window.HxdaReport && window.HxdaReport.event) {
+        HxdaReport.event('ending', { name: 'lookback' });
+    }
+
     if (window.GameAudio) GameAudio.once('knock', { volume: 0.5 });
 
     endingClearAll();
@@ -284,6 +294,11 @@ function endingDisconnect() {
     Store.set('ending_disconnect', true);
     endingPush('disconnect');
 
+    /* 新增上报 */
+    if (window.HxdaReport && window.HxdaReport.event) {
+        HxdaReport.event('ending', { name: 'disconnect' });
+    }
+
     if (window.GameAudio) GameAudio.once('phone_ring', { volume: 0.5 });
 
     endingClearAll();
@@ -306,6 +321,11 @@ function endingDisconnect() {
 function endingRefused() {
     Store.set('ending_refused', true);
     endingPush('refused');
+
+    /* 新增上报 */
+    if (window.HxdaReport && window.HxdaReport.event) {
+        HxdaReport.event('ending', { name: 'refused' });
+    }
 
     endingClearAll();
 
@@ -363,6 +383,11 @@ function endingRemembered() {
     Store.set('ending_remembered', true);
     endingPush('remembered');
 
+    /* 新增上报 */
+    if (window.HxdaReport && window.HxdaReport.event) {
+        HxdaReport.event('ending', { name: 'remembered' });
+    }
+
     if (window.GameAudio) GameAudio.fadeIn('heartbeat', 2000, 0.2);
 
     endingClearAll();
@@ -407,6 +432,11 @@ function endingTogether() {
     Store.set('ending_together', true);
     endingPush('together');
 
+    /* 新增上報 */
+    if (window.HxdaReport && window.HxdaReport.event) {
+        HxdaReport.event('ending', { name: 'together' });
+    }
+
     endingClearAll();
 
     endingShowFullscreen(
@@ -429,6 +459,11 @@ function endingTogether() {
 function endingTrue() {
     Store.set('ending_true', true);
     endingPush('true');
+
+    /* 新增上報 */
+    if (window.HxdaReport && window.HxdaReport.event) {
+        HxdaReport.event('ending', { name: 'true' });
+    }
 
     if (window.GameAudio) GameAudio.fadeIn('heartbeat', 2000, 0.25);
 

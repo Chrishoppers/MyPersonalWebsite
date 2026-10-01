@@ -120,7 +120,8 @@
                 margin: 0 4px;
             }
 
-        body[data-attention-level="extreme"] .post-table tbody tr .col-title a {
+        .forum-wrap[data-attention-level="extreme"] .post-table tbody tr .col-title a,
+        body[data-attention-level="extreme"] .forum-wrap .post-table tbody tr .col-title a {
             color: #a00;
         }
     </style>
@@ -317,6 +318,7 @@
     </div>
 
     <script src="js/storage.js"></script>
+    <script src="js/report.js"></script>
     <script src="js/audio.js"></script>
     <script src="js/fullscreen.js"></script>
     <script src="js/tracker.js"></script>
@@ -329,14 +331,8 @@
             'use strict';
 
             document.querySelectorAll('.post-table .col-title a').forEach(function (a) {
-                var t = null;
-                a.addEventListener('mouseenter', function () {
-                    t = setTimeout(function () {
-                        GameAudio.once('click', { volume: 0.08 });
-                    }, 1000);
-                });
-                a.addEventListener('mouseleave', function () { clearTimeout(t); });
                 a.addEventListener('click', function () {
+                    GameAudio.once('click', { volume: 0.12 });
                     GameAudio.once('page_turn', { volume: 0.35 });
                 });
             });

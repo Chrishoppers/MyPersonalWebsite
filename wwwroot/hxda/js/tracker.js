@@ -28,17 +28,27 @@
                         v >= 11 ? 'mid' :
                             v >= 6 ? 'low' : 'none';
 
-        document.body.dataset.attention = String(v);
-        document.body.dataset.attentionLevel = level;
+            document.body.dataset.attention = String(v);
+            document.body.dataset.attentionLevel = level;
 
-        if (v >= 21 && !document.body.classList.contains('dark-mode')) {
-            document.body.classList.add('dark-mode');
+            /* dark-mode 只改颜色，不改 transform / filter，可以留 body */
+            if (v >= 21 && !document.body.classList.contains('dark-mode')) {
+                document.body.classList.add('dark-mode');
+            }
+
+            /* transform / filter 类的效果，移到 .forum-wrap */
+            var wrap = document.querySelector('.forum-wrap');
+            if (wrap) {
+                wrap.dataset.attention = String(v);
+                wrap.dataset.attentionLevel = level;
+
+                if (v >= 16) wrap.classList.add('attention-drift');
+                else wrap.classList.remove('attention-drift');
+
+                if (v >= 26) wrap.classList.add('attention-critical');
+                else wrap.classList.remove('attention-critical');
+            }
         }
-        if (v >= 16) document.body.classList.add('attention-drift');
-        else document.body.classList.remove('attention-drift');
-        if (v >= 26) document.body.classList.add('attention-critical');
-        else document.body.classList.remove('attention-critical');
-    }
 
     updateAttentionLevel(Store.get('attention', 0));
     setInterval(function () {

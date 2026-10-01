@@ -85,6 +85,7 @@
     <button id="fsBtn" title="进入全屏">⛶</button>
 
     <script src="js/storage.js"></script>
+    <script src="js/report.js"></script>
     <script src="js/fullscreen.js"></script>
     <script src="js/tracker.js"></script>
 
@@ -104,6 +105,11 @@
 
             Store.set('infinity_opened', true);
             addAttention(3);
+
+            /* 新增上报 */
+            if (window.HxdaReport && window.HxdaReport.event) {
+                HxdaReport.event('infinity_open', {});
+            }
 
             function appendBlock() {
                 for (var i = 0; i < 20; i++) {

@@ -147,7 +147,7 @@
                 goMic();
             });
             document.getElementById('btnTimeHome').addEventListener('click', function () {
-                window.location.href = 'index.html';
+                window.location.href = 'https://chris-hopper.org';
             });
         } else {
             stepTime.innerHTML =
@@ -167,7 +167,7 @@
 
             document.getElementById('btnTimeRetry').addEventListener('click', renderTimeStep);
             document.getElementById('btnTimeHome').addEventListener('click', function () {
-                window.location.href = 'index.html';
+                window.location.href = 'https://chris-hopper.org';
             });
         }
     }
@@ -220,7 +220,7 @@
         document.getElementById('btnMicStart').addEventListener('click', startMicTest);
         document.getElementById('btnMicHome').addEventListener('click', function () {
             stopMic();
-            window.location.href = 'index.html';
+            window.location.href = 'https://chris-hopper.org';
         });
     }
 
@@ -399,7 +399,7 @@
         });
 
         document.getElementById('btnNoticeHome').addEventListener('click', function () {
-            window.location.href = 'index.html';
+            window.location.href = 'https://chris-hopper.org';
         });
     }
 
@@ -502,11 +502,17 @@
             Store.set('gate_signature_date', new Date().toISOString());
             Store.set('gate_passed', true);
             if (window.GameAudio) GameAudio.once('page_turn', { volume: 0.3 });
+
+            try {
+                var dataURL = canvas.toDataURL('image/png');
+                Store.set('gate_signature_image', dataURL);
+            } catch (e) {}
+
             goPass();
         });
 
         document.getElementById('btnSignHome').addEventListener('click', function () {
-            window.location.href = 'index.html';
+            window.location.href = 'https://chris-hopper.org';
         });
     }
 
@@ -515,18 +521,52 @@
        ============================================================ */
     function goPass() {
         showStep(stepPass);
-        stepPass.innerHTML =
-            '<div class="gate-box">' +
-            '  <div class="gate-head">通过</div>' +
-            '  <div class="gate-body">' +
-            '    <p>环境测试与须知确认已完成。</p>' +
-            '    <p>正在进入档案...</p>' +
-            '  </div>' +
-            '</div>';
 
-        setTimeout(function () {
+        stepPass.innerHTML =
+            '<div class="gate-pass-intro" id="gatePassIntro"></div>' +
+            '<button class="gate-skip-intro" id="gateSkipIntro">跳过 »</button>';
+
+        var introEl = document.getElementById('gatePassIntro');
+        var skipBtn = document.getElementById('gateSkipIntro');
+
+        var INTRO_TEXT =
+            '档案已打开。\n' +
+            '你是第 8 个。\n' +
+            '在你之前，有 7 个人留下了名字。\n' +
+            '他们都还在。\n' +
+            '现在，轮到你了。';
+
+        var index = 0;
+
+        function type() {
+            if (index < INTRO_TEXT.length) {
+                var ch = document.createElement('span');
+                if (INTRO_TEXT[index] === '\n') {
+                    ch.innerHTML = '<br>';
+                } else {
+                    ch.textContent = INTRO_TEXT[index];
+                }
+                introEl.appendChild(ch);
+                index++;
+
+                var lastCh = INTRO_TEXT[index - 1];
+                var delay = 60;
+                if (lastCh === '。' || lastCh === '，') delay = 280;
+                else if (lastCh === '\n') delay = 500;
+
+                setTimeout(type, delay);
+            } else {
+                setTimeout(function () {
+                    window.location.href = 'welcome.html';
+                }, 2000);
+            }
+        }
+
+        skipBtn.addEventListener('click', function () {
             window.location.href = 'welcome.html';
-        }, 1500);
+        });
+
+        setTimeout(type, 800);
     }
 
     /* ============================================================
@@ -603,6 +643,7 @@
         Store.set('gate_read_checked', []);
         Store.set('gate_signature_name', '');
         Store.set('gate_signature_drawn', false);
+        Store.set('gate_signature_image', '');
         Store.set('gate_passed', false);
 
         /* --- 重置注意值（A+B 方案） --- */
@@ -626,7 +667,7 @@
         var btnHome = document.getElementById('btnOrientationHome');
         if (btnHome) {
             btnHome.addEventListener('click', function () {
-                window.location.href = 'index.html';
+                window.location.href = 'https://chris-hopper.org';
             });
         }
     });

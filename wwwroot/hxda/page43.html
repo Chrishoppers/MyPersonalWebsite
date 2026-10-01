@@ -126,6 +126,7 @@
     <button id="fsBtn" title="进入全屏">⛶</button>
 
     <script src="js/storage.js"></script>
+    <script src="js/report.js"></script>
     <script src="js/fullscreen.js"></script>
     <script src="js/tracker.js"></script>
     <script src="js/ui.js"></script>
@@ -187,6 +188,11 @@
             function handleSubmit() {
                 var v = (answerEl.value || '').trim();
 
+                /* 新增上报 */
+                if (window.HxdaReport && window.HxdaReport.event) {
+                    HxdaReport.event('page43_submit', { answer: v });
+                }
+
                 if (v === '有人吗') {
                     Store.set('ending_remembered', true);
                     if (window.GameAudio) GameAudio.once('phone_ring', { volume: 0.4 });
@@ -205,7 +211,7 @@
                     Store.set('ending_refused', true);
                     endingRefused();
                 }
-                else {
+
                     Store.set('ending_archive', true);
                     endingArchive();
                 }

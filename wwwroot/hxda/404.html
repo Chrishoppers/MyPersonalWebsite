@@ -92,6 +92,7 @@
     </div>
 
     <script src="js/storage.js"></script>
+    <script src="js/report.js"></script>
     <script src="js/fullscreen.js"></script>
     <script src="js/tracker.js"></script>
     <script src="js/ui.js"></script>
@@ -127,6 +128,11 @@
             visited.push(key || 'unknown');
             Store.set('visited_404', visited);
             Store.set('visited_404_count', Store.get('visited_404_count', 0) + 1);
+
+            /* 新增上报 */
+            if (window.HxdaReport && window.HxdaReport.event) {
+                HxdaReport.event('404', { path: key });
+            }
 
             function escapeHtml(s) {
                 var d = document.createElement('div');

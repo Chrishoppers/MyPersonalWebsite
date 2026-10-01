@@ -1,0 +1,287 @@
+﻿@model MyPersonalWebsite.Models.HxdaPlayer
+
+@{
+    ViewData["Title"] = "玩家详情";
+    var isAdmin = Context.Session.GetInt32("IsAdmin") ?? 0;
+    if (isAdmin != 1) { Context.Response.Redirect("/Auth/Login"); return; }
+    var events = ViewBag.Events as List<MyPersonalWebsite.Models.HxdaEvent> ?? new List<MyPersonalWebsite.Models.HxdaEvent>();
+}
+
+<style>
+    .hxda-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem 1.5rem;
+    }
+
+    .hxda-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+
+        .hxda-header h1 {
+            color: #fff;
+            font-size: 1.6rem;
+            margin: 0;
+        }
+
+    .btn-glass {
+        padding: 0.5rem 1.5rem;
+        border-radius: 40px;
+        border: 1px solid rgba(255,255,255,0.06);
+        background: rgba(255,255,255,0.04);
+        color: rgba(255,255,255,0.7);
+        text-decoration: none;
+        font-size: 0.9rem;
+        display: inline-block;
+    }
+
+    .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit,minmax(320px,1fr));
+        gap: 1.2rem;
+        margin-bottom: 1.2rem;
+    }
+
+    .card {
+        background: rgba(255,255,255,0.02);
+        border: 1px solid rgba(255,255,255,0.04);
+        border-radius: 16px;
+        padding: 1.2rem 1.4rem;
+    }
+
+        .card h3 {
+            color: #8B5CF6;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin: 0 0 0.8rem;
+            text-transform: uppercase;
+        }
+
+    .row {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.4rem 0;
+        border-bottom: 1px solid rgba(255,255,255,0.02);
+        font-size: 0.85rem;
+    }
+
+        .row:last-child {
+            border-bottom: none;
+        }
+
+        .row .k {
+            color: rgba(255,255,255,0.3);
+        }
+
+        .row .v {
+            color: rgba(255,255,255,0.8);
+            word-break: break-all;
+            text-align: right;
+            max-width: 60%;
+        }
+
+    .sig-img {
+        max-width: 100%;
+        background: #fff;
+        padding: 10px;
+        border-radius: 8px;
+    }
+
+    .pm-msg {
+        padding: 0.5rem 0.8rem;
+        margin-bottom: 0.4rem;
+        border-radius: 10px;
+        font-size: 0.85rem;
+    }
+
+        .pm-msg.lin {
+            background: rgba(160,0,0,0.06);
+            border-left: 2px solid rgba(160,0,0,0.3);
+        }
+
+        .pm-msg.me {
+            background: rgba(79,172,254,0.06);
+            border-left: 2px solid rgba(79,172,254,0.3);
+            text-align: right;
+        }
+
+        .pm-msg .who {
+            font-weight: bold;
+            color: rgba(255,255,255,0.5);
+            font-size: 0.75rem;
+            margin-bottom: 0.2rem;
+        }
+
+        .pm-msg .time {
+            font-size: 0.65rem;
+            color: rgba(255,255,255,0.2);
+            margin-left: 0.5rem;
+        }
+
+    .event-item {
+        padding: 0.4rem 0;
+        border-bottom: 1px solid rgba(255,255,255,0.02);
+        font-size: 0.8rem;
+    }
+
+        .event-item .type {
+            color: #4facfe;
+            font-weight: 600;
+        }
+
+        .event-item .data {
+            color: rgba(255,255,255,0.4);
+            margin-left: 0.5rem;
+        }
+
+        .event-item .time {
+            float: right;
+            color: rgba(255,255,255,0.2);
+            font-size: 0.7rem;
+        }
+
+    .badge {
+        display: inline-block;
+        padding: 0.15rem 0.7rem;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        margin-right: 0.3rem;
+    }
+
+    .badge-online {
+        background: rgba(40,167,69,0.15);
+        color: #28a745;
+    }
+
+    .badge-offline {
+        background: rgba(255,255,255,0.04);
+        color: rgba(255,255,255,0.3);
+    }
+
+    .badge-admin {
+        background: rgba(139,92,246,0.15);
+        color: #8B5CF6;
+    }
+</style>
+
+<div class="hxda-container">
+    <div class="hxda-header">
+        <h1>
+            👤 @(string.IsNullOrEmpty(Model.VisitorName) ? "无名" : Model.VisitorName)
+            @if (Model.IsOnlineNow)
+            {
+                <span class="badge badge-online">🟢 在线</span>
+            }
+            else
+            {
+
+                <span class="badge badge-offline">⚫ 离线</span>
+            }
+            @if (Model.AdminLoggedIn)
+            {
+                <span class="badge badge-admin">👑 管理员</span>
+            }
+        </h1>
+        <div>
+            <a href="/AdminHxda/Control?id=@Model.Id" class="btn-glass" style="background:rgba(255,193,7,0.08);color:#ffc107;">🎛️ 干预</a>
+            <a href="/AdminHxda/Replay?id=@Model.Id" class="btn-glass" style="margin-left:0.5rem;">🎬 回放</a>
+            <button onclick="delPlayer()" class="btn-glass" style="margin-left:0.5rem;background:rgba(220,53,69,0.08);border-color:rgba(220,53,69,0.08);color:#dc3545;">🗑️ 删除此玩家</button>
+            <a href="/AdminHxda/Players" class="btn-glass" style="margin-left:0.5rem;">← 返回列表</a>
+        </div>
+    </div>
+
+    <div class="grid">
+        <div class="card">
+            <h3>📋 基本信息</h3>
+            <div class="row"><span class="k">玩家 ID</span><span class="v" style="font-family:monospace;font-size:0.75rem;">@Model.Id</span></div>
+            <div class="row"><span class="k">昵称</span><span class="v">@(string.IsNullOrEmpty(Model.VisitorName) ? "无名" : Model.VisitorName)</span></div>
+            <div class="row"><span class="k">真实名字</span><span class="v">@(string.IsNullOrEmpty(Model.RealName) ? "—" : Model.RealName)</span></div>
+            <div class="row"><span class="k">签名日期</span><span class="v">@Model.SignatureDate</span></div>
+            <div class="row"><span class="k">创建时间</span><span class="v">@Model.CreatedAt</span></div>
+            <div class="row"><span class="k">最后在线</span><span class="v">@Model.LastSeenAt</span></div>
+            <div class="row"><span class="k">当前页面</span><span class="v" style="font-family:monospace;font-size:0.75rem;">@Model.CurrentPage</span></div>
+        </div>
+
+        <div class="card">
+            <h3>🎮 游戏进度</h3>
+            <div class="row"><span class="k">注意值</span><span class="v"><strong>@Model.Attention</strong></span></div>
+            <div class="row"><span class="k">刷新次数</span><span class="v">@Model.RefreshCount</span></div>
+            <div class="row"><span class="k">标签切换</span><span class="v">@Model.TabSwitches</span></div>
+            <div class="row"><span class="k">搜索次数</span><span class="v">@Model.SearchCount</span></div>
+            <div class="row"><span class="k">门禁通过</span><span class="v">@(Model.GatePassed ? "✅ 是" : "❌ 否")</span></div>
+            <div class="row"><span class="k">已读节点</span><span class="v">@(Model.NodeReadList.Count == 0 ? "无" : string.Join(", ", Model.NodeReadList))</span></div>
+            <div class="row"><span class="k">已触发结局</span><span class="v">@(Model.EndingsSeenList.Count == 0 ? "无" : string.Join(", ", Model.EndingsSeenList))</span></div>
+            <div class="row"><span class="k">在线状态覆盖</span><span class="v">@(string.IsNullOrEmpty(Model.OnlineOverride) ? "—" : Model.OnlineOverride)</span></div>
+        </div>
+
+        @if (!string.IsNullOrEmpty(Model.SignatureImage) && Model.SignatureImage.StartsWith("data:image"))
+        {
+            <div class="card">
+                <h3>✍️ 玩家签名</h3>
+                <img src="@Model.SignatureImage" class="sig-img" />
+            </div>
+        }
+
+        @if (Model.PmMessagesList.Count > 0)
+        {
+            <div class="card" style="grid-column: span 2;">
+                <h3>💬 私信记录（@Model.PmMessagesList.Count 条）</h3>
+                <div style="max-height:400px;overflow-y:auto;">
+                    @foreach (var m in Model.PmMessagesList)
+                    {
+                        var cls = m.Role == "lin" ? "lin" : "me";
+                        var who = m.Role == "lin" ? "林默" : "玩家";
+                        <div class="pm-msg @cls">
+                            <div class="who">@who <span class="time">@m.Time</span></div>
+                            <div>@m.Content</div>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+
+    <div class="card">
+        <h3>📜 事件日志（@events.Count 条）</h3>
+        <div style="max-height:400px;overflow-y:auto;">
+            @foreach (var e in events)
+            {
+                <div class="event-item">
+                    <span class="type">@e.EventType</span>
+                    <span class="data">@e.EventData</span>
+                    <span class="time">@e.CreatedAt</span>
+                </div>
+            }
+            @if (!events.Any())
+            {
+                <div style="color:rgba(255,255,255,0.15);text-align:center;padding:1rem;">暂无事件</div>
+            }
+        </div>
+    </div>
+
+    <script>
+        function delPlayer() {
+            if (!confirm('⚠️ 确定要删除该玩家吗？\n这会删除该玩家的所有数据、事件、干预记录。\n此操作不可恢复。')) return;
+            fetch('/AdminHxda/DeletePlayer', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: 'id=' + encodeURIComponent('@Model.Id')
+            })
+            .then(r => r.json())
+            .then(d => {
+                if (d.success) {
+                    alert('已删除');
+                    window.location.href = '/AdminHxda/Players';
+                } else {
+                    alert('删除失败');
+                }
+            })
+            .catch(function () { alert('网络错误'); });
+        }
+    </script>
+</div>

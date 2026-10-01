@@ -367,6 +367,10 @@
             Store.set('search_count', n);
             addAttention(1);
 
+            if (window.HxdaReport && window.HxdaReport.event) {
+                HxdaReport.event('search', { word: q, time: nowFull() });
+            }
+
             var hist = Store.get('search_history', []);
             hist.push({
                 word: q,

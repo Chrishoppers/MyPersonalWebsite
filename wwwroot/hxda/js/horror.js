@@ -233,12 +233,16 @@
     function injectBreathing() {
         setInterval(function () {
             const a = Store.get('attention', 0);
+            var wrap = document.querySelector('.forum-wrap');
+
             if (a < 16) {
                 document.body.classList.remove('attention-breathing');
+                if (wrap) wrap.classList.remove('attention-breathing');
                 return;
             }
             if (a >= 16 && a < 21) {
                 document.body.classList.add('attention-breathing');
+                if (wrap) wrap.classList.add('attention-breathing');
             }
         }, 3000);
     }

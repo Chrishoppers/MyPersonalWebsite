@@ -117,6 +117,11 @@
         if (role === 'lin' && window.GameAudio) {
             GameAudio.once('knock', { volume: 0.3 });
         }
+
+        /* 新增上报 */
+        if (window.HxdaReport && window.HxdaReport.event) {
+            HxdaReport.event('pm', { role: role, content: content });
+        }
     }
 
     function showTyping() {
@@ -143,6 +148,11 @@
         addMessage('me', text);
         if (window.GameAudio) GameAudio.once('click', { volume: 0.12 });
         Store.set('pm_last_active', Date.now());
+
+        /* 新增上报 */
+        if (window.HxdaReport && window.HxdaReport.event) {
+            HxdaReport.event('pm', { role: 'me', content: text });
+        }
 
         recordSharedInfo(text);
 

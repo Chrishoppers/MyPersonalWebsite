@@ -92,9 +92,12 @@ hr {
         position: relative;
     }
 
-body[data-attention-level="high"] .forum-head .head-logo::after,
-body[data-attention-level="very-high"] .forum-head .head-logo::after,
-body[data-attention-level="extreme"] .forum-head .head-logo::after {
+.forum-wrap[data-attention-level="high"] .forum-head .head-logo::after,
+body[data-attention-level="high"] .forum-wrap .forum-head .head-logo::after,
+.forum-wrap[data-attention-level="very-high"] .forum-head .head-logo::after,
+body[data-attention-level="very-high"] .forum-wrap .forum-head .head-logo::after,
+.forum-wrap[data-attention-level="extreme"] .forum-head .head-logo::after,
+body[data-attention-level="extreme"] .forum-wrap .forum-head .head-logo::after {
     content: '';
     position: absolute;
     inset: 0;
@@ -872,7 +875,8 @@ body.dark-mode {
     transition: background 0.4s ease;
 }
 
-body.attention-drift {
+.forum-wrap.attention-drift,
+body.attention-drift .forum-wrap {
     animation: attentionDrift 45s ease-in-out infinite;
 }
 
@@ -894,7 +898,8 @@ body.attention-drift {
     }
 }
 
-body.attention-critical {
+.forum-wrap.attention-critical,
+body.attention-critical .forum-wrap {
     animation: criticalFlicker 8s linear infinite;
 }
 
@@ -920,19 +925,26 @@ body.attention-critical {
     }
 }
 
-body[data-attention-level="high"] {
+.forum-wrap[data-attention-level="high"],
+body[data-attention-level="high"] .forum-wrap {
     filter: brightness(0.95);
 }
 
-body[data-attention-level="very-high"] {
+.forum-wrap[data-attention-level="very-high"],
+body[data-attention-level="very-high"] .forum-wrap {
     filter: brightness(0.88);
 }
 
-body[data-attention-level="extreme"] {
+.forum-wrap[data-attention-level="extreme"],
+body[data-attention-level="extreme"] .forum-wrap {
     filter: brightness(0.8) contrast(1.05);
 }
 
-body.attention-breathing {
+
+
+.forum-wrap.attention-breathing,
+.forum-wrap.attention-breathing,
+body.attention-breathing .forum-wrap {
     animation: attentionBreathing 6s ease-in-out infinite;
 }
 
@@ -1632,5 +1644,27 @@ body.page43-page {
     .fullscreen-hint {
         font-size: 10px;
         padding: 4px 8px;
+    }
+}
+/* ============================================================
+   手机竖屏拦截（全站）
+   ============================================================ */
+@media (max-width: 600px) and (orientation: portrait) {
+    body::after {
+        content: '请横屏访问';
+        position: fixed;
+        inset: 0;
+        background: #000;
+        color: #eee;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: "SimSun", "宋体", serif;
+        font-size: 20px;
+        z-index: 9999999;
+        letter-spacing: 0.2em;
+        text-align: center;
+        padding: 30px;
+        line-height: 2;
     }
 }

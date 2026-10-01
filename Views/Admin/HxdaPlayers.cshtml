@@ -1,0 +1,314 @@
+﻿@model List<MyPersonalWebsite.Models.HxdaPlayer>
+
+@{
+    ViewData["Title"] = "回响档案 · 玩家列表";
+    var isAdmin = Context.Session.GetInt32("IsAdmin") ?? 0;
+    if (isAdmin != 1) { Context.Response.Redirect("/Auth/Login"); return; }
+}
+
+<style>
+    .hxda-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 2rem 1.5rem;
+    }
+
+    .hxda-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+
+        .hxda-header h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: linear-gradient(135deg,#8B5CF6,#EC4899,#F59E0B);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin: 0;
+        }
+
+    .btn-glass {
+        padding: 0.5rem 1.5rem;
+        border-radius: 40px;
+        border: 1px solid rgba(255,255,255,0.06);
+        background: rgba(255,255,255,0.04);
+        color: rgba(255,255,255,0.7);
+        text-decoration: none;
+        transition: all 0.3s ease;
+        font-size: 0.9rem;
+        cursor: pointer;
+        display: inline-block;
+    }
+
+        .btn-glass:hover {
+            background: rgba(255,255,255,0.08);
+            color: #fff;
+        }
+
+        .btn-glass.danger {
+            background: rgba(220,53,69,0.08);
+            border-color: rgba(220,53,69,0.08);
+            color: #dc3545;
+        }
+
+    .stats-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit,minmax(140px,1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .stat-card {
+        background: rgba(255,255,255,0.03);
+        border-radius: 16px;
+        padding: 1rem 1.2rem;
+        border: 1px solid rgba(255,255,255,0.04);
+        text-align: center;
+    }
+
+        .stat-card .number {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .stat-card .label {
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.4);
+            margin-top: 0.2rem;
+        }
+
+    .table-wrapper {
+        background: rgba(255,255,255,0.02);
+        border-radius: 16px;
+        border: 1px solid rgba(255,255,255,0.04);
+        overflow-x: auto;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.85rem;
+        min-width: 1100px;
+    }
+
+    th {
+        text-align: left;
+        padding: 0.8rem 1rem;
+        background: rgba(255,255,255,0.03);
+        color: rgba(255,255,255,0.4);
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        border-bottom: 1px solid rgba(255,255,255,0.04);
+        white-space: nowrap;
+    }
+
+    td {
+        padding: 0.7rem 1rem;
+        border-bottom: 1px solid rgba(255,255,255,0.03);
+        color: rgba(255,255,255,0.8);
+        vertical-align: middle;
+    }
+
+    tr:hover td {
+        background: rgba(255,255,255,0.02);
+    }
+
+    .badge {
+        font-size: 0.65rem;
+        padding: 0.15rem 0.7rem;
+        border-radius: 20px;
+        font-weight: 500;
+        display: inline-block;
+    }
+
+    .badge-online {
+        background: rgba(40,167,69,0.15);
+        color: #28a745;
+    }
+
+    .badge-offline {
+        background: rgba(255,255,255,0.04);
+        color: rgba(255,255,255,0.3);
+    }
+
+    .badge-admin {
+        background: rgba(139,92,246,0.15);
+        color: #8B5CF6;
+    }
+
+    .badge-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 1px solid rgba(255,255,255,0.06);
+        vertical-align: middle;
+    }
+
+    .btn-sm {
+        padding: 0.2rem 0.7rem;
+        border: none;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 500;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-block;
+        margin: 0 0.1rem;
+    }
+
+        .btn-sm.primary {
+            background: rgba(79,172,254,0.12);
+            color: #4facfe;
+        }
+
+        .btn-sm.danger {
+            background: rgba(220,53,69,0.08);
+            color: #dc3545;
+        }
+
+        .btn-sm.warn {
+            background: rgba(255,193,7,0.12);
+            color: #ffc107;
+        }
+
+    .empty {
+        text-align: center;
+        padding: 3rem;
+        color: rgba(255,255,255,0.15);
+    }
+
+    .attention-bar {
+        width: 60px;
+        height: 6px;
+        background: rgba(255,255,255,0.04);
+        border-radius: 3px;
+        overflow: hidden;
+        display: inline-block;
+        vertical-align: middle;
+        margin-left: 6px;
+    }
+
+    .attention-fill {
+        height: 100%;
+        background: linear-gradient(90deg,#4facfe,#8B5CF6,#EC4899);
+    }
+</style>
+
+<div class="hxda-container">
+    <div class="hxda-header">
+        <h1>📖 回响档案 · 玩家列表</h1>
+        <div>
+            <a href="/AdminHxda/Live" class="btn-glass">🟢 实时在线</a>
+            <a href="/AdminHxda/Endings" class="btn-glass" style="margin-left:0.5rem;">🏁 结局统计</a>
+            <a href="/AdminHxda/SearchLog" class="btn-glass" style="margin-left:0.5rem;">🔍 搜索记录</a>
+            <a href="/AdminHxda/PmLog" class="btn-glass" style="margin-left:0.5rem;">💬 私信记录</a>
+            <a href="/AdminHxda/Timeline" class="btn-glass" style="margin-left:0.5rem;">📜 时间线</a>
+            <a href="/AdminHxda/Export" class="btn-glass" style="margin-left:0.5rem;">📥 导出</a>
+            <a href="/AdminHxda/Cleanup" class="btn-glass danger" style="margin-left:0.5rem;">🧹 清理</a>
+            <a href="/Admin/Dashboard" class="btn-glass" style="margin-left:0.5rem;">← 后台</a>
+        </div>
+    </div>
+
+    <div class="stats-row">
+        <div class="stat-card"><div class="number">@Model.Count</div><div class="label">👥 总玩家</div></div>
+        <div class="stat-card"><div class="number">@Model.Count(p => p.IsOnlineNow)</div><div class="label">🟢 当前在线</div></div>
+        <div class="stat-card"><div class="number">@Model.Count(p => p.EndingsSeenList.Count > 0)</div><div class="label">🏁 触发结局</div></div>
+        <div class="stat-card"><div class="number">@Model.Count(p => p.EndingsSeenList.Contains("true"))</div><div class="label">⭐ 真结局</div></div>
+    </div>
+
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>玩家</th>
+                    <th>昵称</th>
+                    <th>真实名字</th>
+                    <th>签名</th>
+                    <th>状态</th>
+                    <th>注意值</th>
+                    <th>节点</th>
+                    <th>结局</th>
+                    <th>当前页</th>
+                    <th>最后在线</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var p in Model.OrderByDescending(p => p.IsOnlineNow).ThenByDescending(p => p.LastSeenAt))
+                {
+                    <tr>
+                        <td style="font-family:monospace;font-size:0.7rem;color:rgba(255,255,255,0.3);">@p.Id</td>
+                        <td><strong style="color:#fff;">@(string.IsNullOrEmpty(p.VisitorName) ? "无名" : p.VisitorName)</strong></td>
+                        <td>@(string.IsNullOrEmpty(p.RealName) ? "—" : p.RealName)</td>
+                        <td>
+                            @if (!string.IsNullOrEmpty(p.SignatureImage) && p.SignatureImage.StartsWith("data:image"))
+                            {
+                                <img src="@p.SignatureImage" class="badge-avatar" />
+                            }
+                            else
+                            {
+
+                                <span style="color:rgba(255,255,255,0.15);">—</span>
+                            }
+                        </td>
+                        <td>
+                            @if (p.IsOnlineNow)
+                            {
+                                <span class="badge badge-online">🟢 在线</span>
+                            }
+                            else
+                            {
+
+                                <span class="badge badge-offline">⚫ 离线</span>
+                            }
+                            @if (p.AdminLoggedIn)
+                            {
+                                <span class="badge badge-admin" style="margin-left:0.2rem;">👑</span>
+                            }
+                        </td>
+                        <td>
+                            <strong>@p.Attention</strong>
+                            <span class="attention-bar"><span class="attention-fill" style="width:@(Math.Min(100, p.Attention * 3))%"></span></span>
+                        </td>
+                        <td>@p.NodeReadList.Count / 7</td>
+                        <td>@(p.EndingsSeenList.Count == 0 ? "—" : string.Join(", ", p.EndingsSeenList))</td>
+                        <td style="font-family:monospace;font-size:0.7rem;">@p.CurrentPage</td>
+                        <td style="font-size:0.75rem;color:rgba(255,255,255,0.3);">@p.LastSeenAt</td>
+                        <td>
+                            <a href="/AdminHxda/PlayerDetail?id=@p.Id" class="btn-sm primary">👁️ 详情</a>
+                            <a href="/AdminHxda/Control?id=@p.Id" class="btn-sm warn">🎛️ 干预</a>
+                            <a href="/AdminHxda/Replay?id=@p.Id" class="btn-sm primary">🎬 回放</a>
+                            <button class="btn-sm danger" onclick="delPlayer('@p.Id')">🗑️</button>
+                        </td>
+                    </tr>
+                }
+                @if (!Model.Any())
+                {
+                    <tr><td colspan="11"><div class="empty">📭 暂无玩家数据</div></td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    function delPlayer(id) {
+        if (!confirm('确定要删除该玩家吗？此操作不可恢复。')) return;
+        fetch('/AdminHxda/DeletePlayer', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: 'id=' + encodeURIComponent(id)
+        })
+            .then(r => r.json())
+            .then(d => { if (d.success) location.reload(); else alert('删除失败'); });
+    }
+</script>

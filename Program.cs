@@ -115,6 +115,8 @@ builder.Services.AddHttpClient<DeepSeekService>();
 builder.Services.AddHttpClient<TrainService>();
 builder.Services.AddHttpClient<ReCaptchaService>();
 
+builder.Services.AddSingleton<HxdaDb>();
+
 // ============================================================
 // OCR / Solver services
 // ============================================================

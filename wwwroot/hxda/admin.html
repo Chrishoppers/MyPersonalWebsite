@@ -160,6 +160,7 @@
     </div>
 
     <script src="js/storage.js"></script>
+    <script src="js/report.js"></script>
     <script src="js/fullscreen.js"></script>
     <script src="js/tracker.js"></script>
     <script src="js/ui.js"></script>
@@ -559,6 +560,11 @@
             function runCommand(raw) {
                 var cmd = raw.trim();
                 if (!cmd) return;
+
+                /* 新增上报 */
+                if (window.HxdaReport && window.HxdaReport.event) {
+                    HxdaReport.event('terminal', { cmd: cmd });
+                }
 
                 outHTML('<span class="cmd">&gt; ' + escapeHtml(cmd) + '</span>');
 

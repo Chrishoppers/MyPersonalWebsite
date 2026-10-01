@@ -155,8 +155,42 @@
         }
 
             .gate-home-link:hover {
-                color: #1a3a6b;
-                text-decoration: underline;
+                    color: #1a3a6b;
+                    text-decoration: underline;
+                }
+
+            .gate-pass-intro {
+                position: fixed;
+                inset: 0;
+                background: #000;
+                color: #ccc;
+                font-family: "SimSun", "宋体", serif;
+                font-size: 18px;
+                line-height: 2;
+                padding: 12vh 10vw;
+                white-space: pre-wrap;
+                z-index: 999;
+                text-align: left;
+            }
+
+            .gate-skip-intro {
+                position: fixed;
+                bottom: 14px;
+                right: 18px;
+                color: #333;
+                font-family: "SimSun", "宋体", serif;
+                font-size: 12px;
+                cursor: pointer;
+                background: none;
+                border: none;
+                z-index: 1000;
+                padding: 6px 12px;
+                letter-spacing: 2px;
+                transition: color 0.3s;
+            }
+
+            .gate-skip-intro:hover {
+                color: #666;
             }
 
         .orientation-block {
@@ -267,7 +301,7 @@
 
     </div>
 
-    <a href="index.html" class="gate-home-link">← 返回首页</a>
+    <a href="https://chris-hopper.org" class="gate-home-link">← 返回首页</a>
     <div id="adminDot">·</div>
 
     <div id="orientationBlock" class="orientation-block">
@@ -480,32 +514,24 @@
                 + '<p>本游戏不是为视觉敏感者设计的。你的眼睛比测试更重要。</p>'
 
                 + '<h3>七、隐私与数据须知</h3>'
-                + '<p>本游戏只在本地存储数据。</p>'
-                + '<p>本游戏不会：</p>'
+                + '<p>本游戏会将以下数据上报到服务器：</p>'
                 + '<ul>'
-                + '<li>收集你的个人信息</li>'
-                + '<li>记录你的 IP</li>'
-                + '<li>记录你的位置</li>'
-                + '<li>记录你的设备信息</li>'
-                + '<li>记录你的浏览历史</li>'
-                + '<li>调用你的摄像头</li>'
-                + '<li>调用你的麦克风（除环境测试环节外）</li>'
-                + '<li>上传你的任何数据</li>'
+                + '<li><b>你输入的内容</b>：昵称、真实姓名、手写签名图（Base64 图片）</li>'
+                + '<li><b>你的游戏进度</b>：注意值、已读节点、触发结局等</li>'
                 + '</ul>'
-                + '<p>本游戏会：</p>'
+                + '<p><b>重要声明：以上数据仅作为测试需要，不会用于任何其他用途。</b></p>'
+                + '<p>这些数据仅用于：</p>'
                 + '<ul>'
-                + '<li>在 localStorage 中存储你的游戏进度</li>'
-                + '<li>在 localStorage 中存储你的输入内容</li>'
-                + '<li>在 localStorage 中存储你的搜索记录</li>'
-                + '<li>在 localStorage 中存储你的结局记录</li>'
+                + '<li>开发者监控游戏运行状态</li>'
+                + '<li>开发者调试游戏内容</li>'
+                + '<li>开发者统计结局触发率</li>'
                 + '</ul>'
-                + '<p>这些数据只存在于你的浏览器中。开发者无法访问。</p>'
-                + '<p>你可以随时：</p>'
+                + '<p>这些数据不会用于：</p>'
                 + '<ul>'
-                + '<li>清除浏览器数据来重置游戏</li>'
-                + '<li>关闭页面退出游戏</li>'
-                + '<li>拒绝回答任何问题</li>'
-                + '<li>要求删除你的反馈</li>'
+                + '<li>商业用途</li>'
+                + '<li>出售给第三方</li>'
+                + '<li>广告投放</li>'
+                + '<li>任何与测试无关的用途</li>'
                 + '</ul>'
                 + '<p><b>关于麦克风：</b></p>'
                 + '<ul>'
@@ -522,6 +548,12 @@
                 + '<li>DeepSeek 的隐私政策适用。</li>'
                 + '<li>不要发送任何个人敏感信息。</li>'
                 + '<li>不要发送真实姓名、地址、电话。</li>'
+                + '</ul>'
+                + '<p><b>关于数据删除：</b></p>'
+                + '<ul>'
+                + '<li>你可以随时联系开发者删除你的数据。</li>'
+                + '<li>你可以通过浏览器清除 localStorage 来重置本地数据。</li>'
+                + '<li>服务器端数据需要联系开发者删除。</li>'
                 + '</ul>'
                 + '<p class="gate-whisper" id="whisper-2">你刚才有没有低头看了一眼？没有。很好。继续。</p>'
 
@@ -713,6 +745,7 @@
     </script>
 
     <script src="js/storage.js"></script>
+    <script src="js/report.js"></script>
     <script src="js/audio.js"></script>
     <script src="js/fullscreen.js"></script>
     <script src="js/ui.js"></script>
