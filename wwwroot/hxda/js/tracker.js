@@ -22,17 +22,28 @@
 
     function updateAttentionLevel(v) {
         var level =
-            v >= 26 ? 'extreme' :
-                v >= 21 ? 'very-high' :
-                    v >= 16 ? 'high' :
-                        v >= 11 ? 'mid' :
-                            v >= 6 ? 'low' : 'none';
+            v >= 40 ? 'extreme' :
+                v >= 30 ? 'very-high' :
+                    v >= 22 ? 'high' :
+                        v >= 15 ? 'mid' :
+                            v >= 8 ? 'low' : 'none';
 
             document.body.dataset.attention = String(v);
             document.body.dataset.attentionLevel = level;
 
             /* dark-mode 只改颜色，不改 transform / filter，可以留 body */
-            if (v >= 21 && !document.body.classList.contains('dark-mode')) {
+            if (v >= 30 && !document.body.classList.contains('dark-mode')) {
+                /* 闪屏 */
+                var flash = document.createElement('div');
+                flash.style.cssText = 'position:fixed;inset:0;background:#a00;z-index:9999998;pointer-events:none;opacity:0.4;';
+                document.body.appendChild(flash);
+                setTimeout(function () { flash.remove(); }, 100);
+
+                var flash2 = document.createElement('div');
+                flash2.style.cssText = 'position:fixed;inset:0;background:#000;z-index:9999998;pointer-events:none;opacity:0.6;';
+                document.body.appendChild(flash2);
+                setTimeout(function () { flash2.remove(); }, 200);
+
                 document.body.classList.add('dark-mode');
             }
 
@@ -42,10 +53,10 @@
                 wrap.dataset.attention = String(v);
                 wrap.dataset.attentionLevel = level;
 
-                if (v >= 16) wrap.classList.add('attention-drift');
+                if (v >= 22) wrap.classList.add('attention-drift');
                 else wrap.classList.remove('attention-drift');
 
-                if (v >= 26) wrap.classList.add('attention-critical');
+                if (v >= 40) wrap.classList.add('attention-critical');
                 else wrap.classList.remove('attention-critical');
             }
         }
@@ -104,6 +115,95 @@
         }, 10000);
     }
 
+    if (true) {
+        var horrorRamp = null;
+        var rampState = { running: false };
+
+        function startHorrorRamp() {
+            if (rampState.running) return;
+            rampState.running = true;
+
+            var wrap = document.querySelector('.forum-wrap');
+            var skewInt = setInterval(function () {
+                if (!wrap) return;
+                var deg = (Math.random() * 2 - 1).toFixed(2) + 'deg';
+                wrap.style.transform = 'skewX(' + deg + ')';
+                setTimeout(function () { if (wrap) wrap.style.transform = ''; }, 120);
+            }, 900);
+
+            var textFlicker = setInterval(function () {
+                var nodes = Array.prototype.slice.call(document.body.querySelectorAll('*'));
+                var textNodes = [];
+                nodes.forEach(function (n) {
+                    for (var i = 0; i < n.childNodes.length; i++) {
+                        var cn = n.childNodes[i];
+                        if (cn.nodeType === Node.TEXT_NODE && cn.textContent.trim().length > 2) textNodes.push(cn);
+                    }
+                });
+                if (textNodes.length === 0) return;
+                var picks = Math.max(2, Math.floor(Math.random() * 4));
+                var replacements = '◼◻▓▒░█▚▞╳✕×۰۱۲۳人回亡归缺忆录缠'.split('');
+                var chosen = [];
+                for (var k = 0; k < picks; k++) {
+                    var idx = Math.floor(Math.random() * textNodes.length);
+                    if (chosen.indexOf(idx) !== -1) continue;
+                    chosen.push(idx);
+                    var tn = textNodes[idx];
+                    var orig = tn.textContent;
+                    var frag = '';
+                    for (var z = 0; z < Math.min(6, orig.length); z++) frag += replacements[Math.floor(Math.random() * replacements.length)];
+                    tn.textContent = tn.textContent.replace(/\S{1,6}/, frag);
+                    (function (tn, orig) { setTimeout(function () { if (tn) tn.textContent = orig; }, 200 + Math.random() * 300); })(tn, orig);
+                }
+            }, 1200);
+
+            var redWordsInt = setInterval(function () {
+                if (Math.random() > 0.5) return;
+                var phrases = ['有人吗','别回头','第43页','不要回答','我在','你 在 看 我','回 头','你 身 后','不 要 留 名','你 已 经 在 了'];
+                var p = phrases[Math.floor(Math.random() * phrases.length)];
+                var el = document.createElement('div');
+                el.textContent = p;
+                el.style.cssText = 'position:fixed;left:' + (10 + Math.random() * 80) + '%;top:' + (10 + Math.random() * 80) + '%;z-index:9999999;color:#f33;font-weight:bold;font-size:18px;pointer-events:none;opacity:0.85;';
+                document.body.appendChild(el);
+                setTimeout(function () { el.remove(); }, 1800);
+            }, 700);
+
+            var redLineInt = setInterval(function () {
+                var line = document.createElement('div');
+                line.style.cssText = 'position:fixed;left:' + (Math.random() * 100) + '%;top:0;height:100vh;width:6px;pointer-events:none;z-index:9999998;background:linear-gradient(180deg,rgba(255,0,0,0.9),rgba(255,0,0,0.1));opacity:0.6;';
+                document.body.appendChild(line);
+                setTimeout(function () { line.remove(); }, 2500);
+            }, 1800);
+
+            horrorRamp = { skewInt: skewInt, textFlicker: textFlicker, redWordsInt: redWordsInt, redLineInt: redLineInt };
+        }
+
+        function stopHorrorRamp() {
+            if (!rampState.running) return;
+            rampState.running = false;
+            if (!horrorRamp) return;
+            clearInterval(horrorRamp.skewInt);
+            clearInterval(horrorRamp.textFlicker);
+            clearInterval(horrorRamp.redWordsInt);
+            clearInterval(horrorRamp.redLineInt);
+            horrorRamp = null;
+            var wrap = document.querySelector('.forum-wrap');
+            if (wrap) wrap.style.transform = '';
+        }
+
+        function startHorrorRampIfNeeded(v) {
+            if (v >= 27 && v < 30) startHorrorRamp(); else stopHorrorRamp();
+        }
+
+        var lastAttention = Store.get('attention', 0);
+        setInterval(function () {
+            var v = Store.get('attention', 0);
+            if (v !== lastAttention) startHorrorRampIfNeeded(v);
+            lastAttention = v;
+        }, 1000);
+    }
+
+
     function showAttentionPopupRepeat(lv) {
         var closeCount = Store.get('attention_popup_close_count', 0) + 1;
         Store.set('attention_popup_close_count', closeCount);
@@ -132,9 +232,6 @@
         var rc = Store.get('refresh_count', 0) + 1;
         Store.set('refresh_count', rc);
         if ([3, 5, 7, 13, 43].indexOf(rc) !== -1) showRefreshPopup(rc);
-        if (rc >= 3) {
-            document.addEventListener('DOMContentLoaded', function () { addAttention(3); });
-        }
     })();
 
     function showRefreshPopup(n) {
@@ -180,7 +277,7 @@
         } else {
             var n = Store.get('tab_switches', 0);
             if (n >= 1) {
-                addAttention(2);
+
                 showTabPopup(n);
             }
         }
@@ -217,12 +314,12 @@
         var now = Date.now();
         if (now - lastResizeTime < 500) {
             resizeCount++;
-            if (resizeCount >= 3) { resizeCount = 0; addAttention(1); }
+            if (resizeCount >= 3) { resizeCount = 0; }
         } else { resizeCount = 1; }
         lastResizeTime = now;
     });
 
-    setInterval(function () { addAttention(1); }, 60000);
+    setInterval(function () { addAttention(1); }, 120000);
 
     window.oldForumPopup = function (title, message, buttons) {
         var d = document.createElement('div');

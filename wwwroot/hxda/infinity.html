@@ -104,12 +104,19 @@
             var lastY = window.scrollY;
 
             Store.set('infinity_opened', true);
-            addAttention(3);
 
             /* 新增上报 */
             if (window.HxdaReport && window.HxdaReport.event) {
                 HxdaReport.event('infinity_open', {});
             }
+
+            setTimeout(function () {
+                var tailNote = document.createElement('div');
+                tailNote.style.cssText = 'position:fixed;left:50%;transform:translateX(-50%);bottom:12px;background:rgba(0,0,0,0.6);color:#fff;padding:8px 12px;border-radius:4px;z-index:99999;font-size:13px;';
+                tailNote.textContent = '提示：页面底部可能隐藏一些信息。';
+                document.body.appendChild(tailNote);
+                setTimeout(function () { tailNote.remove(); }, 30000);
+            }, 1000);
 
             function appendBlock() {
                 for (var i = 0; i < 20; i++) {

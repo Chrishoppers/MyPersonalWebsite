@@ -263,6 +263,7 @@
     /* 管理后台 */
     function checkAdminVisibility() {
         var cond = Store.get('read_post_1', false)
+            && Store.get('found_node7', false)
             && Store.get('read_nodes', false)
             && Store.get('reverse_audio', false);
         if (cond) {
@@ -359,6 +360,15 @@
             doSearch(q);
         }
     });
+
+    var searchBtn = document.getElementById('searchBtn');
+    if (searchBtn) {
+        searchBtn.addEventListener('click', function () {
+            var q = searchInput.value.trim();
+            searchDrop.classList.remove('show');
+            doSearch(q);
+        });
+    }
 
     function doSearch(q, fromHistory) {
 

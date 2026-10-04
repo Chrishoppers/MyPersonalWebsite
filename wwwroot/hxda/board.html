@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+    <title>回响档案｜版块</title>
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="css/main.css">
+    <style>
+        .board-page { max-width: 960px; margin: 20px auto; padding: 0 10px; }
+        .board-titlebar {
+            background: #e0e0e0;
+            background-image: linear-gradient(to bottom, #f4f4f4 0%, #e0e0e0 100%);
+            border: 1px solid #aaa;
+            border-bottom: none;
+            padding: 10px 16px;
+            font-size: 14px;
+            font-weight: bold;
+            color: #1a3a6b;
+        }
+        .board-titlebar .count { font-size: 11px; color: #888; font-weight: normal; margin-left: 8px; }
+        .board-crumb {
+            font-size: 11px;
+            color: #888;
+            padding: 6px 16px;
+            background: #fafafa;
+            border-left: 1px solid #aaa;
+            border-right: 1px solid #aaa;
+            border-bottom: 1px dashed #ddd;
+        }
+        .board-crumb a { color: #1a3a6b; text-decoration: none; }
+        .board-crumb a:hover { text-decoration: underline; }
+        .board-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid #aaa;
+            font-size: 12px;
+            background: #fff;
+        }
+        .board-table thead th {
+            background: #e0e0e0;
+            background-image: linear-gradient(to bottom, #f4f4f4 0%, #e0e0e0 100%);
+            border-bottom: 1px solid #aaa;
+            border-right: 1px solid #bbb;
+            padding: 6px 10px;
+            text-align: left;
+            font-weight: bold;
+            color: #1a3a6b;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+        .board-table thead th:last-child { border-right: none; }
+        .board-table tbody td {
+            padding: 6px 10px;
+            border-bottom: 1px solid #ddd;
+            vertical-align: middle;
+        }
+        .board-table tbody tr:nth-child(even) td { background: #f8f8f8; }
+        .board-table tbody tr:hover td { background: #fff8d0; }
+        .board-table .col-icon { width: 22px; text-align: center; }
+        .board-table .col-title a { color: #1a3a6b; text-decoration: none; }
+        .board-table .col-title a:hover { color: #c00; text-decoration: underline; }
+        .board-table .col-title .deleted { color: #aaa; }
+        .board-empty {
+            text-align: center;
+            padding: 40px 20px;
+            color: #888;
+            background: #fff;
+            border: 1px solid #aaa;
+            border-top: none;
+            font-size: 13px;
+        }
+        .board-empty .icon { font-size: 32px; display: block; margin-bottom: 8px; opacity: 0.4; }
+        .board-footer {
+            text-align: center;
+            padding: 14px;
+        }
+        .board-footer a {
+            display: inline-block;
+            padding: 6px 20px;
+            border: 2px outset #bbb;
+            background: #e6e6e6;
+            color: #333;
+            text-decoration: none;
+            font-size: 12px;
+            margin: 0 4px;
+        }
+        .board-footer a:hover { background: #f0f0f0; text-decoration: none; }
+    </style>
+</head>
+<body>
+
+    <div class="forum-wrap" style="min-height: auto;">
+
+        <div class="forum-head">
+            <div class="head-logo"></div>
+            <div class="head-right">
+                <div class="user-info" id="userInfo">游客</div>
+                <div>最后更新：2019-03-01 00:00</div>
+            </div>
+        </div>
+
+        <div class="forum-nav">
+            <a href="bbs.html">← 返回论坛</a>
+            <a href="bbs.html">首页</a>
+            <a href="board.html?b=notice">站务</a>
+            <a href="board.html?b=free">自由交流</a>
+            <a href="node.html">归档</a>
+        </div>
+
+        <div class="forum-notice">
+            本站数据于 2019 年 3 月后不再更新。感谢各位十年来的陪伴。——站长
+        </div>
+
+        <div class="board-page">
+            <div id="boardBox">
+                <div class="board-titlebar" id="boardTitle">加载中...</div>
+                <div class="board-crumb">
+                    <a href="bbs.html">回响档案</a> &raquo; <span id="boardCrumb">版块</span>
+                </div>
+                <div id="boardContent"></div>
+            </div>
+
+            <div class="board-footer">
+                <a href="bbs.html">← 返回论坛首页</a>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="js/storage.js"></script>
+    <script src="js/report.js"></script>
+    <script src="js/audio.js"></script>
+    <script src="js/fullscreen.js"></script>
+    <script src="js/tracker.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/horror.js"></script>
+
+    <script>
+(function () {
+    'use strict';
+
+    function escapeHtml(s) {
+        var d = document.createElement('div');
+        d.textContent = String(s);
+        return d.innerHTML;
+    }
+
+    /* ============================================================
+       顶部用户名
+       ============================================================ */
+    (function () {
+        var userInfo = document.getElementById('userInfo');
+        if (userInfo) {
+            var name = Store.get('gate_signature_name', '') || Store.get('visitor_name', '');
+            if (name) userInfo.innerHTML = '<b>' + escapeHtml(name) + '</b>';
+        }
+    })();
+
+    /* ============================================================
+       全屏按钮
+       ============================================================ */
+    if (window.FullscreenHelper && !window.FullscreenHelper.isMobile) {
+        var fsBtn = document.createElement('button');
+        fsBtn.textContent = '⛶';
+        fsBtn.title = '进入全屏';
+        fsBtn.style.cssText =
+            'position:fixed;bottom:14px;left:18px;' +
+            'color:#666;font-family:monospace;font-size:14px;' +
+            'cursor:pointer;background:none;border:none;padding:4px 8px;' +
+            'z-index:99998;';
+        fsBtn.addEventListener('click', function () {
+            if (window.FullscreenHelper.isInFullscreen()) {
+                window.FullscreenHelper.exit();
+            } else {
+                window.FullscreenHelper.request();
+            }
+        });
+        document.body.appendChild(fsBtn);
+    }
+
+    /* ============================================================
+       版块数据
+       ============================================================ */
+    var BOARDS = {
+        'notice': {
+            title: '站务公告',
+            posts: [
+                { icon: '📌', title: '关于本版留言格式的说明', author: '版主', replies: '0 / 43', last: '2009-11-01 23:47', link: 'post.html?id=3' },
+                { icon: '📄', title: '关于 2019 年 3 月后不再更新的公告', author: '站长', replies: '1 / 12', last: '2019-03-01 00:00', link: null },
+                { icon: '📄', title: '关于用户密码安全的提醒', author: '版主', replies: '0 / 5', last: '2018-06-15 10:00', link: null }
+            ]
+        },
+        'mod-apply': {
+            title: '版主申请',
+            posts: [
+                { icon: '📄', title: '版主申请（长期有效）', author: '站长', replies: '2 / 9', last: '2015-04-20 14:33', link: null }
+            ]
+        },
+        'report': {
+            title: '举报投诉',
+            posts: []
+        },
+        'free': {
+            title: '自由留言',
+            posts: [
+                { icon: '📄', title: '今天的月亮好圆', author: '匿名', replies: '3 / 14', last: '2018-09-24 22:01', link: null },
+                { icon: '📄', title: '有人知道这个论坛是什么时候建的吗', author: '路人甲', replies: '1 / 8', last: '2017-05-12 19:22', link: null },
+                { icon: '📄', title: '求助：我室友总是半夜起来敲键盘', author: '小夏', replies: '5 / 27', last: '2018-11-03 03:13', link: null },
+                { icon: '📄', title: '分享一首歌', author: '匿名', replies: '2 / 11', last: '2018-02-14 23:47', link: null },
+                { icon: '📄', title: '有喜欢看恐怖片的吗', author: '小林', replies: '6 / 33', last: '2017-10-31 21:00', link: null },
+                { icon: '📄', title: '关于最近论坛的一些事', author: '路过', replies: '0 / 1', last: '2019-02-14 23:47', link: null, hint: true },
+                { icon: '❓', title: '（无标题）', author: '未知', replies: '???', last: '???', link: 'post.html?id=4' }
+            ]
+        },
+        'diary': {
+            title: '心情日记',
+            posts: [
+                { icon: '📄', title: '2018 年最后一天', author: '匿名', replies: '3 / 28', last: '2019-12-31 23:59', link: 'post.html?id=15' },
+                { icon: '📄', title: '累', author: '路人甲', replies: '1 / 6', last: '2016-08-17 22:34', link: null }
+            ]
+        },
+        'wish': {
+            title: '许愿墙',
+            posts: [
+                { icon: '📄', title: '写下你想要的', author: '版主', replies: '4 / 19', last: '2019-02-14 23:47', link: 'post.html?id=16' }
+            ]
+        },
+        'archived-members': {
+            title: '已归档会员',
+            posts: [
+                { icon: '◼', title: '节点 1：系统', author: '系统', replies: '——', last: '2009-11-01 00:00', link: '404.html?path=node1' },
+                { icon: '?', title: '节点 2：匿名', author: '匿名', replies: '——', last: '2010-04-17 03:13', link: '404.html?path=node2' },
+                { icon: '📖', title: '节点 3：学生', author: '学生', replies: '——', last: '2012-09-09 23:59', link: '404.html?path=node3' },
+                { icon: '💉', title: '节点 4：护士', author: '护士', replies: '——', last: '2014-12-24 00:00', link: '404.html?path=node4' },
+                { icon: '🚌', title: '节点 5：司机', author: '司机', replies: '——', last: '2016-06-06 06:06', link: '404.html?path=node5' },
+                { icon: '🧒', title: '节点 6：小孩', author: '小孩', replies: '——', last: '2018-01-01 01:01', link: '404.html?path=node6' },
+                { icon: '🐺', title: '节点 7：阿回', author: '阿回', replies: '——', last: '2019-02-14 23:47', link: '404.html?path=node7' },
+                { icon: '·', title: '节点 8：未归档', author: '——', replies: '——', last: '等待中', link: '404.html?path=8' }
+            ]
+        }
+    };
+
+    /* ============================================================
+       渲染
+       ============================================================ */
+    var params = new URLSearchParams(window.location.search);
+    var key = params.get('b') || 'notice';
+    var board = BOARDS[key];
+
+    var titleEl = document.getElementById('boardTitle');
+    var crumbEl = document.getElementById('boardCrumb');
+    var contentEl = document.getElementById('boardContent');
+
+    if (!board) {
+        titleEl.textContent = '版块不存在';
+        crumbEl.textContent = '未知版块';
+        contentEl.innerHTML =
+            '<div class="board-empty">' +
+            '  <span class="icon">📭</span>' +
+            '  此版块不存在或已被删除。' +
+            '</div>';
+        return;
+    }
+
+    titleEl.innerHTML = escapeHtml(board.title) +
+        ' <span class="count">(' + board.posts.length + ' 主题)</span>';
+    crumbEl.textContent = board.title;
+
+    if (!board.posts.length) {
+        contentEl.innerHTML =
+            '<div class="board-empty">' +
+            '  <span class="icon">📭</span>' +
+            '  本版块暂无主题。' +
+            '</div>';
+        return;
+    }
+
+    var html = '';
+    html += '<table class="board-table">';
+    html += '<thead><tr>';
+    html += '<th class="col-icon"></th>';
+    html += '<th>标题</th>';
+    html += '<th style="width:90px;">作者</th>';
+    html += '<th style="width:80px;text-align:center;">回复/查看</th>';
+    html += '<th style="width:160px;">最后发表</th>';
+    html += '</tr></thead><tbody>';
+
+    board.posts.forEach(function (p, i) {
+        var titleHtml;
+        if (p.link) {
+            titleHtml = '<a href="' + p.link + '">' + escapeHtml(p.title) + '</a>';
+        } else {
+            titleHtml = '<span class="deleted">' + escapeHtml(p.title) + '</span>';
+        }
+
+        html += '<tr data-idx="' + i + '">';
+        html += '<td class="col-icon"><span class="thread-icon' + (p.icon === '❓' ? ' unknown' : '') + '">' + p.icon + '</span></td>';
+        html += '<td class="col-title">' + titleHtml + '</td>';
+        html += '<td>' + escapeHtml(p.author) + '</td>';
+        html += '<td style="text-align:center;">' + escapeHtml(p.replies) + '</td>';
+        html += '<td>' + escapeHtml(p.last) + '</td>';
+        html += '</tr>';
+    });
+
+    html += '</tbody></table>';
+    contentEl.innerHTML = html;
+
+    /* ============================================================
+       点击无链接的帖子
+       ============================================================ */
+    contentEl.querySelectorAll('tr[data-idx]').forEach(function (tr) {
+        var idx = parseInt(tr.dataset.idx, 10);
+        var p = board.posts[idx];
+        if (p.link) return;
+
+        tr.style.cursor = 'pointer';
+        tr.addEventListener('click', function () {
+            if (p.hint) {
+                uiAlert('提示', '此帖已被归档。\n\n如果你想知道更多，可以试试在档案的某个角落输入：\n\nhelp');
+            } else {
+                uiAlert('提示', '此帖已被归档，无法访问。');
+            }
+        });
+    });
+
+    /* ============================================================
+       上报
+       ============================================================ */
+    if (window.HxdaReport && window.HxdaReport.event) {
+        HxdaReport.event('board_view', { board: key });
+    }
+
+    if (window.GameAudio) GameAudio.once('click', { volume: 0.1 });
+
+})();
+    </script>
+
+</body>
+</html>

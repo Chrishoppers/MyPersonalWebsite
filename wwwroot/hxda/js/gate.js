@@ -11,7 +11,7 @@
     var CONFIG = {
         OPEN_HOUR: 20,
         CLOSE_HOUR: 5,
-        MIC_DB_THRESHOLD: 50,
+        MIC_DB_THRESHOLD: 70,
         MIC_STABLE_SECONDS: 3,
         ADMIN_CODE: 'echo-admin'
     };
@@ -333,7 +333,7 @@
             NOTICE_BODY_HTML +
             '  </div>' +
             '  <div class="gate-body">' +
-            '    <p class="gate-tiny" id="noticeHint">请滚动到底部以继续。</p>' +
+            '    <p class="gate-tiny" id="noticeHint">请将上方须知滚动到底部以继续。</p>' +
             '    <div id="noticeChecks" style="opacity:0.4;pointer-events:none;">' +
             itemsHtml +
             '    </div>' +

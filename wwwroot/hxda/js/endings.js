@@ -147,12 +147,41 @@ function endingFlashBlack(ms) {
     setTimeout(function () { d.remove(); }, ms);
 }
 
+function endingTypewriter(name, content, consequence, onDone) {
+    var d = document.createElement('div');
+    d.style.cssText =
+        'position:fixed;inset:0;background:#000;color:#ccc;' +
+        'font-family:"SimSun","宋体",serif;font-size:18px;line-height:2;' +
+        'padding:12vh 10vw;white-space:pre-wrap;z-index:9999999;' +
+        'overflow:hidden;text-align:left;';
+    document.body.appendChild(d);
+
+    var fullText = '【结局：' + name + '】\n\n' + content + '\n\n—— ' + consequence;
+    var index = 0;
+    function type() {
+        if (index < fullText.length) {
+            var ch = fullText[index];
+            if (ch === '\n') d.innerHTML += '<br>'; else d.innerHTML += ch;
+            index++;
+            var delay = 50;
+            var lastCh = fullText[index - 1];
+            if (lastCh === '。' || lastCh === '，' || lastCh === '：') delay = 280;
+            else if (lastCh === '\n') delay = 500;
+            setTimeout(type, delay);
+        } else {
+            setTimeout(function () { if (typeof onDone === 'function') onDone(); }, 2000);
+        }
+    }
+    setTimeout(type, 600);
+}
+
 /* ============================================================
    结局 1：归档
    ============================================================ */
 function endingArchive() {
     Store.set('ending_archive', true);
     endingPush('archive');
+    Store.set('archive_new_post', true);
 
     /* 新增上报 */
     if (window.HxdaReport && window.HxdaReport.event) {
@@ -161,57 +190,20 @@ function endingArchive() {
 
     if (window.GameAudio) GameAudio.fadeIn('heartbeat', 2000, 0.25);
 
-    endingClearAll();
-
-    var name = Store.get('visitor_name', '') || '无名';
-
-    var i = 0;
-    var interval = setInterval(function () {
-        var line = document.createElement('div');
-        line.textContent = '已归档';
-        line.style.cssText =
-            'font-size:28px;color:#4a4;letter-spacing:0.3em;' +
-            'margin:6px;font-family:SimSun,serif;' +
-            'opacity:' + (0.3 + Math.random() * 0.7) + ';';
-        document.body.appendChild(line);
-        i++;
-
-        if (i >= 40) {
-            clearInterval(interval);
-            setTimeout(function () {
-                showFinalCard();
-            }, 1500);
+    endingTypewriter(
+        '归档',
+        '页面被"已归档"填满。\n字体从绿变灰。\n出现你设备生成的"你"。',
+        '你成为了档案的一部分。\n节点 8：[玩家名字]。\n首页多了一条新帖。\n重新开始后，它还在。',
+        function () {
+            endingClearAll();
+            Store.set('online_override', 'archive');
+            Store.set('post5_clicked', true);
+            if (window.GameAudio) GameAudio.fadeOut('heartbeat', 1200);
+            endingCleanupAndExit(1500);
         }
-    }, 80);
+    );
+}
 
-    function showFinalCard() {
-        endingClearAll();
-
-        var d = document.createElement('div');
-        d.className = 'ending-bg-archive';
-        d.style.cssText =
-            'position:fixed;inset:0;color:#eee;' +
-            'display:flex;flex-direction:column;align-items:center;justify-content:center;' +
-            'text-align:center;padding:40px;' +
-            'font-family:SimSun,serif;font-size:18px;line-height:2;' +
-            'white-space:pre-wrap;';
-        d.innerHTML =
-            '归档完成。\n\n' +
-            '节点 8：访客 ' + name + '\n' +
-            '欢迎来到回响档案。';
-
-        document.body.appendChild(d);
-
-        var avatar = document.createElement('div');
-        avatar.style.cssText =
-            'width:120px;height:120px;margin:20px auto 0;' +
-            'border:2px solid #333;border-radius:4px;' +
-            'background:radial-gradient(circle, #222, #000);' +
-            'position:relative;overflow:hidden;';
-        var inner = document.createElement('div');
-        inner.style.cssText =
-            'position:absolute;inset:0;' +
-            'background:repeating-linear-gradient(' +
             '  0deg, rgba(255,255,255,0.05) 0px, rgba(255,255,255,0.05) 1px, ' +
             '  transparent 1px, transparent 3px);';
         avatar.appendChild(inner);

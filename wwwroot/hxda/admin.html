@@ -331,12 +331,11 @@
                 out(NODE_CONTENT[n]);
 
                 var arr = Store.get('node_read', []);
-                if (arr.indexOf(n) === -1) {
+                    if (arr.indexOf(n) === -1) {
                     arr.push(n);
                     Store.set('node_read', arr);
                     Store.set('node_read_count', arr.length);
                     Store.set('discovered_read', true);
-                    addAttention(2);
                 }
 
                 if (n === 7) {

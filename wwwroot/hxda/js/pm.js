@@ -74,9 +74,16 @@
             var div = document.createElement('div');
             div.className = 'pm-msg ' + (m.role === 'lin' ? 'from-lin' : 'from-me');
 
+            var contentHtml;
+            if (m.recalled) {
+                contentHtml = '<span class="recalled">' + escapeHtml(m.content) + '</span>';
+            } else {
+                contentHtml = escapeHtml(m.content).replace(/\n/g, '<br>');
+            }
+
             div.innerHTML =
                 '<span class="who">' + (m.role === 'lin' ? '林默' : '你') + '</span>' +
-                '<span class="txt">' + escapeHtml(m.content).replace(/\n/g, '<br>') + '</span>' +
+                '<span class="txt">' + contentHtml + '</span>' +
                 '<span class="time">' + escapeHtml(m.time || '') + '</span>';
 
             bodyEl.appendChild(div);
@@ -114,6 +121,12 @@
 
         renderMessages();
 
+        if (role === 'lin' && Math.random() < 0.12) {
+            setTimeout(function () {
+                showPmFlash(Math.random() < 0.5 ? 'glitch_face' : 'glitch_text');
+            }, 400);
+        }
+
         if (role === 'lin' && window.GameAudio) {
             GameAudio.once('knock', { volume: 0.3 });
         }
@@ -130,6 +143,142 @@
 
     function hideTyping() {
         typingEl.textContent = '';
+    }
+
+    function buildAgreementImage(callback) {
+        var base = new Image();
+        base.crossOrigin = 'anonymous';
+        base.onload = function () {
+            var canvas = document.createElement('canvas');
+            canvas.width = base.naturalWidth;
+            canvas.height = base.naturalHeight;
+            var ctx = canvas.getContext('2d');
+            ctx.drawImage(base, 0, 0);
+
+            var sigData = Store.get('gate_signature_image', '');
+            if (sigData) {
+                var sig = new Image();
+                sig.onload = function () {
+                    var x = canvas.width * 0.15;
+                    var y = canvas.height * 0.50;
+                    var w = canvas.width * 0.35;
+                    var h = canvas.height * 0.08;
+
+                    ctx.globalAlpha = 0.75;
+                    ctx.drawImage(sig, x, y, w, h);
+                    ctx.globalAlpha = 1;
+
+                    try {
+                        var data = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                        for (var i = 0; i < data.data.length; i += 4) {
+                            if (Math.random() < 0.0005) {
+                                data.data[i] = 160;
+                                data.data[i + 1] = 0;
+                                data.data[i + 2] = 0;
+                            }
+                        }
+                        ctx.putImageData(data, 0, 0);
+                    } catch (e) {}
+
+                    callback(canvas.toDataURL('image/png'));
+                };
+                sig.onerror = function () { callback(canvas.toDataURL('image/png')); };
+                sig.src = sigData;
+            } else {
+                callback(canvas.toDataURL('image/png'));
+            }
+        };
+        base.onerror = function () { callback(''); };
+        base.src = 'img/archive_agreement_base.jpg';
+    }
+
+    function triggerAgreementEvent() {
+        if (Store.get('pm_agreement_triggered', false)) return;
+        Store.set('pm_agreement_triggered', true);
+
+        setTimeout(function () { addMessage('lin', '我想给你看一样东西。'); }, 1200);
+
+        setTimeout(function () {
+            buildAgreementImage(function (dataURL) {
+                if (!dataURL) {
+                    addMessage('lin', '（图片加载失败）');
+                    return;
+                }
+
+                var div = document.createElement('div');
+                div.className = 'pm-msg from-lin';
+                div.innerHTML =
+                    '<span class="who">林默</span>' +
+                    '<span class="txt"><img src="' + dataURL + '" alt="归档同意书"></span>' +
+                    '<span class="time">' + nowHM() + '</span>';
+                bodyEl.appendChild(div);
+                bodyEl.scrollTop = bodyEl.scrollHeight;
+
+                pmMessages.push({ role: 'lin', content: '[图片：归档同意书]', time: nowHM() });
+                Store.set('pm_messages', pmMessages);
+
+                div.querySelector('img').addEventListener('click', function () {
+                    if (window.ViewerHelper) {
+                        window.ViewerHelper.openImage('归档同意书', dataURL);
+                    }
+                });
+
+                setTimeout(function () { addMessage('lin', '你签过这个。你签过这个。你签过这个。'); }, 2000);
+                setTimeout(function () { addMessage('lin', '回回回回回回回回回回'); }, 2800);
+                setTimeout(function () { addMessage('lin', '我是谁我是谁我是谁我是谁'); }, 3600);
+
+                setTimeout(function () {
+                    var msgs = Store.get('pm_messages', []);
+                    var replaceIdx = [];
+                    for (var i = msgs.length - 1; i >= 0 && replaceIdx.length < 3; i--) {
+                        if (msgs[i].role === 'lin') replaceIdx.push(i);
+                    }
+                    replaceIdx.forEach(function (idx) {
+                        msgs[idx].content = '（此消息已被撤回）';
+                        msgs[idx].recalled = true;
+                    });
+                    Store.set('pm_messages', msgs);
+                    pmMessages = msgs;
+                    renderMessages();
+                    if (window.GameAudio) GameAudio.once('static', { volume: 0.1 });
+                }, 5000);
+
+                setTimeout(function () { addMessage('lin', '抱歉。刚才信号不好。'); }, 6500);
+                setTimeout(function () { showPmFlash('glitch_face'); }, 7600);
+                setTimeout(function () { addMessage('lin', '我说的是：你签过这个，对吗？'); }, 8000);
+            });
+        }, 4000);
+    }
+
+    function showPmFlash(type) {
+        var flash = document.getElementById('pmFlash');
+        var imgEl = document.getElementById('pmFlashImg');
+        var textEl = document.getElementById('pmFlashText');
+        if (!flash) return;
+
+        if (type === 'glitch_face') {
+            imgEl.src = 'img/glitch_face.jpg';
+            imgEl.style.display = 'block';
+            textEl.style.display = 'none';
+        } else {
+            /* 用 glitch_text.png 图片 */
+            imgEl.src = 'img/glitch_text.png';
+            imgEl.style.display = 'block';
+            imgEl.style.filter = 'none';
+            imgEl.style.maxWidth = '50%';
+            textEl.style.display = 'none';
+        }
+
+        flash.classList.add('show');
+        if (window.GameAudio) GameAudio.once('static', { volume: 0.12 });
+
+        setTimeout(function () {
+            flash.classList.remove('show');
+            imgEl.style.display = 'none';
+            imgEl.style.filter = '';
+            imgEl.style.maxWidth = '';
+            textEl.style.display = 'none';
+        }, 120);
     }
 
     function sendMessage() {
@@ -155,6 +304,13 @@
         }
 
         recordSharedInfo(text);
+
+        var msgCount = Store.get('pm_player_msg_count', 0) + 1;
+        Store.set('pm_player_msg_count', msgCount);
+
+        if (msgCount >= 5 && !Store.get('pm_agreement_triggered', false)) {
+            setTimeout(triggerAgreementEvent, 1500);
+        }
 
         if (text === '有人吗') { handleSendYouRenMa(); return; }
         if (text === '没有人') { handleSendNoOne(); return; }

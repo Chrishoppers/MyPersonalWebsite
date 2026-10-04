@@ -252,8 +252,9 @@
                 document.body.appendChild(fsBtn);
             }
 
-            function checkAdminVisibility() {
+                function checkAdminVisibility() {
                 var cond = Store.get('read_post_1', false)
+                        && Store.get('found_node7', false)
                         && Store.get('read_nodes', false)
                         && Store.get('reverse_audio', false);
                 if (cond) {
@@ -325,9 +326,14 @@
 
                             Store.set('reverse_audio', true);
                             Store.set('verify_reverse_played', true);
-                            addAttention(2);
 
                             var status = content.querySelector('#audioDiagStatus');
+                            if (status) {
+                                status.textContent =
+                                    '不要留名。\n不要回头。\n不要回答。';
+                                status.style.whiteSpace = 'pre-wrap';
+                                status.style.color = '#a00';
+                            }
                             if (status) {
                                 status.textContent =
                                     '不要留名。\n不要回头。\n不要回答。';
