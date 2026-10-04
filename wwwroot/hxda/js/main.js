@@ -34,7 +34,9 @@
     var post5Author = document.getElementById('post5Author');
     var post5Link = document.getElementById('post5Link');
 
-    /* 全屏按钮 */
+    /* ============================================================
+       全屏按钮
+       ============================================================ */
     if (window.FullscreenHelper && !window.FullscreenHelper.isMobile) {
         var fsBtn = document.createElement('button');
         fsBtn.textContent = '⛶';
@@ -54,7 +56,9 @@
         document.body.appendChild(fsBtn);
     }
 
-    /* 在线状态 */
+    /* ============================================================
+       在线状态
+       ============================================================ */
     (function initOnline() {
 
         statTotal.textContent = 8 + Store.get('visited', 0);
@@ -98,8 +102,12 @@
         }
     })();
 
-    /* 帖子5 异常 */
+    /* ============================================================
+       帖子 5 异常
+       ============================================================ */
     (function initPost5() {
+
+        if (!post5Row || !post5Time) return;
 
         post5Time.textContent = nowHM();
 
@@ -159,7 +167,9 @@
         );
     }
 
-    /* 分页 */
+    /* ============================================================
+       分页
+       ============================================================ */
     document.querySelectorAll('.forum-pager a[data-page]').forEach(function (a) {
         a.addEventListener('click', function (e) {
             e.preventDefault();
@@ -167,7 +177,9 @@
         });
     });
 
-    /* 弹窗 1 */
+    /* ============================================================
+       弹窗 1
+       ============================================================ */
     (function initFirstVisit() {
         var cnt = Store.get('popup1_count', 0);
         if (cnt >= 3) return;
@@ -195,7 +207,9 @@
         }, 5000);
     })();
 
-    /* 登录弹窗 */
+    /* ============================================================
+       登录弹窗
+       ============================================================ */
     function showLoginPopup() {
         var name = Store.get('visitor_name', '') || '无名';
         uiAlert(
@@ -211,64 +225,87 @@
         }
     });
 
-    /* 退出 */
-    document.getElementById('navLogout').addEventListener('click', function (e) {
-        e.preventDefault();
-        uiPopup(
-            '退出确认',
-            '您确定要离开？\n它还没有回答。',
-            [
-                {
-                    text: '确定离开',
-                    danger: true,
-                    onClick: function () {
-                        Store.set('ending_disconnect', true);
-                        window.location.href = 'page43.html?disconnect=1';
+    /* ============================================================
+       退出
+       ============================================================ */
+    var navLogout = document.getElementById('navLogout');
+    if (navLogout) {
+        navLogout.addEventListener('click', function (e) {
+            e.preventDefault();
+            uiPopup(
+                '退出确认',
+                '您确定要离开？\n它还没有回答。',
+                [
+                    {
+                        text: '确定离开',
+                        danger: true,
+                        onClick: function () {
+                            Store.set('ending_disconnect', true);
+                            window.location.href = 'page43.html?disconnect=1';
+                        }
+                    },
+                    {
+                        text: '留下',
+                        primary: true,
+                        onClick: function () {
+                            addAttention(5);
+                        }
                     }
-                },
-                {
-                    text: '留下',
-                    primary: true,
-                    onClick: function () {
-                        addAttention(5);
-                    }
-                }
-            ]
-        );
-    });
+                ]
+            );
+        });
+    }
 
-    /* 打印 */
-    document.getElementById('btnPrint').addEventListener('click', function () {
-        Store.set('printed_count', Store.get('printed_count', 0) + 1);
-        Store.set('found_node7', true);
-        Store.set('seen_source_code', true);
-        window.print();
-    });
+    /* ============================================================
+       打印
+       ============================================================ */
+    var btnPrint = document.getElementById('btnPrint');
+    if (btnPrint) {
+        btnPrint.addEventListener('click', function () {
+            Store.set('printed_count', Store.get('printed_count', 0) + 1);
+            Store.set('found_node7', true);
+            Store.set('seen_source_code', true);
+            window.print();
+        });
+    }
 
-    /* 关于 / 帮助 */
-    document.getElementById('btnAbout').addEventListener('click', function () {
-        window.location.href = 'about.html';
-    });
+    /* ============================================================
+       关于 / 帮助
+       ============================================================ */
+    var btnAbout = document.getElementById('btnAbout');
+    if (btnAbout) {
+        btnAbout.addEventListener('click', function () {
+            window.location.href = 'about.html';
+        });
+    }
 
-    document.getElementById('footerHelp').addEventListener('click', function (e) {
-        e.preventDefault();
-        uiAlert(
-            '帮助',
-            '如果您能看懂这些字，说明您已经进入了档案。\n' +
-            '没有帮助。\n' +
-            '只有节点。'
-        );
-    });
+    var footerHelp = document.getElementById('footerHelp');
+    if (footerHelp) {
+        footerHelp.addEventListener('click', function (e) {
+            e.preventDefault();
+            uiAlert(
+                '帮助',
+                '如果您能看懂这些字，说明您已经进入了档案。\n' +
+                '没有帮助。\n' +
+                '只有节点。'
+            );
+        });
+    }
 
-    /* 管理后台 */
+    /* ============================================================
+       管理后台
+       ============================================================ */
     function checkAdminVisibility() {
         var cond = Store.get('read_post_1', false)
             && Store.get('found_node7', false)
             && Store.get('read_nodes', false)
             && Store.get('reverse_audio', false);
+
+        var navAdmin = document.getElementById('navAdmin');
+        var btnAdmin = document.getElementById('btnAdmin');
         if (cond) {
-            document.getElementById('navAdmin').style.display = '';
-            document.getElementById('btnAdmin').style.display = '';
+            if (navAdmin) navAdmin.style.display = '';
+            if (btnAdmin) btnAdmin.style.display = '';
         }
     }
     checkAdminVisibility();
@@ -288,21 +325,22 @@
         );
     }
 
-    document.getElementById('navAdmin').addEventListener('click', function (e) {
-        e.preventDefault();
-        showAdminPopup();
-    });
-    document.getElementById('btnAdmin').addEventListener('click', function (e) {
-        e.preventDefault();
-        showAdminPopup();
-    });
+    var navAdmin = document.getElementById('navAdmin');
+    var btnAdmin = document.getElementById('btnAdmin');
+    if (navAdmin) navAdmin.addEventListener('click', function (e) { e.preventDefault(); showAdminPopup(); });
+    if (btnAdmin) btnAdmin.addEventListener('click', function (e) { e.preventDefault(); showAdminPopup(); });
 
-    /* 搜索系统 */
+    /* ============================================================
+       搜索系统
+       ============================================================ */
+
+    /* 搜索框聚焦 */
     searchInput.addEventListener('focus', function () { renderSearchHistory(); });
     searchInput.addEventListener('blur', function () {
         setTimeout(function () { searchDrop.classList.remove('show'); }, 200);
     });
 
+    /* 搜索历史渲染 */
     function renderSearchHistory() {
         var hist = Store.get('search_history', []);
 
@@ -353,33 +391,42 @@
         });
     }
 
+    /* 回车 → 跳转到 search.html */
     searchInput.addEventListener('keydown', function (e) {
         if (e.key === 'Enter') {
+            e.preventDefault();
             var q = searchInput.value.trim();
             searchDrop.classList.remove('show');
-            doSearch(q);
+            if (q) {
+                window.location.href = 'search.html?q=' + encodeURIComponent(q);
+            } else {
+                window.location.href = 'search.html';
+            }
         }
     });
 
+    /* 搜索按钮 → 跳转到 search.html */
     var searchBtn = document.getElementById('searchBtn');
     if (searchBtn) {
         searchBtn.addEventListener('click', function () {
             var q = searchInput.value.trim();
-            searchDrop.classList.remove('show');
-            doSearch(q);
+            if (q) {
+                window.location.href = 'search.html?q=' + encodeURIComponent(q);
+            } else {
+                window.location.href = 'search.html';
+            }
         });
     }
 
+    /* ============================================================
+       doSearch（保留：从历史点击时调用）
+       ============================================================ */
     function doSearch(q, fromHistory) {
 
         if (!fromHistory) {
             var n = Store.get('search_count', 0) + 1;
             Store.set('search_count', n);
             addAttention(1);
-
-            if (window.HxdaReport && window.HxdaReport.event) {
-                HxdaReport.event('search', { word: q, time: nowFull() });
-            }
 
             var hist = Store.get('search_history', []);
             hist.push({
@@ -459,8 +506,8 @@
             return;
         }
         if (q === '不要留名') {
-            var hasName = Store.get('visitor_name', '') !== '';
-            searchInput.value = hasName ? '你留了。' : '你还没留。很好。';
+            var hasName2 = Store.get('visitor_name', '') !== '';
+            searchInput.value = hasName2 ? '你留了。' : '你还没留。很好。';
             return;
         }
         if (q === '不要回答') { searchInput.value = '你已经回答了。'; return; }
@@ -489,6 +536,9 @@
         showBottomLine('0 条结果。');
     }
 
+    /* ============================================================
+       各种搜索结果处理
+       ============================================================ */
     function handleYouRenMa() {
         var n = Store.get('search_yourenma_count', 0) + 1;
         Store.set('search_yourenma_count', n);
@@ -693,7 +743,9 @@
         setTimeout(function () { d.remove(); }, ms);
     }
 
-    /* 搜索框主动打字 */
+    /* ============================================================
+       搜索框主动打字
+       ============================================================ */
     var idleTimer = null;
     var idleStage = 0;
     var idleTexts = ['有 人 吗', '你 叫 什 么', '别 删 了'];

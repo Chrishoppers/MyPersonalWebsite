@@ -85,6 +85,52 @@
                         content: '⚙ ';
                     }
 
+        /* ============================================================
+           版块列表
+           ============================================================ */
+        .forum-boards {
+            padding: 10px 14px;
+            background: #f4f4f4;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .board-group {
+            margin-bottom: 8px;
+        }
+
+        .board-title {
+            font-weight: bold;
+            color: #1a3a6b;
+            font-size: 12px;
+            margin-bottom: 4px;
+        }
+
+        .board-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .board-item {
+            padding: 2px 8px;
+            border: 1px solid #ddd;
+            background: #fff;
+            font-size: 11px;
+            color: #1a3a6b;
+            text-decoration: none;
+        }
+
+            .board-item:hover {
+                background: #fff8d0;
+                text-decoration: none;
+            }
+
+            .board-item span {
+                color: #999;
+                font-size: 10px;
+                margin-left: 4px;
+            }
+
         #post5Row {
             transition: background 0.5s ease;
         }
@@ -125,19 +171,6 @@
             color: #a00;
         }
     </style>
-        <style>
-            .forum-boards {
-                padding: 10px 14px;
-                background: #f4f4f4;
-                border-bottom: 1px solid #ddd;
-            }
-            .board-group { margin-bottom: 8px; }
-            .board-title { font-weight: bold; color: #1a3a6b; font-size: 12px; margin-bottom: 4px; }
-            .board-list { display: flex; flex-wrap: wrap; gap: 8px; }
-            .board-item { padding: 2px 8px; border: 1px solid #ddd; background: #fff; font-size: 11px; color: #1a3a6b; text-decoration: none; }
-            .board-item:hover { background: #fff8d0; text-decoration: none; }
-            .board-item span { color: #999; font-size: 10px; margin-left: 4px; }
-        </style>
 </head>
 <body>
 
@@ -171,47 +204,53 @@
         </div>
 
         <div class="forum-boards">
-    <div class="board-group">
-        <div class="board-title">站务管理</div>
-        <div class="board-list">
-            <a href="board.html?b=notice" class="board-item">站务公告 <span>3/5</span></a>
-            <a href="board.html?b=mod-apply" class="board-item">版主申请 <span>1/2</span></a>
-            <a href="board.html?b=report" class="board-item">举报投诉 <span>0/0</span></a>
+
+            <div class="board-group">
+                <div class="board-title">站务管理</div>
+                <div class="board-list">
+                    <a href="board.html?b=notice" class="board-item">站务公告 <span>3/5</span></a>
+                    <a href="board.html?b=mod-apply" class="board-item">版主申请 <span>1/2</span></a>
+                    <a href="board.html?b=report" class="board-item">举报投诉 <span>0/0</span></a>
+                </div>
+            </div>
+
+            <div class="board-group">
+                <div class="board-title">失物招领</div>
+                <div class="board-list">
+                    <a href="bbs.html" class="board-item">寻物启事 <span>2/25</span></a>
+                    <a href="bbs.html" class="board-item">失物认领 <span>1/7</span></a>
+                    <a href="bbs.html" class="board-item">寻人启事 <span>1/2</span></a>
+                </div>
+            </div>
+
+            <div class="board-group">
+                <div class="board-title">自由交流</div>
+                <div class="board-list">
+                    <a href="board.html?b=free" class="board-item">自由留言 <span>7/7</span></a>
+                    <a href="board.html?b=diary" class="board-item">心情日记 <span>2/2</span></a>
+                    <a href="board.html?b=wish" class="board-item">许愿墙 <span>1/1</span></a>
+                </div>
+            </div>
+
+            <div class="board-group">
+                <div class="board-title">归档</div>
+                <div class="board-list">
+                    <a href="node.html" class="board-item">归档节点 <span>7/7</span></a>
+                    <a href="board.html?b=archived-members" class="board-item">已归档会员 <span>0/0</span></a>
+                    <a href="infinity.html" class="board-item">无限归档 <span>1/1</span></a>
+                </div>
+            </div>
+
+            <div class="board-group">
+                <div class="board-title">其他</div>
+                <div class="board-list">
+                    <a href="post.html?id=12" class="board-item">签到专区 <span>1/1</span></a>
+                    <a href="post.html?id=13" class="board-item">任务中心 <span>1/1</span></a>
+                    <a href="post.html?id=14" class="board-item">勋章商城 <span>1/1</span></a>
+                </div>
+            </div>
+
         </div>
-    </div>
-    <div class="board-group">
-        <div class="board-title">失物招领</div>
-        <div class="board-list">
-            <a href="board.html?b=notice" class="board-item">寻物启事 <span>2/25</span></a>
-            <a href="board.html?b=notice" class="board-item">失物认领 <span>1/7</span></a>
-            <a href="board.html?b=notice" class="board-item">寻人启事 <span>1/2</span></a>
-        </div>
-    </div>
-    <div class="board-group">
-        <div class="board-title">自由交流</div>
-        <div class="board-list">
-            <a href="board.html?b=free" class="board-item">自由留言 <span>7/7</span></a>
-            <a href="board.html?b=diary" class="board-item">心情日记 <span>2/2</span></a>
-            <a href="board.html?b=wish" class="board-item">许愿墙 <span>1/1</span></a>
-        </div>
-    </div>
-    <div class="board-group">
-        <div class="board-title">归档</div>
-        <div class="board-list">
-            <a href="node.html" class="board-item">归档节点 <span>7/7</span></a>
-            <a href="board.html?b=archived-members" class="board-item">已归档会员 <span>8/8</span></a>
-            <a href="board.html?b=archived-members" class="board-item">无限归档 <span>1/1</span></a>
-        </div>
-    </div>
-    <div class="board-group">
-        <div class="board-title">其他</div>
-        <div class="board-list">
-            <a href="post.html?id=12" class="board-item">签到专区 <span>1/1</span></a>
-            <a href="post.html?id=13" class="board-item">任务中心 <span>1/1</span></a>
-            <a href="post.html?id=14" class="board-item">勋章商城 <span>1/1</span></a>
-        </div>
-    </div>
-</div>
 
         <div class="forum-stats">
             <div>
@@ -226,9 +265,13 @@
         </div>
 
         <div style="padding: 8px 14px; background: #f4f4f4; border-bottom: 1px solid #ddd;">
-            <div class="search-wrap" style="max-width: 500px;">
-                <input type="text" id="searchInput" placeholder="搜索全部归档节点..."
-                       autocomplete="off" maxlength="60">
+            <div class="search-wrap" style="max-width: 600px;">
+                <div style="display:flex;gap:6px;align-items:center;">
+                    <input type="text" id="searchInput" placeholder="搜索全部归档节点..."
+                           autocomplete="off" maxlength="60" style="flex:1;">
+                    <button class="old-btn old-btn-primary" id="searchBtn" style="padding:4px 16px;font-size:12px;">搜索</button>
+                    <a href="search.html" class="old-btn" style="padding:4px 16px;font-size:12px;text-decoration:none;">高级搜索</a>
+                </div>
                 <div class="tiny" style="color:#999;">注意：您的搜索词将被归档。</div>
                 <div class="search-drop" id="searchDrop"></div>
             </div>
@@ -246,6 +289,10 @@
             </thead>
             <tbody>
 
+                <!-- ============================================================
+                     正常帖 1 ~ 20
+                     ============================================================ -->
+
                 <tr data-post-id="1">
                     <td class="col-icon"><span class="thread-icon sticky">📌</span></td>
                     <td class="col-title"><a href="post.html?id=3">置顶：本版留言格式说明</a></td>
@@ -255,70 +302,94 @@
                 </tr>
 
                 <tr data-post-id="2">
-                    <td class="col-icon"><span class="thread-icon">📄</span></td>
-                    <td class="col-title"><a href="post.html?id=1">寻物：一本黑色皮面笔记本</a></td>
-                    <td>林默</td>
-                    <td style="text-align:center;">23 / 43</td>
-                    <td>2019-02-14 23:47<br><span style="color:#999;">by 林默</span></td>
+                    <td class="col-icon"><span class="thread-icon sticky">📌</span></td>
+                    <td class="col-title"><a href="post.html?id=22">版务公告：关于版主职位的说明</a></td>
+                    <td>站长</td>
+                    <td style="text-align:center;">4 / 33</td>
+                    <td>2015-01-02 10:47<br><span style="color:#999;">by 站长</span></td>
                 </tr>
 
                 <tr data-post-id="3">
                     <td class="col-icon"><span class="thread-icon">📄</span></td>
-                    <td class="col-title"><a href="post.html?id=5">寻物：一把黑色折叠伞（已找到）</a></td>
-                    <td>阿杰</td>
-                    <td style="text-align:center;">4 / 18</td>
-                    <td>2011-06-12 14:22<br><span style="color:#999;">by 阿杰</span></td>
+                    <td class="col-title"><a href="post.html?id=12">签到专区｜每日签到帖（第 47 期）</a></td>
+                    <td>版主</td>
+                    <td style="text-align:center;">5 / 23</td>
+                    <td>2019-01-15 14:30<br><span style="color:#999;">by 路人乙</span></td>
                 </tr>
 
                 <tr data-post-id="4">
                     <td class="col-icon"><span class="thread-icon">📄</span></td>
-                    <td class="col-title"><a href="post.html?id=6">新人报到，请大家多关照</a></td>
-                    <td>小夏</td>
-                    <td style="text-align:center;">7 / 31</td>
-                    <td>2012-03-08 21:05<br><span style="color:#999;">by 小夏</span></td>
+                    <td class="col-title"><a href="post.html?id=13">任务中心｜每日任务：在本版任意帖子回复一次</a></td>
+                    <td>版主</td>
+                    <td style="text-align:center;">2 / 15</td>
+                    <td>2019-01-20 09:30<br><span style="color:#999;">by 小夏</span></td>
                 </tr>
 
                 <tr data-post-id="5">
                     <td class="col-icon"><span class="thread-icon">📄</span></td>
-                    <td class="col-title"><a href="post.html?id=7">有人捡到一串钥匙吗？（附图）</a></td>
-                    <td>老周</td>
-                    <td style="text-align:center;">2 / 12</td>
-                    <td>2013-09-21 08:40<br><span style="color:#999;">by 老周</span></td>
+                    <td class="col-title"><a href="post.html?id=6">新人报到，请大家多关照</a></td>
+                    <td>小夏</td>
+                    <td style="text-align:center;">7 / 31</td>
+                    <td>2012-03-09 09:30<br><span style="color:#999;">by 小夏</span></td>
                 </tr>
 
                 <tr data-post-id="6">
                     <td class="col-icon"><span class="thread-icon">📄</span></td>
-                    <td class="col-title"><a href="post.html?id=8">【灌水】今天下雨了，想起以前的事</a></td>
-                    <td>匿名</td>
-                    <td style="text-align:center;">15 / 44</td>
-                    <td>2014-05-30 23:11<br><span style="color:#999;">by 匿名</span></td>
+                    <td class="col-title"><a href="post.html?id=5">寻物：一把黑色折叠伞（已找到）</a></td>
+                    <td>阿杰</td>
+                    <td style="text-align:center;">4 / 18</td>
+                    <td>2011-06-12 19:10<br><span style="color:#999;">by 阿杰</span></td>
                 </tr>
 
                 <tr data-post-id="7">
                     <td class="col-icon"><span class="thread-icon">📄</span></td>
-                    <td class="col-title"><a href="post.html?id=2">有人认识一个叫"阿回"的人吗？</a></td>
-                    <td>访客</td>
-                    <td style="text-align:center;">7 / 43</td>
-                    <td>2019-01-03 23:47<br><span style="color:#999;">by 匿名</span></td>
+                    <td class="col-title"><a href="post.html?id=7">有人捡到一串钥匙吗？（附图）</a></td>
+                    <td>老周</td>
+                    <td style="text-align:center;">2 / 12</td>
+                    <td>2013-09-22 10:30<br><span style="color:#999;">by 老周</span></td>
                 </tr>
 
                 <tr data-post-id="8">
                     <td class="col-icon"><span class="thread-icon">📄</span></td>
-                    <td class="col-title"><a href="post.html?id=9">请问怎么修改头像？</a></td>
-                    <td>小林</td>
-                    <td style="text-align:center;">3 / 9</td>
-                    <td>2015-11-02 10:33<br><span style="color:#999;">by 版主</span></td>
+                    <td class="col-title"><a href="post.html?id=15">心情日记｜2018年最后一天</a></td>
+                    <td>匿名</td>
+                    <td style="text-align:center;">3 / 28</td>
+                    <td>2019-12-31 23:59<br><span style="color:#999;">by 匿名</span></td>
                 </tr>
 
                 <tr data-post-id="9">
-                    <td class="col-icon"><span class="thread-icon unknown">?</span></td>
-                    <td class="col-title"><a href="post.html?id=4">（无标题）</a></td>
-                    <td>未知</td>
-                    <td style="text-align:center;">???</td>
-                    <td>???</td>
+                    <td class="col-icon"><span class="thread-icon">📄</span></td>
+                    <td class="col-title"><a href="post.html?id=16">许愿墙｜写下你想要的</a></td>
+                    <td>版主</td>
+                    <td style="text-align:center;">4 / 19</td>
+                    <td>2019-02-14 23:47<br><span style="color:#999;">by 匿名</span></td>
                 </tr>
 
                 <tr data-post-id="10">
+                    <td class="col-icon"><span class="thread-icon">📄</span></td>
+                    <td class="col-title"><a href="post.html?id=8">【灌水】今天下雨了，想起以前的事</a></td>
+                    <td>匿名</td>
+                    <td style="text-align:center;">10 / 44</td>
+                    <td>2015-01-01 00:03<br><span style="color:#999;">by 匿名</span></td>
+                </tr>
+
+                <tr data-post-id="11">
+                    <td class="col-icon"><span class="thread-icon">📄</span></td>
+                    <td class="col-title"><a href="post.html?id=17">举报投诉｜举报一个可疑账号</a></td>
+                    <td>路人甲</td>
+                    <td style="text-align:center;">4 / 21</td>
+                    <td>2019-02-14 23:47<br><span style="color:#999;">by 匿名</span></td>
+                </tr>
+
+                <tr data-post-id="12">
+                    <td class="col-icon"><span class="thread-icon">📄</span></td>
+                    <td class="col-title"><a href="post.html?id=9">请问怎么修改头像？</a></td>
+                    <td>小林</td>
+                    <td style="text-align:center;">3 / 9</td>
+                    <td>2015-11-02 11:02<br><span style="color:#999;">by 小林</span></td>
+                </tr>
+
+                <tr data-post-id="13">
                     <td class="col-icon"><span class="thread-icon">📄</span></td>
                     <td class="col-title"><a href="post.html?id=10">版规补充：请勿在本版发布无关内容</a></td>
                     <td>版主</td>
@@ -326,63 +397,97 @@
                     <td>2016-01-15 09:00<br><span style="color:#999;">by 版主</span></td>
                 </tr>
 
-                <tr data-post-id="11">
+                <tr data-post-id="14">
+                    <td class="col-icon"><span class="thread-icon">📄</span></td>
+                    <td class="col-title"><a href="post.html?id=14">勋章商城｜当前可兑换勋章一览</a></td>
+                    <td>版主</td>
+                    <td style="text-align:center;">0 / 11</td>
+                    <td>2018-12-01 00:00<br><span style="color:#999;">by 版主</span></td>
+                </tr>
+
+                <tr data-post-id="15">
                     <td class="col-icon"><span class="thread-icon">📄</span></td>
                     <td class="col-title"><a href="post.html?id=11">有没有人记得这个论坛以前叫什么？</a></td>
                     <td>路过</td>
                     <td style="text-align:center;">6 / 27</td>
-                    <td>2017-08-19 16:47<br><span style="color:#999;">by 路过</span></td>
+                    <td>2017-08-20 23:47<br><span style="color:#999;">by 匿名</span></td>
                 </tr>
 
-                <!-- 正常与异常帖已按要求排序，示例条目如下（略） -->
+                <tr data-post-id="16">
+                    <td class="col-icon"><span class="thread-icon">📄</span></td>
+                    <td class="col-title"><a href="post.html?id=18">关于本版的常见问题（新人必看）</a></td>
+                    <td>版主</td>
+                    <td style="text-align:center;">3 / 21</td>
+                    <td>2016-04-14 08:00<br><span style="color:#999;">by 版主</span></td>
+                </tr>
 
-<tr data-post-id="19">
-    <td class="col-icon"><span class="thread-icon">📄</span></td>
-    <td class="col-title"><a href="post.html?id=18">关于本版的常见问题（新人必看）</a></td>
-    <td>版主</td>
-    <td style="text-align:center;">3 / 21</td>
-    <td>2016-04-14 08:00<br><span style="color:#999;">by 版主</span></td>
-</tr>
+                <tr data-post-id="17">
+                    <td class="col-icon"><span class="thread-icon">📄</span></td>
+                    <td class="col-title"><a href="post.html?id=19">这个论坛是不是有点奇怪</a></td>
+                    <td>新来的</td>
+                    <td style="text-align:center;">4 / 27</td>
+                    <td>2017-11-03 03:47<br><span style="color:#999;">by 匿名</span></td>
+                </tr>
 
-<tr data-post-id="20">
-    <td class="col-icon"><span class="thread-icon">📄</span></td>
-    <td class="col-title"><a href="post.html?id=19">这个论坛是不是有点奇怪</a></td>
-    <td>新来的</td>
-    <td style="text-align:center;">4 / 27</td>
-    <td>2017-11-03 03:47<br><span style="color:#999;">by 匿名</span></td>
-</tr>
+                <tr data-post-id="18">
+                    <td class="col-icon"><span class="thread-icon">📄</span></td>
+                    <td class="col-title"><a href="post.html?id=20">还记得 2014 年的那个帖子吗</a></td>
+                    <td>老用户</td>
+                    <td style="text-align:center;">3 / 19</td>
+                    <td>2018-06-21 00:47<br><span style="color:#999;">by 匿名</span></td>
+                </tr>
 
-<tr data-post-id="21">
-    <td class="col-icon"><span class="thread-icon">📄</span></td>
-    <td class="col-title"><a href="post.html?id=20">还记得 2014 年的那个帖子吗</a></td>
-    <td>老用户</td>
-    <td style="text-align:center;">3 / 19</td>
-    <td>2018-06-21 00:47<br><span style="color:#999;">by 匿名</span></td>
-</tr>
+                <tr data-post-id="19">
+                    <td class="col-icon"><span class="thread-icon">📄</span></td>
+                    <td class="col-title"><a href="post.html?id=21">关于本站的"页面校验"功能</a></td>
+                    <td>好奇的人</td>
+                    <td style="text-align:center;">3 / 15</td>
+                    <td>2018-09-14 15:33<br><span style="color:#999;">by 路人甲</span></td>
+                </tr>
 
-<tr data-post-id="22">
-    <td class="col-icon"><span class="thread-icon">📄</span></td>
-    <td class="col-title"><a href="post.html?id=21">关于本站的"页面校验"功能</a></td>
-    <td>好奇的人</td>
-    <td style="text-align:center;">3 / 15</td>
-    <td>2018-09-14 15:33<br><span style="color:#999;">by 路人甲</span></td>
-</tr>
+                <tr data-post-id="20">
+                    <td class="col-icon"><span class="thread-icon">📄</span></td>
+                    <td class="col-title"><a href="post.html?id=23">有人想过这个问题吗</a></td>
+                    <td>匿名</td>
+                    <td style="text-align:center;">3 / 11</td>
+                    <td>2018-12-24 23:53<br><span style="color:#999;">by 匿名</span></td>
+                </tr>
 
-<tr data-post-id="23">
-    <td class="col-icon"><span class="thread-icon sticky">📌</span></td>
-    <td class="col-title"><a href="post.html?id=22">版务公告：关于版主职位的说明</a></td>
-    <td>站长</td>
-    <td style="text-align:center;">4 / 33</td>
-    <td>2015-01-02 10:47<br><span style="color:#999;">by 站长</span></td>
-</tr>
+                <!-- ============================================================
+                     异常帖 1 ~ 4
+                     ============================================================ -->
 
-<tr data-post-id="24">
-    <td class="col-icon"><span class="thread-icon">📄</span></td>
-    <td class="col-title"><a href="post.html?id=23">有人想过这个问题吗</a></td>
-    <td>匿名</td>
-    <td style="text-align:center;">3 / 11</td>
-    <td>2018-12-24 23:53<br><span style="color:#999;">by 匿名</span></td>
-</tr>
+                <tr data-post-id="21">
+                    <td class="col-icon"><span class="thread-icon">📄</span></td>
+                    <td class="col-title"><a href="post.html?id=1">寻物：一本黑色皮面笔记本</a></td>
+                    <td>林默</td>
+                    <td style="text-align:center;">23 / 43</td>
+                    <td>2019-02-14 23:47<br><span style="color:#999;">by 林默</span></td>
+                </tr>
+
+                <tr data-post-id="22">
+                    <td class="col-icon"><span class="thread-icon">📄</span></td>
+                    <td class="col-title"><a href="post.html?id=2">有人认识一个叫"阿回"的人吗？</a></td>
+                    <td>访客</td>
+                    <td style="text-align:center;">7 / 43</td>
+                    <td>2019-01-03 23:47<br><span style="color:#999;">by 匿名</span></td>
+                </tr>
+
+                <tr data-post-id="23">
+                    <td class="col-icon"><span class="thread-icon unknown">?</span></td>
+                    <td class="col-title"><a href="post.html?id=4">（无标题）</a></td>
+                    <td>未知</td>
+                    <td style="text-align:center;">???</td>
+                    <td>???</td>
+                </tr>
+
+                <tr data-post-id="24" id="post5Row">
+                    <td class="col-icon"><span class="thread-icon unknown">?</span></td>
+                    <td class="col-title"><a href="#" id="post5Link">第43页</a></td>
+                    <td id="post5Author">???</td>
+                    <td style="text-align:center;">0 / <span id="post5Views">43</span></td>
+                    <td id="post5Time">刚刚</td>
+                </tr>
 
             </tbody>
         </table>
@@ -402,25 +507,6 @@
             <button class="old-btn" id="btnAdmin" style="display:none;">管理后台</button>
             <button class="old-btn" id="btnLogout">退出</button>
         </div>
-
-        <script>
-            var btnLogout = document.getElementById('btnLogout');
-            if (btnLogout) {
-                btnLogout.addEventListener('click', function () {
-                    if (typeof uiPopup === 'function') {
-                        uiPopup('退出确认', '您确定要离开？\n它还没有回答。', [
-                            { text: '确定离开', danger: true, onClick: function () {
-                                Store.set('ending_disconnect', true);
-                                window.location.href = 'page43.html?disconnect=1';
-                            }},
-                            { text: '留下', primary: true, onClick: function () {
-                                if (typeof addAttention === 'function') addAttention(5);
-                            }}
-                        ]);
-                    }
-                });
-            }
-        </script>
 
         <div class="forum-footer">
             <div>
@@ -444,32 +530,80 @@
     <script src="js/horror.js"></script>
     <script src="js/explore.js"></script>
     <script src="js/main.js"></script>
+
     <script>
 (function () {
             'use strict';
 
+            /* 点击帖子时的音效 */
             document.querySelectorAll('.post-table .col-title a').forEach(function (a) {
                 a.addEventListener('click', function () {
-                    GameAudio.once('click', { volume: 0.12 });
-                    GameAudio.once('page_turn', { volume: 0.35 });
+                    if (window.GameAudio) {
+                        GameAudio.once('click', { volume: 0.12 });
+                        GameAudio.once('page_turn', { volume: 0.35 });
+                    }
                 });
             });
 
+            /* 心跳循环 */
             (function heartLoop() {
                 var a = Store.get('attention', 0);
                 if (a >= 16 && !window._heartOn) {
                     window._heartOn = true;
-                    GameAudio.fadeIn('heartbeat', 1200, 0.25);
+                    if (window.GameAudio) GameAudio.fadeIn('heartbeat', 1200, 0.25);
                 } else if (a < 16 && window._heartOn) {
                     window._heartOn = false;
-                    GameAudio.fadeOut('heartbeat', 1200);
+                    if (window.GameAudio) GameAudio.fadeOut('heartbeat', 1200);
                 }
                 setTimeout(heartLoop, 3000);
             })();
 
             window.addEventListener('beforeunload', function () {
-                GameAudio.fadeOut('heartbeat', 800);
+                if (window.GameAudio) GameAudio.fadeOut('heartbeat', 800);
             });
+
+            /* ============================================================
+               底部"退出"按钮
+               ============================================================ */
+            var btnLogout = document.getElementById('btnLogout');
+            if (btnLogout) {
+                btnLogout.addEventListener('click', function () {
+                    if (typeof uiPopup === 'function') {
+                        uiPopup('退出确认', '您确定要离开？\n它还没有回答。', [
+                            {
+                                text: '确定离开', danger: true, onClick: function () {
+                                    Store.set('ending_disconnect', true);
+                                    window.location.href = 'page43.html?disconnect=1';
+                                }
+                            },
+                            {
+                                text: '留下', primary: true, onClick: function () {
+                                    if (typeof addAttention === 'function') addAttention(5);
+                                }
+                            }
+                        ]);
+                    }
+                });
+            }
+
+            /* ============================================================
+               归档结局后追加新帖
+               ============================================================ */
+            if (Store.get('archive_new_post', false)) {
+                var tbody = document.querySelector('.post-table tbody');
+                if (tbody) {
+                    var tr = document.createElement('tr');
+                    var name = Store.get('visitor_name', '') || '无名';
+                    tr.innerHTML =
+                        '<td class="col-icon"><span class="thread-icon unknown">?</span></td>' +
+                        '<td class="col-title">（无标题）</td>' +
+                        '<td>' + name + '</td>' +
+                        '<td style="text-align:center;">0 / 1</td>' +
+                        '<td>刚刚<br><span style="color:#999;">by ' + name + '</span></td>';
+                    tbody.appendChild(tr);
+                }
+            }
+
 })();
     </script>
 
