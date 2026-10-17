@@ -1,7 +1,7 @@
 ﻿/* ============================================================
    回响档案 · 私信系统
    文件：wwwroot/hxda/js/pm.js
-   后端：/api/deepseek/chat（代理，Key 在服务器）
+   依赖：storage.js、ui.js、tracker.js、audio.js
    ============================================================ */
 
 (function () {
@@ -39,18 +39,13 @@
     var pmOpened = Store.get('pm_opened', false);
     var pmEnded = Store.get('pm_ended', false);
     var pmArchived = Store.get('pm_archived', false);
-    var openStartTime = Date.now();
 
     if (!pmOpened) {
         pmOpened = true;
         Store.set('pm_opened', true);
         Store.set('pm_first_open_time', Date.now());
         if (pmMessages.length === 0) {
-            pmMessages.push({
-                role: 'lin',
-                content: '你好。你是谁？',
-                time: nowHM()
-            });
+            pmMessages.push({ role: 'lin', content: '你好。你是谁？', time: nowHM() });
             Store.set('pm_messages', pmMessages);
         }
     }
@@ -59,9 +54,7 @@
         var readNodes = Store.get('read_nodes', false);
         var readPost1 = Store.get('read_post_1', false);
         var foundNode7 = Store.get('found_node7', false);
-        var inAdmin = Store.get('read_nodes', false) && foundNode7;
-
-        if (inAdmin && readNodes) return 4;
+        if (readNodes && foundNode7) return 4;
         if (readNodes) return 3;
         if (readPost1) return 2;
         return 1;
@@ -77,6 +70,8 @@
             var contentHtml;
             if (m.recalled) {
                 contentHtml = '<span class="recalled">' + escapeHtml(m.content) + '</span>';
+            } else if (m.imageData) {
+                contentHtml = '<img src="' + m.imageData + '" alt="图片">';
             } else {
                 contentHtml = escapeHtml(m.content).replace(/\n/g, '<br>');
             }
@@ -115,39 +110,43 @@
             content: content,
             time: nowHM()
         });
-
         if (pmMessages.length > 100) pmMessages.shift();
         if (!skipStore) Store.set('pm_messages', pmMessages);
-
         renderMessages();
 
+        if (role === 'lin' && window.GameAudio) GameAudio.once('knock', { volume: 0.3 });
         if (role === 'lin' && Math.random() < 0.12) {
             setTimeout(function () {
                 showPmFlash(Math.random() < 0.5 ? 'glitch_face' : 'glitch_text');
             }, 400);
         }
-
-        if (role === 'lin' && window.GameAudio) {
-            GameAudio.once('knock', { volume: 0.3 });
-        }
-
-        /* 新增上报 */
-        if (window.HxdaReport && window.HxdaReport.event) {
-            HxdaReport.event('pm', { role: role, content: content });
-        }
     }
 
-    function showTyping() {
-        typingEl.innerHTML = '林默正在输入<span class="dot">.</span><span class="dot">.</span><span class="dot">.</span>';
+    /* ============================================================
+       图片消息（林默发来的图片）
+       ============================================================ */
+    function addImageMessage(role, imageData, altText) {
+        var msg = {
+            role: role,
+            content: altText || '[图片]',
+            imageData: imageData,
+            time: nowHM()
+        };
+        pmMessages.push(msg);
+        if (pmMessages.length > 100) pmMessages.shift();
+        Store.set('pm_messages', pmMessages);
+        renderMessages();
+
+        if (role === 'lin' && window.GameAudio) GameAudio.once('knock', { volume: 0.3 });
     }
 
-    function hideTyping() {
-        typingEl.textContent = '';
-    }
-
+    /* ============================================================
+       把玩家签名 P 到归档同意书上
+       ============================================================ */
     function buildAgreementImage(callback) {
         var base = new Image();
         base.crossOrigin = 'anonymous';
+
         base.onload = function () {
             var canvas = document.createElement('canvas');
             canvas.width = base.naturalWidth;
@@ -156,47 +155,148 @@
             ctx.drawImage(base, 0, 0);
 
             var sigData = Store.get('gate_signature_image', '');
-            if (sigData) {
-                var sig = new Image();
-                sig.onload = function () {
-                    var x = canvas.width * 0.15;
-                    var y = canvas.height * 0.50;
-                    var w = canvas.width * 0.35;
-                    var h = canvas.height * 0.08;
-
-                    ctx.globalAlpha = 0.75;
-                    ctx.drawImage(sig, x, y, w, h);
-                    ctx.globalAlpha = 1;
-
-                    try {
-                        var data = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                        for (var i = 0; i < data.data.length; i += 4) {
-                            if (Math.random() < 0.0005) {
-                                data.data[i] = 160;
-                                data.data[i + 1] = 0;
-                                data.data[i + 2] = 0;
-                            }
-                        }
-                        ctx.putImageData(data, 0, 0);
-                    } catch (e) {}
-
-                    callback(canvas.toDataURL('image/png'));
-                };
-                sig.onerror = function () { callback(canvas.toDataURL('image/png')); };
-                sig.src = sigData;
-            } else {
+            if (!sigData) {
                 callback(canvas.toDataURL('image/png'));
+                return;
             }
+
+            var sig = new Image();
+            sig.onload = function () {
+                /* ============================================================
+                   甲方签名位置
+                   根据你的 archive_agreement_base.jpg 实际布局调整这 4 个值：
+                   x: 距左比例
+                   y: 距上比例
+                   w: 宽度比例
+                   h: 高度比例
+                   ============================================================ */
+                var x = canvas.width * 0.10;
+                var y = canvas.height * 0.62;
+                var w = canvas.width * 0.30;
+                var h = canvas.height * 0.08;
+
+                ctx.globalAlpha = 0.85;
+                ctx.drawImage(sig, x, y, w, h);
+                ctx.globalAlpha = 1;
+
+                /* 轻微扭曲感 */
+                try {
+                    var data = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                    for (var i = 0; i < data.data.length; i += 4) {
+                        if (Math.random() < 0.0003) {
+                            data.data[i] = 160;
+                            data.data[i + 1] = 0;
+                            data.data[i + 2] = 0;
+                        }
+                    }
+                    ctx.putImageData(data, 0, 0);
+                } catch (e) { }
+
+                callback(canvas.toDataURL('image/png'));
+            };
+            sig.onerror = function () {
+                callback(canvas.toDataURL('image/png'));
+            };
+            sig.src = sigData;
         };
-        base.onerror = function () { callback(''); };
+
+        /* 底图不存在时的 fallback：用 canvas 画一份 */
+        base.onerror = function () {
+            var canvas = document.createElement('canvas');
+            canvas.width = 800;
+            canvas.height = 600;
+            var ctx = canvas.getContext('2d');
+
+            ctx.fillStyle = '#f4ecd8';
+            ctx.fillRect(0, 0, 800, 600);
+            ctx.strokeStyle = '#aaa';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(20, 20, 760, 560);
+
+            ctx.fillStyle = '#222';
+            ctx.font = 'bold 22px SimSun, serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('回响档案 · 归档同意书', 400, 70);
+
+            ctx.beginPath();
+            ctx.moveTo(60, 90);
+            ctx.lineTo(740, 90);
+            ctx.stroke();
+
+            ctx.font = '13px SimSun, serif';
+            ctx.textAlign = 'left';
+            var lines = [
+                '第一条　甲方（签署人）自愿将个人身份信息、留言记录、',
+                '　　　　访问日志等全部资料移交乙方（归档方）保存与管理。',
+                '',
+                '第二条　甲方确认已阅读并理解本同意书全部内容，自愿签署。',
+                '　　　　█████████████████████████████',
+                '',
+                '第三条　乙方承诺对甲方资料进行长期归档保存，保存期限为永久。',
+                '',
+                '第四条　归档编号由乙方统一分配，一经分配不可更改。',
+                '',
+                '第五条　甲方同意███████████████████████████',
+                '',
+                '第六条　█████████████不可撤销██████████████████',
+                '',
+                '第七条　本同意书自签署之日起生效。'
+            ];
+            var y = 130;
+            lines.forEach(function (l) {
+                ctx.fillText(l, 60, y);
+                y += 24;
+            });
+
+            ctx.beginPath();
+            ctx.moveTo(60, 420);
+            ctx.lineTo(740, 420);
+            ctx.stroke();
+
+            ctx.font = 'bold 14px SimSun, serif';
+            ctx.fillText('【甲方（签署人）】', 80, 450);
+            ctx.fillText('【乙方（归档方）】', 460, 450);
+
+            ctx.font = '12px SimSun, serif';
+            ctx.fillText('姓名：____________', 80, 480);
+            ctx.fillText('签名：____________', 80, 510);
+            ctx.fillText('日期：____________', 80, 540);
+
+            ctx.fillText('姓名：████████', 460, 480);
+            ctx.fillText('签名：████████', 460, 510);
+            ctx.fillText('日期：2019-02-14', 460, 540);
+
+            var sigData = Store.get('gate_signature_image', '');
+            if (!sigData) {
+                callback(canvas.toDataURL('image/png'));
+                return;
+            }
+            var sig = new Image();
+            sig.onload = function () {
+                ctx.globalAlpha = 0.85;
+                ctx.drawImage(sig, 100, 500, 160, 30);
+                ctx.globalAlpha = 1;
+                callback(canvas.toDataURL('image/png'));
+            };
+            sig.onerror = function () {
+                callback(canvas.toDataURL('image/png'));
+            };
+            sig.src = sigData;
+        };
+
         base.src = 'img/archive_agreement_base.jpg';
     }
 
+    /* ============================================================
+       归档同意书触发流程
+       ============================================================ */
     function triggerAgreementEvent() {
         if (Store.get('pm_agreement_triggered', false)) return;
         Store.set('pm_agreement_triggered', true);
 
-        setTimeout(function () { addMessage('lin', '我想给你看一样东西。'); }, 1200);
+        setTimeout(function () {
+            addMessage('lin', '我想给你看一样东西。');
+        }, 1200);
 
         setTimeout(function () {
             buildAgreementImage(function (dataURL) {
@@ -205,37 +305,29 @@
                     return;
                 }
 
-                var div = document.createElement('div');
-                div.className = 'pm-msg from-lin';
-                div.innerHTML =
-                    '<span class="who">林默</span>' +
-                    '<span class="txt"><img src="' + dataURL + '" alt="归档同意书"></span>' +
-                    '<span class="time">' + nowHM() + '</span>';
-                bodyEl.appendChild(div);
-                bodyEl.scrollTop = bodyEl.scrollHeight;
+                addImageMessage('lin', dataURL, '[图片：归档同意书]');
 
-                pmMessages.push({ role: 'lin', content: '[图片：归档同意书]', time: nowHM() });
-                Store.set('pm_messages', pmMessages);
+                setTimeout(function () {
+                    addMessage('lin', '你签过这个。你签过这个。你签过这个。');
+                }, 2000);
 
-                div.querySelector('img').addEventListener('click', function () {
-                    if (window.ViewerHelper) {
-                        window.ViewerHelper.openImage('归档同意书', dataURL);
-                    }
-                });
+                setTimeout(function () {
+                    addMessage('lin', '回回回回回回回回回回');
+                }, 2800);
 
-                setTimeout(function () { addMessage('lin', '你签过这个。你签过这个。你签过这个。'); }, 2000);
-                setTimeout(function () { addMessage('lin', '回回回回回回回回回回'); }, 2800);
-                setTimeout(function () { addMessage('lin', '我是谁我是谁我是谁我是谁'); }, 3600);
+                setTimeout(function () {
+                    addMessage('lin', '我是谁我是谁我是谁我是谁');
+                }, 3600);
 
                 setTimeout(function () {
                     var msgs = Store.get('pm_messages', []);
-                    var replaceIdx = [];
-                    for (var i = msgs.length - 1; i >= 0 && replaceIdx.length < 3; i--) {
-                        if (msgs[i].role === 'lin') replaceIdx.push(i);
+                    var idx = [];
+                    for (var i = msgs.length - 1; i >= 0 && idx.length < 3; i--) {
+                        if (msgs[i].role === 'lin') idx.push(i);
                     }
-                    replaceIdx.forEach(function (idx) {
-                        msgs[idx].content = '（此消息已被撤回）';
-                        msgs[idx].recalled = true;
+                    idx.forEach(function (i) {
+                        msgs[i].content = '（此消息已被撤回）';
+                        msgs[i].recalled = true;
                     });
                     Store.set('pm_messages', msgs);
                     pmMessages = msgs;
@@ -243,44 +335,166 @@
                     if (window.GameAudio) GameAudio.once('static', { volume: 0.1 });
                 }, 5000);
 
-                setTimeout(function () { addMessage('lin', '抱歉。刚才信号不好。'); }, 6500);
-                setTimeout(function () { showPmFlash('glitch_face'); }, 7600);
-                setTimeout(function () { addMessage('lin', '我说的是：你签过这个，对吗？'); }, 8000);
+                setTimeout(function () {
+                    addMessage('lin', '抱歉。刚才信号不好。');
+                }, 6500);
+
+                setTimeout(function () {
+                    showPmFlash('glitch_face');
+                }, 7600);
+
+                setTimeout(function () {
+                    addMessage('lin', '我说的是：你签过这个，对吗？');
+                }, 8000);
             });
         }, 4000);
     }
 
+    /* ============================================================
+       闪现
+       ============================================================ */
     function showPmFlash(type) {
         var flash = document.getElementById('pmFlash');
         var imgEl = document.getElementById('pmFlashImg');
-        var textEl = document.getElementById('pmFlashText');
-        if (!flash) return;
+        if (!flash || !imgEl) return;
 
         if (type === 'glitch_face') {
             imgEl.src = 'img/glitch_face.jpg';
-            imgEl.style.display = 'block';
-            textEl.style.display = 'none';
+            imgEl.style.filter = 'contrast(1.5) brightness(0.8)';
         } else {
-            /* 用 glitch_text.png 图片 */
             imgEl.src = 'img/glitch_text.png';
-            imgEl.style.display = 'block';
             imgEl.style.filter = 'none';
-            imgEl.style.maxWidth = '50%';
-            textEl.style.display = 'none';
         }
-
+        imgEl.style.display = 'block';
         flash.classList.add('show');
+
         if (window.GameAudio) GameAudio.once('static', { volume: 0.12 });
 
         setTimeout(function () {
             flash.classList.remove('show');
             imgEl.style.display = 'none';
-            imgEl.style.filter = '';
-            imgEl.style.maxWidth = '';
-            textEl.style.display = 'none';
         }, 120);
     }
 
+    /* ============================================================
+       8 个异常事件
+       ============================================================ */
+    var _pmTriggered = {};
+
+    function triggerPmEvent(id) {
+        if (_pmTriggered[id]) return;
+        _pmTriggered[id] = true;
+
+        switch (id) {
+            case 'glitch_title':
+                setTimeout(function () {
+                    var t = document.querySelector('.pm-title .who span:last-child');
+                    if (t) {
+                        var o = t.textContent;
+                        t.textContent = '与 ████ 的对话';
+                        setTimeout(function () { t.textContent = o; }, 800);
+                    }
+                }, 300);
+                break;
+
+            case 'glitch_node7':
+                setTimeout(function () { showPmFlash('glitch_face'); }, 500);
+                break;
+
+            case 'glitch_blank':
+                setTimeout(function () { addMessage('lin', '（ ）'); }, 800);
+                setTimeout(function () { showPmFlash('glitch_text'); }, 1400);
+                break;
+
+            case 'glitch_b64':
+                setTimeout(function () {
+                    addMessage('lin', '5oiR5Zyo56ysN+WbnuWkjeaWueW8j+iAkw==');
+                }, 1000);
+                break;
+
+            case 'glitch_sig':
+                setTimeout(function () {
+                    var sigData = Store.get('gate_signature_image', '');
+                    if (!sigData) {
+                        addMessage('lin', '你的名字……我见过。');
+                        return;
+                    }
+                    var div = document.createElement('div');
+                    div.className = 'pm-msg from-lin';
+                    div.innerHTML =
+                        '<span class="who">林默</span>' +
+                        '<span class="txt"><img src="' + sigData + '" style="transform:rotate(180deg) scaleX(-1); background:#fff; padding:8px; border:1px solid #888;"></span>' +
+                        '<span class="time">' + nowHM() + '</span>';
+                    bodyEl.appendChild(div);
+                    bodyEl.scrollTop = bodyEl.scrollHeight;
+                }, 1000);
+                break;
+
+            case 'glitch_recall':
+                setTimeout(function () { addMessage('lin', '你'); }, 600);
+                setTimeout(function () { addMessage('lin', '你签过'); }, 1100);
+                setTimeout(function () { addMessage('lin', '你签过这个'); }, 1600);
+                setTimeout(function () {
+                    var msgs = Store.get('pm_messages', []);
+                    msgs = msgs.map(function (m) {
+                        if (m.role === 'lin' && /你(签过)?(这个)?$/.test(m.content)) {
+                            m.content = '（此消息已被撤回）';
+                            m.recalled = true;
+                        }
+                        return m;
+                    });
+                    Store.set('pm_messages', msgs);
+                    pmMessages = msgs;
+                    renderMessages();
+                }, 2600);
+                break;
+
+            case 'glitch_repeat':
+                setTimeout(function () {
+                    var t = setInterval(function () { addMessage('lin', '不要回答'); }, 300);
+                    setTimeout(function () { clearInterval(t); }, 1600);
+                }, 500);
+                break;
+
+            case 'glitch_red':
+                setTimeout(function () {
+                    document.body.style.background = '#1a0000';
+                    document.body.style.transition = 'background 0.3s';
+                    setTimeout(function () { document.body.style.background = ''; }, 1500);
+                }, 500);
+                break;
+
+            case 'glitch_disappear':
+                setTimeout(function () {
+                    statusEl.textContent = '对方已离开';
+                    statusEl.className = 'status danger';
+                    addMessage('lin', '');
+                }, 800);
+                break;
+        }
+    }
+
+    function checkPmEvents() {
+        var n = Store.get('pm_player_msg_count', 0);
+        if (n === 2) triggerPmEvent('glitch_title');
+        if (n === 3) triggerPmEvent('glitch_node7');
+        if (n === 4) triggerPmEvent('glitch_blank');
+        if (n === 5) triggerPmEvent('glitch_b64');
+        if (n === 6) triggerPmEvent('glitch_sig');
+        if (n === 7) triggerPmEvent('glitch_recall');
+        if (n === 8) triggerPmEvent('glitch_repeat');
+        if (n === 9) triggerPmEvent('glitch_red');
+        if (n === 10) triggerPmEvent('glitch_disappear');
+    }
+
+    function showTyping() {
+        typingEl.innerHTML = '林默正在输入<span class="dot">.</span><span class="dot">.</span><span class="dot">.</span>';
+    }
+    function hideTyping() { typingEl.textContent = ''; }
+
+    /* ============================================================
+       发送消息
+       ============================================================ */
     function sendMessage() {
         if (pmEnded || pmArchived) return;
 
@@ -295,18 +509,15 @@
 
         inputEl.value = '';
         addMessage('me', text);
-        if (window.GameAudio) GameAudio.once('click', { volume: 0.12 });
         Store.set('pm_last_active', Date.now());
 
-        /* 新增上报 */
-        if (window.HxdaReport && window.HxdaReport.event) {
-            HxdaReport.event('pm', { role: 'me', content: text });
-        }
+        if (window.GameAudio) GameAudio.once('click', { volume: 0.12 });
 
         recordSharedInfo(text);
 
         var msgCount = Store.get('pm_player_msg_count', 0) + 1;
         Store.set('pm_player_msg_count', msgCount);
+        setTimeout(checkPmEvents, 500);
 
         if (msgCount >= 5 && !Store.get('pm_agreement_triggered', false)) {
             setTimeout(triggerAgreementEvent, 1500);
@@ -327,14 +538,13 @@
     }
 
     function requestLinReply(userText) {
-
         var stage = getPMStage();
         var attention = Store.get('attention', 0);
         var hasName = Store.get('visitor_name', '') !== '';
         var name = Store.get('visitor_name', '') || '无名';
         var now = new Date();
-        var timeStr = now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate())
-            + ' ' + pad(now.getHours()) + ':' + pad(now.getMinutes());
+        var timeStr = now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate()) +
+            ' ' + pad(now.getHours()) + ':' + pad(now.getMinutes());
 
         var sysPrompt =
             '你是林默，一个在2009年丢失了笔记本的人。\n' +
@@ -343,37 +553,17 @@
             '你知道论坛有"归档"机制，但你不知道具体规则。\n' +
             '你害怕第43页，但你不知道为什么。\n' +
             '你说话简短、疲惫、偶尔困惑。\n' +
-            '你会在对话中逐渐意识到：和你对话的人，可能不是普通访客。\n' +
-            '你不会直接说"你是第43页"，但你会暗示。\n' +
-            '你偶尔会突然问："你身后有人吗？"\n' +
-            '你不记得自己上次吃饭是什么时候。\n' +
-            '你听到键盘声会觉得安心。\n' +
-            '你听到鼠标点击声会觉得有人在靠近。\n\n' +
+            '你偶尔会突然问："你身后有人吗？"\n\n' +
             '当前游戏进度：阶段 ' + stage + '\n' +
-            '玩家已读帖子：' + (Store.get('read_post_1', false) ? '是' : '否') + '\n' +
-            '玩家已读归档者：' + (Store.get('read_nodes', false) ? '是' : '否') + '\n' +
             '玩家注意值：' + attention + '\n' +
-            '玩家是否留名：' + (hasName ? '是' : '否') + '\n' +
             '玩家名字：' + name + '\n' +
-            '当前时间：' + timeStr + '\n' +
-            '玩家设备：' + (/Mobi|Android|iPad|iPhone/i.test(navigator.userAgent) ? '移动端' : '桌面端') + '\n' +
-            '玩家时区：' + (Intl.DateTimeFormat().resolvedOptions().timeZone || '') + '\n\n' +
-            '根据以上信息，以林默的身份回复玩家。\n' +
-            '回复要简短，不超过50字。\n' +
-            '回复要自然，不要像机器人。\n' +
-            '回复要偶尔出现异常，比如突然问"你身后有人吗"。\n' +
-            '回复要根据进度调整，早期困惑，中期恐惧，后期绝望。\n' +
-            '如果玩家问"你是真人吗"，回复："我是林默。我是。"\n' +
-            '如果玩家问"阿回是谁"，回复："它是我弄丢的那本本子。但它不是我写的。"\n' +
-            '如果玩家问"第43页有什么"，回复："不要翻。"\n' +
-            '如果玩家发送"有人吗"，回复："有人。一直都在。"\n' +
-            '如果玩家发送"没有人"，回复："你确定吗？"\n' +
-            '如果玩家发送空白，回复："你什么都没说。很好。继续。"\n' +
-            '如果玩家发送自己的名字，回复："这个名字……我见过。在归档记录里。"';
+            '当前时间：' + timeStr + '\n\n' +
+            '回复要简短，不超过50字。回复要自然，不要像机器人。';
 
         var messages = [{ role: 'system', content: sysPrompt }];
 
         pmMessages.slice(-CONFIG.maxHistory).forEach(function (m) {
+            if (m.imageData) return;
             messages.push({
                 role: m.role === 'lin' ? 'assistant' : 'user',
                 content: m.content
@@ -386,28 +576,21 @@
             fetch(CONFIG.apiUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    messages: messages,
-                    temperature: 0.85,
-                    max_tokens: 120
-                })
+                body: JSON.stringify({ messages: messages, temperature: 0.85, max_tokens: 120 })
             })
                 .then(function (r) { return r.json(); })
                 .then(function (data) {
                     hideTyping();
-
                     if (data && data.success && data.content) {
                         var reply = data.content.trim();
                         addMessage('lin', reply);
                         checkLinSpecialPhrases(reply);
                     } else {
-                        console.warn('DeepSeek 调用失败，回退本地回复', data);
                         fallbackReply(userText);
                     }
                 })
-                .catch(function (err) {
+                .catch(function () {
                     hideTyping();
-                    console.warn('DeepSeek 网络错误，回退本地回复', err);
                     fallbackReply(userText);
                 });
         } else {
@@ -426,91 +609,37 @@
     }
 
     function localReply(userText, stage) {
-
         var MAP = {
-
             1: {
                 '你好': '你是谁？你怎么找到这里的？',
-                '我看到了你的寻物帖': '你找到了吗？那本本子。',
-                '你丢了什么': '一本黑色皮面笔记本。封面内侧写了一个"回"字。',
                 '阿回是谁': '我不知道。但它在回答。',
                 '你在哪': '我在 2019 年 2 月 14 日。之后就再也没有日期了。',
                 '你是真人吗': '我是林默。我是。',
-                '你能帮我吗': '帮？你还没告诉我你是谁。',
                 '你身后有人吗': '我一直一个人。除非你在。',
-                '你想出去吗': '出去？去哪里？',
-                '你还在找吗': '我找了十年。现在我在等。',
-                '等什么': '等有人回答"有人吗"。',
-                '我回答了': '你回答了吗？你确定？',
                 '有人吗': '有人。一直都在。'
             },
-
             2: {
                 '我读了你的帖子': '那你应该知道第43页。不要翻。',
                 '笔记本里写了什么': '不是我写的。但字迹是我的。',
-                '你为什么不报警': '我报了。警察说没有这个论坛。但我在这个论坛里。',
-                '你还在找吗': '我找了十年。现在我在等。',
-                '等什么': '等有人回答"有人吗"。',
-                '我回答了': '你回答了吗？你确定？',
-                '你身后有人吗': '我一直一个人。除非你在。',
-                '你想出去吗': '出去？去哪里？',
                 '第43页有什么': '不要翻。',
-                '如果我翻了呢': '你已经翻了。你只是在读。',
-                '你是谁': '我是林默。我是……我不知道了。',
-                '你能出来吗': '你可以进来。',
                 '有人吗': '有人。一直都在。'
             },
-
             3: {
                 '我读了归档者': '七个。你是第八个吗？',
-                '第7个是阿回': '阿回是我弄丢的那本本子。但它不是我写的。',
                 '阿回说它不知道它是谁': '它知道。它只是不想说。',
                 '你为什么害怕第43页': '因为第43页写的是我。',
-                '写的是什么': '不要回头。',
-                '如果我翻了呢': '你已经翻了。你只是在读。',
-                '你是谁': '我是林默。我是……我不知道了。',
-                '你能出来吗': '你可以进来。',
-                '我进来了': '那你看到了吗？',
-                '看到了什么': '节点 7。阿回。还有第八个位置。',
-                '第八个是谁': '你。',
-                '我不想被归档': '那就不要留名。',
-                '我已经留了': '那你已经在了。',
-                '我怎么出去': '你出不去。但你可以不进来。',
-                '什么意思': '不要回答"有人吗"。',
-                '你在哪': '我在你后面的那个节点。第 6 个。',
-                '你是第 6 个': '我是护士。2014 年。你呢？',
                 '有人吗': '有人。一直都在。'
             },
-
             4: {
                 '我在后台': '你找到了。那你看到了吗？',
-                '看到了什么': '节点 7。阿回。还有第八个位置。',
-                '第八个是谁': '你。',
-                '我不想被归档': '那就不要留名。',
-                '我已经留了': '那你已经在了。',
-                '我怎么出去': '你出不去。但你可以不进来。',
-                '什么意思': '不要回答"有人吗"。',
-                '你在哪': '我在你后面的那个节点。第 6 个。',
-                '你是第 6 个': '我是护士。2014 年。你呢？',
                 '我该怎么办': '输入 override allow-unreceived。然后输入"没有人"。',
-                '为什么': '因为没有人回答。系统就无法归档。',
                 '你确定': '我确定。我试过。',
-                '你试过什么': '我试过回答。我试过不留名。我试过回头。都不行。',
-                '那你为什么还在这里': '因为我在等一个阅读者。',
-                '阅读者是什么': '阅读者是唯一不被归档的身份。',
-                '我是阅读者吗': '你不是。你是第 43 页的内容。',
-                '那我怎么办': '不回答。不回头。不留名。',
-                '然后呢': '然后你就自由了。',
-                '你呢': '我留下来。',
-                '为什么': '因为总得有人留下来。',
                 '有人吗': '有人。一直都在。'
             }
         };
 
         var stageMap = MAP[stage] || MAP[1];
-        if (stageMap[userText]) {
-            return stageMap[userText];
-        }
+        if (stageMap[userText]) return stageMap[userText];
 
         if (userText.indexOf('你好') !== -1) return '你是谁？你怎么找到这里的？';
         if (userText.indexOf('有人吗') !== -1) return '有人。一直都在。';
@@ -518,39 +647,17 @@
         if (userText.indexOf('43') !== -1) return '不要翻。';
         if (userText.indexOf('出去') !== -1 || userText.indexOf('离开') !== -1) return '你出不去。但你可以不进来。';
         if (userText.indexOf('你是谁') !== -1) return '我是林默。我是……我不知道了。';
-        if (userText.indexOf('你在哪') !== -1) return '我在 2019 年 2 月 14 日。之后就再也没有日期了。';
         if (userText.indexOf('真人') !== -1) return '我是林默。我是。';
-        if (userText.indexOf('帮') !== -1) return '帮？你还没告诉我你是谁。';
-        if (userText.indexOf('找到') !== -1) return '你找到了吗？那本本子。';
 
-        var fallbacks = [
-            '……',
-            '你身后有人吗？',
-            '我好像忘了很多事。',
-            '你听到了吗？键盘声。',
-            '继续。',
-            '你还在吗？',
-            '这里永远是23:47。'
-        ];
+        var fallbacks = ['……', '你身后有人吗？', '我好像忘了很多事。', '你听到了吗？键盘声。', '继续。', '你还在吗？', '这里永远是23:47。'];
         return fallbacks[Math.floor(Math.random() * fallbacks.length)];
     }
 
     function checkLinSpecialPhrases(reply) {
-        if (reply.indexOf('whoami') !== -1) {
-            Store.set('pm_lin_said_whoami', true);
-            Store.set('discovered_whoami', true);
-        }
-        if (reply.indexOf('connect') !== -1) {
-            Store.set('pm_lin_said_connect', true);
-            Store.set('discovered_connect', true);
-        }
-        if (reply.indexOf('override') !== -1) {
-            Store.set('pm_lin_said_override', true);
-            Store.set('discovered_override', true);
-        }
-        if (reply.indexOf('你可以进来') !== -1) {
-            Store.set('pm_lin_said_comein', true);
-        }
+        if (reply.indexOf('whoami') !== -1) { Store.set('pm_lin_said_whoami', true); Store.set('discovered_whoami', true); }
+        if (reply.indexOf('connect') !== -1) { Store.set('pm_lin_said_connect', true); Store.set('discovered_connect', true); }
+        if (reply.indexOf('override') !== -1) { Store.set('pm_lin_said_override', true); Store.set('discovered_override', true); }
+        if (reply.indexOf('你可以进来') !== -1) { Store.set('pm_lin_said_comein', true); }
     }
 
     function linReply(text) {
@@ -562,12 +669,9 @@
         Store.set('pm_asked_yourenma', true);
         Store.set('pm_archived', true);
         pmArchived = true;
-
         addMessage('lin', '有人。一直都在。');
-
         setTimeout(function () {
-            uiAlert(
-                '对话归档',
+            uiAlert('对话归档',
                 '您回答了"有人吗"。\n' +
                 '您的回答已被归档。\n' +
                 '归档节点：第 8 个。\n' +
@@ -578,44 +682,30 @@
                     sendBtn.disabled = true;
                     statusEl.textContent = '当前对话已归档';
                     statusEl.className = 'status danger';
-                    inputEl.placeholder = '你已经问过了。';
-                }
-            );
+                });
         }, 800);
     }
 
-    function handleSendNoOne() {
-        addMessage('lin', '你确定吗？');
-    }
+    function handleSendNoOne() { addMessage('lin', '你确定吗？'); }
 
     function handleSendCome() {
         Store.set('ending_together', true);
         pmEnded = true;
         addMessage('lin', '好。你来。');
-
         setTimeout(function () {
-            uiAlert(
-                '同归',
-                '现在你是它。\n' +
-                '请等待下一位。\n' +
-                '请记住：不要回答。',
-                function () {
-                    window.location.href = 'admin.html';
-                }
-            );
+            uiAlert('同归',
+                '现在你是它。\n请等待下一位。\n请记住：不要回答。',
+                function () { window.location.href = 'admin.html'; });
         }, 1500);
     }
 
     function handleSendNo() {
         pmEnded = true;
         Store.set('pm_ended', true);
-
         addMessage('lin', '好。');
-
         setTimeout(function () {
             addMessage('lin', '……');
             addMessage('lin', '我一直在。');
-
             inputEl.disabled = true;
             sendBtn.disabled = true;
             statusEl.textContent = '林默不在了。';
@@ -626,26 +716,19 @@
     function recordSharedInfo(text) {
         var info = Store.get('pm_shared_info', {});
         var myName = Store.get('visitor_name', '');
-
         if (myName && text.indexOf(myName) !== -1) info[myName] = true;
-
-        var places = ['南宁', '北京', '上海', '广州', '深圳', '杭州', '成都', '武汉', '西安'];
-        places.forEach(function (p) {
+        ['南宁', '北京', '上海', '广州', '深圳', '杭州', '成都', '武汉', '西安'].forEach(function (p) {
             if (text.indexOf(p) !== -1) info[p] = true;
         });
-
-        var roles = ['学生', '老师', '医生', '护士', '程序员'];
-        roles.forEach(function (r) {
+        ['学生', '老师', '医生', '护士', '程序员'].forEach(function (r) {
             if (text.indexOf(r) !== -1) info[r] = true;
         });
-
         Store.set('pm_shared_info', info);
     }
 
     function checkOpenTimer() {
         var openedAt = Store.get('pm_first_open_time', Date.now());
         var elapsedMin = (Date.now() - openedAt) / 60000;
-
         if (elapsedMin >= 20 && !pmEnded) {
             statusEl.textContent = '林默不在了。';
             statusEl.className = 'status danger';
@@ -659,7 +742,6 @@
             statusEl.className = 'status warn';
         }
     }
-
     setInterval(checkOpenTimer, 60000);
     checkOpenTimer();
 
@@ -669,10 +751,6 @@
         if (Math.random() < 0.4) {
             var opts = ['你刚才走了。', '你去哪了？', '你回来了。', '我一直在。'];
             addMessage('lin', opts[Math.floor(Math.random() * opts.length)]);
-        }
-
-        if (Math.random() < 0.3 && window.GameAudio) {
-            GameAudio.once('breath', { volume: 0.25 });
         }
     });
 
@@ -687,36 +765,12 @@
     });
 
     sendBtn.addEventListener('click', sendMessage);
-
     inputEl.addEventListener('keydown', function (e) {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
             sendMessage();
         }
     });
-
-    inputEl.addEventListener('keydown', function () {
-        if (window.HorrorAudio) window.HorrorAudio.playClick();
-    });
-
-    if (window.FullscreenHelper && !window.FullscreenHelper.isMobile) {
-        var fsBtn = document.createElement('button');
-        fsBtn.textContent = '⛶';
-        fsBtn.title = '进入全屏';
-        fsBtn.style.cssText =
-            'position:fixed;bottom:14px;left:18px;' +
-            'color:#666;font-family:monospace;font-size:14px;' +
-            'cursor:pointer;background:none;border:none;padding:4px 8px;' +
-            'z-index:99998;';
-        fsBtn.addEventListener('click', function () {
-            if (window.FullscreenHelper.isInFullscreen()) {
-                window.FullscreenHelper.exit();
-            } else {
-                window.FullscreenHelper.request();
-            }
-        });
-        document.body.appendChild(fsBtn);
-    }
 
     renderMessages();
 

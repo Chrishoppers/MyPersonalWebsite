@@ -167,9 +167,48 @@
         gate_signature_date: '',
         gate_passed: false,
         admin_logged_in: false,
+
+        /* ============================================================
+           解密系统相关
+           ============================================================ */
+        arc_unlocked: false,
+        cipher_used_count: 0,
+        cipher_last_base64: '',
+        cipher_last_hex: '',
+        cipher_last_morse: '',
+        source_unlocked: false,
+        post_unlocked_4: false,
+        node8_unlocked: false,
+        cipher_unlocked: false,
+        decrypt_unlocked: false,
+        found_morse: false,
+        found_base64: false,
+        found_rot13: false,
+        found_emoji: false,
+        found_punct: false,
+        found_binary: false,
+        found_acrostic: false,
+        pm_agreement_triggered: false,
+        pm_player_msg_count: 0,
+        profile_add_friend_clicked: false,
+        archive_new_post: false,
+
+        /* ============================================================
+           新结局
+           ============================================================ */
+        ending_reader: false,
+        ending_delete: false,
+        ending_seventh: false,
+        ending_wrong_code: false,
+
+        /* ============================================================
+           系统介入
+           ============================================================ */
+        sys_hint_shown_count: 0,
+        sys_last_hint: ''
     };
 
-    Object.keys(DEFAULTS).forEach(function (k) {
+    Object.keys(DEFAULTS).forEach(function (k) {    
         try {
             if (localStorage.getItem(PREFIX + k) === null) {
                 Store.set(k, DEFAULTS[k]);

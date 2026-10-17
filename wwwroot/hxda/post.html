@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
-    <title>回响档案｜帖子</title>
+    <title>回响档案｜帖子 - Powered by Discuz!</title>
     <link rel="icon" href="favicon.ico" type="image/x-icon">
     <link rel="stylesheet" href="css/main.css">
     <style>
@@ -220,6 +220,18 @@
                     background: #f0f0f0;
                     text-decoration: none;
                 }
+
+        .post-locked {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+            .post-locked input {
+                padding: 6px 12px;
+                border: 1px solid #888;
+                width: 200px;
+                font-family: inherit;
+            }
     </style>
 </head>
 <body>
@@ -229,8 +241,13 @@
         <div class="forum-head">
             <div class="head-logo"></div>
             <div class="head-right">
+                <div class="forum-top-buttons" style="justify-content:flex-end;margin-bottom:4px;">
+                    <a href="bbs.html">论坛</a>
+                    <a href="search.html">搜索</a>
+                    <a href="about.html">帮助</a>
+                    <a href="archive.html">档案馆</a>
+                </div>
                 <div class="user-info" id="userInfo">游客</div>
-                <div>最后更新：2019-03-01 00:00</div>
             </div>
         </div>
 
@@ -240,8 +257,14 @@
             <a href="about.html">关于本站</a>
         </div>
 
+        <div class="forum-crumb">
+            <a href="bbs.html">回响档案</a>
+            <span class="sep">&raquo;</span>
+            <span>帖子</span>
+        </div>
+
         <div class="forum-notice">
-            本站数据于 2019 年 3 月后不再更新。感谢各位十年来的陪伴。——站长
+            📢 本站数据于 2019 年 3 月后不再更新。感谢各位十年来的陪伴。——站长
         </div>
 
         <div class="post-detail" id="postDetail">
@@ -252,74 +275,46 @@
             <a href="bbs.html">← 返回论坛首页</a>
         </div>
 
+        <div class="forum-footer">
+            <div class="footer-line"><a href="bbs.html">返回论坛</a> | <a href="about.html">关于本站</a> | <a href="cipher.html">解密</a></div>
+            <div class="footer-line footer-time">Powered by <b>EchoSystem v0.9</b> © 2009-2019 <b>Comsenz Inc.</b></div>
+        </div>
+
     </div>
 
     <div class="overlay" id="viewerOverlay">
         <div class="overlay-box" style="max-width:720px;">
-            <div class="overlay-title">
-                <span id="viewerFileName">notebook_default.jpg</span>
-                <span class="x" id="viewerClose">✕</span>
-            </div>
+            <div class="overlay-title"><span id="viewerFileName">notebook_default.jpg</span><span class="x" id="viewerClose">✕</span></div>
             <div class="overlay-body" style="padding:0;background:#000;text-align:center;">
-                <div id="viewerImageWrap"
-                     style="background:#000;min-height:320px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;">
-                    <img id="viewerImage" src=""
-                         style="max-width:100%;max-height:400px;transition:filter 0.3s,transform 0.3s;" alt="">
+                <div id="viewerImageWrap" style="background:#000;min-height:320px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;">
+                    <img id="viewerImage" src="" style="max-width:100%;max-height:400px;transition:filter 0.3s,transform 0.3s;" alt="">
                 </div>
                 <div style="padding:14px 20px;background:#222;text-align:left;">
-                    <div style="margin-bottom:6px;">
-                        <label style="display:inline-block;width:50px;color:#999;">亮度</label>
-                        <input type="range" id="ctrlBright" min="0" max="100" value="50" style="width:70%;">
-                    </div>
-                    <div style="margin-bottom:6px;">
-                        <label style="display:inline-block;width:50px;color:#999;">对比</label>
-                        <input type="range" id="ctrlContrast" min="0" max="100" value="50" style="width:70%;">
-                    </div>
-                    <div style="margin-bottom:10px;">
-                        <label style="display:inline-block;width:50px;color:#999;">缩放</label>
-                        <input type="range" id="ctrlScale" min="50" max="200" value="100" style="width:70%;">
-                    </div>
+                    <div style="margin-bottom:6px;"><label style="display:inline-block;width:50px;color:#999;">亮度</label><input type="range" id="ctrlBright" min="0" max="100" value="50" style="width:70%;"></div>
+                    <div style="margin-bottom:6px;"><label style="display:inline-block;width:50px;color:#999;">对比</label><input type="range" id="ctrlContrast" min="0" max="100" value="50" style="width:70%;"></div>
+                    <div style="margin-bottom:10px;"><label style="display:inline-block;width:50px;color:#999;">缩放</label><input type="range" id="ctrlScale" min="50" max="200" value="100" style="width:70%;"></div>
                     <div style="text-align:center;">
                         <button class="old-btn" id="btnInvert">反色</button>
                         <button class="old-btn" id="btnRotate">旋转</button>
                         <button class="old-btn" id="btnFileInfo">文件信息</button>
                     </div>
                 </div>
-                <div id="viewerInfo"
-                     style="display:none;padding:12px 20px;background:#111;color:#888;font-size:11px;text-align:left;font-family:'Courier New',monospace;line-height:1.8;"></div>
+                <div id="viewerInfo" style="display:none;padding:12px 20px;background:#111;color:#888;font-size:11px;text-align:left;font-family:'Courier New',monospace;line-height:1.8;"></div>
             </div>
         </div>
     </div>
 
     <div class="overlay" id="audioOverlay">
         <div class="overlay-box" style="max-width:480px;">
-            <div class="overlay-title">
-                <span>笔记本第43页录音.mp3</span>
-                <span class="x" id="audioClose">✕</span>
-            </div>
+            <div class="overlay-title"><span>笔记本第43页录音.mp3</span><span class="x" id="audioClose">✕</span></div>
             <div class="overlay-body" style="padding:20px;background:#1a1a1a;color:#ddd;text-align:center;">
                 <div style="margin-bottom:16px;">
-                    <div style="display:flex;justify-content:space-between;font-size:11px;color:#666;margin-bottom:6px;">
-                        <span id="audioCur">00:00</span>
-                        <span>00:43</span>
-                    </div>
-                    <div id="audioTrack" style="height:6px;background:#333;border-radius:3px;cursor:pointer;position:relative;">
-                        <div id="audioFill" style="height:100%;background:#888;border-radius:3px;width:0%;"></div>
-                    </div>
+                    <div style="display:flex;justify-content:space-between;font-size:11px;color:#666;margin-bottom:6px;"><span id="audioCur">00:00</span><span>00:43</span></div>
+                    <div id="audioTrack" style="height:6px;background:#333;border-radius:3px;cursor:pointer;position:relative;"><div id="audioFill" style="height:100%;background:#888;border-radius:3px;width:0%;"></div></div>
                 </div>
-                <div style="margin-bottom:12px;">
-                    <button class="old-btn" id="btnPlay">▶ 播放</button>
-                    <button class="old-btn" id="btnPause">⏸ 暂停</button>
-                </div>
-                <div style="margin-bottom:12px;">
-                    <button class="old-btn" id="btnSpeed05">0.5x</button>
-                    <button class="old-btn" id="btnSpeed1">1x</button>
-                    <button class="old-btn" id="btnSpeed15">1.5x</button>
-                    <button class="old-btn" id="btnSpeed2">2x</button>
-                </div>
-                <div>
-                    <button class="old-btn" id="btnReverse" style="background:#333;color:#ddd;border-color:#555;">反向播放</button>
-                </div>
+                <div style="margin-bottom:12px;"><button class="old-btn" id="btnPlay">▶ 播放</button><button class="old-btn" id="btnPause">⏸ 暂停</button></div>
+                <div style="margin-bottom:12px;"><button class="old-btn" id="btnSpeed05">0.5x</button><button class="old-btn" id="btnSpeed1">1x</button><button class="old-btn" id="btnSpeed15">1.5x</button><button class="old-btn" id="btnSpeed2">2x</button></div>
+                <div><button class="old-btn" id="btnReverse" style="background:#333;color:#ddd;border-color:#555;">反向播放</button></div>
             </div>
         </div>
     </div>
@@ -333,6 +328,7 @@
     <script src="js/horror.js"></script>
     <script src="js/explore.js"></script>
     <script src="js/viewer.js"></script>
+    <script src="js/system-helper.js"></script>
 
     <script>
 (function () {
@@ -362,14 +358,8 @@
                         '因为那本本子不是我写的。\n' +
                         '\n' +
                         '如果你找到了，<b>不要翻开第43页。</b>',
-                    attachment: {
-                        type: 'image',
-                        name: 'notebook_default.jpg',
-                        src: 'img/notebook_default.jpg'
-                    },
-                    audioAttachment: {
-                        name: '笔记本第43页录音.mp3'
-                    },
+                    attachment: { type: 'image', name: 'notebook_default.jpg', src: 'img/notebook_default.jpg' },
+                    audioAttachment: { name: '笔记本第43页录音.mp3' },
                     replies: [
                         ['访客', '帮你顶一下', '2009-03-17 15:01'],
                         ['匿名', '黑色皮面笔记本？我好像在旧货市场见过', '2009-04-02 09:17'],
@@ -393,7 +383,8 @@
                         ['匿名', '楼主你还在吗？', '2015-09-09 09:09'],
                         ['林默', '在。', '2015-09-09 09:10'],
                         ['匿名', '十年了。', '2019-02-14 23:46'],
-                        ['林默', '它开始自己写留言了。', '2019-02-14 23:47']
+                        ['林默', '它开始自己写留言了。', '2019-02-14 23:47'],
+                        ['匿名', '第7层见。', '2019-02-14 23:48']
                     ]
                 },
                 '2': {
@@ -432,7 +423,9 @@
                     time: '2009-11-01 00:00',
                     body: '有人吗。',
                     replies: [],
-                    special: 'post4'
+                    special: 'post4',
+                    encrypted: true,
+                    key: '第七个'
                 },
                 '5': {
                     title: '寻物：一把黑色折叠伞（已找到）',
@@ -533,7 +526,9 @@
                     body:
                         '我大概是 2010 年注册的。\n' +
                         '记得那时候论坛名字好像不是现在这个。\n' +
-                        '有老用户记得吗？',
+                        '有老用户记得吗？\n\n' +
+                        '——\n' +
+                        '（附：5Zue5Z+N5qGj5qGI）',
                     replies: [
                         ['匿名', '不记得了', '2017-08-19 18:02'],
                         ['路人甲', '我也记得改过名', '2017-08-20 09:33'],
@@ -558,7 +553,9 @@
                         ['匿名', '签到。', '2019-01-15 10:03'],
                         ['小夏', '签到。想对我妈说，我很好。', '2019-01-15 11:22'],
                         ['老周', '签到。', '2019-01-15 12:05'],
-                        ['路人乙', '签到。', '2019-01-15 14:30']
+                        ['路人乙', '签到。', '2019-01-15 14:30'],
+                        ['匿名', '楼主你试过在后台输入 list 吗？会出来一个清单。', '2019-01-15 15:02'],
+                        ['匿名', '还有 read 7。', '2019-01-15 15:15']
                     ]
                 },
                 '13': {
@@ -604,7 +601,8 @@
                     replies: [
                         ['路人甲', '新年快乐。', '2018-12-31 23:58'],
                         ['匿名', '新年快乐。', '2019-01-01 00:00'],
-                        ['匿名', '还在。', '2019-12-31 23:59']
+                        ['匿名', '还在。', '2019-12-31 23:59'],
+                        ['匿名', '档案馆的密钥是建站时间。', '2019-01-01 00:10']
                     ]
                 },
                 '16': {
@@ -639,7 +637,9 @@
                         ['路人甲', '为什么？', '2018-09-09 09:35'],
                         ['版主', '这个帖子稍后会删除。', '2018-09-09 09:40'],
                         ['匿名', '我见过那个账号。', '2019-02-14 23:47'],
-                        ['匿名', '你可以在关于本站那个页面里输 whoami 试试。', '2019-02-14 23:47']
+                        ['匿名', '你可以在关于本站那个页面里输 whoami 试试。', '2019-02-14 23:47'],
+                        ['匿名', '01001111 01001011', '2019-02-14 23:48'],
+                        ['匿名', '没用。只是我想说。', '2019-02-14 23:49']
                     ]
                 },
                 '18': {
@@ -653,11 +653,14 @@
                         'A：输入 read [编号]，例如 read 7。\n\n' +
                         'Q：我是谁？\n' +
                         'A：……这个问题，最好自己去找答案。\n\n' +
-                        '—— 版主',
+                        '—— 版主\n\n' +
+                        '（杂项：2e 2e 2e 2e 2e）',
                     replies: [
                         ['路人甲', '顶，新人必看', '2016-04-12 10:23'],
                         ['匿名', 'read 7 是什么？', '2016-04-13 22:10'],
-                        ['版主', '你会知道的。', '2016-04-14 08:00']
+                        ['版主', '你会知道的。', '2016-04-14 08:00'],
+                        ['匿名', '如果看到一串乱码，去 cipher.html 解。', '2016-04-14 09:00'],
+                        ['匿名', '有些页面可以解。比如关于本站最下面那个。', '2016-04-14 09:15']
                     ]
                 },
                 '19': {
@@ -674,7 +677,11 @@
                         ['匿名', '别点那个。我就是点了之后变成这样的。', '2017-11-03 03:00'],
                         ['匿名', '你可以试试输入 whoami，看看你还认不认识自己。', '2017-11-03 03:13'],
                         ['新来的', '什么意思？', '2017-11-03 03:20'],
-                        ['匿名', '你会知道的。', '2017-11-03 03:47']
+                        ['匿名', '你会知道的。', '2017-11-03 03:47'],
+                        ['匿名', '-.-. .- -. / -.-- --- ..- / .... . .- .-. / -- .', '2017-11-03 04:00'],
+                        ['匿名', '... . ...- . -. - ....', '2017-11-03 04:13'],
+                        ['匿名', '用解密器试试。', '2017-11-03 04:20'],
+                        ['匿名', '别自己猜。', '2017-11-03 04:33']
                     ]
                 },
                 '20': {
@@ -689,7 +696,10 @@
                     replies: [
                         ['匿名', '别说了。', '2018-06-21 00:00'],
                         ['老用户', '你也试过？', '2018-06-21 00:15'],
-                        ['匿名', '……', '2018-06-21 00:47']
+                        ['匿名', '……', '2018-06-21 00:47'],
+                        ['匿名', '句号 7，逗号 4，问号 3。感叹号 0。', '2018-06-21 01:00'],
+                        ['匿名', '连起来是 7430。', '2018-06-21 01:15'],
+                        ['匿名', '不是密码。是位置。', '2018-06-21 01:33']
                     ]
                 },
                 '21': {
@@ -699,11 +709,18 @@
                     body:
                         '关于本站页面有个"旧版兼容模式"，里面有 5 个标签页。\n' +
                         '我最开始只看了"基本信息"，后来发现"HTML 源代码"那个标签里藏着东西。\n' +
-                        '你们可以自己去看看。',
+                        '\n' +
+                        '如果你在平板上，进不了开发者工具，别担心。\n' +
+                        '源代码也能在游戏里直接看。\n' +
+                        '\n' +
+                        '—— 好奇的人',
                     replies: [
                         ['路人甲', '看了，没什么啊', '2018-09-14 15:00'],
                         ['好奇的人', '你仔细看了吗？', '2018-09-14 15:10'],
-                        ['路人甲', '……好像有。', '2018-09-14 15:33']
+                        ['路人甲', '……好像有。', '2018-09-14 15:33'],
+                        ['匿名', '🔴🟢🔵', '2018-09-14 16:00'],
+                        ['匿名', '红=0 橙=1 黄=2 绿=3 蓝=4 紫=5', '2018-09-14 16:15'],
+                        ['匿名', '看第三个节点。和第四个。', '2018-09-14 16:30']
                     ]
                 },
                 '22': {
@@ -718,7 +735,9 @@
                         ['匿名', '有人接替过吗？', '2015-01-02 10:00'],
                         ['站长', '有过。', '2015-01-02 10:30'],
                         ['匿名', '那他现在在哪？', '2015-01-02 10:33'],
-                        ['站长', '在档案里。', '2015-01-02 10:47']
+                        ['站长', '在档案里。', '2015-01-02 10:47'],
+                        ['匿名', '终端密码是 2347。', '2015-01-02 11:00'],
+                        ['匿名', '但最终密码不是。', '2015-01-02 11:15']
                     ]
                 },
                 '23': {
@@ -726,15 +745,16 @@
                     author: '匿名',
                     time: '2018-12-24 23:47',
                     body:
-                        '如果你是一段被写在纸上的文字，\n' +
-                        '你能证明自己是真实存在的吗？\n\n' +
-                        '如果有一天你发现，你不是在阅读档案，\n' +
-                        '而是档案在书写你，\n' +
-                        '你会怎么做？',
+                        '回 头 看 看 你 的 书 签。\n' +
+                        '响 声 是 从 那 里 来 的。\n' +
+                        '你 需 要 的 不 是 逃 跑。\n' +
+                        '问 一 问 自 己 是 谁。',
                     replies: [
                         ['匿名', '输入 whoami 试试。', '2018-12-24 23:50'],
                         ['匿名', '别。', '2018-12-24 23:51'],
-                        ['匿名', '太晚了。', '2018-12-24 23:53']
+                        ['匿名', '太晚了。', '2018-12-24 23:53'],
+                        ['匿名', '去 source.html 看看。', '2018-12-24 23:55'],
+                        ['匿名', '有些密码不在页面上。', '2018-12-24 23:57']
                     ]
                 }
             };
@@ -760,10 +780,43 @@
             }
 
             function renderPost(p, id) {
+
+                /* ============================================================
+                   加密帖
+                   ============================================================ */
+                if (p.encrypted && !Store.get('post_unlocked_' + id, false)) {
+                    detailEl.innerHTML =
+                        '<div class="post-head">' + escapeHtml(p.title) + '</div>' +
+                        '<div class="post-locked">' +
+                        '  <p style="color:#888;">此帖内容已加密。</p>' +
+                        '  <p style="color:#888;font-size:12px;margin-top:20px;">请输入密钥：</p>' +
+                        '  <input type="text" id="postKeyInput" autocomplete="off">' +
+                        '  <button class="old-btn old-btn-primary" id="postUnlockBtn" style="margin-left:8px;">解锁</button>' +
+                        '  <p id="postKeyMsg" style="color:#a00;font-size:12px;margin-top:10px;"></p>' +
+                        '  <p style="color:#999;font-size:11px;margin-top:20px;">提示：答案在档案馆里。</p>' +
+                        '</div>';
+
+                    var unlockBtn = document.getElementById('postUnlockBtn');
+                    var keyInput = document.getElementById('postKeyInput');
+                    var keyMsg = document.getElementById('postKeyMsg');
+
+                    unlockBtn.addEventListener('click', function () {
+                        if (keyInput.value.trim() === p.key) {
+                            Store.set('post_unlocked_' + id, true);
+                            renderPost(p, id);
+                        } else {
+                            keyMsg.textContent = '密钥错误。';
+                            keyInput.value = '';
+                        }
+                    });
+                    keyInput.addEventListener('keydown', function (e) {
+                        if (e.key === 'Enter') unlockBtn.click();
+                    });
+                    return;
+                }
+
                 var html = '';
-
                 html += '<div class="post-head">' + escapeHtml(p.title) + '</div>';
-
                 html += '<div class="post-meta">';
                 if (p.author === '林默') {
                     html += '发帖人：<a href="pm.html" id="sendPMLink" style="color:#1a3a6b;">林默</a>';
@@ -771,7 +824,6 @@
                     html += '发帖人：' + escapeHtml(p.author);
                 }
                 html += ' ' + escapeHtml(p.time) + '</div>';
-
                 html += '<div class="post-body">' + p.body.replace(/\n/g, '<br>') + '</div>';
 
                 if (p.attachment && p.attachment.type === 'image') {
@@ -789,18 +841,14 @@
 
                 if (p.audioAttachment) {
                     if (!p.attachment) {
-                        html += '<div class="attachment-area">';
-                        html += '<div class="att-label">附件：</div>';
+                        html += '<div class="attachment-area"><div class="att-label">附件：</div>';
                     }
                     html += '<div class="audio-att" id="attAudio">' + escapeHtml(p.audioAttachment.name) + '</div>';
                     if (!p.attachment) { html += '</div>'; }
                 }
 
-                /* 林默个人主页链接 */
                 if (p.audioAttachment) {
-                    html += '<div class="user-profile-link">';
-                    html += '<a href="profile.html?id=lin">👤 林默的个人主页</a>';
-                    html += '</div>';
+                    html += '<div class="user-profile-link"><a href="profile.html?id=lin">👤 林默的个人主页</a></div>';
                 }
 
                 if (p.replies && p.replies.length) {
@@ -811,15 +859,15 @@
                         var content = escapeHtml(r[1]);
 
                         if (id === '1' && i === 22) {
-                            if (refreshCount >= 1) { content += '<br><span class="reply-anomaly">它写的是你的名字。</span>'; }
-                            if (refreshCount >= 2) { content += '<br><span class="reply-anomaly">' + escapeHtml(playerName || '无名') + '</span>'; }
-                            if (refreshCount >= 3) { content += '<br><span class="reply-anomaly">你来了。</span>'; }
+                            if (refreshCount >= 1) content += '<br><span class="reply-anomaly">它写的是你的名字。</span>';
+                            if (refreshCount >= 2) content += '<br><span class="reply-anomaly">' + escapeHtml(playerName || '无名') + '</span>';
+                            if (refreshCount >= 3) content += '<br><span class="reply-anomaly">你来了。</span>';
                         }
 
                         if (id === '2' && i === 0) {
-                            if (refreshCount === 1) { content = '阿回不在了。'; }
-                            else if (refreshCount === 2) { content = '阿回在你后面。'; }
-                            else if (refreshCount >= 3) { content = '阿回是版主吧？。'; }
+                            if (refreshCount === 1) content = '阿回不在了。';
+                            else if (refreshCount === 2) content = '阿回在你后面。';
+                            else if (refreshCount >= 3) content = '阿回是版主吧？。';
                         }
 
                         html += '<div class="reply" data-floor="' + (i + 1) + '">';
@@ -851,14 +899,14 @@
                 if (attImage) {
                     attImage.addEventListener('click', function () {
                         var src = this.dataset.src || 'img/notebook_default.jpg';
-                        if (window.ViewerHelper) { window.ViewerHelper.openImage('notebook_default.jpg', src); }
+                        if (window.ViewerHelper) window.ViewerHelper.openImage('notebook_default.jpg', src);
                     });
                 }
 
                 var attAudio = document.getElementById('attAudio');
                 if (attAudio) {
                     attAudio.addEventListener('click', function () {
-                        if (window.ViewerHelper) { window.ViewerHelper.openAudio(); }
+                        if (window.ViewerHelper) window.ViewerHelper.openAudio();
                     });
                 }
 
@@ -930,9 +978,7 @@
 
                 if (id === '2') {
                     var replies = detailEl.querySelectorAll('.reply');
-                    if (replies[1]) {
-                        replies[1].title = '最后编辑：2019-01-03 02:19 / 编辑者：阿回';
-                    }
+                    if (replies[1]) replies[1].title = '最后编辑：2019-01-03 02:19 / 编辑者：阿回';
                 }
 
                 var sendPMLink = document.getElementById('sendPMLink');
@@ -963,7 +1009,7 @@
                 var userInfo = document.getElementById('userInfo');
                 if (userInfo) {
                     var name = Store.get('gate_signature_name', '') || Store.get('visitor_name', '');
-                    if (name) { userInfo.innerHTML = '<b>' + escapeHtml(name) + '</b>'; }
+                    if (name) userInfo.innerHTML = '<b>' + escapeHtml(name) + '</b>';
                 }
             })();
 
@@ -973,8 +1019,8 @@
                 fsBtn.title = '进入全屏';
                 fsBtn.style.cssText = 'position:fixed;bottom:14px;left:18px;color:#666;font-family:monospace;font-size:14px;cursor:pointer;background:none;border:none;padding:4px 8px;z-index:99998;';
                 fsBtn.addEventListener('click', function () {
-                    if (window.FullscreenHelper.isInFullscreen()) { window.FullscreenHelper.exit(); }
-                    else { window.FullscreenHelper.request(); }
+                    if (window.FullscreenHelper.isInFullscreen()) window.FullscreenHelper.exit();
+                    else window.FullscreenHelper.request();
                 });
                 document.body.appendChild(fsBtn);
             }

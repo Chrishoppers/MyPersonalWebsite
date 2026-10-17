@@ -3,45 +3,38 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
-    <title>回响档案｜归档者</title>
+    <title>归档节点 - 回响档案 - Powered by Discuz!</title>
     <link rel="icon" href="favicon.ico" type="image/x-icon">
     <link rel="stylesheet" href="css/main.css">
     <style>
-        body {
-            transition: background 1.2s ease, color 1.2s ease;
-            min-height: 100vh;
-        }
-
-            body.reading {
-                background: #a8a8a8;
-            }
-
-            body.deep-dark {
-                background: #0b0b0b;
-                color: #888;
-            }
-
-                body.deep-dark .forum-wrap {
-                    background: #0a0a0a;
-                    border-color: #222;
-                }
-
         .node-box {
             width: 720px;
             max-width: 96vw;
             margin: 30px auto;
             background: #f4f4f4;
             border: 2px solid #888;
-            font-family: inherit;
             padding: 20px 26px 26px;
-            transition: background 1.2s ease, border-color 1.2s ease;
+            transition: background 1.2s ease;
         }
 
-        body.deep-dark .node-box {
-            background: #141414;
-            border-color: #444;
+        body.reading {
+            background: #a8a8a8;
+        }
+
+        body.deep-dark {
+            background: #0b0b0b;
             color: #888;
         }
+
+            body.deep-dark .forum-wrap {
+                background: #0a0a0a;
+                border-color: #222;
+            }
+
+            body.deep-dark .node-box {
+                background: #141414;
+                border-color: #444;
+            }
 
         .node-header {
             display: flex;
@@ -56,27 +49,13 @@
             color: #666;
         }
 
-        body.deep-dark .node-header {
-            color: #666;
-            border-color: #333;
-        }
-
-        .node-header .title {
-            font-weight: bold;
-            color: #1a3a6b;
-            font-size: 15px;
-        }
+            .node-header .title {
+                font-weight: bold;
+                color: #1a3a6b;
+                font-size: 15px;
+            }
 
         body.deep-dark .node-header .title {
-            color: #6a6;
-        }
-
-        .node-header a {
-            color: #1a3a6b;
-            font-size: 12px;
-        }
-
-        body.deep-dark .node-header a {
             color: #6a6;
         }
 
@@ -85,10 +64,6 @@
             color: #999;
             margin-bottom: 14px;
             font-family: "Courier New", monospace;
-        }
-
-        body.deep-dark .node-tip {
-            color: #555;
         }
 
         .node-card {
@@ -113,10 +88,6 @@
             border-color: #333;
             color: #888;
         }
-
-            body.deep-dark .node-card:hover {
-                background: #222;
-            }
 
         .node-card.read {
             opacity: 0.55;
@@ -143,14 +114,13 @@
             justify-content: center;
             font-size: 22px;
             color: #666;
-            overflow: visible;   /* 原来是 hidden */
-            position: relative;  /* 新增 */
+            overflow: visible;
+            position: relative;
         }
 
         body.deep-dark .node-card .avatar {
             background: #222;
             border-color: #444;
-            color: #666;
         }
 
         .node-card .avatar img {
@@ -158,81 +128,6 @@
             height: 100%;
             object-fit: cover;
             display: block;
-        }
-
-        /* ============================================================
-           长条形双框印章
-           ============================================================ */
-        .node-stamp {
-            position: absolute;
-            right: -22px;
-            bottom: -8px;
-            padding: 3px 6px;
-            background: rgba(255, 255, 255, 0.85);
-            border: 2px solid #a00;
-            color: #a00;
-            font-family: "SimSun", "宋体", serif;
-            font-size: 10px;
-            font-weight: bold;
-            line-height: 1;
-            letter-spacing: 2px;
-            transform: rotate(-18deg);
-            opacity: 0.9;
-            pointer-events: none;
-            white-space: nowrap;
-            z-index: 10;
-            box-shadow: 0 0 4px rgba(160, 0, 0, 0.25);
-        }
-
-        /* 内框：细一点 */
-        .node-stamp::before {
-            content: '';
-            position: absolute;
-            inset: 1px;
-            border: 1px solid #a00;
-            opacity: 0.65;
-            pointer-events: none;
-        }
-
-        .node-stamp .stamp-text {
-            position: relative;
-            z-index: 1;
-            display: block;
-        }
-
-        /* 未归档：灰色 */
-        .node-stamp.unarchived {
-            border-color: #888;
-            color: #888;
-            background: rgba(255, 255, 255, 0.75);
-            box-shadow: 0 0 4px rgba(100, 100, 100, 0.2);
-        }
-
-        .node-stamp.unarchived::before {
-            border-color: #888;
-            opacity: 0.5;
-        }
-
-        /* 深色模式 */
-        body.deep-dark .node-stamp {
-            background: rgba(0, 0, 0, 0.65);
-            border-color: #a33;
-            color: #a33;
-            box-shadow: 0 0 5px rgba(160, 0, 0, 0.4);
-        }
-
-        body.deep-dark .node-stamp::before {
-            border-color: #a33;
-        }
-
-        body.deep-dark .node-stamp.unarchived {
-            border-color: #666;
-            color: #666;
-            box-shadow: 0 0 4px rgba(100, 100, 100, 0.3);
-        }
-
-        body.deep-dark .node-stamp.unarchived::before {
-            border-color: #666;
         }
 
         .node-card .info {
@@ -276,10 +171,6 @@
             text-align: right;
         }
 
-        body.deep-dark .node-card .side-hint {
-            color: #555;
-        }
-
         .node-detail {
             display: none;
             padding: 12px 16px;
@@ -290,7 +181,6 @@
             line-height: 2;
             white-space: pre-wrap;
             color: #333;
-            font-family: "SimSun", "宋体", serif;
             margin-bottom: 8px;
         }
 
@@ -314,41 +204,30 @@
 
             .node8-wrap.show {
                 display: block;
-                animation: fadeIn 0.5s ease;
             }
 
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
+            .node8-wrap label {
+                display: block;
+                font-size: 13px;
+                color: #333;
+                margin-bottom: 8px;
+                font-weight: bold;
             }
 
-            to {
-                opacity: 1;
+            .node8-wrap input {
+                padding: 6px 10px;
+                border: 1px solid #888;
+                background: #fff;
+                font-family: inherit;
+                font-size: 13px;
+                width: 100%;
+                max-width: 320px;
             }
-        }
 
-        .node8-wrap label {
-            display: block;
-            font-size: 13px;
-            color: #333;
-            margin-bottom: 8px;
-            font-weight: bold;
-        }
-
-        .node8-wrap input {
-            padding: 6px 10px;
-            border: 1px solid #888;
-            background: #fff;
-            font-family: inherit;
-            font-size: 13px;
-            width: 100%;
-            max-width: 320px;
-        }
-
-        .node8-wrap .old-btn {
-            padding: 6px 20px;
-            margin-left: 8px;
-        }
+            .node8-wrap .old-btn {
+                padding: 6px 20px;
+                margin-left: 8px;
+            }
 
         .node8-tiny {
             font-size: 11px;
@@ -376,13 +255,17 @@
 </head>
 <body>
 
-    <div class="forum-wrap" style="min-height: auto;">
-
+    <div class="forum-wrap" style="min-height:auto;">
         <div class="forum-head">
             <div class="head-logo"></div>
             <div class="head-right">
-                <div class="user-info" id="userInfo">游客</div>
-                <div>最后更新：2019-03-01 00:00</div>
+                <div class="forum-top-buttons" style="justify-content:flex-end;margin-bottom:4px;">
+                    <a href="bbs.html">论坛</a>
+                    <a href="search.html">搜索</a>
+                    <a href="about.html">帮助</a>
+                    <a href="archive.html">档案馆</a>
+                </div>
+                <div class="user-info"><span id="userInfo">游客</span></div>
             </div>
         </div>
 
@@ -392,23 +275,21 @@
             <a href="node.html" class="active">归档者</a>
         </div>
 
-        <div class="forum-notice">
-            本站数据于 2019 年 3 月后不再更新。感谢各位十年来的陪伴。——站长
+        <div class="forum-crumb">
+            <a href="bbs.html">回响档案</a>
+            <span class="sep">&raquo;</span>
+            <span>归档节点</span>
         </div>
 
-        <div class="node-box" id="nodeBox">
+        <div class="forum-notice">📢 本站数据于 2019 年 3 月后不再更新。感谢各位十年来的陪伴。——站长</div>
 
+        <div class="node-box" id="nodeBox">
             <div class="node-header">
                 <span class="title">📦 归档者</span>
-                <span>
-                    归档节点：<b id="nodeCount">0</b> / 7
-                    <a href="bbs.html" style="margin-left:12px;">← 返回论坛</a>
-                </span>
+                <span>归档节点：<b id="nodeCount">0</b> / 7</span>
             </div>
-
             <div class="node-tip">完整列表：list ｜ 详情：read [编号]</div>
-
-            <div class="node-list" id="nodeList"></div>
+            <div id="nodeList"></div>
 
             <div class="node8-wrap" id="node8Wrap">
                 <label>你叫什么？</label>
@@ -420,9 +301,12 @@
             <div class="node-footer">
                 ✦ 读完所有节点后，可继续：<span class="cmd">我接替</span>（在后台终端输入）
             </div>
-
         </div>
 
+        <div class="forum-footer">
+            <div class="footer-line"><a href="bbs.html">返回论坛</a> | <a href="about.html">关于本站</a></div>
+            <div class="footer-line footer-time">Powered by <b>EchoSystem v0.9</b> © 2009-2019 <b>Comsenz Inc.</b></div>
+        </div>
     </div>
 
     <script src="js/storage.js"></script>
@@ -431,10 +315,10 @@
     <script src="js/tracker.js"></script>
     <script src="js/ui.js"></script>
     <script src="js/horror.js"></script>
+    <script src="js/system-helper.js"></script>
 
     <script>
 (function () {
-
             'use strict';
 
             function escapeHtml(s) {
@@ -455,20 +339,19 @@
                 var fsBtn = document.createElement('button');
                 fsBtn.textContent = '⛶';
                 fsBtn.title = '进入全屏';
-                fsBtn.style.cssText =
-                    'position:fixed;bottom:14px;left:18px;' +
-                    'color:#666;font-family:monospace;font-size:14px;' +
-                    'cursor:pointer;background:none;border:none;padding:4px 8px;' +
-                    'z-index:99998;';
+                fsBtn.style.cssText = 'position:fixed;bottom:14px;left:18px;color:#666;font-family:monospace;font-size:14px;cursor:pointer;background:none;border:none;padding:4px 8px;z-index:99998;';
                 fsBtn.addEventListener('click', function () {
-                    if (window.FullscreenHelper.isInFullscreen()) {
-                        window.FullscreenHelper.exit();
-                    } else {
-                        window.FullscreenHelper.request();
-                    }
+                    if (window.FullscreenHelper.isInFullscreen()) window.FullscreenHelper.exit();
+                    else window.FullscreenHelper.request();
                 });
                 document.body.appendChild(fsBtn);
             }
+
+            /* 每个节点印章显示一个汉字 */
+            var STAMP_CHARS = {
+                1: '不', 2: '要', 3: '回', 4: '答',
+                5: '你', 6: '看', 7: '了', 8: '·'
+            };
 
             var NODES = [
                 { id: 1, who: '系统', msg: '有人吗。', time: '2009-11-01 00:00', avatar: '◼',
@@ -484,19 +367,12 @@
                 { id: 6, who: '小孩', msg: '有人吗。', time: '2018-01-01 01:01', avatar: '🧒',
                   detail: '小孩在玩捉迷藏。\n小孩数到一百。\n小孩开始找。\n小孩找到了所有人。\n除了一个。\n那个一直在数。' },
                 { id: 7, who: '阿回', msg: '我叫阿回。我不知道我是谁。', time: '2019-02-14 23:47', avatar: '🐺',
-                  detail:
-                      '阿回是林默弄丢的笔记本。\n' +
-                      '但笔记本不是林默写的。\n' +
-                      '阿回不是人。\n' +
-                      '阿回也不是系统。\n' +
-                      '阿回是第一个回答"有人吗"的人。\n' +
-                      '\n' +
-                      '如果你愿意，输入 我接替' },
+                  detail: '阿回是林默弄丢的笔记本。\n但笔记本不是林默写的。\n阿回不是人。\n阿回也不是系统。\n阿回是第一个回答"有人吗"的人。\n\n如果你愿意，输入 我接替' },
                 { id: 8, who: '未归档', msg: '等待中。', time: '现在。', avatar: '·',
-                  detail: '尚未归档。\n等待一个愿意留下名字的人。', isNode8: true }
+                  detail: '尚未归档。\n等待一个愿意留下名字的人。', isNode8: true, encrypted: true, key: '阿回' }
             ];
 
-            var listEl  = document.getElementById('nodeList');
+            var listEl = document.getElementById('nodeList');
             var countEl = document.getElementById('nodeCount');
 
             function render() {
@@ -504,23 +380,17 @@
                 var readArr = Store.get('node_read', []);
 
                 NODES.forEach(function (n) {
-
                     var card = document.createElement('div');
                     card.className = 'node-card' + (readArr.indexOf(n.id) !== -1 ? ' read' : '');
                     card.dataset.id = n.id;
 
-                    var stampHtml;
-                    if (n.isNode8) {
-                        stampHtml = '<span class="node-stamp unarchived"><span class="stamp-text">未归档</span></span>';
-                    } else {
-                        stampHtml = '<span class="node-stamp"><span class="stamp-text">已归档</span></span>';
-                    }
+                    var stampChar = STAMP_CHARS[n.id] || '·';
+                    var stampClass = n.isNode8 ? 'node-stamp unarchived' : 'node-stamp';
 
                     card.innerHTML =
                         '<div class="avatar">' +
-                        '  <img src="img/node' + n.id + '.jpg" alt="" ' +
-                        '       onerror="this.style.display=\'none\';this.parentNode.textContent=\'' + n.avatar + '\';">' +
-                        '  ' + stampHtml +
+                        '  <img src="img/node' + n.id + '.jpg" alt="" onerror="this.style.display=\'none\';this.parentNode.textContent=\'' + n.avatar + '\';">' +
+                        '  <span class="' + stampClass + '"><span class="stamp-text">' + stampChar + '</span></span>' +
                         '</div>' +
                         '<div class="info">' +
                         '  <div class="who">节点 ' + n.id + '：' + escapeHtml(n.who) + '</div>' +
@@ -531,11 +401,9 @@
 
                     card.addEventListener('click', function () {
                         var wasOpen = card.classList.contains('expanded');
-
                         document.querySelectorAll('.node-card.expanded').forEach(function (c) {
                             c.classList.remove('expanded');
                         });
-
                         if (!wasOpen) {
                             card.classList.add('expanded');
                             markRead(n.id);
@@ -547,11 +415,7 @@
                     var detail = document.createElement('div');
                     detail.className = 'node-detail';
                     detail.textContent = n.detail;
-
-                    if (readArr.indexOf(n.id) !== -1) {
-                        card.classList.add('expanded');
-                    }
-
+                    if (readArr.indexOf(n.id) !== -1) card.classList.add('expanded');
                     listEl.appendChild(detail);
                 });
 
@@ -560,13 +424,22 @@
             }
 
             function markRead(id) {
-                var arr = Store.get('node_read', []);
+                if (id === 8 && !Store.get('node8_unlocked', false)) {
+                    var key = prompt('请输入节点 8 的密钥：');
+                    if (key === '阿回') {
+                        Store.set('node8_unlocked', true);
+                    } else {
+                        alert('密钥错误。');
+                        return;
+                    }
+                }
 
+                var arr = Store.get('node_read', []);
                 if (arr.indexOf(id) === -1) {
                     arr.push(id);
                     Store.set('node_read', arr);
                     Store.set('node_read_count', arr.length);
-                    addAttention(2);
+                    if (typeof addAttention === 'function') addAttention(2);
 
                     var realCount = arr.filter(function (x) { return x <= 7; }).length;
                     if (realCount >= 7) {
@@ -574,7 +447,6 @@
                         showNode8();
                     }
 
-                    /* 新增上报 */
                     if (window.HxdaReport && window.HxdaReport.event) {
                         HxdaReport.event('node', { id: id });
                     }
@@ -592,14 +464,9 @@
 
             function updateBackground() {
                 var n = Store.get('node_read', []).filter(function (x) { return x <= 7; }).length;
-
-                if (n >= 7) {
-                    document.body.classList.add('deep-dark');
-                } else if (n >= 3) {
-                    document.body.classList.add('reading');
-                } else {
-                    document.body.classList.remove('reading', 'deep-dark');
-                }
+                if (n >= 7) document.body.classList.add('deep-dark');
+                else if (n >= 3) document.body.classList.add('reading');
+                else document.body.classList.remove('reading', 'deep-dark');
             }
 
             function showNode8() {
@@ -609,53 +476,32 @@
             document.getElementById('node8Submit').addEventListener('click', function () {
                 var inp = document.getElementById('node8Input');
                 var v = (inp.value || '').trim();
-
                 if (v) {
                     Store.set('node8_name', v);
                     Store.set('visitor_name', v);
-
-                    uiAlert(
-                        '归档完成',
-                        '归档完成。节点 8：' + v + '。\n' +
-                        '欢迎来到回响档案。',
-                        function () {
-                            Store.set('ending_archive', true);
-                            window.location.href = 'page43.html?archive=1';
-                        }
-                    );
+                    uiAlert('归档完成', '归档完成。节点 8：' + v + '。\n欢迎来到回响档案。', function () {
+                        Store.set('ending_archive', true);
+                        window.location.href = 'page43.html?archive=1';
+                    });
                 } else {
                     var wrap = document.getElementById('node8Wrap');
                     wrap.classList.add('shake');
-                    setTimeout(function () {
-                        wrap.classList.remove('shake');
-                        wrap.classList.remove('show');
-                    }, 800);
-
-                    uiAlert(
-                        '归档失败',
-                        '无法归档无名者。\n' +
-                        '你还有机会。'
-                    );
+                    setTimeout(function () { wrap.classList.remove('shake'); wrap.classList.remove('show'); }, 800);
+                    uiAlert('归档失败', '无法归档无名者。\n你还有机会。');
                 }
             });
 
             document.getElementById('node8Input').addEventListener('keydown', function (e) {
-                if (e.key === 'Enter') {
-                    document.getElementById('node8Submit').click();
-                }
+                if (e.key === 'Enter') document.getElementById('node8Submit').click();
             });
 
             render();
-
-            if (Store.get('read_nodes', false)) {
-                showNode8();
-            }
+            if (Store.get('read_nodes', false)) showNode8();
 
             Store.set('node_opened', true);
-            addAttention(1);
+            if (typeof addAttention === 'function') addAttention(1);
 
 })();
     </script>
-
 </body>
 </html>

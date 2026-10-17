@@ -131,6 +131,19 @@
 </style>
 
 <div class="live-container">
+    @if (ViewBag.ConfigError != null)
+    {
+        <div style="background:#3a0a0a;border:1px solid #a33;color:#f99;padding:12px 20px;margin:20px 0;font-family:'Courier New',monospace;font-size:13px;">
+            ⚠ 配置错误：@ViewBag.ConfigError<br>
+            请检查 appsettings.json 的 Turso 节。
+        </div>
+    }
+    @if (ViewBag.Error != null)
+    {
+        <div style="background:#3a0a0a;border:1px solid #a33;color:#f99;padding:12px 20px;margin:20px 0;font-family:'Courier New',monospace;font-size:13px;">
+            ⚠ 查询失败：@ViewBag.Error
+        </div>
+    }
     <div class="live-header">
         <h1><span class="pulse"></span>🟢 实时在线（@Model.Count）</h1>
         <div>

@@ -1,0 +1,200 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+    <title>页面源代码 - 回响档案</title>
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="css/main.css">
+    <style>
+        .src-body {
+            padding: 16px 20px;
+            font-family: "Courier New", monospace;
+            font-size: 12px;
+            line-height: 1.8;
+            white-space: pre-wrap;
+            overflow-x: auto;
+            max-height: 70vh;
+            overflow-y: auto;
+            color: #9c9;
+            background: #1a1a1a;
+        }
+
+            .src-body .comment {
+                color: #666;
+                font-style: italic;
+            }
+
+            .src-body .tag {
+                color: #6af;
+            }
+
+            .src-body .attr {
+                color: #fa6;
+            }
+
+            .src-body .str {
+                color: #6f6;
+            }
+
+            .src-body .hl {
+                color: #f66;
+                font-weight: bold;
+                background: #300;
+            }
+
+        .src-copy-btn {
+            float: right;
+            padding: 3px 10px;
+            background: #333;
+            color: #9c9;
+            border: 1px solid #555;
+            font-family: inherit;
+            font-size: 11px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="forum-wrap" style="min-height:auto;">
+        <div class="forum-head">
+            <div class="head-logo"></div>
+            <div class="head-right">
+                <div class="forum-top-buttons" style="justify-content:flex-end;margin-bottom:4px;">
+                    <a href="bbs.html">论坛</a>
+                    <a href="search.html">搜索</a>
+                    <a href="about.html">帮助</a>
+                    <a href="archive.html">档案馆</a>
+                </div>
+                <div class="user-info"><span>游客</span></div>
+            </div>
+        </div>
+
+        <div class="forum-nav">
+            <a href="bbs.html">← 返回论坛</a>
+            <a href="bbs.html">首页</a>
+            <a href="about.html">关于本站</a>
+            <a href="verify.html">页面校验</a>
+            <a href="source.html" class="active">源代码</a>
+        </div>
+
+        <div class="forum-crumb">
+            <a href="bbs.html">回响档案</a>
+            <span class="sep">&raquo;</span>
+            <span>页面源代码</span>
+        </div>
+
+        <div style="padding:20px;max-width:900px;margin:0 auto;">
+            <div style="background:#1a1a1a;border:2px solid #333;color:#ccc;">
+                <div style="background:#2a2a2a;color:#ccc;padding:8px 14px;font-weight:bold;font-size:13px;border-bottom:1px solid #333;font-family:'Courier New',monospace;display:flex;justify-content:space-between;align-items:center;">
+                    <span>📄 source.html — 页面源代码</span>
+                    <button class="src-copy-btn" id="copyBtn">复制全部</button>
+                </div>
+                <div class="src-body" id="srcBody"></div>
+            </div>
+            <div style="margin-top:16px;padding:10px 14px;background:#0a0a0a;color:#666;font-family:'Courier New',monospace;font-size:11px;border:1px dashed #333;">
+                提示：可以直接长按文字选中复制，粘贴到"解密"页面尝试解码。
+            </div>
+        </div>
+
+        <div class="forum-footer">
+            <div class="footer-line">
+                <a href="bbs.html">返回论坛</a> |
+                <a href="cipher.html">解密</a>
+            </div>
+            <div class="footer-line footer-time">
+                Powered by <b>EchoSystem v0.9</b> © 2009-2019 <b>Comsenz Inc.</b>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/storage.js"></script>
+    <script src="js/system-helper.js"></script>
+    <script>
+    (function () {
+        var srcBody = document.getElementById('srcBody');
+
+        function renderSource() {
+            var lines = [
+                '<span class="comment">&lt;!-- 节点7：归档完成。等待下一位。 --&gt;</span>',
+                '<span class="comment">&lt;!-- 下一节点：无名者。 --&gt;</span>',
+                '<span class="comment">&lt;!-- 如果你能看到这里，说明你不是留言者。 --&gt;</span>',
+                '<span class="comment">&lt;!-- 你是阅读者。 --&gt;</span>',
+                '<span class="comment">&lt;!-- 但阅读者也会被归档。 --&gt;</span>',
+                '<span class="comment">&lt;!-- 第43页：不要回头。 --&gt;</span>',
+                '<span class="comment">&lt;!-- EchoSystem v0.9 --&gt;</span>',
+                '',
+                '<span class="tag">&lt;html&gt;</span>',
+                '<span class="tag">&lt;head&gt;</span>',
+                '  <span class="tag">&lt;title&gt;</span>回响档案｜失物招领·留言簿<span class="tag">&lt;/title&gt;</span>',
+                '  <span class="tag">&lt;meta</span> <span class="attr">name</span>=<span class="str">"data-key"</span> <span class="attr">content</span>=<span class="str">"2347"</span><span class="tag">&gt;</span>',
+                '  <span class="tag">&lt;meta</span> <span class="attr">name</span>=<span class="str">"cipher"</span> <span class="attr">content</span>=<span class="str">"RPU-43-FRIRAGU"</span><span class="tag">&gt;</span>',
+                '  <span class="tag">&lt;meta</span> <span class="attr">name</span>=<span class="str">"file-size"</span> <span class="attr">content</span>=<span class="str">"43x27"</span><span class="tag">&gt;</span>',
+                '  <span class="tag">&lt;meta</span> <span class="attr">name</span>=<span class="str">"morse-hint"</span> <span class="attr">content</span>=<span class="str">"帖19"</span><span class="tag">&gt;</span>',
+                '<span class="tag">&lt;/head&gt;</span>',
+                '<span class="tag">&lt;body&gt;</span>',
+                '  <span class="tag">&lt;div</span> <span class="attr">class</span>=<span class="str">"archive"</span><span class="tag">&gt;</span>',
+                '    <span class="tag">&lt;!-- Base64: 5Zue5Z+N5qGj5qGI --&gt;</span>',
+                '    <span class="tag">&lt;!-- Morse: -.-. .- -. / -.-- --- ..- / .... . .- .-. / -- . --&gt;</span>',
+                '    <span class="tag">&lt;!-- ROT13: RPU-43-FRIRAGU --&gt;</span>',
+                '    <span class="tag">&lt;!-- Key: 2347 --&gt;</span>',
+                '  <span class="tag">&lt;/div&gt;</span>',
+                '',
+                '  <span class="comment">&lt;!-- 7 个节点，各藏一字：不 / 要 / 回 / 答 / 你 / 看 / 了 --&gt;</span>',
+                '  <span class="comment">&lt;!-- 组合：不要回答 + 你看了 --&gt;</span>',
+                '',
+                '  <span class="comment">&lt;!-- 第43页的内容：你是第43页。 --&gt;</span>',
+                '  <span class="hl">&lt;!-- 最终密码藏在 ROT13 里。 --&gt;</span>',
+                '<span class="tag">&lt;/body&gt;</span>',
+                '<span class="tag">&lt;/html&gt;</span>'
+            ];
+            srcBody.innerHTML = lines.join('\n');
+        }
+
+        if (Store.get('source_unlocked', false)) {
+            renderSource();
+        } else {
+            srcBody.innerHTML =
+                '<span class="comment">// 此文件已加密</span>\n' +
+                '<span class="comment">// 请输入密钥解锁</span>\n\n' +
+                '<div style="text-align:center;padding:20px;">' +
+                '  <input type="text" id="srcKey" placeholder="密钥" style="padding:6px 12px;border:1px solid #888;width:200px;font-family:inherit;">' +
+                '  <button class="old-btn" id="srcUnlock" style="margin-left:8px;">解锁</button>' +
+                '  <p id="srcKeyMsg" style="color:#f66;font-size:12px;margin-top:10px;"></p>' +
+                '  <p style="color:#666;font-size:11px;margin-top:20px;">提示：密钥在源代码里。</p>' +
+                '</div>';
+
+            document.getElementById('srcUnlock').addEventListener('click', function () {
+                var v = document.getElementById('srcKey').value.trim();
+                if (v === '2347') {
+                    Store.set('source_unlocked', true);
+                    renderSource();
+                } else {
+                    document.getElementById('srcKeyMsg').textContent = '密钥错误。';
+                    document.getElementById('srcKey').value = '';
+                }
+            });
+            document.getElementById('srcKey').addEventListener('keydown', function (e) {
+                if (e.key === 'Enter') document.getElementById('srcUnlock').click();
+            });
+        }
+
+        document.getElementById('copyBtn').addEventListener('click', function () {
+            var text = srcBody.innerText;
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(text).then(function () { alert('已复制到剪贴板。'); });
+            } else {
+                var ta = document.createElement('textarea');
+                ta.value = text;
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                ta.remove();
+                alert('已复制到剪贴板。');
+            }
+        });
+    })();
+    </script>
+</body>
+</html>

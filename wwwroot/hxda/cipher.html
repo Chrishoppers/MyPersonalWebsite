@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+    <title>解密 - 回响档案 - Powered by Discuz!</title>
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+
+    <div class="forum-wrap">
+        <div class="forum-head">
+            <div class="head-logo"></div>
+            <div class="head-right">
+                <div class="forum-top-buttons" style="justify-content:flex-end;margin-bottom:4px;">
+                    <a href="bbs.html">论坛</a>
+                    <a href="search.html">搜索</a>
+                    <a href="about.html">帮助</a>
+                    <a href="archive.html">档案馆</a>
+                </div>
+                <div class="user-info"><span>解密器</span></div>
+            </div>
+        </div>
+
+        <div class="forum-nav">
+            <a href="bbs.html">← 返回论坛</a>
+            <a href="bbs.html">首页</a>
+            <a href="search.html">搜索</a>
+            <a href="cipher.html" class="active">解密</a>
+        </div>
+
+        <div class="forum-crumb">
+            <a href="bbs.html">回响档案</a>
+            <span class="sep">&raquo;</span>
+            <span>解密</span>
+        </div>
+
+        <div class="forum-notice">
+            把你在档案里找到的奇怪字符串粘贴进来。
+        </div>
+
+        <div style="padding:20px;">
+            <div style="background:#f4f4f4;border:2px solid #888;max-width:720px;margin:0 auto;">
+                <div style="background:#1a3a6b;background-image:linear-gradient(to bottom,#4a6fa5 0%,#1a3a6b 100%);color:#fff;padding:8px 14px;font-weight:bold;font-size:14px;">🔓 解密器</div>
+                <div style="padding:20px 24px;">
+                    <textarea id="cipherInput" placeholder="粘贴密文..." style="width:100%;height:100px;padding:8px 12px;border:1px solid #888;background:#fff;font-family:'Courier New',monospace;font-size:13px;resize:vertical;"></textarea>
+                    <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
+                        <button class="old-btn old-btn-primary" id="cipherBtn">解密</button>
+                        <button class="old-btn" id="bruteBtn">暴力尝试</button>
+                    </div>
+                    <div id="cipherOutput" style="margin-top:16px;padding:12px;background:#fafafa;border:1px solid #ddd;white-space:pre-wrap;font-family:'Courier New',monospace;font-size:12px;line-height:1.8;min-height:100px;max-height:400px;overflow-y:auto;">
+                        <span style="color:#888;font-style:italic;">输入密文，然后点击"解密"。</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="forum-footer">
+            <div class="footer-line">
+                <a href="bbs.html">返回论坛</a> |
+                <a href="archive.html">档案馆</a> |
+                <a href="about.html">关于本站</a>
+            </div>
+            <div class="footer-line footer-time">
+                Powered by <b>EchoSystem v0.9</b> © 2009-2019 <b>Comsenz Inc.</b>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/storage.js"></script>
+    <script src="js/system-helper.js"></script>
+    <script src="js/cipher.js"></script>
+    <script>
+    (function () {
+        function escapeHtml(s) {
+            var d = document.createElement('div');
+            d.textContent = String(s);
+            return d.innerHTML;
+        }
+
+        var inputEl = document.getElementById('cipherInput');
+        var outputEl = document.getElementById('cipherOutput');
+
+        document.getElementById('cipherBtn').addEventListener('click', function () {
+            var v = inputEl.value.trim();
+            if (!v) { outputEl.innerHTML = '<span style="color:#888;">请输入密文。</span>'; return; }
+            var r = Cipher.autoDecode(v);
+            if (r && r.value) {
+                outputEl.innerHTML = '类型：' + escapeHtml(r.type) +
+                    '\n\n<span style="color:#a00;font-weight:bold;">' + escapeHtml(r.value) + '</span>';
+                Store.set('cipher_used_count', Store.get('cipher_used_count', 0) + 1);
+            } else {
+                outputEl.innerHTML = '<span style="color:#888;">无法识别。试试"暴力尝试"。</span>';
+            }
+        });
+
+        document.getElementById('bruteBtn').addEventListener('click', function () {
+            var v = inputEl.value.trim();
+            if (!v) { outputEl.innerHTML = '<span style="color:#888;">请输入密文。</span>'; return; }
+            var list = Cipher.bruteForce(v);
+            if (!list.length) { outputEl.innerHTML = '<span style="color:#888;">没有匹配的解法。</span>'; return; }
+            outputEl.innerHTML = list.map(escapeHtml).join('\n');
+        });
+    })();
+    </script>
+</body>
+</html>

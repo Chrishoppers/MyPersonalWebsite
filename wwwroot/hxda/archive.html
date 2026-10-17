@@ -1,0 +1,137 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+    <title>档案馆 - 回响档案 - Powered by Discuz!</title>
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+
+    <div class="forum-wrap">
+        <div class="forum-head">
+            <div class="head-logo"></div>
+            <div class="head-right">
+                <div class="forum-top-buttons" style="justify-content:flex-end;margin-bottom:4px;">
+                    <a href="bbs.html">论坛</a>
+                    <a href="search.html">搜索</a>
+                    <a href="about.html">帮助</a>
+                    <a href="archive.html" style="font-weight:bold;">档案馆</a>
+                </div>
+                <div class="user-info"><span>游客</span></div>
+            </div>
+        </div>
+
+        <div class="forum-nav">
+            <a href="bbs.html">← 返回论坛</a>
+            <a href="bbs.html">首页</a>
+            <a href="about.html">关于本站</a>
+            <a href="archive.html" class="active">档案馆</a>
+        </div>
+
+        <div class="forum-crumb">
+            <a href="bbs.html">回响档案</a>
+            <span class="sep">&raquo;</span>
+            <span>档案馆</span>
+        </div>
+
+        <div class="forum-notice">
+            📢 本站数据于 2019 年 3 月后不再更新。感谢各位十年来的陪伴。——站长
+        </div>
+
+        <div style="padding:20px;max-width:720px;margin:0 auto;">
+            <div style="background:#f4f4f4;border:2px solid #888;">
+                <div style="background:#1a3a6b;background-image:linear-gradient(to bottom,#4a6fa5 0%,#1a3a6b 100%);color:#fff;padding:8px 14px;font-weight:bold;font-size:14px;border-bottom:1px solid #0d1b3e;">📚 回响档案馆简介</div>
+                <div style="padding:20px 24px;font-size:13px;line-height:2;color:#333;">
+
+                    <div style="margin-bottom:18px;">
+                        <h3 style="font-size:14px;color:#1a3a6b;margin-bottom:6px;">一、建立</h3>
+                        <p>本论坛建于 <b>2009 年 11 月 1 日 00:00</b>。</p>
+                        <p>首任站长是"系统"（EchoSystem v0.9）。</p>
+                        <p>站长已注销。</p>
+                    </div>
+
+                    <div style="margin-bottom:18px;">
+                        <h3 style="font-size:14px;color:#1a3a6b;margin-bottom:6px;">二、性质</h3>
+                        <p>本论坛为失物招领与留言簿。</p>
+                        <p>所有留言自动归档。</p>
+                        <p>归档不可撤销。</p>
+                    </div>
+
+                    <div style="margin-bottom:18px;">
+                        <h3 style="font-size:14px;color:#1a3a6b;margin-bottom:6px;">三、加密段</h3>
+                        <div id="arcLocked" style="padding:14px;background:#fafafa;border:1px dashed #aaa;color:#888;font-family:'Courier New',monospace;font-size:12px;text-align:center;">
+                            <p>███ 档案已加密 ███</p>
+                            <p style="margin:10px 0;">请输入密钥：</p>
+                            <input type="text" id="arcKey" placeholder="密钥" style="padding:6px 12px;border:1px solid #888;width:200px;font-family:inherit;margin-right:8px;">
+                            <button class="old-btn" id="arcUnlock">解锁</button>
+                            <p style="font-size:10px;margin-top:10px;color:#aaa;">提示：密钥是档案的建立时间，格式 YYYY-MM-DD。</p>
+                        </div>
+                        <div id="arcUnlocked" style="display:none;">
+                            <p><b>四、历史</b></p>
+                            <p>2009-11-01：系统发布第一条留言"有人吗。"，被自动归档，成为节点 1。</p>
+                            <p>2009-03-17：林默发布寻物帖，寻找一本黑色皮面笔记本。笔记本封面内侧有一个"回"字。林默不是笔记本的作者。</p>
+                            <p>2009-06-01：林默被系统归档，成为节点 6。</p>
+                            <p>2009-06-02：笔记本被系统理解成"回应"，变成"阿回"，成为节点 7。</p>
+                            <p>2010-2018：5 个节点陆续被归档。每个节点留下的都是"有人吗"。</p>
+                            <p>2019-02-14 23:47：阿回留下最后一句。</p>
+                            <p>2019-03-01：论坛停止更新。</p>
+                            <p style="margin-top:14px;"><b>五、现在</b></p>
+                            <p>你是第 8 个。</p>
+                            <p>你是内容，还是阅读者？</p>
+                            <p>答案在第 43 页。</p>
+                            <p style="color:#a00;font-weight:bold;margin-top:14px;">提示：第 43 页的密码不是数字。</p>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="forum-footer">
+            <div class="footer-line">
+                <a href="bbs.html">返回论坛</a> |
+                <a href="about.html">关于本站</a> |
+                <a href="cipher.html">解密</a>
+            </div>
+            <div class="footer-line footer-time">
+                Powered by <b>EchoSystem v0.9</b> © 2009-2019 <b>Comsenz Inc.</b>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/storage.js"></script>
+    <script src="js/system-helper.js"></script>
+    <script>
+    (function () {
+        var arcLocked = document.getElementById('arcLocked');
+        var arcUnlocked = document.getElementById('arcUnlocked');
+        var arcKey = document.getElementById('arcKey');
+        var arcUnlock = document.getElementById('arcUnlock');
+
+        if (Store.get('arc_unlocked', false)) {
+            arcLocked.style.display = 'none';
+            arcUnlocked.style.display = 'block';
+        }
+
+        arcUnlock.addEventListener('click', function () {
+            var v = arcKey.value.trim();
+            if (v === '2009-11-01') {
+                Store.set('arc_unlocked', true);
+                arcLocked.style.display = 'none';
+                arcUnlocked.style.display = 'block';
+            } else {
+                arcKey.value = '';
+                arcKey.placeholder = '密钥错误';
+                setTimeout(function () { arcKey.placeholder = '密钥'; }, 2000);
+            }
+        });
+
+        arcKey.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') arcUnlock.click();
+        });
+    })();
+    </script>
+</body>
+</html>

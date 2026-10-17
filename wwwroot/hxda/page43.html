@@ -11,7 +11,7 @@
             padding: 0;
             background: #000;
             color: #eee;
-            font-family: "SimSun", "宋体", serif;
+            font-family: "SimSun", serif;
             font-size: 20px;
             line-height: 2;
             min-height: 100vh;
@@ -30,7 +30,7 @@
                     content: '';
                     position: fixed;
                     inset: 0;
-                    background: rgba(0, 0, 0, 0.85);
+                    background: rgba(0,0,0,0.85);
                     z-index: 0;
                     pointer-events: none;
                 }
@@ -115,7 +115,12 @@
 <body class="page43-page">
 
     <div id="wrap">
-        <div id="top">不要回头。</div>
+        <div id="top">
+            不要回头。
+            <div style="font-size:11px;color:#333;margin-top:8px;letter-spacing:0.3em;">
+                有 些 密 码 不 在 页 面 上 。
+            </div>
+        </div>
         <div id="ask">
             <div class="q">回答：有人吗？</div>
             <input id="answer" autocomplete="off">
@@ -135,11 +140,9 @@
 
     <script>
 (function () {
-
             'use strict';
 
             var params = new URLSearchParams(window.location.search);
-
             if (params.get('remembered')) { endingRemembered(); return; }
             if (params.get('lookback'))   { endingLookback();   return; }
             if (params.get('archive'))    { endingArchive();    return; }
@@ -147,6 +150,10 @@
             if (params.get('together'))   { endingTogether();   return; }
             if (params.get('disconnect')) { endingDisconnect(); return; }
             if (params.get('true'))       { endingTrue();       return; }
+            if (params.get('reader'))     { endingReader();     return; }
+            if (params.get('delete'))     { endingDelete();     return; }
+            if (params.get('seventh'))    { endingSeventh();    return; }
+            if (params.get('wrongcode'))  { endingWrongCode();  return; }
 
             Store.set('clicked_page43', true);
             addAttention(3);
@@ -161,19 +168,6 @@
             }, 3000);
 
             if (window.GameAudio) GameAudio.fadeIn('heartbeat', 2000, 0.2);
-            window.addEventListener('beforeunload', function () {
-                if (window.GameAudio) GameAudio.fadeOut('heartbeat', 800);
-            });
-            window.addEventListener('scroll', function () {
-                if (Math.random() < 0.05 && window.GameAudio) {
-                    GameAudio.once('breath', { volume: 0.2 });
-                }
-            });
-
-            var hasScrolledDown = false;
-            window.addEventListener('scroll', function () {
-                if (window.scrollY > 120) hasScrolledDown = true;
-            });
 
             var lastY = window.scrollY;
             window.addEventListener('scroll', function () {
@@ -188,43 +182,69 @@
             function handleSubmit() {
                 var v = (answerEl.value || '').trim();
 
-                /* 新增上报 */
                 if (window.HxdaReport && window.HxdaReport.event) {
                     HxdaReport.event('page43_submit', { answer: v });
                 }
 
+                // 1. 真结局密码
+                if (v === 'ECHO-43-SEVENTH' || v === 'echo-43-seventh') {
+                    if (isTrueEndingReady()) { Store.set('ending_true', true); endingTrue(); }
+                    else { endingWrongCode(); }
+                    return;
+                }
+
+                // 2. 阅读者
+                if (v.toUpperCase() === 'READER' || v === '阅读者') {
+                    if (Store.get('read_nodes', false) && Store.get('discovered_whoami', false)) endingReader();
+                    else endingWrongCode();
+                    return;
+                }
+
+                // 3. 删除
+                if (v.toUpperCase() === 'DELETE-ALL' || v === '删除所有') {
+                    if (Store.get('read_post_1', false) && Store.get('found_node7', false)) endingDelete();
+                    else endingWrongCode();
+                    return;
+                }
+
+                // 4. 第七个
+                if (v.toUpperCase() === 'I-AM-SEVENTH' || v === '我接替') {
+                    if (Store.get('read_nodes', false) && Store.get('discovered_whoami', false)) endingSeventh();
+                    else endingWrongCode();
+                    return;
+                }
+
+                // 5. 有人吗
                 if (v === '有人吗') {
                     Store.set('ending_remembered', true);
-                    if (window.GameAudio) GameAudio.once('phone_ring', { volume: 0.4 });
                     endingRemembered();
+                    return;
                 }
-                else if (v === '没有人') {
-                    if (isTrueEndingReady()) {
-                        Store.set('ending_true', true);
-                        endingTrue();
-                    } else {
-                        Store.set('ending_refused', true);
-                        endingRefused();
-                    }
+
+                // 6. 没有人
+                if (v === '没有人') {
+                    if (isTrueEndingReady()) { Store.set('ending_true', true); endingTrue(); }
+                    else { Store.set('ending_refused', true); endingRefused(); }
+                    return;
                 }
-                else if (v === '') {
+
+                // 7. 空
+                if (v === '') {
                     Store.set('ending_refused', true);
                     endingRefused();
+                    return;
                 }
-                else {
-                    Store.set('ending_archive', true);
-                    endingArchive();
-                }
+
+                // 8. 其他 → 归档
+                Store.set('ending_archive', true);
+                endingArchive();
             }
 
             submitBtn.addEventListener('click', handleSubmit);
-
-            answerEl.addEventListener('keydown', function (e) {
-                if (e.key === 'Enter') handleSubmit();
-            });
+            answerEl.addEventListener('keydown', function (e) { if (e.key === 'Enter') handleSubmit(); });
 
             function isTrueEndingReady() {
-                var checks = [
+                return [
                     Store.get('visitor_name', '') === '',
                     Store.get('read_post_1', false),
                     Store.get('found_node7', false),
@@ -233,22 +253,17 @@
                     Store.get('discovered_whoami', false),
                     Store.get('pm_lin_said_comein', false),
                     Store.get('pm_ended', false)
-                ];
-                return checks.every(function (c) { return c === true; });
+                ].every(function (c) { return c === true; });
             }
 
             document.getElementById('fsBtn').addEventListener('click', function () {
                 if (window.FullscreenHelper) {
-                    if (window.FullscreenHelper.isInFullscreen()) {
-                        window.FullscreenHelper.exit();
-                    } else {
-                        window.FullscreenHelper.request();
-                    }
+                    if (window.FullscreenHelper.isInFullscreen()) window.FullscreenHelper.exit();
+                    else window.FullscreenHelper.request();
                 }
             });
 
 })();
     </script>
-
 </body>
 </html>

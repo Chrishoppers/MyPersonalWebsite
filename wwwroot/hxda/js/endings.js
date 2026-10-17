@@ -527,4 +527,77 @@ function endingTrue() {
             }, 4000);
         }, 5000);
     }
+    /* ============================================================
+   结局 8：阅读者
+   ============================================================ */
+    function endingReader() {
+        Store.set('ending_reader', true);
+        endingPush('reader');
+        endingTypewriter(
+            '阅读者',
+            '你证明了自己不是内容。\n你是阅读者。\n档案不会归档你。',
+            '你可以离开。\n但阿回还在等。\n你带不走它。',
+            function () {
+                endingClearAll();
+                Store.set('online_override', 'reader');
+                endingCleanupAndExit(2000);
+            }
+        );
+    }
+
+    /* ============================================================
+       结局 9：删除
+       ============================================================ */
+    function endingDelete() {
+        Store.set('ending_delete', true);
+        endingPush('delete');
+        endingTypewriter(
+            '删除',
+            '你找到了删除档案的方法。\n所有节点、所有留言、所有归档者。\n一键清空。',
+            '档案消失了。\n你回到了现实。\n但浏览器书签里，\n多了一个新的链接：\nhuixiang-dangan.net/bbs/',
+            function () {
+                endingClearAll();
+                Store.set('online_override', 'delete');
+                endingCleanupAndExit(3000);
+            }
+        );
+    }
+
+    /* ============================================================
+       结局 10：第七个
+       ============================================================ */
+    function endingSeventh() {
+        Store.set('ending_seventh', true);
+        endingPush('seventh');
+        endingTypewriter(
+            '第七个',
+            '你选择了接替阿回。\n你成为了新的节点 7。\n阿回被释放。',
+            '下一个访客将看到你。\n他会问你："有人吗？"\n你必须回答。\n或者不回答。',
+            function () {
+                endingClearAll();
+                Store.set('online_override', 'seventh');
+                Store.set('pm_ended', true);
+                endingCleanupAndExit(2000);
+            }
+        );
+    }
+
+    /* ============================================================
+       结局 11：密码错误
+       ============================================================ */
+    function endingWrongCode() {
+        Store.set('ending_wrong_code', true);
+        endingPush('wrong_code');
+        endingTypewriter(
+            '密码错误',
+            '你在第43页输入了错误的密码。\n系统没有接受。\n系统开始归档。',
+            '你被归档为节点 8。\n这一次，没有人会来读你。\n\n' +
+            '【提示】\n正确的密码不在页面上。\n在源代码里。\n在 ROT13 里。\n在第 7 个节点里。',
+            function () {
+                endingClearAll();
+                Store.set('online_override', 'archive');
+                endingCleanupAndExit(3000);
+            }
+        );
+    }
 }

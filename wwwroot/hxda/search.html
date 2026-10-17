@@ -3,156 +3,23 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
-    <title>回响档案｜搜索</title>
+    <title>搜索 - 回响档案 - Powered by Discuz!</title>
     <link rel="icon" href="favicon.ico" type="image/x-icon">
     <link rel="stylesheet" href="css/main.css">
-    <style>
-        .search-page {
-            max-width: 720px;
-            margin: 30px auto;
-            padding: 0 10px;
-        }
-
-        .search-box {
-            background: #f4f4f4;
-            border: 2px solid #888;
-            font-family: "SimSun", "宋体", serif;
-        }
-
-        .search-titlebar {
-            background: #1a3a6b;
-            background-image: linear-gradient(to bottom, #4a6fa5 0%, #1a3a6b 100%);
-            color: #fff;
-            padding: 8px 14px;
-            font-weight: bold;
-            font-size: 14px;
-            border-bottom: 1px solid #0d1b3e;
-        }
-
-        .search-body {
-            padding: 20px 24px;
-        }
-
-        .search-input-row {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 8px;
-        }
-
-            .search-input-row input {
-                flex: 1;
-                padding: 6px 12px;
-                border: 1px solid #888;
-                background: #fff;
-                font-family: inherit;
-                font-size: 13px;
-            }
-
-                .search-input-row input:focus {
-                    outline: 1px solid #1a3a6b;
-                }
-
-        .search-hint {
-            font-size: 11px;
-            color: #999;
-            margin-bottom: 16px;
-        }
-
-        .search-results {
-            margin-top: 16px;
-            border-top: 1px dashed #ccc;
-            padding-top: 14px;
-            min-height: 120px;
-            font-size: 13px;
-            line-height: 2;
-            white-space: pre-wrap;
-        }
-
-            .search-results .hl {
-                color: #a00;
-                font-weight: bold;
-            }
-
-            .search-results .result-line {
-                padding: 4px 0;
-                border-bottom: 1px dotted #eee;
-            }
-
-                .search-results .result-line:last-child {
-                    border-bottom: none;
-                }
-
-                .search-results .result-line a {
-                    color: #1a3a6b;
-                    text-decoration: none;
-                }
-
-                    .search-results .result-line a:hover {
-                        text-decoration: underline;
-                    }
-
-        .search-history {
-            margin-top: 16px;
-            padding-top: 14px;
-            border-top: 1px dashed #ccc;
-            display: none;
-        }
-
-            .search-history.show {
-                display: block;
-            }
-
-            .search-history h4 {
-                font-size: 12px;
-                color: #888;
-                margin-bottom: 8px;
-                font-weight: normal;
-            }
-
-            .search-history .hist-item {
-                padding: 4px 10px;
-                font-size: 12px;
-                color: #333;
-                border: 1px solid #ddd;
-                background: #fafafa;
-                margin-bottom: 4px;
-                cursor: pointer;
-            }
-
-                .search-history .hist-item:hover {
-                    background: #fff8d0;
-                }
-
-                .search-history .hist-item .h-time {
-                    color: #999;
-                    font-size: 11px;
-                    margin-left: 8px;
-                }
-
-        .search-footer {
-            text-align: center;
-            padding: 14px;
-        }
-
-            .search-footer a {
-                display: inline-block;
-                padding: 6px 20px;
-                border: 2px outset #bbb;
-                background: #e6e6e6;
-                color: #333;
-                text-decoration: none;
-                font-size: 12px;
-            }
-    </style>
 </head>
 <body>
 
-    <div class="forum-wrap" style="min-height: auto;">
+    <div class="forum-wrap">
         <div class="forum-head">
             <div class="head-logo"></div>
             <div class="head-right">
-                <div class="user-info" id="userInfo">游客</div>
-                <div>最后更新：2019-03-01 00:00</div>
+                <div class="forum-top-buttons" style="justify-content:flex-end;margin-bottom:4px;">
+                    <a href="bbs.html">论坛</a>
+                    <a href="search.html" style="font-weight:bold;">搜索</a>
+                    <a href="about.html">帮助</a>
+                    <a href="archive.html">档案馆</a>
+                </div>
+                <div class="user-info"><span>游客</span></div>
             </div>
         </div>
 
@@ -160,226 +27,209 @@
             <a href="bbs.html">← 返回论坛</a>
             <a href="bbs.html">首页</a>
             <a href="search.html" class="active">搜索</a>
+            <a href="cipher.html">解密</a>
         </div>
 
-        <div class="forum-notice">
-            本站数据于 2019 年 3 月后不再更新。感谢各位十年来的陪伴。——站长
+        <div class="forum-crumb">
+            <a href="bbs.html">回响档案</a>
+            <span class="sep">&raquo;</span>
+            <span>搜索</span>
         </div>
 
-        <div class="search-page">
-            <div class="search-box">
-                <div class="search-titlebar">🔍 搜索全部归档节点</div>
-                <div class="search-body">
-                    <div class="search-input-row">
-                        <input type="text" id="searchInput" placeholder="输入关键词..." autocomplete="off" maxlength="60">
+        <div class="forum-notice">📢 本站数据于 2019 年 3 月后不再更新。感谢各位十年来的陪伴。——站长</div>
+
+        <div style="padding:20px;">
+            <div style="background:#f4f4f4;border:2px solid #888;max-width:720px;margin:0 auto;">
+                <div style="background:#1a3a6b;background-image:linear-gradient(to bottom,#4a6fa5 0%,#1a3a6b 100%);color:#fff;padding:8px 14px;font-weight:bold;font-size:14px;">🔍 搜索全部归档节点</div>
+                <div style="padding:20px 24px;">
+                    <div style="display:flex;gap:8px;margin-bottom:8px;">
+                        <input type="text" id="searchInput" placeholder="输入关键词..." style="flex:1;padding:6px 12px;border:1px solid #888;background:#fff;font-family:inherit;font-size:13px;">
                         <button class="old-btn old-btn-primary" id="searchBtn">搜索</button>
                     </div>
-                    <div class="search-hint">注意：您的搜索词将被归档。</div>
-                    <div class="search-results" id="searchResults">输入关键词，然后点击"搜索"。</div>
-                    <div class="search-history" id="searchHistory">
-                        <h4>搜索历史</h4>
+                    <div style="font-size:11px;color:#999;margin-bottom:16px;">注意：您的搜索词将被归档。</div>
+                    <div id="searchResults" style="border-top:1px dashed #ccc;padding-top:14px;min-height:120px;font-size:13px;line-height:2;white-space:pre-wrap;">输入关键词，然后点击"搜索"。</div>
+                    <div id="searchHistory" style="margin-top:16px;padding-top:14px;border-top:1px dashed #ccc;display:none;">
+                        <h4 style="font-size:12px;color:#888;margin-bottom:8px;font-weight:normal;">搜索历史</h4>
                         <div id="historyList"></div>
                     </div>
                 </div>
             </div>
-            <div class="search-footer"><a href="bbs.html">← 返回论坛首页</a></div>
+        </div>
+
+        <div class="forum-footer">
+            <div class="footer-line">
+                <a href="bbs.html">返回论坛</a> |
+                <a href="cipher.html">解密</a>
+            </div>
+            <div class="footer-line footer-time">
+                Powered by <b>EchoSystem v0.9</b> © 2009-2019 <b>Comsenz Inc.</b>
+            </div>
         </div>
     </div>
 
     <script src="js/storage.js"></script>
     <script src="js/report.js"></script>
     <script src="js/audio.js"></script>
-    <script src="js/fullscreen.js"></script>
-    <script src="js/tracker.js"></script>
     <script src="js/ui.js"></script>
-    <script src="js/horror.js"></script>
-
+    <script src="js/system-helper.js"></script>
     <script>
 (function () {
-            'use strict';
+    'use strict';
 
-            function escapeHtml(s) {
-                var d = document.createElement('div');
-                d.textContent = String(s);
-                return d.innerHTML;
-            }
+    function escapeHtml(s) {
+        var d = document.createElement('div');
+        d.textContent = String(s);
+        return d.innerHTML;
+    }
 
-            (function () {
-                var userInfo = document.getElementById('userInfo');
-                if (userInfo) {
-                    var name = Store.get('gate_signature_name', '') || Store.get('visitor_name', '');
-                    if (name) userInfo.innerHTML = '<b>' + escapeHtml(name) + '</b>';
-                }
-            })();
+    var searchInput = document.getElementById('searchInput');
+    var searchBtn = document.getElementById('searchBtn');
+    var resultsEl = document.getElementById('searchResults');
+    var historyEl = document.getElementById('searchHistory');
+    var historyList = document.getElementById('historyList');
 
-            if (window.FullscreenHelper && !window.FullscreenHelper.isMobile) {
-                var fsBtn = document.createElement('button');
-                fsBtn.textContent = '⛶';
-                fsBtn.title = '进入全屏';
-                fsBtn.style.cssText = 'position:fixed;bottom:14px;left:18px;color:#666;font-family:monospace;font-size:14px;cursor:pointer;background:none;border:none;padding:4px 8px;z-index:99998;';
-                fsBtn.addEventListener('click', function () {
-                    if (window.FullscreenHelper.isInFullscreen()) window.FullscreenHelper.exit();
-                    else window.FullscreenHelper.request();
-                });
-                document.body.appendChild(fsBtn);
-            }
+    var params = new URLSearchParams(window.location.search);
+    var initQ = params.get('q') || '';
+    if (initQ) { searchInput.value = initQ; doSearch(initQ); }
 
-            var searchInput = document.getElementById('searchInput');
-            var searchBtn = document.getElementById('searchBtn');
-            var resultsEl = document.getElementById('searchResults');
-            var historyEl = document.getElementById('searchHistory');
-            var historyList = document.getElementById('historyList');
+    function doSearch(q) {
+        if (!q) { resultsEl.textContent = '请输入关键词。'; return; }
 
-            var params = new URLSearchParams(window.location.search);
-            var initQ = params.get('q') || '';
-            console.log('[search.html] initQ =', initQ);
+        var n = Store.get('search_count', 0) + 1;
+        Store.set('search_count', n);
 
-            if (initQ) {
-                searchInput.value = initQ;
-                doSearch(initQ);
-            }
+        var hist = Store.get('search_history', []);
+        var d = new Date();
+        var pad = function (x) { return String(x).padStart(2, '0'); };
+        var time = d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
+        hist.push({ word: q, time: time, user: Store.get('visitor_name', '') || '无名' });
+        if (hist.length > 50) hist.shift();
+        Store.set('search_history', hist);
 
-            function doSearch(q) {
-                if (!q) { resultsEl.textContent = '请输入关键词。'; return; }
+        if (window.HxdaReport && window.HxdaReport.event) {
+            HxdaReport.event('search', { word: q, time: time });
+        }
 
-                var n = Store.get('search_count', 0) + 1;
-                Store.set('search_count', n);
+        showResult(q);
+        renderHistory();
+    }
 
-                var hist = Store.get('search_history', []);
-                var d = new Date();
-                var pad = function (x) { return String(x).padStart(2, '0'); };
-                var time = d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
-                hist.push({ word: q, time: time, user: Store.get('visitor_name', '') || '无名' });
-                if (hist.length > 50) hist.shift();
-                Store.set('search_history', hist);
+    function showResult(q) {
+        var link = function (t, id) { return '<a href="post.html?id=' + id + '" style="color:#1a3a6b;">' + t + '</a>'; };
 
-                if (window.HxdaReport && window.HxdaReport.event) {
-                    HxdaReport.event('search', { word: q, time: time });
-                }
+        var normalMap = {
+            '林默': [[ '寻物：一本黑色皮面笔记本', '1'], ['有人认识一个叫"阿回"的人吗？', '2']],
+            '笔记本': [[ '寻物：一本黑色皮面笔记本', '1']],
+            '寻物': [[ '寻物：一本黑色皮面笔记本', '1'], ['寻物：一把黑色折叠伞（已找到）', '5']],
+            '版主': [[ '置顶：本版留言格式说明', '3']],
+            '归档': [[ '置顶：本版留言格式说明', '3'], ['寻物：一本黑色皮面笔记本', '1']],
+            '节点': [[ '置顶：本版留言格式说明', '3'], ['寻物：一本黑色皮面笔记本', '1']]
+        };
 
-                showResult(q);
-                renderHistory();
-            }
-
-            function showResult(q) {
-                var link = function (t, id) { return '<a href="post.html?id=' + id + '">' + t + '</a>'; };
-
-                var normalMap = {
-                    '林默': [[ '寻物：一本黑色皮面笔记本', '1'], ['有人认识一个叫"阿回"的人吗？', '2']],
-                    '笔记本': [[ '寻物：一本黑色皮面笔记本', '1']],
-                    '寻物': [[ '寻物：一本黑色皮面笔记本', '1'], ['寻物：一把黑色折叠伞（已找到）', '5']],
-                    '版主': [[ '置顶：本版留言格式说明', '3']],
-                    '归档': [[ '置顶：本版留言格式说明', '3'], ['寻物：一本黑色皮面笔记本', '1']],
-                    '节点': [[ '置顶：本版留言格式说明', '3'], ['寻物：一本黑色皮面笔记本', '1']],
-                    '护士': [[ '有人认识一个叫"阿回"的人吗？', '2']],
-                    '学生': [[ '有人认识一个叫"阿回"的人吗？', '2']],
-                    '司机': [[ '有人认识一个叫"阿回"的人吗？', '2']],
-                    '小孩': [[ '有人认识一个叫"阿回"的人吗？', '2']],
-                    '匿名': [[ '有人认识一个叫"阿回"的人吗？', '2']]
-                };
-
-                if (normalMap[q]) {
-                    var html = '返回 ' + normalMap[q].length + ' 条结果：\n\n';
-                    normalMap[q].forEach(function (arr) {
-                        html += '<div class="result-line">· ' + link(arr[0], arr[1]) + '</div>';
-                    });
-                    resultsEl.innerHTML = html;
-                    return;
-                }
-
-                if (q === '阿回') {
-                    resultsEl.innerHTML =
-                        '0 条结果。\n\n' +
-                        '<span class="hl">阿回的最后一次访问：2019-02-14 23:47。</span>\n' +
-                        'IP 来源：本站。\n设备：EchoSystem v0.9。\n状态：未归档 / 等待回答。';
-                    return;
-                }
-
-                if (q === 'EchoSystem' || q === 'EchoSystem v0.9') {
-                    resultsEl.innerHTML = '0 条结果。\n\n<span class="hl">您搜索了系统名称。</span>\n系统已检测到您的访问。\n当前版本：v0.9。';
-                    document.body.style.filter = 'invert(1)';
-                    setTimeout(function () { document.body.style.filter = ''; }, 500);
-                    return;
-                }
-
-                if (q === '有人吗') {
-                    resultsEl.innerHTML =
-                        '返回 7 条结果。\n全是同一个帖子："有人吗。"\n发帖人分别是 7 个归档者。\n\n' +
-                        '<span class="hl">最后一条是阿回："我叫阿回。我不知道我是谁。"</span>';
-                    return;
-                }
-
-                if (q === '没有人') { resultsEl.innerHTML = '0 条结果。\n\n<span class="hl">你确定吗？</span>'; return; }
-                if (q === '不要回头') { resultsEl.innerHTML = '0 条结果。\n\n<span class="hl">太晚了。</span>'; return; }
-                if (q === '回头') {
-                    resultsEl.innerHTML = '0 条结果。\n\n<span class="hl">你回头了。</span>';
-                    document.body.style.background = '#a00';
-                    setTimeout(function () { document.body.style.background = ''; }, 200);
-                    return;
-                }
-                if (q === '身后') {
-                    resultsEl.innerHTML = '0 条结果。\n\n<span class="hl">我在。</span>';
-                    document.body.style.filter = 'brightness(0.5)';
-                    setTimeout(function () { document.body.style.filter = ''; }, 300);
-                    return;
-                }
-                if (q === '你在哪') { resultsEl.textContent = '0 条结果。\n\n我在这里。'; return; }
-                if (q === '你是谁') { resultsEl.textContent = '0 条结果。\n\n我是第43页。'; return; }
-                if (q === '我想出去') { resultsEl.textContent = '0 条结果。\n\n你出不去。但你可以不进来。'; return; }
-                if (q === '救命') { resultsEl.textContent = '0 条结果。\n\n没有人能帮你。'; return; }
-                if (q === '再见') { resultsEl.textContent = '0 条结果。\n\n你确定？'; return; }
-                if (q === '晚安') { resultsEl.textContent = '0 条结果。\n\n现在才凌晨2:47。'; return; }
-                if (q === '时间') { resultsEl.textContent = '0 条结果。\n\n这里永远是23:47。'; return; }
-                if (q === '日期') { resultsEl.textContent = '0 条结果。\n\n2019-02-14。'; return; }
-                if (q === '2019') { resultsEl.textContent = '0 条结果。\n\n你找到了最后一天。'; return; }
-                if (q === '2009') { resultsEl.textContent = '0 条结果。\n\n你找到了第一天。'; return; }
-                if (q === '不要留名') {
-                    var hasName = Store.get('visitor_name', '') !== '';
-                    resultsEl.textContent = '0 条结果。\n\n' + (hasName ? '你留了。' : '你还没留。很好。');
-                    return;
-                }
-
-                var myName = Store.get('visitor_name', '');
-                if (myName && q === myName) {
-                    var cnt = Store.get('search_own_name_count', 0) + 1;
-                    Store.set('search_own_name_count', cnt);
-                    if (cnt === 1) resultsEl.innerHTML = '1 条结果。\n发帖人：' + escapeHtml(myName) + '。\n内容："有人吗。"\n时间：现在。\n状态：归档中。';
-                    else if (cnt === 2) resultsEl.innerHTML = '1 条结果。\n发帖人：' + escapeHtml(myName) + '。\n内容："已归档。"\n时间：现在。\n状态：完成。';
-                    else if (cnt === 3) resultsEl.textContent = '0 条结果。\n\n你已经不在了。';
-                    else resultsEl.textContent = '0 条结果。\n\n别找了。你在这里。';
-                    return;
-                }
-
-                resultsEl.innerHTML = '0 条结果。\n\n<span class="hl">档案里没有这个词。</span>';
-            }
-
-            function renderHistory() {
-                var hist = Store.get('search_history', []);
-                if (!hist.length) { historyEl.classList.remove('show'); return; }
-                historyEl.classList.add('show');
-                historyList.innerHTML = '';
-                hist.slice().reverse().slice(0, 10).forEach(function (h) {
-                    var d = document.createElement('div');
-                    d.className = 'hist-item';
-                    d.innerHTML = escapeHtml(h.word) + '<span class="h-time">' + escapeHtml(h.time) + '</span>';
-                    d.addEventListener('click', function () {
-                        searchInput.value = h.word;
-                        doSearch(h.word);
-                    });
-                    historyList.appendChild(d);
-                });
-            }
-
-            searchBtn.addEventListener('click', function () { doSearch(searchInput.value.trim()); });
-            searchInput.addEventListener('keydown', function (e) {
-                if (e.key === 'Enter') { e.preventDefault(); doSearch(searchInput.value.trim()); }
+        if (normalMap[q]) {
+            var html = '返回 ' + normalMap[q].length + ' 条结果：\n\n';
+            normalMap[q].forEach(function (arr) {
+                html += '· ' + link(arr[0], arr[1]) + '\n';
             });
+            resultsEl.innerHTML = html;
+            return;
+        }
 
-            renderHistory();
-            if (window.GameAudio) GameAudio.once('click', { volume: 0.1 });
+        if (q === '阿回') {
+            resultsEl.innerHTML = '0 条结果。\n\n<span style="color:#a00;font-weight:bold;">阿回的最后一次访问：2019-02-14 23:47。</span>\nIP 来源：本站。\n设备：EchoSystem v0.9。\n状态：未归档 / 等待回答。';
+            return;
+        }
 
+        if (q === 'EchoSystem' || q === 'EchoSystem v0.9') {
+            resultsEl.innerHTML = '0 条结果。\n\n<span style="color:#a00;font-weight:bold;">您搜索了系统名称。</span>\n系统已检测到您的访问。\n当前版本：v0.9。';
+            document.body.style.filter = 'invert(1)';
+            setTimeout(function () { document.body.style.filter = ''; }, 500);
+            return;
+        }
+
+        if (q === '有人吗') {
+            resultsEl.innerHTML = '返回 7 条结果。\n全是同一个帖子："有人吗。"\n\n<span style="color:#a00;font-weight:bold;">最后一条是阿回："我叫阿回。我不知道我是谁。"</span>';
+            return;
+        }
+
+        if (q === '没有人') { resultsEl.innerHTML = '0 条结果。\n\n<span style="color:#a00;font-weight:bold;">你确定吗？</span>'; return; }
+        if (q === '不要回头') { resultsEl.innerHTML = '0 条结果。\n\n<span style="color:#a00;font-weight:bold;">太晚了。</span>'; return; }
+        if (q === '回头') {
+            resultsEl.innerHTML = '0 条结果。\n\n<span style="color:#a00;font-weight:bold;">你回头了。</span>';
+            document.body.style.background = '#a00';
+            setTimeout(function () { document.body.style.background = ''; }, 200);
+            return;
+        }
+        if (q === '身后') {
+            resultsEl.innerHTML = '0 条结果。\n\n<span style="color:#a00;font-weight:bold;">我在。</span>';
+            document.body.style.filter = 'brightness(0.5)';
+            setTimeout(function () { document.body.style.filter = ''; }, 300);
+            return;
+        }
+        if (q === '你在哪') { resultsEl.textContent = '0 条结果。\n\n我在这里。'; return; }
+        if (q === '你是谁') { resultsEl.textContent = '0 条结果。\n\n我是第43页。'; return; }
+        if (q === '我想出去') { resultsEl.textContent = '0 条结果。\n\n你出不去。但你可以不进来。'; return; }
+        if (q === '救命') { resultsEl.textContent = '0 条结果。\n\n没有人能帮你。'; return; }
+        if (q === '再见') { resultsEl.textContent = '0 条结果。\n\n你确定？'; return; }
+        if (q === '晚安') { resultsEl.textContent = '0 条结果。\n\n现在才凌晨2:47。'; return; }
+        if (q === '时间') { resultsEl.textContent = '0 条结果。\n\n这里永远是23:47。'; return; }
+        if (q === '日期') { resultsEl.textContent = '0 条结果。\n\n2019-02-14。'; return; }
+        if (q === '2019') { resultsEl.textContent = '0 条结果。\n\n你找到了最后一天。'; return; }
+        if (q === '2009') { resultsEl.textContent = '0 条结果。\n\n你找到了第一天。'; return; }
+        if (q === '不要留名') {
+            var hasName = Store.get('visitor_name', '') !== '';
+            resultsEl.textContent = '0 条结果。\n\n' + (hasName ? '你留了。' : '你还没留。很好。');
+            return;
+        }
+
+        if (q === '回响档案') { resultsEl.innerHTML = '0 条结果。\n\n<span style="color:#a00;font-weight:bold;">你找到了论坛以前的名字。</span>\n但这不是密码。'; return; }
+        if (q === 'CAN YOU HEAR ME') { resultsEl.innerHTML = '0 条结果。\n\n<span style="color:#a00;font-weight:bold;">YES. I ALWAYS CAN.</span>\n\n【提示】\n去看第 7 个节点。'; Store.set('found_morse', true); return; }
+        if (q === 'ECHO-43-SEVENTH') { resultsEl.innerHTML = '0 条结果。\n\n<span style="color:#a00;font-weight:bold;">去第 43 页输入它。</span>'; return; }
+        if (q === '2347') { resultsEl.innerHTML = '0 条结果。\n\n<span style="color:#a00;font-weight:bold;">这是终端密码。不是最终密码。</span>'; return; }
+        if (q === '4327') { resultsEl.innerHTML = '0 条结果。\n\n<span style="color:#a00;font-weight:bold;">这是尺寸。不是密码。</span>'; return; }
+        if (q === 'SEVENTH') { resultsEl.innerHTML = '0 条结果。\n\n<span style="color:#a00;font-weight:bold;">第七个。\n去看节点 7。</span>'; return; }
+        if (q === 'OK') { resultsEl.textContent = '0 条结果。\n\n你在回复谁？'; return; }
+        if (q === '不要回答你看了') { resultsEl.textContent = '0 条结果。\n\n你已经回答了。'; return; }
+        if (q === '回响，你问') { resultsEl.textContent = '0 条结果。\n\n问什么？'; return; }
+        if (q === '2009-11-01') { resultsEl.innerHTML = '0 条结果。\n\n<span style="color:#a00;font-weight:bold;">这是档案馆的密钥。</span>'; return; }
+        if (q === '第七个') { resultsEl.innerHTML = '0 条结果。\n\n<span style="color:#a00;font-weight:bold;">这是节点 4 的密钥。</span>'; return; }
+        if (q === '阿回') { resultsEl.innerHTML = '0 条结果。\n\n<span style="color:#a00;font-weight:bold;">这是节点 8 的密钥。</span>'; return; }
+        if (q === 'ECHO') { resultsEl.innerHTML = '0 条结果。\n\n<span style="color:#a00;font-weight:bold;">这是终端解锁密钥。</span>'; return; }
+
+        var myName = Store.get('visitor_name', '');
+        if (myName && q === myName) {
+            var cnt = Store.get('search_own_name_count', 0) + 1;
+            Store.set('search_own_name_count', cnt);
+            if (cnt === 1) resultsEl.innerHTML = '1 条结果。\n发帖人：' + escapeHtml(myName) + '。\n内容："有人吗。"\n时间：现在。\n状态：归档中。';
+            else if (cnt === 2) resultsEl.innerHTML = '1 条结果。\n发帖人：' + escapeHtml(myName) + '。\n内容："已归档。"\n时间：现在。\n状态：完成。';
+            else if (cnt === 3) resultsEl.textContent = '0 条结果。\n\n你已经不在了。';
+            else resultsEl.textContent = '0 条结果。\n\n别找了。你在这里。';
+            return;
+        }
+
+        resultsEl.innerHTML = '0 条结果。\n\n<span style="color:#a00;font-weight:bold;">档案里没有这个词。</span>';
+    }
+
+    function renderHistory() {
+        var hist = Store.get('search_history', []);
+        if (!hist.length) { historyEl.style.display = 'none'; return; }
+        historyEl.style.display = 'block';
+        historyList.innerHTML = '';
+        hist.slice().reverse().slice(0, 10).forEach(function (h) {
+            var d = document.createElement('div');
+            d.style.cssText = 'padding:4px 10px;font-size:12px;color:#333;border:1px solid #ddd;background:#fafafa;margin-bottom:4px;cursor:pointer;';
+            d.textContent = h.word + '  ' + h.time;
+            d.addEventListener('click', function () { searchInput.value = h.word; doSearch(h.word); });
+            historyList.appendChild(d);
+        });
+    }
+
+    searchBtn.addEventListener('click', function () { doSearch(searchInput.value.trim()); });
+    searchInput.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') { e.preventDefault(); doSearch(searchInput.value.trim()); }
+    });
+    renderHistory();
 })();
     </script>
-
 </body>
 </html>
