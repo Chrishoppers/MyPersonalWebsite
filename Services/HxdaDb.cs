@@ -449,6 +449,36 @@ namespace MyPersonalWebsite.Services
             return list;
         }
 
+        /* ============================================================
+           按玩家查询全部干预记录（含已消费）
+           ============================================================ */
+        public async Task<List<HxdaIntervention>> GetInterventionsByPlayer(string playerId, int limit = 100)
+        {
+            var rows = await QueryAsync(
+                "SELECT * FROM hxda_interventions WHERE player_id = @id ORDER BY created_at DESC LIMIT " + limit,
+                new Dictionary<string, object> { ["id"] = playerId ?? "" });
+
+            var list = new List<HxdaIntervention>();
+            foreach (var r in rows)
+            {
+                try
+                {
+                    list.Add(new HxdaIntervention
+                    {
+                        Id = int.TryParse(r.ContainsKey("id") ? r["id"]?.ToString() : "0", out var i) ? i : 0,
+                        PlayerId = r.ContainsKey("player_id") ? r["player_id"]?.ToString() ?? "" : "",
+                        Type = r.ContainsKey("type") ? r["type"]?.ToString() ?? "" : "",
+                        Payload = r.ContainsKey("payload") ? r["payload"]?.ToString() ?? "" : "",
+                        Active = r.ContainsKey("active") && r["active"]?.ToString() == "1",
+                        Consumed = r.ContainsKey("consumed") && r["consumed"]?.ToString() == "1",
+                        CreatedAt = r.ContainsKey("created_at") ? r["created_at"]?.ToString() ?? "" : ""
+                    });
+                }
+                catch { }
+            }
+            return list;
+        }
+
         public async Task MarkInterventionsConsumed(List<int> ids)
         {
             if (ids == null || ids.Count == 0) return;
@@ -559,15 +589,18 @@ namespace MyPersonalWebsite.Services
             await ExecuteAsync("DELETE FROM hxda_players WHERE last_seen_at < datetime('now', '-' || @days || ' days')",
                 new Dictionary<string, object> { ["days"] = days.ToString() });
         }
+
         public async Task CleanupOldEvents(int days)
         {
             await ExecuteAsync("DELETE FROM hxda_events WHERE created_at < datetime('now', '-' || @days || ' days')",
                 new Dictionary<string, object> { ["days"] = days.ToString() });
         }
+
         public async Task CleanupConsumedInterventions()
         {
             await ExecuteAsync("DELETE FROM hxda_interventions WHERE consumed = 1");
         }
+
         public async Task CleanupOfflinePlayers()
         {
             await ExecuteAsync("DELETE FROM hxda_players WHERE last_seen_at < datetime('now', '-1 hour')");
