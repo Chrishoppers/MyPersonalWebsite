@@ -20,18 +20,24 @@
 
     function readReturnUrl() { return encodeURIComponent('/BoardGame/Index'); }
 
-    window.openMode = async (type, title) => {
-        if (!(await hasPrivacyAgreement())) {
-            if (confirm('开始对局前请先阅读并同意隐私声明。现在前往阅读吗？'))
-                location.href = `/BoardGame/Privacy?returnUrl=${readReturnUrl()}`;
-            return;
-        }
+    function openModeModal(type, title) {
         currentType = type;
         currentRoom = null;
         $('modalTitle').textContent = `${title} · 选择模式`;
         $('qrSection').hidden = true;
         $('modeModal').classList.add('show');
         $('modeModal').setAttribute('aria-hidden', 'false');
+    }
+
+    window.openMode = async (type, title) => {
+        if (!(await hasPrivacyAgreement())) {
+            if (confirm('开始对局前请先阅读并同意隐私声明。现在前往阅读吗？')) {
+                sessionStorage.setItem('bg_pending_game', JSON.stringify({ type, title }));
+                location.href = `/BoardGame/Privacy?returnUrl=${readReturnUrl()}`;
+            }
+            return;
+        }
+        openModeModal(type, title);
     };
 
     window.closeModal = () => {
@@ -83,4 +89,17 @@
 
     $('modeModal').addEventListener('click', event => { if (event.target === $('modeModal')) closeModal(); });
     document.addEventListener('keydown', event => { if (event.key === 'Escape') closeModal(); });
+
+    // 从隐私声明同意后返回大厅时，自动进入此前选择的棋类的模式选择
+    (async () => {
+        const pending = sessionStorage.getItem('bg_pending_game');
+        if (!pending) return;
+        sessionStorage.removeItem('bg_pending_game');
+        try {
+            const parsed = JSON.parse(pending);
+            if (parsed && parsed.type && await hasPrivacyAgreement()) {
+                openModeModal(parsed.type, parsed.title || parsed.type);
+            }
+        } catch { }
+    })();
 })();
