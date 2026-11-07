@@ -1,0 +1,58 @@
+@{
+    ViewData["Title"] = "棋盘对局";
+    var type = ViewBag.GameType as string ?? "gomoku";
+    var mode = ViewBag.Mode as string ?? "pvp";
+    var level = ViewBag.AiLevel as string ?? "";
+    var code = ViewBag.RoomCode as string ?? "";
+}
+<link rel="stylesheet" href="~/css/boardgame.css" />
+<div class="bg-body">
+    <div class="bg-play">
+        <section class="bg-play-main">
+            <header class="bg-play-header">
+                <div class="bg-play-title"><h1 id="gameTitle">对局中</h1><span class="bg-status-pill" id="turnPill">连接中…</span></div>
+                <div class="bg-room-tools"><span class="bg-room-label">房间码</span><strong class="bg-room-code" id="roomCodeDisplay">@code</strong><button type="button" class="bg-btn" onclick="copyRoomCode()">复制</button></div>
+            </header>
+            <div class="bg-board-wrap"><canvas id="board" width="680" height="680" aria-label="棋盘"></canvas></div>
+            <div class="bg-play-footer"><a href="/BoardGame/Index">← 返回大厅</a><a href="/BoardGame/Privacy">隐私声明</a></div>
+        </section>
+        <aside class="bg-play-side">
+            <section class="bg-panel"><h2 class="bg-panel-title">对局双方</h2>
+                <div class="bg-player" id="playerMe"><div class="avatar" id="myAvatar">😊</div><div class="info"><div class="name" id="myName">我</div><div class="role" id="myRole">玩家</div></div></div>
+                <div class="bg-player" id="playerOpp"><div class="avatar" id="oppAvatar">❔</div><div class="info"><div class="name" id="oppName">对手</div><div class="role" id="oppRole">对手</div></div></div>
+            </section>
+            <section class="bg-panel"><h2 class="bg-panel-title">走子记录</h2><div class="bg-moves" id="movesList" aria-live="polite"></div></section>
+            <section class="bg-panel bg-chat"><h2 class="bg-panel-title">对局聊天</h2><div class="bg-chat-list" id="chatList" aria-live="polite"></div>
+                <div class="bg-chat-input"><input id="chatInput" maxlength="200" placeholder="输入消息…" autocomplete="off" /><button type="button" id="sendChatBtn">发送</button></div>
+            </section>
+            <section class="bg-panel bg-action-panel"><button type="button" class="bg-btn bg-btn-danger" id="resignBtn">🏳️ 认输</button><button type="button" class="bg-btn" onclick="location.href='/BoardGame/Index'">返回大厅</button></section>
+        </aside>
+    </div>
+</div>
+<div class="bg-gameover" id="gameOverLayer" aria-hidden="true"><div class="bg-gameover-card"><div class="trophy" id="goIcon">🏆</div><h2 id="goTitle">对局结束</h2><p id="goReason"></p><button type="button" class="bg-btn bg-btn-primary" onclick="location.href='/BoardGame/Index'">返回大厅</button></div></div>
+<div class="bg-toast" id="toast" role="status" aria-live="polite"></div>
+<script src="https://cdn.jsdelivr.net/npm/@@microsoft/signalr@@8.0.7/dist/browser/signalr.min.js"></script>
+<script src="~/js/boardgame/gomoku.js" asp-append-version="true"></script>
+<script src="~/js/boardgame/xiangqi.js" asp-append-version="true"></script>
+<script src="~/js/boardgame/chess.js" asp-append-version="true"></script>
+<script src="~/js/boardgame/boardgame-client.js" asp-append-version="true"></script>
+<script>
+    window.__BG__ = {
+        gameType: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(type)),
+        mode: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(mode)),
+        level: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(level)),
+        roomCode: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(code))
+    };
+    BoardGameClient.boot(window.__BG__);
+    async function copyRoomCode() {
+        try { await navigator.clipboard.writeText(window.__BG__.roomCode); showToast('房间码已复制'); }
+        catch { showToast(`房间码：${window.__BG__.roomCode}`); }
+    }
+    function showToast(message) {
+        const toast = document.getElementById('toast'); toast.textContent = message; toast.classList.add('show');
+        clearTimeout(toast._timer); toast._timer = setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+    document.getElementById('resignBtn').addEventListener('click', () => {
+        if (confirm('确定认输？')) BoardGameClient.resign();
+    });
+</script>

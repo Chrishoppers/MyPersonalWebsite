@@ -1,0 +1,55 @@
+@{
+    ViewData["Title"] = "♟️ 棋盘对局";
+}
+<link rel="stylesheet" href="~/css/boardgame.css" />
+<div class="bg-body">
+    <div class="bg-lobby">
+        <header class="bg-lobby-header">
+            <h1>♟️ 棋盘对局</h1>
+            <p>五子棋 · 中国象棋 · 国际象棋</p>
+            <p>真人对弈、扫码组队、AI 三档难度与完整棋局回放</p>
+        </header>
+        <div class="bg-games-grid">
+            <button type="button" class="bg-game-card" style="--c1:#22C55E;--c2:#06B6D4;--c3:#22C55E" onclick="openMode('gomoku','五子棋')">
+                <span class="bg-icon">⚫⚪</span><span class="bg-title">五子棋</span>
+                <span class="bg-desc">15×15 标准棋盘，先连成五子者胜。经典、快速、易上手。</span>
+                <span class="bg-tags"><span class="bg-tag">快速</span><span class="bg-tag">多人</span><span class="bg-tag">AI 对弈</span></span>
+            </button>
+            <button type="button" class="bg-game-card" style="--c1:#EF4444;--c2:#F59E0B;--c3:#EF4444" onclick="openMode('xiangqi','中国象棋')">
+                <span class="bg-icon">🀄</span><span class="bg-title">中国象棋</span>
+                <span class="bg-desc">传统 9×10 棋盘，车马炮士象将卒，将死对方将帅者胜。</span>
+                <span class="bg-tags"><span class="bg-tag">传统</span><span class="bg-tag">策略</span><span class="bg-tag">AI 对弈</span></span>
+            </button>
+            <button type="button" class="bg-game-card" style="--c1:#8B5CF6;--c2:#EC4899;--c3:#F59E0B" onclick="openMode('chess','国际象棋')">
+                <span class="bg-icon">♞</span><span class="bg-title">国际象棋</span>
+                <span class="bg-desc">8×8 棋盘，王后车象马兵，将死对方国王者胜。</span>
+                <span class="bg-tags"><span class="bg-tag">国际</span><span class="bg-tag">战略</span><span class="bg-tag">AI 对弈</span></span>
+            </button>
+        </div>
+        <p class="bg-lobby-footer"><a href="/Game">← 返回游戏中心</a>　<a href="/BoardGame/Privacy">隐私声明</a></p>
+    </div>
+</div>
+<div class="bg-modal-mask" id="modeModal" aria-hidden="true">
+    <div class="bg-modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <button type="button" class="bg-modal-close" onclick="closeModal()" aria-label="关闭">×</button>
+        <h3 id="modalTitle">选择对局模式</h3>
+        <div class="bg-modal-section"><h4>真人对弈</h4>
+            <div class="bg-mode-buttons"><button type="button" class="bg-btn" onclick="startMatch('online')">🌐 在线匹配</button>
+            <button type="button" class="bg-btn" onclick="startMatch('qr')">📱 扫码组队</button></div>
+        </div>
+        <div class="bg-modal-section"><h4>AI 对弈</h4>
+            <div class="bg-mode-buttons three"><button type="button" class="bg-btn" onclick="startAI('easy')">🟢 简单</button>
+            <button type="button" class="bg-btn" onclick="startAI('medium')">🟡 中等</button>
+            <button type="button" class="bg-btn" onclick="startAI('hard')">🔴 困难</button></div>
+        </div>
+        <div class="bg-modal-section" id="qrSection" hidden>
+            <h4>扫码邀请对方</h4><div class="bg-qr-wrap" id="qrWrap"></div>
+            <p class="bg-room-code" id="roomCodeDisplay"></p>
+            <p class="bg-modal-help">等待对方加入，或复制房间码分享。</p>
+            <button type="button" class="bg-btn bg-btn-primary" onclick="goPlay()">进入对局房间</button>
+        </div>
+        <button type="button" class="bg-btn bg-btn-ghost bg-modal-cancel" onclick="closeModal()">取消</button>
+    </div>
+</div>
+<div class="bg-toast" id="toast" role="status" aria-live="polite"></div>
+<script src="~/js/boardgame/boardgame-lobby.js" asp-append-version="true"></script>

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.DataProtection;
 using MyPersonalWebsite.Models;
 using MyPersonalWebsite.Services;
 using MyPersonalWebsite.Hubs;
+using MyPersonalWebsite.Services.BoardGame;
 using System.Globalization;
 using System.Text.Encodings.Web;
 using System.Text.Unicode;
@@ -106,6 +107,13 @@ builder.Services.AddScoped<EmailRateLimitService>();
 builder.Services.AddScoped<GameAntiCheatService>();
 builder.Services.AddScoped<DeepSeekService>();
 builder.Services.AddScoped<WerewolfVoiceService>();
+builder.Services.AddScoped<GomokuEngine>();
+builder.Services.AddScoped<XiangqiEngine>();
+builder.Services.AddScoped<ChessEngine>();
+builder.Services.AddScoped<BoardGameService>();
+builder.Services.AddScoped<BoardGameAiService>();
+builder.Services.AddScoped<ChatModerationService>();
+builder.Services.AddScoped<QrCodeService>();
 
 // ⭐ 平台验证服务（新增）
 builder.Services.AddScoped<PlatformVerifyService>();
@@ -204,6 +212,7 @@ app.MapHub<PartyHub>("/partyHub");
 app.MapHub<WerewolfHub>("/werewolfHub");
 // SolverHub for real-time solver progress
 app.MapHub<SolverHub>("/solverHub");
+app.MapHub<BoardGameHub>("/boardGameHub");
 
 // ============================================================
 // 应用生命周期事件
@@ -251,7 +260,11 @@ async Task EnsureTursoTablesAsync(DataSyncService dataSync)
         { "GameAnswerLogs", @"CREATE TABLE IF NOT EXISTS GameAnswerLogs (Id INTEGER PRIMARY KEY, SessionId TEXT NOT NULL, UserId INTEGER NOT NULL, Level INTEGER NOT NULL, QuestionType TEXT, Answer TEXT, IsCorrect INTEGER DEFAULT 0, CreatedAt TEXT)" },
         { "CheatEvents", @"CREATE TABLE IF NOT EXISTS CheatEvents (Id INTEGER PRIMARY KEY, SessionId TEXT NOT NULL, UserId INTEGER NOT NULL, EventType TEXT NOT NULL, EventDetail TEXT, DetectedAt TEXT)" },
         { "ResourceRequests", @"CREATE TABLE IF NOT EXISTS ResourceRequests (Id INTEGER PRIMARY KEY, UserId INTEGER NOT NULL, UserName TEXT NOT NULL, UserEmail TEXT NOT NULL, PersonName TEXT NOT NULL, CharacterName TEXT, ResourceType TEXT DEFAULT '一人', Status TEXT DEFAULT 'pending', CreatedAt TEXT)" },
-        { "VerifyGameStats", @"CREATE TABLE IF NOT EXISTS VerifyGameStats (Id INTEGER PRIMARY KEY AUTOINCREMENT, UserId INTEGER NOT NULL UNIQUE, TotalScore INTEGER DEFAULT 0, MaxCombo INTEGER DEFAULT 0, MaxLevel INTEGER DEFAULT 0, GamesPlayed INTEGER DEFAULT 0, UpdatedAt TEXT)" }
+        { "VerifyGameStats", @"CREATE TABLE IF NOT EXISTS VerifyGameStats (Id INTEGER PRIMARY KEY AUTOINCREMENT, UserId INTEGER NOT NULL UNIQUE, TotalScore INTEGER DEFAULT 0, MaxCombo INTEGER DEFAULT 0, MaxLevel INTEGER DEFAULT 0, GamesPlayed INTEGER DEFAULT 0, UpdatedAt TEXT)" },
+        { "BoardGameRooms", @"CREATE TABLE IF NOT EXISTS BoardGameRooms (Id INTEGER PRIMARY KEY AUTOINCREMENT, RoomCode TEXT NOT NULL UNIQUE, GameType TEXT NOT NULL, Mode TEXT NOT NULL, Status TEXT NOT NULL DEFAULT 'waiting', HostUserId INTEGER, HostName TEXT, HostAvatar TEXT, HostIsGuest INTEGER DEFAULT 0, HostGuestKey TEXT, GuestUserId INTEGER, GuestName TEXT, GuestAvatar TEXT, GuestIsGuest INTEGER DEFAULT 0, GuestGuestKey TEXT, GuestConnectionId TEXT, AiLevel TEXT, AiSide TEXT, CurrentTurn TEXT NOT NULL DEFAULT 'black', BoardState TEXT NOT NULL, MoveCount INTEGER DEFAULT 0, Winner TEXT, ResultReason TEXT, ChatEnabled INTEGER DEFAULT 1, CreatedAt TEXT, StartedAt TEXT, FinishedAt TEXT)" },
+        { "BoardGameMoves", @"CREATE TABLE IF NOT EXISTS BoardGameMoves (Id INTEGER PRIMARY KEY AUTOINCREMENT, RoomId INTEGER NOT NULL, MoveIndex INTEGER NOT NULL, Side TEXT NOT NULL, FromPos TEXT, ToPos TEXT, MoveText TEXT, BoardStateAfter TEXT, CreatedAt TEXT)" },
+        { "BoardGameChats", @"CREATE TABLE IF NOT EXISTS BoardGameChats (Id INTEGER PRIMARY KEY AUTOINCREMENT, RoomId INTEGER NOT NULL, SenderName TEXT, SenderIsGuest INTEGER DEFAULT 0, SenderSide TEXT, Content TEXT, HarmonyScore INTEGER DEFAULT 100, IsFlagged INTEGER DEFAULT 0, CreatedAt TEXT)" },
+        { "BoardGamePrivacyAgreements", @"CREATE TABLE IF NOT EXISTS BoardGamePrivacyAgreements (Id INTEGER PRIMARY KEY AUTOINCREMENT, UserId INTEGER, GuestKey TEXT, Version TEXT NOT NULL, AgreedAt TEXT)" }
     };
 
     int successCount = 0;

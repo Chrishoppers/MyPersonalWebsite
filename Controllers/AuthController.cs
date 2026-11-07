@@ -268,8 +268,9 @@ namespace MyPersonalWebsite.Controllers
         // 登录 GET
         // ============================================================
         [HttpGet]
-        public IActionResult Login()
+        public IActionResult Login(string? returnUrl = null)
         {
+            ViewBag.ReturnUrl = Url.IsLocalUrl(returnUrl) ? returnUrl : null;
             return View();
         }
 
@@ -282,8 +283,9 @@ namespace MyPersonalWebsite.Controllers
 
 [HttpPost]
 [ValidateAntiForgeryToken]
-public async Task<IActionResult> Login(string username, string password)
+public async Task<IActionResult> Login(string username, string password, string? returnUrl = null)
 {
+    ViewBag.ReturnUrl = Url.IsLocalUrl(returnUrl) ? returnUrl : null;
     var user = await _dataSync.GetUserByUsernameAsync(username);
     if (user == null)
     {
@@ -358,6 +360,11 @@ public async Task<IActionResult> Login(string username, string password)
     if (user.IsRestricted)
     {
         return RedirectToAction("Index", "Resource");
+    }
+
+    if (Url.IsLocalUrl(returnUrl))
+    {
+        return Redirect(returnUrl!);
     }
 
     if (user.IsAdmin)

@@ -205,6 +205,7 @@
         }
 
         <form asp-action="Login" method="post" id="loginForm">
+            <input type="hidden" name="returnUrl" value="@ViewBag.ReturnUrl" />
 
             <div class="form-group">
                 <label>用户名或邮箱</label>

@@ -1,0 +1,97 @@
+@{
+    ViewData["Title"] = "加入棋局";
+    var code = ViewBag.RoomCode as string ?? "";
+}
+<link rel="stylesheet" href="~/css/boardgame.css" />
+<div class="bg-body">
+    <div class="bg-privacy bg-join-page">
+        <h1>加入棋局</h1>
+        <p class="subtitle">房间码：<span class="bg-room-code">@code</span></p>
+        <section class="bg-panel bg-join-panel">
+            <h2 class="bg-panel-title">选择加入方式</h2>
+            <button type="button" class="bg-btn bg-btn-primary" onclick="loginJoin()">🔑 登录账号加入</button>
+            <button type="button" id="joinAccountBtn" class="bg-btn" hidden onclick="joinAsAccount()">以当前账号加入</button>
+            <div class="bg-or">或使用游客身份加入</div>
+            <button type="button" class="bg-btn" onclick="showGuestForm()">👤 游客加入</button>
+            <div id="guestForm" class="bg-guest-form" hidden>
+                <h3 class="bg-panel-title">选择头像</h3>
+                <div id="avatarPicker" class="bg-avatar-picker"></div>
+                <label for="guestName" class="bg-panel-title">临时昵称</label>
+                <input id="guestName" maxlength="12" autocomplete="nickname" placeholder="请输入昵称" />
+                <div class="bg-player bg-preview-player">
+                    <div class="avatar is-guest" id="previewAvatar">🐱</div>
+                    <div class="info"><div class="name" id="previewName">游客_无名</div><div class="role">游客身份</div></div>
+                </div>
+                <button type="button" class="bg-btn bg-btn-primary" onclick="guestJoin()">✓ 以游客身份加入</button>
+            </div>
+            <p class="bg-join-privacy">继续加入即表示你已阅读并同意<a href="/BoardGame/Privacy?returnUrl=%2FBoardGame%2FJoin%2F@code">棋盘对局隐私声明</a>。</p>
+        </section>
+    </div>
+</div>
+<div class="bg-toast" id="toast" role="status" aria-live="polite"></div>
+<script>
+    const ROOM_CODE = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(code));
+    const AVATARS = ['🐱', '🐶', '🐼', '🦊', '🐸', '🐵', '🦁', '🐯'];
+    let selectedAvatar = '🐱';
+    const $ = id => document.getElementById(id);
+    function showToast(message) {
+        const toast = $('toast'); toast.textContent = message; toast.classList.add('show');
+        clearTimeout(toast._timer); toast._timer = setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+    async function checkPrivacy() {
+        try {
+            const response = await fetch('/api/boardgame/privacy-status');
+            if (!response.ok) return false;
+            const result = await response.json();
+            if (result.agreed) localStorage.setItem('bg_privacy_agreed_v1', '1');
+            return result.agreed;
+        } catch { return false; }
+    }
+    function loginJoin() {
+        location.href = `/Auth/Login?returnUrl=${encodeURIComponent(`/BoardGame/Join/${ROOM_CODE}`)}`;
+    }
+    async function showGuestForm() {
+        if (!(await checkPrivacy())) {
+            location.href = `/BoardGame/Privacy?returnUrl=${encodeURIComponent(`/BoardGame/Join/${ROOM_CODE}`)}`;
+            return;
+        }
+        $('guestForm').hidden = false;
+        buildAvatarPicker();
+    }
+    function buildAvatarPicker() {
+        const picker = $('avatarPicker'); picker.replaceChildren();
+        AVATARS.forEach(emoji => {
+            const button = document.createElement('button'); button.type = 'button'; button.textContent = emoji;
+            button.className = 'bg-avatar-option' + (emoji === selectedAvatar ? ' selected' : '');
+            button.onclick = () => {
+                selectedAvatar = emoji; $('previewAvatar').textContent = emoji;
+                picker.querySelectorAll('button').forEach(item => item.classList.toggle('selected', item === button));
+            };
+            picker.appendChild(button);
+        });
+    }
+    $('guestName').addEventListener('input', event => { $('previewName').textContent = `游客_${event.target.value || '无名'}`; });
+    async function submitJoin(asGuest) {
+        if (!(await checkPrivacy())) {
+            location.href = `/BoardGame/Privacy?returnUrl=${encodeURIComponent(`/BoardGame/Join/${ROOM_CODE}`)}`;
+            return;
+        }
+        try {
+            const response = await fetch('/api/boardgame/join', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code: ROOM_CODE, guestName: $('guestName').value, guestAvatar: selectedAvatar, asGuest })
+            });
+            const result = await response.json();
+            if (!response.ok) { showToast(result.error || '加入失败'); return; }
+            location.href = `/BoardGame/Play?type=${encodeURIComponent(result.gameType)}&mode=pvp&code=${encodeURIComponent(ROOM_CODE)}`;
+        } catch { showToast('连接失败，请稍后重试'); }
+    }
+    function guestJoin() { return submitJoin(true); }
+    function joinAsAccount() { return submitJoin(false); }
+    (async () => {
+        try {
+            const response = await fetch('/api/boardgame/me');
+            if (response.ok && !(await response.json()).isGuest) $('joinAccountBtn').hidden = false;
+        } catch { }
+    })();
+</script>
