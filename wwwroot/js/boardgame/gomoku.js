@@ -42,28 +42,28 @@ window.GomokuBoard = (() => {
     function draw() {
         if (!context || !state) return;
         const gradient = context.createLinearGradient(0, 0, size, size);
-        gradient.addColorStop(0, '#efd29c'); gradient.addColorStop(1, '#ce9e5e');
+        gradient.addColorStop(0, '#221e2f'); gradient.addColorStop(1, '#0f0d18');
         context.fillStyle = gradient; context.fillRect(0, 0, size, size);
-        context.save(); context.globalAlpha = 0.045; context.strokeStyle = '#533318'; context.lineWidth = 1;
+        context.save(); context.globalAlpha = 0.035; context.strokeStyle = '#a78bfa'; context.lineWidth = 1;
         for (let y = 8; y < size; y += 14) {
             context.beginPath(); context.moveTo(0, y);
             for (let x = 0; x <= size; x += 16) context.lineTo(x, y + Math.sin(x * 0.025 + y) * 1.6);
             context.stroke();
         }
         context.restore();
-        context.strokeStyle = '#634324'; context.lineWidth = Math.max(1, cell * 0.018);
+        context.strokeStyle = 'rgba(255,255,255,.16)'; context.lineWidth = Math.max(1, cell * 0.018);
         for (let i = 0; i < N; i++) {
             const point = pad + i * cell;
             context.beginPath(); context.moveTo(pad, point); context.lineTo(size - pad, point); context.stroke();
             context.beginPath(); context.moveTo(point, pad); context.lineTo(point, size - pad); context.stroke();
         }
-        context.fillStyle = '#634324';
+        context.fillStyle = '#a78bfa';
         [[3, 3], [3, 11], [7, 7], [11, 3], [11, 11]].forEach(([x, y]) => {
             context.beginPath(); context.arc(pad + x * cell, pad + y * cell, cell * 0.075, 0, Math.PI * 2); context.fill();
         });
         if (hover && state.cells[hover.y]?.[hover.x] === '') {
             context.beginPath(); context.arc(center(hover.x), center(hover.y), cell * 0.4, 0, Math.PI * 2);
-            context.fillStyle = 'rgba(0,0,0,.15)'; context.fill();
+            context.fillStyle = 'rgba(255,255,255,.14)'; context.fill();
         }
         for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
             const piece = state.cells[y]?.[x];
@@ -79,12 +79,12 @@ window.GomokuBoard = (() => {
     function drawStone(x, y, black) {
         const cx = center(x), cy = center(y), radius = cell * 0.42;
         context.save(); context.shadowColor = 'rgba(0,0,0,.45)'; context.shadowBlur = cell * 0.16; context.shadowOffsetY = cell * 0.05;
-        context.beginPath(); context.arc(cx, cy, radius, 0, Math.PI * 2); context.fillStyle = black ? '#090909' : '#f8f8f8'; context.fill(); context.restore();
+        context.beginPath(); context.arc(cx, cy, radius, 0, Math.PI * 2); context.fillStyle = black ? '#0a0a12' : '#f8f8f8'; context.fill(); context.restore();
         const shine = context.createRadialGradient(cx - radius * 0.3, cy - radius * 0.34, radius * 0.08, cx, cy, radius);
-        if (black) { shine.addColorStop(0, '#666'); shine.addColorStop(0.55, '#202020'); shine.addColorStop(1, '#000'); }
+        if (black) { shine.addColorStop(0, '#5b5b6e'); shine.addColorStop(0.55, '#20202c'); shine.addColorStop(1, '#06060c'); }
         else { shine.addColorStop(0, '#fff'); shine.addColorStop(0.65, '#eee'); shine.addColorStop(1, '#bdbdbd'); }
         context.beginPath(); context.arc(cx, cy, radius, 0, Math.PI * 2); context.fillStyle = shine; context.fill();
-        context.strokeStyle = black ? 'rgba(255,255,255,.15)' : 'rgba(0,0,0,.12)'; context.lineWidth = 1; context.stroke();
+        context.strokeStyle = black ? 'rgba(255,255,255,.4)' : 'rgba(0,0,0,.12)'; context.lineWidth = 1; context.stroke();
     }
 
     function pointFromEvent(event) {

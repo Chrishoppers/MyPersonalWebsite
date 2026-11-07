@@ -49,7 +49,7 @@ window.ChessBoard = (() => {
     function draw() {
         if (!context || !state) return;
         for (let y = 0; y < SIZE; y++) for (let x = 0; x < SIZE; x++) {
-            context.fillStyle = (x + y) % 2 === 0 ? '#F0D9B5' : '#B58863';
+            context.fillStyle = (x + y) % 2 === 0 ? '#3c3750' : '#26222f';
             context.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
         }
         if (selected) {
@@ -62,10 +62,10 @@ window.ChessBoard = (() => {
             const piece = state.cells[y]?.[x]; if (!piece) continue;
             const symbol = CHARS[piece] || piece, cx = (x + .5) * cellSize, cy = (y + .5) * cellSize;
             context.save(); context.shadowColor = 'rgba(0,0,0,.42)'; context.shadowBlur = cellSize * .08; context.shadowOffsetY = cellSize * .025;
-            context.fillStyle = piece === piece.toUpperCase() ? '#fff' : '#181818'; context.fillText(symbol, cx, cy); context.restore();
-            context.lineWidth = Math.max(1, cellSize * .012); context.strokeStyle = piece === piece.toUpperCase() ? '#777' : '#aaa'; context.strokeText(symbol, cx, cy);
+            context.fillStyle = piece === piece.toUpperCase() ? '#f3f3f7' : '#14121c'; context.fillText(symbol, cx, cy); context.restore();
+            context.lineWidth = Math.max(1, cellSize * .012); context.strokeStyle = piece === piece.toUpperCase() ? '#8b87a0' : '#b8b2cc'; context.strokeText(symbol, cx, cy);
         }
-        context.font = `bold ${cellSize * .14}px sans-serif`; context.fillStyle = 'rgba(0,0,0,.55)';
+        context.font = `bold ${cellSize * .14}px sans-serif`; context.fillStyle = 'rgba(255,255,255,.45)';
         for (let i = 0; i < SIZE; i++) {
             context.textAlign = 'left'; context.textBaseline = 'bottom'; context.fillText(String.fromCharCode(97 + i), i * cellSize + 4, boardSize - 3);
             context.textAlign = 'right'; context.textBaseline = 'top'; context.fillText(String(SIZE - i), boardSize - 4, i * cellSize + 3);

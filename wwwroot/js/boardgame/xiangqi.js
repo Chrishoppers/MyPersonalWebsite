@@ -35,26 +35,26 @@ window.XiangqiBoard = (() => {
     function draw() {
         if (!context || !state) return;
         const gradient = context.createLinearGradient(0, 0, width, height);
-        gradient.addColorStop(0, '#efd29c'); gradient.addColorStop(1, '#cd9d5e');
+        gradient.addColorStop(0, '#221e2f'); gradient.addColorStop(1, '#0f0d18');
         context.fillStyle = gradient; context.fillRect(0, 0, width, height);
-        context.save(); context.globalAlpha = 0.045; context.strokeStyle = '#533318';
+        context.save(); context.globalAlpha = 0.035; context.strokeStyle = '#a78bfa';
         for (let y = 8; y < height; y += 14) {
             context.beginPath(); context.moveTo(0, y);
             for (let x = 0; x <= width; x += 16) context.lineTo(x, y + Math.sin(x * 0.02 + y) * 1.5);
             context.stroke();
         }
         context.restore();
-        context.strokeStyle = '#57391f'; context.lineWidth = 1.4;
+        context.strokeStyle = 'rgba(255,255,255,.16)'; context.lineWidth = 1.4;
         for (let y = 0; y < H; y++) {
             context.beginPath(); context.moveTo(px(0), py(y)); context.lineTo(px(W - 1), py(y)); context.stroke();
         }
         for (let x = 0; x < W; x++) {
             context.beginPath(); context.moveTo(px(x), py(0)); context.lineTo(px(x), py(H - 1)); context.stroke();
         }
-        context.fillStyle = '#e6bf83'; context.fillRect(padX + cell, py(4) + 1, cell * 7, cell - 2);
-        context.fillStyle = '#57391f'; context.font = `bold ${cell * 0.48}px serif`; context.textAlign = 'center'; context.textBaseline = 'middle';
+        context.fillStyle = 'rgba(139,92,246,.14)'; context.fillRect(padX + cell, py(4) + 1, cell * 7, cell - 2);
+        context.fillStyle = '#fbbf24'; context.font = `bold ${cell * 0.48}px serif`; context.textAlign = 'center'; context.textBaseline = 'middle';
         context.fillText('楚　河', px(2), py(4.5)); context.fillText('漢　界', px(6), py(4.5));
-        context.strokeStyle = '#57391f'; context.lineWidth = 1.4;
+        context.strokeStyle = 'rgba(255,255,255,.16)'; context.lineWidth = 1.4;
         [[3, 0, 5, 2], [5, 0, 3, 2], [3, 7, 5, 9], [5, 7, 3, 9]].forEach(([x1, y1, x2, y2]) => {
             context.beginPath(); context.moveTo(px(x1), py(y1)); context.lineTo(px(x2), py(y2)); context.stroke();
         });

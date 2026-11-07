@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using MyPersonalWebsite.Services.BoardGame;
 
 namespace MyPersonalWebsite.Controllers;
@@ -41,9 +41,19 @@ public sealed class BoardGameApiController : Controller
     [HttpPost("privacy-agree")]
     public async Task<IActionResult> AgreePrivacy()
     {
-        if (await _game.HasPrivacyAgreementAsync(UserId, GuestKey, PrivacyVersion)) return Ok(new { ok = true });
-        await _game.SavePrivacyAgreementAsync(UserId, GuestKey, PrivacyVersion);
-        return Ok(new { ok = true });
+        // 隐私同意记录是尽力而为的授权留痕，写入失败也不应阻塞用户进入对局。
+        try
+        {
+            if (await _game.HasPrivacyAgreementAsync(UserId, GuestKey, PrivacyVersion))
+                return Ok(new { ok = true, saved = true });
+            var saved = await _game.SavePrivacyAgreementAsync(UserId, GuestKey, PrivacyVersion);
+            return Ok(new { ok = true, saved });
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"⚠️ 隐私同意记录保存失败（不影响继续使用）: {ex.Message}");
+            return Ok(new { ok = true, saved = false });
+        }
     }
 
     public sealed class CreateRequest

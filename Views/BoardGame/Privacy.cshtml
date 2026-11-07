@@ -39,12 +39,22 @@
 </div>
 <div class="bg-toast" id="toast" role="status" aria-live="polite"></div>
 <script>
+    const RETURN_URL = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(safeReturnUrl));
+    function showToast(message) {
+        const toast = document.getElementById('toast');
+        toast.textContent = message; toast.classList.add('show');
+        clearTimeout(toast._timer); toast._timer = setTimeout(() => toast.classList.remove('show'), 3200);
+    }
     async function agreeAndGo() {
+        let saved = true;
         try {
-            const response = await fetch('/api/boardgame/privacy-agree', { method: 'POST' });
-            if (!response.ok) throw new Error('保存失败');
-            localStorage.setItem('bg_privacy_agreed_v1', '1');
-            location.href = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(safeReturnUrl));
-        } catch { alert('保存失败，请重试'); }
+            const response = await fetch('/api/boardgame/privacy-agree', { method: 'POST', credentials: 'same-origin' });
+            const data = response.ok ? await response.json().catch(() => ({})) : {};
+            saved = data.saved !== false;
+        } catch { saved = false; }
+        // 本地先标记已同意，保证任何网络/存储异常都不会阻断进入对局
+        try { localStorage.setItem('bg_privacy_agreed_v1', '1'); } catch { }
+        if (!saved) showToast('同意记录暂未保存到云端，但不影响本次使用');
+        location.href = RETURN_URL;
     }
 </script>

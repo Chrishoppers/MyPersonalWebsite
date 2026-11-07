@@ -134,7 +134,7 @@ public sealed class BoardGameService
         }).ToList();
     }
 
-    public Task SavePrivacyAgreementAsync(long? userId, string guestKey, string version) =>
+    public Task<bool> SavePrivacyAgreementAsync(long? userId, string guestKey, string version) =>
         _db.ExecuteSqlAsync($"INSERT INTO BoardGamePrivacyAgreements (UserId,GuestKey,Version,AgreedAt) VALUES ({NullableId(userId)},'{E(guestKey)}','{E(version)}','{DateTime.UtcNow:O}')");
 
     public async Task<bool> HasPrivacyAgreementAsync(long? userId, string guestKey, string version)
