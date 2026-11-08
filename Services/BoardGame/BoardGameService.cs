@@ -119,7 +119,7 @@ public sealed class BoardGameService
     {
         var rows = await QueryRowsAsync($@"SELECT Id,RoomCode,GameType,Mode,Status,HostUserId,HostName,HostAvatar,HostIsGuest,HostGuestKey,
             GuestUserId,GuestName,GuestAvatar,GuestIsGuest,GuestGuestKey,GuestConnectionId,AiLevel,AiSide,CurrentTurn,BoardState,
-            MoveCount,Winner,ResultReason,ChatEnabled,CreatedAt,FinishedAt FROM BoardGameRooms
+            MoveCount,Winner,ResultReason,ChatEnabled,CreatedAt,FinishedAt,HostToken,GuestToken FROM BoardGameRooms
             WHERE GameType='{E(gameType)}' AND Mode='pvp' AND Status='finished' AND HostIsGuest=0 AND GuestIsGuest=0 ORDER BY FinishedAt DESC LIMIT 50");
         return rows.Select(MapRoom).ToList();
     }
@@ -170,9 +170,53 @@ public sealed class BoardGameService
     private static string NewRoomCode() => new(Enumerable.Range(0, 6).Select(_ => CodeChars[Random.Shared.Next(CodeChars.Length)]).ToArray());
     public static string E(string? value) => (value ?? "").Replace("'", "''", StringComparison.Ordinal);
     private static string NullableId(long? value) => value?.ToString() ?? "NULL";
-    private static string Text(JsonElement value) => value.ValueKind == JsonValueKind.Null ? "" : value.ToString();
-    private static string? NullableText(JsonElement value) => value.ValueKind == JsonValueKind.Null ? null : value.ToString();
-    private static int Int(JsonElement value) => value.ValueKind == JsonValueKind.Number ? value.GetInt32() : int.TryParse(value.ToString(), out var parsed) ? parsed : 0;
-    private static long Long(JsonElement value) => value.ValueKind == JsonValueKind.Number ? value.GetInt64() : long.TryParse(value.ToString(), out var parsed) ? parsed : 0;
-    private static long? NullableLong(JsonElement value) => value.ValueKind == JsonValueKind.Null ? null : Long(value);
+
+    // Turso Hrana 协议返回值是 {"type":"text","value":"..."} 或 {"type":"integer","value":"123"} 对象，
+    // 需要先取出 "value" 字段，否则 ToString() 得到的是 JSON 字符串而非真实值。
+    private static bool IsNullValue(JsonElement value) =>
+        value.ValueKind == JsonValueKind.Null ||
+        (value.ValueKind == JsonValueKind.Object && value.TryGetProperty("type", out var t) && t.ValueKind == JsonValueKind.String && t.GetString() == "null");
+
+    private static JsonElement RawValue(JsonElement value)
+    {
+        if (value.ValueKind == JsonValueKind.Object && value.TryGetProperty("value", out var inner))
+            return inner;
+        return value;
+    }
+
+    private static string Text(JsonElement value)
+    {
+        if (IsNullValue(value)) return "";
+        var raw = RawValue(value);
+        if (raw.ValueKind == JsonValueKind.Null) return "";
+        return raw.ValueKind == JsonValueKind.String ? raw.GetString() ?? "" : raw.ToString();
+    }
+
+    private static string? NullableText(JsonElement value)
+    {
+        if (IsNullValue(value)) return null;
+        var raw = RawValue(value);
+        if (raw.ValueKind == JsonValueKind.Null) return null;
+        return raw.ValueKind == JsonValueKind.String ? raw.GetString() : raw.ToString();
+    }
+
+    private static int Int(JsonElement value)
+    {
+        if (IsNullValue(value)) return 0;
+        var raw = RawValue(value);
+        if (raw.ValueKind == JsonValueKind.Number) return raw.GetInt32();
+        if (raw.ValueKind == JsonValueKind.String) return int.TryParse(raw.GetString(), out var p) ? p : 0;
+        return int.TryParse(raw.ToString(), out var p2) ? p2 : 0;
+    }
+
+    private static long Long(JsonElement value)
+    {
+        if (IsNullValue(value)) return 0;
+        var raw = RawValue(value);
+        if (raw.ValueKind == JsonValueKind.Number) return raw.GetInt64();
+        if (raw.ValueKind == JsonValueKind.String) return long.TryParse(raw.GetString(), out var p) ? p : 0;
+        return long.TryParse(raw.ToString(), out var p2) ? p2 : 0;
+    }
+
+    private static long? NullableLong(JsonElement value) => IsNullValue(value) ? null : Long(value);
 }
