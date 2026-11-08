@@ -413,14 +413,15 @@
         btn.textContent = '⏳ 注册中...';
     });
 
-    // 如果验证失败，重置 reCAPTCHA
+    // 如果验证失败，重置验证码（安全处理，避免无 reCAPTCHA widget 时报错）
     @if (ViewBag.ResetCaptcha == true)
     {
         <text>
-            if (typeof grecaptcha !== 'undefined') {
-                grecaptcha.reset();
+            if (typeof grecaptcha !== 'undefined' && typeof grecaptcha.reset === 'function') {
+                try { grecaptcha.reset(); } catch (e) { }
             }
             document.getElementById('captchaToken').value = '';
+            refreshSvgCaptcha();
         </text>
     }
 </script>

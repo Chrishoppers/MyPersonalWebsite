@@ -213,7 +213,14 @@ namespace MyPersonalWebsite.Services
         public string GenerateAndStoreCaptcha()
         {
             var text = GenerateCaptchaText();
-            _httpContextAccessor.HttpContext?.Session.SetString("SvgCaptchaText", text);
+            try
+            {
+                _httpContextAccessor.HttpContext?.Session.SetString("SvgCaptchaText", text);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"⚠️ 存储图形验证码失败（不影响图片生成）: {ex.Message}");
+            }
             return text;
         }
 
