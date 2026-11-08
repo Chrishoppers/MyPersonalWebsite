@@ -85,11 +85,19 @@ public sealed class BoardGameService
     public async Task<bool> JoinRoomAsync(string code, long? guestUserId, string guestName, string guestAvatar,
         bool guestIsGuest, string? guestKey, string connectionId = "", string? guestToken = null)
     {
+        // 防自加入：只有加入者是登录用户时才按 UserId 判断；游客加入时跳过，
+        // 否则 "HostUserId != NULL" 会得到 NULL（假），导致 UPDATE 匹配 0 行。
+        var userGuard = guestUserId.HasValue
+            ? $"AND (HostUserId IS NULL OR HostUserId != {guestUserId.Value})"
+            : "AND 1=1";
+        var guestGuard = !string.IsNullOrEmpty(guestKey)
+            ? $"AND (HostGuestKey IS NULL OR HostGuestKey = '' OR HostGuestKey != '{E(guestKey)}')"
+            : "AND 1=1";
+
         var sql = $@"UPDATE BoardGameRooms SET Status='playing',GuestUserId={NullableId(guestUserId)},
             GuestName='{E(guestName)}',GuestAvatar='{E(guestAvatar)}',GuestIsGuest={(guestIsGuest ? 1 : 0)},
             GuestGuestKey='{E(guestKey)}',GuestConnectionId='{E(connectionId)}',GuestToken='{E(guestToken)}',StartedAt='{DateTime.UtcNow:O}'
-            WHERE RoomCode='{E(code)}' AND Status='waiting' AND GuestName IS NULL AND (HostUserId IS NULL OR HostUserId != {NullableId(guestUserId)})
-            AND (HostGuestKey IS NULL OR HostGuestKey = '' OR HostGuestKey != '{E(guestKey)}')";
+            WHERE RoomCode='{E(code)}' AND Status='waiting' AND GuestName IS NULL {userGuard} {guestGuard}";
         return await _db.ExecuteSqlAsync(sql);
     }
 

@@ -346,3 +346,16 @@ button.bg-move-item { cursor: pointer; }
 .bg-game-card::before { content: ""; position: absolute; top: -40%; left: -80%; width: 60%; height: 180%; background: linear-gradient(115deg, transparent, rgba(255,255,255,.08), transparent); transform: skewX(-18deg); transition: none; pointer-events: none; z-index: 1; }
 .bg-game-card:hover::before { animation: bg-shine .8s ease; }
 @keyframes bg-shine { from { left: -80%; } to { left: 130%; } }
+
+/* 棋盘外框渐变描边 + 面板抬升 + 消息淡入 */
+.bg-board-wrap { position: relative; }
+.bg-board-wrap::before {
+    content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px;
+    background: linear-gradient(160deg, rgba(139,92,246,.5), rgba(236,72,153,.25), rgba(6,182,212,.2), transparent 60%);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude; pointer-events: none;
+}
+.bg-panel { transition: transform .25s ease, border-color .25s ease, box-shadow .25s ease; }
+.bg-panel:hover { transform: translateY(-2px); border-color: rgba(167,139,250,.3); box-shadow: 0 10px 28px -16px rgba(139,92,246,.5); }
+.bg-chat-msg { animation: bg-msg-in .3s ease; }
+@keyframes bg-msg-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }

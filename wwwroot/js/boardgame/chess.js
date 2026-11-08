@@ -68,9 +68,16 @@ window.ChessBoard = (() => {
         for (let y = 0; y < SIZE; y++) for (let x = 0; x < SIZE; x++) {
             const piece = state.cells[y]?.[x]; if (!piece) continue;
             const symbol = CHARS[piece] || piece, cx = (x + .5) * cellSize, cy = (y + .5) * cellSize;
-            context.save(); context.shadowColor = 'rgba(0,0,0,.42)'; context.shadowBlur = cellSize * .08; context.shadowOffsetY = cellSize * .025;
-            context.fillStyle = piece === piece.toUpperCase() ? '#f3f3f7' : '#14121c'; context.fillText(symbol, cx, cy); context.restore();
-            context.lineWidth = Math.max(1, cellSize * .012); context.strokeStyle = piece === piece.toUpperCase() ? '#8b87a0' : '#b8b2cc'; context.strokeText(symbol, cx, cy);
+            const white = piece === piece.toUpperCase();
+            const grad = context.createLinearGradient(cx, cy - cellSize * .42, cx, cy + cellSize * .42);
+            if (white) { grad.addColorStop(0, '#ffffff'); grad.addColorStop(0.55, '#ecebf3'); grad.addColorStop(1, '#b4b4c9'); }
+            else { grad.addColorStop(0, '#48475e'); grad.addColorStop(0.55, '#16151f'); grad.addColorStop(1, '#050509'); }
+            context.save();
+            context.shadowColor = 'rgba(0,0,0,.55)'; context.shadowBlur = cellSize * .16; context.shadowOffsetY = cellSize * .05;
+            context.fillStyle = grad; context.fillText(symbol, cx, cy + cellSize * .02); context.restore();
+            context.lineWidth = Math.max(1, cellSize * .015);
+            context.strokeStyle = white ? 'rgba(115,105,150,.75)' : 'rgba(205,200,228,.6)';
+            context.strokeText(symbol, cx, cy + cellSize * .02);
         }
         context.font = `bold ${cellSize * .14}px sans-serif`; context.fillStyle = 'rgba(255,255,255,.45)';
         for (let i = 0; i < SIZE; i++) {
