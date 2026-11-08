@@ -141,6 +141,14 @@ button.bg-move-item { cursor: pointer; }
 .bg-privacy-scroll p, .bg-privacy-scroll ul { margin: .3rem 0; }
 .bg-privacy-scroll ul { padding-left: 1.3rem; }
 .bg-privacy-scroll li { margin: .25rem 0; }
+
+/* 隐私弹窗 · 高级质感 */
+.bg-privacy-modal { position: relative; }
+.bg-privacy-modal::before { content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px; background: linear-gradient(160deg, rgba(139,92,246,.55), rgba(236,72,153,.3), rgba(245,158,11,.18), transparent 60%); -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite: xor; mask-composite: exclude; pointer-events: none; }
+.bg-privacy-modal h3 { background: linear-gradient(120deg, #fff, #a78bfa 45%, #f472b6); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.bg-privacy-scroll h4 { color: #c4b5fd; letter-spacing: .02em; }
+.bg-privacy-actions .bg-btn-primary { background-size: 200% 200%; animation: bg-btn-flow 5s ease-in-out infinite; }
+.bg-privacy-actions .bg-btn-ghost:hover { border-color: rgba(220,53,69,.5); color: #f87171; }
 .bg-join-page { max-width: 620px; }
 .bg-join-panel { gap: .75rem; padding: 1.4rem; }
 .bg-join-panel > .bg-btn { width: 100%; min-height: 50px; }
