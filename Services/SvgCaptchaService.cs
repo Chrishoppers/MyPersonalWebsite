@@ -215,7 +215,17 @@ namespace MyPersonalWebsite.Services
             var text = GenerateCaptchaText();
             try
             {
-                _httpContextAccessor.HttpContext?.Session.SetString("SvgCaptchaText", text);
+                var httpContext = _httpContextAccessor.HttpContext;
+                if (httpContext != null)
+                {
+                    // 用 HttpOnly Cookie 存验证码文字（比 Session 更可靠，图片与提交请求间不会丢失）
+                    httpContext.Response.Cookies.Append("SvgCaptchaText", text, new CookieOptions
+                    {
+                        HttpOnly = true,
+                        SameSite = SameSiteMode.Lax,
+                        Expires = DateTimeOffset.UtcNow.AddMinutes(10)
+                    });
+                }
             }
             catch (Exception ex)
             {
@@ -229,7 +239,7 @@ namespace MyPersonalWebsite.Services
         // ============================================================
         public bool VerifyCaptcha(string userInput)
         {
-            var stored = _httpContextAccessor.HttpContext?.Session.GetString("SvgCaptchaText");
+            var stored = _httpContextAccessor.HttpContext?.Request.Cookies["SvgCaptchaText"];
             if (string.IsNullOrEmpty(stored)) return false;
 
             // 忽略大小写和前后空格

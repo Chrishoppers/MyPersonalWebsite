@@ -109,25 +109,27 @@ namespace MyPersonalWebsite.Controllers
             // 生成验证码
             var code = new Random().Next(100000, 999999).ToString();
 
-            // 头像转 Base64
+            // 头像转 Base64（最大 5MB）
             string? avatarData = null;
             if (avatar != null && avatar.Length > 0)
             {
                 var allowedTypes = new[] { "image/jpeg", "image/png", "image/gif", "image/webp" };
-                if (allowedTypes.Contains(avatar.ContentType) && avatar.Length <= 5 * 1024 * 1024)
+                if (!allowedTypes.Contains(avatar.ContentType))
                 {
-                    using var memoryStream = new MemoryStream();
-                    await avatar.CopyToAsync(memoryStream);
-                    var imageBytes = memoryStream.ToArray();
-                    var base64 = Convert.ToBase64String(imageBytes);
-                    avatarData = $"data:{avatar.ContentType};base64,{base64}";
-
-                    if (avatarData.Length > 500 * 1024)
-                    {
-                        ModelState.AddModelError("", "图片过大，请压缩后上传（最大500KB）");
-                        return View();
-                    }
+                    ModelState.AddModelError("", "头像仅支持 JPG、PNG、GIF、WebP 格式");
+                    return View();
                 }
+                if (avatar.Length > 5 * 1024 * 1024)
+                {
+                    ModelState.AddModelError("", "头像不能超过 5MB");
+                    return View();
+                }
+
+                using var memoryStream = new MemoryStream();
+                await avatar.CopyToAsync(memoryStream);
+                var imageBytes = memoryStream.ToArray();
+                var base64 = Convert.ToBase64String(imageBytes);
+                avatarData = $"data:{avatar.ContentType};base64,{base64}";
             }
 
             // 创建用户
