@@ -13,6 +13,43 @@ const BoardGameClient = (() => {
         clearTimeout(el._timer); el._timer = setTimeout(() => el.classList.remove('show'), 3000);
     }
 
+    // 详细错误弹窗：默认折叠技术详情，可展开查看错误代码/堆栈
+    function showRoomError(error, stage) {
+        const overlay = $('errorOverlay');
+        if (!overlay) { toast('连接房间失败'); return; }
+        const message = (error && (error.message || error.toString())) || '无法连接到棋局房间';
+        $('errorMessage').textContent = message;
+        const detail = [
+            '阶段：' + stage,
+            '房间码：' + (config.roomCode || '(无)'),
+            '棋类：' + (config.gameType || '(无)'),
+            '模式：' + (config.mode || '(无)'),
+            '错误类型：' + (error && error.name ? error.name : 'Error'),
+            '错误信息：' + message,
+            '堆栈：',
+            (error && error.stack ? error.stack : '(无堆栈信息)')
+        ].join('\n');
+        $('errorDetail').textContent = detail;
+        $('errorDetail').hidden = true;
+        $('errorToggle').textContent = '查看详细错误 ▾';
+        overlay.classList.add('show');
+        overlay.setAttribute('aria-hidden', 'false');
+    }
+
+    window.toggleErrorDetail = () => {
+        const detail = $('errorDetail'), toggle = $('errorToggle');
+        if (!detail || !toggle) return;
+        const hidden = detail.hidden;
+        detail.hidden = !hidden;
+        toggle.textContent = hidden ? '收起详细错误 ▴' : '查看详细错误 ▾';
+    };
+
+    window.closeError = () => {
+        const overlay = $('errorOverlay');
+        if (overlay) { overlay.classList.remove('show'); overlay.setAttribute('aria-hidden', 'true'); }
+        location.href = '/BoardGame/Index';
+    };
+
     async function boot(options) {
         config = options;
         const renderers = { gomoku: window.GomokuBoard, xiangqi: window.XiangqiBoard, chess: window.ChessBoard };
@@ -63,15 +100,16 @@ const BoardGameClient = (() => {
         connection.onreconnecting(() => { $('turnPill').textContent = '正在重连…'; });
         connection.onreconnected(async () => {
             try { room = await connection.invoke('JoinRoom', config.roomCode); applyRoomState(); toast('已重新连接'); }
-            catch { toast('无法重新加入该棋局'); }
+            catch (error) { console.error('❌ 重连失败:', error); showRoomError(error, '重新连接'); }
         });
 
         try {
             await connection.start();
             room = await connection.invoke('JoinRoom', config.roomCode);
             applyRoomState();
-        } catch {
-            toast('连接房间失败，请确认房间有效后刷新页面');
+        } catch (error) {
+            console.error('❌ 连接房间失败:', error);
+            showRoomError(error, '加入房间');
             $('turnPill').textContent = '连接失败';
         }
         $('sendChatBtn').addEventListener('click', sendChat);

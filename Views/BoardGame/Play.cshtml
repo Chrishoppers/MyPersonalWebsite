@@ -30,6 +30,16 @@
     </div>
 </div>
 <div class="bg-gameover" id="gameOverLayer" aria-hidden="true"><div class="bg-gameover-card"><div class="trophy" id="goIcon">🏆</div><h2 id="goTitle">对局结束</h2><p id="goReason"></p><button type="button" class="bg-btn bg-btn-primary" onclick="location.href='/BoardGame/Index'">返回大厅</button></div></div>
+<div class="bg-error" id="errorOverlay" aria-hidden="true">
+    <div class="bg-error-card">
+        <div class="bg-error-icon">⚠️</div>
+        <h2>连接房间失败</h2>
+        <p id="errorMessage"></p>
+        <button type="button" class="bg-error-toggle" id="errorToggle" onclick="toggleErrorDetail()">查看详细错误 ▾</button>
+        <pre id="errorDetail" class="bg-error-detail" hidden></pre>
+        <button type="button" class="bg-btn bg-btn-primary" onclick="closeError()">返回大厅</button>
+    </div>
+</div>
 <div class="bg-toast" id="toast" role="status" aria-live="polite"></div>
 <script src="https://cdn.jsdelivr.net/npm/@@microsoft/signalr@@8.0.7/dist/browser/signalr.min.js"></script>
 <script src="~/js/boardgame/gomoku.js" asp-append-version="true"></script>
