@@ -1,26 +1,14 @@
 (() => {
     let currentType = '';
     let currentRoom = null;
+    let pendingType = '';
+    let pendingTitle = '';
     const $ = id => document.getElementById(id);
 
     function toast(message) {
         const el = $('toast'); el.textContent = message; el.classList.add('show');
         clearTimeout(el._timer); el._timer = setTimeout(() => el.classList.remove('show'), 3000);
     }
-
-    async function hasPrivacyAgreement() {
-        // 本地已同意过，直接放行，避免服务端未保存导致反复跳回大厅
-        if (localStorage.getItem('bg_privacy_agreed_v1') === '1') return true;
-        try {
-            const response = await fetch('/api/boardgame/privacy-status');
-            if (!response.ok) return false;
-            const result = await response.json();
-            if (result.agreed) localStorage.setItem('bg_privacy_agreed_v1', '1');
-            return result.agreed === true;
-        } catch { return false; }
-    }
-
-    function readReturnUrl() { return encodeURIComponent('/BoardGame/Index'); }
 
     function openModeModal(type, title) {
         currentType = type;
@@ -31,19 +19,12 @@
         $('modeModal').setAttribute('aria-hidden', 'false');
     }
 
-    function hasLocalAgreement() {
-        try { return localStorage.getItem('bg_privacy_agreed_v1') === '1'; } catch { return false; }
-    }
-
+    // 点击棋类：每次都弹出隐私声明确认（纯前端，不查库、不持久化）
     window.openMode = (type, title) => {
-        // 本地未同意 → 立即弹隐私弹窗（不等服务器，避免卡顿）
-        if (!hasLocalAgreement()) {
-            try { sessionStorage.setItem('bg_pending_game', JSON.stringify({ type, title })); } catch { }
-            const modal = $('privacyModal');
-            if (modal) { modal.classList.add('show'); modal.setAttribute('aria-hidden', 'false'); }
-            return;
-        }
-        openModeModal(type, title);
+        pendingType = type;
+        pendingTitle = title;
+        const modal = $('privacyModal');
+        if (modal) { modal.classList.add('show'); modal.setAttribute('aria-hidden', 'false'); }
     };
 
     window.closeModal = () => {
@@ -54,27 +35,19 @@
     window.closePrivacyModal = () => {
         $('privacyModal').classList.remove('show');
         $('privacyModal').setAttribute('aria-hidden', 'true');
-        sessionStorage.removeItem('bg_pending_game');
+        pendingType = ''; pendingTitle = '';
     };
 
-    window.agreePrivacy = async () => {
-        try {
-            const response = await fetch('/api/boardgame/privacy-agree', { method: 'POST', credentials: 'same-origin' });
-            if (response.ok) await response.json().catch(() => ({}));
-        } catch { }
-        try { localStorage.setItem('bg_privacy_agreed_v1', '1'); } catch { }
+    // 同意：直接进入该棋类的模式选择，不再上传/查询数据库
+    window.agreePrivacy = () => {
         $('privacyModal').classList.remove('show');
         $('privacyModal').setAttribute('aria-hidden', 'true');
-        let pending = null;
-        try { pending = sessionStorage.getItem('bg_pending_game'); sessionStorage.removeItem('bg_pending_game'); } catch { }
-        try {
-            const parsed = JSON.parse(pending);
-            if (parsed && parsed.type) openModeModal(parsed.type, parsed.title || parsed.type);
-        } catch { }
+        const type = pendingType, title = pendingTitle;
+        pendingType = ''; pendingTitle = '';
+        if (type) openModeModal(type, title);
     };
 
     window.startMatch = async kind => {
-        if (!(await hasPrivacyAgreement())) { toast('请先同意隐私声明'); return; }
         try {
             const isInvite = kind === 'qr';
             const response = await fetch(isInvite ? '/api/boardgame/create' : '/api/boardgame/match', {
@@ -98,7 +71,6 @@
     };
 
     window.startAI = async level => {
-        if (!(await hasPrivacyAgreement())) { toast('请先同意隐私声明'); return; }
         try {
             const response = await fetch('/api/boardgame/create', {
                 method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -122,17 +94,4 @@
         if ($('privacyModal').classList.contains('show')) closePrivacyModal();
         else closeModal();
     });
-
-    // 从隐私声明同意后返回大厅时，自动进入此前选择的棋类的模式选择
-    (async () => {
-        let pending = null;
-        try { pending = sessionStorage.getItem('bg_pending_game'); sessionStorage.removeItem('bg_pending_game'); } catch { }
-        if (!pending) return;
-        try {
-            const parsed = JSON.parse(pending);
-            if (parsed && parsed.type && hasLocalAgreement()) {
-                openModeModal(parsed.type, parsed.title || parsed.type);
-            }
-        } catch { }
-    })();
 })();

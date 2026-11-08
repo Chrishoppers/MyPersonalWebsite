@@ -66,7 +66,6 @@ public sealed class BoardGameApiController : Controller
     [HttpPost("create")]
     public async Task<IActionResult> Create([FromBody] CreateRequest request)
     {
-        if (!await HasAgreement()) return BadRequest(new { error = "请先阅读并同意隐私声明。" });
         if (!GameTypes.Contains(request.GameType) || request.Mode is not ("ai" or "pvp")) return BadRequest(new { error = "棋类或对局模式无效。" });
         var level = request.Mode == "ai" ? request.AiLevel is "easy" or "medium" or "hard" ? request.AiLevel : "medium" : null;
         var aiSide = request.Mode == "ai" ? request.GameType == "gomoku" ? "white" : "black" : null;
@@ -82,7 +81,6 @@ public sealed class BoardGameApiController : Controller
     [HttpPost("match")]
     public async Task<IActionResult> Match([FromBody] MatchRequest request)
     {
-        if (!await HasAgreement()) return BadRequest(new { error = "请先阅读并同意隐私声明。" });
         if (!GameTypes.Contains(request.GameType)) return BadRequest(new { error = "棋类无效。" });
         var waiting = await _game.FindWaitingRoomForUserAsync(request.GameType, UserId, GuestKey);
         if (waiting is not null)
@@ -117,7 +115,6 @@ public sealed class BoardGameApiController : Controller
     [HttpPost("join")]
     public async Task<IActionResult> JoinRoom([FromBody] JoinRequest request)
     {
-        if (!await HasAgreement()) return BadRequest(new { error = "请先阅读并同意隐私声明。" });
         var code = request.Code.Trim().ToUpperInvariant();
         if (code.Length != 6 || code.Any(character => !char.IsAsciiLetterOrDigit(character))) return BadRequest(new { error = "房间码无效。" });
         var room = await _game.GetRoomAsync(code);

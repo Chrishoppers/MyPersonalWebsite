@@ -65,15 +65,9 @@
         const toast = $('toast'); toast.textContent = message; toast.classList.add('show');
         clearTimeout(toast._timer); toast._timer = setTimeout(() => toast.classList.remove('show'), 3000);
     }
-    async function checkPrivacy() {
-        if (localStorage.getItem('bg_privacy_agreed_v1') === '1') return true;
-        try {
-            const response = await fetch('/api/boardgame/privacy-status');
-            if (!response.ok) return false;
-            const result = await response.json();
-            if (result.agreed) localStorage.setItem('bg_privacy_agreed_v1', '1');
-            return result.agreed;
-        } catch { return false; }
+    function checkPrivacy() {
+        // 纯前端判断，不查数据库
+        try { return localStorage.getItem('bg_privacy_agreed_v1') === '1'; } catch { return false; }
     }
     let afterAgree = null;
     function openPrivacyModal() {
@@ -85,11 +79,8 @@
         $('privacyModal').setAttribute('aria-hidden', 'true');
         afterAgree = null;
     }
-    async function agreePrivacy() {
-        try {
-            const response = await fetch('/api/boardgame/privacy-agree', { method: 'POST', credentials: 'same-origin' });
-            if (response.ok) await response.json().catch(() => ({}));
-        } catch { }
+    function agreePrivacy() {
+        // 不再上传数据库，仅本地标记
         try { localStorage.setItem('bg_privacy_agreed_v1', '1'); } catch { }
         $('privacyModal').classList.remove('show');
         $('privacyModal').setAttribute('aria-hidden', 'true');
