@@ -9,6 +9,11 @@ namespace MyPersonalWebsite.Services
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly Random _random = new();
 
+        public SvgCaptchaService(IHttpContextAccessor httpContextAccessor)
+        {
+            _httpContextAccessor = httpContextAccessor;
+        }
+
         // 字体列表
         private readonly string[] _fonts = new[]
         {
