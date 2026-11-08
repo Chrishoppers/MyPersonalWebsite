@@ -75,8 +75,9 @@ public sealed class BoardGameApiController : Controller
             var guest = !UserId.HasValue;
             var displayName = guest ? EnsureGuestName() : Username;
             var avatar = guest ? EnsureGuestAvatar() : "😊";
-            var created = await _game.CreateRoomAsync(request.GameType, request.Mode, level, aiSide, UserId, displayName, avatar, guest, guest ? GuestKey : null);
-            return Ok(new { roomId = created.Id, roomCode = created.Code, joinUrl = BuildJoinUrl(created.Code), qrBase64 = _qr.GeneratePngBase64(BuildJoinUrl(created.Code)) });
+            var hostToken = Guid.NewGuid().ToString("N");
+            var created = await _game.CreateRoomAsync(request.GameType, request.Mode, level, aiSide, UserId, displayName, avatar, guest, guest ? GuestKey : null, hostToken);
+            return Ok(new { roomId = created.Id, roomCode = created.Code, hostToken = hostToken, joinUrl = BuildJoinUrl(created.Code), qrBase64 = _qr.GeneratePngBase64(BuildJoinUrl(created.Code)) });
         }
         catch (Exception ex)
         {
@@ -97,7 +98,7 @@ public sealed class BoardGameApiController : Controller
             var waiting = await _game.FindWaitingRoomForUserAsync(request.GameType, UserId, GuestKey);
             if (waiting is not null)
             {
-                return Ok(new { roomCode = waiting.RoomCode, isCreator = true, gameType = waiting.GameType });
+                return Ok(new { roomCode = waiting.RoomCode, isCreator = true, gameType = waiting.GameType, hostToken = waiting.HostToken });
             }
             var waitingOpponent = await _game.FindWaitingRoomAsync(request.GameType);
             if (waitingOpponent is not null && !IsCurrentUser(waitingOpponent))
@@ -105,15 +106,17 @@ public sealed class BoardGameApiController : Controller
                 var joiningAsGuest = !UserId.HasValue;
                 var guestName = joiningAsGuest ? EnsureGuestName() : Username;
                 var guestAvatar = joiningAsGuest ? EnsureGuestAvatar() : "😊";
-                var joined = await _game.JoinRoomAsync(waitingOpponent.RoomCode, UserId, guestName, guestAvatar, joiningAsGuest, joiningAsGuest ? GuestKey : null);
+                var guestToken = Guid.NewGuid().ToString("N");
+                var joined = await _game.JoinRoomAsync(waitingOpponent.RoomCode, UserId, guestName, guestAvatar, joiningAsGuest, joiningAsGuest ? GuestKey : null, "", guestToken);
                 if (!joined) return Conflict(new { error = "匹配房间刚刚被加入，请重试。" });
-                return Ok(new { roomCode = waitingOpponent.RoomCode, isCreator = false, gameType = waitingOpponent.GameType });
+                return Ok(new { roomCode = waitingOpponent.RoomCode, isCreator = false, gameType = waitingOpponent.GameType, guestToken = guestToken });
             }
             var guest = !UserId.HasValue;
+            var hostToken = Guid.NewGuid().ToString("N");
             var created = await _game.CreateRoomAsync(request.GameType, "pvp", null, null, UserId,
-                guest ? EnsureGuestName() : Username, guest ? EnsureGuestAvatar() : "😊", guest, guest ? GuestKey : null);
+                guest ? EnsureGuestName() : Username, guest ? EnsureGuestAvatar() : "😊", guest, guest ? GuestKey : null, hostToken);
             var url = BuildJoinUrl(created.Code);
-            return Ok(new { roomCode = created.Code, isCreator = true, joinUrl = url, qrBase64 = _qr.GeneratePngBase64(url) });
+            return Ok(new { roomCode = created.Code, isCreator = true, hostToken = hostToken, joinUrl = url, qrBase64 = _qr.GeneratePngBase64(url) });
         }
         catch (Exception ex)
         {
@@ -145,9 +148,10 @@ public sealed class BoardGameApiController : Controller
             HttpContext.Session.SetString("GuestName", guestName);
             HttpContext.Session.SetString("GuestAvatar", avatar);
         }
-        var ok = await _game.JoinRoomAsync(code, asGuest ? null : UserId, guestName, avatar, asGuest, asGuest ? GuestKey : null);
+        var guestToken = Guid.NewGuid().ToString("N");
+        var ok = await _game.JoinRoomAsync(code, asGuest ? null : UserId, guestName, avatar, asGuest, asGuest ? GuestKey : null, "", guestToken);
         if (!ok) return BadRequest(new { error = "房间不存在或已开始。" });
-        return Ok(new { ok = true, roomCode = code, gameType = room.GameType });
+        return Ok(new { ok = true, roomCode = code, gameType = room.GameType, guestToken = guestToken });
     }
 
     [HttpGet("me")]

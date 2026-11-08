@@ -21,12 +21,12 @@ public sealed class BoardGameHub : Hub
         _configuration = configuration;
     }
 
-    public async Task<object?> JoinRoom(string roomCode)
+    public async Task<object?> JoinRoom(string roomCode, string? token = null)
     {
         var room = await _game.GetRoomAsync(roomCode);
         if (room is null) throw new HubException("无权加入该棋局。");
-        var side = GetSide(room);
-        // AI 对局只有一名真人玩家（房主）；session 匹配失败时也允许以房主身份进入，避免本地/游客场景报“无权加入”
+        var side = GetSide(room, token);
+        // AI 对局只有一名真人玩家（房主）；令牌/session 匹配失败时也允许以房主身份进入
         if (side is null && room.Mode == "ai")
             side = _game.GetEngine(room.GameType).InitialSide;
         if (side is null) throw new HubException("无权加入该棋局。");
@@ -52,7 +52,7 @@ public sealed class BoardGameHub : Hub
         try
         {
             var room = await _game.GetRoomAsync(roomCode);
-            var side = GetSide(room);
+            var side = GetSide(room, null);
             if (room is null || side is null || room.Status != "playing" || room.CurrentTurn != side) return;
             var engine = _game.GetEngine(room.GameType);
             var move = new BoardMove(from, to, extra);
@@ -82,7 +82,7 @@ public sealed class BoardGameHub : Hub
     {
         if (string.IsNullOrWhiteSpace(content) || content.Length > 200) return;
         var room = await _game.GetRoomAsync(roomCode);
-        var side = GetSide(room);
+        var side = GetSide(room, null);
         if (room is null || side is null || room.ChatEnabled == 0 || room.Status != "playing") return;
         var (name, isGuest) = GetSender(room, side);
         var threshold = _configuration.GetValue("BoardGame:ChatHarmonyThreshold", 50);
@@ -114,7 +114,7 @@ public sealed class BoardGameHub : Hub
     public async Task Resign(string roomCode)
     {
         var room = await _game.GetRoomAsync(roomCode);
-        var side = GetSide(room);
+        var side = GetSide(room, null);
         if (room is null || side is null || room.Status != "playing") return;
         await FinishAndNotify(room, new GameStatus(GameOutcome.Win, NextSide(room.GameType, side), $"{_game.GetEngine(room.GameType).SideName(side)}认输"));
     }
@@ -152,9 +152,15 @@ public sealed class BoardGameHub : Hub
         });
     }
 
-    private string? GetSide(RoomDto? room)
+    private string? GetSide(RoomDto? room, string? token)
     {
         if (room is null) return null;
+        // 令牌鉴权（优先，不依赖 session）
+        if (!string.IsNullOrEmpty(token) && token == room.HostToken)
+            return _game.GetEngine(room.GameType).InitialSide;
+        if (!string.IsNullOrEmpty(token) && token == room.GuestToken)
+            return NextSide(room.GameType, _game.GetEngine(room.GameType).InitialSide);
+        // session 鉴权（兜底）
         var session = Context.GetHttpContext()?.Session;
         var userId = session?.GetInt32("UserId");
         var guestKey = session?.GetString("GuestKey");

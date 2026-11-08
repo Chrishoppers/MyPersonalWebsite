@@ -129,7 +129,7 @@
             });
             const result = await response.json();
             if (!response.ok) { showToast(result.error || '加入失败'); return; }
-            location.href = `/BoardGame/Play?type=${encodeURIComponent(result.gameType)}&mode=pvp&code=${encodeURIComponent(ROOM_CODE)}`;
+            location.href = `/BoardGame/Play?type=${encodeURIComponent(result.gameType)}&mode=pvp&code=${encodeURIComponent(ROOM_CODE)}&token=${encodeURIComponent(result.guestToken || '')}`;
         } catch { showToast('连接失败，请稍后重试'); }
     }
     function guestJoin() { return submitJoin(true); }

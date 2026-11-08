@@ -4,6 +4,7 @@
     var mode = ViewBag.Mode as string ?? "pvp";
     var level = ViewBag.AiLevel as string ?? "";
     var code = ViewBag.RoomCode as string ?? "";
+    var token = ViewBag.Token as string ?? "";
 }
 <link rel="stylesheet" href="~/css/boardgame.css" asp-append-version="true" />
 <div class="bg-body">
@@ -51,7 +52,8 @@
         gameType: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(type)),
         mode: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(mode)),
         level: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(level)),
-        roomCode: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(code))
+        roomCode: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(code)),
+        token: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(token))
     };
     BoardGameClient.boot(window.__BG__);
     async function copyRoomCode() {

@@ -12,12 +12,13 @@ public sealed class BoardGameController : Controller
         return View();
     }
 
-    public IActionResult Play(string? type, string? mode, string? level, string? code)
+    public IActionResult Play(string? type, string? mode, string? level, string? code, string? token)
     {
         ViewBag.GameType = type ?? "gomoku";
         ViewBag.Mode = mode ?? "pvp";
         ViewBag.AiLevel = level ?? "";
         ViewBag.RoomCode = code ?? "";
+        ViewBag.Token = token ?? "";
         return View();
     }
 

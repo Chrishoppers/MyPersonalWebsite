@@ -33,6 +33,8 @@ public sealed class RoomDto
     public int ChatEnabled { get; set; } = 1;
     public string? CreatedAt { get; set; }
     public string? FinishedAt { get; set; }
+    public string? HostToken { get; set; }
+    public string? GuestToken { get; set; }
 }
 
 public sealed class MoveDto

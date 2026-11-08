@@ -80,13 +80,14 @@
             const result = await response.json();
             if (response.status === 401) { toast('请先登录后再创建对局'); setTimeout(() => location.href = '/Auth/Login?returnUrl=' + encodeURIComponent('/BoardGame/Index'), 800); return; }
             if (!response.ok) { toast(result.error || '创建对局失败'); return; }
-            location.href = `/BoardGame/Play?type=${encodeURIComponent(currentType)}&mode=ai&level=${encodeURIComponent(level)}&code=${encodeURIComponent(result.roomCode)}`;
+            location.href = `/BoardGame/Play?type=${encodeURIComponent(currentType)}&mode=ai&level=${encodeURIComponent(level)}&code=${encodeURIComponent(result.roomCode)}&token=${encodeURIComponent(result.hostToken || '')}`;
         } catch { toast('创建对局失败，请稍后重试'); }
     };
 
     window.goPlay = () => {
         if (!currentRoom?.roomCode) return;
-        location.href = `/BoardGame/Play?type=${encodeURIComponent(currentType)}&mode=pvp&code=${encodeURIComponent(currentRoom.roomCode)}`;
+        const token = currentRoom.hostToken || currentRoom.guestToken || '';
+        location.href = `/BoardGame/Play?type=${encodeURIComponent(currentType)}&mode=pvp&code=${encodeURIComponent(currentRoom.roomCode)}&token=${encodeURIComponent(token)}`;
     };
 
     $('modeModal').addEventListener('click', event => { if (event.target === $('modeModal')) closeModal(); });

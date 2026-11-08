@@ -99,13 +99,13 @@ const BoardGameClient = (() => {
         connection.on('GameOver', result => showGameOver(result.winner, result.outcome, result.reason));
         connection.onreconnecting(() => { $('turnPill').textContent = '正在重连…'; });
         connection.onreconnected(async () => {
-            try { room = await connection.invoke('JoinRoom', config.roomCode); applyRoomState(); toast('已重新连接'); }
+            try { room = await connection.invoke('JoinRoom', config.roomCode, config.token || null); applyRoomState(); toast('已重新连接'); }
             catch (error) { console.error('❌ 重连失败:', error); showRoomError(error, '重新连接'); }
         });
 
         try {
             await connection.start();
-            room = await connection.invoke('JoinRoom', config.roomCode);
+            room = await connection.invoke('JoinRoom', config.roomCode, config.token || null);
             applyRoomState();
         } catch (error) {
             console.error('❌ 连接房间失败:', error);
