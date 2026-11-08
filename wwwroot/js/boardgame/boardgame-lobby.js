@@ -55,6 +55,7 @@
                 body: JSON.stringify(isInvite ? { gameType: currentType, mode: 'pvp' } : { gameType: currentType })
             });
             const result = await response.json();
+            if (response.status === 401) { toast('请先登录后再创建/匹配对局'); setTimeout(() => location.href = '/Auth/Login?returnUrl=' + encodeURIComponent('/BoardGame/Index'), 800); return; }
             if (!response.ok) { toast(result.error || '匹配失败'); return; }
             currentRoom = result;
             if (kind === 'qr') {
@@ -77,6 +78,7 @@
                 body: JSON.stringify({ gameType: currentType, mode: 'ai', aiLevel: level })
             });
             const result = await response.json();
+            if (response.status === 401) { toast('请先登录后再创建对局'); setTimeout(() => location.href = '/Auth/Login?returnUrl=' + encodeURIComponent('/BoardGame/Index'), 800); return; }
             if (!response.ok) { toast(result.error || '创建对局失败'); return; }
             location.href = `/BoardGame/Play?type=${encodeURIComponent(currentType)}&mode=ai&level=${encodeURIComponent(level)}&code=${encodeURIComponent(result.roomCode)}`;
         } catch { toast('创建对局失败，请稍后重试'); }

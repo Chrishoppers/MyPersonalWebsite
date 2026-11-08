@@ -68,6 +68,7 @@ public sealed class BoardGameApiController : Controller
     {
         try
         {
+            if (!UserId.HasValue) return Unauthorized(new { error = "请先登录后再创建对局。" });
             if (!GameTypes.Contains(request.GameType) || request.Mode is not ("ai" or "pvp")) return BadRequest(new { error = "棋类或对局模式无效。" });
             var level = request.Mode == "ai" ? request.AiLevel is "easy" or "medium" or "hard" ? request.AiLevel : "medium" : null;
             var aiSide = request.Mode == "ai" ? request.GameType == "gomoku" ? "white" : "black" : null;
@@ -91,6 +92,7 @@ public sealed class BoardGameApiController : Controller
     {
         try
         {
+            if (!UserId.HasValue) return Unauthorized(new { error = "请先登录后再匹配对局。" });
             if (!GameTypes.Contains(request.GameType)) return BadRequest(new { error = "棋类无效。" });
             var waiting = await _game.FindWaitingRoomForUserAsync(request.GameType, UserId, GuestKey);
             if (waiting is not null)
