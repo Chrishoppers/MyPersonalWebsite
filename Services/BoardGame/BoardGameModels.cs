@@ -35,6 +35,8 @@ public sealed class RoomDto
     public string? FinishedAt { get; set; }
     public string? HostToken { get; set; }
     public string? GuestToken { get; set; }
+    public int HostReady { get; set; }
+    public int GuestReady { get; set; }
 }
 
 public sealed class MoveDto

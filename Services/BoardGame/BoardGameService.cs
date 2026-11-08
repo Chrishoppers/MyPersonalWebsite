@@ -57,7 +57,7 @@ public sealed class BoardGameService
     {
         var rows = await QueryRowsAsync($@"SELECT Id,RoomCode,GameType,Mode,Status,HostUserId,HostName,HostAvatar,HostIsGuest,HostGuestKey,
             GuestUserId,GuestName,GuestAvatar,GuestIsGuest,GuestGuestKey,GuestConnectionId,AiLevel,AiSide,CurrentTurn,BoardState,
-            MoveCount,Winner,ResultReason,ChatEnabled,CreatedAt,FinishedAt,HostToken,GuestToken FROM BoardGameRooms WHERE RoomCode='{E(code)}' LIMIT 1");
+            MoveCount,Winner,ResultReason,ChatEnabled,CreatedAt,FinishedAt,HostToken,GuestToken,HostReady,GuestReady FROM BoardGameRooms WHERE RoomCode='{E(code)}' LIMIT 1");
         return rows.Count == 0 ? null : MapRoom(rows[0]);
     }
 
@@ -65,7 +65,7 @@ public sealed class BoardGameService
     {
         var rows = await QueryRowsAsync($@"SELECT Id,RoomCode,GameType,Mode,Status,HostUserId,HostName,HostAvatar,HostIsGuest,HostGuestKey,
             GuestUserId,GuestName,GuestAvatar,GuestIsGuest,GuestGuestKey,GuestConnectionId,AiLevel,AiSide,CurrentTurn,BoardState,
-            MoveCount,Winner,ResultReason,ChatEnabled,CreatedAt,FinishedAt,HostToken,GuestToken FROM BoardGameRooms WHERE Id={id} LIMIT 1");
+            MoveCount,Winner,ResultReason,ChatEnabled,CreatedAt,FinishedAt,HostToken,GuestToken,HostReady,GuestReady FROM BoardGameRooms WHERE Id={id} LIMIT 1");
         return rows.Count == 0 ? null : MapRoom(rows[0]);
     }
 
@@ -94,12 +94,21 @@ public sealed class BoardGameService
             ? $"AND (HostGuestKey IS NULL OR HostGuestKey = '' OR HostGuestKey != '{E(guestKey)}')"
             : "AND 1=1";
 
-        var sql = $@"UPDATE BoardGameRooms SET Status='playing',GuestUserId={NullableId(guestUserId)},
+        var sql = $@"UPDATE BoardGameRooms SET GuestUserId={NullableId(guestUserId)},
             GuestName='{E(guestName)}',GuestAvatar='{E(guestAvatar)}',GuestIsGuest={(guestIsGuest ? 1 : 0)},
-            GuestGuestKey='{E(guestKey)}',GuestConnectionId='{E(connectionId)}',GuestToken='{E(guestToken)}',StartedAt='{DateTime.UtcNow:O}'
+            GuestGuestKey='{E(guestKey)}',GuestConnectionId='{E(connectionId)}',GuestToken='{E(guestToken)}',GuestReady=0
             WHERE RoomCode='{E(code)}' AND Status='waiting' AND GuestName IS NULL {userGuard} {guestGuard}";
         return await _db.ExecuteSqlAsync(sql);
     }
+
+    public Task SetPlayerReadyAsync(long roomId, bool isHost, bool ready) =>
+        _db.ExecuteSqlAsync($"UPDATE BoardGameRooms SET {(isHost ? "HostReady" : "GuestReady")}={(ready ? 1 : 0)} WHERE Id={roomId} AND Status='waiting'");
+
+    public Task StartRoomAsync(long roomId) =>
+        _db.ExecuteSqlAsync($"UPDATE BoardGameRooms SET Status='playing',StartedAt='{DateTime.UtcNow:O}' WHERE Id={roomId} AND Status='waiting'");
+
+    public Task KickGuestAsync(string code) =>
+        _db.ExecuteSqlAsync($"UPDATE BoardGameRooms SET GuestUserId=NULL,GuestName=NULL,GuestAvatar=NULL,GuestIsGuest=0,GuestGuestKey=NULL,GuestConnectionId=NULL,GuestToken=NULL,GuestReady=0 WHERE RoomCode='{E(code)}' AND Status='waiting'");
 
     public async Task<bool> SetGuestConnectionAsync(string code, string guestKey, string connectionId)
     {
@@ -127,7 +136,7 @@ public sealed class BoardGameService
     {
         var rows = await QueryRowsAsync($@"SELECT Id,RoomCode,GameType,Mode,Status,HostUserId,HostName,HostAvatar,HostIsGuest,HostGuestKey,
             GuestUserId,GuestName,GuestAvatar,GuestIsGuest,GuestGuestKey,GuestConnectionId,AiLevel,AiSide,CurrentTurn,BoardState,
-            MoveCount,Winner,ResultReason,ChatEnabled,CreatedAt,FinishedAt,HostToken,GuestToken FROM BoardGameRooms
+            MoveCount,Winner,ResultReason,ChatEnabled,CreatedAt,FinishedAt,HostToken,GuestToken,HostReady,GuestReady FROM BoardGameRooms
             WHERE GameType='{E(gameType)}' AND Mode='pvp' AND Status='finished' AND HostIsGuest=0 AND GuestIsGuest=0 ORDER BY FinishedAt DESC LIMIT 50");
         return rows.Select(MapRoom).ToList();
     }
@@ -172,7 +181,8 @@ public sealed class BoardGameService
         GuestConnectionId = NullableText(row[15]), AiLevel = NullableText(row[16]), AiSide = NullableText(row[17]),
         CurrentTurn = Text(row[18]), BoardState = Text(row[19]), MoveCount = Int(row[20]), Winner = NullableText(row[21]),
         ResultReason = NullableText(row[22]), ChatEnabled = Int(row[23]), CreatedAt = NullableText(row[24]), FinishedAt = NullableText(row[25]),
-        HostToken = NullableText(row[26]), GuestToken = NullableText(row[27])
+        HostToken = NullableText(row[26]), GuestToken = NullableText(row[27]),
+        HostReady = Int(row[28]), GuestReady = Int(row[29])
     };
 
     private static string NewRoomCode() => new(Enumerable.Range(0, 6).Select(_ => CodeChars[Random.Shared.Next(CodeChars.Length)]).ToArray());

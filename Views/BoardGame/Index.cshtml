@@ -26,6 +26,11 @@
                 <span class="bg-tags"><span class="bg-tag">国际</span><span class="bg-tag">战略</span><span class="bg-tag">AI 对弈</span></span>
             </button>
         </div>
+        <div class="bg-join-room">
+            <span class="bg-join-label">🚪 加入已有房间</span>
+            <input id="joinCode" class="bg-join-input" maxlength="6" placeholder="输入 6 位房间码" autocomplete="off" />
+            <button type="button" class="bg-btn bg-btn-primary" onclick="joinRoomByCode()">加入</button>
+        </div>
         <p class="bg-lobby-footer"><a href="/Game">← 返回游戏中心</a>　<a href="/BoardGame/Replays">🎬 棋局回放</a></p>
     </div>
 </div>

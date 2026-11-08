@@ -90,6 +90,12 @@
         location.href = `/BoardGame/Play?type=${encodeURIComponent(currentType)}&mode=pvp&code=${encodeURIComponent(currentRoom.roomCode)}&token=${encodeURIComponent(token)}`;
     };
 
+    window.joinRoomByCode = () => {
+        const code = ($('joinCode').value || '').trim().toUpperCase();
+        if (code.length !== 6) { toast('请输入 6 位房间码'); return; }
+        location.href = '/BoardGame/Join/' + encodeURIComponent(code);
+    };
+
     $('modeModal').addEventListener('click', event => { if (event.target === $('modeModal')) closeModal(); });
     $('privacyModal').addEventListener('click', event => { if (event.target === $('privacyModal')) closePrivacyModal(); });
     document.addEventListener('keydown', event => {

@@ -41,19 +41,23 @@ public sealed class BoardGameHub : Hub
             room.Id, room.RoomCode, room.GameType, room.Mode, room.Status,
             room.HostName, room.HostAvatar, room.HostIsGuest, room.GuestName, room.GuestAvatar, room.GuestIsGuest,
             room.AiLevel, room.AiSide, room.CurrentTurn, room.BoardState, room.MoveCount, room.ChatEnabled,
+            room.HostReady, room.GuestReady,
             mySide = side
         };
     }
 
-    public async Task MakeMove(string roomCode, string? from, string to, string? extra = null)
+    public async Task MakeMove(string roomCode, string? from, string to, string? extra = null, string? token = null)
     {
         var gate = RoomLocks.GetOrAdd(roomCode, _ => new SemaphoreSlim(1, 1));
         await gate.WaitAsync();
         try
         {
             var room = await _game.GetRoomAsync(roomCode);
-            var side = GetSide(room, null);
-            if (room is null || side is null || room.Status != "playing" || room.CurrentTurn != side) return;
+            var side = GetSide(room, token);
+            if (room is null) { await Clients.Caller.SendAsync("MoveRejected", "房间不存在"); return; }
+            if (side is null) { await Clients.Caller.SendAsync("MoveRejected", "无权操作该棋局"); return; }
+            if (room.Status != "playing") { await Clients.Caller.SendAsync("MoveRejected", "对局尚未开始"); return; }
+            if (room.CurrentTurn != side) { await Clients.Caller.SendAsync("MoveRejected", "还没轮到您"); return; }
             var engine = _game.GetEngine(room.GameType);
             var move = new BoardMove(from, to, extra);
             var result = engine.TryApplyMove(room.BoardState, side, move, out var newState);
@@ -74,6 +78,11 @@ public sealed class BoardGameHub : Hub
             }
             if (room.Mode == "ai" && next == room.AiSide)
                 await MakeAiMoveAsync(room, engine, newState);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"❌ MakeMove 异常: {ex}");
+            await Clients.Caller.SendAsync("MoveRejected", "走子处理失败：" + ex.Message);
         }
         finally { gate.Release(); }
     }
@@ -117,6 +126,42 @@ public sealed class BoardGameHub : Hub
         var side = GetSide(room, null);
         if (room is null || side is null || room.Status != "playing") return;
         await FinishAndNotify(room, new GameStatus(GameOutcome.Win, NextSide(room.GameType, side), $"{_game.GetEngine(room.GameType).SideName(side)}认输"));
+    }
+
+    // 准备：双方都准备后开始对局
+    public async Task SetReady(string roomCode, string? token = null)
+    {
+        var room = await _game.GetRoomAsync(roomCode);
+        if (room is null) return;
+        var isHost = !string.IsNullOrEmpty(token) && token == room.HostToken;
+        var isGuest = !string.IsNullOrEmpty(token) && token == room.GuestToken;
+        if (!isHost && !isGuest) return;
+
+        await _game.SetPlayerReadyAsync(room.Id, isHost, true);
+        var updated = await _game.GetRoomAsync(roomCode);
+        if (updated is null) return;
+        await Clients.Group(roomCode).SendAsync("RoomUpdated", new
+        {
+            status = updated.Status, guestName = updated.GuestName, guestAvatar = updated.GuestAvatar,
+            guestIsGuest = updated.GuestIsGuest, currentTurn = updated.CurrentTurn, chatEnabled = updated.ChatEnabled,
+            hostReady = updated.HostReady, guestReady = updated.GuestReady
+        });
+        if (updated.HostReady == 1 && updated.GuestReady == 1 && updated.Status == "waiting")
+        {
+            await _game.StartRoomAsync(room.Id);
+            await Clients.Group(roomCode).SendAsync("GameStarted", new { });
+        }
+    }
+
+    // 房主踢出玩家
+    public async Task KickPlayer(string roomCode, string? token = null)
+    {
+        var room = await _game.GetRoomAsync(roomCode);
+        if (room is null) return;
+        var isHost = !string.IsNullOrEmpty(token) && token == room.HostToken;
+        if (!isHost) return;
+        await _game.KickGuestAsync(roomCode);
+        await Clients.Group(roomCode).SendAsync("GuestKicked", new { });
     }
 
     private async Task MakeAiMoveAsync(RoomDto room, IBoardGameEngine engine, string state)

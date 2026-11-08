@@ -67,7 +67,7 @@ const BoardGameClient = (() => {
 
         renderer.mount($('board'), move => {
             if (!room || gameOver || aiThinking || room.status !== 'playing' || room.currentTurn !== mySide) return;
-            connection.invoke('MakeMove', config.roomCode, move.from, move.to, move.extra || null).catch(() => toast('走子发送失败，请检查连接'));
+            connection.invoke('MakeMove', config.roomCode, move.from, move.to, move.extra || null, config.token || null).catch(() => toast('走子发送失败，请检查连接'));
         });
 
         connection = new signalR.HubConnectionBuilder()
@@ -78,7 +78,7 @@ const BoardGameClient = (() => {
         connection.on('RoomUpdated', update => {
             if (!room) return;
             Object.assign(room, update);
-            updatePlayerUI(); updateTurnUI(room.currentTurn);
+            updatePlayerUI(); updateTurnUI(room.currentTurn); updateReadyUI();
         });
         connection.on('MoveMade', move => {
             if (!room) return;
@@ -97,6 +97,8 @@ const BoardGameClient = (() => {
             $('chatInput').placeholder = '聊天已关闭';
         });
         connection.on('GameOver', result => showGameOver(result.winner, result.outcome, result.reason));
+        connection.on('GameStarted', () => { if (room) room.status = 'playing'; updateReadyUI(); updateTurnUI(room && room.currentTurn); toast('🎉 双方已准备，对局开始！'); });
+        connection.on('GuestKicked', () => { if (room) { room.guestName = null; room.guestAvatar = null; room.guestIsGuest = 0; } updatePlayerUI(); updateReadyUI(); toast('对方已被房主移出房间'); });
         connection.onreconnecting(() => { $('turnPill').textContent = '正在重连…'; });
         connection.onreconnected(async () => {
             try { room = await connection.invoke('JoinRoom', config.roomCode, config.token || null); applyRoomState(); toast('已重新连接'); }
@@ -128,6 +130,7 @@ const BoardGameClient = (() => {
         }
         if (room.status === 'waiting') $('turnPill').textContent = '等待对手加入…';
         if (room.status === 'finished') showGameOver(room.winner, room.winner ? 'Win' : 'Draw', room.resultReason);
+        updateReadyUI();
     }
 
     function updatePlayerUI() {
@@ -177,6 +180,39 @@ const BoardGameClient = (() => {
         if (gameOver || !connection) return;
         connection.invoke('Resign', config.roomCode).catch(() => toast('认输请求发送失败'));
     }
+
+    function updateReadyUI() {
+        const readyBtn = $('readyBtn'), kickBtn = $('kickBtn'), resignBtn = $('resignBtn');
+        if (!room) return;
+        const hostSide = config.gameType === 'xiangqi' ? 'red' : config.gameType === 'chess' ? 'white' : 'black';
+        const isHost = mySide === hostSide;
+        const isPvp = room.mode === 'pvp';
+        const waiting = room.status === 'waiting';
+        const hasGuest = !!room.guestName;
+        const myReady = isHost ? room.hostReady === 1 : room.guestReady === 1;
+        if (readyBtn) {
+            readyBtn.style.display = (isPvp && waiting) ? 'inline-flex' : 'none';
+            readyBtn.textContent = myReady ? '✅ 已准备' : '🟢 准备';
+            readyBtn.disabled = !!myReady;
+        }
+        if (kickBtn) kickBtn.style.display = (isPvp && waiting && isHost && hasGuest) ? 'inline-flex' : 'none';
+        if (resignBtn) resignBtn.style.display = (room.status === 'playing') ? 'inline-flex' : 'none';
+    }
+
+    window.setReady = () => {
+        if (!connection) return;
+        connection.invoke('SetReady', config.roomCode, config.token || null).catch(() => toast('准备失败，请重试'));
+    };
+
+    window.kickPlayer = () => {
+        if (!connection || !confirm('确定将对方移出房间吗？')) return;
+        connection.invoke('KickPlayer', config.roomCode, config.token || null).catch(() => toast('踢出失败'));
+    };
+
+    window.closeGameOver = () => {
+        const layer = $('gameOverLayer');
+        if (layer) { layer.classList.remove('show'); layer.setAttribute('aria-hidden', 'true'); }
+    };
 
     function showGameOver(winner, outcome, reason) {
         if (gameOver) return;

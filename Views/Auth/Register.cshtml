@@ -233,6 +233,13 @@
         transform-origin: center center;
     }
 
+    /* 本地 SVG 图形验证码 */
+    .svg-captcha-wrapper { display: flex; align-items: center; gap: 0.5rem; }
+    .svg-captcha-wrapper img { height: 52px; border-radius: 10px; cursor: pointer; flex-shrink: 0; background: #fff; border: 1px solid rgba(255,255,255,0.06); }
+    .svg-captcha-wrapper input { flex: 1; min-width: 0; padding: 0.75rem 0.9rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.06); background: rgba(255,255,255,0.03); color: #fff; font-size: 0.95rem; letter-spacing: 0.1em; text-transform: uppercase; outline: none; }
+    .svg-captcha-wrapper input:focus { border-color: rgba(108,60,225,0.2); }
+    .svg-captcha-wrapper .captcha-refresh { flex-shrink: 0; width: 40px; height: 40px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.03); color: rgba(255,255,255,0.5); cursor: pointer; font-size: 1rem; }
+
     /* 响应式 */
     @@media (max-width: 480px) {
         .auth-card {
@@ -320,6 +327,16 @@
                 </div>
             </div>
 
+            <!-- 本地图形验证码（备用方案） -->
+            <div class="form-group">
+                <label>备用验证码 <span style="font-weight:400;opacity:.45;font-size:.72rem;">（上方 reCAPTCHA 无法使用时填写此项）</span></label>
+                <div class="svg-captcha-wrapper">
+                    <img id="svgCaptchaImg" src="/Captcha/Index" alt="图形验证码" title="点击刷新" onclick="refreshSvgCaptcha()" />
+                    <input type="text" id="svgCaptcha" name="svgCaptcha" placeholder="输入字符" maxlength="6" autocomplete="off" />
+                    <button type="button" class="captcha-refresh" onclick="refreshSvgCaptcha()">🔄</button>
+                </div>
+            </div>
+
             <button type="submit" class="btn-primary" id="submitBtn">注册</button>
 
             <div class="footer-links">
@@ -374,14 +391,21 @@
         reader.readAsDataURL(file);
     });
 
+    // 刷新本地图形验证码
+    function refreshSvgCaptcha() {
+        document.getElementById('svgCaptchaImg').src = '/Captcha/Index?t=' + Date.now();
+        document.getElementById('svgCaptcha').value = '';
+    }
+
     // 提交表单
     document.getElementById('registerForm').addEventListener('submit', function(e) {
         const btn = document.getElementById('submitBtn');
         const token = document.getElementById('captchaToken').value;
+        const svg = document.getElementById('svgCaptcha').value;
         
-        if (!token) {
+        if (!token && !svg) {
             e.preventDefault();
-            alert('请先完成验证码验证');
+            alert('请完成验证码验证（reCAPTCHA 或备用图形验证码任选其一）');
             return false;
         }
         

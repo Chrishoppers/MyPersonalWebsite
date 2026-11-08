@@ -26,11 +26,16 @@
             <section class="bg-panel bg-chat"><h2 class="bg-panel-title">对局聊天</h2><div class="bg-chat-list" id="chatList" aria-live="polite"></div>
                 <div class="bg-chat-input"><input id="chatInput" maxlength="200" placeholder="输入消息…" autocomplete="off" /><button type="button" id="sendChatBtn">发送</button></div>
             </section>
-            <section class="bg-panel bg-action-panel"><button type="button" class="bg-btn bg-btn-danger" id="resignBtn">🏳️ 认输</button><button type="button" class="bg-btn" onclick="location.href='/BoardGame/Index'">返回大厅</button></section>
+            <section class="bg-panel bg-action-panel">
+                <button type="button" class="bg-btn" id="readyBtn" style="display:none;" onclick="setReady()">🟢 准备</button>
+                <button type="button" class="bg-btn bg-btn-danger" id="kickBtn" style="display:none;" onclick="kickPlayer()">🚫 踢出玩家</button>
+                <button type="button" class="bg-btn bg-btn-danger" id="resignBtn">🏳️ 认输</button>
+                <button type="button" class="bg-btn" onclick="location.href='/BoardGame/Index'">返回大厅</button>
+            </section>
         </aside>
     </div>
 </div>
-<div class="bg-gameover" id="gameOverLayer" aria-hidden="true"><div class="bg-gameover-card"><div class="trophy" id="goIcon">🏆</div><h2 id="goTitle">对局结束</h2><p id="goReason"></p><button type="button" class="bg-btn bg-btn-primary" onclick="location.href='/BoardGame/Index'">返回大厅</button></div></div>
+<div class="bg-gameover" id="gameOverLayer" aria-hidden="true"><div class="bg-gameover-card"><div class="trophy" id="goIcon">🏆</div><h2 id="goTitle">对局结束</h2><p id="goReason"></p><button type="button" class="bg-btn" onclick="closeGameOver()">👁 观看棋盘</button><button type="button" class="bg-btn bg-btn-primary" onclick="location.href='/BoardGame/Index'">返回大厅</button></div></div>
 <div class="bg-error" id="errorOverlay" aria-hidden="true">
     <div class="bg-error-card">
         <div class="bg-error-icon">⚠️</div>

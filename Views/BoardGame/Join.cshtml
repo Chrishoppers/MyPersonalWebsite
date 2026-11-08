@@ -139,6 +139,8 @@
             const response = await fetch('/api/boardgame/me');
             if (response.ok && !(await response.json()).isGuest) $('joinAccountBtn').hidden = false;
         } catch { }
+        // 进入加入页即要求同意隐私声明（未同意则弹窗）
+        if (!checkPrivacy()) openPrivacyModal();
     })();
     $('privacyModal').addEventListener('click', event => { if (event.target === $('privacyModal')) closePrivacyModal(); });
     document.addEventListener('keydown', event => { if (event.key === 'Escape') closePrivacyModal(); });

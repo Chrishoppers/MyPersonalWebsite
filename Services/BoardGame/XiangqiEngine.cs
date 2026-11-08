@@ -114,6 +114,7 @@ public sealed class XiangqiEngine : IBoardGameEngine
                 {
                     var legX = x + (Math.Abs(dx) == 2 ? dx / 2 : 0);
                     var legY = y + (Math.Abs(dy) == 2 ? dy / 2 : 0);
+                    if (legX < 0 || legX >= Width || legY < 0 || legY >= Height) continue; // 边界保护，避免马在边线越界
                     if (cells[legY][legX].Length == 0) Add(x + dx, y + dy);
                 }
                 break;
