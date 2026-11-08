@@ -31,11 +31,18 @@ namespace MyPersonalWebsite.Controllers
 
             if (userId.HasValue)
             {
-                var likes = await _context.MessageLikes
-                    .Where(l => l.UserId == userId.Value)
-                    .Select(l => l.MessageId)
-                    .ToListAsync();
-                likedIds = new HashSet<int>(likes);
+                try
+                {
+                    var likes = await _context.MessageLikes
+                        .Where(l => l.UserId == userId.Value)
+                        .Select(l => l.MessageId)
+                        .ToListAsync();
+                    likedIds = new HashSet<int>(likes);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"⚠️ 读取本地点赞记录失败（不影响留言墙显示）: {ex.Message}");
+                }
             }
 
             ViewBag.LikedIds = likedIds;
