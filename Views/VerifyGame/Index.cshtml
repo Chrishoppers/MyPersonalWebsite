@@ -470,6 +470,20 @@
         .game-over .btn-group .btn-restart,
         .game-over .btn-group .btn-home { padding: 0.4rem 1.5rem; font-size: 0.75rem; }
     }
+
+    /* ===== 高科技感增强 ===== */
+    .game-header h1 { animation: vgTitleGlow 3s ease-in-out infinite; }
+    @@keyframes vgTitleGlow { 0%,100% { filter: drop-shadow(0 0 6px rgba(139,92,246,0.18)); } 50% { filter: drop-shadow(0 0 22px rgba(236,72,153,0.45)); } }
+    .challenge-card { box-shadow: 0 8px 40px rgba(0,0,0,0.2), 0 0 50px -22px rgba(139,92,246,0.6); }
+    .challenge-card::after { content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1px; background: linear-gradient(135deg, rgba(139,92,246,0.5), rgba(236,72,153,0.25), transparent 60%); -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite: xor; mask-composite: exclude; pointer-events: none; opacity: 0; transition: opacity 0.4s ease; }
+    .challenge-card:hover::after { opacity: 1; }
+    .timer-bar .timer-fill { box-shadow: 0 0 12px rgba(245,158,11,0.55); }
+    .status-item .value.score { text-shadow: 0 0 12px rgba(245,158,11,0.55); }
+    .status-item .value.combo { text-shadow: 0 0 12px rgba(52,211,153,0.55); }
+    .status-item .value.level { text-shadow: 0 0 12px rgba(139,92,246,0.55); }
+    .game-over .final-score { text-shadow: 0 0 26px rgba(245,158,11,0.65); }
+    .option-btn, .color-option, .ab-key-btn { box-shadow: 0 4px 20px -10px rgba(139,92,246,0.4); }
+    .btn-restart, .btn-home { box-shadow: 0 8px 28px -12px rgba(139,92,246,0.55); }
 </style>
 
 <div class="game-container">
@@ -529,11 +543,23 @@
             <div class="perm-row">
                 <div class="perm-label">
                     <span class="icon">🎤</span> 麦克风
-                    <span class="perm-desc">语音控制 + 专注度检测</span>
+                    <span class="perm-desc">音量检测 + 专注度检测</span>
                 </div>
                 <div class="perm-toggle">
                     <label class="switch">
                         <input type="checkbox" id="micToggle" checked onchange="updateHardwareTest()">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+            <div class="perm-row">
+                <div class="perm-label">
+                    <span class="icon">🗣️</span> 语音识别
+                    <span class="perm-desc">说指令即可操作（可关闭，仅保留麦克风检测）</span>
+                </div>
+                <div class="perm-toggle">
+                    <label class="switch">
+                        <input type="checkbox" id="speechToggle" checked onchange="updateHardwareTest()">
                         <span class="slider"></span>
                     </label>
                 </div>
@@ -620,7 +646,7 @@
         level: 1, score: 0, lives: 3, combo: 0, maxCombo: 0, passed: 0,
         cheatCount: 0, isPlaying: false, isAnswered: false, timer: null, timeLeft: 15,
         totalLevels: 100, currentChallenge: null, isGameOver: false,
-        micEnabled: true,
+        micEnabled: true, speechEnabled: true,
         penaltyCheat: 5, penaltyMic: 4, penaltyCam: 2,
         answerTimes: [], questionStartTime: null
     };
@@ -642,11 +668,15 @@
     // ============================================================
     function updateHardwareTest() {
         var micOn = document.getElementById('micToggle').checked;
+        var speechToggle = document.getElementById('speechToggle');
         if (!micOn) {
             hardwareTest.mic.status = 'pending';
             hardwareTest.mic.ready = false;
             document.getElementById('micTestStatus').className = 'test-status pending';
             document.getElementById('micTestStatus').textContent = '⏳ 已关闭';
+            if (speechToggle) { speechToggle.checked = false; speechToggle.disabled = true; }
+        } else {
+            if (speechToggle) { speechToggle.disabled = false; }
         }
         updateStartButton();
     }
@@ -738,6 +768,7 @@
     // ============================================================
     function confirmPermissions() {
         gameState.micEnabled = document.getElementById('micToggle').checked;
+        gameState.speechEnabled = gameState.micEnabled && document.getElementById('speechToggle').checked;
         if (gameState.micEnabled && !hardwareTest.mic.ready) {
             showToast('⚠️ 请先测试麦克风', 'warning');
             return;
@@ -745,16 +776,17 @@
 
         document.getElementById('permissionOverlay').classList.remove('active');
 
-        // 显示语音教程（权限确认后弹出）
-        setTimeout(function() {
-            showVoiceTutorial();
-        }, 500);
+        if (gameState.speechEnabled) {
+            setTimeout(function() { showVoiceTutorial(); }, 500);
+        }
 
         if (gameState.micEnabled) {
-            VoiceService.init();
-            VoiceService.setupEvents();
-            VoiceService.start();
             document.getElementById('micIndicator').className = 'indicator mic active';
+            if (gameState.speechEnabled) {
+                VoiceService.init();
+                VoiceService.setupEvents();
+                VoiceService.start();
+            }
         } else {
             document.getElementById('micIndicator').className = 'indicator mic inactive';
             showToast('⚠️ 麦克风已关闭，每关将扣除 4 分', 'warning');
@@ -765,6 +797,7 @@
 
     function skipPermissions() {
         gameState.micEnabled = false;
+        gameState.speechEnabled = false;
         document.getElementById('permissionOverlay').classList.remove('active');
         document.getElementById('micIndicator').className = 'indicator mic inactive';
         showToast('⚠️ 已跳过麦克风，每关将扣除 4 分', 'warning');
@@ -1339,7 +1372,7 @@
         document.getElementById('typeBadge').style.display = 'block';
         document.getElementById('typeNameDisplay').textContent = '📝 第 1 关 · 入门';
 
-        if (gameState.micEnabled && !document.querySelector('.voice-status-bar')) {
+        if (gameState.micEnabled && gameState.speechEnabled && !document.querySelector('.voice-status-bar')) {
             var container = document.getElementById('gameContent');
             var bar = document.createElement('div');
             bar.className = 'voice-status-bar';
@@ -1368,7 +1401,7 @@
         document.getElementById('feedback').style.display = 'none';
         document.getElementById('gameContent').innerHTML = '';
 
-        if (gameState.micEnabled && !document.querySelector('.voice-status-bar')) {
+        if (gameState.micEnabled && gameState.speechEnabled && !document.querySelector('.voice-status-bar')) {
             var container = document.getElementById('gameContent');
             var bar = document.createElement('div');
             bar.className = 'voice-status-bar';
@@ -1413,7 +1446,7 @@
 
         var container = document.getElementById('gameContent');
 
-        if (gameState.micEnabled && !document.querySelector('.voice-status-bar')) {
+        if (gameState.micEnabled && gameState.speechEnabled && !document.querySelector('.voice-status-bar')) {
             var bar = document.createElement('div');
             bar.className = 'voice-status-bar';
             bar.id = 'voiceStatusBar';
@@ -2049,7 +2082,7 @@
         }
 
         setupPuzzleSwipe(grid);
-        startTimer(60);
+        startTimer(gameState.currentChallenge && gameState.currentChallenge.timeLimit ? gameState.currentChallenge.timeLimit : 60);
     }
 
     function setupPuzzleSwipe(grid) {
@@ -2219,19 +2252,21 @@
         var elapsed = (Date.now() - gameState.questionStartTime) / 1000;
         gameState.answerTimes.push({ elapsed: elapsed, isCorrect: isCorrect, level: gameState.level });
 
-        // 作弊检测：秒答
+        // 作弊检测：秒答（仅提示+扣分，不阻断后续流程）
         if (isCorrect && elapsed < 1.0) {
-            triggerCheatPenalty('检测到异常快速答题', 5);
-            return;
+            gameState.cheatCount++;
+            gameState.score = Math.max(0, gameState.score - gameState.penaltyCheat);
+            showToast('⚠️ 检测到异常快速答题，扣除 ' + gameState.penaltyCheat + ' 分', 'warning');
         }
 
-        // 作弊检测：超慢
+        // 作弊检测：超慢（仅提示+扣分，不阻断后续流程）
         var recent = gameState.answerTimes.slice(-10);
         if (recent.length >= 5) {
             var avgTime = recent.reduce(function(a, b) { return a + b.elapsed; }, 0) / recent.length;
             if (elapsed > avgTime * 3 && elapsed > 15) {
-                triggerCheatPenalty('检测到异常缓慢答题', 5);
-                return;
+                gameState.cheatCount++;
+                gameState.score = Math.max(0, gameState.score - gameState.penaltyCheat);
+                showToast('⚠️ 检测到异常缓慢答题，扣除 ' + gameState.penaltyCheat + ' 分', 'warning');
             }
         }
 
@@ -2273,6 +2308,7 @@
     function startTimer(limit) {
         clearInterval(gameState.timer);
         gameState.timeLeft = limit || 15;
+        document.getElementById('timerSection').style.display = 'block';
         updateTimerDisplay(limit || 15);
 
         gameState.timer = setInterval(function() {
@@ -2416,8 +2452,8 @@
         - (gameState.passed * gameState.penaltyMic);
     finalScore = Math.max(0, finalScore);
     
-    // 5. 保存分数
-    saveScore(finalScore);
+    // 5. 保存分数（保存完成后再刷新排行榜，避免竞态导致排名不更新）
+    saveScore(finalScore).then(function() { loadRanking(); });
     
     // 6. 渲染结束页面
     if (card) {
@@ -2446,8 +2482,7 @@
         `;
     }
     
-    // 7. 加载排行榜（不阻塞）
-    loadRanking();
+    // 7. 排行榜已在保存分数完成后刷新
 }
 
    function gameWin() {
@@ -2473,8 +2508,8 @@
         - (gameState.passed * gameState.penaltyMic);
     finalScore = Math.max(0, finalScore);
     
-    // 5. 保存分数
-    saveScore(finalScore);
+    // 5. 保存分数（保存完成后再刷新排行榜，避免竞态导致排名不更新）
+    saveScore(finalScore).then(function() { loadRanking(); });
     
     // 6. 渲染通关页面
     if (card) {
@@ -2503,12 +2538,11 @@
         `;
     }
     
-    // 7. 加载排行榜
-    loadRanking();
+    // 7. 排行榜已在保存分数完成后刷新
 }
 
     function saveScore(score) {
-        fetch('/VerifyGame/SaveScore', {
+        return fetch('/VerifyGame/SaveScore', {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'RequestVerificationToken': token },
             body: 'score=' + score + '&level=' + gameState.level + '&maxCombo=' + gameState.maxCombo + '&passed=' + gameState.passed
@@ -2657,9 +2691,9 @@
         },
         // 第15页 - 题型13：真假判断
         {
-            title: '⚖️ 题型 13/20：真假判断',
-            desc: '判断陈述是 <strong>真的</strong> 还是 <strong>假的</strong>。<br><br>📌 语音操作：说 <span class="cmd">选真的</span> 或 <span class="cmd">第一个</span><br>💡 仔细思考再作答！',
-            demo: '⚖️ 示例："地球是平的" → 假的'
+            title: '⚖️ 题型 13/20：逻辑判断',
+            desc: '判断数学与逻辑陈述是 <strong>真的</strong> 还是 <strong>假的</strong>。<br><br>📌 语音操作：说 <span class="cmd">选真的</span> 或 <span class="cmd">第一个</span><br>💡 涉及质数、不等式、几何、数论等，仔细推理！',
+            demo: '⚖️ 示例："所有质数都是奇数" → 假的（2 是质数）'
         },
         // 第16页 - 题型14：华容道
         {

@@ -1829,9 +1829,12 @@ public async Task<IActionResult> GetRanking()
         // ============================================================
         private object GenerateTrueFalse(int level, int difficulty, int typesCompleted)
         {
+            // 提升难度：入门阶段也使用更高难度的数学/逻辑题，避免“地球是球体”这类送分题
+            int effectiveDifficulty = Math.Min(100, difficulty + 20);
             var pool = _trueFalseQuestions.Where(q =>
-                difficulty >= q.minLevel && difficulty <= q.maxLevel).ToArray();
+                effectiveDifficulty >= q.minLevel && effectiveDifficulty <= q.maxLevel).ToArray();
 
+            if (pool.Length == 0) pool = _trueFalseQuestions.Where(q => q.minLevel >= 21).ToArray();
             if (pool.Length == 0) pool = _trueFalseQuestions;
 
             var selected = pool[_random.Next(pool.Length)];
@@ -1860,11 +1863,11 @@ public async Task<IActionResult> GetRanking()
         // ============================================================
         private object GeneratePuzzle(int level, int difficulty, int typesCompleted)
         {
-            bool use4x4 = level >= 51;
-            int size = use4x4 ? 4 : 3;
+            // 前端华容道渲染仅支持 3×3；固定为 3×3，避免高关卡出现 4×4 导致无法完成
+            int size = 3;
 
             var puzzle = GeneratePuzzleBoard(size, difficulty);
-            int timeLimit = Math.Min(use4x4 ? 180 : 120, 30 + difficulty / 2 + (use4x4 ? 60 : 0));
+            int timeLimit = Math.Min(120, 30 + difficulty / 2);
 
             return new Dictionary<string, object>
             {

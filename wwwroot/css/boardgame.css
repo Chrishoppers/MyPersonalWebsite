@@ -13,9 +13,6 @@
     --bg-glow: 0 20px 60px -20px rgba(139,92,246,.35);
 }
 
-/* 强制深色底：覆盖任何可能的白底（含 body 越界滚动区域） */
-html, body { background-color: #0a0a0f !important; }
-.bg-body, .bg-body::before, .bg-body::after { background-color: #0a0a0f; }
 
 .bg-body, .bg-body * { box-sizing: border-box; }
 .bg-body {
@@ -135,6 +132,15 @@ button.bg-move-item { cursor: pointer; }
 .bg-privacy-card li { margin: .35rem 0; }
 .bg-privacy-actions { display: flex; justify-content: center; gap: .75rem; }
 .bg-privacy-actions .bg-btn { min-width: 145px; }
+.bg-privacy-modal { width: min(720px, 94vw); }
+.bg-privacy-scroll { max-height: 56vh; overflow-y: auto; margin-bottom: 1.3rem; padding-right: .6rem; color: var(--bg-muted); font-size: .86rem; line-height: 1.75; }
+.bg-privacy-scroll::-webkit-scrollbar { width: 5px; }
+.bg-privacy-scroll::-webkit-scrollbar-thumb { background: rgba(139,92,246,.2); border-radius: 10px; }
+.bg-privacy-scroll h4 { margin: 1.1rem 0 .4rem; padding-top: .7rem; border-top: 1px solid var(--bg-border); color: #fff; font-size: .95rem; }
+.bg-privacy-scroll h4:first-child { margin-top: 0; padding-top: 0; border-top: 0; }
+.bg-privacy-scroll p, .bg-privacy-scroll ul { margin: .3rem 0; }
+.bg-privacy-scroll ul { padding-left: 1.3rem; }
+.bg-privacy-scroll li { margin: .25rem 0; }
 .bg-join-page { max-width: 620px; }
 .bg-join-panel { gap: .75rem; padding: 1.4rem; }
 .bg-join-panel > .bg-btn { width: 100%; min-height: 50px; }

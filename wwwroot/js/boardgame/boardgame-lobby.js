@@ -33,10 +33,9 @@
 
     window.openMode = async (type, title) => {
         if (!(await hasPrivacyAgreement())) {
-            if (confirm('开始对局前请先阅读并同意隐私声明。现在前往阅读吗？')) {
-                sessionStorage.setItem('bg_pending_game', JSON.stringify({ type, title }));
-                location.href = `/BoardGame/Privacy?returnUrl=${readReturnUrl()}`;
-            }
+            sessionStorage.setItem('bg_pending_game', JSON.stringify({ type, title }));
+            $('privacyModal').classList.add('show');
+            $('privacyModal').setAttribute('aria-hidden', 'false');
             return;
         }
         openModeModal(type, title);
@@ -45,6 +44,28 @@
     window.closeModal = () => {
         $('modeModal').classList.remove('show');
         $('modeModal').setAttribute('aria-hidden', 'true');
+    };
+
+    window.closePrivacyModal = () => {
+        $('privacyModal').classList.remove('show');
+        $('privacyModal').setAttribute('aria-hidden', 'true');
+        sessionStorage.removeItem('bg_pending_game');
+    };
+
+    window.agreePrivacy = async () => {
+        try {
+            const response = await fetch('/api/boardgame/privacy-agree', { method: 'POST', credentials: 'same-origin' });
+            if (response.ok) await response.json().catch(() => ({}));
+        } catch { }
+        try { localStorage.setItem('bg_privacy_agreed_v1', '1'); } catch { }
+        $('privacyModal').classList.remove('show');
+        $('privacyModal').setAttribute('aria-hidden', 'true');
+        const pending = sessionStorage.getItem('bg_pending_game');
+        sessionStorage.removeItem('bg_pending_game');
+        try {
+            const parsed = JSON.parse(pending);
+            if (parsed && parsed.type) openModeModal(parsed.type, parsed.title || parsed.type);
+        } catch { }
     };
 
     window.startMatch = async kind => {
@@ -90,7 +111,12 @@
     };
 
     $('modeModal').addEventListener('click', event => { if (event.target === $('modeModal')) closeModal(); });
-    document.addEventListener('keydown', event => { if (event.key === 'Escape') closeModal(); });
+    $('privacyModal').addEventListener('click', event => { if (event.target === $('privacyModal')) closePrivacyModal(); });
+    document.addEventListener('keydown', event => {
+        if (event.key !== 'Escape') return;
+        if ($('privacyModal').classList.contains('show')) closePrivacyModal();
+        else closeModal();
+    });
 
     // 从隐私声明同意后返回大厅时，自动进入此前选择的棋类的模式选择
     (async () => {

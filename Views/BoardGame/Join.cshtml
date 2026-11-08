@@ -24,8 +24,35 @@
                 </div>
                 <button type="button" class="bg-btn bg-btn-primary" onclick="guestJoin()">✓ 以游客身份加入</button>
             </div>
-            <p class="bg-join-privacy">继续加入即表示你已阅读并同意<a href="/BoardGame/Privacy?returnUrl=%2FBoardGame%2FJoin%2F@code">棋盘对局隐私声明</a>。</p>
+            <p class="bg-join-privacy">继续加入即表示你已阅读并同意<a href="javascript:void(0)" onclick="openPrivacyModal()">棋盘对局隐私声明</a>。</p>
         </section>
+    </div>
+</div>
+<div class="bg-modal-mask" id="privacyModal" aria-hidden="true">
+    <div class="bg-modal bg-privacy-modal" role="dialog" aria-modal="true" aria-labelledby="privacyModalTitle">
+        <button type="button" class="bg-modal-close" onclick="closePrivacyModal()" aria-label="关闭">×</button>
+        <h3 id="privacyModalTitle">🔒 隐私声明与使用说明</h3>
+        <p class="bg-modal-help" style="margin-top:-1rem;">棋盘对局功能 · 版本 v1</p>
+        <div class="bg-privacy-scroll">
+            <h4>一、收集和处理的信息</h4>
+            <p>使用在线对局时，系统需要处理房间码、棋类、棋局状态、走子、对局结果、聊天内容及创建时间。登录玩家使用账号昵称和用户编号；游客使用临时昵称、Emoji 头像和随机访客标识（非实名，无法定位真实身份）。</p>
+            <h4>二、AI 与第三方服务</h4>
+            <p>聊天文本会发送给 DeepSeek AI 做内容审核；AI 对弈会把棋类、棋盘状态和合法走法发送给 DeepSeek 以生成落子。请求不主动包含账号密码等身份信息。</p>
+            <h4>三、存储与共享</h4>
+            <p>棋局、聊天与同意记录保存在 Turso 数据库，暂无自动删除期限。请勿在聊天中发送密码、联系方式等敏感信息。对局信息会提供给同房间玩家。</p>
+            <h4>四、聊天审核与处罚</h4>
+            <p>聊天文本会进行"和谐度"评分，低于阈值（默认 50 分）的消息被拦截；累计多次违规会关闭聊天，并对该局作"平局"或"判负"处理。</p>
+            <h4>五、游客与账号</h4>
+            <p>游客身份依赖站点会话与浏览器本地存储，清除后可能无法继续使用原游客身份。登录用户的棋局会与账号关联。</p>
+            <h4>六、你的权利</h4>
+            <p>未同意前不能创建或加入对局；停止使用即退出后续处理。可清理浏览器本地存储撤销"已同意"标记，或通过网站首页联系方式申请处理账号关联数据。</p>
+            <h4>七、功能限制与声明更新</h4>
+            <p>国际象棋当前版本不支持易位和吃过路兵；AI 棋力仅供娱乐。功能或数据处理方式变化时本声明可能更新，请留意版本号。</p>
+        </div>
+        <div class="bg-privacy-actions">
+            <button type="button" class="bg-btn bg-btn-ghost" onclick="closePrivacyModal()">拒绝</button>
+            <button type="button" class="bg-btn bg-btn-primary" onclick="agreePrivacy()">✓ 我已阅读并同意</button>
+        </div>
     </div>
 </div>
 <div class="bg-toast" id="toast" role="status" aria-live="polite"></div>
@@ -48,12 +75,35 @@
             return result.agreed;
         } catch { return false; }
     }
+    let afterAgree = null;
+    function openPrivacyModal() {
+        $('privacyModal').classList.add('show');
+        $('privacyModal').setAttribute('aria-hidden', 'false');
+    }
+    function closePrivacyModal() {
+        $('privacyModal').classList.remove('show');
+        $('privacyModal').setAttribute('aria-hidden', 'true');
+        afterAgree = null;
+    }
+    async function agreePrivacy() {
+        try {
+            const response = await fetch('/api/boardgame/privacy-agree', { method: 'POST', credentials: 'same-origin' });
+            if (response.ok) await response.json().catch(() => ({}));
+        } catch { }
+        try { localStorage.setItem('bg_privacy_agreed_v1', '1'); } catch { }
+        $('privacyModal').classList.remove('show');
+        $('privacyModal').setAttribute('aria-hidden', 'true');
+        const action = afterAgree;
+        afterAgree = null;
+        if (action) action();
+    }
     function loginJoin() {
         location.href = `/Auth/Login?returnUrl=${encodeURIComponent(`/BoardGame/Join/${ROOM_CODE}`)}`;
     }
     async function showGuestForm() {
         if (!(await checkPrivacy())) {
-            location.href = `/BoardGame/Privacy?returnUrl=${encodeURIComponent(`/BoardGame/Join/${ROOM_CODE}`)}`;
+            afterAgree = () => { $('guestForm').hidden = false; buildAvatarPicker(); };
+            openPrivacyModal();
             return;
         }
         $('guestForm').hidden = false;
@@ -74,9 +124,13 @@
     $('guestName').addEventListener('input', event => { $('previewName').textContent = `游客_${event.target.value || '无名'}`; });
     async function submitJoin(asGuest) {
         if (!(await checkPrivacy())) {
-            location.href = `/BoardGame/Privacy?returnUrl=${encodeURIComponent(`/BoardGame/Join/${ROOM_CODE}`)}`;
+            afterAgree = () => doJoin(asGuest);
+            openPrivacyModal();
             return;
         }
+        await doJoin(asGuest);
+    }
+    async function doJoin(asGuest) {
         try {
             const response = await fetch('/api/boardgame/join', {
                 method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -95,4 +149,6 @@
             if (response.ok && !(await response.json()).isGuest) $('joinAccountBtn').hidden = false;
         } catch { }
     })();
+    $('privacyModal').addEventListener('click', event => { if (event.target === $('privacyModal')) closePrivacyModal(); });
+    document.addEventListener('keydown', event => { if (event.key === 'Escape') closePrivacyModal(); });
 </script>
