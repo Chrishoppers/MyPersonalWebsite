@@ -2,7 +2,7 @@
     ViewData["Title"] = "棋局回放";
     var roomId = ViewBag.RoomId is long value ? value : Convert.ToInt64(ViewBag.RoomId ?? 0);
 }
-<link rel="stylesheet" href="~/css/boardgame.css" />
+<link rel="stylesheet" href="~/css/boardgame.css" asp-append-version="true" />
 <div class="bg-body">
     <div class="bg-play bg-replay-layout">
         <section class="bg-play-main">

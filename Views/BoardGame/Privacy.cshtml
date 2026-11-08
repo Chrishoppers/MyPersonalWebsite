@@ -3,7 +3,7 @@
     var returnUrl = ViewBag.ReturnUrl as string ?? "/BoardGame/Index";
     var safeReturnUrl = Url.IsLocalUrl(returnUrl) ? returnUrl : "/BoardGame/Index";
 }
-<link rel="stylesheet" href="~/css/boardgame.css" />
+<link rel="stylesheet" href="~/css/boardgame.css" asp-append-version="true" />
 <div class="bg-body">
     <div class="bg-privacy">
         <h1>隐私声明与使用说明</h1>

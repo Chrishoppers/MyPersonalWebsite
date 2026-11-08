@@ -13,6 +13,9 @@
     --bg-glow: 0 20px 60px -20px rgba(139,92,246,.35);
 }
 
+/* 强制深色底：覆盖任何可能的白底（含 body 越界滚动区域） */
+html, body { background-color: #0a0a0f !important; }
+.bg-body { background-color: #0a0a0f !important; }
 
 .bg-body, .bg-body * { box-sizing: border-box; }
 .bg-body {

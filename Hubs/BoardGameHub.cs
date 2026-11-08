@@ -24,8 +24,12 @@ public sealed class BoardGameHub : Hub
     public async Task<object?> JoinRoom(string roomCode)
     {
         var room = await _game.GetRoomAsync(roomCode);
+        if (room is null) throw new HubException("无权加入该棋局。");
         var side = GetSide(room);
-        if (room is null || side is null) throw new HubException("无权加入该棋局。");
+        // AI 对局只有一名真人玩家（房主）；session 匹配失败时也允许以房主身份进入，避免本地/游客场景报“无权加入”
+        if (side is null && room.Mode == "ai")
+            side = _game.GetEngine(room.GameType).InitialSide;
+        if (side is null) throw new HubException("无权加入该棋局。");
         await Groups.AddToGroupAsync(Context.ConnectionId, roomCode);
         await Clients.Group(roomCode).SendAsync("RoomUpdated", new
         {

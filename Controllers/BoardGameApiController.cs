@@ -66,14 +66,22 @@ public sealed class BoardGameApiController : Controller
     [HttpPost("create")]
     public async Task<IActionResult> Create([FromBody] CreateRequest request)
     {
-        if (!GameTypes.Contains(request.GameType) || request.Mode is not ("ai" or "pvp")) return BadRequest(new { error = "棋类或对局模式无效。" });
-        var level = request.Mode == "ai" ? request.AiLevel is "easy" or "medium" or "hard" ? request.AiLevel : "medium" : null;
-        var aiSide = request.Mode == "ai" ? request.GameType == "gomoku" ? "white" : "black" : null;
-        var guest = !UserId.HasValue;
-        var displayName = guest ? EnsureGuestName() : Username;
-        var avatar = guest ? EnsureGuestAvatar() : "😊";
-        var created = await _game.CreateRoomAsync(request.GameType, request.Mode, level, aiSide, UserId, displayName, avatar, guest, guest ? GuestKey : null);
-        return Ok(new { roomId = created.Id, roomCode = created.Code, joinUrl = BuildJoinUrl(created.Code), qrBase64 = _qr.GeneratePngBase64(BuildJoinUrl(created.Code)) });
+        try
+        {
+            if (!GameTypes.Contains(request.GameType) || request.Mode is not ("ai" or "pvp")) return BadRequest(new { error = "棋类或对局模式无效。" });
+            var level = request.Mode == "ai" ? request.AiLevel is "easy" or "medium" or "hard" ? request.AiLevel : "medium" : null;
+            var aiSide = request.Mode == "ai" ? request.GameType == "gomoku" ? "white" : "black" : null;
+            var guest = !UserId.HasValue;
+            var displayName = guest ? EnsureGuestName() : Username;
+            var avatar = guest ? EnsureGuestAvatar() : "😊";
+            var created = await _game.CreateRoomAsync(request.GameType, request.Mode, level, aiSide, UserId, displayName, avatar, guest, guest ? GuestKey : null);
+            return Ok(new { roomId = created.Id, roomCode = created.Code, joinUrl = BuildJoinUrl(created.Code), qrBase64 = _qr.GeneratePngBase64(BuildJoinUrl(created.Code)) });
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"❌ 创建棋局房间失败: {ex.Message}");
+            return StatusCode(500, new { error = "创建对局失败：数据库连接异常，请检查 Turso 是否已配置且可用。" });
+        }
     }
 
     public sealed class MatchRequest { public string GameType { get; set; } = ""; }
@@ -81,27 +89,35 @@ public sealed class BoardGameApiController : Controller
     [HttpPost("match")]
     public async Task<IActionResult> Match([FromBody] MatchRequest request)
     {
-        if (!GameTypes.Contains(request.GameType)) return BadRequest(new { error = "棋类无效。" });
-        var waiting = await _game.FindWaitingRoomForUserAsync(request.GameType, UserId, GuestKey);
-        if (waiting is not null)
+        try
         {
-            return Ok(new { roomCode = waiting.RoomCode, isCreator = true, gameType = waiting.GameType });
+            if (!GameTypes.Contains(request.GameType)) return BadRequest(new { error = "棋类无效。" });
+            var waiting = await _game.FindWaitingRoomForUserAsync(request.GameType, UserId, GuestKey);
+            if (waiting is not null)
+            {
+                return Ok(new { roomCode = waiting.RoomCode, isCreator = true, gameType = waiting.GameType });
+            }
+            var waitingOpponent = await _game.FindWaitingRoomAsync(request.GameType);
+            if (waitingOpponent is not null && !IsCurrentUser(waitingOpponent))
+            {
+                var joiningAsGuest = !UserId.HasValue;
+                var guestName = joiningAsGuest ? EnsureGuestName() : Username;
+                var guestAvatar = joiningAsGuest ? EnsureGuestAvatar() : "😊";
+                var joined = await _game.JoinRoomAsync(waitingOpponent.RoomCode, UserId, guestName, guestAvatar, joiningAsGuest, joiningAsGuest ? GuestKey : null);
+                if (!joined) return Conflict(new { error = "匹配房间刚刚被加入，请重试。" });
+                return Ok(new { roomCode = waitingOpponent.RoomCode, isCreator = false, gameType = waitingOpponent.GameType });
+            }
+            var guest = !UserId.HasValue;
+            var created = await _game.CreateRoomAsync(request.GameType, "pvp", null, null, UserId,
+                guest ? EnsureGuestName() : Username, guest ? EnsureGuestAvatar() : "😊", guest, guest ? GuestKey : null);
+            var url = BuildJoinUrl(created.Code);
+            return Ok(new { roomCode = created.Code, isCreator = true, joinUrl = url, qrBase64 = _qr.GeneratePngBase64(url) });
         }
-        var waitingOpponent = await _game.FindWaitingRoomAsync(request.GameType);
-        if (waitingOpponent is not null && !IsCurrentUser(waitingOpponent))
+        catch (Exception ex)
         {
-            var joiningAsGuest = !UserId.HasValue;
-            var guestName = joiningAsGuest ? EnsureGuestName() : Username;
-            var guestAvatar = joiningAsGuest ? EnsureGuestAvatar() : "😊";
-            var joined = await _game.JoinRoomAsync(waitingOpponent.RoomCode, UserId, guestName, guestAvatar, joiningAsGuest, joiningAsGuest ? GuestKey : null);
-            if (!joined) return Conflict(new { error = "匹配房间刚刚被加入，请重试。" });
-            return Ok(new { roomCode = waitingOpponent.RoomCode, isCreator = false, gameType = waitingOpponent.GameType });
+            Console.WriteLine($"❌ 匹配创建房间失败: {ex.Message}");
+            return StatusCode(500, new { error = "创建对局失败：数据库连接异常，请检查 Turso 是否已配置且可用。" });
         }
-        var guest = !UserId.HasValue;
-        var created = await _game.CreateRoomAsync(request.GameType, "pvp", null, null, UserId,
-            guest ? EnsureGuestName() : Username, guest ? EnsureGuestAvatar() : "😊", guest, guest ? GuestKey : null);
-        var url = BuildJoinUrl(created.Code);
-        return Ok(new { roomCode = created.Code, isCreator = true, joinUrl = url, qrBase64 = _qr.GeneratePngBase64(url) });
     }
 
     public sealed class JoinRequest
