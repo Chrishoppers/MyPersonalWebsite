@@ -279,6 +279,11 @@ async Task EnsureTursoTablesAsync(DataSyncService dataSync)
         }
         catch { }
     }
+
+    // 令牌方案新增列：旧表自动补列（幂等；列已存在时 Turso 返回错误被忽略）
+    try { await dataSync.ExecuteSqlAsync("ALTER TABLE BoardGameRooms ADD COLUMN HostToken TEXT"); } catch { }
+    try { await dataSync.ExecuteSqlAsync("ALTER TABLE BoardGameRooms ADD COLUMN GuestToken TEXT"); } catch { }
+
     Console.WriteLine($"📊 Turso 表检查完成: 成功 {successCount}");
 }
 
