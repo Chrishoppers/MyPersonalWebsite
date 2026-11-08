@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using MyPersonalWebsite.Models;
 
 namespace MyPersonalWebsite.Services
@@ -13,11 +14,11 @@ namespace MyPersonalWebsite.Services
         private readonly TursoService _tursoService;
         private readonly bool _tursoAvailable;
 
-        public DataSyncService(TursoService tursoService)
+        public DataSyncService(TursoService tursoService, IConfiguration configuration)
         {
             _tursoService = tursoService;
-            var url = Environment.GetEnvironmentVariable("TURSO_DATABASE_URL") ?? "";
-            var token = Environment.GetEnvironmentVariable("TURSO_AUTH_TOKEN") ?? "";
+            var url = Environment.GetEnvironmentVariable("TURSO_DATABASE_URL") ?? configuration["Turso:Url"] ?? "";
+            var token = Environment.GetEnvironmentVariable("TURSO_AUTH_TOKEN") ?? configuration["Turso:Token"] ?? "";
             _tursoAvailable = !string.IsNullOrEmpty(url) && !string.IsNullOrEmpty(token);
 
             if (_tursoAvailable)

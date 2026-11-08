@@ -31,11 +31,16 @@
         $('modeModal').setAttribute('aria-hidden', 'false');
     }
 
-    window.openMode = async (type, title) => {
-        if (!(await hasPrivacyAgreement())) {
-            sessionStorage.setItem('bg_pending_game', JSON.stringify({ type, title }));
-            $('privacyModal').classList.add('show');
-            $('privacyModal').setAttribute('aria-hidden', 'false');
+    function hasLocalAgreement() {
+        try { return localStorage.getItem('bg_privacy_agreed_v1') === '1'; } catch { return false; }
+    }
+
+    window.openMode = (type, title) => {
+        // 本地未同意 → 立即弹隐私弹窗（不等服务器，避免卡顿）
+        if (!hasLocalAgreement()) {
+            try { sessionStorage.setItem('bg_pending_game', JSON.stringify({ type, title })); } catch { }
+            const modal = $('privacyModal');
+            if (modal) { modal.classList.add('show'); modal.setAttribute('aria-hidden', 'false'); }
             return;
         }
         openModeModal(type, title);
@@ -60,8 +65,8 @@
         try { localStorage.setItem('bg_privacy_agreed_v1', '1'); } catch { }
         $('privacyModal').classList.remove('show');
         $('privacyModal').setAttribute('aria-hidden', 'true');
-        const pending = sessionStorage.getItem('bg_pending_game');
-        sessionStorage.removeItem('bg_pending_game');
+        let pending = null;
+        try { pending = sessionStorage.getItem('bg_pending_game'); sessionStorage.removeItem('bg_pending_game'); } catch { }
         try {
             const parsed = JSON.parse(pending);
             if (parsed && parsed.type) openModeModal(parsed.type, parsed.title || parsed.type);
@@ -120,12 +125,12 @@
 
     // 从隐私声明同意后返回大厅时，自动进入此前选择的棋类的模式选择
     (async () => {
-        const pending = sessionStorage.getItem('bg_pending_game');
+        let pending = null;
+        try { pending = sessionStorage.getItem('bg_pending_game'); sessionStorage.removeItem('bg_pending_game'); } catch { }
         if (!pending) return;
-        sessionStorage.removeItem('bg_pending_game');
         try {
             const parsed = JSON.parse(pending);
-            if (parsed && parsed.type && await hasPrivacyAgreement()) {
+            if (parsed && parsed.type && hasLocalAgreement()) {
                 openModeModal(parsed.type, parsed.title || parsed.type);
             }
         } catch { }

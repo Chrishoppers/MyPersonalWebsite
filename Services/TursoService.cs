@@ -3,6 +3,7 @@ using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
 
 namespace MyPersonalWebsite.Services
 {
@@ -12,13 +13,13 @@ namespace MyPersonalWebsite.Services
         private readonly string _databaseUrl;
         private readonly string _authToken;
 
-        public TursoService(HttpClient httpClient)
+        public TursoService(HttpClient httpClient, IConfiguration configuration)
         {
             _httpClient = httpClient;
             _httpClient.Timeout = TimeSpan.FromSeconds(30);
             
-            var url = Environment.GetEnvironmentVariable("TURSO_DATABASE_URL") ?? "";
-            _authToken = Environment.GetEnvironmentVariable("TURSO_AUTH_TOKEN") ?? "";
+            var url = Environment.GetEnvironmentVariable("TURSO_DATABASE_URL") ?? configuration["Turso:Url"] ?? "";
+            _authToken = Environment.GetEnvironmentVariable("TURSO_AUTH_TOKEN") ?? configuration["Turso:Token"] ?? "";
             
             if (!string.IsNullOrEmpty(url))
             {
