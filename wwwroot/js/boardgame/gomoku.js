@@ -1,6 +1,6 @@
 window.GomokuBoard = (() => {
     const N = 15;
-    let canvas, context, onMove, state, hover, size = 0, cell = 0, pad = 0, last = null, pixelRatio = 1;
+    let canvas, context, onMove, state, hover, size = 0, cell = 0, pad = 0, last = null, pixelRatio = 1, lastTime = 0, animating = false;
 
     function mount(element, callback) {
         canvas = element; context = canvas.getContext('2d'); onMove = callback;
@@ -35,8 +35,19 @@ window.GomokuBoard = (() => {
             const [x, y] = to.split(',').map(Number);
             if (Number.isInteger(x) && Number.isInteger(y) && state.cells[y]?.[x] !== undefined) state.cells[y][x] = side === 'black' ? '1' : '2';
         }
-        if (to) { const [x, y] = to.split(',').map(Number); last = { x, y }; }
+        if (to) { const [x, y] = to.split(',').map(Number); last = { x, y }; lastTime = Date.now(); }
         draw();
+        animateDrop();
+    }
+
+    function animateDrop() {
+        if (animating) return;
+        animating = true;
+        const tick = () => {
+            if (Date.now() - lastTime < 260) { draw(); requestAnimationFrame(tick); }
+            else { animating = false; draw(); }
+        };
+        requestAnimationFrame(tick);
     }
 
     function draw() {
@@ -67,7 +78,11 @@ window.GomokuBoard = (() => {
         }
         for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
             const piece = state.cells[y]?.[x];
-            if (piece === '1' || piece === '2') drawStone(x, y, piece === '1');
+            if (piece === '1' || piece === '2') {
+                const isLast = last && last.x === x && last.y === y;
+                const progress = isLast ? Math.min(1, (Date.now() - lastTime) / 260) : 1;
+                drawStone(x, y, piece === '1', easeOutBack(progress));
+            }
         }
         if (last) {
             context.beginPath(); context.arc(center(last.x), center(last.y), cell * 0.14, 0, Math.PI * 2);
@@ -76,8 +91,12 @@ window.GomokuBoard = (() => {
     }
 
     function center(point) { return pad + point * cell; }
-    function drawStone(x, y, black) {
-        const cx = center(x), cy = center(y), radius = cell * 0.42;
+    function easeOutBack(t) {
+        const c1 = 1.70158, c3 = c1 + 1;
+        return Math.max(0, 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2));
+    }
+    function drawStone(x, y, black, scale = 1) {
+        const cx = center(x), cy = center(y), radius = cell * 0.42 * scale;
         context.save(); context.shadowColor = 'rgba(0,0,0,.45)'; context.shadowBlur = cell * 0.16; context.shadowOffsetY = cell * 0.05;
         context.beginPath(); context.arc(cx, cy, radius, 0, Math.PI * 2); context.fillStyle = black ? '#0a0a12' : '#f8f8f8'; context.fill(); context.restore();
         const shine = context.createRadialGradient(cx - radius * 0.3, cy - radius * 0.34, radius * 0.08, cx, cy, radius);

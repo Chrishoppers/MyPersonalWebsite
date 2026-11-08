@@ -1,7 +1,7 @@
 window.XiangqiBoard = (() => {
     const W = 9, H = 10;
     const chars = { K: '帅', A: '仕', B: '相', N: '馬', R: '車', C: '炮', P: '兵', k: '将', a: '士', b: '象', n: '馬', r: '車', c: '砲', p: '卒' };
-    let canvas, context, onMove, state, selected = null, cell = 0, padX = 0, padY = 0, width = 0, height = 0, ratio = 1;
+    let canvas, context, onMove, state, selected = null, cell = 0, padX = 0, padY = 0, width = 0, height = 0, ratio = 1, lastMove = null;
 
     function mount(element, callback) {
         canvas = element; context = canvas.getContext('2d'); onMove = callback;
@@ -29,6 +29,10 @@ window.XiangqiBoard = (() => {
         else if (state && from) {
             const [fx, fy] = from.split(',').map(Number), [tx, ty] = to.split(',').map(Number);
             state.cells[ty][tx] = state.cells[fy][fx]; state.cells[fy][fx] = '';
+        }
+        if (from && to) {
+            const [fx, fy] = from.split(',').map(Number), [tx, ty] = to.split(',').map(Number);
+            lastMove = { from: { x: fx, y: fy }, to: { x: tx, y: ty } };
         }
         selected = null; draw();
     }
@@ -58,6 +62,12 @@ window.XiangqiBoard = (() => {
         [[3, 0, 5, 2], [5, 0, 3, 2], [3, 7, 5, 9], [5, 7, 3, 9]].forEach(([x1, y1, x2, y2]) => {
             context.beginPath(); context.moveTo(px(x1), py(y1)); context.lineTo(px(x2), py(y2)); context.stroke();
         });
+        if (lastMove) {
+            context.beginPath(); context.arc(px(lastMove.from.x), py(lastMove.from.y), cell * 0.5, 0, Math.PI * 2);
+            context.strokeStyle = 'rgba(251,191,36,.35)'; context.lineWidth = 2.5; context.stroke();
+            context.beginPath(); context.arc(px(lastMove.to.x), py(lastMove.to.y), cell * 0.5, 0, Math.PI * 2);
+            context.strokeStyle = 'rgba(251,191,36,.6)'; context.lineWidth = 2.5; context.stroke();
+        }
         if (selected) {
             context.beginPath(); context.arc(px(selected.x), py(selected.y), cell * 0.48, 0, Math.PI * 2);
             context.strokeStyle = '#fbbf24'; context.lineWidth = 3; context.stroke();

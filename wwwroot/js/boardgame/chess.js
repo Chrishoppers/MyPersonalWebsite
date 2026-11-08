@@ -7,7 +7,7 @@ window.ChessBoard = (() => {
         { code: 'B', white: '♗', black: '♝', label: '象 · Bishop' },
         { code: 'N', white: '♘', black: '♞', label: '马 · Knight' }
     ];
-    let canvas, context, onMove, state, selected = null, boardSize = 0, cellSize = 0, ratio = 1;
+    let canvas, context, onMove, state, selected = null, boardSize = 0, cellSize = 0, ratio = 1, lastMove = null;
 
     function mount(element, callback) {
         canvas = element; context = canvas.getContext('2d'); onMove = callback;
@@ -43,6 +43,7 @@ window.ChessBoard = (() => {
         }
         if (piece === 'P' && ty === 0) state.cells[ty][tx] = 'Q';
         if (piece === 'p' && ty === 7) state.cells[ty][tx] = 'q';
+        lastMove = { from: { x: fx, y: fy }, to: { x: tx, y: ty } };
         selected = null; draw();
     }
 
@@ -51,6 +52,12 @@ window.ChessBoard = (() => {
         for (let y = 0; y < SIZE; y++) for (let x = 0; x < SIZE; x++) {
             context.fillStyle = (x + y) % 2 === 0 ? '#3c3750' : '#26222f';
             context.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+        }
+        if (lastMove) {
+            context.fillStyle = 'rgba(251,191,36,.22)';
+            context.fillRect(lastMove.from.x * cellSize, lastMove.from.y * cellSize, cellSize, cellSize);
+            context.fillStyle = 'rgba(251,191,36,.34)';
+            context.fillRect(lastMove.to.x * cellSize, lastMove.to.y * cellSize, cellSize, cellSize);
         }
         if (selected) {
             context.fillStyle = 'rgba(251,191,36,.55)';
