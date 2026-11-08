@@ -13,6 +13,10 @@
     --bg-glow: 0 20px 60px -20px rgba(139,92,246,.35);
 }
 
+/* 强制深色底：覆盖任何可能的白底（含 body 越界滚动区域） */
+html, body { background-color: #0a0a0f !important; }
+.bg-body, .bg-body::before, .bg-body::after { background-color: #0a0a0f; }
+
 .bg-body, .bg-body * { box-sizing: border-box; }
 .bg-body {
     min-height: calc(100vh - 8rem);
@@ -21,7 +25,6 @@
     color: var(--bg-text);
     background: #0a0a0f;
     background-image: radial-gradient(ellipse 75% 42% at 15% 0%,rgba(139,92,246,.16),transparent 65%),radial-gradient(ellipse 75% 45% at 85% 100%,rgba(236,72,153,.12),transparent 65%),radial-gradient(ellipse 60% 40% at 50% 50%,rgba(6,182,212,.05),transparent 70%);
-    background-attachment: fixed;
     font-family: -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
 }
 .bg-body button, .bg-body input { font: inherit; }
@@ -154,6 +157,22 @@ button.bg-move-item { cursor: pointer; }
 .bg-progress-panel span { color: var(--bg-muted); font-size: .82rem; white-space: nowrap; }
 .bg-replay-info { color: var(--bg-muted); font-size: .85rem; line-height: 1.7; overflow-wrap: anywhere; }
 
+.bg-replay-tabs { display: flex; flex-wrap: wrap; justify-content: center; gap: .5rem; margin: 1rem 0 1.4rem; }
+.bg-replay-tab { padding: .5rem 1.1rem; border: 1px solid var(--bg-border); border-radius: 999px; background: var(--bg-surface); color: var(--bg-muted); font-size: .82rem; font-weight: 650; cursor: pointer; transition: all .2s ease; }
+.bg-replay-tab:hover { border-color: rgba(167,139,250,.5); color: #fff; }
+.bg-replay-tab.active { border-color: transparent; background: linear-gradient(130deg,var(--bg-purple),var(--bg-pink)); color: #fff; box-shadow: 0 6px 18px -8px rgba(236,72,153,.6); }
+.bg-replay-list { display: grid; grid-template-columns: repeat(auto-fill,minmax(300px,1fr)); gap: .9rem; max-width: 1080px; margin: 0 auto; }
+.bg-replay-card { display: flex; flex-direction: column; gap: .5rem; padding: 1.1rem 1.2rem; border: 1px solid var(--bg-border); border-radius: 18px; background: var(--bg-surface); color: var(--bg-text); text-decoration: none; transition: transform .25s ease,border-color .25s ease,box-shadow .25s ease,background .25s ease; }
+.bg-replay-card:hover { transform: translateY(-4px); border-color: rgba(167,139,250,.5); background: var(--bg-surface-hover); box-shadow: 0 16px 40px -18px rgba(139,92,246,.55); }
+.bg-replay-card-head { display: flex; min-width: 0; align-items: center; justify-content: space-between; gap: .6rem; }
+.bg-replay-title { overflow: hidden; color: #fff; font-size: .9rem; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+.bg-replay-result { flex-shrink: 0; padding: .2rem .55rem; border-radius: 999px; font-size: .7rem; font-weight: 700; }
+.bg-replay-result.win { background: rgba(251,191,36,.12); color: #fbbf24; }
+.bg-replay-result.draw { background: rgba(255,255,255,.06); color: var(--bg-muted); }
+.bg-replay-card-meta { color: var(--bg-dim); font-size: .75rem; }
+.bg-replay-play { margin-top: .2rem; color: #c4b5fd; font-size: .8rem; font-weight: 650; }
+.bg-replay-empty { grid-column: 1 / -1; padding: 3rem 1rem; color: var(--bg-dim); font-size: .9rem; text-align: center; }
+
 @media (max-width: 1024px) {
     .bg-play { grid-template-columns: minmax(0,1fr); }
     .bg-play-side { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); align-items: start; }
@@ -269,3 +288,11 @@ button.bg-move-item { cursor: pointer; }
 .bg-modal { box-shadow: 0 35px 100px rgba(0,0,0,.65), 0 0 60px -20px rgba(139,92,246,.35); }
 .bg-lobby-header h1 { filter: drop-shadow(0 6px 24px rgba(167,139,250,.28)); }
 .bg-privacy-card, .bg-gameover-card { box-shadow: 0 24px 60px -28px rgba(0,0,0,.7); }
+
+/* 科技感：标题呼吸辉光 + 主按钮流光 */
+.bg-lobby-header h1 { animation: bg-title-glow 3.2s ease-in-out infinite; }
+@keyframes bg-title-glow { 0%,100% { filter: drop-shadow(0 0 10px rgba(167,139,250,.16)); } 50% { filter: drop-shadow(0 0 26px rgba(167,139,250,.42)); } }
+.bg-btn-primary { background-size: 200% 200%; animation: bg-btn-flow 5s ease-in-out infinite; }
+@keyframes bg-btn-flow { 0%,100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+.bg-status-pill { animation: bg-pill-pulse 2.6s ease-in-out infinite; }
+@keyframes bg-pill-pulse { 0%,100% { box-shadow: 0 0 0 rgba(34,197,94,0); } 50% { box-shadow: 0 0 14px -2px rgba(34,197,94,.55); } }

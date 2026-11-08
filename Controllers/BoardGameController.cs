@@ -33,4 +33,6 @@ public sealed class BoardGameController : Controller
         ViewBag.RoomId = id;
         return View();
     }
+
+    public IActionResult Replays() => View();
 }

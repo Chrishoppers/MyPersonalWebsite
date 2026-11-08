@@ -1,0 +1,102 @@
+@{
+    ViewData["Title"] = "棋局回放";
+}
+<link rel="stylesheet" href="~/css/boardgame.css" />
+<div class="bg-body">
+    <div class="bg-lobby">
+        <header class="bg-lobby-header">
+            <h1>🎬 棋局回放</h1>
+            <p>五子棋 · 中国象棋 · 国际象棋</p>
+            <p>回放仅收录双方均为登录玩家、且已结束的真人对局</p>
+        </header>
+
+        <div class="bg-replay-tabs" id="replayTabs" role="tablist">
+            <button type="button" class="bg-replay-tab active" data-type="all">全部</button>
+            <button type="button" class="bg-replay-tab" data-type="gomoku">⚫ 五子棋</button>
+            <button type="button" class="bg-replay-tab" data-type="xiangqi">🀄 中国象棋</button>
+            <button type="button" class="bg-replay-tab" data-type="chess">♞ 国际象棋</button>
+        </div>
+
+        <div class="bg-replay-list" id="replayList" aria-live="polite">
+            <p class="bg-replay-empty">正在加载回放…</p>
+        </div>
+
+        <p class="bg-lobby-footer"><a href="/BoardGame/Index">← 返回棋盘大厅</a>　<a href="/Game">返回游戏中心</a></p>
+    </div>
+</div>
+<div class="bg-toast" id="toast" role="status" aria-live="polite"></div>
+<script>
+    (() => {
+        const TYPES = ['gomoku', 'xiangqi', 'chess'];
+        const TYPE_META = {
+            gomoku: { icon: '⚫', name: '五子棋' },
+            xiangqi: { icon: '🀄', name: '中国象棋' },
+            chess: { icon: '♞', name: '国际象棋' }
+        };
+        const $ = id => document.getElementById(id);
+        let all = [], filter = 'all';
+
+        function toast(message) {
+            const el = $('toast'); el.textContent = message; el.classList.add('show');
+            clearTimeout(el._timer); el._timer = setTimeout(() => el.classList.remove('show'), 3000);
+        }
+
+        async function load() {
+            try {
+                const sets = await Promise.all(TYPES.map(async type => {
+                    try {
+                        const r = await fetch(`/api/boardgame/replays/${type}`);
+                        return r.ok ? await r.json() : [];
+                    } catch { return []; }
+                }));
+                all = sets.flat().sort((a, b) => (b.finishedAt || '').localeCompare(a.finishedAt || ''));
+            } catch { all = []; }
+            render();
+        }
+
+        function render() {
+            const list = $('replayList'); list.replaceChildren();
+            const items = filter === 'all' ? all : all.filter(item => item.gameType === filter);
+            if (!items.length) {
+                const empty = document.createElement('p');
+                empty.className = 'bg-replay-empty';
+                empty.textContent = '暂无回放。完成一局真人对弈后，双方均为登录玩家即可在这里回放。';
+                list.appendChild(empty); return;
+            }
+            items.forEach(item => {
+                const meta = TYPE_META[item.gameType] || { icon: '♟', name: item.gameType };
+                const card = document.createElement('a');
+                card.className = 'bg-replay-card';
+                card.href = `/BoardGame/Replay/${item.id}`;
+                const head = document.createElement('div'); head.className = 'bg-replay-card-head';
+                const title = document.createElement('span'); title.className = 'bg-replay-title';
+                title.textContent = `${meta.icon} ${meta.name} · ${item.hostName || '玩家'} vs ${item.guestName || '玩家'}`;
+                const result = document.createElement('span');
+                result.className = `bg-replay-result ${item.winner ? 'win' : 'draw'}`;
+                result.textContent = item.winner ? (item.winner === 'draw' ? '🤝 平局' : `🏆 ${item.winner} 胜`) : '🤝 平局';
+                head.append(title, result);
+                const meta2 = document.createElement('div'); meta2.className = 'bg-replay-card-meta';
+                meta2.textContent = `${item.moveCount || 0} 手 · ${formatTime(item.finishedAt)} · ${item.resultReason || ''}`;
+                const play = document.createElement('span'); play.className = 'bg-replay-play'; play.textContent = '▶ 观看回放';
+                card.append(head, meta2, play);
+                list.appendChild(card);
+            });
+        }
+
+        function formatTime(value) {
+            if (!value) return '未知时间';
+            const date = new Date(value);
+            return isNaN(date.getTime()) ? value : date.toLocaleString('zh-CN', { hour12: false });
+        }
+
+        document.querySelectorAll('.bg-replay-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                filter = tab.dataset.type;
+                document.querySelectorAll('.bg-replay-tab').forEach(t => t.classList.toggle('active', t === tab));
+                render();
+            });
+        });
+
+        load();
+    })();
+</script>

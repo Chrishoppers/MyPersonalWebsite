@@ -9,6 +9,8 @@
     }
 
     async function hasPrivacyAgreement() {
+        // 本地已同意过，直接放行，避免服务端未保存导致反复跳回大厅
+        if (localStorage.getItem('bg_privacy_agreed_v1') === '1') return true;
         try {
             const response = await fetch('/api/boardgame/privacy-status');
             if (!response.ok) return false;
