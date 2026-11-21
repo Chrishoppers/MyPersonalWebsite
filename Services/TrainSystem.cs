@@ -60,13 +60,16 @@ namespace MyPersonalWebsite.Services
             {
                 Trains.Add(BuildTrain(nums[i], $"{names[i]}{nums[i]}", Corridors[i], 0, Corridors[i].Length, i == 3 || i == 5));
             }
+            // 普速卧铺车（软卧/硬卧/硬座/无座）
+            Trains.Add(BuildTrain("Z101", "直达特快Z101", Corridors[0], 0, Corridors[0].Length, false, true));
+            Trains.Add(BuildTrain("K301", "快速K301", Corridors[2], 0, Corridors[2].Length, false, true));
         }
 
-        private static Train BuildTrain(string number, string name, (string Name, string Code, int Km)[] corridor, int start, int count, bool isD)
+        private static Train BuildTrain(string number, string name, (string Name, string Code, int Km)[] corridor, int start, int count, bool isD, bool isSleeper = false)
         {
-            var t = new Train(number, name)
+            var t = new Train(number, name, isSleeper)
             {
-                MaxSpeed = isD ? 250 : 300,
+                MaxSpeed = isSleeper ? 160 : (isD ? 250 : 300),
                 DepartureTime = DateTime.Now.Date.AddHours(Random.Shared.Next(6, 14))
             };
             int depart = 0;
@@ -210,19 +213,16 @@ namespace MyPersonalWebsite.Services
                 TicketingMode.MayDay => Random.Shared.Next(1, 3),
                 _ => Random.Shared.Next(1, 3)
             };
+            var validClasses = ValidClassesFor(t);
             for (int p = 0; p < pc; p++)
             {
-                var sc = (CarriageType)Random.Shared.Next(3);
-                string scs = Carriage.TypeName(sc);
-                string[] cols = sc == CarriageType.Business ? new[] { "A", "F" }
-                              : sc == CarriageType.FirstClass ? new[] { "A", "C", "D", "F" }
-                              : new[] { "A", "B", "C", "D", "F" };
+                string scs = validClasses[Random.Shared.Next(validClasses.Length)];
                 var (id, age, gender) = GenerateId();
                 int typeRand = Random.Shared.Next(100);
                 var ptype = typeRand < 80 ? PassengerType.Adult : typeRand < 90 ? PassengerType.Child : PassengerType.Student;
                 if (ptype == PassengerType.Child) age = Random.Shared.Next(6, 15);
                 if (ptype == PassengerType.Student) age = Random.Shared.Next(18, 24);
-                o.Passengers.Add(new PassengerInfo(RandomName(gender), cols[Random.Shared.Next(cols.Length)], scs)
+                o.Passengers.Add(new PassengerInfo(RandomName(gender), "any", scs)
                 {
                     IdNumber = id,
                     Age = age,
@@ -298,6 +298,12 @@ namespace MyPersonalWebsite.Services
                 var allSeats = t.Carriages.SelectMany(c => c.Seats).ToList();
                 foreach (var p in o.Passengers)
                 {
+                    // 无座：不占用物理座位，直接出票
+                    if (p.SeatClass == "无座")
+                    {
+                        assigned.Add("无座");
+                        continue;
+                    }
                     var candidates = allSeats.Where(s => s.Type == ToCarriageType(p.SeatClass) && IsFree(s, o)).ToList();
                     var best = candidates.Count > 0 ? FindBestSeat(candidates, p) : null;
 
@@ -307,6 +313,8 @@ namespace MyPersonalWebsite.Services
                         {
                             "二等座" => new[] { "一等座", "商务座" },
                             "一等座" => new[] { "商务座" },
+                            "硬座" => new[] { "硬卧", "软卧" },
+                            "硬卧" => new[] { "软卧" },
                             _ => Array.Empty<string>()
                         };
                         foreach (var up in upgrade)
@@ -355,6 +363,9 @@ namespace MyPersonalWebsite.Services
         {
             "商务座" => CarriageType.Business,
             "一等座" => CarriageType.FirstClass,
+            "软卧" => CarriageType.SoftSleeper,
+            "硬卧" => CarriageType.HardSleeper,
+            "硬座" => CarriageType.HardSeat,
             _ => CarriageType.SecondClass
         };
 
@@ -362,8 +373,17 @@ namespace MyPersonalWebsite.Services
         {
             "商务座" => 1.75m,
             "一等座" => 0.88m,
+            "软卧" => 0.75m,
+            "硬卧" => 0.50m,
+            "硬座" => 0.30m,
+            "无座" => 0.28m,
             _ => 0.55m
         };
+
+        private static string[] ValidClassesFor(Train t)
+            => t.Carriages.Any(c => c.Type == CarriageType.SoftSleeper)
+                ? new[] { "硬座", "硬卧", "软卧", "无座" }
+                : new[] { "二等座", "一等座", "商务座", "无座" };
 
         private static decimal CalculatePrice(Train t, Order o)
         {

@@ -1,6 +1,6 @@
 namespace MyPersonalWebsite.Models
 {
-    public enum CarriageType { Business, FirstClass, SecondClass }
+    public enum CarriageType { Business, FirstClass, SecondClass, SoftSleeper, HardSleeper, HardSeat }
     public enum OrderStatus { Queued, Processing, Success, Failed, Paid, Waitlisted }
     public enum PassengerType { Adult, Child, Student }
 
@@ -15,17 +15,27 @@ namespace MyPersonalWebsite.Models
         public int TotalSeats { get; set; }
         public int SoldSeats { get; set; }
 
-        public Train(string number, string name)
+        public Train(string number, string name, bool isSleeper = false)
         {
             TrainNumber = number;
             TrainName = name;
-            // 车厢布局：1/10 商务座，2/9 一等座，3-8 二等座
-            for (int i = 1; i <= 10; i++)
+            if (isSleeper)
             {
-                CarriageType type = (i == 1 || i == 10) ? CarriageType.Business
-                                  : (i == 2 || i == 9) ? CarriageType.FirstClass
-                                  : CarriageType.SecondClass;
-                Carriages.Add(new Carriage(i, type));
+                // 普速卧铺车：1-2 软卧，3-8 硬卧，9-12 硬座
+                for (int i = 1; i <= 2; i++) Carriages.Add(new Carriage(i, CarriageType.SoftSleeper));
+                for (int i = 3; i <= 8; i++) Carriages.Add(new Carriage(i, CarriageType.HardSleeper));
+                for (int i = 9; i <= 12; i++) Carriages.Add(new Carriage(i, CarriageType.HardSeat));
+            }
+            else
+            {
+                // 高铁/动车：1/10 商务座，2/9 一等座，3-8 二等座
+                for (int i = 1; i <= 10; i++)
+                {
+                    CarriageType type = (i == 1 || i == 10) ? CarriageType.Business
+                                      : (i == 2 || i == 9) ? CarriageType.FirstClass
+                                      : CarriageType.SecondClass;
+                    Carriages.Add(new Carriage(i, type));
+                }
             }
             TotalSeats = Carriages.Sum(c => c.Seats.Count);
         }
@@ -73,10 +83,21 @@ namespace MyPersonalWebsite.Models
         {
             CarriageNumber = num;
             Type = type;
-            string[] cols = type == CarriageType.Business ? new[] { "A", "F" }
-                          : type == CarriageType.FirstClass ? new[] { "A", "C", "D", "F" }
-                          : new[] { "A", "B", "C", "D", "F" };
-            int rows = type == CarriageType.Business ? 8 : 10;
+            string[] cols = type switch
+            {
+                CarriageType.Business => new[] { "A", "F" },
+                CarriageType.FirstClass => new[] { "A", "C", "D", "F" },
+                CarriageType.SoftSleeper => new[] { "上", "下" },
+                CarriageType.HardSleeper => new[] { "上", "中", "下" },
+                _ => new[] { "A", "B", "C", "D", "F" }
+            };
+            int rows = type switch
+            {
+                CarriageType.Business => 8,
+                CarriageType.SoftSleeper => 9,
+                CarriageType.HardSleeper => 11,
+                _ => 10
+            };
             for (int r = 1; r <= rows; r++)
                 foreach (string c in cols)
                     Seats.Add(new Seat(num, r, c, type));
@@ -86,6 +107,9 @@ namespace MyPersonalWebsite.Models
         {
             CarriageType.Business => "商务座",
             CarriageType.FirstClass => "一等座",
+            CarriageType.SoftSleeper => "软卧",
+            CarriageType.HardSleeper => "硬卧",
+            CarriageType.HardSeat => "硬座",
             _ => "二等座"
         };
     }

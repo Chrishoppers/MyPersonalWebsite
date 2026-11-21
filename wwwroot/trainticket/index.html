@@ -248,6 +248,25 @@ tr:hover td{background:#f7faff}
 .mt8{margin-top:8px}.mt12{margin-top:12px}.mt16{margin-top:16px}.mb8{margin-bottom:8px}.mb12{margin-bottom:12px}
 .muted{color:var(--muted)}.small{font-size:.78rem}.bold{font-weight:700}.right{text-align:right}
 @media(max-width:760px){.nav{overflow-x:auto}.train-card{flex-wrap:wrap}.tc-dur{display:none}}
+.task-dim{display:flex;gap:10px;align-items:center;padding:6px 10px;border-radius:8px;margin:4px 0;background:#fff;border:1px solid #eef2f7;font-size:.8rem}
+.task-dim.ok{border-color:#b7e3b7;background:#f0faf0}
+.task-dim.bad{border-color:#f3c9c9;background:#fdf2f2}
+.task-dim .td-name{font-weight:700}
+.task-dim .td-pts{margin-left:auto;font-weight:800}
+.task-dim .td-note{color:var(--muted)}
+.cand-tag{font-size:.62rem;padding:1px 7px;border-radius:20px;background:#fff3cd;color:#8a6d00;margin-left:4px}
+.pax-set{display:flex;gap:6px;align-items:center;margin-top:6px;flex-wrap:wrap}
+.pax-set select{padding:3px 6px;border:1px solid #d5dee8;border-radius:6px;font-size:.72rem;font-weight:700}
+.mini-pref{border:1px solid #d5dee8;background:#fff;border-radius:6px;padding:2px 7px;font-size:.7rem;cursor:pointer;font-weight:700}
+.mini-pref.on{border-color:var(--blue);background:#eef5ff;color:var(--blue)}
+.pay-method{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin:12px 0}
+.slider-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:9999;padding:1rem}
+.slider-overlay.active{display:flex}
+.slider-box{background:#fff;border-radius:14px;padding:22px;width:360px;max-width:92vw;text-align:center;box-shadow:0 24px 80px rgba(0,0,0,.4);color:#223}
+.slider-track{position:relative;height:46px;background:#f0f4f8;border-radius:23px;margin:16px 0 4px;overflow:hidden}
+.slider-target{position:absolute;top:6px;width:34px;height:34px;border-radius:8px;background:#c9d8ec;box-shadow:inset 0 0 0 2px #fff}
+.slider-bar{position:absolute;top:0;left:0;height:46px;background:linear-gradient(90deg,#8BC34A,#4CAF50);border-radius:23px 0 0 23px;width:0}
+.slider-handle{position:absolute;top:2px;left:0;width:42px;height:42px;border-radius:50%;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.25);display:flex;align-items:center;justify-content:center;font-size:1.1rem;color:#4CAF50;cursor:grab;touch-action:none}
 </style>
 </head>
 <body>
@@ -294,6 +313,15 @@ tr:hover td{background:#f7faff}
 
 <!-- 车票预订 -->
 <div id="page0" class="page active">
+  <!-- 任务横幅 -->
+  <div id="taskBanner" class="card" style="display:none;background:linear-gradient(135deg,#0f3f8a,#1a5fb4);color:#fff;border:none;margin-bottom:12px">
+    <div class="flex wrap center gap12">
+      <div style="font-weight:800">🎯 抢票任务进行中</div>
+      <div id="taskBannerRoute" style="font-size:1.05rem;font-weight:900">--</div>
+      <div id="taskBannerTimer" style="margin-left:auto;font-weight:800">⏱ --</div>
+    </div>
+    <div id="taskBannerPax" class="small" style="color:#dbe9ff;margin-top:6px;line-height:1.7"></div>
+  </div>
   <div class="search-bar">
     <div class="st-field"><input id="buyFrom" placeholder="出发地" autocomplete="off" oninput="suggest('buyFrom')"><div id="buyFromSuggest" class="suggest"></div></div>
     <div class="swap-btn" onclick="swapStations()" title="交换">⇄</div>
@@ -325,7 +353,7 @@ tr:hover td{background:#f7faff}
           <div class="flex wrap center gap8 mt12">
             <input id="newName" placeholder="姓名" style="padding:7px 10px;border:1px solid #d5dee8;border-radius:8px;width:96px">
             <input id="newId" placeholder="身份证号(可留空)" style="padding:7px 10px;border:1px solid #d5dee8;border-radius:8px;width:190px">
-            <button class="btn" style="background:var(--blue)" onclick="addPassenger()">＋ 添加</button>
+            <button class="btn" id="addPaxBtn" style="background:var(--blue)" onclick="addPassenger()">＋ 添加</button>
             <span class="bold small">💺 座位偏好：</span>
             <button class="seat-pref active" id="spAny" onclick="setSeatPrefAll('any')">不限</button>
             <button class="seat-pref" id="spWin" onclick="setSeatPrefAll('window')">🪟 靠窗</button>
@@ -403,60 +431,41 @@ tr:hover td{background:#f7faff}
   </div>
 </div>
 
-<!-- 抢票大战 -->
+<!-- 抢票大战（真实抢票任务） -->
 <div id="page4" class="page">
   <div class="game-hero">
     <div class="gh-top">
       <div>
-        <div style="font-size:.8rem;color:#cfe0ff">🎯 抢票任务 · <span id="gDifficulty">未开始</span></div>
-        <div style="font-size:1.3rem;font-weight:900;margin-top:6px" id="gRoute">等待开始…</div>
-        <div style="font-size:.78rem;color:#cfe0ff;margin-top:4px" id="gMeta">在放票瞬间抢占座位，击败黄牛对手！</div>
-        <div class="gh-bots" id="gBots"></div>
+        <div style="font-size:.8rem;color:#cfe0ff">🎯 真实抢票任务 · <span id="tDifficulty">未开始</span></div>
+        <div style="font-size:1.3rem;font-weight:900;margin-top:6px" id="tRoute">等待接单…</div>
+        <div style="font-size:.78rem;color:#cfe0ff;margin-top:4px" id="tMeta">按 12306 流程为指定乘客购买真实车票</div>
       </div>
       <div class="flex gap12 center">
-        <div class="gh-timer"><div class="num" id="gTimer">--</div><div class="lbl">剩余秒数</div></div>
-        <div class="gh-score"><div class="num" id="gScore">0</div><div class="lbl">积分</div></div>
-        <div class="gh-combo" id="gCombo"></div>
+        <div class="gh-timer"><div class="num" id="tTimer">--</div><div class="lbl">剩余秒数</div></div>
+        <div class="gh-score"><div class="num" id="tScore">0</div><div class="lbl">评分</div></div>
       </div>
     </div>
-  </div>
-
-  <div class="g-actions">
-    <select id="gameMode" style="padding:9px;border:2px solid #d5dee8;border-radius:10px;font-weight:700" onchange="modeChanged()">
-      <option value="timed" selected>⏱ 限时挑战（抢N张）</option>
-      <option value="endless">♾️ 无尽模式（拼积分）</option>
-    </select>
-    <select id="taskDifficulty" style="padding:9px;border:2px solid #d5dee8;border-radius:10px;font-weight:700">
-      <option value="easy">🟢 简单 · 8张 · 60秒</option>
-      <option value="normal" selected>🟡 普通 · 12张 · 50秒</option>
-      <option value="hard">🟠 困难 · 16张 · 45秒</option>
-      <option value="hell">🔴 地狱 · 20张 · 40秒</option>
-    </select>
-    <button class="book-btn" id="gStart" onclick="startGame()">▶ 开始抢票</button>
-    <button class="btn b-stop" id="gStop" onclick="stopGame()" style="display:none">■ 结束</button>
-    <div style="flex:1"></div>
-    <button class="powerup" id="puRadar" onclick="usePowerup('radar')">📡 雷达 <small class="muted">15🪙</small></button>
-    <button class="powerup" id="puDouble" onclick="usePowerup('double')">💰 双倍 <small class="muted">25🪙</small></button>
-    <button class="powerup" id="puRobot" onclick="usePowerup('robot')">🤖 机器人 <small class="muted">35🪙</small></button>
-    <button class="powerup" id="puFreeze" onclick="usePowerup('freeze')">❄️ 冻结 <small class="muted">30🪙</small></button>
-    <button class="powerup" id="puSpeed" onclick="usePowerup('speed')">⚡ 减速 <small class="muted">20🪙</small></button>
-    <span class="small muted">余额：<b id="gCoins">0</b> 🪙</span>
   </div>
 
   <div class="card">
-    <div style="text-align:center;margin-bottom:10px">
-      <span class="hint">目标：抢到 <b id="gTarget">--</b> 张票</span>
-      <span class="hint" style="margin-left:14px">已抢：<b id="gGrabbed">0</b></span>
-      <span class="hint" style="margin-left:14px">对手抢走：<b id="gBotGrabbed">0</b></span>
+    <h3>📋 任务要求</h3>
+    <div id="tBrief" class="small" style="line-height:2">尚未开始任务。选择难度后点击「开始接单」。</div>
+    <div class="flex gap8 mt12 center wrap">
+      <select id="taskDifficulty2" style="padding:9px;border:2px solid #d5dee8;border-radius:10px;font-weight:700">
+        <option value="easy">🟢 简单 · 1 名乘客 · 直接给出站名</option>
+        <option value="normal" selected>🟡 普通 · 1 名乘客 · 需判断站点/席位</option>
+        <option value="hard">🟠 困难 · 2 名乘客 · 含时段/座位要求</option>
+        <option value="hell">🔴 地狱 · 3 名乘客 · 全部要求</option>
+      </select>
+      <button class="book-btn" id="tStart" onclick="startTask()">▶ 开始接单</button>
+      <button class="btn b-stop" id="tStop" onclick="stopTask()" style="display:none">■ 放弃任务</button>
     </div>
-    <div class="g-grid" id="gGrid"></div>
+    <div class="small muted mt8">💡 接单后请切换到「车票预订」页，按任务要求完成购票与支付。</div>
   </div>
-  <div class="legend mt8">
-    <span><i class="lg" style="background:#e3e9f1"></i>未放票</span>
-    <span><i class="lg" style="background:#b7f3b0"></i>可抢（点击！）</span>
-    <span><i class="lg" style="background:#7cc0ff"></i>你抢到</span>
-    <span><i class="lg" style="background:#ffb3b3"></i>对手抢到</span>
-    <span><i class="lg" style="background:#ffe08a"></i>📡 即将放票（雷达）</span>
+
+  <div class="card">
+    <h3>📊 评分维度</h3>
+    <div id="tDimList" class="small muted">完成任务后将在这里显示多维评分。</div>
   </div>
 </div>
 
@@ -527,6 +536,18 @@ tr:hover td{background:#f7faff}
   </div>
 </div>
 
+<!-- 任务结算 -->
+<div id="taskResultModal" class="modal">
+  <div class="modal-box" style="max-width:440px;text-align:center" onclick="event.stopPropagation()">
+    <div class="rank-badge rank-B" id="taskRankBadge"><div class="r" id="taskRankLetter">B</div><div class="t" id="taskRankTitle">评价</div></div>
+    <h3 id="taskResultHead" style="margin-bottom:10px">任务结算</h3>
+    <div id="taskDimList2" class="small" style="text-align:left;margin-bottom:12px"></div>
+    <div id="taskResultBody" class="small muted" style="margin-bottom:16px;line-height:1.9"></div>
+    <button class="book-btn" onclick="closeModal('taskResultModal');startTask()">🔁 再来一单</button>
+    <button class="btn b-ghost" style="color:#666" onclick="closeModal('taskResultModal')">关闭</button>
+  </div>
+</div>
+
 <!-- 验证码 -->
 <div id="captchaOverlay" class="captcha-overlay">
   <div class="captcha-box">
@@ -543,10 +564,13 @@ tr:hover td{background:#f7faff}
   <div class="pay-box">
     <div style="font-weight:800;color:#1677ff" id="payTitle">🏧 支付宝</div>
     <div class="pay-amount" id="payAmount">¥0.00</div>
+    <div class="small" id="payCountdown" style="display:none;color:#c0392b;font-weight:700">⏱ 请在 <b id="payCount">--</b> 秒内完成支付</div>
     <div class="pay-method">
       <button class="pay-method-btn active" data-m="alipay" onclick="switchPay('alipay')">支付宝</button>
       <button class="pay-method-btn" data-m="wechat" onclick="switchPay('wechat')">微信</button>
       <button class="pay-method-btn" data-m="card" onclick="switchPay('card')">银行卡</button>
+      <button class="pay-method-btn" data-m="unionpay" onclick="switchPay('unionpay')">云闪付</button>
+      <button class="pay-method-btn" data-m="ecard" onclick="switchPay('ecard')">铁路E卡通</button>
     </div>
     <div class="small muted">🔑 支付密码：<b id="payPwd">------</b></div>
     <div class="pay-dots"><div class="pay-dot"></div><div class="pay-dot"></div><div class="pay-dot"></div><div class="pay-dot"></div><div class="pay-dot"></div><div class="pay-dot"></div></div>
@@ -558,6 +582,21 @@ tr:hover td{background:#f7faff}
     </div>
     <div id="payResult" class="bold mt12"></div>
     <button class="btn b-ghost" style="color:#666;margin-top:10px" onclick="closePay()">取消</button>
+  </div>
+</div>
+
+<!-- 滑块验证 -->
+<div id="sliderOverlay" class="slider-overlay">
+  <div class="slider-box">
+    <h3>🛡️ 安全验证</h3>
+    <div class="small muted mt8">拖动滑块，将滑块对准缺口完成验证</div>
+    <div class="slider-track" id="sliderTrack">
+      <div class="slider-target" id="sliderTarget"></div>
+      <div class="slider-bar" id="sliderBar"></div>
+      <div class="slider-handle" id="sliderHandle">➤</div>
+    </div>
+    <div class="small mt8" id="sliderHint">向右拖动滑块</div>
+    <button class="btn b-ghost" style="color:#666;margin-top:10px" onclick="closeSlider()">取消</button>
   </div>
 </div>
 
@@ -848,21 +887,59 @@ function confirmTrainDetail(){
 
 /* ============================ 乘客管理 ============================ */
 function initPassengers(){
+  if(task.active && task.data && task.data.candidates){
+    booking.passengers = task.data.candidates.map(function(c){
+      return {name:c.name, id:c.idNumber, sel:false, pref:'any', cls:'二等座', ptype:'成人', role:c.role};
+    });
+    renderPassengers();
+    return;
+  }
   booking.passengers = [
-    {name:'张三', id:'32010219900101001X', sel:false, pref:'any'},
-    {name:'李四', id:'32010219900202002X', sel:false, pref:'any'}
+    {name:'张三', id:'32010219900101001X', sel:false, pref:'any', cls:'二等座'},
+    {name:'李四', id:'32010219900202002X', sel:false, pref:'any', cls:'二等座'}
   ];
   renderPassengers();
 }
+function setPaxClass(i, cls){ booking.passengers[i].cls = cls; renderPassengers(); }
+function setPaxPref(i, pref){ booking.passengers[i].pref = pref; renderPassengers(); }
+function setPaxType(i, t){ booking.passengers[i].ptype = t; renderPassengers(); }
 function renderPassengers(){
   var h = '';
+  var isTask = task.active;
   booking.passengers.forEach(function(p, i){
+    var role = p.role ? '<span class="cand-tag">'+esc(p.role)+'</span>' : '';
+    var extra = '';
+    if(isTask){
+      if(p.sel){
+        var typeOpts = ['成人','儿童','学生'].map(function(t){ return '<option'+(p.ptype===t?' selected':'')+'>'+t+'</option>'; }).join('');
+        var clsOpts = ['二等座','一等座','商务座'].map(function(c){ return '<option'+(p.cls===c?' selected':'')+'>'+c+'</option>'; }).join('');
+        var prefBtns = ['any','window','aisle'].map(function(t){
+          var lbl = t==='any'?'不限':(t==='window'?'🪟靠窗':'过道');
+          return '<button class="mini-pref '+(p.pref===t?'on':'')+'" onclick="event.stopPropagation();setPaxPref('+i+',\''+t+'\')">'+lbl+'</button>';
+        }).join('');
+        extra = '<div class="pax-set" onclick="event.stopPropagation()">'
+          + '<select onchange="setPaxType('+i+',this.value)" title="乘客类型">'+typeOpts+'</select>'
+          + '<select onchange="setPaxClass('+i+',this.value)" title="席别">'+clsOpts+'</select>'
+          + prefBtns
+          + '</div>';
+      } else {
+        extra = '<small class="muted">点击选择，然后设置席别/座位</small>';
+      }
+    } else {
+      extra = '<small style="color:var(--blue)">💺 '+prefLabel(p.pref)+'</small>';
+    }
     h += '<div class="pax-card '+(p.sel?'sel':'')+'" onclick="booking.passengers['+i+'].sel=!booking.passengers['+i+'].sel;renderPassengers()">'
       + '<div class="av">'+p.name[0]+'</div>'
-      + '<div><b>'+esc(p.name)+'</b><br><small class="muted">'+esc(p.id)+'</small><br><small style="color:var(--blue)">💺 '+prefLabel(p.pref)+'</small></div>'
-      + '<button class="btn b-ghost" style="color:#c0392b;margin-left:auto;padding:4px 9px" onclick="event.stopPropagation();removePassenger('+i+')">✕</button></div>';
+      + '<div><b>'+esc(p.name)+'</b>'+role+'<br><small class="muted">'+esc(p.id)+'</small><br>'+extra+'</div>'
+      + (isTask?'':'<button class="btn b-ghost" style="color:#c0392b;margin-left:auto;padding:4px 9px" onclick="event.stopPropagation();removePassenger('+i+')">✕</button>')
+      + '</div>';
   });
   $('paxList').innerHTML = h || '<div class="muted">请添加乘客</div>';
+  // 任务模式下隐藏「添加乘客」输入与全局席别，避免自行添加/误导
+  var addBtn = $('addPaxBtn'); if(addBtn) addBtn.style.display = isTask ? 'none' : '';
+  if($('newName')) $('newName').style.display = isTask ? 'none' : '';
+  if($('newId')) $('newId').style.display = isTask ? 'none' : '';
+  if($('buyClass')) $('buyClass').style.display = isTask ? 'none' : '';
 }
 function prefLabel(p){ return p==='window'?'靠窗A/F': p==='aisle'?'过道C/D': (p&&p!=='any'?p+'列':'不限'); }
 function addPassenger(){
@@ -923,6 +1000,7 @@ function submitOrder(){
   if(!sel.length){ showToast('请至少选择一位乘客','err'); return; }
   if(!booking.train){ showToast('请先选择车次','err'); return; }
   booking.seatClass = $('buyClass').value;
+  if(task.active){ submitTaskOrder(sel); return; }
   var names = sel.map(function(p){return p.name;}).join(',');
   var prefs = sel.map(function(p, i){
     if(booking.selectedSeats && booking.selectedSeats[i]) return booking.selectedSeats[i];
@@ -1422,6 +1500,214 @@ function resetGameUI(){
   game.peek = {};
 }
 
+/* ============================ 真实抢票任务 ============================ */
+var task = { active:false, data:null, timer:null, timeLeft:0, submitted:false, paid:false, orderId:null, score:0, dims:[] };
+
+function payName(m){ return m==='alipay'?'支付宝': m==='wechat'?'微信支付': m==='card'?'银行卡': (m||''); }
+function mapTaskDifficulty(level){
+  if(!level) return $('taskDifficulty2').value;
+  var n = parseInt(level.slice(1)) || 1;
+  return n<=3?'easy': n<=6?'normal': n<=9?'hard':'hell';
+}
+function startTask(difficulty){
+  if(task.active){ showToast('任务进行中','warn'); return; }
+  var diff = difficulty || $('taskDifficulty2').value;
+  fetch('/api/task/start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({difficulty:diff})})
+    .then(function(r){return r.json();}).then(function(d){
+      if(!d.taskId){ showToast('任务启动失败','err'); return; }
+      task.active = true; task.data = d; task.submitted=false; task.paid=false; task.score=0; task.dims=[]; task.orderId=null;
+      task.timeLeft = d.timeLimitSeconds;
+      renderTask();
+      $('tStart').style.display='none'; $('tStop').style.display='inline-block';
+      showPage(0);
+      showToast('🎯 任务已下发！请在车票预订页完成购票','ok');
+      playSound('win');
+      if(task.timer) clearInterval(task.timer);
+      task.timer = setInterval(taskTick, 1000);
+    }).catch(function(){ showToast('任务启动失败','err'); });
+}
+function taskTick(){
+  task.timeLeft--;
+  if(task.timeLeft<=0){ task.timeLeft=0; stopTask('超时'); return; }
+  if($('tTimer')) $('tTimer').textContent = task.timeLeft;
+  if($('taskBannerTimer')) $('taskBannerTimer').textContent = '⏱ '+task.timeLeft+'s';
+}
+function renderTask(){
+  var d = task.data;
+  if($('tDifficulty')) $('tDifficulty').textContent = {easy:'🟢 简单',normal:'🟡 普通',hard:'🟠 困难',hell:'🔴 地狱'}[d.difficulty]||d.difficulty;
+  var routeHint = d.fromCity + (d.fromStationHint?('（'+d.fromStationHint+'）'):'') + ' → ' + d.toCity + (d.toStationHint?('（'+d.toStationHint+'）'):'');
+  if($('tRoute')) $('tRoute').textContent = routeHint;
+  if($('tMeta')) $('tMeta').textContent = '为 '+d.passengers.length+' 名乘客购票 · 时限 '+d.timeLimitSeconds+' 秒';
+  if($('tTimer')) $('tTimer').textContent = task.timeLeft;
+  if($('tScore')) $('tScore').textContent = task.score;
+  var req = [];
+  d.passengers.forEach(function(p){
+    var parts = [];
+    if(p.idNumber) parts.push('证件 '+esc(p.idNumber));
+    if(p.passengerType) parts.push('类型 '+esc(p.passengerType));
+    if(p.seatClass) parts.push('席位 '+esc(p.seatClass));
+    if(p.seatPref && p.seatPref!=='any') parts.push('座位 '+(p.seatPref==='window'?'靠窗':p.seatPref==='aisle'?'过道':esc(p.seatPref)));
+    if(p.timePeriod) parts.push('时段 '+esc(p.timePeriod));
+    if(p.stationPref) parts.push(esc(p.stationPref));
+    req.push('<div style="padding:6px 10px;border-radius:8px;background:#eef5ff;margin:4px 0"><b>👤 '+esc(p.name)+'</b><br><span class="muted">'+parts.join(' · ')+'</span></div>');
+  });
+  req.push('<div class="muted">💳 支付：<b>'+payName(d.payMethod)+'</b> · 密码 <b>'+d.payPassword+'</b>（支付时请输入）</div>');
+  if($('tBrief')) $('tBrief').innerHTML = req.join('');
+  var banner = $('taskBanner');
+  if(banner){
+    banner.style.display='block';
+    $('taskBannerRoute').textContent = routeHint;
+    var paxNames = d.passengers.map(function(p){return p.name;}).join('、');
+    $('taskBannerPax').innerHTML = '👤 乘客：<b>'+esc(paxNames)+'</b> · 席位 <b>'+esc(d.passengers[0].seatClass)+'</b> · 支付 '+payName(d.payMethod)+'（密码 '+d.payPassword+'）';
+  }
+  initPassengers();
+}
+function stopTask(reason){
+  if(task.timer) clearInterval(task.timer); task.timer=null;
+  fetch('/api/task/stop',{method:'POST'});
+  if(reason==='超时') showToast('⏱ 任务超时，未完成','err');
+  else if(reason) showToast(reason,'info');
+  task.active = false; task.data = null;
+  var s=$('tStart'); if(s) s.style.display='inline-block';
+  var s2=$('tStop'); if(s2) s2.style.display='none';
+  var banner=$('taskBanner'); if(banner) banner.style.display='none';
+  if($('tTimer')) $('tTimer').textContent='--';
+  if($('tScore')) $('tScore').textContent='0';
+  initPassengers();
+}
+function renderTaskDims(dims, el){
+  if(!el) return;
+  if(!dims || !dims.length){ el.innerHTML='<div class="muted">暂无评分</div>'; return; }
+  var h='';
+  dims.forEach(function(d){
+    h += '<div class="task-dim '+(d.passed?'ok':'bad')+'"><span class="td-name">'+esc(d.name)+'</span><span class="td-pts">'+d.earned+' / '+d.max+'</span><span>'+(d.passed?'✅':'❌')+'</span><span class="td-note">'+esc(d.note||'')+'</span></div>';
+  });
+  el.innerHTML = h;
+}
+function submitTaskOrder(sel){
+  // 12306 式滑块验证通过后再提交
+  verifySlider(function(){ doTaskSubmit(sel); });
+}
+function doTaskSubmit(sel){
+  var payload = {
+    train: booking.train.trainNumber,
+    from: booking.from,
+    to: booking.to,
+    passengers: sel.map(function(p){ return {name:p.name, passengerType: p.ptype||'成人', seatClass: p.cls||'二等座', preferredSeat: p.pref||'any'}; })
+  };
+  var t = booking.train;
+  var fi = t.stations.findIndex(function(s){return s.name===booking.from;});
+  var ti = t.stations.findIndex(function(s){return s.name===booking.to;});
+  var km = t.stations[ti].distance - t.stations[fi].distance;
+  var amount = 0; sel.forEach(function(p){ amount += calcPrice(km, p.cls||'二等座', 1); });
+  $('queuePanel').style.display='block';
+  $('queueStatus').textContent='正在提交任务订单…';
+  $('queueBar').style.width='5%';
+  fetch('/api/task/submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
+    .then(function(r){return r.json();}).then(function(res){
+      $('queuePanel').style.display='none';
+      if(res.ok){
+        task.submitted = true; task.score = res.score; task.orderId = res.orderId; task.dims = res.dimensions||[];
+        if($('tScore')) $('tScore').textContent = res.score;
+        renderTaskDims(res.dimensions, $('tDimList'));
+        if(res.orderId && ORDERS[res.orderId]) amount = ORDERS[res.orderId].totalPrice || amount;
+        showTaskPayPrompt(res.orderId, amount);
+        openPay(res.orderId, amount, true);
+      } else {
+        showToast('❌ '+(res.msg||'提交失败'),'err');
+      }
+    }).catch(function(){ $('queuePanel').style.display='none'; showToast('网络错误','err'); });
+}
+function showTaskPayPrompt(orderId, amount){
+  var h = '<div style="background:#fff8e6;border:2px solid #ffd27a;border-radius:12px;padding:16px">'
+    + '<h3 style="color:#e67e22">⏳ 待支付</h3>'
+    + '<div class="small" style="line-height:1.9;margin:8px 0">订单号：<b>'+esc(orderId)+'</b><br>金额：<b style="color:var(--orange)">¥'+(amount||0).toFixed(2)+'</b><br>请选择支付方式并输入支付密码</div>'
+    + '<button class="book-btn" onclick="openPay(\''+esc(orderId)+'\','+(amount||0)+',true)">💳 去支付</button></div>';
+  $('ticketResult').innerHTML = h;
+  $('ticketResult').style.display='block';
+}
+function submitTaskPay(){
+  fetch('/api/task/pay',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({orderId: pay.orderId, method: pay.method, password: pay.input})})
+    .then(function(r){return r.json();}).then(function(res){
+      if(res.ok){
+        task.paid = true; task.score = res.score;
+        $('payResult').innerHTML='<span style="color:var(--green)">✅ 支付完成</span>';
+        confetti(80); playSound('coin');
+        var r = res;
+        setTimeout(function(){ closePay(); onTaskPay(r); }, 800);
+      } else {
+        $('payResult').innerHTML='<span style="color:var(--red)">❌ '+(res.msg||'支付失败，请重试')+'</span>';
+        pay.input=''; renderPayDots(); playSound('fail');
+      }
+    });
+}
+function onTaskPay(res){
+  renderTaskDims(res.dimensions, $('taskDimList2'));
+  $('taskRankBadge').className = 'rank-badge rank-'+res.rank;
+  $('taskRankLetter').textContent = res.rank;
+  $('taskRankTitle').textContent = {S:'传说级',A:'精英级',B:'老练级',C:'入门级',D:'萌新'}[res.rank]||'';
+  $('taskResultHead').textContent = '任务结算';
+  var line = '综合评分 <b style="color:var(--orange);font-size:1.3rem">'+res.score+'</b> / '+res.maxScore+'<br>';
+  if(res.elapsed!=null) line += '用时 '+res.elapsed+' 秒'+(res.speedCoins?' · 速度奖励 +'+res.speedCoins+' 🪙':'')+'<br>';
+  line += '获得 <b style="color:var(--green)">'+res.coins+' 🪙</b>';
+  $('taskResultBody').innerHTML = line;
+  $('ticketResult').style.display='none';
+  addCoins(res.coins); addXp(res.score);
+  profile.games++; bumpDaily('games',1); if(res.rank==='S') bumpDaily('wins',1);
+  saveProfile(); refreshProfile();
+  if(campLevel){
+    var prev = profile.camp[campLevel];
+    if(!prev || 'SABCD'.indexOf(res.rank) < 'SABCD'.indexOf(prev)){ profile.camp[campLevel]=res.rank; saveProfile(); }
+    campLevel = null;
+  }
+  openModal('taskResultModal');
+  stopTask();
+  if(res.rank==='S') confetti(200);
+}
+
+/* ============================ 滑块验证（12306 式） ============================ */
+var sliderVerifyCb = null, sliderTargetPos = 0, sliderDragging = false;
+function verifySlider(cb){ sliderVerifyCb = cb; $('sliderOverlay').classList.add('active'); sliderReset(); }
+function closeSlider(){ sliderVerifyCb = null; $('sliderOverlay').classList.remove('active'); }
+function sliderReset(){
+  var track = $('sliderTrack');
+  var tw = 34;
+  var maxLeft = track.clientWidth - tw;
+  sliderTargetPos = Math.floor(Math.random()*(maxLeft - 50) + 30);
+  $('sliderTarget').style.left = sliderTargetPos + 'px';
+  $('sliderHandle').style.left = '0px';
+  $('sliderBar').style.width = '0px';
+  var h = $('sliderHint'); h.textContent = '向右拖动滑块'; h.style.color = '#8a97a5';
+}
+function sliderDown(e){ sliderDragging = true; e.preventDefault(); }
+function sliderMove(e){
+  if(!sliderDragging) return;
+  var track = $('sliderTrack');
+  var rect = track.getBoundingClientRect();
+  var cx = (e.clientX !== undefined) ? e.clientX : (e.touches && e.touches[0] ? e.touches[0].clientX : 0);
+  var x = cx - rect.left;
+  var maxLeft = track.clientWidth - 42;
+  x = Math.max(0, Math.min(maxLeft, x));
+  $('sliderHandle').style.left = x + 'px';
+  $('sliderBar').style.width = x + 'px';
+}
+function sliderUp(){
+  if(!sliderDragging) return;
+  sliderDragging = false;
+  var left = parseFloat($('sliderHandle').style.left) || 0;
+  var diff = Math.abs(left - sliderTargetPos);
+  var h = $('sliderHint');
+  if(diff <= 6){
+    h.textContent = '✅ 验证通过！'; h.style.color = '#27ae60';
+    var cb = sliderVerifyCb; sliderVerifyCb = null;
+    setTimeout(function(){ $('sliderOverlay').classList.remove('active'); if(cb) cb(); }, 400);
+  } else {
+    h.textContent = '❌ 验证失败，请重试'; h.style.color = '#c0392b';
+    playSound('fail');
+    setTimeout(sliderReset, 500);
+  }
+}
+
 /* ============================ 成就 ============================ */
 var ACH = [
   {id:'first_win',icon:'🎖️',name:'首战告捷',desc:'完成第一局抢票任务'},
@@ -1499,7 +1785,7 @@ var campLevel = null;
 function startCampaignLevel(id){
   campLevel = id;
   showPage(4);
-  startGame(id, 'timed');
+  startTask(mapTaskDifficulty(id));
 }
 
 /* ============================ 每日任务 ============================ */
@@ -1553,20 +1839,45 @@ function claimDailyBonus(){
 }
 
 /* ============================ 支付 ============================ */
-function openPay(orderId, amount){
+function openPay(orderId, amount, isTask){
   pay.orderId = orderId; pay.input='';
-  pay.pwd = String(Math.floor(Math.random()*900000+100000));
+  pay.isTask = !!isTask;
+  if(pay.isTask && task.data){
+    pay.pwd = task.data.payPassword;
+    $('payPwd').textContent = '••••••';
+    $('payCountdown').style.display = 'block';
+    pay.deadline = Date.now() + 60000;
+    if(pay.timer) clearInterval(pay.timer);
+    pay.timer = setInterval(payTick, 1000);
+    payTick();
+  } else {
+    pay.pwd = String(Math.floor(Math.random()*900000+100000));
+    $('payPwd').textContent = pay.pwd;
+    $('payCountdown').style.display = 'none';
+    if(pay.timer) clearInterval(pay.timer); pay.timer=null;
+  }
   $('payAmount').textContent = '¥'+(amount||0).toFixed(2);
-  $('payPwd').textContent = pay.pwd;
   $('payResult').textContent='';
+  switchPay('alipay');
   renderPayDots();
   $('payOverlay').classList.add('active');
 }
-function closePay(){ $('payOverlay').classList.remove('active'); }
+function closePay(){ if(pay.timer) clearInterval(pay.timer); pay.timer=null; $('payOverlay').classList.remove('active'); }
+function payTick(){
+  var left = Math.max(0, Math.round((pay.deadline - Date.now())/1000));
+  var el = $('payCount'); if(el) el.textContent = left;
+  if(left<=0){
+    if(pay.timer) clearInterval(pay.timer); pay.timer=null;
+    closePay();
+    if(pay.isTask && task.active){ stopTask('支付超时，订单已取消'); }
+  }
+}
 function switchPay(type){
+  pay.method = type;
   document.querySelectorAll('.pay-method-btn').forEach(function(b){ b.classList.remove('active'); });
-  document.querySelector('.pay-method-btn[data-m='+type+']').classList.add('active');
-  $('payTitle').textContent = type==='alipay'?'🏧 支付宝': type==='wechat'?'💚 微信支付':'💳 银行卡支付';
+  var btn = document.querySelector('.pay-method-btn[data-m='+type+']');
+  if(btn) btn.classList.add('active');
+  $('payTitle').textContent = type==='alipay'?'🏧 支付宝': type==='wechat'?'💚 微信支付': type==='card'?'💳 银行卡支付': type==='unionpay'?'☁️ 云闪付':'🚄 铁路E卡通';
 }
 function pressKey(k){
   if(k==='clear') pay.input='';
@@ -1574,7 +1885,9 @@ function pressKey(k){
   else if(pay.input.length<6) pay.input += k;
   renderPayDots();
   if(pay.input.length===6){
-    if(pay.input===pay.pwd){
+    if(pay.isTask){
+      submitTaskPay();
+    } else if(pay.input===pay.pwd){
       $('payResult').innerHTML='<span style="color:var(--green)">✅ 支付成功！</span>';
       fetch('/api/pay?orderId='+pay.orderId,{method:'POST'}).then(function(r){return r.json();});
       if(ORDERS[pay.orderId]) ORDERS[pay.orderId].status = 'Paid';
@@ -1678,6 +1991,12 @@ function init(){
   loadOrders();
   loadSignalR(connectHub);
   setInterval(updateStatsPoll, 3000);
+  var sh = $('sliderHandle');
+  if(sh){ sh.addEventListener('mousedown', sliderDown); sh.addEventListener('touchstart', sliderDown); }
+  document.addEventListener('mousemove', sliderMove);
+  document.addEventListener('mouseup', sliderUp);
+  document.addEventListener('touchmove', sliderMove, {passive:false});
+  document.addEventListener('touchend', sliderUp);
 }
 init();
 </script>

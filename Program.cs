@@ -145,6 +145,7 @@ builder.Services.AddSingleton<HxdaDb>();
 // ⭐ TrainTicketWeb 抢票模拟中心（整合）
 builder.Services.AddSingleton<TrainSystem>();
 builder.Services.AddSingleton<GrabGameService>();
+builder.Services.AddSingleton<TicketTaskService>();
 
 // ============================================================
 // OCR / Solver services
@@ -437,6 +438,14 @@ app.MapPost("/api/reset", () =>
 // ---------- 统计 ----------
 app.MapGet("/api/stats", () => Results.Ok(trainSystem.GetStats()));
 
+// ---------- 真实抢票任务 ----------
+var taskService = app.Services.GetRequiredService<TicketTaskService>();
+app.MapPost("/api/task/start", (TaskStartRequest req) => Results.Ok(taskService.Start(req.Difficulty ?? "normal")));
+app.MapGet("/api/task/current", () => Results.Ok(taskService.CurrentDto()));
+app.MapPost("/api/task/stop", () => Results.Ok(taskService.Stop()));
+app.MapPost("/api/task/submit", (TaskSubmitRequest req) => Results.Ok(taskService.Submit(req)));
+app.MapPost("/api/task/pay", (TaskPayRequest req) => Results.Ok(taskService.Pay(req)));
+
 // ============================================================
 // 应用生命周期事件
 // ============================================================
@@ -579,3 +588,4 @@ static object ToOrderDto(Order o) => new
 };
 
 record BuyRequest(string Train, string From, string To, string Name, string SeatClass, string PreferredSeat);
+record TaskStartRequest(string Difficulty);
