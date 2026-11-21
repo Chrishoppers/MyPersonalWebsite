@@ -8,8 +8,25 @@ using System.Globalization;
 using System.Text.Encodings.Web;
 using System.Text.Unicode;
 using System.Text.Json;
+using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.SignalR;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// ⭐ 只保留控制台日志：禁用 EventLog 提供程序
+//    （否则非管理员环境写事件日志 source ".NET Runtime" 会因"拒绝访问"而崩溃，并掩盖真实错误）
+builder.Logging.ClearProviders();
+builder.Logging.AddConfiguration(builder.Configuration.GetSection("Logging"));
+builder.Logging.AddSimpleConsole();
+
+// 全局兜底：捕获未处理异常，避免 .NET 运行时再尝试写事件日志
+AppDomain.CurrentDomain.UnhandledException += (s, e) =>
+    Console.WriteLine($"[FATAL] 未处理异常: {e.ExceptionObject}");
+TaskScheduler.UnobservedTaskException += (s, e) =>
+{
+    Console.WriteLine($"[WARN] 未观察任务异常: {e.Exception?.Message}");
+    e.SetObserved();
+};
 
 // ⭐ 禁用文件监控
 builder.Host.UseDefaultServiceProvider((context, options) =>
@@ -125,6 +142,10 @@ builder.Services.AddHttpClient<ReCaptchaService>();
 
 builder.Services.AddSingleton<HxdaDb>();
 
+// ⭐ TrainTicketWeb 抢票模拟中心（整合）
+builder.Services.AddSingleton<TrainSystem>();
+builder.Services.AddSingleton<GrabGameService>();
+
 // ============================================================
 // OCR / Solver services
 // ============================================================
@@ -151,6 +172,11 @@ builder.Services.AddSignalR(options =>
 {
     options.EnableDetailedErrors = true;
     options.MaximumReceiveMessageSize = 102400;
+}).AddJsonProtocol(o =>
+{
+    o.PayloadSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    o.PayloadSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+    o.PayloadSerializerOptions.PropertyNameCaseInsensitive = true;
 });
 
 // ============================================================
@@ -213,6 +239,203 @@ app.MapHub<WerewolfHub>("/werewolfHub");
 // SolverHub for real-time solver progress
 app.MapHub<SolverHub>("/solverHub");
 app.MapHub<BoardGameHub>("/boardGameHub");
+app.MapHub<TicketHub>("/ticketHub");
+
+// ============================================================
+// ⭐ TrainTicketWeb 抢票模拟中心（整合）
+// ============================================================
+var trainSystem = app.Services.GetRequiredService<TrainSystem>();
+var ticketHubContext = app.Services.GetRequiredService<IHubContext<TicketHub>>();
+
+trainSystem.InitializeDefaultTrains();
+
+// ---------- 事件 → SignalR ----------
+trainSystem.OnOrderCreated += o =>
+{
+    _ = ticketHubContext.Clients.All.SendAsync("OrderCreated", new
+    {
+        orderId = o.OrderId,
+        trainNumber = o.TrainNumber,
+        trainName = o.TrainName,
+        fromStation = o.FromStation,
+        toStation = o.ToStation,
+        departureTime = o.DepartureTime,
+        arrivalTime = o.ArrivalTime,
+        status = o.Status.ToString(),
+        createTime = o.CreateTime,
+        source = o.Source,
+        passengers = o.Passengers.Select(p => new
+        {
+            p.Name, p.SeatClass, p.PreferredSeat,
+            passengerType = p.TypeName, p.Age, p.Gender, p.IdNumber
+        }).ToList()
+    });
+};
+trainSystem.OnOrderStatusChanged += o =>
+{
+    _ = ticketHubContext.Clients.All.SendAsync("OrderUpdated", new
+    {
+        orderId = o.OrderId,
+        status = o.Status.ToString(),
+        assignedSeats = o.AssignedSeats,
+        failReason = o.FailReason,
+        totalPrice = o.TotalPrice,
+        attemptCount = o.AttemptCount,
+        finishTime = o.FinishTime
+    });
+};
+
+// ---------- 实时统计广播 ----------
+var ttLifetime = app.Services.GetRequiredService<IHostApplicationLifetime>();
+_ = Task.Run(async () =>
+{
+    while (!ttLifetime.ApplicationStopping.IsCancellationRequested)
+    {
+        try { await ticketHubContext.Clients.All.SendAsync("StatsUpdated", trainSystem.GetStats()); }
+        catch { /* 忽略发送异常 */ }
+        try { await Task.Delay(1000, ttLifetime.ApplicationStopping); } catch { break; }
+    }
+});
+
+// ---------- 列车 ----------
+app.MapGet("/api/trains", () => Results.Ok(trainSystem.Trains.Select(t => new
+{
+    trainNumber = t.TrainNumber,
+    trainName = t.TrainName,
+    maxSpeed = t.MaxSpeed,
+    departureTime = t.DepartureTime.ToString("HH:mm"),
+    totalSeats = t.TotalSeats,
+    stations = t.Stations.Select(s => new
+    {
+        name = s.StationName, code = s.StationCode, distance = s.Distance,
+        arrive = s.ArriveMinutes, depart = s.DepartMinutes, stop = s.StopMinutes
+    }).ToList(),
+    carriages = t.Carriages.Select(c => new
+    {
+        number = c.CarriageNumber,
+        type = c.Type.ToString(),
+        seatClass = Carriage.TypeName(c.Type),
+        seats = c.Seats.Count
+    }).ToList()
+})));
+
+app.MapGet("/api/seats", (string trainNumber, string station) =>
+{
+    var t = trainSystem.Trains.FirstOrDefault(x => x.TrainNumber == trainNumber);
+    if (t == null) return Results.NotFound(new { error = "列车不存在" });
+    int idx = t.Stations.FindIndex(s => s.StationName == station);
+    return Results.Ok(t.Carriages.Select(c => new
+    {
+        carriageNumber = c.CarriageNumber,
+        type = c.Type.ToString(),
+        seatClass = Carriage.TypeName(c.Type),
+        seats = c.Seats.Select(s => new
+        {
+            row = s.Row,
+            column = s.Column,
+            seatNumber = s.SeatNumber,
+            status = trainSystem.GetSeatStatus(s, t, idx),
+            window = s.IsWindow
+        }).ToList()
+    }));
+});
+
+// ---------- 订单 ----------
+app.MapPost("/api/buy", (BuyRequest req) =>
+{
+    var tr = trainSystem.Trains.FirstOrDefault(x => x.TrainNumber == req.Train);
+    if (tr == null) return Results.Json(new { success = false, msg = "列车不存在" });
+
+    int fi = tr.Stations.FindIndex(s => s.StationName == req.From);
+    int ti = tr.Stations.FindIndex(s => s.StationName == req.To);
+    if (fi < 0 || ti < 0 || fi >= ti)
+        return Results.Json(new { success = false, msg = "站点选择无效" });
+
+    var o = new Order
+    {
+        TrainNumber = req.Train,
+        TrainName = tr.TrainName,
+        FromStation = req.From,
+        ToStation = req.To,
+        DepartureTime = tr.DepartureTime.AddMinutes(tr.Stations[fi].DepartMinutes).ToString("HH:mm"),
+        ArrivalTime = tr.DepartureTime.AddMinutes(tr.Stations[ti].ArriveMinutes).ToString("HH:mm"),
+        Source = "user"
+    };
+    for (int i = fi; i <= ti; i++) o.PassedStations.Add(tr.Stations[i].StationName);
+
+    var names = (req.Name ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+    var seats = (req.PreferredSeat ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+    var classes = (req.SeatClass ?? "二等座").Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+    for (int i = 0; i < names.Length; i++)
+    {
+        var seatPref = i < seats.Length ? seats[i] : "";
+        var cls = i < classes.Length ? classes[i] : (classes.Length > 0 ? classes[0] : "二等座");
+        var p = new PassengerInfo(names[i], seatPref, cls)
+        {
+            Age = Random.Shared.Next(18, 60),
+            Gender = Random.Shared.Next(2) == 0 ? "男" : "女"
+        };
+        o.Passengers.Add(p);
+    }
+
+    if (o.Passengers.Count == 0)
+        return Results.Json(new { success = false, msg = "请至少输入一位乘客" });
+
+    trainSystem.EnqueueOrder(o);
+    return Results.Json(new { success = true, orderId = o.OrderId });
+});
+
+app.MapGet("/api/orders", (int count = 200) => Results.Ok(trainSystem.RecentOrders(Math.Clamp(count, 1, 1000)).Select(ToOrderDto)));
+
+app.MapGet("/api/order/{id}", (string id) =>
+{
+    var o = trainSystem.AllOrdersSnapshot().FirstOrDefault(x => x.OrderId == id);
+    return o == null ? Results.NotFound(new { error = "订单不存在" }) : Results.Ok(ToOrderDto(o));
+});
+
+app.MapPost("/api/pay", (string orderId) =>
+{
+    var o = trainSystem.AllOrdersSnapshot().FirstOrDefault(x => x.OrderId == orderId);
+    if (o == null) return Results.Json(new { success = false, msg = "订单不存在" });
+    if (o.Status != OrderStatus.Success) return Results.Json(new { success = false, msg = "订单未出票，无法支付" });
+    o.Status = OrderStatus.Paid;
+    trainSystem.RaiseOrderStatusChanged(o);
+    return Results.Json(new { success = true, msg = "支付成功" });
+});
+
+// ---------- 系统控制 ----------
+app.MapPost("/api/start", () => { trainSystem.StartSystem(); return Results.Ok(new { running = true }); });
+app.MapPost("/api/stop", () => { trainSystem.StopSystem(); return Results.Ok(new { running = false }); });
+app.MapPost("/api/traffic", (int rate) => { trainSystem.TrafficRate = Math.Clamp(rate, 0, 1000); return Results.Ok(); });
+app.MapPost("/api/server", (int count) => { trainSystem.ServerCount = Math.Clamp(count, 1, 100); trainSystem.AdjustServers(); return Results.Ok(); });
+app.MapPost("/api/mode", (string mode) =>
+{
+    trainSystem.CurrentMode = mode switch
+    {
+        "spring" => TrainSystem.TicketingMode.SpringFestival,
+        "national" => TrainSystem.TicketingMode.NationalDay,
+        "mayday" => TrainSystem.TicketingMode.MayDay,
+        _ => TrainSystem.TicketingMode.Normal
+    };
+    return Results.Ok(new { mode = trainSystem.CurrentMode.ToString() });
+});
+app.MapPost("/api/addtrain", () => { trainSystem.AddTrain(); return Results.Ok(); });
+app.MapPost("/api/removetrain", () => { trainSystem.RemoveTrain(); return Results.Ok(); });
+app.MapPost("/api/reset", () =>
+{
+    trainSystem.StopSystem();
+    trainSystem.OrderQueue.Clear();
+    foreach (var t in trainSystem.Trains)
+        foreach (var c in t.Carriages)
+            foreach (var s in c.Seats)
+                s.SectionOccupied.Clear();
+    trainSystem.InitializeDefaultTrains();
+    return Results.Ok(new { msg = "已重置" });
+});
+
+// ---------- 统计 ----------
+app.MapGet("/api/stats", () => Results.Ok(trainSystem.GetStats()));
 
 // ============================================================
 // 应用生命周期事件
@@ -326,3 +549,33 @@ string EscapeSql(string value)
     if (string.IsNullOrEmpty(value)) return "";
     return value.Replace("'", "''");
 }
+
+// ============================================================
+// ⭐ TrainTicketWeb 抢票模拟中心（辅助）
+// ============================================================
+static object ToOrderDto(Order o) => new
+{
+    orderId = o.OrderId,
+    trainNumber = o.TrainNumber,
+    trainName = o.TrainName,
+    fromStation = o.FromStation,
+    toStation = o.ToStation,
+    departureTime = o.DepartureTime,
+    arrivalTime = o.ArrivalTime,
+    passedStations = o.PassedStations,
+    status = o.Status.ToString(),
+    failReason = o.FailReason,
+    createTime = o.CreateTime,
+    finishTime = o.FinishTime,
+    assignedSeats = o.AssignedSeats,
+    totalPrice = o.TotalPrice,
+    source = o.Source,
+    attemptCount = o.AttemptCount,
+    passengers = o.Passengers.Select(p => new
+    {
+        p.Name, p.SeatClass, p.PreferredSeat,
+        passengerType = p.TypeName, p.Age, p.Gender, p.IdNumber
+    }).ToList()
+};
+
+record BuyRequest(string Train, string From, string To, string Name, string SeatClass, string PreferredSeat);
