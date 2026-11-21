@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.SignalR;
 using MyPersonalWebsite.Models;
 using MyPersonalWebsite.Services;
+using MyPersonalWebsite.Hubs;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -16,11 +18,15 @@ namespace MyPersonalWebsite.Controllers
     {
         private readonly DataSyncService _dataSync;
         private readonly BrevoEmailService _emailService;
+        private readonly IHubContext<MessageHub> _messageHub;
+        private readonly HxdaDb _hxdaDb;
 
-        public AdminController(DataSyncService dataSync, BrevoEmailService emailService)
+        public AdminController(DataSyncService dataSync, BrevoEmailService emailService, IHubContext<MessageHub> messageHub, HxdaDb hxdaDb)
         {
             _dataSync = dataSync;
             _emailService = emailService;
+            _messageHub = messageHub;
+            _hxdaDb = hxdaDb;
         }
 
         // ============================================================
@@ -416,7 +422,53 @@ namespace MyPersonalWebsite.Controllers
             ViewBag.RecentMessages = messages.OrderByDescending(m => m.CreateTime).Take(5).ToList();
             ViewBag.RecentContactRequests = contactRequests.OrderByDescending(r => r.RequestTime).Take(5).ToList();
 
+            // ============================================================
+            // 回响档案数据（聊天记录 + 进度，管理员可见）
+            // ============================================================
+            try
+            {
+                var hxdaPlayers = await _hxdaDb.GetAllPlayers();
+                ViewBag.HxdaPlayers = hxdaPlayers.OrderByDescending(p => p.LastSeenAt).Take(12).ToList();
+                ViewBag.HxdaPmLogs = await _hxdaDb.GetAllPmLogs();
+            }
+            catch
+            {
+                ViewBag.HxdaPlayers = new List<HxdaPlayer>();
+                ViewBag.HxdaPmLogs = new List<HxdaPmRecord>();
+            }
+
             return View();
+        }
+
+        // ============================================================
+        // 💀 恐怖效果释放（广播到所有在线用户）
+        // ============================================================
+        [HttpPost]
+        public async Task<IActionResult> BroadcastHorror(string type, string message)
+        {
+            if ((HttpContext.Session.GetInt32("IsAdmin") ?? 0) != 1)
+                return Unauthorized();
+
+            try
+            {
+                switch (type)
+                {
+                    case "ghost":
+                        await _messageHub.Clients.All.SendAsync("GhostEvent", string.IsNullOrEmpty(message) ? "👻 幽灵出没！" : message);
+                        break;
+                    case "shake":
+                        await _messageHub.Clients.All.SendAsync("ShakeEvent", string.IsNullOrEmpty(message) ? "hard" : message);
+                        break;
+                    default:
+                        await _messageHub.Clients.All.SendAsync("HorrorInvasion", string.IsNullOrEmpty(message) ? "💀 你逃不掉的..." : message);
+                        break;
+                }
+                return Json(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, error = ex.Message });
+            }
         }
 
         // ============================================================

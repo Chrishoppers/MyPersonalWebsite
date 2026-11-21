@@ -31,13 +31,14 @@ namespace MyPersonalWebsite.Services
                 // 自动配置系统节点与流量（难度越高竞争越激烈），并自动启动系统
                 var (sc, tr) = difficulty switch
                 {
-                    "easy" => (3, 8),
-                    "hard" => (5, 20),
-                    "hell" => (6, 28),
-                    _ => (4, 14)
+                    "easy" => (4, 25),
+                    "hard" => (8, 60),
+                    "hell" => (10, 90),
+                    _ => (6, 45)
                 };
                 _trainSystem.ServerCount = sc;
                 _trainSystem.TrafficRate = tr;
+                _trainSystem.CurrentMode = TrainSystem.TicketingMode.SpringFestival; // 春运模式：流量全开，抢票更激烈
                 _trainSystem.StartSystem();
                 _trainSystem.AdjustServers();
                 return ToClientDto(_task);
@@ -392,6 +393,7 @@ namespace MyPersonalWebsite.Services
             if (name.EndsWith("虹桥")) return name[..^2];
             if (name.EndsWith("南站") || name.EndsWith("北站") || name.EndsWith("东站") || name.EndsWith("西站")) return name[..^2];
             if (name.EndsWith("南") || name.EndsWith("北") || name.EndsWith("东") || name.EndsWith("西")) return name[..^1];
+            if (name.EndsWith("站")) return name[..^1];
             return name;
         }
 
@@ -406,6 +408,7 @@ namespace MyPersonalWebsite.Services
             if (name.EndsWith("北")) return "北站";
             if (name.EndsWith("东")) return "东站";
             if (name.EndsWith("西")) return "西站";
+            if (name.EndsWith("站")) return "站";
             return "本站";
         }
 

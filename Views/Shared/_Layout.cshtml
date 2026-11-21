@@ -591,6 +591,21 @@
                     overlay.id = 'horrorOverlay';
                     document.body.appendChild(overlay);
 
+                    // 全屏红字乱码背景
+                    var glitchLayer = document.createElement('div');
+                    glitchLayer.style.cssText =
+                        'position:absolute;inset:0;z-index:-1;color:rgba(255,0,0,0.22);' +
+                        'font-family:"Courier New",monospace;font-size:15px;line-height:1.35;' +
+                        'word-break:break-all;overflow:hidden;white-space:pre-wrap;padding:1.2rem;pointer-events:none;';
+                    var glib = '▓▒░█▀▄▌▐■□◢◣◤◥#%&@!?/\\|<>{}[]~☠';
+                    var glibText = '';
+                    for (var gi = 0; gi < 700; gi++) {
+                        glibText += glib[Math.floor(Math.random() * glib.length)];
+                        if (gi % 46 === 45) glibText += '\n';
+                    }
+                    glitchLayer.textContent = glibText;
+                    overlay.appendChild(glitchLayer);
+
                     var images = ['ghost.png','face1.png','face2.png','face3.png','skull.png','demon.png','scream.png','blood_eyes.png'];
                     var selectedImage = images[Math.floor(Math.random() * images.length)];
                     var img = document.createElement('img');

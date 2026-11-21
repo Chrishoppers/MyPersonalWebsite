@@ -1,4 +1,4 @@
-﻿/* ============================================================
+/* ============================================================
    回响档案 · 私信系统
    文件：wwwroot/hxda/js/pm.js
    依赖：storage.js、ui.js、tracker.js、audio.js
@@ -377,6 +377,58 @@
     }
 
     /* ============================================================
+       全屏红字 + 乱码（林默异常时突然出现）
+       ============================================================ */
+    function showFullScreenRedText() {
+        var overlay = document.createElement('div');
+        overlay.style.cssText =
+            'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.92);' +
+            'display:flex;flex-direction:column;align-items:center;justify-content:center;' +
+            'pointer-events:none;';
+        document.body.appendChild(overlay);
+
+        var glitchChars = '▓▒░█▀▄▌▐■□▪▫◢◣◤◥#%&@!?/\\|<>{}[]~☠▮';
+        var redTexts = [
+            '我 在 你 后 面',
+            '别 回 头',
+            '你 已 经 是 档 案 了',
+            '它 看 见 你 了',
+            '快 跑',
+            '你 就 是 下 一 个'
+        ];
+
+        var main = document.createElement('div');
+        main.style.cssText =
+            'color:#ff0000;font-size:9vw;font-weight:900;' +
+            'font-family:"Courier New",monospace;text-shadow:0 0 40px rgba(255,0,0,0.9);' +
+            'letter-spacing:0.1em;text-align:center;padding:0 1rem;z-index:2;';
+        main.textContent = redTexts[Math.floor(Math.random() * redTexts.length)];
+        overlay.appendChild(main);
+
+        var bg = document.createElement('div');
+        bg.style.cssText =
+            'position:absolute;inset:0;color:rgba(255,0,0,0.28);' +
+            'font-family:"Courier New",monospace;font-size:14px;line-height:1.4;' +
+            'word-break:break-all;overflow:hidden;white-space:pre-wrap;padding:1rem;z-index:1;';
+        var lines = '';
+        for (var i = 0; i < 600; i++) {
+            lines += glitchChars[Math.floor(Math.random() * glitchChars.length)];
+            if (i % 42 === 41) lines += '\n';
+        }
+        bg.textContent = lines;
+        overlay.appendChild(bg);
+
+        if (window.GameAudio) GameAudio.once('static', { volume: 0.3 });
+
+        var flashes = 0;
+        var fl = setInterval(function () {
+            overlay.style.opacity = (flashes % 2 === 0) ? '0.35' : '1';
+            flashes++;
+            if (flashes >= 8) { clearInterval(fl); overlay.remove(); }
+        }, 90);
+    }
+
+    /* ============================================================
        8 个异常事件
        ============================================================ */
     var _pmTriggered = {};
@@ -461,6 +513,7 @@
                     document.body.style.background = '#1a0000';
                     document.body.style.transition = 'background 0.3s';
                     setTimeout(function () { document.body.style.background = ''; }, 1500);
+                    showFullScreenRedText();
                 }, 500);
                 break;
 

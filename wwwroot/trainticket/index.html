@@ -765,6 +765,7 @@ function cityOf(name){
   if(name.slice(-2)==='虹桥') return name.slice(0,-2);
   if(/[南北东西]站$/.test(name)) return name.slice(0,-2);
   if(/[南北东西]$/.test(name)) return name.slice(0,-1);
+  if(name.slice(-1)==='站') return name.slice(0,-1);
   return name;
 }
 function stationMatches(name, input){ return !!name && !!input && (name===input || cityOf(name)===input); }
@@ -782,6 +783,7 @@ function stationSuffixLabel(name){
   if(name.slice(-1)==='北') return '北站';
   if(name.slice(-1)==='东') return '东站';
   if(name.slice(-1)==='西') return '西站';
+  if(name.slice(-1)==='站') return '站';
   return '';
 }
 

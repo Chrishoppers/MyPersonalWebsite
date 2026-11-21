@@ -29,9 +29,10 @@ namespace MyPersonalWebsite.Services
             new (string, string, int)[] { ("北京南","BJP",0), ("天津西","TXP",120), ("济南西","JWK",406), ("徐州东","XDH",692), ("南京南","NKH",1023), ("无锡东","WXH",1201), ("上海虹桥","AOH",1318) },
             new (string, string, int)[] { ("北京西","BXP",0), ("石家庄","SJP",281), ("郑州东","ZAF",693), ("武汉","WHN",1209), ("长沙南","CWQ",1591), ("广州南","IZQ",2298), ("深圳北","IOQ",2400) },
             new (string, string, int)[] { ("上海虹桥","AOH",0), ("杭州东","HGH",159), ("南昌西","NCG",741), ("长沙南","CWQ",1083), ("贵阳北","KQW",1793), ("昆明南","KOM",2252) },
-            new (string, string, int)[] { ("上海虹桥","AOH",0), ("宁波","NGH",314), ("温州南","VRH",589), ("福州南","FYS",883), ("厦门北","XKS",1109), ("深圳北","IOQ",1618) },
+            new (string, string, int)[] { ("上海南","SNH",0), ("宁波","NGH",314), ("温州南","VRH",589), ("福州南","FYS",883), ("厦门北","XKS",1109), ("深圳北","IOQ",1618) },
             new (string, string, int)[] { ("北京南","BJP",0), ("沈阳北","SBT",703), ("长春","CCT",1003), ("哈尔滨西","VAB",1241) },
-            new (string, string, int)[] { ("西安北","EAY",0), ("成都东","ICW",658), ("重庆西","CXW",1097) }
+            new (string, string, int)[] { ("西安北","EAY",0), ("成都东","ICW",658), ("重庆西","CXW",1097) },
+            new (string, string, int)[] { ("广州东","GGQ",0), ("深圳站","SZQ",139), ("香港西九龙","XJA",180) }
         };
 
         public event Action<Order>? OnOrderCreated;
@@ -43,23 +44,39 @@ namespace MyPersonalWebsite.Services
         public void InitializeDefaultTrains()
         {
             Trains.Clear();
-            var names = new[] { "和谐号", "复兴号", "和谐号", "复兴号", "和谐号", "复兴号" };
-            var nums = new[] { "G101", "G201", "G301", "D401", "G501", "D601" };
-            for (int i = 0; i < Corridors.Length; i++)
-            {
-                Trains.Add(BuildTrain(nums[i], $"{names[i]}{nums[i]}", Corridors[i], 0, Corridors[i].Length, i == 3 || i == 5));
-            }
-            // 普速卧铺车（软卧/硬卧/硬座/无座）
-            Trains.Add(BuildTrain("Z101", "直达特快Z101", Corridors[0], 0, Corridors[0].Length, false, true));
-            Trains.Add(BuildTrain("K301", "快速K301", Corridors[2], 0, Corridors[2].Length, false, true));
+            // 每条线多趟车、不同发车时刻；北京(南/西)、上海(虹桥/南)、广州(南/东)、深圳(北/站) 形成同城多站
+            AddTrain("G101", "复兴号G101", Corridors[0], 7, 300);
+            AddTrain("G103", "复兴号G103", Corridors[0], 11, 300);
+            AddTrain("G105", "复兴号G105", Corridors[0], 15, 300);
+            AddTrain("G107", "复兴号G107", Corridors[0], 19, 300);
+            AddTrain("G201", "和谐号G201", Corridors[1], 8, 300);
+            AddTrain("G203", "和谐号G203", Corridors[1], 13, 300);
+            AddTrain("G205", "和谐号G205", Corridors[1], 17, 300);
+            AddTrain("G301", "和谐号G301", Corridors[2], 7, 300);
+            AddTrain("G303", "和谐号G303", Corridors[2], 15, 300);
+            AddTrain("D401", "复兴号D401", Corridors[3], 9, 250);
+            AddTrain("D403", "复兴号D403", Corridors[3], 16, 250);
+            AddTrain("G501", "和谐号G501", Corridors[4], 8, 300);
+            AddTrain("G503", "和谐号G503", Corridors[4], 14, 300);
+            AddTrain("D601", "复兴号D601", Corridors[5], 10, 250);
+            AddTrain("G701", "和谐号G701", Corridors[6], 9, 300);
+            AddTrain("G703", "和谐号G703", Corridors[6], 18, 300);
+            // 普速卧铺（软卧/硬卧/硬座/无座）
+            AddTrain("Z101", "直达特快Z101", Corridors[0], 6, 160, true);
+            AddTrain("K301", "快速K301", Corridors[2], 18, 160, true);
         }
 
-        private static Train BuildTrain(string number, string name, (string Name, string Code, int Km)[] corridor, int start, int count, bool isD, bool isSleeper = false)
+        private void AddTrain(string num, string name, (string Name, string Code, int Km)[] corridor, int depHour, int maxSpeed, bool isSleeper = false)
+        {
+            Trains.Add(BuildTrain(num, name, corridor, 0, corridor.Length, depHour, maxSpeed, isSleeper));
+        }
+
+        private static Train BuildTrain(string number, string name, (string Name, string Code, int Km)[] corridor, int start, int count, int depHour, int maxSpeed, bool isSleeper = false)
         {
             var t = new Train(number, name, isSleeper)
             {
-                MaxSpeed = isSleeper ? 160 : (isD ? 250 : 300),
-                DepartureTime = DateTime.Now.Date.AddHours(Random.Shared.Next(6, 14))
+                MaxSpeed = maxSpeed,
+                DepartureTime = DateTime.Now.Date.AddHours(depHour)
             };
             int depart = 0;
             for (int i = 0; i < count; i++)
@@ -91,8 +108,8 @@ namespace MyPersonalWebsite.Services
             int start = Random.Shared.Next(Math.Max(1, corridor.Length - 4));
             int count = corridor.Length - start;
             if (count < 3) { start = 0; count = Math.Max(3, corridor.Length); }
-            string num = $"G{701 + Trains.Count}";
-            Trains.Add(BuildTrain(num, $"和谐号{num}", corridor, start, count, Random.Shared.Next(2) == 0));
+            string num = $"G{900 + Trains.Count}";
+            Trains.Add(BuildTrain(num, $"和谐号{num}", corridor, start, count, Random.Shared.Next(6, 20), Random.Shared.Next(2) == 0 ? 250 : 300));
         }
 
         public void RemoveTrain()

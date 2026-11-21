@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>万物捏捏 · 解压原型 v0.2</title>
+<style>
+  :root{ --pink:#ff9ac2; --mint:#7ef0c0; --sky:#7ee8fa; --violet:#a78bfa; }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body{ margin:0; height:100%; overflow:hidden; touch-action:none; }
+  body{
+    font-family:"PingFang SC","Microsoft YaHei",-apple-system,"Segoe UI",sans-serif;
+    background: radial-gradient(120% 90% at 50% 0%, #fdeff6 0%, #f4f0ff 48%, #e8f4ff 100%);
+    user-select:none; -webkit-user-select:none; color:#5b4a66;
+  }
+  canvas{ display:block; position:fixed; inset:0; touch-action:none; }
+  #vignette{ position:fixed; inset:0; pointer-events:none;
+    background:radial-gradient(120% 120% at 50% 45%, transparent 55%, rgba(120,80,140,0.12) 100%); }
+  #hud{ position:fixed; inset:0; pointer-events:none; z-index:5; }
+  #title{ position:absolute; left:18px; top:16px; font-size:20px; font-weight:800; letter-spacing:.5px;
+    background:rgba(255,255,255,.6); backdrop-filter:blur(6px); padding:8px 14px; border-radius:16px; }
+  #title .sub{ font-size:11px; font-weight:500; opacity:.55; margin-left:6px; }
+  #toyLabel{ position:absolute; top:18px; left:50%; transform:translateX(-50%); font-size:16px; font-weight:700;
+    background:rgba(255,255,255,.7); backdrop-filter:blur(6px); padding:7px 16px; border-radius:999px; white-space:nowrap; }
+  #score{ position:absolute; right:18px; top:16px; font-size:18px; font-weight:800;
+    background:rgba(255,255,255,.6); backdrop-filter:blur(6px); padding:8px 14px; border-radius:16px; }
+  #combo{ position:absolute; right:18px; top:64px; font-size:22px; font-weight:900; color:#ff5f9e;
+    text-shadow:0 1px 0 #fff; transition:opacity .15s; opacity:0; }
+  #pressureWrap{ position:absolute; left:50%; transform:translateX(-50%); bottom:118px; width:min(320px,60vw);
+    height:14px; border-radius:999px; overflow:hidden; background:rgba(255,255,255,.6);
+    box-shadow:inset 0 1px 3px rgba(0,0,0,.08); }
+  #pressureBar{ height:100%; width:0%; border-radius:999px; background:linear-gradient(90deg,#7ee8fa,#ff9ac2); transition:width .08s linear; }
+  #pressureWrap .lbl{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    font-size:10px; font-weight:700; color:#8a6f96; pointer-events:none; text-shadow:0 1px 0 #fff; }
+  #buttons{ position:absolute; left:50%; transform:translateX(-50%); bottom:16px; display:flex; gap:10px; pointer-events:auto; }
+  button{ pointer-events:auto; cursor:pointer; border:none; font-family:inherit; font-weight:700; font-size:14px; color:#5b4a66;
+    background:rgba(255,255,255,.85); backdrop-filter:blur(6px); padding:11px 18px; border-radius:999px;
+    box-shadow:0 3px 10px rgba(150,100,180,.18); transition:transform .08s, box-shadow .15s; }
+  button:hover{ transform:translateY(-1px); box-shadow:0 6px 16px rgba(150,100,180,.28); }
+  button:active{ transform:scale(.95); }
+  #popBtn{ background:linear-gradient(135deg,#ff8fb3,#ff5f9e); color:#fff; font-size:16px; padding:13px 26px; }
+  #hint{ position:absolute; left:50%; transform:translateX(-50%); bottom:76px; font-size:12px; font-weight:600; color:#8a6f96; opacity:.85; white-space:nowrap; }
+  .float{ position:fixed; z-index:6; pointer-events:none; font-weight:900; font-size:20px;
+    text-shadow:0 1px 0 #fff; animation:floatUp .9s ease-out forwards; }
+  @keyframes floatUp{ from{opacity:1; transform:translateY(0) scale(1);} to{opacity:0; transform:translateY(-64px) scale(1.25);} }
+  #flash{ position:fixed; inset:0; background:#fff; opacity:0; pointer-events:none; z-index:4; }
+  #flash.on{ animation:flashA .28s ease-out; }
+  @keyframes flashA{ 0%{opacity:.55;} 100%{opacity:0;} }
+  #err{ position:fixed; left:50%; top:50%; transform:translate(-50%,-50%); z-index:9; background:#fff; border-radius:16px;
+    padding:20px 24px; max-width:80vw; font-size:14px; box-shadow:0 10px 40px rgba(0,0,0,.2); display:none; color:#c0392b; }
+  #back{ position:absolute; left:14px; bottom:18px; pointer-events:auto; z-index:6; text-decoration:none; color:#5b4a66;
+    background:rgba(255,255,255,.85); backdrop-filter:blur(6px); padding:11px 16px; border-radius:999px; font-weight:700; font-size:14px;
+    box-shadow:0 3px 10px rgba(150,100,180,.18); }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="vignette"></div>
+<div id="flash"></div>
+<div id="hud">
+  <div id="title">万物捏捏<span class="sub">解压原型 v0.2</span></div>
+  <a id="back" href="index.html">← 实验室</a>
+  <div id="toyLabel">🫧 史莱姆球</div>
+  <div id="score">💥 <span id="scoreVal">0</span></div>
+  <div id="combo">连击 ×<span id="comboVal">1</span></div>
+  <div id="pressureWrap"><div id="pressureBar"></div><div class="lbl">按住摇一摇 · 蓄满捏爆</div></div>
+  <div id="hint">点住揉捏（手指处凹陷）· 拖拽 · 摇晃蓄力捏爆</div>
+  <div id="buttons">
+    <button id="nextBtn">🔄 换个玩具</button>
+    <button id="popBtn">💢 捏爆！</button>
+    <button id="muteBtn">🔊</button>
+  </div>
+</div>
+<div id="err"></div>
+
+<script src="three.min.js"></script>
+<script>
+'use strict';
+(function(){
+  if(typeof THREE === 'undefined'){ showErr('three.js 引擎加载失败，请确认 three.min.js 与本文件在同一目录。'); return; }
+  function showErr(msg){ var e=document.getElementById('err'); e.style.display='block'; e.textContent='⚠️ '+msg; }
+  window.addEventListener('error', function(e){ if(e && e.message) showErr(e.message); });
+
+  // ============ 渲染器 / 场景 / 相机 ============
+  var canvas = document.getElementById('c');
+  var renderer = new THREE.WebGLRenderer({ canvas:canvas, antialias:true, alpha:true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio||1, 2));
+  renderer.setClearColor(0x000000, 0);
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  var scene = new THREE.Scene();
+  var camera = new THREE.PerspectiveCamera(42, 1, 0.1, 100);
+  camera.position.set(0, 0, 10);
+
+  // 灯光
+  scene.add(new THREE.AmbientLight(0xffffff, 0.55));
+  var key = new THREE.DirectionalLight(0xffffff, 1.15); key.position.set(3,4,7); scene.add(key);
+  var rim = new THREE.DirectionalLight(0xffd9e8, 1.0); rim.position.set(-5,-2,6); scene.add(rim);
+  var top = new THREE.DirectionalLight(0xd8f4ff, 0.7); top.position.set(0,6,2); scene.add(top);
+
+  // ============ 玩具定义 ============
+  var toys = [
+    { name:'史莱姆球', emoji:'🫧', color:0xa78bfa, surf:'smooth' },
+    { name:'海胆球',   emoji:'🪸', color:0xff9ac2, surf:'spiky'  },
+    { name:'泡泡球',   emoji:'🫧', color:0x7ef0c0, surf:'bumpy'  },
+    { name:'蛋形',     emoji:'🥚', color:0xffd66b, surf:'egg'    },
+    { name:'水晶宝石', emoji:'💎', color:0x7ee8fa, surf:'gem'    }
+  ];
+  var toyIndex = 0;
+
+  function makeGeometry(toy){
+    var g;
+    if(toy.surf === 'gem'){ g = new THREE.IcosahedronGeometry(1.25, 1); }
+    else { g = new THREE.SphereGeometry(1.25, 48, 32); }
+    if(toy.surf !== 'gem'){
+      var p = g.attributes.position;
+      for(var i=0;i<p.count;i++){
+        var x=p.getX(i), y=p.getY(i), z=p.getZ(i);
+        var r=Math.hypot(x,y,z)||1, th=Math.atan2(z,x), ph=Math.acos(Math.max(-1,Math.min(1,y/r)));
+        var rr=1.25;
+        if(toy.surf==='spiky'){ rr = 1.25*(1 + 0.16*Math.sin(th*6)*Math.sin(ph*5)); }
+        else if(toy.surf==='bumpy'){ rr = 1.25*(1 + 0.11*(Math.sin(th*4+ph*3)*Math.sin(ph*7) + 0.5*Math.sin(th*9))); }
+        else if(toy.surf==='egg'){ rr = 1.25*(1 + 0.20*Math.cos(ph)); }
+        p.setXYZ(i, x/r*rr, y/r*rr, z/r*rr);
+      }
+      g.computeVertexNormals();
+    }
+    return g;
+  }
+
+  // ============ 软体 Blob ============
+  var mat = new THREE.MeshPhysicalMaterial({
+    color:0xa78bfa, roughness:0.22, metalness:0.0,
+    clearcoat:1.0, clearcoatRoughness:0.3
+  });
+  var blobMesh = new THREE.Mesh(makeGeometry(toys[0]), mat);
+  scene.add(blobMesh);
+  var basePos = new Float32Array(blobMesh.geometry.attributes.position.array);
+
+  // 阴影
+  var shadow = new THREE.Mesh(
+    new THREE.CircleGeometry(1, 40),
+    new THREE.MeshBasicMaterial({ color:0x000000, transparent:true, opacity:0.15, depthWrite:false })
+  );
+  shadow.position.z = -0.6;
+  scene.add(shadow);
+
+  // 背景漂浮装饰
+  var decor = [];
+  (function(){
+    var cols=[0xffd6e8,0xd6e8ff,0xe8ffd6,0xfff3c4];
+    for(var i=0;i<8;i++){
+      var m=new THREE.Mesh(new THREE.IcosahedronGeometry(0.4,0),
+        new THREE.MeshStandardMaterial({color:cols[i%4], roughness:0.6, flatShading:true, transparent:true, opacity:0.45}));
+      var a=(i/8)*Math.PI*2, r=5+(i%3)*0.9;
+      m.position.set(Math.cos(a)*r, Math.sin(a)*r*0.7, -4-(i%2)*1.5);
+      m.scale.setScalar(1+(i%3)*0.7);
+      m.userData={ base:m.position.clone(), phase:i*1.3 };
+      scene.add(m); decor.push(m);
+    }
+  })();
+
+  // ============ 粒子（软球池 + 普通混合，浅色背景可见） ============
+  var PART_N = 140;
+  var parts = [];
+  var partGeo = new THREE.SphereGeometry(0.13, 8, 8);
+  for(var pi=0; pi<PART_N; pi++){
+    var pm = new THREE.MeshBasicMaterial({ color:0xffffff, transparent:true, depthWrite:false });
+    var pmMesh = new THREE.Mesh(partGeo, pm);
+    pmMesh.visible = false;
+    pmMesh.userData = { life:0, max:1, vx:0, vy:0, vz:0 };
+    scene.add(pmMesh);
+    parts.push(pmMesh);
+  }
+  var pCursor = 0;
+
+  function spawnBurst(wx, wy, wz, count){
+    var hex = mat.color.getHex();
+    for(var i=0;i<count;i++){
+      var m = parts[pCursor]; pCursor = (pCursor+1)%PART_N;
+      m.visible = true;
+      m.material.color.setHex(hex);
+      m.material.opacity = 1;
+      m.position.set(wx, wy, wz);
+      var a = Math.random()*Math.PI*2, sp = 1.2 + Math.random()*4.5;
+      m.userData.vx = Math.cos(a)*sp;
+      m.userData.vy = Math.sin(a)*sp;
+      m.userData.vz = (Math.random()-0.5)*2;
+      m.userData.max = 0.5 + Math.random()*0.6;
+      m.userData.life = 0;
+      m.scale.setScalar(0.5 + Math.random()*1.0);
+    }
+  }
+  function updateParticles(dt){
+    for(var i=0;i<PART_N;i++){
+      var m = parts[i];
+      if(!m.visible) continue;
+      m.userData.life += dt;
+      if(m.userData.life >= m.userData.max){ m.visible=false; continue; }
+      m.userData.vy -= 6.0*dt;              // 重力(屏幕向下)
+      m.position.x += m.userData.vx*dt;
+      m.position.y += m.userData.vy*dt;
+      m.position.z += m.userData.vz*dt;
+      var k = 1 - m.userData.life/m.userData.max;
+      m.material.opacity = k;
+      m.scale.multiplyScalar(Math.max(0.001, 1 - 1.5*dt));
+    }
+  }
+
+  // ============ 音效 ============
+  var audioCtx=null, master=null, noiseBuf=null, muted=false;
+  function ensureAudio(){
+    if(!audioCtx){
+      try{
+        var AC=window.AudioContext||window.webkitAudioContext;
+        audioCtx=new AC(); master=audioCtx.createGain();
+        master.gain.value=muted?0:0.45; master.connect(audioCtx.destination);
+        var len=Math.floor(audioCtx.sampleRate*0.5);
+        noiseBuf=audioCtx.createBuffer(1,len,audioCtx.sampleRate);
+        var d=noiseBuf.getChannelData(0);
+        for(var i=0;i<len;i++) d[i]=Math.random()*2-1;
+      }catch(e){}
+    }
+    if(audioCtx && audioCtx.state==='suspended') audioCtx.resume();
+  }
+  function playSquish(inten){
+    if(!audioCtx) return;
+    var t=audioCtx.currentTime;
+    var src=audioCtx.createBufferSource(); src.buffer=noiseBuf; src.loop=true;
+    var f=audioCtx.createBiquadFilter(); f.type='lowpass';
+    f.frequency.setValueAtTime(900,t); f.frequency.exponentialRampToValueAtTime(160,t+0.16);
+    var g=audioCtx.createGain(); g.gain.setValueAtTime(0.5*inten,t); g.gain.exponentialRampToValueAtTime(0.001,t+0.18);
+    src.connect(f); f.connect(g); g.connect(master); src.start(t); src.stop(t+0.2);
+  }
+  function playBoing(){
+    if(!audioCtx) return;
+    var t=audioCtx.currentTime;
+    var o=audioCtx.createOscillator(); o.type='sine';
+    o.frequency.setValueAtTime(180,t); o.frequency.exponentialRampToValueAtTime(90,t+0.25);
+    var g=audioCtx.createGain(); g.gain.setValueAtTime(0.4,t); g.gain.exponentialRampToValueAtTime(0.001,t+0.32);
+    o.connect(g); g.connect(master); o.start(t); o.stop(t+0.35);
+  }
+  function playPop(){
+    if(!audioCtx) return;
+    var t=audioCtx.currentTime;
+    var o=audioCtx.createOscillator(); o.type='sine';
+    o.frequency.setValueAtTime(520,t); o.frequency.exponentialRampToValueAtTime(90,t+0.14);
+    var g=audioCtx.createGain(); g.gain.setValueAtTime(0.7,t); g.gain.exponentialRampToValueAtTime(0.001,t+0.2);
+    o.connect(g); g.connect(master); o.start(t); o.stop(t+0.22);
+    var src=audioCtx.createBufferSource(); src.buffer=noiseBuf; src.loop=true;
+    var h=audioCtx.createBiquadFilter(); h.type='highpass'; h.frequency.value=1300;
+    var g2=audioCtx.createGain(); g2.gain.setValueAtTime(0.4,t); g2.gain.exponentialRampToValueAtTime(0.001,t+0.06);
+    src.connect(h); h.connect(g2); g2.connect(master); src.start(t); src.stop(t+0.08);
+  }
+  function playDing(){
+    if(!audioCtx) return;
+    var t=audioCtx.currentTime;
+    var o=audioCtx.createOscillator(); o.type='triangle';
+    o.frequency.setValueAtTime(880,t); o.frequency.setValueAtTime(1318,t+0.06);
+    var g=audioCtx.createGain(); g.gain.setValueAtTime(0.22,t); g.gain.exponentialRampToValueAtTime(0.001,t+0.4);
+    o.connect(g); g.connect(master); o.start(t); o.stop(t+0.45);
+  }
+
+  // ============ 状态 ============
+  var state = {
+    x:0, y:0, vx:0, vy:0,
+    stretchAmt:0, stretchVel:0, stretchRot:0,
+    pressDepth:0, pressVel:0,
+    grabbing:false, pointerId:-1,
+    lastPointerX:0, lastPointerY:0,
+    pointerSpeed:0,
+    grabOffset:{x:0,y:0},
+    prevPtr:{x:0,y:0},
+    grabStart:0
+  };
+  var pressLocal = new THREE.Vector3(0,0,1.25);
+  var pressLocalTarget = new THREE.Vector3(0,0,1.25);
+  var raycaster = new THREE.Raycaster();
+  var MAXV = 12, BOUND_X = 2.5, BOUND_Y = 2.5;
+  var spawnGrow = 1;
+  var elapsed = 0, timeScale = 1, shake = 0;
+  var score = 0, combo = 1, lastPopTime = -10;
+  var flashEl = document.getElementById('flash');
+
+  function easeOutBack(t){
+    var c1=1.70158, c3=c1+1;
+    return 1 + c3*Math.pow(t-1,3) + c1*Math.pow(t-1,2);
+  }
+
+  function setToy(i){
+    toyIndex = ((i%toys.length)+toys.length)%toys.length;
+    var t = toys[toyIndex];
+    blobMesh.geometry.dispose();
+    blobMesh.geometry = makeGeometry(t);
+    basePos = new Float32Array(blobMesh.geometry.attributes.position.array);
+    mat.color.setHex(t.color);
+    document.getElementById('toyLabel').textContent = t.emoji + ' ' + t.name;
+    state.x=0; state.y=0; state.vx=0; state.vy=0;
+    state.stretchAmt=0; state.stretchVel=0; state.pressDepth=0; state.pressVel=0;
+    state.grabbing=false; state.pointerId=-1; state.pointerSpeed=0;
+    pressLocal.set(0,0,1.25); pressLocalTarget.set(0,0,1.25);
+    spawnGrow = 0;
+  }
+
+  // ============ 玩法 ============
+  function doPop(reason){
+    var wx = state.x, wy = state.y;
+    spawnBurst(wx, wy, 0, 60);
+    shake = Math.min(shake+0.6, 1.0);
+    timeScale = 0.25;
+    playPop(); playDing();
+    if(navigator.vibrate){ try{ navigator.vibrate([25,30,25]); }catch(e){} }
+    combo = (elapsed - lastPopTime < 2.2) ? combo+1 : 1;
+    lastPopTime = elapsed;
+    var gained = 10*combo;
+    score += gained;
+    document.getElementById('scoreVal').textContent = score;
+    floatText(wx, wy, '+' + gained + (combo>1 ? ' ×'+combo : ''));
+    flashEl.classList.remove('on'); void flashEl.offsetWidth; flashEl.classList.add('on');
+    setToy(toyIndex+1);
+  }
+  function floatText(wx, wy, text){
+    var v = new THREE.Vector3(wx, wy, 0).project(camera);
+    var x = (v.x*0.5+0.5)*window.innerWidth;
+    var y = (-v.y*0.5+0.5)*window.innerHeight;
+    var d = document.createElement('div');
+    d.className='float'; d.textContent=text;
+    d.style.left=(x-30)+'px'; d.style.top=(y-10)+'px';
+    d.style.color='#'+mat.color.getHexString();
+    document.body.appendChild(d);
+    setTimeout(function(){ d.remove(); }, 920);
+  }
+
+  function updateBlob(dt, rawDt){
+    var s = state;
+    if(s.grabbing){
+      var w = screenToPlane(s.lastPointerX, s.lastPointerY);
+      var tx = w.x + s.grabOffset.x, ty = w.y + s.grabOffset.y;
+      // 直接跟手：位置锁定，平滑估算速度用于拉伸
+      if(dt > 0.0001){
+        s.vx += (((tx - s.x)/dt) - s.vx) * Math.min(1, dt*22);
+        s.vy += (((ty - s.y)/dt) - s.vy) * Math.min(1, dt*22);
+      }
+      s.x = tx; s.y = ty;
+      // 指针速度（用于摇晃蓄力）
+      var pdx = w.x - s.prevPtr.x, pdy = w.y - s.prevPtr.y;
+      var ps = (dt>0.0001) ? Math.hypot(pdx,pdy)/dt : 0;
+      s.pointerSpeed += (ps - s.pointerSpeed)*Math.min(1, dt*10);
+      s.prevPtr.x = w.x; s.prevPtr.y = w.y;
+    } else {
+      // 归位弹簧（绝不乱飞） + 阻尼
+      var kHome=9, cHome=3.2;
+      s.vx += (-s.x*kHome - s.vx*cHome)*dt;
+      s.vy += (-s.y*kHome - s.vy*cHome)*dt;
+      s.x += s.vx*dt; s.y += s.vy*dt;
+    }
+    var spd = Math.hypot(s.vx, s.vy);
+    if(spd > MAXV){ s.vx *= MAXV/spd; s.vy *= MAXV/spd; spd = MAXV; }
+
+    // 软边界（轻推回 + 压扁）
+    if(s.x > BOUND_X){ s.x=BOUND_X; if(s.vx>0){ s.vx*=-0.5; s.stretchAmt=-0.5; s.stretchRot=Math.PI; s.stretchVel=0; } }
+    if(s.x < -BOUND_X){ s.x=-BOUND_X; if(s.vx<0){ s.vx*=-0.5; s.stretchAmt=-0.5; s.stretchRot=0; s.stretchVel=0; } }
+    if(s.y > BOUND_Y){ s.y=BOUND_Y; if(s.vy>0){ s.vy*=-0.5; s.stretchAmt=-0.5; s.stretchRot=-Math.PI/2; s.stretchVel=0; } }
+    if(s.y < -BOUND_Y){ s.y=-BOUND_Y; if(s.vy<0){ s.vy*=-0.5; s.stretchAmt=-0.5; s.stretchRot=Math.PI/2; s.stretchVel=0; } }
+
+    // 按压深度（捏住→凹陷；摇晃→加深；松手→回弹）
+    var pressTarget = 0;
+    if(s.grabbing){ pressTarget = 0.45 + Math.min(s.pointerSpeed/16, 0.55); }
+    var kP=90, cP=12;
+    s.pressVel += ((pressTarget - s.pressDepth)*kP - s.pressVel*cP)*dt;
+    s.pressDepth += s.pressVel*dt;
+    if(s.pressDepth > 0.97){ s.pressDepth=0.97; doPop('squish'); return; }
+    if(s.pressDepth < -0.25) s.pressDepth = -0.25;
+
+    // 速度拉伸
+    var targetAmt = Math.min(spd*0.06, 0.5);
+    var kS=100, cS=10;
+    s.stretchVel += ((targetAmt - s.stretchAmt)*kS - s.stretchVel*cS)*dt;
+    s.stretchAmt += s.stretchVel*dt;
+    if(spd > 1.5) s.stretchRot = Math.atan2(s.vy, s.vx);
+  }
+
+  function updateGeometry(){
+    var g = blobMesh.geometry;
+    var arr = g.attributes.position.array;
+    var n = g.attributes.position.count;
+    var pL = pressLocal, R=0.8, R2=R*R, depth = state.pressDepth;
+    for(var i=0;i<n;i++){
+      var bx=basePos[i*3], by=basePos[i*3+1], bz=basePos[i*3+2];
+      var dx=bx-pL.x, dy=by-pL.y, dz=bz-pL.z;
+      var d2=dx*dx+dy*dy+dz*dz;
+      if(d2 < R2 && depth > 0.001){
+        var d = Math.sqrt(d2)||0.0001;
+        var t = 1 - d/R;
+        var fall = t*t*(3-2*t);
+        var len = Math.hypot(bx,by,bz)||0.0001;
+        var push = depth*0.5*fall;
+        arr[i*3]=bx-(bx/len)*push; arr[i*3+1]=by-(by/len)*push; arr[i*3+2]=bz-(bz/len)*push;
+      } else {
+        arr[i*3]=bx; arr[i*3+1]=by; arr[i*3+2]=bz;
+      }
+    }
+    g.attributes.position.needsUpdate = true;
+    g.computeVertexNormals();
+    g.computeBoundingSphere();
+  }
+
+  function applyMeshTransform(){
+    var s = state;
+    var a = s.stretchAmt;
+    var press = s.pressDepth;
+    var bulge = 1 + press*0.12;
+    var sz = 1 - press*0.25;
+    var grow = easeOutBack(Math.min(1, spawnGrow));
+    var tremble = 0;
+    if(press > 0.7) tremble = (press - 0.7) * 0.06 * Math.sin(elapsed*70);
+    var bx = bulge + tremble;
+    blobMesh.position.set(s.x, s.y, 0);
+    blobMesh.rotation.z = s.stretchRot;
+    blobMesh.scale.set((1-0.5*a)*bx*grow, (1+a)*bx*grow, sz*grow);
+    // 阴影随压扁变化
+    shadow.position.set(s.x, s.y - 1.75, -0.6);
+    var ss = (1 + press*0.35) * (1 - 0.25*Math.abs(a));
+    shadow.scale.setScalar(Math.max(0.5, ss));
+    shadow.material.opacity = 0.15 - 0.04*press;
+  }
+
+  // ============ 输入 ============
+  function toNDC(cx, cy){ return new THREE.Vector2((cx/window.innerWidth)*2-1, -(cy/window.innerHeight)*2+1); }
+  function screenToPlane(cx, cy){
+    var ndc = toNDC(cx, cy);
+    var v = new THREE.Vector3(ndc.x, ndc.y, 0.5).unproject(camera);
+    var dir = v.sub(camera.position).normalize();
+    var t = -camera.position.z / dir.z;
+    return { x: camera.position.x + dir.x*t, y: camera.position.y + dir.y*t };
+  }
+  function onDown(e){
+    ensureAudio();
+    raycaster.setFromCamera(toNDC(e.clientX, e.clientY), camera);
+    var hits = raycaster.intersectObject(blobMesh, false);
+    if(hits.length>0){
+      state.grabbing = true;
+      state.pointerId = e.pointerId;
+      state.lastPointerX = e.clientX; state.lastPointerY = e.clientY;
+      var hp = hits[0].point;
+      state.grabOffset.x = state.x - hp.x;
+      state.grabOffset.y = state.y - hp.y;
+      blobMesh.updateMatrixWorld(true);
+      pressLocalTarget.copy(blobMesh.worldToLocal(hp.clone()));
+      pressLocal.copy(pressLocalTarget);
+      state.prevPtr.x = state.x; state.prevPtr.y = state.y;
+      state.grabStart = elapsed;
+      state.pressVel += 7;               // 点下去立刻有个凹陷反馈
+      playSquish(0.4);
+      spawnBurst(hp.x, hp.y, 0, 5);
+    }
+  }
+  function onMove(e){
+    if(state.grabbing && e.pointerId === state.pointerId){
+      state.lastPointerX = e.clientX; state.lastPointerY = e.clientY;
+      raycaster.setFromCamera(toNDC(e.clientX, e.clientY), camera);
+      var hits = raycaster.intersectObject(blobMesh, false);
+      if(hits.length>0){ blobMesh.updateMatrixWorld(true); pressLocalTarget.copy(blobMesh.worldToLocal(hits[0].point.clone())); }
+    }
+  }
+  function onUp(e){
+    if(state.grabbing && e.pointerId === state.pointerId){
+      state.grabbing = false; state.pointerId = -1;
+      if(elapsed - state.grabStart < 0.3 && state.pressDepth < 0.4){ playBoing(); }
+      else { playSquish(0.3); }
+    }
+  }
+  canvas.addEventListener('pointerdown', onDown);
+  window.addEventListener('pointermove', onMove);
+  window.addEventListener('pointerup', onUp);
+  window.addEventListener('pointercancel', onUp);
+  window.addEventListener('keydown', function(e){
+    if(e.code==='Space'||e.key===' '){ e.preventDefault(); ensureAudio(); doPop('key'); }
+    else if(e.key==='n'||e.key==='N'||e.key==='ArrowRight'){ setToy(toyIndex+1); }
+    else if(e.key==='ArrowLeft'){ setToy(toyIndex-1); }
+    else if(e.key==='m'||e.key==='M'){ toggleMute(); }
+  });
+  function toggleMute(){
+    muted = !muted;
+    if(master) master.gain.value = muted ? 0 : 0.45;
+    document.getElementById('muteBtn').textContent = muted ? '🔇' : '🔊';
+  }
+  document.getElementById('popBtn').addEventListener('click', function(){ ensureAudio(); doPop('button'); });
+  document.getElementById('nextBtn').addEventListener('click', function(){ setToy(toyIndex+1); });
+  document.getElementById('muteBtn').addEventListener('click', toggleMute);
+
+  // ============ 视口 ============
+  function resize(){
+    var w = window.innerWidth, h = window.innerHeight;
+    renderer.setSize(w, h);
+    camera.aspect = w/h; camera.updateProjectionMatrix();
+    var vfov = camera.fov*Math.PI/180;
+    var halfH = Math.tan(vfov/2)*camera.position.z;
+    var halfW = halfH*camera.aspect;
+    BOUND_X = Math.max(0.6, halfW - 1.6);
+    BOUND_Y = Math.max(0.6, halfH - 1.8);
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  // ============ 主循环 ============
+  function updateHUD(){
+    var pct = Math.min(100, state.pressDepth/0.97*100);
+    var bar = document.getElementById('pressureBar');
+    bar.style.width = pct+'%';
+    bar.style.background = pct>70 ? 'linear-gradient(90deg,#ff9ac2,#ff5f9e)' : 'linear-gradient(90deg,#7ee8fa,#ff9ac2)';
+    var c = document.getElementById('combo');
+    c.style.opacity = ((elapsed-lastPopTime<2.2) && combo>1) ? '1' : '0';
+    document.getElementById('comboVal').textContent = combo;
+  }
+
+  var lastT = performance.now();
+  function frame(now){
+    requestAnimationFrame(frame);
+    var rawDt = Math.min((now-lastT)/1000, 0.05);
+    lastT = now;
+    elapsed += rawDt;
+    timeScale += (1-timeScale)*(1-Math.pow(0.001, rawDt));
+    var dt = rawDt*timeScale;
+
+    spawnGrow = Math.min(1, spawnGrow + dt*2.2);
+    pressLocal.lerp(pressLocalTarget, Math.min(1, dt*18));
+
+    updateBlob(dt, rawDt);
+    updateGeometry();
+    applyMeshTransform();
+    updateParticles(dt);
+    updateHUD();
+
+    // 装饰浮动
+    for(var di=0; di<decor.length; di++){
+      var m=decor[di];
+      m.position.x = m.userData.base.x + Math.sin(elapsed*0.5+m.userData.phase)*0.15;
+      m.position.y = m.userData.base.y + Math.cos(elapsed*0.7+m.userData.phase)*0.15;
+      m.rotation.y += dt*0.2; m.rotation.x += dt*0.13;
+    }
+
+    // 相机震动
+    shake *= Math.pow(0.0001, rawDt);
+    camera.position.x = (Math.random()-0.5)*shake;
+    camera.position.y = (Math.random()-0.5)*shake;
+    camera.position.z = 10;
+    camera.lookAt(0,0,0);
+
+    renderer.render(scene, camera);
+  }
+
+  setToy(0);
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

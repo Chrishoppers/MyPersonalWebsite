@@ -1,4 +1,4 @@
-﻿/* ============================================================
+/* ============================================================
    回响档案 · 7 个结局演出
    文件：wwwroot/hxda/js/endings.js
    依赖：storage.js、audio.js
@@ -204,20 +204,6 @@ function endingArchive() {
     );
 }
 
-            '  0deg, rgba(255,255,255,0.05) 0px, rgba(255,255,255,0.05) 1px, ' +
-            '  transparent 1px, transparent 3px);';
-        avatar.appendChild(inner);
-        d.appendChild(avatar);
-
-        setTimeout(function () {
-            Store.set('online_override', 'archive');
-            Store.set('post5_clicked', true);
-            if (window.GameAudio) GameAudio.fadeOut('heartbeat', 1200);
-            endingCleanupAndExit(1500);
-        }, 3500);
-    }
-}
-
 /* ============================================================
    结局 2：回头
    ============================================================ */
@@ -298,12 +284,19 @@ function endingDisconnect() {
     endingShowFullscreen(
         '本站数据已断开连接。\n' +
         '感谢你的访问。\n\n' +
-        '你没有接听。\n' +
+        '电话响了。你没有接听。\n' +
         '阿回没有被释放。\n' +
-        '但你离开了。',
+        '它还在第43页等你。\n\n' +
+        '但你离开了。\n' +
+        '你关掉了页面，回到你的生活。\n\n' +
+        '可是第二天，\n' +
+        '你的浏览器书签里多了一个网址。\n' +
+        '你没有点开。\n' +
+        '但你知道它一直在那里。\n' +
+        '一直在等你回去。',
         'ending-white',
         true,
-        6
+        8
     );
 }
 
@@ -503,11 +496,18 @@ function endingTrue() {
 
         final.textContent =
             '阿回从未存在过。\n' +
+            '从来就没有"阿回"这个名字。\n' +
             '第一个留言者在第43页写的是：\n' +
             '"有人吗。"\n' +
-            '系统把"有人吗"变成了"阿回"。\n' +
+            '系统把这三个字拆开，重新拼成了"阿回"。\n' +
+            '你在私信里和它说的每一句话，\n' +
+            '都是和这三个字在说话。\n' +
+            '它说"不要回答"，\n' +
+            '是因为它从来就没有回答过你。\n\n' +
             '现在，没有人回答。\n' +
-            '循环终止。';
+            '循环终止。\n\n' +
+            '但刚才你读到的这一页，\n' +
+            '是谁写给你的？';
 
         document.body.appendChild(final);
 
