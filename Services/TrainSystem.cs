@@ -34,17 +34,6 @@ namespace MyPersonalWebsite.Services
             new (string, string, int)[] { ("西安北","EAY",0), ("成都东","ICW",658), ("重庆西","CXW",1097) }
         };
 
-        private static readonly string[] Surnames = {
-            "张","李","王","刘","陈","杨","赵","黄","周","吴","徐","孙","胡","朱","高","林","何","郭","马","罗",
-            "梁","宋","郑","谢","韩","唐","冯","于","董","萧","程","曹","袁","邓","许","傅","沈","曾","彭","吕"
-        };
-        private static readonly string[] GivenNames = {
-            "伟","芳","娜","敏","静","丽","强","磊","洋","涛","杰","军","玲","超","宇","婷","鑫","鹏","晨","雪",
-            "睿","琪","浩","轩","琳","博","文","龙","飞","峰","欣","雨","阳","志","明","慧","俊","凯","华","平"
-        };
-        private static readonly string[] MaleNames = { "伟","强","磊","军","超","宇","鑫","鹏","龙","飞","峰","志","明","俊","凯","华","平","建","辉","浩","轩","博" };
-        private static readonly string[] FemaleNames = { "芳","娜","敏","静","丽","玲","婷","雪","睿","琪","琳","欣","雨","阳","慧","文","悦","颖","晓","云" };
-
         public event Action<Order>? OnOrderCreated;
         public event Action<Order>? OnOrderStatusChanged;
 
@@ -222,7 +211,7 @@ namespace MyPersonalWebsite.Services
                 var ptype = typeRand < 80 ? PassengerType.Adult : typeRand < 90 ? PassengerType.Child : PassengerType.Student;
                 if (ptype == PassengerType.Child) age = Random.Shared.Next(6, 15);
                 if (ptype == PassengerType.Student) age = Random.Shared.Next(18, 24);
-                o.Passengers.Add(new PassengerInfo(RandomName(gender), "any", scs)
+                o.Passengers.Add(new PassengerInfo(NamePool.RandomName(gender == "女"), "any", scs)
                 {
                     IdNumber = id,
                     Age = age,
@@ -231,12 +220,6 @@ namespace MyPersonalWebsite.Services
                 });
             }
             return o;
-        }
-
-        private static string RandomName(string gender)
-        {
-            var pool = gender == "女" ? FemaleNames : MaleNames;
-            return Surnames[Random.Shared.Next(Surnames.Length)] + pool[Random.Shared.Next(pool.Length)];
         }
 
         private static (string Id, int Age, string Gender) GenerateId()
@@ -371,13 +354,13 @@ namespace MyPersonalWebsite.Services
 
         public static decimal RatePerKm(string seatClass) => seatClass switch
         {
-            "商务座" => 1.75m,
-            "一等座" => 0.88m,
-            "软卧" => 0.75m,
-            "硬卧" => 0.50m,
-            "硬座" => 0.30m,
-            "无座" => 0.28m,
-            _ => 0.55m
+            "商务座" => 1.40m,
+            "一等座" => 0.72m,
+            "软卧" => 0.48m,
+            "硬卧" => 0.28m,
+            "硬座" => 0.14m,
+            "无座" => 0.14m,
+            _ => 0.46m
         };
 
         private static string[] ValidClassesFor(Train t)

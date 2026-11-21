@@ -72,8 +72,11 @@ body{
 .search-btn{padding:14px 34px;background:linear-gradient(135deg,#ff6a00,#ff8c2e);color:#fff;border:none;font-size:1.05rem;font-weight:800;cursor:pointer}
 .search-btn:hover{filter:brightness(1.05)}
 .suggest{position:absolute;top:100%;left:0;width:100%;background:#fff;border:1px solid #e2e8f0;border-top:none;border-radius:0 0 10px 10px;max-height:200px;overflow-y:auto;z-index:30;display:none;box-shadow:0 10px 24px rgba(0,0,0,.12)}
-.suggest div{padding:10px 14px;cursor:pointer;font-size:.9rem}
-.suggest div:hover{background:#eaf2ff}
+.suggest .sg-city{font-size:.7rem;color:#8a97a5;padding:6px 14px 2px;font-weight:700}
+.suggest .sg-stations{display:flex;flex-wrap:wrap;gap:6px;padding:4px 14px 6px}
+.suggest .sg-st{padding:3px 10px;border-radius:16px;background:#eef5ff;color:var(--blue);cursor:pointer;font-size:.78rem;font-weight:700;white-space:nowrap}
+.suggest .sg-st:hover{background:#dbeafe}
+.suggest .sg-none{padding:12px 14px;color:#9aa7b5}
 
 /* ---------- 车次卡片 ---------- */
 .train-card{display:flex;align-items:center;gap:14px;padding:16px;border-bottom:1px solid #f0f3f7;cursor:pointer;transition:.15s;background:#fff}
@@ -267,6 +270,52 @@ tr:hover td{background:#f7faff}
 .slider-target{position:absolute;top:6px;width:34px;height:34px;border-radius:8px;background:#c9d8ec;box-shadow:inset 0 0 0 2px #fff}
 .slider-bar{position:absolute;top:0;left:0;height:46px;background:linear-gradient(90deg,#8BC34A,#4CAF50);border-radius:23px 0 0 23px;width:0}
 .slider-handle{position:absolute;top:2px;left:0;width:42px;height:42px;border-radius:50%;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.25);display:flex;align-items:center;justify-content:center;font-size:1.1rem;color:#4CAF50;cursor:grab;touch-action:none}
+/* ===== 移动端 / iPad 适配 ===== */
+@media(max-width:900px){
+  .topbar{padding:8px 10px;gap:8px}
+  .brand small{display:none}
+  .stats-pill{display:none}
+  .page{padding:10px}
+  .search-bar{flex-wrap:wrap}
+  .st-field{min-width:100%}
+  .date-field{flex:1;width:auto}
+  .search-btn{width:100%}
+  .page .flex.gap12.mt16{flex-direction:column}
+  .page .card[style*="width:180px"]{width:100%!important;flex-shrink:1}
+  .train-card{flex-wrap:wrap;gap:8px}
+  .tc-no,.tc-time,.tc-seats,.tc-price{width:auto}
+  .tc-dur{display:none}
+  .pax-card{min-width:100%}
+  .game-hero{padding:16px}
+  .gh-top{flex-direction:column;align-items:flex-start}
+  .gh-timer .num{font-size:2rem}
+  .modal-box{width:94vw;max-height:90vh;overflow:auto}
+  .pay-box,.slider-box{width:94vw;max-width:420px}
+  .table-wrap{max-height:52vh}
+}
+@media(max-width:520px){
+  .brand{font-size:.88rem}
+  .tb-group{font-size:.64rem;padding:4px 6px}
+  .btn{padding:5px 9px;font-size:.7rem}
+  .nav-item{padding:11px 10px;font-size:.76rem}
+  .card{padding:12px}
+  .card h3{font-size:.86rem}
+  th,td{font-size:.68rem;padding:6px 4px}
+  .pax-set select{font-size:.68rem}
+  .seat-grid,.g-grid{overflow-x:auto}
+  .tc-price{font-size:.95rem}
+}
+.lb-row{display:flex;align-items:center;gap:10px;padding:6px 8px;border-bottom:1px solid #f0f3f7;font-size:.8rem}
+.lb-no{width:26px;text-align:center;font-weight:800;color:#8a97a5}
+.lb-name{flex:1;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lb-rank{padding:1px 7px;border-radius:12px;font-weight:800;font-size:.68rem}
+.lb-S{background:#ffe08a;color:#8a5a00}
+.lb-A{background:#d6f5d6;color:#1a7a1a}
+.lb-B{background:#dbeafe;color:#1a5fb4}
+.lb-C{background:#eef2f7;color:#556}
+.lb-D{background:#fdd;color:#a02020}
+.lb-score{font-weight:800;color:var(--orange)}
+.lb-meta{color:#9aa7b5;font-size:.72rem}
 </style>
 </head>
 <body>
@@ -291,9 +340,9 @@ tr:hover td{background:#f7faff}
   </div>
   <button class="btn b-start" id="btnStart" onclick="startSystem()">▶ 启动</button>
   <button class="btn b-stop" id="btnStop" onclick="stopSystem()">■ 停止</button>
-  <button class="btn b-ghost" onclick="addTrain()">＋列车</button>
-  <button class="btn b-ghost" onclick="removeTrain()">－列车</button>
-  <button class="btn b-ghost" onclick="confirmReset()" title="重置">↺</button>
+  <button class="btn b-ghost" id="btnAddTrain" onclick="addTrain()">＋列车</button>
+  <button class="btn b-ghost" id="btnRemoveTrain" onclick="removeTrain()">－列车</button>
+  <button class="btn b-ghost" id="btnReset" onclick="confirmReset()" title="重置">↺</button>
   <button class="btn b-ghost" id="soundBtn" onclick="toggleSound()" title="音效">🔊</button>
   <div class="stats-pill" id="statsPill">
     <span>排队 <b id="stQueue">0</b></span><span>成功 <b id="stSuccess">0</b></span>
@@ -320,7 +369,7 @@ tr:hover td{background:#f7faff}
       <div id="taskBannerRoute" style="font-size:1.05rem;font-weight:900">--</div>
       <div id="taskBannerTimer" style="margin-left:auto;font-weight:800">⏱ --</div>
     </div>
-    <div id="taskBannerPax" class="small" style="color:#dbe9ff;margin-top:6px;line-height:1.7"></div>
+    <div id="taskBannerReq" style="margin-top:8px"></div>
   </div>
   <div class="search-bar">
     <div class="st-field"><input id="buyFrom" placeholder="出发地" autocomplete="off" oninput="suggest('buyFrom')"><div id="buyFromSuggest" class="suggest"></div></div>
@@ -341,6 +390,10 @@ tr:hover td{background:#f7faff}
       <label class="small"><input type="radio" name="seatFilter" value="二等座" onchange="searchTrains()"> 二等座</label>
       <label class="small"><input type="radio" name="seatFilter" value="一等座" onchange="searchTrains()"> 一等座</label>
       <label class="small"><input type="radio" name="seatFilter" value="商务座" onchange="searchTrains()"> 商务座</label>
+      <label class="small"><input type="radio" name="seatFilter" value="软卧" onchange="searchTrains()"> 软卧</label>
+      <label class="small"><input type="radio" name="seatFilter" value="硬卧" onchange="searchTrains()"> 硬卧</label>
+      <label class="small"><input type="radio" name="seatFilter" value="硬座" onchange="searchTrains()"> 硬座</label>
+      <label class="small"><input type="radio" name="seatFilter" value="无座" onchange="searchTrains()"> 无座</label>
     </div>
     <div style="flex:1;min-width:0">
       <div id="trainResults" class="card" style="min-height:160px">
@@ -360,7 +413,7 @@ tr:hover td{background:#f7faff}
             <button class="seat-pref" id="spAisle" onclick="setSeatPrefAll('aisle')">过道</button>
             <span class="bold small">🎫 席别：</span>
             <select id="buyClass" style="padding:7px;border:1px solid #d5dee8;border-radius:8px">
-              <option>二等座</option><option>一等座</option><option>商务座</option>
+              <option>二等座</option><option>一等座</option><option>商务座</option><option>软卧</option><option>硬卧</option><option>硬座</option><option>无座</option>
             </select>
             <button class="btn" style="background:#8e44ad" onclick="openSeatPicker()">💺 选座位</button>
             <button class="book-btn" style="margin-left:auto" onclick="confirmOrder()">提交订单</button>
@@ -466,6 +519,13 @@ tr:hover td{background:#f7faff}
   <div class="card">
     <h3>📊 评分维度</h3>
     <div id="tDimList" class="small muted">完成任务后将在这里显示多维评分。</div>
+  </div>
+
+  <div class="card">
+    <h3>🏆 实时抢票排行榜
+      <button class="btn b-ghost" id="nickBtn" onclick="setNickname()" style="margin-left:auto;color:var(--blue)">昵称：<b id="myNick">玩家</b></button>
+    </h3>
+    <div id="lbList" class="small"></div>
   </div>
 </div>
 
@@ -631,7 +691,7 @@ tr:hover td{background:#f7faff}
 'use strict';
 /* ============================ 全局状态 ============================ */
 var conn = null, signalrOk = false;
-var TRAINS = [], STATIONS = [], ORDERS = {};
+var TRAINS = [], STATIONS = [], CITIES = [], ORDERS = {};
 var currentPage = 0;
 var booking = { train: null, from: '', to: '', passengers: [], seatClass: '二等座' };
 var watchingOrder = null;
@@ -697,9 +757,33 @@ function showToast(msg, cls){
 }
 function fmtTime(min){ min = ((min%1440)+1440)%1440; var h=Math.floor(min/60), m=min%60; return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0'); }
 function fmtDur(min){ return Math.floor(min/60)+'时'+(min%60)+'分'; }
-function ratePerKm(cls){ return cls==='商务座'?1.75: cls==='一等座'?0.88:0.55; }
+function ratePerKm(cls){ return cls==='商务座'?1.4: cls==='一等座'?0.72: cls==='软卧'?0.48: cls==='硬卧'?0.28: cls==='硬座'?0.14: cls==='无座'?0.14:0.46; }
 function calcPrice(km, cls, n){ return Math.round(km*ratePerKm(cls)*n*2)/2; }
 function trainBaseMin(t){ var p=t.departureTime.split(':'); return parseInt(p[0])*60+parseInt(p[1]); }
+function cityOf(name){
+  if(!name) return '';
+  if(name.slice(-2)==='虹桥') return name.slice(0,-2);
+  if(/[南北东西]站$/.test(name)) return name.slice(0,-2);
+  if(/[南北东西]$/.test(name)) return name.slice(0,-1);
+  return name;
+}
+function stationMatches(name, input){ return !!name && !!input && (name===input || cityOf(name)===input); }
+function resolveStation(train, input){
+  var idx = train.stations.findIndex(function(s){ return stationMatches(s.name, input); });
+  return idx >= 0 ? train.stations[idx].name : input;
+}
+function stationSuffixLabel(name){
+  if(name.slice(-2)==='虹桥') return '虹桥站';
+  if(name.slice(-2)==='南站') return '南站';
+  if(name.slice(-2)==='北站') return '北站';
+  if(name.slice(-2)==='东站') return '东站';
+  if(name.slice(-2)==='西站') return '西站';
+  if(name.slice(-1)==='南') return '南站';
+  if(name.slice(-1)==='北') return '北站';
+  if(name.slice(-1)==='东') return '东站';
+  if(name.slice(-1)==='西') return '西站';
+  return '';
+}
 
 function confetti(n){
   var c = $('confetti'), ctx = c.getContext('2d');
@@ -735,6 +819,9 @@ async function loadTrains(){
     var ss = {};
     TRAINS.forEach(function(t){ t.stations.forEach(function(s){ ss[s.name]=true; }); });
     STATIONS = Object.keys(ss).sort();
+    var cc = {};
+    STATIONS.forEach(function(s){ cc[cityOf(s)] = true; });
+    CITIES = Object.keys(cc).sort();
     populateSeatTrain();
     drawRoutes();
   } catch(e){ console.error(e); }
@@ -757,9 +844,29 @@ async function loadOrders(){
 function suggest(type){
   var input = $(type), box = $(type+'Suggest'), v = input.value.trim();
   if(!v){ box.style.display='none'; return; }
-  var m = STATIONS.filter(function(s){ return s.indexOf(v)>=0; }).slice(0,12);
-  box.innerHTML = m.map(function(s){ return '<div onmousedown="pickStation(\''+type+'\',\''+s+'\')">'+s+'</div>'; }).join('');
-  box.style.display = m.length ? 'block' : 'none';
+  // 同城多站并列展示：按城市分组
+  var cityMap = {};
+  STATIONS.forEach(function(s){
+    var c = cityOf(s);
+    if(s.indexOf(v)>=0 || c.indexOf(v)>=0){
+      if(!cityMap[c]) cityMap[c] = [];
+      if(cityMap[c].indexOf(s)<0) cityMap[c].push(s);
+    }
+  });
+  var cities = Object.keys(cityMap).sort();
+  var h = '';
+  cities.slice(0,6).forEach(function(c){
+    var sts = cityMap[c].slice(0,6);
+    h += '<div class="sg-city">📍 '+c+'</div>';
+    h += '<div class="sg-stations">';
+    sts.forEach(function(s){
+      var suf = stationSuffixLabel(s);
+      h += '<span class="sg-st" onmousedown="pickStation(\''+type+'\',\''+s+'\')">'+s+(suf?' · '+suf:'')+'</span>';
+    });
+    h += '</div>';
+  });
+  box.innerHTML = h || '<div class="sg-none">无匹配站点</div>';
+  box.style.display = cities.length ? 'block' : 'none';
 }
 function pickStation(type, s){ $(type).value = s; $(type+'Suggest').style.display='none'; }
 function swapStations(){ var a=$('buyFrom').value, b=$('buyTo').value; $('buyFrom').value=b; $('buyTo').value=a; }
@@ -774,12 +881,13 @@ function searchTrains(){
   var seatFilter = document.querySelector('input[name=seatFilter]:checked').value;
   var h = '', found = 0;
   TRAINS.forEach(function(t, i){
-    var fi = t.stations.findIndex(function(s){return s.name===from;});
-    var ti = t.stations.findIndex(function(s){return s.name===to;});
+    var fi = t.stations.findIndex(function(s){return stationMatches(s.name, from);});
+    var ti = t.stations.findIndex(function(s){return stationMatches(s.name, to);});
     if(fi<0 || ti<=fi) return;
     if(t.trainNumber[0]==='D' && !onlyD) return;
     if(t.trainNumber[0]!=='D' && !onlyG) return;
     found++;
+    var fname = t.stations[fi].name, tname = t.stations[ti].name;
     var base = trainBaseMin(t);
     var dep = fmtTime(base + t.stations[fi].depart);
     var arr = fmtTime(base + t.stations[ti].arrive);
@@ -789,10 +897,10 @@ function searchTrains(){
     var price = calcPrice(km, seatFilter||'二等座', 1);
     h += '<div class="train-card" onclick="selectTrain(\''+t.trainNumber+'\')">'
       + '<div class="tc-no"><div class="num" style="color:'+col+'">'+t.trainNumber+'</div><div class="name">'+t.trainName+'</div></div>'
-      + '<div class="tc-time"><div class="t">'+dep+'</div><div class="s">'+from+'</div></div>'
+      + '<div class="tc-time"><div class="t">'+dep+'</div><div class="s">'+fname+'</div></div>'
       + '<div class="tc-dur"><div class="d">'+fmtDur(dur)+' · 经停'+(ti-fi)+'站 · '+km+'km</div><div class="line"><span class="icon">🚄</span></div></div>'
-      + '<div class="tc-time"><div class="t">'+arr+'</div><div class="s">'+to+'</div></div>'
-      + '<div class="tc-seats">二等 <b>'+remainSeats(t,'二等座')+'</b> 张<br>一等 <b>'+remainSeats(t,'一等座')+'</b> 张<br>商务 <b>'+remainSeats(t,'商务座')+'</b> 张</div>'
+      + '<div class="tc-time"><div class="t">'+arr+'</div><div class="s">'+tname+'</div></div>'
+      + '<div class="tc-seats">'+seatCountsHtml(t)+'</div>'
       + '<div class="tc-price">¥'+price+'<small> '+ (seatFilter||'二等座') +' 起</small></div>'
       + '<button class="book-btn">预订</button></div>';
   });
@@ -801,14 +909,14 @@ function searchTrains(){
     h = '<div style="padding:20px;text-align:center;color:#9aa7b5">未找到直达车次，尝试中转查询…</div>';
     var transfer = '';
     outer: for(var a=0;a<TRAINS.length;a++){
-      var t1 = TRAINS[a]; var f1 = t1.stations.findIndex(function(s){return s.name===from;});
+      var t1 = TRAINS[a]; var f1 = t1.stations.findIndex(function(s){return stationMatches(s.name, from);});
       if(f1<0) continue;
       for(var x=f1+1;x<t1.stations.length;x++){
         var mid = t1.stations[x].name;
         for(var b=0;b<TRAINS.length;b++){
           var t2 = TRAINS[b];
           var f2 = t2.stations.findIndex(function(s){return s.name===mid;});
-          var e2 = t2.stations.findIndex(function(s){return s.name===to;});
+          var e2 = t2.stations.findIndex(function(s){return stationMatches(s.name, to);});
           if(f2>=0 && e2>f2){
             transfer += '<div class="train-card" style="border-left:4px solid var(--orange);background:#fff9ef"><div class="tc-no"><div class="num" style="color:var(--orange)">🔄 中转</div><div class="name">换乘 1 次</div></div>'
               + '<div class="tc-time"><div class="t">'+t1.trainNumber+'</div><div class="s">'+from+'→'+mid+'</div></div>'
@@ -830,11 +938,19 @@ function remainSeats(t, cls){
   t.carriages.forEach(function(c){ if(c.seatClass===cls) total += c.seats; });
   return total;
 }
+function seatCountsHtml(t){
+  var counts = {};
+  t.carriages.forEach(function(c){ counts[c.seatClass] = (counts[c.seatClass]||0) + c.seats; });
+  var order = ['二等座','一等座','商务座','软卧','硬卧','硬座'];
+  var h = '';
+  order.forEach(function(n){ if(counts[n]) h += n.slice(0,2) + ' <b>'+counts[n]+'</b> 张<br>'; });
+  return h || '<span class="muted">—</span>';
+}
 function selectTrain(tn){
   booking.train = TRAINS.find(function(t){return t.trainNumber===tn;});
   if(!booking.train) return;
-  booking.from = $('buyFrom').value.trim();
-  booking.to = $('buyTo').value.trim();
+  booking.from = resolveStation(booking.train, $('buyFrom').value.trim());
+  booking.to = resolveStation(booking.train, $('buyTo').value.trim());
   booking.selectedSeats = [];
   showTrainDetail();
 }
@@ -862,7 +978,7 @@ function showTrainDetail(){
     + '<hr style="margin:10px 0;border-color:#eef2f7">'
     + '<div style="max-height:290px;overflow:auto">'+rows+'</div>'
     + '<div class="mt12 flex gap8 center wrap"><span class="bold small">席别：</span>'
-    + '<select id="detailClass" onchange="updateDetailPrice()" style="padding:7px;border:1px solid #d5dee8;border-radius:8px"><option>二等座</option><option>一等座</option><option>商务座</option></select>'
+    + '<select id="detailClass" onchange="updateDetailPrice()" style="padding:7px;border:1px solid #d5dee8;border-radius:8px"><option>二等座</option><option>一等座</option><option>商务座</option><option>软卧</option><option>硬卧</option><option>硬座</option><option>无座</option></select>'
     + '<span class="small muted">参考价 <b id="detailPrice" style="color:var(--orange)"></b> / 人</span></div>'
     + '<div class="mt12 right"><button class="btn b-ghost" style="color:#666" onclick="closeModal(\'trainModal\')">取消</button>'
     + '<button class="book-btn" style="margin-left:8px" onclick="confirmTrainDetail()">下一步：选择乘客</button></div></div>';
@@ -912,7 +1028,7 @@ function renderPassengers(){
     if(isTask){
       if(p.sel){
         var typeOpts = ['成人','儿童','学生'].map(function(t){ return '<option'+(p.ptype===t?' selected':'')+'>'+t+'</option>'; }).join('');
-        var clsOpts = ['二等座','一等座','商务座'].map(function(c){ return '<option'+(p.cls===c?' selected':'')+'>'+c+'</option>'; }).join('');
+        var clsOpts = ['二等座','一等座','商务座','软卧','硬卧','硬座','无座'].map(function(c){ return '<option'+(p.cls===c?' selected':'')+'>'+c+'</option>'; }).join('');
         var prefBtns = ['any','window','aisle'].map(function(t){
           var lbl = t==='any'?'不限':(t==='window'?'🪟靠窗':'过道');
           return '<button class="mini-pref '+(p.pref===t?'on':'')+'" onclick="event.stopPropagation();setPaxPref('+i+',\''+t+'\')">'+lbl+'</button>';
@@ -1038,6 +1154,8 @@ function renderSeatPicker(cars){
     var left, right;
     if(car.type==='Business'){ left=['A']; right=['F']; }
     else if(car.type==='FirstClass'){ left=['A','C']; right=['D','F']; }
+    else if(car.type==='SoftSleeper'){ left=['上','下']; right=[]; }
+    else if(car.type==='HardSleeper'){ left=['上','中','下']; right=[]; }
     else { left=['A','B','C']; right=['D','F']; }
     h += '<div class="mt8"><div class="carriage-bar" style="font-size:.82rem"><span>'+car.carriageNumber+'号车厢 · '+car.seatClass+'</span></div>';
     h += '<div class="seat-grid" style="grid-template-columns:30px repeat('+left.length+',1fr) 34px repeat('+right.length+',1fr)">';
@@ -1126,6 +1244,7 @@ function connectHub(){
   conn.on('gameCaptchaResult', function(d){ hideCaptcha(); if(d.ok) showToast('✅ 验证通过 +'+d.bonus+' 分','ok'); else showToast('❌ 验证失败 -'+d.penalty+' 分，对手抢走 '+d.stolen+' 张','err'); game.score=d.score; refreshGameHud(); });
   conn.on('gamePowerup', function(d){ var m={freeze:'❄️ 对手被冻结！',speed:'⚡ 对手手速减半！',double:'💰 双倍积分生效！',robot:'🤖 机器人已出动！'}; showToast(m[d.type]||'道具生效','info'); playSound('powerup'); });
   conn.on('gameOver', function(d){ onGameOver(d); });
+  conn.on('leaderboardUpdated', function(l){ renderLeaderboard(l); });
   conn.onclose(function(){ signalrOk=false; $('offline').style.display='block'; });
   conn.start().then(function(){ signalrOk=true; $('offline').style.display='none'; }).catch(function(e){ console.error(e); $('offline').style.display='block'; });
 }
@@ -1254,6 +1373,8 @@ async function loadSeats(){
       var left, right;
       if(car.type==='Business'){ left=['A']; right=['F']; }
       else if(car.type==='FirstClass'){ left=['A','C']; right=['D','F']; }
+      else if(car.type==='SoftSleeper'){ left=['上','下']; right=[]; }
+      else if(car.type==='HardSleeper'){ left=['上','中','下']; right=[]; }
       else { left=['A','B','C']; right=['D','F']; }
       var cols = 2 + left.length + right.length;
       h += '<div class="mt12"><div class="carriage-bar"><span>'+car.carriageNumber+'号车厢 · '+car.seatClass+'</span><span style="font-size:.72rem">'+car.seats.length+' 座</span></div>';
@@ -1509,6 +1630,18 @@ function mapTaskDifficulty(level){
   var n = parseInt(level.slice(1)) || 1;
   return n<=3?'easy': n<=6?'normal': n<=9?'hard':'hell';
 }
+function lockSystem(){
+  ['modeSelect','trafficRange','serverRange','btnStart','btnStop','btnAddTrain','btnRemoveTrain','btnReset'].forEach(function(id){
+    var el = $(id); if(el){ el.disabled = true; }
+  });
+  showToast('🔒 系统参数已锁定（节点/流量已自动配置）','info');
+}
+function unlockSystem(){
+  ['modeSelect','trafficRange','serverRange','btnStart','btnStop','btnAddTrain','btnRemoveTrain','btnReset'].forEach(function(id){
+    var el = $(id); if(el){ el.disabled = false; }
+  });
+  showToast('🔓 系统参数已解锁，可自由调节','info');
+}
 function startTask(difficulty){
   if(task.active){ showToast('任务进行中','warn'); return; }
   var diff = difficulty || $('taskDifficulty2').value;
@@ -1518,6 +1651,7 @@ function startTask(difficulty){
       task.active = true; task.data = d; task.submitted=false; task.paid=false; task.score=0; task.dims=[]; task.orderId=null;
       task.timeLeft = d.timeLimitSeconds;
       renderTask();
+      lockSystem();
       $('tStart').style.display='none'; $('tStop').style.display='inline-block';
       showPage(0);
       showToast('🎯 任务已下发！请在车票预订页完成购票','ok');
@@ -1537,7 +1671,7 @@ function renderTask(){
   if($('tDifficulty')) $('tDifficulty').textContent = {easy:'🟢 简单',normal:'🟡 普通',hard:'🟠 困难',hell:'🔴 地狱'}[d.difficulty]||d.difficulty;
   var routeHint = d.fromCity + (d.fromStationHint?('（'+d.fromStationHint+'）'):'') + ' → ' + d.toCity + (d.toStationHint?('（'+d.toStationHint+'）'):'');
   if($('tRoute')) $('tRoute').textContent = routeHint;
-  if($('tMeta')) $('tMeta').textContent = '为 '+d.passengers.length+' 名乘客购票 · 时限 '+d.timeLimitSeconds+' 秒';
+  if($('tMeta')) $('tMeta').textContent = '为 '+d.passengers.length+' 名乘客购票 · 时限 '+d.timeLimitSeconds+' 秒 · 节点 '+d.serverCount+' · 流量 '+d.trafficRate+'（已锁定）';
   if($('tTimer')) $('tTimer').textContent = task.timeLeft;
   if($('tScore')) $('tScore').textContent = task.score;
   var req = [];
@@ -1557,10 +1691,28 @@ function renderTask(){
   if(banner){
     banner.style.display='block';
     $('taskBannerRoute').textContent = routeHint;
-    var paxNames = d.passengers.map(function(p){return p.name;}).join('、');
-    $('taskBannerPax').innerHTML = '👤 乘客：<b>'+esc(paxNames)+'</b> · 席位 <b>'+esc(d.passengers[0].seatClass)+'</b> · 支付 '+payName(d.payMethod)+'（密码 '+d.payPassword+'）';
+    if($('taskBannerReq')) $('taskBannerReq').innerHTML = buildBannerReqHtml(d);
   }
   initPassengers();
+}
+function buildBannerReqHtml(d){
+  var rows = [];
+  d.passengers.forEach(function(p){
+    var parts = [];
+    if(p.idNumber) parts.push('证件 '+esc(p.idNumber));
+    if(p.passengerType) parts.push('类型 '+esc(p.passengerType));
+    if(p.seatClass) parts.push('席位 '+esc(p.seatClass));
+    if(p.seatPref && p.seatPref!=='any') parts.push('座位 '+(p.seatPref==='window'?'靠窗':p.seatPref==='aisle'?'过道':esc(p.seatPref)));
+    if(p.timePeriod) parts.push('时段 '+esc(p.timePeriod));
+    if(p.stationPref) parts.push(esc(p.stationPref));
+    rows.push('<div style="padding:8px 12px;border-radius:9px;background:rgba(255,255,255,.14);margin:5px 0;line-height:1.8">'
+      + '<b>👤 '+esc(p.name)+'</b>'
+      + (parts.length ? '<br><span style="color:#e8f0ff;font-size:.85em">'+parts.join(' · ')+'</span>' : '')
+      + '</div>');
+  });
+  rows.push('<div style="margin:6px 0;line-height:1.8">💳 支付方式：<b>'+payName(d.payMethod)+'</b> · 支付密码：<b>'+d.payPassword+'</b></div>');
+  rows.push('<div style="margin:6px 0;line-height:1.8">⏱ 时限 <b>'+d.timeLimitSeconds+'</b> 秒 · 节点 <b>'+d.serverCount+'</b> · 流量 <b>'+d.trafficRate+'</b>（系统已锁定）</div>');
+  return rows.join('');
 }
 function stopTask(reason){
   if(task.timer) clearInterval(task.timer); task.timer=null;
@@ -1573,6 +1725,7 @@ function stopTask(reason){
   var banner=$('taskBanner'); if(banner) banner.style.display='none';
   if($('tTimer')) $('tTimer').textContent='--';
   if($('tScore')) $('tScore').textContent='0';
+  unlockSystem();
   initPassengers();
 }
 function renderTaskDims(dims, el){
@@ -1660,9 +1813,46 @@ function onTaskPay(res){
     if(!prev || 'SABCD'.indexOf(res.rank) < 'SABCD'.indexOf(prev)){ profile.camp[campLevel]=res.rank; saveProfile(); }
     campLevel = null;
   }
+  // 提交多人实时排行榜
+  submitLeaderboard({ score: res.score, rank: res.rank, coins: res.coins, difficulty: task.data ? task.data.difficulty : '', timeSec: res.elapsed||0 });
   openModal('taskResultModal');
   stopTask();
   if(res.rank==='S') confetti(200);
+}
+
+/* ============================ 实时排行榜 ============================ */
+var nick = (function(){ try{ return localStorage.getItem('ttw_nick')||''; }catch(e){ return ''; } })();
+function loadNickname(){
+  if(!nick){ nick = '乘客' + Math.floor(1000 + Math.random()*9000); try{ localStorage.setItem('ttw_nick', nick); }catch(e){} }
+  if($('myNick')) $('myNick').textContent = nick;
+  return nick;
+}
+function setNickname(){
+  var n = prompt('请输入你的昵称（用于排行榜）：', nick || '');
+  if(n && n.trim()){ nick = n.trim().slice(0,12); try{ localStorage.setItem('ttw_nick', nick); }catch(e){} }
+  if($('myNick')) $('myNick').textContent = nick;
+}
+function renderLeaderboard(list){
+  var el = $('lbList'); if(!el) return;
+  if(!list || !list.length){ el.innerHTML = '<div class="muted">暂无记录，完成任务后上榜</div>'; return; }
+  var h = '';
+  list.slice(0,20).forEach(function(e, i){
+    var medal = i===0?'🥇': i===1?'🥈': i===2?'🥉': (i+1)+'.';
+    var rk = e.rank ? '<span class="lb-rank lb-'+e.rank+'">'+e.rank+'</span>' : '';
+    h += '<div class="lb-row">'
+      + '<span class="lb-no">'+medal+'</span>'
+      + '<span class="lb-name">'+esc(e.name)+'</span>'
+      + rk
+      + '<span class="lb-score">'+e.score+' 分</span>'
+      + '<span class="lb-meta">'+esc(e.difficulty)+' · '+e.timeSec+'s</span>'
+      + '</div>';
+  });
+  el.innerHTML = h;
+}
+function loadLeaderboard(){ fetch('/api/leaderboard').then(function(r){return r.json();}).then(renderLeaderboard).catch(function(){}); }
+function submitLeaderboard(r){
+  fetch('/api/leaderboard/submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:nick, score:r.score, rank:r.rank, coins:r.coins, difficulty:r.difficulty, timeSec:r.timeSec})})
+    .then(function(x){return x.json();}).then(function(d){ if(d && d.leaderboard) renderLeaderboard(d.leaderboard); }).catch(function(){});
 }
 
 /* ============================ 滑块验证（12306 式） ============================ */
@@ -1967,6 +2157,7 @@ function doReset(){
 
 /* ============================ 页面导航 ============================ */
 function showPage(n){
+  if(task.active && n!==0 && n!==4){ showToast('🔒 任务进行中，仅可访问「车票预订」与「抢票任务」页','warn'); return; }
   currentPage = n;
   document.querySelectorAll('.nav-item').forEach(function(t){ t.classList.toggle('active', parseInt(t.getAttribute('data-p'))===n); });
   for(var i=0;i<=6;i++){ var p=$('page'+i); if(p) p.classList.toggle('active', i===n); }
@@ -1987,6 +2178,8 @@ function init(){
   $('buyDate').textContent = new Date().toISOString().slice(0,10).replace(/-/g,'-');
   initPassengers();
   refreshProfile();
+  loadNickname();
+  loadLeaderboard();
   loadTrains();
   loadOrders();
   loadSignalR(connectHub);

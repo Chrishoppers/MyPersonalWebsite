@@ -12,12 +12,6 @@ namespace MyPersonalWebsite.Services
         private readonly object _lock = new();
         private TicketTask? _task;
 
-        private static readonly string[] Surnames = {
-            "张","李","王","刘","陈","杨","赵","黄","周","吴","徐","孙","胡","朱","高","林","何","郭","马","罗",
-            "梁","宋","郑","谢","韩","唐","冯","于","董","萧","程","曹","袁","邓","许","傅","沈","曾","彭","吕"
-        };
-        private static readonly string[] MaleNames = { "伟","强","磊","军","超","宇","鑫","鹏","龙","飞","峰","志","明","俊","凯","华","平","建","辉","浩","轩","博","哲","阳","晨" };
-        private static readonly string[] FemaleNames = { "芳","娜","敏","静","丽","玲","婷","雪","睿","琪","琳","欣","雨","阳","慧","文","悦","颖","晓","云","洁","梦","丹","倩" };
         private static readonly string[] Relations = { "同事","邻居","表弟","同学","客户","朋友","亲戚","室友" };
         private static readonly string[] PayMethods = { "alipay", "wechat", "card", "unionpay", "ecard" };
 
@@ -34,6 +28,18 @@ namespace MyPersonalWebsite.Services
             lock (_lock)
             {
                 _task = Generate(difficulty);
+                // 自动配置系统节点与流量（难度越高竞争越激烈），并自动启动系统
+                var (sc, tr) = difficulty switch
+                {
+                    "easy" => (3, 8),
+                    "hard" => (5, 20),
+                    "hell" => (6, 28),
+                    _ => (4, 14)
+                };
+                _trainSystem.ServerCount = sc;
+                _trainSystem.TrafficRate = tr;
+                _trainSystem.StartSystem();
+                _trainSystem.AdjustServers();
                 return ToClientDto(_task);
             }
         }
@@ -354,11 +360,9 @@ namespace MyPersonalWebsite.Services
 
         private static string UniqueName(HashSet<string> used)
         {
-            for (int i = 0; i < 200; i++)
+            for (int i = 0; i < 500; i++)
             {
-                var gender = Random.Shared.Next(2) == 0;
-                var pool = gender ? MaleNames : FemaleNames;
-                var name = Surnames[Random.Shared.Next(Surnames.Length)] + pool[Random.Shared.Next(pool.Length)];
+                var name = NamePool.RandomName(Random.Shared.Next(2) == 1);
                 if (used.Add(name)) return name;
             }
             return "乘客" + used.Count;
@@ -457,12 +461,14 @@ namespace MyPersonalWebsite.Services
             _ => m
         };
 
-        private static object ToClientDto(TicketTask task) => new
+        private object ToClientDto(TicketTask task) => new
         {
             taskId = task.TaskId,
             difficulty = task.Difficulty,
             timeLimitSeconds = task.TimeLimitSeconds,
             deadline = task.Deadline,
+            serverCount = _trainSystem.ServerCount,
+            trafficRate = _trainSystem.TrafficRate,
             fromCity = task.FromCity,
             toCity = task.ToCity,
             fromStationHint = task.FromStationHint,

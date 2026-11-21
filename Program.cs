@@ -146,6 +146,7 @@ builder.Services.AddSingleton<HxdaDb>();
 builder.Services.AddSingleton<TrainSystem>();
 builder.Services.AddSingleton<GrabGameService>();
 builder.Services.AddSingleton<TicketTaskService>();
+builder.Services.AddSingleton<LeaderboardService>();
 
 // ============================================================
 // OCR / Solver services
@@ -247,6 +248,8 @@ app.MapHub<TicketHub>("/ticketHub");
 // ============================================================
 var trainSystem = app.Services.GetRequiredService<TrainSystem>();
 var ticketHubContext = app.Services.GetRequiredService<IHubContext<TicketHub>>();
+var taskService = app.Services.GetRequiredService<TicketTaskService>();
+var leaderboardService = app.Services.GetRequiredService<LeaderboardService>();
 
 trainSystem.InitializeDefaultTrains();
 
@@ -406,12 +409,13 @@ app.MapPost("/api/pay", (string orderId) =>
 });
 
 // ---------- 系统控制 ----------
-app.MapPost("/api/start", () => { trainSystem.StartSystem(); return Results.Ok(new { running = true }); });
-app.MapPost("/api/stop", () => { trainSystem.StopSystem(); return Results.Ok(new { running = false }); });
-app.MapPost("/api/traffic", (int rate) => { trainSystem.TrafficRate = Math.Clamp(rate, 0, 1000); return Results.Ok(); });
-app.MapPost("/api/server", (int count) => { trainSystem.ServerCount = Math.Clamp(count, 1, 100); trainSystem.AdjustServers(); return Results.Ok(); });
+app.MapPost("/api/start", () => { if (IsTaskLocked()) return TaskLockedResponse(); trainSystem.StartSystem(); return Results.Ok(new { running = true }); });
+app.MapPost("/api/stop", () => { if (IsTaskLocked()) return TaskLockedResponse(); trainSystem.StopSystem(); return Results.Ok(new { running = false }); });
+app.MapPost("/api/traffic", (int rate) => { if (IsTaskLocked()) return TaskLockedResponse(); trainSystem.TrafficRate = Math.Clamp(rate, 0, 1000); return Results.Ok(); });
+app.MapPost("/api/server", (int count) => { if (IsTaskLocked()) return TaskLockedResponse(); trainSystem.ServerCount = Math.Clamp(count, 1, 100); trainSystem.AdjustServers(); return Results.Ok(); });
 app.MapPost("/api/mode", (string mode) =>
 {
+    if (IsTaskLocked()) return TaskLockedResponse();
     trainSystem.CurrentMode = mode switch
     {
         "spring" => TrainSystem.TicketingMode.SpringFestival,
@@ -421,10 +425,11 @@ app.MapPost("/api/mode", (string mode) =>
     };
     return Results.Ok(new { mode = trainSystem.CurrentMode.ToString() });
 });
-app.MapPost("/api/addtrain", () => { trainSystem.AddTrain(); return Results.Ok(); });
-app.MapPost("/api/removetrain", () => { trainSystem.RemoveTrain(); return Results.Ok(); });
+app.MapPost("/api/addtrain", () => { if (IsTaskLocked()) return TaskLockedResponse(); trainSystem.AddTrain(); return Results.Ok(); });
+app.MapPost("/api/removetrain", () => { if (IsTaskLocked()) return TaskLockedResponse(); trainSystem.RemoveTrain(); return Results.Ok(); });
 app.MapPost("/api/reset", () =>
 {
+    if (IsTaskLocked()) return TaskLockedResponse();
     trainSystem.StopSystem();
     trainSystem.OrderQueue.Clear();
     foreach (var t in trainSystem.Trains)
@@ -439,12 +444,15 @@ app.MapPost("/api/reset", () =>
 app.MapGet("/api/stats", () => Results.Ok(trainSystem.GetStats()));
 
 // ---------- 真实抢票任务 ----------
-var taskService = app.Services.GetRequiredService<TicketTaskService>();
 app.MapPost("/api/task/start", (TaskStartRequest req) => Results.Ok(taskService.Start(req.Difficulty ?? "normal")));
 app.MapGet("/api/task/current", () => Results.Ok(taskService.CurrentDto()));
 app.MapPost("/api/task/stop", () => Results.Ok(taskService.Stop()));
 app.MapPost("/api/task/submit", (TaskSubmitRequest req) => Results.Ok(taskService.Submit(req)));
 app.MapPost("/api/task/pay", (TaskPayRequest req) => Results.Ok(taskService.Pay(req)));
+
+// ---------- 多人实时抢票排行榜 ----------
+app.MapGet("/api/leaderboard", () => Results.Ok(leaderboardService.Get()));
+app.MapPost("/api/leaderboard/submit", (LeaderboardSubmitRequest req) => Results.Ok(leaderboardService.Submit(req.Name, req.Score, req.Rank, req.Coins, req.Difficulty, req.TimeSec)));
 
 // ============================================================
 // 应用生命周期事件
@@ -587,5 +595,9 @@ static object ToOrderDto(Order o) => new
     }).ToList()
 };
 
+bool IsTaskLocked() => taskService.Current is { Active: true };
+IResult TaskLockedResponse() => Results.Json(new { ok = false, locked = true, msg = "任务进行中，禁止修改系统参数" });
+
 record BuyRequest(string Train, string From, string To, string Name, string SeatClass, string PreferredSeat);
 record TaskStartRequest(string Difficulty);
+record LeaderboardSubmitRequest(string Name, int Score, string Rank, int Coins, string Difficulty, int TimeSec);
