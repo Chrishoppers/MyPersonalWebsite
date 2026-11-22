@@ -666,9 +666,65 @@
             .seat-tv .seat-name { font-size: 0.5rem; max-width: 50px; }
             .seat-table .seat-name { font-size: 0.55rem; max-width: 55px; }
         }
+        /* 发牌扇形飞牌动画 */
+        .deal-anim.deal-fan { display: flex; justify-content: center; align-items: center; height: 150px; margin-top: 1rem; perspective: 900px; }
+        .deal-card {
+            width: 44px; height: 64px; border-radius: 6px;
+            background: linear-gradient(135deg, #2a1b4d 0%, #120c26 100%);
+            border: 1px solid rgba(139,92,246,0.55);
+            box-shadow: 0 6px 18px rgba(139,92,246,0.4);
+            overflow: hidden;
+            margin-left: -18px;
+            transform: rotate(var(--rot, 0deg));
+            transform-origin: bottom center;
+            animation: dealFan 0.65s cubic-bezier(0.2, 0.7, 0.3, 1) both;
+        }
+        .deal-card:first-child { margin-left: 0; }
+        .deal-card .card-back-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        @@keyframes dealFan {
+            0% { transform: rotate(var(--rot, 0deg)) translateY(-130px) rotateY(180deg) scale(0.4); opacity: 0; }
+            60% { transform: rotate(var(--rot, 0deg)) translateY(8px) rotateY(20deg) scale(1.05); opacity: 1; }
+            100% { transform: rotate(var(--rot, 0deg)) translateY(0) rotateY(0) scale(1); opacity: 1; }
+        }
+
+        /* 全息 HUD 特效 */
+        .scanlines { position: fixed; inset: 0; z-index: 48; pointer-events: none; background: repeating-linear-gradient(0deg, rgba(255,255,255,0.018) 0 1px, transparent 1px 3px); mix-blend-mode: overlay; }
+        .scanbar { position: fixed; left: 0; right: 0; height: 130px; z-index: 49; pointer-events: none; background: linear-gradient(180deg, transparent, rgba(0,240,255,0.07), rgba(139,92,246,0.04), transparent); animation: scanSweep 5s linear infinite; }
+        @@keyframes scanSweep { 0% { top: -130px; } 100% { top: 100vh; } }
+        .hud-frame { position: fixed; inset: 12px; z-index: 47; pointer-events: none; border: 1px solid rgba(0,240,255,0.08); box-shadow: inset 0 0 46px rgba(0,240,255,0.03); border-radius: 4px; }
+        .hud-corner { position: fixed; width: 26px; height: 26px; z-index: 47; pointer-events: none; border: 2px solid rgba(0,240,255,0.35); }
+        .hud-corner.tl { top: 18px; left: 18px; border-right: none; border-bottom: none; }
+        .hud-corner.tr { top: 18px; right: 18px; border-left: none; border-bottom: none; }
+        .hud-corner.bl { bottom: 18px; left: 18px; border-right: none; border-top: none; }
+        .hud-corner.br { bottom: 18px; right: 18px; border-left: none; border-top: none; }
+        /* 阶段切换过渡光晕 */
+        .phase-flash { position: fixed; inset: 0; z-index: 46; pointer-events: none; opacity: 0; background: radial-gradient(circle at 50% 50%, rgba(139,92,246,0.35), rgba(236,72,153,0.15), transparent 70%); }
+        .phase-flash.go { animation: phaseFlash 0.8s ease-out; }
+        @@keyframes phaseFlash { 0% { opacity: 0; } 30% { opacity: 1; } 100% { opacity: 0; } }
+        /* 发牌飞向座位 */
+        .deal-overlay { position: fixed; inset: 0; z-index: 45; pointer-events: none; }
+        .deal-card-fly { position: absolute; width: 44px; height: 64px; border-radius: 6px; overflow: hidden; box-shadow: 0 8px 24px rgba(139,92,246,0.5); }
+        .deal-card-fly img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        /* 警长徽章 + 死亡特效 */
+        .seat-tv.sheriff, .seat-table.sheriff { animation: sheriffGlow 1.6s ease-in-out infinite; }
+        @@keyframes sheriffGlow { 0%,100% { box-shadow: 0 0 20px rgba(245,158,11,0.2); } 50% { box-shadow: 0 0 50px rgba(245,158,11,0.65); } }
+        .sheriff-badge { position: absolute; top: -14px; right: -8px; font-size: 1.2rem; animation: badgePop 0.5s ease both; z-index: 3; }
+        @@keyframes badgePop { 0% { transform: scale(0) rotate(-180deg); } 70% { transform: scale(1.4) rotate(10deg); } 100% { transform: scale(1) rotate(0); } }
+        .seat-tv.dead, .seat-table.dead { animation: deathFade 0.6s ease both; }
+        @@keyframes deathFade { 0% { opacity: 1; filter: none; } 100% { opacity: 0.25; filter: grayscale(1); } }
+        .death-mark { position: absolute; top: 50%; left: 50%; font-size: 1.5rem; animation: deathMark 0.6s ease both; z-index: 3; }
+        @@keyframes deathMark { 0% { opacity: 0; transform: translate(-50%,-50%) scale(0); } 100% { opacity: 1; transform: translate(-50%,-50%) scale(1); } }
     </style>
 </head>
 <body>
+
+    <!-- 全息 HUD 特效 -->
+    <div class="hud-frame"></div>
+    <div class="hud-corner tl"></div><div class="hud-corner tr"></div>
+    <div class="hud-corner bl"></div><div class="hud-corner br"></div>
+    <div class="scanlines"></div>
+    <div class="scanbar"></div>
+    <div class="phase-flash" id="phaseFlash"></div>
 
     <!-- 粒子背景 -->
     <canvas id="particleCanvas"></canvas>
@@ -1120,6 +1176,7 @@
                     config.sheriffId = data.seatNumber;
                     document.getElementById('sheriffDisplay').classList.add('show');
                     document.getElementById('sheriffName').textContent = data.seatNumber + '号 ' + data.nickname;
+                    markSheriffSeat(data.seatNumber);
                     showDisplayMessage('👑 ' + data.seatNumber + '号当选警长！');
                 });
 
@@ -1132,6 +1189,7 @@
                 });
 
                 connection.on('PlayerDeath', function(data) {
+                    markDeathSeat(data.seatNumber);
                     showDisplayMessage('💀 ' + data.seatNumber + '号 ' + data.nickname + ' 死亡');
                 });
 
@@ -1202,13 +1260,83 @@
         // ============================================================
         // 显示更新
         // ============================================================
+        function dealCardsHTML() {
+            var html = '<div class="deal-anim deal-fan">';
+            for (var i = 0; i < 12; i++) {
+                var rot = ((i - 5.5) * 3.6).toFixed(1);
+                html += '<div class="deal-card" style="animation-delay:' + (i * 0.05).toFixed(2) + 's; --rot:' + rot + 'deg;"><img src="/images/werewolf/牌背.png" class="card-back-img" alt="牌背" /></div>';
+            }
+            html += '</div>';
+            return html;
+        }
+
+        // ⭐ 发牌真正飞到每个座位坐标
+        function dealCardsToSeats() {
+            var seats = (selectedMode === 'table' ? config.seatsTable : config.seatsTV) || [];
+            if (!seats.length) return;
+            var overlay = document.createElement('div');
+            overlay.className = 'deal-overlay';
+            document.body.appendChild(overlay);
+            var cx = window.innerWidth / 2;
+            var cy = window.innerHeight / 2;
+            var targets = [];
+            seats.forEach(function(s) {
+                if (s.element) {
+                    var r = s.element.getBoundingClientRect();
+                    targets.push({ x: r.left + r.width / 2, y: r.top + r.height / 2 });
+                }
+            });
+            targets.forEach(function(pos, i) {
+                var card = document.createElement('div');
+                card.className = 'deal-card-fly';
+                card.innerHTML = '<img src="/images/werewolf/牌背.png" alt="牌背" />';
+                card.style.left = (cx - 22) + 'px';
+                card.style.top = (cy - 32) + 'px';
+                overlay.appendChild(card);
+                setTimeout(function() {
+                    card.animate([
+                        { transform: 'translate(0,0) rotateY(0deg) scale(0.3)', opacity: 0 },
+                        { transform: 'translate(' + (pos.x - cx) + 'px,' + (pos.y - cy) + 'px) rotateY(360deg) scale(1)', opacity: 1 }
+                    ], { duration: 750, easing: 'cubic-bezier(0.2, 0.7, 0.3, 1)', fill: 'forwards' });
+                }, i * 60);
+            });
+            setTimeout(function() { overlay.remove(); }, targets.length * 60 + 1300);
+        }
+
+        function markSheriffSeat(seatNumber) {
+            var seats = (selectedMode === 'table' ? config.seatsTable : config.seatsTV) || [];
+            var seat = seats.find(function(s) { return s.number === seatNumber; });
+            if (seat && seat.element) {
+                seat.element.classList.add('sheriff');
+                if (!seat.element.querySelector('.sheriff-badge')) {
+                    var b = document.createElement('span');
+                    b.className = 'sheriff-badge';
+                    b.textContent = '👑';
+                    seat.element.appendChild(b);
+                }
+            }
+        }
+        function markDeathSeat(seatNumber) {
+            var seats = (selectedMode === 'table' ? config.seatsTable : config.seatsTV) || [];
+            var seat = seats.find(function(s) { return s.number === seatNumber; });
+            if (seat && seat.element) {
+                seat.element.classList.add('dead');
+                if (!seat.element.querySelector('.death-mark')) {
+                    var d = document.createElement('span');
+                    d.className = 'death-mark';
+                    d.textContent = '💀';
+                    seat.element.appendChild(d);
+                }
+            }
+        }
+
         function updateDisplay(phase) {
             var content = document.getElementById('displayContent');
 
             var phases = {
                 'setup': '<span class="big-icon">🐺</span><div class="big-text" style="color:rgba(255,255,255,0.03);">等待开始</div><div class="sub-text">✦ AI 自动推进游戏流程 ✦</div>',
                 'seating': '<span class="big-icon">🪑</span><div class="big-text" style="color:rgba(255,255,255,0.03);">等待就坐</div><div class="sub-text">✦ 请所有玩家就坐 ✦</div>',
-                'dealing': '<span class="big-icon">🃏</span><div class="big-text" style="color:#8B5CF6;">洗牌发牌中...</div><div class="sub-text">✦ 请稍候 ✦</div>',
+                'dealing': '<span class="big-icon">🃏</span><div class="big-text" style="color:#8B5CF6;">洗牌发牌中...</div><div class="sub-text">✦ 请稍候 ✦</div>' + dealCardsHTML(),
                 'revealing': '<span class="big-icon">📩</span><div class="big-text" style="color:#8B5CF6;">查看你的身份</div><div class="sub-text">✦ 请在手机上查看身份牌 ✦</div>',
                 'sheriff_election': '<span class="big-icon">👑</span><div class="big-text sheriff">警长竞选</div><div class="sub-text">✦ 请参与竞选的玩家发言 ✦</div>',
                 'night_guard': '<span class="big-icon">🛡️</span><div class="big-text night">守卫请行动</div><div class="sub-text">✦ 守卫请在手机上选择守护目标 ✦</div><div class="timer-text">⏱ 20s</div>',
@@ -1226,6 +1354,13 @@
             };
 
             content.innerHTML = phases[phase] || phases.setup;
+
+            // 阶段切换过渡光晕
+            var f = document.getElementById('phaseFlash');
+            if (f) { f.classList.remove('go'); void f.offsetWidth; f.classList.add('go'); }
+
+            // 发牌阶段：卡片飞向各座位
+            if (phase === 'dealing') { setTimeout(dealCardsToSeats, 200); }
         }
 
         function showDeathAnnounce(deaths, message) {

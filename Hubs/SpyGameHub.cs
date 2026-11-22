@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.SignalR;
+using MyPersonalWebsite.Services;
 using System.Collections.Concurrent;
 
 namespace MyPersonalWebsite.Hubs
@@ -7,6 +8,9 @@ namespace MyPersonalWebsite.Hubs
     {
         private static readonly ConcurrentDictionary<string, SpyRoom> _rooms = new();
         private static readonly ConcurrentDictionary<string, (string playerId, string roomCode)> _connMap = new();
+
+        private readonly DataSyncService _dataSync;
+        public SpyGameHub(DataSyncService dataSync) => _dataSync = dataSync;
 
         // 词对库（平民词 / 卧底词）
         private static readonly (string c, string s)[] WordPairs =
@@ -25,6 +29,7 @@ namespace MyPersonalWebsite.Hubs
             room.Players.Add(player);
             _rooms[code] = room;
             _connMap[Context.ConnectionId] = (player.PlayerId, code);
+            _ = PersistRoomAsync(room);
             await Groups.AddToGroupAsync(Context.ConnectionId, code);
             await Clients.Caller.SendAsync("RoomCreated", new { success = true, room = RoomDto(room), playerId = player.PlayerId });
             return new { success = true, roomCode = code, playerId = player.PlayerId };
@@ -75,6 +80,7 @@ namespace MyPersonalWebsite.Hubs
             room.Status = "playing";
             room.Round = 1;
             room.Phase = "speaking";
+            _ = PersistRoomAsync(room);
             room.SpeakOrder = room.Players.Select(p => p.PlayerId).ToList();
             room.PendingSpeakers = room.SpeakOrder.Where(id => room.Players.First(p => p.PlayerId == id).Alive).ToList();
             room.Clues.Clear();
@@ -214,7 +220,12 @@ namespace MyPersonalWebsite.Hubs
                         if (room.Status == "playing") { /* 简单处理：有人离开则判定剩余玩家继续或结束 */ }
                         await Clients.Group(room.Code).SendAsync("RoomUpdated", RoomDto(room));
                     }
-                    if (room.Players.Count == 0) _rooms.TryRemove(room.Code, out _);
+                    if (room.Players.Count == 0)
+                    {
+                        room.Status = "ended";
+                        _ = PersistRoomAsync(room);
+                        _rooms.TryRemove(room.Code, out _);
+                    }
                 }
             }
             await base.OnDisconnectedAsync(exception);
@@ -236,6 +247,18 @@ namespace MyPersonalWebsite.Hubs
                 role = room.Status == "playing" || room.Status == "ended" ? p.Role : (string?)null
             }).ToList()
         };
+
+        private async Task PersistRoomAsync(SpyRoom room)
+        {
+            try
+            {
+                var sql = $@"INSERT INTO GameRooms (RoomId, GameType, HostName, PlayerCount, MaxPlayers, Status, Phase, CreatedAt, UpdatedAt)
+VALUES ('{room.Code}', 'spy', '', {room.Players.Count}, 8, '{room.Status}', '{room.Phase}', '{DateTime.Now:yyyy-MM-dd HH:mm:ss}', '{DateTime.Now:yyyy-MM-dd HH:mm:ss}')
+ON CONFLICT(RoomId) DO UPDATE SET PlayerCount = {room.Players.Count}, Status = '{room.Status}', Phase = '{room.Phase}', UpdatedAt = '{DateTime.Now:yyyy-MM-dd HH:mm:ss}'";
+                await _dataSync.ExecuteSqlAsync(sql);
+            }
+            catch (Exception ex) { Console.WriteLine($"⚠️ 谁是卧底房间持久化失败: {ex.Message}"); }
+        }
 
         private static string NewId() => Guid.NewGuid().ToString("N")[..10];
         private static string NewCode()

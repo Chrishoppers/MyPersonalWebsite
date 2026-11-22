@@ -53,7 +53,10 @@ namespace MyPersonalWebsite.Controllers
 
         public IActionResult Player(string? roomId)
         {
+            var userId = HttpContext.Session.GetInt32("UserId");
             ViewBag.RoomId = roomId;
+            ViewBag.Username = userId.HasValue ? HttpContext.Session.GetString("Username") : null;
+            ViewBag.IsLoggedIn = userId.HasValue;
             return View();
         }
 

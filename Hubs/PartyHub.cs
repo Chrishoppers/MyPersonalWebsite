@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.SignalR;
 using MyPersonalWebsite.Models;
+using MyPersonalWebsite.Services;
 using System.Collections.Concurrent;
 
 namespace MyPersonalWebsite.Hubs
@@ -7,6 +8,8 @@ namespace MyPersonalWebsite.Hubs
     public class PartyHub : Hub
     {
         private static readonly ConcurrentDictionary<string, PartyRoom> _rooms = new();
+        private readonly DataSyncService _dataSync;
+        public PartyHub(DataSyncService dataSync) => _dataSync = dataSync;
         private static readonly ConcurrentDictionary<string, string> _playerToRoom = new();
         private static readonly ConcurrentDictionary<string, string> _connectionToPlayer = new();
 
@@ -49,6 +52,7 @@ namespace MyPersonalWebsite.Hubs
             _rooms[roomId] = room;
             _playerToRoom[playerId] = roomId;
             _connectionToPlayer[Context.ConnectionId] = playerId;
+            _ = PersistRoomAsync(room);
 
             await Groups.AddToGroupAsync(Context.ConnectionId, roomId);
             await Clients.Caller.SendAsync("RoomCreated", new { success = true, room });
@@ -152,6 +156,7 @@ public async Task StartGame(string roomId, string playerId)
     }
 
     room.Status = "playing";
+    _ = PersistRoomAsync(room);
     
     // ⭐ 广播给所有玩家，让他们跳转
     await Clients.Group(roomId).SendAsync("GameStarted", room);
@@ -255,6 +260,8 @@ public async Task StartGame(string roomId, string playerId)
 
                         if (!room.Players.Any())
                         {
+                            room.Status = "ended";
+                            _ = PersistRoomAsync(room);
                             _rooms.TryRemove(roomId, out _);
                         }
                     }
@@ -281,6 +288,18 @@ public async Task StartGame(string roomId, string playerId)
         // ============================================================
         // 生成房间码
         // ============================================================
+        private async Task PersistRoomAsync(PartyRoom room)
+        {
+            try
+            {
+                var sql = $@"INSERT INTO GameRooms (RoomId, GameType, HostName, PlayerCount, MaxPlayers, Status, Phase, CreatedAt, UpdatedAt)
+VALUES ('{room.RoomId}', 'party', '{room.HostName?.Replace("'", "''")}', {room.Players.Count}, {room.MaxPlayers}, '{room.Status}', '', '{room.CreatedAt:yyyy-MM-dd HH:mm:ss}', '{DateTime.Now:yyyy-MM-dd HH:mm:ss}')
+ON CONFLICT(RoomId) DO UPDATE SET PlayerCount = {room.Players.Count}, Status = '{room.Status}', UpdatedAt = '{DateTime.Now:yyyy-MM-dd HH:mm:ss}'";
+                await _dataSync.ExecuteSqlAsync(sql);
+            }
+            catch (Exception ex) { Console.WriteLine($"⚠️ 派对房间持久化失败: {ex.Message}"); }
+        }
+
         private string GenerateRoomCode()
         {
             const string chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
