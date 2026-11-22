@@ -1,0 +1,348 @@
+@{
+    ViewData["Title"] = "📝 成语填空";
+    var username = Context.Session.GetString("Username") ?? "玩家";
+}
+
+<link rel="stylesheet" href="~/css/casual-game.css" />
+
+<style>
+    .game-container { max-width: 680px; margin: 0 auto; padding: 1rem 1.2rem 3rem; }
+
+    .game-header { text-align: center; padding: 0.6rem 0 1rem; }
+    .game-header h1 {
+        font-size: 2rem; font-weight: 800; margin: 0;
+        background: linear-gradient(135deg, #F59E0B 0%, #F97316 100%);
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .game-header .subtitle { color: rgba(255,255,255,0.3); font-size: 0.82rem; margin-top: 0.2rem; }
+
+    .status-bar {
+        display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; flex-wrap: wrap;
+        background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.04);
+        border-radius: 16px; padding: 0.7rem 1.3rem; margin-bottom: 1rem;
+    }
+    .status-item { color: rgba(255,255,255,0.3); font-size: 0.8rem; display: flex; align-items: center; gap: 0.35rem; }
+    .status-item .value { color: #fff; font-weight: 700; font-size: 1.1rem; }
+    .status-item .value.time { color: #F59E0B; font-variant-numeric: tabular-nums; }
+
+    .diff-bar { display: flex; gap: 0.5rem; justify-content: center; margin-bottom: 1rem; }
+    .diff-btn {
+        padding: 0.4rem 1.3rem; font-size: 0.82rem; font-weight: 700; color: rgba(255,255,255,0.5);
+        background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 50px; cursor: pointer; font-family: inherit; transition: all 0.15s ease;
+    }
+    .diff-btn.active { color: #fff; background: rgba(245,158,11,0.2); border-color: rgba(245,158,11,0.5); }
+
+    .question-card {
+        background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05);
+        border-radius: 24px; padding: 2rem 1.2rem 1.5rem; text-align: center; margin-bottom: 1rem;
+    }
+    .idiom-slots { display: flex; justify-content: center; gap: 0.5rem; margin-bottom: 0.6rem; }
+    .idiom-slot {
+        width: 60px; height: 60px; display: flex; align-items: center; justify-content: center;
+        font-size: 1.8rem; font-weight: 800; color: #fff;
+        background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px;
+        transition: all 0.2s ease;
+    }
+    .idiom-slot.blank { color: #F59E0B; border-color: rgba(245,158,11,0.4); background: rgba(245,158,11,0.08); animation: pulse 1.2s infinite; }
+    .idiom-slot.filled-correct { color: #28a745; border-color: rgba(40,167,69,0.5); background: rgba(40,167,69,0.12); }
+    .idiom-slot.filled-wrong { color: #dc3545; border-color: rgba(220,53,69,0.5); background: rgba(220,53,69,0.12); animation: shake 0.4s; }
+    @@keyframes pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(245,158,11,0.3); } 50% { box-shadow: 0 0 0 8px rgba(245,158,11,0); } }
+    @@keyframes shake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+
+    .meaning { color: rgba(255,255,255,0.35); font-size: 0.88rem; min-height: 1.4em; line-height: 1.6; }
+    .meaning.revealed { color: rgba(255,255,255,0.6); }
+
+    .options-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.6rem; }
+    .option-btn {
+        padding: 0.85rem 0; font-size: 1.3rem; font-weight: 800; color: #fff;
+        background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 14px; cursor: pointer; font-family: inherit; transition: all 0.14s ease;
+    }
+    .option-btn:hover { background: rgba(255,255,255,0.08); transform: translateY(-2px); }
+    .option-btn:disabled { cursor: default; opacity: 0.6; transform: none; }
+    .option-btn.correct { background: rgba(40,167,69,0.18); border-color: rgba(40,167,69,0.5); color: #4ade80; animation: popIn 0.3s; }
+    .option-btn.wrong { background: rgba(220,53,69,0.16); border-color: rgba(220,53,69,0.5); color: #f87171; animation: shake 0.4s; }
+    @@keyframes popIn { 0% { transform: scale(0.9); } 60% { transform: scale(1.08); } 100% { transform: scale(1); } }
+
+    .feedback { text-align: center; margin-top: 0.9rem; font-weight: 700; font-size: 1rem; min-height: 1.5em; }
+    .feedback.good { color: #4ade80; }
+    .feedback.bad { color: #f87171; }
+
+    .start-wrap { text-align: center; padding: 3rem 0; }
+    .big-btn {
+        display: inline-block; padding: 0.9rem 2.6rem; font-size: 1.05rem; font-weight: 800; color: #fff;
+        background: linear-gradient(135deg, #F59E0B, #F97316); border: none; border-radius: 50px;
+        cursor: pointer; font-family: inherit; transition: all 0.2s ease; box-shadow: 0 6px 20px rgba(245,158,11,0.3);
+    }
+    .big-btn:hover { transform: translateY(-2px); }
+    .big-btn:disabled { opacity: 0.5; cursor: default; }
+
+    .result-panel {
+        display: none; background: rgba(255,255,255,0.03); border: 1px solid rgba(245,158,11,0.3);
+        border-radius: 20px; padding: 1.6rem 1.2rem; margin-top: 1rem; text-align: center;
+    }
+    .result-panel.show { display: block; }
+    .result-panel h2 { color: #F59E0B; font-weight: 800; margin-bottom: 0.6rem; }
+
+    .lb-panel { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 16px; padding: 1rem 1.1rem; margin-top: 1.4rem; }
+
+    @@media (max-width: 480px) {
+        .idiom-slot { width: 52px; height: 52px; font-size: 1.6rem; }
+        .options-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+</style>
+
+<div class="game-container">
+    <div class="game-header">
+        <h1>📝 成语填空</h1>
+        <div class="subtitle">60 秒限时挑战 · 补全空缺字 · 连对加分</div>
+    </div>
+
+    <div class="status-bar">
+        <span class="status-item">⭐ 得分 <span class="value" id="score">0</span></span>
+        <span class="status-item">🔥 连对 <span class="value" id="combo">0</span></span>
+        <span class="status-item">⏱️ 剩余 <span class="value time" id="time">60</span>s</span>
+        <span class="status-item">🏆 最佳 <span class="value" id="best">0</span></span>
+    </div>
+
+    <div class="diff-bar" id="diffBar">
+        <button class="diff-btn" data-n="3">😀 简单</button>
+        <button class="diff-btn active" data-n="4">🙂 普通</button>
+        <button class="diff-btn" data-n="6">😈 困难</button>
+    </div>
+
+    <div class="start-wrap" id="startWrap">
+        <button class="big-btn" id="startBtn">▶️ 开始挑战</button>
+        <div class="muted" style="color:rgba(255,255,255,0.3);font-size:0.82rem;margin-top:0.8rem;">简单 3 选 1 · 普通 4 选 1 · 困难 6 选 1</div>
+    </div>
+
+    <div id="gameArea" style="display:none;">
+        <div class="question-card">
+            <div class="idiom-slots" id="slots"></div>
+            <div class="meaning" id="meaning"></div>
+        </div>
+        <div class="options-grid" id="options"></div>
+        <div class="feedback" id="feedback"></div>
+    </div>
+
+    <div class="result-panel" id="result">
+        <h2>🎉 挑战结束！</h2>
+        <div class="my-best-bar" id="myBestBar" style="justify-content:center;margin-bottom:0.8rem;"></div>
+        <button class="big-btn" id="againBtn">🔄 再来一局</button>
+    </div>
+
+    <div class="lb-panel">
+        <div class="panel-title">🏆 全站排行榜</div>
+        <div id="lb"></div>
+    </div>
+</div>
+
+<script src="~/js/casual-game.js"></script>
+<script>
+(function () {
+    'use strict';
+    var GAME_KEY = 'idiom';
+    var GAME_SECONDS = 60;
+
+    var idioms = [
+        { t: '画蛇添足', m: '比喻多此一举，弄巧成拙' },
+        { t: '守株待兔', m: '比喻死守经验，不知变通' },
+        { t: '亡羊补牢', m: '出了问题及时补救，还不算晚' },
+        { t: '掩耳盗铃', m: '比喻自己欺骗自己' },
+        { t: '刻舟求剑', m: '比喻拘泥成法，不知变通' },
+        { t: '井底之蛙', m: '比喻见识短浅的人' },
+        { t: '狐假虎威', m: '比喻借别人的威势来吓唬人' },
+        { t: '对牛弹琴', m: '比喻说话不看对象，白费口舌' },
+        { t: '一鸣惊人', m: '平时不露，一干就有惊人的成绩' },
+        { t: '胸有成竹', m: '做事之前已经有通盘的考虑' },
+        { t: '画龙点睛', m: '在关键处点明要旨，使内容生动传神' },
+        { t: '滥竽充数', m: '没有真本领，混在行家里面充数' },
+        { t: '拔苗助长', m: '急于求成，反而把事弄糟' },
+        { t: '杯弓蛇影', m: '疑神疑鬼，自相惊扰' },
+        { t: '朝三暮四', m: '反复无常，没有定性' },
+        { t: '程门立雪', m: '比喻尊师重道，诚恳求学' },
+        { t: '打草惊蛇', m: '行动不周密，反使对方有所戒备' },
+        { t: '东施效颦', m: '盲目模仿别人，结果适得其反' },
+        { t: '赴汤蹈火', m: '不避艰险，奋不顾身' },
+        { t: '邯郸学步', m: '模仿不成，反而失去自己原有的本事' },
+        { t: '鹤立鸡群', m: '才能或仪表出众，超于众人' },
+        { t: '画饼充饥', m: '用空想来安慰自己' },
+        { t: '精卫填海', m: '比喻意志坚决，不畏艰难' },
+        { t: '门庭若市', m: '宾客很多，非常热闹' },
+        { t: '破釜沉舟', m: '下决心，不顾一切地干到底' },
+        { t: '杞人忧天', m: '不必要的、过分的忧虑' },
+        { t: '塞翁失马', m: '坏事在一定条件下可以变为好事' },
+        { t: '四面楚歌', m: '比喻陷入孤立无援的困境' },
+        { t: '卧薪尝胆', m: '刻苦自励，发愤图强' },
+        { t: '一诺千金', m: '说话算数，极有信用' },
+        { t: '愚公移山', m: '比喻做事有毅力，不怕困难' },
+        { t: '自相矛盾', m: '言行前后不一，互相抵触' },
+        { t: '草木皆兵', m: '形容极度惊恐时疑神疑鬼' },
+        { t: '如火如荼', m: '形容气势旺盛、气氛热烈' },
+        { t: '手不释卷', m: '勤奋好学，书本不离手' },
+        { t: '小心翼翼', m: '形容举动十分谨慎，丝毫不敢疏忽' }
+    ];
+
+    var charPool = '画蛇添足守株待兔亡羊补牢掩耳盗铃刻舟求剑井底之蛙狐假虎威对牛弹琴一鸣惊人胸有成竹龙点睛滥竽充数拔苗助长杯弓影朝三暮四程门立雪打草惊东施效颦赴汤蹈火邯郸学步鹤立鸡群饼饥精卫填海门庭若市破釜沉舟杞忧塞翁失马四面楚歌卧薪尝胆诺千金愚公移山自矛盾草木皆兵如火如荼手释卷翼翼';
+    var charSet = {};
+    for (var ci = 0; ci < charPool.length; ci++) charSet[charPool[ci]] = true;
+
+    var optCount = 4;          // 当前难度选项数
+    var score = 0, combo = 0, bestScore = 0;
+    var current = null, blankIdx = 0, correctChar = '', locked = false;
+    var running = false, remaining = GAME_SECONDS, timerHandle = null;
+
+    function $(id) { return document.getElementById(id); }
+    var scoreEl = $('score'), comboEl = $('combo'), timeEl = $('time'), bestEl = $('best');
+    var slotsEl = $('slots'), meaningEl = $('meaning'), optionsEl = $('options'), feedbackEl = $('feedback');
+    var startWrap = $('startWrap'), gameArea = $('gameArea'), resultEl = $('result');
+
+    function loadLocalBest() {
+        try { bestScore = parseInt(localStorage.getItem('idiom_best_score') || '0', 10); } catch (e) {}
+    }
+    function saveLocalBest() {
+        try { localStorage.setItem('idiom_best_score', String(bestScore)); } catch (e) {}
+    }
+
+    function shuffle(a) { for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+    function pickDistractors(correct) {
+        var keys = Object.keys(charSet), out = [], guard = 0, need = optCount - 1;
+        while (out.length < need && guard < 600) { guard++; var ch = keys[Math.floor(Math.random() * keys.length)]; if (ch !== correct && out.indexOf(ch) < 0) out.push(ch); }
+        return out;
+    }
+
+    function newRound() {
+        locked = false;
+        current = idioms[Math.floor(Math.random() * idioms.length)];
+        blankIdx = Math.floor(Math.random() * 4);
+        correctChar = current.t[blankIdx];
+        feedbackEl.textContent = ''; feedbackEl.className = 'feedback';
+        meaningEl.textContent = ''; meaningEl.classList.remove('revealed');
+
+        var html = '';
+        for (var i = 0; i < 4; i++) {
+            html += '<div class="idiom-slot' + (i === blankIdx ? ' blank' : '') + '">' + (i === blankIdx ? '？' : current.t[i]) + '</div>';
+        }
+        slotsEl.innerHTML = html;
+
+        var options = shuffle([correctChar].concat(pickDistractors(correctChar)));
+        optionsEl.style.gridTemplateColumns = 'repeat(' + Math.min(optCount, 3) + ', 1fr)';
+        var optHtml = '';
+        for (var k = 0; k < options.length; k++) optHtml += '<button class="option-btn" data-c="' + options[k] + '">' + options[k] + '</button>';
+        optionsEl.innerHTML = optHtml;
+    }
+
+    function revealSlots(state) {
+        var target = slotsEl.querySelector('.idiom-slot.blank');
+        if (!target) return;
+        target.textContent = correctChar;
+        target.classList.remove('blank');
+        target.classList.add(state === 'correct' ? 'filled-correct' : 'filled-wrong');
+    }
+
+    function answer(chosen, btn) {
+        if (!running || locked) return;
+        locked = true;
+        var btns = optionsEl.querySelectorAll('.option-btn');
+        var centerX = 0, centerY = 0;
+        for (var i = 0; i < btns.length; i++) {
+            btns[i].disabled = true;
+            if (btns[i].getAttribute('data-c') === correctChar) btns[i].classList.add('correct');
+            if (btns[i] === btn && chosen !== correctChar) btns[i].classList.add('wrong');
+            if (btns[i] === btn) { var r = btns[i].getBoundingClientRect(); centerX = r.left + r.width / 2; centerY = r.top; }
+        }
+        if (chosen === correctChar) {
+            combo++;
+            var gain = 10 + Math.min(combo - 1, 10) * 2;
+            score += gain;
+            CasualGame.Sound.correct();
+            CasualGame.floatText(centerX, centerY, '+' + gain, '#4ade80');
+            feedbackEl.textContent = '✅ +' + gain + (combo > 1 ? ' · 连对 ×' + combo : '');
+            feedbackEl.className = 'feedback good';
+            revealSlots('correct');
+        } else {
+            combo = 0;
+            CasualGame.Sound.wrong();
+            feedbackEl.textContent = '❌ 正确答案是「' + correctChar + '」';
+            feedbackEl.className = 'feedback bad';
+            revealSlots('wrong');
+        }
+        meaningEl.textContent = '💡 ' + current.m;
+        meaningEl.classList.add('revealed');
+        scoreEl.textContent = score;
+        comboEl.textContent = combo;
+        setTimeout(newRound, chosen === correctChar ? 650 : 1300);
+    }
+
+    optionsEl.addEventListener('click', function (e) {
+        var btn = e.target.closest('.option-btn');
+        if (!btn) return;
+        CasualGame.Sound.click();
+        answer(btn.getAttribute('data-c'), btn);
+    });
+
+    function tick() {
+        remaining--;
+        timeEl.textContent = remaining;
+        if (remaining <= 10) CasualGame.Sound.tick();
+        if (remaining <= 0) endGame();
+    }
+
+    function startGame() {
+        score = 0; combo = 0; remaining = GAME_SECONDS;
+        scoreEl.textContent = '0'; comboEl.textContent = '0'; timeEl.textContent = remaining;
+        startWrap.style.display = 'none';
+        gameArea.style.display = 'block';
+        resultEl.classList.remove('show');
+        running = true;
+        newRound();
+        timerHandle = setInterval(tick, 1000);
+    }
+
+    function endGame() {
+        if (!running) return;
+        running = false;
+        if (timerHandle) clearInterval(timerHandle);
+        gameArea.style.display = 'none';
+        resultEl.classList.add('show');
+        if (score > bestScore) { bestScore = score; saveLocalBest(); CasualGame.Sound.win(); }
+        else CasualGame.Sound.lose();
+        bestEl.textContent = bestScore;
+        // 提交成绩
+        CasualGame.submit(GAME_KEY, score, combo).then(function (r) {
+            renderMyBest(r);
+        });
+    }
+
+    function renderMyBest(submitRes) {
+        var bar = $('myBestBar');
+        if (submitRes && submitRes.ok) {
+            bar.innerHTML = '<span>🏆 本局 <b>' + score + '</b></span>' +
+                '<span>📈 账号最佳 <b>' + submitRes.bestScore + '</b></span>' +
+                '<span>🥇 排名 <b>#' + submitRes.rank + '</b></span>' +
+                '<span>🎮 局数 <b>' + submitRes.gamesPlayed + '</b></span>';
+        } else {
+            bar.innerHTML = '<span>🏆 本局 <b>' + score + '</b></span>';
+        }
+        CasualGame.loadLeaderboard(GAME_KEY, $('lb'));
+    }
+
+    // 难度切换
+    var diffBtns = document.querySelectorAll('#diffBar .diff-btn');
+    diffBtns.forEach(function (b) {
+        b.addEventListener('click', function () {
+            diffBtns.forEach(function (x) { x.classList.remove('active'); });
+            b.classList.add('active');
+            optCount = parseInt(b.getAttribute('data-n'), 10);
+        });
+    });
+
+    $('startBtn').addEventListener('click', startGame);
+    $('againBtn').addEventListener('click', startGame);
+
+    loadLocalBest();
+    bestEl.textContent = bestScore;
+    CasualGame.loadLeaderboard(GAME_KEY, $('lb'));
+})();
+</script>

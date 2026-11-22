@@ -1,0 +1,311 @@
+@{
+    ViewData["Title"] = "🕵️ 谁是卧底？";
+    var username = Context.Session.GetString("Username") ?? "玩家";
+}
+
+<link rel="stylesheet" href="~/css/casual-game.css" />
+
+<style>
+    .game-container { max-width: 660px; margin: 0 auto; padding: 1rem 1.2rem 3rem; }
+    .game-header { text-align: center; padding: 0.6rem 0 1rem; }
+    .game-header h1 {
+        font-size: 2rem; font-weight: 800; margin: 0;
+        background: linear-gradient(135deg, #EC4899 0%, #F472B6 100%);
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .game-header .subtitle { color: rgba(255,255,255,0.3); font-size: 0.82rem; margin-top: 0.2rem; }
+
+    .status-bar {
+        display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; flex-wrap: wrap;
+        background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.04);
+        border-radius: 16px; padding: 0.7rem 1.3rem; margin-bottom: 1.2rem;
+    }
+    .status-item { color: rgba(255,255,255,0.3); font-size: 0.8rem; display: flex; align-items: center; gap: 0.35rem; }
+    .status-item .value { color: #fff; font-weight: 700; font-size: 1.1rem; }
+
+    .panel {
+        background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05);
+        border-radius: 24px; padding: 1.4rem; min-height: 320px; display: flex; flex-direction: column;
+    }
+    .log { flex: 1; overflow-y: auto; max-height: 340px; margin-bottom: 1rem; display: flex; flex-direction: column; gap: 0.5rem; }
+    .log .line {
+        color: rgba(255,255,255,0.7); font-size: 0.92rem; line-height: 1.5; padding: 0.5rem 0.8rem;
+        background: rgba(255,255,255,0.03); border-radius: 12px; animation: lineIn 0.25s ease;
+    }
+    @@keyframes lineIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+    .log .line.speaker { color: #F472B6; }
+    .log .line.human { color: #4ade80; }
+    .log .line.event { color: #ffc107; }
+    .log .line.result { color: #fff; background: rgba(236,72,153,0.12); font-weight: 700; }
+    .log .line.lose { color: #fff; background: rgba(220,53,69,0.12); font-weight: 700; }
+
+    .action { text-align: center; }
+    .big-btn {
+        display: inline-block; padding: 0.85rem 2.4rem; font-size: 1rem; font-weight: 800; color: #fff;
+        background: linear-gradient(135deg, #EC4899, #F472B6); border: none; border-radius: 50px;
+        cursor: pointer; font-family: inherit; transition: all 0.2s ease;
+    }
+    .big-btn:hover { transform: translateY(-2px); }
+    .big-btn:disabled { opacity: 0.5; cursor: default; transform: none; }
+
+    .role-word { font-size: 2.6rem; font-weight: 800; color: #fff; margin: 0.4rem 0; animation: popIn 0.4s ease; }
+    @@keyframes popIn { 0% { transform: scale(0.5); opacity: 0; } 70% { transform: scale(1.1); } 100% { transform: scale(1); opacity: 1; } }
+    .role-badge { display: inline-block; padding: 0.25rem 1rem; border-radius: 50px; font-size: 0.85rem; font-weight: 700; margin-bottom: 0.4rem; }
+    .role-badge.civilian { background: rgba(40,167,69,0.15); color: #4ade80; }
+    .role-badge.spy { background: rgba(220,53,69,0.15); color: #f87171; }
+    .muted { color: rgba(255,255,255,0.3); font-size: 0.85rem; }
+
+    .clue-row { display: flex; gap: 0.5rem; margin-top: 0.5rem; }
+    .clue-input {
+        flex: 1; padding: 0.75rem 1rem; font-size: 1rem; color: #fff;
+        background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 12px; font-family: inherit; outline: none;
+    }
+    .clue-input:focus { border-color: rgba(236,72,153,0.5); }
+
+    .vote-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.7rem; }
+    .vote-btn {
+        padding: 1rem 0; font-size: 1rem; font-weight: 800; color: #fff;
+        background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 16px; cursor: pointer; font-family: inherit; transition: all 0.15s ease;
+    }
+    .vote-btn:hover { background: rgba(236,72,153,0.15); border-color: rgba(236,72,153,0.4); transform: translateY(-2px); }
+    .vote-btn .emoji { display: block; font-size: 1.8rem; margin-bottom: 0.2rem; }
+
+    .lb-panel { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 16px; padding: 1rem 1.1rem; margin-top: 1.4rem; }
+
+    @@media (max-width: 480px) { .vote-grid { grid-template-columns: 1fr; } }
+</style>
+
+<div class="game-container">
+    <div class="game-header">
+        <h1>🕵️ 谁是卧底？</h1>
+        <div class="subtitle">4 人局 · 找出隐藏在人群中的卧底！ · <a href="/SpyGame/Room" style="color:#F472B6;">👥 多人对战</a></div>
+    </div>
+
+    <div class="status-bar">
+        <span class="status-item">🔁 轮次 <span class="value" id="round">0</span></span>
+        <span class="status-item">👥 存活 <span class="value" id="alive">4</span></span>
+        <span class="status-item">🏆 胜 <span class="value" id="wins">0</span></span>
+        <span class="status-item">💀 负 <span class="value" id="losses">0</span></span>
+    </div>
+
+    <div class="panel">
+        <div class="log" id="log"></div>
+        <div class="action" id="action"></div>
+    </div>
+
+    <div class="lb-panel">
+        <div class="panel-title">🏆 全站排行榜（胜场数）</div>
+        <div id="lb"></div>
+    </div>
+</div>
+
+<script src="~/js/casual-game.js"></script>
+<script>
+(function () {
+    'use strict';
+    var GAME_KEY = 'spy';
+
+    var pairs = [
+        { a: { w: '苹果', c: ['脆脆的水果', '一般是红色的', '可以削皮吃'] }, b: { w: '梨', c: ['脆脆的水果', '黄绿色的', '水分很足'] } },
+        { a: { w: '猫', c: ['毛茸茸的动物', '会抓老鼠', '爱晒太阳'] }, b: { w: '狗', c: ['毛茸茸的动物', '看家护院', '会摇尾巴'] } },
+        { a: { w: '足球', c: ['用脚踢的球', '世界杯的项目', '进球很难'] }, b: { w: '篮球', c: ['用手拍的球', 'NBA 的项目', '投篮得分'] } },
+        { a: { w: '奶茶', c: ['甜甜的饮料', '里面有珍珠', '年轻人爱喝'] }, b: { w: '咖啡', c: ['苦苦的饮料', '喝了提神', '有咖啡因'] } },
+        { a: { w: '手机', c: ['随身携带', '能打电话', '屏幕越来越大'] }, b: { w: '电脑', c: ['用来办公', '有键盘', '可以编程'] } },
+        { a: { w: '面条', c: ['长长的食物', '用筷子夹着吃', '北方人常吃'] }, b: { w: '米饭', c: ['一粒一粒的', '用碗盛着吃', '南方人常吃'] } },
+        { a: { w: '冰箱', c: ['放在厨房', '用来保鲜', '有冷藏室'] }, b: { w: '空调', c: ['夏天用得多', '调节温度', '常挂在墙上'] } },
+        { a: { w: '眼镜', c: ['戴在脸上', '矫正视力', '镜片是透明的'] }, b: { w: '墨镜', c: ['戴在脸上', '遮挡阳光', '镜片是深色的'] } },
+        { a: { w: '医生', c: ['在医院工作', '穿白大褂', '给人看病'] }, b: { w: '护士', c: ['在医院工作', '照顾病人', '给人打针'] } },
+        { a: { w: '老师', c: ['在教室讲课', '批改作业', '用黑板粉笔'] }, b: { w: '教授', c: ['在大学教书', '做科研', '带研究生'] } },
+        { a: { w: '地铁', c: ['在地下跑', '速度很快', '按站停靠'] }, b: { w: '公交', c: ['在马路上跑', '容易堵车', '到站停靠'] } },
+        { a: { w: '可乐', c: ['碳酸饮料', '甜甜的', '冰的更好喝'] }, b: { w: '雪碧', c: ['碳酸饮料', '透明的', '柠檬味'] } }
+    ];
+
+    var players, spyIdx, round, wins, losses, phase, speakQueue;
+    var humanName = '你';
+
+    function $(id) { return document.getElementById(id); }
+    var logEl = $('log'), actionEl = $('action');
+    var roundEl = $('round'), aliveEl = $('alive'), winsEl = $('wins'), lossesEl = $('losses');
+
+    function loadStats() {
+        try { wins = parseInt(localStorage.getItem('spy_wins') || '0', 10); losses = parseInt(localStorage.getItem('spy_losses') || '0', 10); }
+        catch (e) { wins = 0; losses = 0; }
+    }
+    function saveStats() {
+        try { localStorage.setItem('spy_wins', String(wins)); localStorage.setItem('spy_losses', String(losses)); } catch (e) {}
+    }
+    function refreshHud() { roundEl.textContent = round; aliveEl.textContent = aliveCount(); winsEl.textContent = wins; lossesEl.textContent = losses; }
+
+    function aliveCount() { return players.filter(function (p) { return p.alive; }).length; }
+    function alivePlayers() { return players.filter(function (p) { return p.alive; }); }
+    function aliveBots() { return players.filter(function (p) { return p.alive && !p.isHuman; }); }
+
+    function shuffle(a) { for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+
+    function appendLog(text, cls) {
+        var d = document.createElement('div');
+        d.className = 'line' + (cls ? ' ' + cls : '');
+        d.textContent = text;
+        logEl.appendChild(d);
+        logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    function newGame() {
+        logEl.innerHTML = '';
+        var pair = pairs[Math.floor(Math.random() * pairs.length)];
+        spyIdx = 1 + Math.floor(Math.random() * 3);
+        players = [
+            { idx: 0, name: humanName, role: 'civilian', word: pair.a.w, clues: shuffle(pair.a.c.slice()), alive: true, isHuman: true, clueCount: 0 },
+            { idx: 1, name: '小红', role: '', word: '', clues: [], alive: true, isHuman: false, clueCount: 0 },
+            { idx: 2, name: '阿强', role: '', word: '', clues: [], alive: true, isHuman: false, clueCount: 0 },
+            { idx: 3, name: '小美', role: '', word: '', clues: [], alive: true, isHuman: false, clueCount: 0 }
+        ];
+        for (var i = 1; i < players.length; i++) {
+            var isSpy = i === spyIdx;
+            players[i].role = isSpy ? 'spy' : 'civilian';
+            players[i].word = isSpy ? pair.b.w : pair.a.w;
+            players[i].clues = shuffle((isSpy ? pair.b.c : pair.a.c).slice());
+        }
+        round = 0; phase = 'reveal';
+        refreshHud();
+        renderReveal();
+    }
+
+    function renderReveal() {
+        var human = players[0];
+        actionEl.innerHTML =
+            '<div class="muted">你是 1 号玩家，先查看你的身份</div>' +
+            '<button class="big-btn" id="revealBtn">🔍 查看我的身份</button>';
+        $('revealBtn').addEventListener('click', function () {
+            CasualGame.Sound.flip();
+            actionEl.innerHTML =
+                '<div class="role-badge civilian">👥 平民</div>' +
+                '<div class="role-word">' + human.word + '</div>' +
+                '<div class="muted">记住你的词，找出和你描述对不上的卧底！</div>' +
+                '<div style="margin-top:1rem;"><button class="big-btn" id="startBtn">▶️ 开始游戏</button></div>';
+            $('startBtn').addEventListener('click', function () {
+                CasualGame.Sound.click();
+                appendLog('🎮 游戏开始！4 位玩家就座。', 'event');
+                beginRound();
+            });
+        });
+    }
+
+    function beginRound() {
+        round++; phase = 'speak'; refreshHud();
+        appendLog('—— 第 ' + round + ' 轮发言 ——', 'event');
+        speakQueue = shuffle(alivePlayers()).slice();
+        speakNext();
+    }
+
+    function speakNext() {
+        if (speakQueue.length === 0) { afterSpeak(); return; }
+        var p = speakQueue.shift();
+        if (p.isHuman) { renderHumanSpeak(); }
+        else {
+            actionEl.innerHTML = '<div class="muted">' + p.name + ' 正在发言…</div>';
+            setTimeout(function () {
+                appendLog(p.name + '：' + p.clues[p.clueCount++ % p.clues.length], 'speaker');
+                CasualGame.Sound.click();
+                speakNext();
+            }, 650);
+        }
+    }
+
+    function renderHumanSpeak() {
+        actionEl.innerHTML =
+            '<div class="muted">轮到你发言了，用一句话描述你的词（别太明显）</div>' +
+            '<div class="clue-row"><input type="text" class="clue-input" id="clueInput" maxlength="30" placeholder="输入你的描述…" />' +
+            '<button class="big-btn" id="clueBtn" style="padding:0.6rem 1.4rem;">发言</button></div>';
+        var input = $('clueInput');
+        function submit() {
+            var clue = input.value.trim() || '……';
+            CasualGame.Sound.click();
+            appendLog(humanName + '：' + clue, 'human');
+            speakNext();
+        }
+        $('clueBtn').addEventListener('click', submit);
+        input.addEventListener('keydown', function (e) { if (e.key === 'Enter') submit(); });
+        input.focus();
+    }
+
+    function afterSpeak() {
+        phase = 'vote';
+        var bots = aliveBots();
+        var html = '<div class="muted">🗳️ 投票：你认为谁是卧底？</div><div class="vote-grid">';
+        for (var i = 0; i < bots.length; i++) {
+            var b = bots[i];
+            html += '<button class="vote-btn" data-idx="' + b.idx + '"><span class="emoji">' + (b.idx === 1 ? '👩' : b.idx === 2 ? '👨' : '👧') + '</span>' + b.name + '</button>';
+        }
+        html += '</div>';
+        actionEl.innerHTML = html;
+        var btns = actionEl.querySelectorAll('.vote-btn');
+        for (var k = 0; k < btns.length; k++) {
+            btns[k].addEventListener('click', function () {
+                CasualGame.Sound.click();
+                resolveVote(parseInt(this.getAttribute('data-idx'), 10));
+            });
+        }
+    }
+
+    function aiVote(b) {
+        if (b.idx === spyIdx) {
+            var civs = aliveBots().filter(function (x) { return x.idx !== b.idx; });
+            return civs[Math.floor(Math.random() * civs.length)].idx;
+        } else {
+            if (players[spyIdx].alive && Math.random() < 0.4) return spyIdx;
+            var others = aliveBots().filter(function (x) { return x.idx !== b.idx; });
+            return others[Math.floor(Math.random() * others.length)].idx;
+        }
+    }
+
+    function resolveVote(targetIdx) {
+        phase = 'voting';
+        var votes = {}; votes[targetIdx] = 1;
+        appendLog(humanName + ' 投给了 ' + players[targetIdx].name, 'human');
+        var bots = aliveBots();
+        for (var i = 0; i < bots.length; i++) {
+            var t = aiVote(bots[i]);
+            votes[t] = (votes[t] || 0) + 1;
+            appendLog(bots[i].name + ' 投给了 ' + players[t].name, 'speaker');
+        }
+        var max = 0, aliveB = aliveBots();
+        for (var j = 0; j < aliveB.length; j++) max = Math.max(max, votes[aliveB[j].idx] || 0);
+        var tops = aliveB.filter(function (b) { return (votes[b.idx] || 0) === max; });
+        var eliminated = tops[Math.floor(Math.random() * tops.length)];
+        players[eliminated.idx].alive = false;
+        var isSpy = eliminated.idx === spyIdx;
+        appendLog('🚨 ' + eliminated.name + ' 被淘汰，真实身份是：' + (isSpy ? '🕵️ 卧底' : '👥 平民'), 'event');
+        CasualGame.Sound.pop();
+        refreshHud();
+
+        if (isSpy) { endGame(true); return; }
+        if (aliveCount() <= 2) { endGame(false); return; }
+        actionEl.innerHTML = '<div class="muted">' + eliminated.name + ' 不是卧底，游戏继续…</div>';
+        setTimeout(beginRound, 1000);
+    }
+
+    function endGame(win) {
+        phase = 'end';
+        if (win) { wins++; appendLog('🎉 平民胜利！你成功找出了卧底！', 'result'); CasualGame.Sound.win(); }
+        else { losses++; appendLog('💀 卧底获胜！' + players[spyIdx].name + ' 就是卧底。', 'lose'); CasualGame.Sound.lose(); }
+        saveStats(); refreshHud();
+        actionEl.innerHTML =
+            '<div style="font-size:2rem;margin-bottom:0.4rem;">' + (win ? '🎉' : '💀') + '</div>' +
+            '<div class="muted">' + (win ? '恭喜获胜！' : '再试一次，找出卧底！') + '</div>' +
+            '<div style="margin-top:1rem;"><button class="big-btn" id="againBtn">🔄 再来一局</button></div>';
+        $('againBtn').addEventListener('click', newGame);
+
+        // 提交胜场到排行榜
+        CasualGame.submit(GAME_KEY, wins, 0).then(function () {
+            CasualGame.loadLeaderboard(GAME_KEY, $('lb'));
+        });
+    }
+
+    loadStats();
+    newGame();
+    CasualGame.loadLeaderboard(GAME_KEY, $('lb'));
+})();
+</script>

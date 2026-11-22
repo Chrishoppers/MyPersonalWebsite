@@ -1,0 +1,110 @@
+/* ============ 休闲小游戏通用样式（排行榜 / 漂浮分数） ============ */
+
+/* 排行榜 */
+.lb-empty {
+    text-align: center;
+    color: rgba(255,255,255,0.3);
+    font-size: 0.85rem;
+    padding: 1.2rem 0;
+}
+
+.lb-row {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.55rem 0.8rem;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    font-size: 0.9rem;
+}
+
+.lb-row:last-child { border-bottom: none; }
+
+.lb-row.me {
+    background: rgba(139,92,246,0.14);
+    border-radius: 10px;
+    border-bottom: none;
+}
+
+.lb-medal {
+    width: 2rem;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.lb-rank {
+    display: inline-block;
+    min-width: 1.6rem;
+    text-align: center;
+    color: rgba(255,255,255,0.4);
+    font-weight: 700;
+}
+
+.lb-name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: rgba(255,255,255,0.85);
+    font-weight: 600;
+}
+
+.lb-combo {
+    color: #ff9d5c;
+    font-size: 0.8rem;
+    flex-shrink: 0;
+}
+
+.lb-score {
+    font-weight: 800;
+    color: #fff;
+    flex-shrink: 0;
+}
+
+/* 漂浮分数（得分飞字） */
+.float-score {
+    position: fixed;
+    z-index: 999;
+    pointer-events: none;
+    font-weight: 900;
+    font-size: 1.5rem;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.4);
+    transform: translate(-50%, -50%);
+    animation: floatUp 0.9s ease-out forwards;
+}
+
+@keyframes floatUp {
+    0% { opacity: 0; transform: translate(-50%, -50%) scale(0.6); }
+    20% { opacity: 1; transform: translate(-50%, -70%) scale(1.15); }
+    100% { opacity: 0; transform: translate(-50%, -160%) scale(1); }
+}
+
+/* 通用面板标题 */
+.panel-title {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: rgba(255,255,255,0.6);
+    font-size: 0.9rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+/* 我的最佳条 */
+.my-best-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.9rem;
+    align-items: center;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 14px;
+    padding: 0.6rem 1rem;
+    font-size: 0.82rem;
+    color: rgba(255,255,255,0.4);
+}
+
+.my-best-bar b {
+    color: #fff;
+    font-size: 0.95rem;
+}

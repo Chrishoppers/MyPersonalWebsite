@@ -594,8 +594,78 @@
             .swap-modal h3 { font-size: 1rem; }
         }
     </style>
+
+    <!-- ============ 身份牌揭晓动画 ============ -->
+    <style>
+        #roleRevealOverlay {
+            position: fixed; inset: 0; z-index: 9999; display: none;
+            align-items: center; justify-content: center;
+            background: radial-gradient(120% 120% at 50% 30%, rgba(20,12,40,0.9), rgba(6,4,14,0.96));
+            backdrop-filter: blur(12px);
+        }
+        #roleRevealOverlay.show { display: flex; animation: overlayFade 0.3s ease; }
+        @@keyframes overlayFade { from { opacity: 0; } to { opacity: 1; } }
+        .role-card-wrap { display: flex; flex-direction: column; align-items: center; gap: 1.6rem; }
+        .role-card { width: 210px; height: 315px; perspective: 1400px; }
+        .role-card-inner {
+            position: relative; width: 100%; height: 100%;
+            transition: transform 0.9s cubic-bezier(0.2, 0.7, 0.25, 1);
+            transform-style: preserve-3d;
+        }
+        .role-card.flipped .role-card-inner { transform: rotateY(180deg); }
+        .role-card-front, .role-card-back {
+            position: absolute; inset: 0; backface-visibility: hidden; border-radius: 20px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
+        .role-card-front {
+            background: linear-gradient(135deg, #2a1b4d 0%, #120c26 100%);
+            border: 1px solid rgba(139,92,246,0.45);
+        }
+        .role-card-front::before {
+            content: ''; position: absolute; inset: 10px; border-radius: 14px;
+            border: 1px dashed rgba(255,255,255,0.12);
+        }
+        .card-back-pattern { font-size: 5rem; filter: drop-shadow(0 6px 16px rgba(139,92,246,0.5)); }
+        .card-back-text { color: rgba(255,255,255,0.45); letter-spacing: 0.35em; margin-top: 0.6rem; font-weight: 700; }
+        .role-card-back {
+            background: linear-gradient(160deg, #2a1f45 0%, #140d26 100%);
+            border: 1px solid rgba(255,255,255,0.18); transform: rotateY(180deg);
+        }
+        .role-emoji { font-size: 4.2rem; filter: drop-shadow(0 8px 18px rgba(0,0,0,0.5)); }
+        .role-name { font-size: 1.9rem; font-weight: 900; color: #fff; margin-top: 0.5rem; letter-spacing: 0.1em; }
+        .role-desc { font-size: 0.85rem; color: rgba(255,255,255,0.55); margin-top: 0.5rem; text-align: center; padding: 0 1.2rem; line-height: 1.6; }
+        .role-confirm {
+            padding: 0.8rem 2.4rem; font-size: 1rem; font-weight: 800; color: #fff;
+            background: linear-gradient(135deg, #8B5CF6, #EC4899); border: none; border-radius: 50px;
+            cursor: pointer; font-family: inherit; box-shadow: 0 8px 24px rgba(139,92,246,0.4);
+            transition: transform 0.2s ease; animation: confirmIn 0.5s ease 0.8s both;
+        }
+        .role-confirm:hover { transform: translateY(-2px); }
+        @@keyframes confirmIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
 </head>
 <body>
+
+    <!-- 身份牌揭晓动画 -->
+    <div id="roleRevealOverlay">
+        <div class="role-card-wrap">
+            <div class="role-card" id="roleCard">
+                <div class="role-card-inner">
+                    <div class="role-card-front">
+                        <div class="card-back-pattern">🐺</div>
+                        <div class="card-back-text">狼人杀</div>
+                    </div>
+                    <div class="role-card-back">
+                        <div class="role-emoji" id="roleEmoji">👤</div>
+                        <div class="role-name" id="roleName">平民</div>
+                        <div class="role-desc" id="roleDesc">无特殊技能</div>
+                    </div>
+                </div>
+            </div>
+            <button class="role-confirm" id="roleConfirmBtn" onclick="hideRoleCard()">👌 我记住了</button>
+        </div>
+    </div>
 
     <!-- 粒子背景 -->
     <canvas id="particleCanvas"></canvas>
@@ -793,6 +863,33 @@
         // ============================================================
         // SignalR
         // ============================================================
+        // ============ 身份牌揭晓 ============
+        var ROLE_INFO = {
+            Villager: ['👤', '平民', '无特殊技能，通过发言投票找出狼人', '#4ade80'],
+            Werewolf: ['🐺', '狼人', '每晚与狼队友共同杀害一名玩家', '#f87171'],
+            Seer: ['🔮', '预言家', '每晚查验一名玩家的身份', '#60a5fa'],
+            Witch: ['🧪', '女巫', '解药救人，毒药杀人', '#a78bfa'],
+            Guard: ['🛡️', '守卫', '每晚守护一名玩家免受袭击', '#34d399'],
+            Hunter: ['🔫', '猎人', '死亡时可开枪带走一名玩家', '#fb923c'],
+            Fool: ['🤡', '白痴', '被投票放逐时可翻牌免死一次', '#facc15'],
+            Knight: ['⚔️', '骑士', '白天可挑战一名玩家', '#fbbf24']
+        };
+        function showRoleCard(role) {
+            var info = ROLE_INFO[role] || ['👤', role || '?', '', '#4ade80'];
+            document.getElementById('roleEmoji').textContent = info[0];
+            document.getElementById('roleName').textContent = info[1];
+            document.getElementById('roleName').style.color = info[3];
+            document.getElementById('roleDesc').textContent = info[2];
+            var overlay = document.getElementById('roleRevealOverlay');
+            var card = document.getElementById('roleCard');
+            card.classList.remove('flipped');
+            overlay.classList.add('show');
+            setTimeout(function () { card.classList.add('flipped'); }, 350);
+        }
+        function hideRoleCard() {
+            document.getElementById('roleRevealOverlay').classList.remove('show');
+        }
+
         function connectSignalR() {
             try {
                 connection = new signalR.HubConnectionBuilder()
@@ -876,6 +973,10 @@
                     }
                 });
 
+                connection.on('ReceiveRole', function(data) {
+                    if (data && !data.isSpectator) showRoleCard(data.role);
+                });
+
                 connection.on('DisplayMessage', function(message) {
                     showToast('📢 ' + message, 'info');
                 });
@@ -925,6 +1026,10 @@
                         state.seatNumber = 0;
                         document.getElementById('actionStatus').textContent = '● 你是房主，等待玩家就坐';
                         showToast('✅ 已加入房间，你是房主', 'success');
+                        // 重连后补拉身份牌
+                        connection.invoke('GetMyRole', result.playerId).then(function(r) {
+                            if (r && r.role && !r.isSpectator) showRoleCard(r.role);
+                        }).catch(function() {});
                     } else if (result && !result.success) {
                         showToast('❌ ' + result.message, 'error');
                     }

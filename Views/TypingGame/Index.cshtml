@@ -1,0 +1,231 @@
+@{
+    ViewData["Title"] = "⌨️ 打字速度测试";
+    var username = Context.Session.GetString("Username") ?? "玩家";
+}
+
+<link rel="stylesheet" href="~/css/casual-game.css" />
+
+<style>
+    .game-container { max-width: 780px; margin: 0 auto; padding: 1rem 1.2rem 3rem; }
+    .game-header { text-align: center; padding: 0.6rem 0 1rem; }
+    .game-header h1 {
+        font-size: 2rem; font-weight: 800; margin: 0;
+        background: linear-gradient(135deg, #10B981 0%, #34D399 100%);
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .game-header .subtitle { color: rgba(255,255,255,0.3); font-size: 0.82rem; margin-top: 0.2rem; }
+
+    .status-bar {
+        display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; flex-wrap: wrap;
+        background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.04);
+        border-radius: 16px; padding: 0.7rem 1.3rem; margin-bottom: 1rem;
+    }
+    .status-item { color: rgba(255,255,255,0.3); font-size: 0.8rem; display: flex; align-items: center; gap: 0.35rem; }
+    .status-item .value { color: #fff; font-weight: 700; font-size: 1.1rem; }
+    .status-item .value.time { color: #34D399; font-variant-numeric: tabular-nums; }
+
+    .diff-bar { display: flex; gap: 0.5rem; justify-content: center; margin-bottom: 1rem; }
+    .diff-btn {
+        padding: 0.4rem 1.3rem; font-size: 0.82rem; font-weight: 700; color: rgba(255,255,255,0.5);
+        background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 50px; cursor: pointer; font-family: inherit; transition: all 0.15s ease;
+    }
+    .diff-btn.active { color: #fff; background: rgba(16,185,129,0.2); border-color: rgba(16,185,129,0.5); }
+
+    .passage-box {
+        background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05);
+        border-radius: 20px; padding: 1.5rem 1.3rem; margin-bottom: 1rem;
+        font-size: 1.5rem; line-height: 2.2; letter-spacing: 0.08em; user-select: none; min-height: 140px;
+    }
+    .passage-box span { color: rgba(255,255,255,0.22); border-radius: 3px; transition: color 0.05s ease; }
+    .passage-box span.done { color: #4ade80; }
+    .passage-box span.wrong { color: #f87171; background: rgba(220,53,69,0.14); }
+    .passage-box span.caret { color: #34D399; background: rgba(52,211,153,0.15); border-left: 2px solid #34D399; }
+
+    .typing-input {
+        width: 100%; padding: 1rem 1.2rem; font-size: 1.1rem; color: #fff;
+        background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 14px; font-family: inherit; outline: none; transition: border-color 0.2s ease;
+    }
+    .typing-input:focus { border-color: rgba(52,211,153,0.5); }
+    .typing-input:disabled { opacity: 0.5; }
+
+    .result-panel {
+        display: none; text-align: center; background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(52,211,153,0.3); border-radius: 20px; padding: 1.6rem 1.2rem; margin-top: 1.2rem;
+    }
+    .result-panel.show { display: block; }
+    .result-panel h2 { color: #34D399; font-weight: 800; margin-bottom: 0.7rem; }
+    .result-row { display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap; margin-bottom: 1rem; }
+    .result-item { color: rgba(255,255,255,0.4); font-size: 0.85rem; }
+    .result-item .big { display: block; color: #fff; font-size: 1.8rem; font-weight: 800; margin-bottom: 0.1rem; }
+
+    .big-btn {
+        display: inline-block; padding: 0.75rem 2.4rem; font-size: 0.95rem; font-weight: 700; color: #fff;
+        background: linear-gradient(135deg, #10B981, #34D399); border: none; border-radius: 50px;
+        cursor: pointer; font-family: inherit; transition: all 0.2s ease;
+    }
+    .big-btn:hover { transform: translateY(-2px); }
+
+    .lb-panel { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 16px; padding: 1rem 1.1rem; margin-top: 1.4rem; }
+</style>
+
+<div class="game-container">
+    <div class="game-header">
+        <h1>⌨️ 打字速度测试</h1>
+        <div class="subtitle">限时输入中文段落 · 测测你的打字速度</div>
+    </div>
+
+    <div class="status-bar">
+        <span class="status-item">⏱️ 剩余 <span class="value time" id="time">60</span> 秒</span>
+        <span class="status-item">📈 速度 <span class="value" id="cpm">0</span> 字/分</span>
+        <span class="status-item">🎯 正确 <span class="value" id="correct">0</span></span>
+        <span class="status-item">🏆 最佳 <span class="value" id="best">0</span></span>
+    </div>
+
+    <div class="diff-bar" id="diffBar">
+        <button class="diff-btn" data-s="120">😀 简单 120s</button>
+        <button class="diff-btn active" data-s="60">🙂 普通 60s</button>
+        <button class="diff-btn" data-s="30">😈 困难 30s</button>
+    </div>
+
+    <div class="passage-box" id="passage"></div>
+    <input type="text" class="typing-input" id="input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="点击这里开始打字…" />
+
+    <div class="result-panel" id="result">
+        <h2>🎉 测试完成！</h2>
+        <div class="result-row">
+            <div class="result-item"><span class="big" id="rCpm">0</span>字/分</div>
+            <div class="result-item"><span class="big" id="rAcc">0%</span>准确率</div>
+            <div class="result-item"><span class="big" id="rCorrect">0</span>正确字数</div>
+        </div>
+        <div class="my-best-bar" id="myBestBar" style="justify-content:center;margin-bottom:1rem;"></div>
+        <button class="big-btn" id="restartBtn">🔄 再来一次</button>
+    </div>
+
+    <div class="lb-panel">
+        <div class="panel-title">🏆 全站排行榜</div>
+        <div id="lb"></div>
+    </div>
+</div>
+
+<script src="~/js/casual-game.js"></script>
+<script>
+(function () {
+    'use strict';
+    var GAME_KEY = 'typing';
+    var testSeconds = 60;
+
+    var passages = [
+        '春天的清晨阳光温柔地洒在大地上微风轻轻吹过带来花草的清香鸟儿在枝头欢快地歌唱一切都显得那么宁静而美好人们走出家门开始新一天的生活孩子们背着书包蹦蹦跳跳地走向学校脸上洋溢着灿烂的笑容',
+        '学习编程需要耐心和坚持从最基础的语法开始慢慢积累经验遇到问题不要害怕要学会独立思考也可以查阅资料或者向他人请教每一次调试成功都会带来成就感久而久之你会发现自己的能力在不断提高',
+        '阅读一本好书就像和一位智者对话它能开阔我们的视野丰富我们的内心世界在书中我们可以体验不同的人生感受别样的风景无论多忙都应该抽出时间静下心来读几页书让心灵得到片刻的安宁',
+        '清晨的公园里有许多锻炼身体的人有的在跑步有的在打太极还有的在跳广场舞大家脸上都带着健康的红润生命在于运动这句话说得一点也不错坚持锻炼才能拥有强健的体魄',
+        '科技的进步改变了我们的生活方式手机和互联网让世界变得更小信息传播的速度也越来越快我们可以随时随地获取知识但同时也要学会辨别信息的真伪保持独立思考的能力'
+    ];
+
+    var passage = '', startTime = null, timerHandle = null, finished = false, remaining = 60, bestCpm = 0;
+
+    function $(id) { return document.getElementById(id); }
+    var passageEl = $('passage'), inputEl = $('input');
+    var timeEl = $('time'), cpmEl = $('cpm'), correctEl = $('correct'), bestEl = $('best');
+
+    function loadBest() { try { bestCpm = parseInt(localStorage.getItem('typing_best_cpm') || '0', 10); } catch (e) {} }
+    function saveBest() { try { localStorage.setItem('typing_best_cpm', String(bestCpm)); } catch (e) {} }
+
+    function renderPassage() {
+        var html = '';
+        for (var i = 0; i < passage.length; i++) html += '<span data-i="' + i + '">' + passage[i] + '</span>';
+        passageEl.innerHTML = html;
+    }
+
+    function startTimer() {
+        startTime = Date.now();
+        timerHandle = setInterval(function () {
+            remaining = testSeconds - Math.floor((Date.now() - startTime) / 1000);
+            if (remaining <= 0) { remaining = 0; finish(); return; }
+            timeEl.textContent = remaining;
+            if (remaining <= 5) CasualGame.Sound.tick();
+        }, 200);
+    }
+
+    function updateStats() {
+        var typed = inputEl.value, correct = 0;
+        var spans = passageEl.querySelectorAll('span');
+        for (var i = 0; i < spans.length; i++) {
+            spans[i].className = '';
+            if (i < typed.length) {
+                if (typed[i] === spans[i].textContent) { spans[i].className = 'done'; correct++; }
+                else spans[i].className = 'wrong';
+            } else if (i === typed.length) spans[i].className = 'caret';
+        }
+        var minutes = startTime ? ((Date.now() - startTime) / 60000) : 0;
+        cpmEl.textContent = minutes > 0 ? Math.round(correct / minutes) : 0;
+        correctEl.textContent = correct;
+    }
+
+    function finish() {
+        if (finished) return;
+        finished = true;
+        if (timerHandle) clearInterval(timerHandle);
+        inputEl.disabled = true;
+        var typed = inputEl.value, correct = 0;
+        for (var i = 0; i < typed.length && i < passage.length; i++) if (typed[i] === passage[i]) correct++;
+        var minutes = startTime ? Math.max(0.05, (Date.now() - startTime) / 60000) : 1;
+        var cpm = Math.round(correct / minutes);
+        var acc = typed.length > 0 ? Math.round(correct / typed.length * 100) : 0;
+        if (cpm > bestCpm) { bestCpm = cpm; saveBest(); CasualGame.Sound.win(); }
+        else CasualGame.Sound.lose();
+
+        $('rCpm').textContent = cpm;
+        $('rAcc').textContent = acc + '%';
+        $('rCorrect').textContent = correct;
+        bestEl.textContent = bestCpm;
+        $('result').classList.add('show');
+
+        CasualGame.submit(GAME_KEY, cpm, 0).then(function (r) {
+            var bar = $('myBestBar');
+            if (r && r.ok) {
+                bar.innerHTML = '<span>📈 账号最佳 <b>' + r.bestScore + '</b> 字/分</span>' +
+                    '<span>🥇 排名 <b>#' + r.rank + '</b></span>';
+            } else bar.innerHTML = '';
+            CasualGame.loadLeaderboard(GAME_KEY, $('lb'));
+        });
+    }
+
+    function reset() {
+        finished = false; remaining = testSeconds; startTime = null;
+        if (timerHandle) clearInterval(timerHandle);
+        inputEl.disabled = false; inputEl.value = '';
+        timeEl.textContent = testSeconds; cpmEl.textContent = '0'; correctEl.textContent = '0';
+        $('result').classList.remove('show');
+        passage = passages[Math.floor(Math.random() * passages.length)];
+        renderPassage();
+        inputEl.focus();
+    }
+
+    inputEl.addEventListener('input', function () {
+        if (finished) return;
+        if (!startTime) startTimer();
+        updateStats();
+        if (inputEl.value.length >= passage.length) finish();
+    });
+    passageEl.addEventListener('click', function () { if (!finished) inputEl.focus(); });
+    $('restartBtn').addEventListener('click', reset);
+
+    var diffBtns = document.querySelectorAll('#diffBar .diff-btn');
+    diffBtns.forEach(function (b) {
+        b.addEventListener('click', function () {
+            diffBtns.forEach(function (x) { x.classList.remove('active'); });
+            b.classList.add('active');
+            testSeconds = parseInt(b.getAttribute('data-s'), 10);
+            reset();
+        });
+    });
+
+    loadBest();
+    bestEl.textContent = bestCpm;
+    reset();
+    CasualGame.loadLeaderboard(GAME_KEY, $('lb'));
+})();
+</script>

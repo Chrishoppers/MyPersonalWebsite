@@ -1872,6 +1872,27 @@ namespace MyPersonalWebsite.Hubs
             }).Cast<object>().ToList();
         }
 
+        // ⭐ 获取自己的身份牌（用于客户端重连后补拉身份）
+        public async Task<object?> GetMyRole(string playerId)
+        {
+            foreach (var game in _games.Values)
+            {
+                var p = game.Players.FirstOrDefault(x => x.PlayerId == playerId);
+                if (p != null)
+                {
+                    return new
+                    {
+                        seatNumber = p.SeatNumber,
+                        role = p.Role.ToString(),
+                        nickname = p.Nickname,
+                        isSpectator = p.IsSpectator,
+                        isAI = p.IsAI
+                    };
+                }
+            }
+            return null;
+        }
+
         public async Task EndGame(string roomId)
         {
             if (!_games.TryGetValue(roomId, out var game)) return;

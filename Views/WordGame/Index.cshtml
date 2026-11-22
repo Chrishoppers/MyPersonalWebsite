@@ -1,0 +1,266 @@
+@{
+    ViewData["Title"] = "🔤 单词挑战";
+    var username = Context.Session.GetString("Username") ?? "玩家";
+}
+
+<link rel="stylesheet" href="~/css/casual-game.css" />
+
+<style>
+    .game-container { max-width: 680px; margin: 0 auto; padding: 1rem 1.2rem 3rem; }
+    .game-header { text-align: center; padding: 0.6rem 0 1rem; }
+    .game-header h1 {
+        font-size: 2rem; font-weight: 800; margin: 0;
+        background: linear-gradient(135deg, #06B6D4 0%, #3B82F6 100%);
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .game-header .subtitle { color: rgba(255,255,255,0.3); font-size: 0.82rem; margin-top: 0.2rem; }
+
+    .status-bar {
+        display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; flex-wrap: wrap;
+        background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.04);
+        border-radius: 16px; padding: 0.7rem 1.3rem; margin-bottom: 1rem;
+    }
+    .status-item { color: rgba(255,255,255,0.3); font-size: 0.8rem; display: flex; align-items: center; gap: 0.35rem; }
+    .status-item .value { color: #fff; font-weight: 700; font-size: 1.1rem; }
+    .status-item .value.time { color: #06B6D4; font-variant-numeric: tabular-nums; }
+
+    .diff-bar { display: flex; gap: 0.5rem; justify-content: center; margin-bottom: 1rem; }
+    .diff-btn {
+        padding: 0.4rem 1.3rem; font-size: 0.82rem; font-weight: 700; color: rgba(255,255,255,0.5);
+        background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 50px; cursor: pointer; font-family: inherit; transition: all 0.15s ease;
+    }
+    .diff-btn.active { color: #fff; background: rgba(6,182,212,0.2); border-color: rgba(6,182,212,0.5); }
+
+    .word-card {
+        background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05);
+        border-radius: 24px; padding: 2rem 1.4rem 1.6rem; text-align: center; margin-bottom: 1rem;
+    }
+    .word-cn { font-size: 2.8rem; font-weight: 800; color: #fff; margin-bottom: 0.6rem; }
+    .word-hint { color: rgba(255,255,255,0.45); font-size: 1.25rem; letter-spacing: 0.25em; font-weight: 700; font-family: 'Consolas', 'Courier New', monospace; }
+    .word-hint-note { color: rgba(255,255,255,0.2); font-size: 0.75rem; margin-top: 0.3rem; }
+
+    .answer-row { display: flex; gap: 0.6rem; margin-bottom: 0.5rem; }
+    .answer-input {
+        flex: 1; padding: 0.9rem 1.2rem; font-size: 1.15rem; color: #fff;
+        background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 14px; font-family: inherit; outline: none; transition: border-color 0.2s ease;
+    }
+    .answer-input:focus { border-color: rgba(6,182,212,0.5); }
+    .answer-input.good { border-color: rgba(40,167,69,0.6); background: rgba(40,167,69,0.08); }
+    .answer-input.bad { border-color: rgba(220,53,69,0.6); background: rgba(220,53,69,0.08); animation: shake 0.4s; }
+    @@keyframes shake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+
+    .submit-btn {
+        padding: 0 1.6rem; font-size: 1rem; font-weight: 700; color: #fff;
+        background: linear-gradient(135deg, #06B6D4, #3B82F6); border: none; border-radius: 14px;
+        cursor: pointer; font-family: inherit; transition: all 0.2s ease;
+    }
+    .submit-btn:hover { transform: translateY(-1px); }
+
+    .feedback { text-align: center; margin-top: 0.7rem; font-weight: 700; font-size: 0.98rem; min-height: 1.5em; }
+    .feedback.good { color: #4ade80; }
+    .feedback.bad { color: #f87171; }
+
+    .start-wrap { text-align: center; padding: 3rem 0; }
+    .big-btn {
+        display: inline-block; padding: 0.9rem 2.6rem; font-size: 1.05rem; font-weight: 800; color: #fff;
+        background: linear-gradient(135deg, #06B6D4, #3B82F6); border: none; border-radius: 50px;
+        cursor: pointer; font-family: inherit; transition: all 0.2s ease; box-shadow: 0 6px 20px rgba(6,182,212,0.3);
+    }
+    .big-btn:hover { transform: translateY(-2px); }
+
+    .result-panel {
+        display: none; background: rgba(255,255,255,0.03); border: 1px solid rgba(6,182,212,0.3);
+        border-radius: 20px; padding: 1.6rem 1.2rem; margin-top: 1rem; text-align: center;
+    }
+    .result-panel.show { display: block; }
+    .result-panel h2 { color: #06B6D4; font-weight: 800; margin-bottom: 0.6rem; }
+
+    .lb-panel { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 16px; padding: 1rem 1.1rem; margin-top: 1.4rem; }
+</style>
+
+<div class="game-container">
+    <div class="game-header">
+        <h1>🔤 单词挑战</h1>
+        <div class="subtitle">限时看中文打英文 · 连对加分</div>
+    </div>
+
+    <div class="status-bar">
+        <span class="status-item">⭐ 得分 <span class="value" id="score">0</span></span>
+        <span class="status-item">🔥 连对 <span class="value" id="combo">0</span></span>
+        <span class="status-item">⏱️ 剩余 <span class="value time" id="time">60</span>s</span>
+        <span class="status-item">🏆 最佳 <span class="value" id="best">0</span></span>
+    </div>
+
+    <div class="diff-bar" id="diffBar">
+        <button class="diff-btn" data-s="90">😀 简单 90s</button>
+        <button class="diff-btn active" data-s="60">🙂 普通 60s</button>
+        <button class="diff-btn" data-s="40">😈 困难 40s</button>
+    </div>
+
+    <div class="start-wrap" id="startWrap">
+        <button class="big-btn" id="startBtn">▶️ 开始挑战</button>
+        <div class="muted" style="color:rgba(255,255,255,0.3);font-size:0.82rem;margin-top:0.8rem;">输入英文单词，回车提交</div>
+    </div>
+
+    <div id="gameArea" style="display:none;">
+        <div class="word-card">
+            <div class="word-cn" id="wordCn">苹果</div>
+            <div class="word-hint" id="wordHint">a _ _ _ _</div>
+            <div class="word-hint-note">提示：首字母 + 长度</div>
+        </div>
+        <div class="answer-row">
+            <input type="text" class="answer-input" id="answerInput" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="输入英文单词…" />
+            <button class="submit-btn" id="submitBtn">确定</button>
+        </div>
+        <div class="feedback" id="feedback"></div>
+    </div>
+
+    <div class="result-panel" id="result">
+        <h2>🎉 挑战结束！</h2>
+        <div class="my-best-bar" id="myBestBar" style="justify-content:center;margin-bottom:0.8rem;"></div>
+        <button class="big-btn" id="againBtn">🔄 再来一局</button>
+    </div>
+
+    <div class="lb-panel">
+        <div class="panel-title">🏆 全站排行榜</div>
+        <div id="lb"></div>
+    </div>
+</div>
+
+<script src="~/js/casual-game.js"></script>
+<script>
+(function () {
+    'use strict';
+    var GAME_KEY = 'word';
+    var gameSeconds = 60;
+
+    var words = [
+        { cn: '苹果', en: ['apple'] }, { cn: '香蕉', en: ['banana'] }, { cn: '猫', en: ['cat'] },
+        { cn: '狗', en: ['dog'] }, { cn: '书', en: ['book'] }, { cn: '水', en: ['water'] },
+        { cn: '火', en: ['fire'] }, { cn: '太阳', en: ['sun'] }, { cn: '月亮', en: ['moon'] },
+        { cn: '星星', en: ['star'] }, { cn: '学校', en: ['school'] }, { cn: '老师', en: ['teacher'] },
+        { cn: '学生', en: ['student'] }, { cn: '朋友', en: ['friend'] }, { cn: '家庭', en: ['family'] },
+        { cn: '快乐', en: ['happy'] }, { cn: '美丽', en: ['beautiful'] }, { cn: '大', en: ['big'] },
+        { cn: '小', en: ['small'] }, { cn: '快', en: ['fast', 'quick'] }, { cn: '慢', en: ['slow'] },
+        { cn: '高', en: ['tall', 'high'] }, { cn: '蓝色', en: ['blue'] }, { cn: '红色', en: ['red'] },
+        { cn: '绿色', en: ['green'] }, { cn: '黄色', en: ['yellow'] }, { cn: '时间', en: ['time'] },
+        { cn: '今天', en: ['today'] }, { cn: '明天', en: ['tomorrow'] }, { cn: '昨天', en: ['yesterday'] },
+        { cn: '早上', en: ['morning'] }, { cn: '晚上', en: ['evening', 'night'] }, { cn: '吃饭', en: ['eat'] },
+        { cn: '睡觉', en: ['sleep'] }, { cn: '跑步', en: ['run'] }, { cn: '游泳', en: ['swim'] },
+        { cn: '唱歌', en: ['sing'] }, { cn: '跳舞', en: ['dance'] }, { cn: '飞机', en: ['airplane', 'plane'] },
+        { cn: '火车', en: ['train'] }, { cn: '电脑', en: ['computer'] }, { cn: '手机', en: ['phone', 'mobile'] },
+        { cn: '音乐', en: ['music'] }, { cn: '电影', en: ['movie', 'film'] }, { cn: '天气', en: ['weather'] },
+        { cn: '春天', en: ['spring'] }, { cn: '夏天', en: ['summer'] }, { cn: '冬天', en: ['winter'] }
+    ];
+
+    var score = 0, combo = 0, bestScore = 0, current = null, locked = false;
+    var running = false, remaining = 60, timerHandle = null;
+
+    function $(id) { return document.getElementById(id); }
+    var wordCnEl = $('wordCn'), wordHintEl = $('wordHint'), answerInput = $('answerInput');
+    var scoreEl = $('score'), comboEl = $('combo'), timeEl = $('time'), bestEl = $('best');
+    var feedbackEl = $('feedback'), startWrap = $('startWrap'), gameArea = $('gameArea'), resultEl = $('result');
+
+    function loadLocalBest() { try { bestScore = parseInt(localStorage.getItem('word_best_score') || '0', 10); } catch (e) {} }
+    function saveLocalBest() { try { localStorage.setItem('word_best_score', String(bestScore)); } catch (e) {} }
+
+    function buildHint(w) {
+        var first = w.en[0][0], rest = '';
+        for (var i = 1; i < w.en[0].length; i++) rest += '_ ';
+        return first + ' ' + rest.trim();
+    }
+
+    function newRound() {
+        locked = false;
+        var rem = words.filter(function (w) { return w !== current; });
+        current = rem[Math.floor(Math.random() * rem.length)];
+        wordCnEl.textContent = current.cn;
+        wordHintEl.textContent = buildHint(current);
+        answerInput.value = '';
+        answerInput.className = 'answer-input';
+        feedbackEl.textContent = ''; feedbackEl.className = 'feedback';
+        answerInput.focus();
+    }
+
+    function check() {
+        if (!running || locked) return;
+        var val = answerInput.value.trim().toLowerCase();
+        if (!val) { answerInput.focus(); return; }
+        locked = true;
+        var ok = current.en.indexOf(val) >= 0;
+        if (ok) {
+            combo++;
+            var gain = 10 + Math.min(combo - 1, 10) * 2;
+            score += gain;
+            CasualGame.Sound.correct();
+            answerInput.className = 'answer-input good';
+            feedbackEl.textContent = '✅ 正确！' + current.cn + ' = ' + current.en[0] + (combo > 1 ? ' · 连对 ×' + combo : '');
+            feedbackEl.className = 'feedback good';
+        } else {
+            combo = 0;
+            CasualGame.Sound.wrong();
+            answerInput.className = 'answer-input bad';
+            feedbackEl.textContent = '❌ 正确答案：' + current.en.join(' / ');
+            feedbackEl.className = 'feedback bad';
+        }
+        scoreEl.textContent = score; comboEl.textContent = combo;
+        setTimeout(newRound, ok ? 700 : 1400);
+    }
+
+    document.getElementById('submitBtn').addEventListener('click', function () { CasualGame.Sound.click(); check(); });
+    answerInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); check(); } });
+
+    function tick() {
+        remaining--;
+        timeEl.textContent = remaining;
+        if (remaining <= 10) CasualGame.Sound.tick();
+        if (remaining <= 0) endGame();
+    }
+
+    function startGame() {
+        score = 0; combo = 0; remaining = gameSeconds;
+        scoreEl.textContent = '0'; comboEl.textContent = '0'; timeEl.textContent = remaining;
+        startWrap.style.display = 'none'; gameArea.style.display = 'block';
+        resultEl.classList.remove('show'); running = true;
+        newRound();
+        timerHandle = setInterval(tick, 1000);
+    }
+
+    function endGame() {
+        if (!running) return;
+        running = false;
+        if (timerHandle) clearInterval(timerHandle);
+        gameArea.style.display = 'none'; resultEl.classList.add('show');
+        if (score > bestScore) { bestScore = score; saveLocalBest(); CasualGame.Sound.win(); }
+        else CasualGame.Sound.lose();
+        bestEl.textContent = bestScore;
+        CasualGame.submit(GAME_KEY, score, combo).then(function (r) {
+            var bar = $('myBestBar');
+            if (r && r.ok) {
+                bar.innerHTML = '<span>🏆 本局 <b>' + score + '</b></span>' +
+                    '<span>📈 账号最佳 <b>' + r.bestScore + '</b></span>' +
+                    '<span>🥇 排名 <b>#' + r.rank + '</b></span>';
+            } else bar.innerHTML = '<span>🏆 本局 <b>' + score + '</b></span>';
+            CasualGame.loadLeaderboard(GAME_KEY, $('lb'));
+        });
+    }
+
+    var diffBtns = document.querySelectorAll('#diffBar .diff-btn');
+    diffBtns.forEach(function (b) {
+        b.addEventListener('click', function () {
+            diffBtns.forEach(function (x) { x.classList.remove('active'); });
+            b.classList.add('active');
+            gameSeconds = parseInt(b.getAttribute('data-s'), 10);
+        });
+    });
+
+    $('startBtn').addEventListener('click', startGame);
+    $('againBtn').addEventListener('click', startGame);
+
+    loadLocalBest();
+    bestEl.textContent = bestScore;
+    CasualGame.loadLeaderboard(GAME_KEY, $('lb'));
+})();
+</script>
