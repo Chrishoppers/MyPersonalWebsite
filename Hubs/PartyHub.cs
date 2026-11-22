@@ -161,12 +161,16 @@ public async Task StartGame(string roomId, string playerId)
     // ⭐ 广播给所有玩家，让他们跳转
     await Clients.Group(roomId).SendAsync("GameStarted", room);
     
-    // ⭐ 发送跳转指令给所有玩家
-    await Clients.Group(roomId).SendAsync("RedirectToGame", new { 
-        roomId = roomId, 
-        game = "werewolf",
-        url = "/Werewolf/Waiting?roomId=" + roomId
-    });
+    // ⭐ 房主用本地跳转去等待大厅（需管理员）；其他玩家跳转到 Player（无需登录）
+    foreach (var p in room.Players.Where(x => !x.IsHost))
+    {
+        await Clients.Client(p.ConnectionId).SendAsync("RedirectToGame", new
+        {
+            roomId = roomId,
+            game = "werewolf",
+            url = "/Werewolf/Player?roomId=" + roomId
+        });
+    }
 }
 
         // ============================================================

@@ -1258,6 +1258,12 @@
             seatNumber: 0
         };
 
+        // 兜底：从 URL 读取房间码（避免 roomId 丢失导致 AI 报"请先创建房间"）
+        if (!state.roomId) {
+            var _m = window.location.search.match(/[?&]roomId=([^&]+)/);
+            if (_m) state.roomId = decodeURIComponent(_m[1]);
+        }
+
         var connection = null;
 
         // ============================================================
