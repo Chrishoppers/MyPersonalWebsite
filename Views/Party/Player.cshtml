@@ -1153,7 +1153,8 @@
             avatar: '@(isLoggedIn ? (Context.Session.GetString("UserAvatar") ?? "🧑") : "🧑")',
             isJoined: false,
             isReady: false,
-            isLoggedIn: isLoggedIn
+            isLoggedIn: isLoggedIn,
+            redirected: false
         };
 
         // ============================================================
@@ -1222,6 +1223,10 @@ connection.on('RedirectToGame', function(data) {
                     document.querySelector('.waiting-ring').style.display = 'none';
                     document.querySelector('#joinedStatus h2').textContent = '🎮 游戏中';
                     document.getElementById('readyBtn').style.display = 'none';
+                    // ⭐ 玩家直接跳转到狼人杀 Player 页（无需登录）
+                    setTimeout(function() {
+                        window.location.href = '/Werewolf/Player?roomId=' + state.roomId;
+                    }, 1500);
                 });
 
                 connection.on('Kicked', function(message) {
@@ -1237,6 +1242,22 @@ connection.on('RedirectToGame', function(data) {
                     .then(function() {
                         console.log('✅ SignalR 已连接');
                         validateRoom();
+
+                        // ⭐ 轮询兜底：检测到派对开始后自动跳转到狼人杀 Player 页
+                        setInterval(function() {
+                            if (connection && connection.state === signalR.HubConnectionState.Connected &&
+                                state.roomId && !state.redirected) {
+                                connection.invoke('GetRoomInfo', state.roomId)
+                                    .then(function(room) {
+                                        if (room && room.status === 'playing') {
+                                            state.redirected = true;
+                                            console.log('🔀 检测到游戏开始，跳转到 Player:', state.roomId);
+                                            window.location.href = '/Werewolf/Player?roomId=' + state.roomId;
+                                        }
+                                    })
+                                    .catch(function() {});
+                            }
+                        }, 3000);
                     })
                     .catch(function(err) {
                         console.error('❌ SignalR 连接失败:', err);

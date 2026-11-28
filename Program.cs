@@ -132,6 +132,7 @@ builder.Services.AddScoped<BoardGameAiService>();
 builder.Services.AddScoped<ChatModerationService>();
 builder.Services.AddScoped<QrCodeService>();
 builder.Services.AddScoped<CasualGameService>();
+builder.Services.AddScoped<MyPersonalWebsite.Services.Tarot.TarotService>();
 
 // ⭐ 平台验证服务（新增）
 builder.Services.AddScoped<PlatformVerifyService>();

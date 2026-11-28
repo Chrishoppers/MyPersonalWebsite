@@ -1,14 +1,8 @@
 @{
     Layout = null;
     ViewData["Title"] = "🐺 狼人杀 · 座位图";
-    var isAdmin = Context.Session.GetInt32("IsAdmin") ?? 0;
-    if (isAdmin != 1)
-    {
-        Context.Response.Redirect("/Auth/Login");
-        return;
-    }
     var roomId = ViewBag.RoomId as string ?? Context.Request.Query["roomId"].ToString() ?? "";
-    var username = Context.Session.GetString("Username") ?? "管理员";
+    var username = Context.Session.GetString("Username") ?? "玩家";
 }
 
 <!DOCTYPE html>
