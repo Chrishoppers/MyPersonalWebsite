@@ -389,6 +389,7 @@
     .followup-hint { text-align: center; color: rgba(255,255,255,0.5); font-size: 0.8rem; margin-bottom: 0.7rem; }
     .followup-hint b { color: var(--gold); }
     .followup-chips { display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center; margin-bottom: 0.8rem; }
+    .followup-chips-label { width: 100%; text-align: center; color: rgba(255,255,255,0.4); font-size: 0.76rem; margin-bottom: 0.2rem; }
     .followup-chip { padding: 0.35rem 0.8rem; font-size: 0.76rem; font-weight: 600; cursor: pointer; font-family: inherit; color: rgba(255,255,255,0.65); background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 50px; transition: all 0.18s ease; }
     .followup-chip:hover { color: #fff; border-color: rgba(244,208,122,0.45); background: rgba(244,208,122,0.08); transform: translateY(-2px); }
     .followup-input-row { display: flex; gap: 0.6rem; align-items: stretch; }
@@ -956,6 +957,7 @@
     var STATUS = null;
     var CARD_MODE = 'simple'; // 'simple'（系统简易版）| 'original'（原版图片）
     var FOLLOWUP_CTX = null;
+    var AI_QUESTIONS = [];
     var FOLLOWUP_SUGGESTIONS = [
         '能针对我的情况给出更具体的行动建议吗？',
         '这个结果里我需要特别注意什么？',
@@ -1705,9 +1707,12 @@
             wb.textContent = warning;
             body.insertBefore(wb, body.firstChild);
         }
+        // 提取 AI 追问（如果有），其余内容正常渲染
+        var parts = splitAiQuestions(md);
+        AI_QUESTIONS = parts.questions;
         var wrapper = document.createElement('div');
         wrapper.className = 'reading-ai';
-        wrapper.innerHTML = mdToHtml(md);
+        wrapper.innerHTML = mdToHtml(parts.main);
         body.appendChild(wrapper);
         var blocks = wrapper.querySelectorAll('h2, h3, p, ul, .reading-summary-box');
         for (var i = 0; i < blocks.length; i++) blocks[i].classList.add('rv-block');
@@ -1716,6 +1721,24 @@
                 (function (el, delay) { setTimeout(function () { el.classList.add('show'); }, delay); })(blocks[j], j * 90);
             }
         });
+    }
+
+    function splitAiQuestions(md) {
+        var questions = [];
+        var main = md || '';
+        var idx = main.search(/##\s*AI\s*追问|##\s*AI\s*想进一步了解/);
+        if (idx < 0) return { main: main, questions: questions };
+        var tail = main.slice(idx);
+        main = main.slice(0, idx);
+        var lines = tail.split(/\r?\n/);
+        for (var i = 0; i < lines.length; i++) {
+            var t = lines[i].trim();
+            if (/^[-*]\s+/.test(t)) {
+                var q = t.replace(/^[-*]\s+/, '').trim();
+                if (q && q !== '无' && q !== '暂无' && q !== '无需') questions.push(q);
+            }
+        }
+        return { main: main, questions: questions };
     }
 
     function showFollowupSection() {
@@ -1735,12 +1758,15 @@
 
     function renderFollowupChips() {
         var el = $('followupChips');
-        el.innerHTML = FOLLOWUP_SUGGESTIONS.map(function (s, i) {
-            return '<button class="followup-chip" data-idx="' + i + '">💡 ' + escapeHtml(s) + '</button>';
-        }).join('');
+        var items = AI_QUESTIONS.length ? AI_QUESTIONS : FOLLOWUP_SUGGESTIONS;
+        var label = AI_QUESTIONS.length ? '🤖 AI 想进一步了解你：' : '💡 追问建议：';
+        el.innerHTML = '<div class="followup-chips-label">' + label + '</div>' +
+            items.map(function (s, i) {
+                return '<button class="followup-chip" data-idx="' + i + '">' + escapeHtml(s) + '</button>';
+            }).join('');
         el.querySelectorAll('.followup-chip').forEach(function (c) {
             c.addEventListener('click', function () {
-                $('followupInput').value = FOLLOWUP_SUGGESTIONS[parseInt(c.dataset.idx, 10)];
+                $('followupInput').value = items[parseInt(c.dataset.idx, 10)];
                 $('followupInput').focus();
             });
         });
@@ -1757,6 +1783,14 @@
         var btn = $('followupSendBtn');
         btn.disabled = true; btn.textContent = '⏳ 思考中…';
 
+        // 加载动画
+        var loading = document.createElement('div');
+        loading.className = 'followup-box';
+        loading.innerHTML = '<div class="fu-user">💬 <b>你的追问：</b>' + escapeHtml(msg) + '</div>' +
+            '<div class="fu-ai"><span class="shimmer">✨ AI 正在深入思考…</span><div class="ai-progress"><div class="ai-progress-bar"></div></div></div>';
+        $('readingBody').appendChild(loading);
+        loading.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
         var payload = {
             originalQuestion: FOLLOWUP_CTX.question,
             spread: FOLLOWUP_CTX.spread,
@@ -1772,6 +1806,7 @@
         .then(function (r) { return r.json(); })
         .then(function (data) {
             btn.disabled = false; btn.textContent = '💬 发送追问';
+            loading.remove();
             if (data && data.success && data.content) {
                 appendFollowup(msg, data.content);
                 $('followupInput').value = '';
@@ -1782,16 +1817,28 @@
                 toast('追问失败，请稍后再试');
             }
         })
-        .catch(function () { btn.disabled = false; btn.textContent = '💬 发送追问'; toast('网络异常'); });
+        .catch(function () { btn.disabled = false; btn.textContent = '💬 发送追问'; loading.remove(); toast('网络异常'); });
     }
 
     function appendFollowup(userMsg, aiContent) {
         var body = $('readingBody');
         var box = document.createElement('div');
         box.className = 'followup-box';
-        box.innerHTML = '<div class="fu-user">💬 <b>你的追问：</b>' + escapeHtml(userMsg) + '</div>' +
-            '<div class="fu-ai">' + mdToHtml(aiContent) + '</div>';
+        box.innerHTML = '<div class="fu-user">💬 <b>你的追问：</b>' + escapeHtml(userMsg) + '</div><div class="fu-ai"></div>';
+        var fuAi = box.querySelector('.fu-ai');
         body.appendChild(box);
+
+        var inner = document.createElement('div');
+        inner.innerHTML = mdToHtml(aiContent);
+        fuAi.appendChild(inner);
+        var blocks = inner.querySelectorAll('h2, h3, p, ul, .reading-summary-box');
+        for (var i = 0; i < blocks.length; i++) blocks[i].classList.add('rv-block');
+        requestAnimationFrame(function () {
+            for (var j = 0; j < blocks.length; j++) {
+                (function (el, delay) { setTimeout(function () { el.classList.add('show'); }, delay); })(blocks[j], j * 80);
+            }
+        });
+
         // 累积上下文，支持连续多轮追问
         FOLLOWUP_CTX.content = (FOLLOWUP_CTX.content ? FOLLOWUP_CTX.content + '\n\n---\n\n' : '') +
             '【追问】' + userMsg + '\n\n' + aiContent;

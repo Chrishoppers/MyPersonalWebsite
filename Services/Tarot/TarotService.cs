@@ -219,6 +219,9 @@ public sealed class TarotService
         sb.AppendLine("（逐张牌结合其位置含义解读，并串联彼此关系）");
         sb.AppendLine("## 建议与总结");
         sb.AppendLine("（给出 2-3 条可落地的建议，并温暖收尾）");
+        sb.AppendLine();
+        sb.AppendLine("## AI 追问");
+        sb.AppendLine("（最后，如果还需要进一步了解求问者的情况才能给出更精准解读，请提出 2-3 个你最想了解的问题，每行一个，以「- 」开头；若信息已足够，只写「- 无」）");
 
         return sb.ToString();
     }
