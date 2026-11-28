@@ -155,17 +155,20 @@
     .board.visible { display: flex; animation: phaseIn 0.6s ease; }
 
     .board-celtic { justify-content: center; align-items: center; gap: 26px; flex-wrap: wrap; }
-    .cross { position: relative; width: 380px; padding: 8px; }
+    .cross { position: relative; width: 460px; padding: 10px; }
     .cross::before, .cross::after {
         content: ''; position: absolute; z-index: 0; pointer-events: none;
         background: linear-gradient(transparent, rgba(244,208,122,0.22), transparent);
     }
     .cross::before { left: 50%; top: 4%; bottom: 4%; width: 1px; }
     .cross::after { top: 50%; left: 4%; right: 4%; height: 1px; background: linear-gradient(90deg, transparent, rgba(244,208,122,0.22), transparent); }
-    .cross-grid { position: relative; z-index: 1; display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); gap: 12px;
+    .cross-grid { position: relative; z-index: 1; display: grid; grid-template-columns: 1fr 1.35fr 1fr; gap: 16px;
         grid-template-areas: ". top ." "left center right" ". bottom ."; }
-    .crossing { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 150px; z-index: 6; }
-    .crossing .slot-card { transform: rotate(90deg); margin: 0 auto; }
+    .crossing { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 6; }
+    .crossing .slot-card { transform: rotate(90deg); }
+    .crossing-tag { position: absolute; right: 2px; top: 0; z-index: 7; text-align: right; pointer-events: none; }
+    .crossing-tag .slot-name { display: block; color: var(--gold); font-weight: 700; font-size: 0.72rem; }
+    .crossing-tag .slot-sub { display: block; color: rgba(255,255,255,0.28); font-size: 0.6rem; margin-top: 1px; }
     .staff { position: relative; display: flex; flex-direction: column; gap: 12px; padding-left: 6px; }
     .staff::before { content: ''; position: absolute; left: -8px; top: 4%; bottom: 4%; width: 1px; background: linear-gradient(transparent, rgba(244,208,122,0.2), transparent); }
 
@@ -387,7 +390,7 @@
         .magic-ring.r3 { width: 280px; height: 280px; margin: -140px 0 0 -140px; }
         .cross { width: 300px; }
         .slot-card { width: 70px; height: 112px; }
-        .crossing { width: 120px; }
+        .crossing-tag .slot-name { font-size: 0.66rem; }
         .cf-num { font-size: 0.7rem; }
         .cf-symbol { font-size: 1.5rem; }
         .cf-name { font-size: 0.62rem; }
@@ -821,14 +824,25 @@
             var cross = document.createElement('div'); cross.className = 'cross';
             var grid = document.createElement('div'); grid.className = 'cross-grid';
             var crossCells = ['top', 'left', 'center', 'right', 'bottom'];
+            var crossingPos = null;
             for (var i = 0; i < spread.positions.length; i++) {
                 var pos = spread.positions[i];
-                var slot = buildSlot(pos);
-                if (pos.area === 'crossing') { cross.appendChild(slot); }
-                else if (crossCells.indexOf(pos.area) >= 0) { grid.appendChild(slot); }
+                if (pos.area === 'crossing') { crossingPos = pos; continue; }
+                if (crossCells.indexOf(pos.area) >= 0) grid.appendChild(buildSlot(pos));
             }
-            cross.querySelector('.slot[data-key="p2"]').classList.add('crossing');
             cross.appendChild(grid);
+
+            // 横跨牌：只放横置的牌，叠加在中间主位之上；文字用浮动标签，避免重叠
+            var crossing = document.createElement('div');
+            crossing.className = 'slot crossing';
+            crossing.dataset.key = crossingPos.key;
+            crossing.innerHTML = '<div class="slot-card"></div>';
+            cross.appendChild(crossing);
+
+            var tag = document.createElement('div');
+            tag.className = 'crossing-tag';
+            tag.innerHTML = '<span class="slot-name">' + crossingPos.name + '</span><span class="slot-sub">' + crossingPos.sub + '</span>';
+            cross.appendChild(tag);
 
             var staff = document.createElement('div'); staff.className = 'staff';
             var staffOrder = ['staff1', 'staff2', 'staff3', 'staff4'];
