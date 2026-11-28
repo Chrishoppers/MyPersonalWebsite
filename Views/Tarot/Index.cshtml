@@ -1339,7 +1339,7 @@
 
         var pos = spread.positions[drawn.length];
         var card = DECK[deckIndex];
-        var reversed = Math.random() < 0.25;
+        var reversed = Math.random() < 0.5;
         var slot = document.querySelector('#board .slot[data-key="' + pos.key + '"] .slot-card');
 
         var fcard = originEl && originEl.classList.contains('fan-card') ? originEl : fanCardByDeckIndex(deckIndex);
