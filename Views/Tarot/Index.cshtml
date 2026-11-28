@@ -93,6 +93,15 @@
     .big-btn:hover { transform: translateY(-3px) scale(1.02); box-shadow: 0 14px 44px rgba(244,208,122,0.45); }
     .big-btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; box-shadow: none; }
 
+    .quota-info { text-align: center; color: rgba(255,255,255,0.4); font-size: 0.82rem; margin-bottom: 0.8rem; }
+    .quota-info b { color: var(--gold); }
+    .daily-banner-wrap { margin-bottom: 1rem; }
+    .daily-banner { text-align: center; padding: 1rem; border-radius: 16px; background: linear-gradient(135deg, rgba(244,208,122,0.12), rgba(139,92,246,0.1)); border: 1px solid rgba(244,208,122,0.3); }
+    .db-title { font-size: 1.05rem; font-weight: 800; color: var(--gold); }
+    .db-stars { font-size: 1.3rem; color: var(--gold); letter-spacing: 2px; margin: 0.3rem 0; }
+    .db-stars span { font-size: 0.75rem; color: rgba(255,255,255,0.4); letter-spacing: 0; }
+    .db-line { color: rgba(255,255,255,0.65); font-size: 0.85rem; margin: 0.2rem 0; }
+
     /* ============================================================
        阶段 2：洗牌（高级 3D 多段式）
        ============================================================ */
@@ -389,18 +398,51 @@
         .magic-ring.r2 { width: 160px; height: 160px; margin: -80px 0 0 -80px; }
         .magic-ring.r3 { width: 280px; height: 280px; margin: -140px 0 0 -140px; }
         .cross { width: 300px; }
-        .slot-card { width: 70px; height: 112px; }
+        .cross-grid { gap: 12px; }
+        .board-celtic { gap: 16px; }
+        .staff { gap: 8px; }
+        .board-row { gap: 12px; }
+        .tarot-grid { gap: 10px; }
+        .slot-card { width: 72px; height: 116px; }
         .crossing-tag .slot-name { font-size: 0.66rem; }
-        .cf-num { font-size: 0.7rem; }
-        .cf-symbol { font-size: 1.5rem; }
-        .cf-name { font-size: 0.62rem; }
-        .cf-medallion { width: 48px; height: 48px; }
+        .slot-label .slot-name { font-size: 0.74rem; }
+        .slot-label .slot-sub { font-size: 0.6rem; }
+
+        /* 卡面内容缩小，避免叠加 */
+        .tcard-front-inner { padding: 5px 4px 13px; }
+        .cf-top { height: 12px; }
+        .cf-num { font-size: 0.66rem; }
+        .cf-medallion { width: 42px; height: 42px; }
+        .cf-medallion::after { inset: 3px; }
+        .cf-symbol { font-size: 1.3rem; }
+        .cf-court { width: 18px; height: 18px; font-size: 0.7rem; bottom: -4px; right: -4px; }
+        .cf-pips { max-width: 46px; gap: 2px; }
+        .cf-pip { font-size: 0.72rem; }
+        .cf-name { font-size: 0.6rem; }
+        .cf-en { font-size: 0.4rem; }
+        .cf-corner { width: 5px; height: 5px; }
+        .tcard-badge { font-size: 0.45rem; padding: 0.02rem 0.4rem; }
         .spread-select { grid-template-columns: 1fr 1fr; }
     }
     @@media (max-width: 420px) {
         .cross { width: 264px; }
-        .slot-card { width: 60px; height: 96px; }
+        .slot-card { width: 62px; height: 100px; }
+        .board-celtic { gap: 12px; }
+        .cross-grid { gap: 10px; }
         .spread-select { grid-template-columns: 1fr; }
+
+        .tcard-front-inner { padding: 4px 3px 11px; }
+        .cf-top { height: 11px; }
+        .cf-num { font-size: 0.6rem; }
+        .cf-medallion { width: 36px; height: 36px; }
+        .cf-symbol { font-size: 1.15rem; }
+        .cf-court { width: 16px; height: 16px; font-size: 0.62rem; }
+        .cf-pips { max-width: 40px; gap: 2px; }
+        .cf-pip { font-size: 0.66rem; }
+        .cf-name { font-size: 0.55rem; }
+        .cf-en { display: none; }
+        .cf-corner { width: 4px; height: 4px; }
+        .tcard-badge { font-size: 0.42rem; padding: 0.01rem 0.35rem; bottom: 1px; }
     }
 </style>
 
@@ -413,6 +455,10 @@
             <h1>🔮 塔罗牌占卜</h1>
             <div class="subtitle">静心 · 提问 · 洗牌 · 抽牌 · 聆听牌灵的启示</div>
             <button class="history-btn" id="historyBtn">📜 我的记录</button>
+            @if ((Context.Session.GetInt32("IsAdmin") ?? 0) == 1)
+            {
+                <a class="history-btn" href="/Tarot/Admin" style="right:auto; left:0; text-decoration:none;">⚙️ 管理</a>
+            }
         </header>
 
         <!-- 牌阵棋盘（抽牌/解读时显示） -->
@@ -421,6 +467,8 @@
         <!-- ===== 阶段 1：提问 ===== -->
         <section class="phase active" id="phase-question">
             <div class="panel">
+                <div class="quota-info" id="quotaInfo"></div>
+                <div class="daily-banner-wrap" id="dailyBanner" style="display:none;"></div>
                 <div class="question-label" id="questionLabel"><span class="moon">🌙</span> 在心中默念你的问题，然后写下来</div>
                 <textarea class="q-input" id="qInput" maxlength="200" placeholder="例如：我最近的事业发展会如何？"></textarea>
                 <div class="spread-select" id="spreadSelect">
@@ -602,6 +650,7 @@
     var spread = null;
     var drawn = [];
     var reading = false;
+    var STATUS = null;
 
     function $(id) { return document.getElementById(id); }
 
@@ -1207,6 +1256,7 @@
             question: q,
             spread: spread.name,
             verdict: verdict,
+            isDaily: !!spread.daily,
             cards: drawn.map(function (d) {
                 return { positionName: d.pos.name + '（' + d.pos.sub + '）', cardId: d.card.id, reversed: d.reversed };
             })
@@ -1219,8 +1269,24 @@
         })
         .then(function (r) { return r.json(); })
         .then(function (data) {
-            if (data && data.success && data.content) renderReading(data.content, data.fallback, data.errorDetail);
-            else $('readingStatus').innerHTML = '⚠️ 解读暂时无法完成，请稍后再试。';
+            if (data && data.success && data.content) {
+                if (data.cached) {
+                    // 每日一签已测过：展示缓存结果
+                    var cards = [];
+                    try { cards = JSON.parse(data.cardsJson || '[]'); } catch (e) {}
+                    var card = (cards.length && DECK.length > cards[0].cardId) ? DECK[cards[0].cardId] : null;
+                    if (card) $('readingBody').innerHTML = renderDailyFortune(card);
+                    renderReading(data.content, false, '');
+                } else {
+                    renderReading(data.content, data.fallback, data.errorDetail);
+                }
+                // 刷新状态（每日一签/次数）
+                refreshStatus();
+            } else if (data && data.message) {
+                $('readingStatus').innerHTML = '⚠️ ' + escapeHtml(data.message);
+            } else {
+                $('readingStatus').innerHTML = '⚠️ 解读暂时无法完成，请稍后再试。';
+            }
         })
         .catch(function () { $('readingStatus').innerHTML = '⚠️ 网络异常，解读失败，请稍后再试。'; });
     }
@@ -1336,6 +1402,55 @@
             $('qInput').placeholder = '例如：我最近的事业发展会如何？';
             $('questionLabel').innerHTML = '<span class="moon">🌙</span> 在心中默念你的问题，然后写下来';
         }
+        updateStartButton();
+    }
+
+    function updateStartButton() {
+        var btn = $('startShuffleBtn');
+        if (!STATUS) { btn.disabled = false; btn.textContent = '🔮 开始洗牌'; return; }
+        if (spread.daily) {
+            if (STATUS.todayDaily) { btn.disabled = true; btn.textContent = '✅ 今日运势已测'; }
+            else { btn.disabled = false; btn.textContent = '🔮 开始洗牌'; }
+        } else {
+            if (STATUS.remaining <= 0) { btn.disabled = true; btn.textContent = '⏳ 今日次数已用完'; }
+            else { btn.disabled = false; btn.textContent = '🔮 开始洗牌'; }
+        }
+    }
+
+    function applyStatusUI() {
+        if (!STATUS) return;
+        var q = $('quotaInfo');
+        if (STATUS.loggedIn) {
+            q.innerHTML = '今日剩余 <b>' + STATUS.remaining + '</b> / ' + STATUS.dailyLimit + ' 次';
+        } else {
+            q.innerHTML = '';
+        }
+        var box = $('dailyBanner');
+        if (STATUS.todayDaily) {
+            box.style.display = 'block';
+            box.innerHTML = buildDailyBanner(STATUS.todayDaily);
+        } else {
+            box.style.display = 'none';
+        }
+        updateStartButton();
+    }
+
+    function buildDailyBanner(daily) {
+        var cards = [];
+        try { cards = JSON.parse(daily.cardsJson || '[]'); } catch (e) {}
+        var card = (cards.length && DECK.length > cards[0].cardId) ? DECK[cards[0].cardId] : null;
+        if (!card) {
+            return '<div class="daily-banner"><div class="db-title">🌞 今日运势已生成</div></div>';
+        }
+        var f = dailyFortune(card);
+        var starStr = '';
+        for (var i = 0; i < 5; i++) starStr += (i < f.stars ? '★' : '☆');
+        return '<div class="daily-banner">' +
+            '<div class="db-title">🌞 今日运势 · ' + escapeHtml(card.name) + (cards[0].reversed ? '（逆）' : '（正）') + '</div>' +
+            '<div class="db-stars">' + starStr + ' <span>' + f.stars + '/5</span></div>' +
+            '<div class="db-line">🍀 幸运色 ' + f.color + ' · 🔢 幸运数字 ' + f.num + '</div>' +
+            '<div class="db-line">' + f.yi + ' · ' + f.ji + '</div>' +
+            '</div>';
     }
 
     function bind() {
@@ -1359,8 +1474,10 @@
             var v = parseInt($('numInput').value, 10);
             if (isNaN(v) || v < 1 || v > 78) { toast('请输入 1–78 之间的编号'); return; }
             ensureAudio(); sndWhoosh();
-            var fcard = fanCardByDeckIndex(v - 1);
-            drawCard(v - 1, fcard);
+            // 编号 = 扇形牌堆上的第 N 张（视觉编号），映射到洗牌后的牌堆索引
+            var deckIndex = order[v - 1];
+            var fcard = fanCardByDeckIndex(deckIndex);
+            drawCard(deckIndex, fcard);
         });
         $('numInput').addEventListener('keydown', function (e) { if (e.key === 'Enter') $('numDrawBtn').click(); });
 
@@ -1383,6 +1500,13 @@
     // ============================================================
     // 初始化
     // ============================================================
+    function refreshStatus() {
+        fetch('/api/tarot/status')
+            .then(function (r) { return r.json(); })
+            .then(function (data) { STATUS = data; applyStatusUI(); })
+            .catch(function () {});
+    }
+
     function init() {
         startStars();
         bind();
@@ -1390,6 +1514,7 @@
             .then(function (r) { return r.json(); })
             .then(function (data) { if (data && data.cards) DECK = data.cards; })
             .catch(function () {});
+        refreshStatus();
     }
 
     init();

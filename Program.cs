@@ -531,6 +531,10 @@ async Task EnsureTursoTablesAsync(DataSyncService dataSync)
     try { await dataSync.ExecuteSqlAsync("ALTER TABLE BoardGameRooms ADD COLUMN HostReady INTEGER DEFAULT 0"); } catch { }
     try { await dataSync.ExecuteSqlAsync("ALTER TABLE BoardGameRooms ADD COLUMN GuestReady INTEGER DEFAULT 0"); } catch { }
 
+    // 塔罗牌：每人每日配额 + 每日一签标记（幂等）
+    try { await dataSync.ExecuteSqlAsync("ALTER TABLE Users ADD COLUMN TarotDailyLimit INTEGER DEFAULT 10"); } catch { }
+    try { await dataSync.ExecuteSqlAsync("ALTER TABLE TarotReadings ADD COLUMN IsDaily INTEGER DEFAULT 0"); } catch { }
+
     Console.WriteLine($"📊 Turso 表检查完成: 成功 {successCount}");
 }
 

@@ -1,0 +1,194 @@
+@{
+    ViewData["Title"] = "🔮 塔罗管理";
+}
+
+<style>
+    .tarot-admin { max-width: 1080px; margin: 0 auto; padding: 1rem 1.2rem 3rem; }
+    .ta-head { text-align: center; padding: 1rem 0; }
+    .ta-head h1 {
+        font-size: 2rem; font-weight: 800; margin: 0;
+        background: linear-gradient(135deg, #f4d07a, #EC4899, #8B5CF6);
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .ta-head .sub { color: rgba(255,255,255,0.35); font-size: 0.85rem; margin-top: 0.3rem; }
+
+    .ta-section {
+        background: rgba(255,255,255,0.025); border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 18px; padding: 1.3rem 1.3rem; margin-top: 1.2rem;
+    }
+    .ta-section h2 { font-size: 1.05rem; color: #f4d07a; margin: 0 0 0.9rem; font-weight: 800; }
+
+    .ta-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    .ta-table th, .ta-table td { padding: 0.55rem 0.6rem; border-bottom: 1px solid rgba(255,255,255,0.05); text-align: left; }
+    .ta-table th { color: rgba(255,255,255,0.4); font-weight: 600; font-size: 0.75rem; }
+    .ta-table td { color: rgba(255,255,255,0.8); }
+    .ta-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+    .quota-input { width: 64px; padding: 0.35rem 0.5rem; text-align: center; color: #fff; font-family: inherit; font-size: 0.85rem;
+        background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.14); border-radius: 8px; }
+    .quota-input:focus { outline: none; border-color: rgba(244,208,122,0.6); }
+    .ta-btn {
+        padding: 0.35rem 0.8rem; font-size: 0.78rem; font-weight: 700; cursor: pointer; font-family: inherit;
+        color: #1a1408; background: linear-gradient(135deg, #f4d07a, #d99a3d); border: none; border-radius: 8px;
+    }
+    .ta-btn:hover { filter: brightness(1.06); }
+
+    .reading-item { border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 0.8rem 0.9rem; margin-bottom: 0.6rem; cursor: pointer; }
+    .reading-item:hover { border-color: rgba(244,208,122,0.3); }
+    .ri-head { display: flex; justify-content: space-between; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
+    .ri-user { color: #f4d07a; font-weight: 700; font-size: 0.88rem; }
+    .ri-time { color: rgba(255,255,255,0.25); font-size: 0.7rem; }
+    .ri-question { color: rgba(255,255,255,0.6); font-size: 0.8rem; margin: 0.35rem 0; }
+    .ri-tags { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    .ri-tag { font-size: 0.72rem; padding: 0.15rem 0.5rem; border-radius: 20px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.06); color: rgba(255,255,255,0.7); }
+    .ri-tag.daily { background: rgba(244,208,122,0.12); color: #f4d07a; border-color: rgba(244,208,122,0.15); }
+    .ri-tag.rev { color: #ec5d7a; }
+    .ri-detail { display: none; margin-top: 0.6rem; padding-top: 0.6rem; border-top: 1px dashed rgba(255,255,255,0.08); color: rgba(255,255,255,0.78); line-height: 1.8; font-size: 0.88rem; }
+    .ri-detail h2 { color: #f4d07a; font-size: 1rem; margin: 0.8rem 0 0.4rem; }
+    .ri-detail h3 { color: #8B5CF6; font-size: 0.9rem; margin: 0.6rem 0 0.3rem; }
+    .ri-detail strong { color: #f4d07a; }
+
+    .ta-empty { text-align: center; color: rgba(255,255,255,0.3); padding: 1.5rem; font-size: 0.85rem; }
+    .ta-back { display: inline-block; margin-bottom: 0.6rem; color: rgba(255,255,255,0.4); text-decoration: none; font-size: 0.8rem; }
+    .ta-back:hover { color: #f4d07a; }
+</style>
+
+<div class="tarot-admin">
+    <a class="ta-back" href="/Tarot">← 返回塔罗牌</a>
+    <header class="ta-head">
+        <h1>🔮 塔罗牌管理</h1>
+        <div class="sub">查看所有玩家测试的详细内容 · 调整每人每日测试次数</div>
+    </header>
+
+    <section class="ta-section">
+        <h2>⏱️ 每日测试次数管理</h2>
+        <div id="quotaList"><div class="ta-empty">加载中…</div></div>
+    </section>
+
+    <section class="ta-section">
+        <h2>📜 玩家测试记录</h2>
+        <div style="margin-bottom:0.8rem;">
+            <input id="readingSearch" type="text" placeholder="🔍 按用户名筛选…" style="width:100%;max-width:320px;padding:0.55rem 0.9rem;color:#fff;font-family:inherit;font-size:0.85rem;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.12);border-radius:10px;outline:none;" />
+        </div>
+        <div id="readingsList"><div class="ta-empty">加载中…</div></div>
+    </section>
+</div>
+
+<script>
+(function () {
+    'use strict';
+
+    function $(id) { return document.getElementById(id); }
+    function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+    function inlineMd(s) { s = esc(s); s = s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>'); return s; }
+    function mdToHtml(md) {
+        var lines = (md || '').split(/\r?\n/), out = [], open = false;
+        for (var i = 0; i < lines.length; i++) {
+            var t = lines[i].trim();
+            if (t === '') { if (open) { out.push('</ul>'); open = false; } continue; }
+            if (/^###\s+/.test(t)) { if (open) { out.push('</ul>'); open = false; } out.push('<h3>' + inlineMd(t.replace(/^###\s+/, '')) + '</h3>'); continue; }
+            if (/^##\s+/.test(t)) { if (open) { out.push('</ul>'); open = false; } out.push('<h2>' + inlineMd(t.replace(/^##\s+/, '')) + '</h2>'); continue; }
+            if (/^[-*]\s+/.test(t)) { if (!open) { out.push('<ul>'); open = true; } out.push('<li>' + inlineMd(t.replace(/^[-*]\s+/, '')) + '</li>'); continue; }
+            if (open) { out.push('</ul>'); open = false; }
+            out.push('<p>' + inlineMd(t) + '</p>');
+        }
+        if (open) out.push('</ul>');
+        return out.join('');
+    }
+
+    // ===== 配额列表 =====
+    function loadQuotas() {
+        fetch('/api/tarot/admin/quotas').then(function (r) { return r.json(); }).then(function (data) {
+            var el = $('quotaList');
+            if (!data || !data.success || !data.list || !data.list.length) { el.innerHTML = '<div class="ta-empty">暂无用户</div>'; return; }
+            var html = '<table class="ta-table"><thead><tr><th>ID</th><th>用户名</th><th>每日次数</th><th>操作</th></tr></thead><tbody>';
+            data.list.forEach(function (u) {
+                html += '<tr>' +
+                    '<td>' + u.userId + '</td>' +
+                    '<td>' + esc(u.username) + '</td>' +
+                    '<td><input class="quota-input" type="number" min="0" max="1000" value="' + u.dailyLimit + '" data-uid="' + u.userId + '" /></td>' +
+                    '<td><button class="ta-btn" data-uid="' + u.userId + '">保存</button></td>' +
+                    '</tr>';
+            });
+            html += '</tbody></table>';
+            el.innerHTML = html;
+            el.querySelectorAll('.ta-btn').forEach(function (b) {
+                b.addEventListener('click', function () {
+                    var uid = parseInt(this.dataset.uid, 10);
+                    var input = el.querySelector('.quota-input[data-uid="' + uid + '"]');
+                    var val = parseInt(input.value, 10);
+                    if (isNaN(val) || val < 0) { alert('请输入合法的次数'); return; }
+                    setQuota(uid, val, this);
+                });
+            });
+        }).catch(function () { $('quotaList').innerHTML = '<div class="ta-empty">加载失败</div>'; });
+    }
+
+    function setQuota(uid, limit, btn) {
+        btn.disabled = true; btn.textContent = '保存中…';
+        fetch('/api/tarot/admin/quota', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: uid, limit: limit })
+        }).then(function (r) { return r.json(); }).then(function (data) {
+            if (data && data.success) { btn.textContent = '✅ 已保存'; setTimeout(function () { btn.textContent = '保存'; btn.disabled = false; }, 1200); }
+            else { alert(data && data.message ? data.message : '保存失败'); btn.textContent = '保存'; btn.disabled = false; }
+        }).catch(function () { alert('网络错误'); btn.textContent = '保存'; btn.disabled = false; });
+    }
+
+    // ===== 记录列表 =====
+    var ALL_READINGS = [];
+
+    function renderReadings(list) {
+        var el = $('readingsList');
+        if (!list || !list.length) { el.innerHTML = '<div class="ta-empty">暂无记录</div>'; return; }
+        var html = '';
+        list.forEach(function (item) {
+            var cards = [];
+            try { cards = JSON.parse(item.cardsJson || '[]'); } catch (e) {}
+            var pills = cards.map(function (c) {
+                return '<span class="ri-tag">' + esc(c.positionName) + ' · ' + esc(c.name) + (c.reversed ? ' <span class="rev">逆</span>' : '') + '</span>';
+            }).join('');
+            html += '<div class="reading-item">' +
+                '<div class="ri-head">' +
+                    '<span class="ri-user">👤 ' + esc(item.username || ('用户' + item.userId)) + '</span>' +
+                    '<span class="ri-time">' + esc(item.createdAt) + '</span>' +
+                '</div>' +
+                '<div class="ri-question">💬 ' + esc(item.question) + '</div>' +
+                '<div class="ri-tags"><span class="ri-tag' + (item.isDaily ? ' daily' : '') + '">' + esc(item.spread) + '</span>' + pills + '</div>' +
+                '<div class="ri-detail">' + mdToHtml(item.resultJson) + '</div>' +
+                '</div>';
+        });
+        el.innerHTML = html;
+        el.querySelectorAll('.reading-item').forEach(function (it) {
+            it.addEventListener('click', function () {
+                var d = it.querySelector('.ri-detail');
+                d.style.display = d.style.display === 'none' ? 'block' : 'none';
+            });
+        });
+    }
+
+    function filterReadings() {
+        var kw = ($('readingSearch').value || '').trim().toLowerCase();
+        if (!kw) { renderReadings(ALL_READINGS); return; }
+        var filtered = ALL_READINGS.filter(function (item) {
+            var name = (item.username || ('用户' + item.userId) || '').toLowerCase();
+            var q = (item.question || '').toLowerCase();
+            return name.indexOf(kw) >= 0 || q.indexOf(kw) >= 0;
+        });
+        renderReadings(filtered);
+    }
+
+    function loadReadings() {
+        fetch('/api/tarot/admin/readings?limit=300').then(function (r) { return r.json(); }).then(function (data) {
+            if (!data || !data.success) { $('readingsList').innerHTML = '<div class="ta-empty">加载失败</div>'; return; }
+            ALL_READINGS = data.list || [];
+            renderReadings(ALL_READINGS);
+        }).catch(function () { $('readingsList').innerHTML = '<div class="ta-empty">加载失败</div>'; });
+    }
+
+    $('readingSearch').addEventListener('input', filterReadings);
+
+    loadQuotas();
+    loadReadings();
+})();
+</script>

@@ -729,6 +729,51 @@ namespace MyPersonalWebsite.Services
 
             await SendEmailAsync(toEmail, "【Chris hopper 个人网站】✅ 账户解封通知", html);
         }
+
+        // ============================================================
+        // 18. 塔罗牌每日次数调整通知（发送给用户）
+        // ============================================================
+        public async Task SendTarotQuotaAdjustedEmailAsync(string toEmail, string username, int limit)
+        {
+            var html = $@"
+                <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #2a2a3e; border-radius: 16px; background: #0a0a0f; color: #e0e0e0;'>
+                    <div style='text-align:center;margin-bottom:14px;'><span style='font-size:2.5rem;'>🔮</span></div>
+                    <h2 style='color: #f4d07a; text-align:center;'>塔罗牌每日次数已调整</h2>
+                    <p>您好 <strong>{username}</strong>！</p>
+                    <p>管理员已调整你的塔罗牌每日测试次数：</p>
+                    <div style='background:#1a1a2e;padding:16px;border-radius:10px;margin:12px 0;border:1px solid #2a2a3e;text-align:center;'>
+                        <p style='font-size:1.6rem;font-weight:bold;color:#f4d07a;margin:0;'>每日 {limit} 次</p>
+                    </div>
+                    <div style='margin:20px 0;text-align:center;'>
+                        <a href='https://chris-hopper.org/Tarot' style='display:inline-block;padding:12px 36px;background:linear-gradient(135deg,#f4d07a,#d99a3d);color:#1a1408;text-decoration:none;border-radius:40px;font-weight:700;'>🔮 去占卜</a>
+                    </div>
+                    <hr style='border:none;border-top:1px solid #2a2a3e;'>
+                    <p style='color:#555;font-size:12px;text-align:center;'>💌 系统自动发送，不用回复。</p>
+                </div>";
+            await SendEmailAsync(toEmail, "【Chris hopper 个人网站】🔮 塔罗牌每日次数已调整", html);
+        }
+
+        // ============================================================
+        // 19. 塔罗牌次数用完通知（发送给用户）
+        // ============================================================
+        public async Task SendTarotQuotaExhaustedEmailAsync(string toEmail, string username, int limit)
+        {
+            var html = $@"
+                <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #2a2a3e; border-radius: 16px; background: #0a0a0f; color: #e0e0e0;'>
+                    <div style='text-align:center;margin-bottom:14px;'><span style='font-size:2.5rem;'>🌙</span></div>
+                    <h2 style='color: #8B5CF6; text-align:center;'>今日塔罗测试次数已用完</h2>
+                    <p>您好 <strong>{username}</strong>！</p>
+                    <p>你今天的塔罗牌测试次数（每日 {limit} 次）已经用完啦。</p>
+                    <p>明天 0 点会自动重置，到时候再来占卜吧 ✨</p>
+                    <div style='margin:20px 0;text-align:center;'>
+                        <a href='https://chris-hopper.org/Tarot' style='display:inline-block;padding:12px 36px;background:linear-gradient(135deg,#8B5CF6,#EC4899);color:#fff;text-decoration:none;border-radius:40px;font-weight:700;'>查看今日运势</a>
+                    </div>
+                    <hr style='border:none;border-top:1px solid #2a2a3e;'>
+                    <p style='color:#555;font-size:12px;text-align:center;'>💌 系统自动发送，不用回复。</p>
+                </div>";
+            await SendEmailAsync(toEmail, "【Chris hopper 个人网站】🔮 今日塔罗测试次数已用完", html);
+        }
+
         public async Task<bool> SendEmailWithAttachmentsAsync(
     string to,
     string subject,

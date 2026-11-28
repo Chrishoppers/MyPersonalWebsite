@@ -1,5 +1,6 @@
 using System.Text;
 using System.Text.Json;
+using MyPersonalWebsite.Models;
 using MyPersonalWebsite.Services.Tarot;
 
 namespace MyPersonalWebsite.Services.Tarot;
@@ -30,6 +31,8 @@ public sealed class TarotReadingResult
 public sealed class TarotHistoryItem
 {
     public int Id { get; set; }
+    public int UserId { get; set; }
+    public string Username { get; set; } = "";
     public string Question { get; set; } = "";
     public string Spread { get; set; } = "";
     /// <summary>抽到的牌（JSON 数组，含位置/牌名/图片/正逆位）。</summary>
@@ -37,6 +40,15 @@ public sealed class TarotHistoryItem
     /// <summary>解读内容（Markdown）。</summary>
     public string ResultJson { get; set; } = "";
     public string CreatedAt { get; set; } = "";
+    public bool IsDaily { get; set; }
+}
+
+/// <summary>用户每日塔罗配额（管理页使用）。</summary>
+public sealed class TarotQuotaItem
+{
+    public int UserId { get; set; }
+    public string Username { get; set; } = "";
+    public int DailyLimit { get; set; } = 10;
 }
 
 /// <summary>
@@ -48,17 +60,20 @@ public sealed class TarotService
     private readonly IConfiguration _config;
     private readonly ILogger<TarotService> _logger;
     private readonly DataSyncService _dataSync;
+    private readonly BrevoEmailService _emailService;
 
     public TarotService(
         IHttpClientFactory httpClientFactory,
         IConfiguration config,
         ILogger<TarotService> logger,
-        DataSyncService dataSync)
+        DataSyncService dataSync,
+        BrevoEmailService emailService)
     {
         _httpClientFactory = httpClientFactory;
         _config = config;
         _logger = logger;
         _dataSync = dataSync;
+        _emailService = emailService;
     }
 
     public async Task<TarotReadingResult> InterpretAsync(string question, string spread, List<DrawnCardDto> cards, string? verdict = null)
@@ -241,7 +256,7 @@ public sealed class TarotService
     // 占卜历史
     // ============================================================
 
-    public async Task SaveReadingAsync(int userId, string question, string spread, List<DrawnCardDto> cards, string resultContent)
+    public async Task SaveReadingAsync(int userId, string question, string spread, List<DrawnCardDto> cards, string resultContent, bool isDaily = false)
     {
         try
         {
@@ -261,8 +276,8 @@ public sealed class TarotService
             }).ToList();
 
             var cardsJson = JsonSerializer.Serialize(cardsInfo);
-            var sql = $@"INSERT INTO TarotReadings (UserId, Question, Spread, CardsJson, ResultJson, CreatedAt)
-VALUES ({userId}, '{Esc(question)}', '{Esc(spread)}', '{Esc(cardsJson)}', '{Esc(resultContent)}', '{DateTime.Now:yyyy-MM-dd HH:mm:ss}')";
+            var sql = $@"INSERT INTO TarotReadings (UserId, Question, Spread, CardsJson, ResultJson, CreatedAt, IsDaily)
+VALUES ({userId}, '{Esc(question)}', '{Esc(spread)}', '{Esc(cardsJson)}', '{Esc(resultContent)}', '{DateTime.Now:yyyy-MM-dd HH:mm:ss}', {(isDaily ? 1 : 0)})";
             await _dataSync.ExecuteSqlAsync(sql);
         }
         catch (Exception ex)
@@ -276,6 +291,95 @@ VALUES ({userId}, '{Esc(question)}', '{Esc(spread)}', '{Esc(cardsJson)}', '{Esc(
         limit = Math.Clamp(limit, 1, 50);
         var json = await _dataSync.QueryAsync($"SELECT * FROM TarotReadings WHERE UserId = {userId} ORDER BY Id DESC LIMIT {limit}");
         return ParseHistory(json);
+    }
+
+    // ============================================================
+    // 配额 & 每日一签
+    // ============================================================
+
+    public async Task<int> GetDailyLimitAsync(int userId)
+    {
+        var json = await _dataSync.QueryAsync($"SELECT TarotDailyLimit FROM Users WHERE Id = {userId}");
+        return ParseSingleInt(json, 10);
+    }
+
+    public async Task SetDailyLimitAsync(int userId, int limit)
+    {
+        limit = Math.Clamp(limit, 0, 1000);
+        await _dataSync.ExecuteSqlAsync($"UPDATE Users SET TarotDailyLimit = {limit} WHERE Id = {userId}");
+    }
+
+    public async Task SetDailyLimitAndNotifyAsync(int userId, int limit)
+    {
+        await SetDailyLimitAsync(userId, limit);
+        try
+        {
+            await _dataSync.AddNotificationAsync(new Notification
+            {
+                UserId = userId,
+                Title = "🔮 塔罗牌每日次数已调整",
+                Message = $"管理员已将你的每日塔罗测试次数调整为 {limit} 次。",
+                Type = "info",
+                CreatedAt = DateTime.Now,
+            });
+
+            var user = await _dataSync.GetUserByIdAsync(userId);
+            if (user != null && !string.IsNullOrEmpty(user.Email))
+            {
+                await _emailService.SendTarotQuotaAdjustedEmailAsync(user.Email, user.Username, limit);
+            }
+        }
+        catch (Exception ex) { _logger.LogWarning(ex, "塔罗配额调整通知失败"); }
+    }
+
+    public async Task NotifyQuotaExhaustedAsync(int userId, int limit)
+    {
+        try
+        {
+            await _dataSync.AddNotificationAsync(new Notification
+            {
+                UserId = userId,
+                Title = "🔮 今日塔罗次数已用完",
+                Message = $"你今天的塔罗测试次数（{limit} 次）已用完，明天 0 点自动重置。",
+                Type = "warning",
+                CreatedAt = DateTime.Now,
+            });
+
+            var user = await _dataSync.GetUserByIdAsync(userId);
+            if (user != null && !string.IsNullOrEmpty(user.Email))
+            {
+                await _emailService.SendTarotQuotaExhaustedEmailAsync(user.Email, user.Username, limit);
+            }
+        }
+        catch (Exception ex) { _logger.LogWarning(ex, "塔罗次数用完通知失败"); }
+    }
+
+    public async Task<int> GetTodayCountAsync(int userId)
+    {
+        var today = DateTime.Now.ToString("yyyy-MM-dd") + " 00:00:00";
+        var json = await _dataSync.QueryAsync($"SELECT COUNT(*) AS Cnt FROM TarotReadings WHERE UserId = {userId} AND IsDaily = 0 AND CreatedAt >= '{today}'");
+        return ParseSingleInt(json, 0);
+    }
+
+    public async Task<TarotHistoryItem?> GetTodayDailyAsync(int userId)
+    {
+        var today = DateTime.Now.ToString("yyyy-MM-dd") + " 00:00:00";
+        var json = await _dataSync.QueryAsync($"SELECT * FROM TarotReadings WHERE UserId = {userId} AND IsDaily = 1 AND CreatedAt >= '{today}' ORDER BY Id DESC LIMIT 1");
+        var list = ParseHistory(json);
+        return list.Count > 0 ? list[0] : null;
+    }
+
+    public async Task<List<TarotHistoryItem>> GetAllReadingsAsync(int limit = 300)
+    {
+        limit = Math.Clamp(limit, 1, 1000);
+        var json = await _dataSync.QueryAsync($"SELECT t.*, u.Username FROM TarotReadings t LEFT JOIN Users u ON u.Id = t.UserId ORDER BY t.Id DESC LIMIT {limit}");
+        return ParseHistory(json);
+    }
+
+    public async Task<List<TarotQuotaItem>> GetAllQuotasAsync()
+    {
+        var json = await _dataSync.QueryAsync("SELECT Id, Username, TarotDailyLimit FROM Users WHERE IsDeleted = 0 ORDER BY Id ASC");
+        return ParseQuotaList(json);
     }
 
     private static List<TarotHistoryItem> ParseHistory(string json)
@@ -308,11 +412,14 @@ VALUES ({userId}, '{Esc(question)}', '{Esc(spread)}', '{Esc(cardsJson)}', '{Esc(
                     switch (names[c])
                     {
                         case "Id": item.Id = int.TryParse(cell, out var id) ? id : 0; break;
+                        case "UserId": item.UserId = int.TryParse(cell, out var uid) ? uid : 0; break;
+                        case "Username": item.Username = cell; break;
                         case "Question": item.Question = cell; break;
                         case "Spread": item.Spread = cell; break;
                         case "CardsJson": item.CardsJson = cell; break;
                         case "ResultJson": item.ResultJson = cell; break;
                         case "CreatedAt": item.CreatedAt = cell; break;
+                        case "IsDaily": item.IsDaily = cell == "1" || cell == "true"; break;
                     }
                 }
                 list.Add(item);
@@ -322,6 +429,75 @@ VALUES ({userId}, '{Esc(question)}', '{Esc(spread)}', '{Esc(cardsJson)}', '{Esc(
         {
             // 解析失败返回空列表
         }
+
+        return list;
+    }
+
+    private static int ParseSingleInt(string json, int defaultValue)
+    {
+        if (string.IsNullOrEmpty(json) || json == "{}") return defaultValue;
+        try
+        {
+            using var doc = JsonDocument.Parse(json);
+            var root = doc.RootElement;
+            if (root.TryGetProperty("results", out var results) && results.GetArrayLength() > 0)
+            {
+                var r = results[0];
+                if (r.TryGetProperty("response", out var response) && response.TryGetProperty("result", out var result))
+                {
+                    if (result.TryGetProperty("rows", out var rows) && rows.GetArrayLength() > 0)
+                    {
+                        var row = rows[0];
+                        if (row.ValueKind == JsonValueKind.Array && row.GetArrayLength() > 0)
+                        {
+                            return int.TryParse(CellStr(row[0]), out var n) ? n : defaultValue;
+                        }
+                    }
+                }
+            }
+        }
+        catch { }
+        return defaultValue;
+    }
+
+    private static List<TarotQuotaItem> ParseQuotaList(string json)
+    {
+        var list = new List<TarotQuotaItem>();
+        if (string.IsNullOrEmpty(json) || json == "{}") return list;
+
+        try
+        {
+            using var doc = JsonDocument.Parse(json);
+            var root = doc.RootElement;
+            if (!root.TryGetProperty("results", out var results) || results.GetArrayLength() == 0) return list;
+            if (!results[0].TryGetProperty("response", out var response)) return list;
+            if (!response.TryGetProperty("result", out var result)) return list;
+            if (!result.TryGetProperty("rows", out var rows)) return list;
+            if (!result.TryGetProperty("cols", out var cols)) return list;
+
+            var names = new string[cols.GetArrayLength()];
+            for (var i = 0; i < names.Length; i++)
+                names[i] = cols[i].GetProperty("name").GetString() ?? "";
+
+            foreach (var row in rows.EnumerateArray())
+            {
+                if (row.ValueKind != JsonValueKind.Array) continue;
+                var item = new TarotQuotaItem();
+                var len = Math.Min(names.Length, row.GetArrayLength());
+                for (var c = 0; c < len; c++)
+                {
+                    var cell = CellStr(row[c]);
+                    switch (names[c])
+                    {
+                        case "Id": item.UserId = int.TryParse(cell, out var id) ? id : 0; break;
+                        case "Username": item.Username = cell; break;
+                        case "TarotDailyLimit": item.DailyLimit = int.TryParse(cell, out var lim) ? lim : 10; break;
+                    }
+                }
+                list.Add(item);
+            }
+        }
+        catch { }
 
         return list;
     }
