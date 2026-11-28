@@ -86,6 +86,7 @@
         for (var i = 0; i < lines.length; i++) {
             var t = lines[i].trim();
             if (t === '') { if (open) { out.push('</ul>'); open = false; } continue; }
+            if (/^[-*_]{3,}$/.test(t)) { if (open) { out.push('</ul>'); open = false; } continue; }
             if (/^###\s+/.test(t)) { if (open) { out.push('</ul>'); open = false; } out.push('<h3>' + inlineMd(t.replace(/^###\s+/, '')) + '</h3>'); continue; }
             if (/^##\s+/.test(t)) { if (open) { out.push('</ul>'); open = false; } out.push('<h2>' + inlineMd(t.replace(/^##\s+/, '')) + '</h2>'); continue; }
             if (/^[-*]\s+/.test(t)) { if (!open) { out.push('<ul>'); open = true; } out.push('<li>' + inlineMd(t.replace(/^[-*]\s+/, '')) + '</li>'); continue; }
