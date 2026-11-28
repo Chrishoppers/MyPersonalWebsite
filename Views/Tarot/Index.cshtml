@@ -131,10 +131,22 @@
 
     /* ---- 卡背设计 ---- */
     .tcard-back-design { position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; border-radius: inherit; }
-    .tcard-back-design .back-ring { position: absolute; inset: 8px; border: 1px solid rgba(244,208,122,0.5); border-radius: 6px; }
-    .tcard-back-design .back-ring::before { content: ''; position: absolute; inset: 4px; border: 1px dashed rgba(244,208,122,0.28); border-radius: 4px; }
-    .tcard-back-design .back-symbol { font-size: 1.7rem; position: relative; }
-    .tcard-back-design .back-stars { position: relative; font-size: 0.6rem; letter-spacing: 4px; color: rgba(244,208,122,0.7); margin-top: 2px; }
+    .back-ring { position: absolute; inset: 7px; border: 1px solid rgba(244,208,122,0.5); border-radius: 7px; }
+    .back-ring2 { position: absolute; inset: 11px; border: 1px dashed rgba(244,208,122,0.28); border-radius: 5px; }
+    .back-center {
+        position: relative; width: 52px; height: 52px; border-radius: 50%;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        background: radial-gradient(circle at 50% 40%, rgba(244,208,122,0.18), rgba(0,0,0,0.32) 72%);
+        border: 1px solid rgba(244,208,122,0.6); box-shadow: 0 0 22px rgba(244,208,122,0.28), inset 0 0 10px rgba(0,0,0,0.4);
+    }
+    .back-moon { font-size: 1.35rem; color: var(--gold); line-height: 1; text-shadow: 0 0 14px rgba(244,208,122,0.9); }
+    .back-eye { font-size: 0.8rem; margin-top: -3px; filter: drop-shadow(0 0 6px rgba(244,208,122,0.6)); }
+    .back-stars { position: relative; font-size: 0.55rem; letter-spacing: 3px; color: rgba(244,208,122,0.7); margin-top: 6px; }
+    .back-corner { position: absolute; width: 7px; height: 7px; border: 1px solid rgba(244,208,122,0.6); }
+    .back-corner.tl { top: 4px; left: 4px; border-right: none; border-bottom: none; }
+    .back-corner.tr { top: 4px; right: 4px; border-left: none; border-bottom: none; }
+    .back-corner.bl { bottom: 4px; left: 4px; border-right: none; border-top: none; }
+    .back-corner.br { bottom: 4px; right: 4px; border-left: none; border-top: none; }
 
     /* ============================================================
        牌阵棋盘
@@ -179,37 +191,69 @@
         position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden;
         border-radius: 10px; overflow: hidden;
     }
-    .tcard-back { background: linear-gradient(145deg, #2a2260, #150f2e); border: 1px solid rgba(244,208,122,0.5); }
+    .tcard-back {
+        background:
+            radial-gradient(120% 90% at 50% 0%, rgba(139,92,246,0.28), transparent 46%),
+            linear-gradient(160deg, #2a2260 0%, #181040 60%, #0f0b26 100%);
+        border: 1px solid rgba(244,208,122,0.55);
+    }
     .tcard-front {
         position: relative;
-        background: var(--card-grad, linear-gradient(145deg, #2a1f4d, #170f30));
-        border: 1px solid rgba(244,208,122,0.55); transform: rotateY(180deg);
-        box-shadow: inset 0 0 0 4px rgba(0,0,0,0.25); overflow: hidden;
+        background:
+            radial-gradient(120% 90% at 50% 0%, rgba(255,255,255,0.10), transparent 45%),
+            var(--card-grad, linear-gradient(160deg, #2b1a5e 0%, #1a1038 60%, #120c28 100%));
+        border: 1px solid rgba(244,208,122,0.6); transform: rotateY(180deg);
+        box-shadow: inset 0 0 0 1px rgba(244,208,122,0.14), inset 0 0 24px rgba(0,0,0,0.5);
+        overflow: hidden;
     }
     .tcard-front::after {
-        content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 3;
-        background: linear-gradient(115deg, transparent 35%, rgba(255,255,255,0.55) 50%, transparent 65%);
+        content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 6;
+        background: linear-gradient(115deg, transparent 35%, rgba(255,255,255,0.5) 50%, transparent 65%);
         transform: translateX(-130%); opacity: 0;
     }
     .tcard.flipped .tcard-front::after { animation: shineSweep 0.6s ease 0.12s; }
     @@keyframes shineSweep { 0% { transform: translateX(-130%); opacity: 0; } 25% { opacity: 1; } 100% { transform: translateX(130%); opacity: 0; } }
 
-    .tcard-front-inner { position: absolute; inset: 0; }
-    .tcard-fallback { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 6px; }
-    .tcard-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-    .tcard.reversed .tcard-img, .tcard.reversed .tcard-fallback { transform: rotate(180deg); }
-    .tcard-caption {
-        position: absolute; left: 0; right: 0; bottom: 0; padding: 3px 4px 2px; z-index: 4;
-        background: linear-gradient(transparent, rgba(0,0,0,0.82));
-        display: flex; flex-direction: column; align-items: center; gap: 1px;
+    .tcard-front-inner {
+        position: absolute; inset: 0; padding: 7px 6px 16px;
+        display: flex; flex-direction: column; align-items: center;
     }
-    .tcard-roman { font-size: 1.05rem; color: var(--gold); font-weight: 800; letter-spacing: 1px; }
-    .tcard-symbol { font-size: 2rem; line-height: 1; margin: 3px 0; filter: drop-shadow(0 2px 6px rgba(0,0,0,0.5)); }
-    .tcard-rank { font-size: 0.72rem; color: rgba(255,255,255,0.75); font-weight: 700; }
-    .tcard-name { font-size: 0.72rem; color: #fff; font-weight: 800; margin-top: 3px; }
-    .tcard-en { font-size: 0.5rem; color: rgba(255,255,255,0.5); margin-top: 1px; }
-    .tcard-caption .tcard-name { font-size: 0.56rem; margin-top: 0; text-shadow: 0 1px 3px rgba(0,0,0,0.9); }
-    .tcard-badge { font-size: 0.5rem; padding: 0.02rem 0.45rem; border-radius: 20px; color: #1a1408; background: var(--gold); font-weight: 700; }
+    .tcard.reversed .tcard-front-inner { transform: rotate(180deg); }
+
+    .cf-top { text-align: center; height: 15px; flex: 0 0 auto; }
+    .cf-num { font-size: 0.78rem; font-weight: 800; letter-spacing: 1px; color: var(--card-accent, var(--gold)); text-shadow: 0 0 10px rgba(244,208,122,0.5); }
+    .cf-center { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; width: 100%; }
+    .cf-medallion {
+        position: relative; width: 56px; height: 56px; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        background: radial-gradient(circle at 50% 35%, rgba(255,255,255,0.16), rgba(0,0,0,0.3) 72%);
+        border: 1px solid var(--card-accent, var(--gold));
+        box-shadow: 0 0 18px rgba(244,208,122,0.25), inset 0 0 12px rgba(0,0,0,0.4);
+    }
+    .cf-medallion::after { content: ''; position: absolute; inset: 4px; border-radius: 50%; border: 1px dashed rgba(244,208,122,0.35); }
+    .cf-symbol { font-size: 1.85rem; line-height: 1; filter: drop-shadow(0 2px 6px rgba(0,0,0,0.6)); }
+    .cf-court {
+        position: absolute; bottom: -5px; right: -5px; font-size: 0.85rem; line-height: 1;
+        width: 22px; height: 22px; display: flex; align-items: center; justify-content: center;
+        background: #120c28; border: 1px solid var(--card-accent, var(--gold)); border-radius: 50%;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+    }
+    .cf-pips { display: flex; flex-wrap: wrap; justify-content: center; align-content: center; gap: 3px; max-width: 56px; }
+    .cf-pip { font-size: 0.85rem; line-height: 1; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.55)); }
+    .cf-bottom { text-align: center; flex: 0 0 auto; }
+    .cf-name { font-size: 0.72rem; font-weight: 800; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.7); }
+    .cf-en { font-size: 0.46rem; color: rgba(244,208,122,0.72); letter-spacing: 0.3px; }
+    .cf-corner { position: absolute; width: 6px; height: 6px; border: 1px solid rgba(244,208,122,0.6); z-index: 4; }
+    .cf-corner.tl { top: 4px; left: 4px; border-right: none; border-bottom: none; }
+    .cf-corner.tr { top: 4px; right: 4px; border-left: none; border-bottom: none; }
+    .cf-corner.bl { bottom: 4px; left: 4px; border-right: none; border-top: none; }
+    .cf-corner.br { bottom: 4px; right: 4px; border-left: none; border-top: none; }
+
+    .tcard-badge {
+        position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%); z-index: 5;
+        font-size: 0.5rem; padding: 0.02rem 0.45rem; border-radius: 20px;
+        color: #1a1408; background: var(--card-accent, var(--gold)); font-weight: 800;
+    }
     .tcard.reversed .tcard-badge { background: #ec5d7a; color: #fff; }
 
     .slot-card.flash { animation: slotFlash 0.9s ease; }
@@ -344,9 +388,10 @@
         .cross { width: 300px; }
         .slot-card { width: 70px; height: 112px; }
         .crossing { width: 120px; }
-        .tcard-roman { font-size: 0.85rem; }
-        .tcard-symbol { font-size: 1.5rem; }
-        .tcard-name { font-size: 0.62rem; }
+        .cf-num { font-size: 0.7rem; }
+        .cf-symbol { font-size: 1.5rem; }
+        .cf-name { font-size: 0.62rem; }
+        .cf-medallion { width: 48px; height: 48px; }
         .spread-select { grid-template-columns: 1fr 1fr; }
     }
     @@media (max-width: 420px) {
@@ -591,45 +636,67 @@
     }
 
     function cardGrad(card) {
-        if (card.arcana === 'major') return 'linear-gradient(145deg, #3b2a5e, #171033)';
-        if (card.suit === 'wands') return 'linear-gradient(145deg, #5c2813, #2a1308)';
-        if (card.suit === 'cups') return 'linear-gradient(145deg, #103a5e, #081527)';
-        if (card.suit === 'swords') return 'linear-gradient(145deg, #2b3a4e, #111827)';
-        if (card.suit === 'pentacles') return 'linear-gradient(145deg, #234a2c, #0d1f13)';
-        return 'linear-gradient(145deg, #2a1f4d, #170f30)';
+        if (card.arcana === 'major') return 'linear-gradient(160deg, #3b2a6e 0%, #241455 55%, #150e34 100%)';
+        if (card.suit === 'wands') return 'linear-gradient(160deg, #6b2a12 0%, #4a1a0a 55%, #2a0f06 100%)';
+        if (card.suit === 'cups') return 'linear-gradient(160deg, #0f3a5e 0%, #0a2440 55%, #061426 100%)';
+        if (card.suit === 'swords') return 'linear-gradient(160deg, #33455e 0%, #22303f 55%, #131c26 100%)';
+        if (card.suit === 'pentacles') return 'linear-gradient(160deg, #2a5a34 0%, #1a3d22 55%, #0d2312 100%)';
+        return 'linear-gradient(160deg, #2a1f4d 0%, #170f30 100%)';
+    }
+
+    var RANK_NUM = { '王牌': 1, '二': 2, '三': 3, '四': 4, '五': 5, '六': 6, '七': 7, '八': 8, '九': 9, '十': 10 };
+
+    function courtGlyph(rank) {
+        if (rank === '侍从') return '🎴';
+        if (rank === '骑士') return '🐎';
+        if (rank === '王后') return '👑';
+        if (rank === '国王') return '🤴';
+        return '';
     }
 
     function backDesignHTML() {
         return '<div class="tcard-back-design">' +
-            '<div class="back-ring"></div>' +
-            '<span class="back-symbol">🔮</span>' +
-            '<span class="back-stars">✦ ✦ ✦</span>' +
+            '<div class="back-ring"></div><div class="back-ring2"></div>' +
+            '<div class="back-center"><span class="back-moon">☾</span><span class="back-eye">🔮</span></div>' +
+            '<span class="back-stars">✦ ✦ ✦ ✦</span>' +
+            '<span class="back-corner tl"></span><span class="back-corner tr"></span>' +
+            '<span class="back-corner bl"></span><span class="back-corner br"></span>' +
             '</div>';
     }
 
-    function cardImgHTML(card) {
-        if (!card.imageUrl) return '';
-        var fn = card.imageUrl.split('/').pop();
-        var local = '/images/tarot/' + fn;
-        return '<img class="tcard-img" src="' + local + '" data-remote="' + card.imageUrl + '" alt="' + escapeHtml(card.name) + '" loading="lazy" ' +
-            'onerror="if(!this.dataset.fb){this.dataset.fb=1;if(this.dataset.remote){this.src=this.dataset.remote;}}else{this.style.display=\'none\';}" />';
+    function pipsHTML(symbol, n) {
+        var h = '';
+        for (var i = 0; i < n; i++) h += '<span class="cf-pip">' + symbol + '</span>';
+        return h;
     }
 
     function frontHTML(card, reversed) {
-        var fallback = '<div class="tcard-fallback">';
-        if (card.arcana === 'major') fallback += '<div class="tcard-roman">' + card.roman + '</div>';
-        fallback += '<div class="tcard-symbol">' + card.symbol + '</div>';
-        if (card.arcana === 'minor') fallback += '<div class="tcard-rank">' + card.rank + '</div>';
-        fallback += '<div class="tcard-name">' + card.name + '</div>';
-        fallback += '<div class="tcard-en">' + card.nameEn + '</div>';
-        fallback += '</div>';
+        var isMajor = card.arcana === 'major';
+        var isCourt = !isMajor && (card.rank === '侍从' || card.rank === '骑士' || card.rank === '王后' || card.rank === '国王');
+        var rankNum = (!isMajor && !isCourt) ? (RANK_NUM[card.rank] || 0) : 0;
 
-        var caption = '<div class="tcard-caption">' +
-            '<span class="tcard-name">' + card.name + '</span>' +
-            '<span class="tcard-badge">' + (reversed ? '逆位' : '正位') + '</span>' +
-            '</div>';
+        var topLabel;
+        if (isMajor) topLabel = card.roman;
+        else if (isCourt) topLabel = card.rank;
+        else topLabel = rankNum === 1 ? 'A' : String(rankNum);
 
-        return '<div class="tcard-front-inner">' + fallback + cardImgHTML(card) + caption + '</div>';
+        var center;
+        if (isMajor) {
+            center = '<div class="cf-medallion"><span class="cf-symbol">' + card.symbol + '</span></div>';
+        } else if (isCourt) {
+            center = '<div class="cf-medallion"><span class="cf-symbol">' + card.symbol + '</span><span class="cf-court">' + courtGlyph(card.rank) + '</span></div>';
+        } else {
+            center = '<div class="cf-pips">' + pipsHTML(card.symbol, rankNum) + '</div>';
+        }
+
+        return '<div class="tcard-front-inner">' +
+            '<span class="cf-corner tl"></span><span class="cf-corner tr"></span>' +
+            '<span class="cf-corner bl"></span><span class="cf-corner br"></span>' +
+            '<div class="cf-top"><span class="cf-num">' + topLabel + '</span></div>' +
+            '<div class="cf-center">' + center + '</div>' +
+            '<div class="cf-bottom"><div class="cf-name">' + card.name + '</div><div class="cf-en">' + card.nameEn + '</div></div>' +
+            '</div>' +
+            '<div class="tcard-badge">' + (reversed ? '逆位' : '正位') + '</div>';
     }
 
     function escapeHtml(s) {
@@ -905,6 +972,7 @@
         var el = document.createElement('div');
         el.className = 'tcard' + (reversed ? ' reversed' : '');
         el.style.setProperty('--card-grad', cardGrad(card));
+        el.style.setProperty('--card-accent', suitColor(card));
         el.innerHTML =
             '<div class="tcard-face tcard-back">' + backDesignHTML() + '</div>' +
             '<div class="tcard-face tcard-front">' + frontHTML(card, reversed) + '</div>';
