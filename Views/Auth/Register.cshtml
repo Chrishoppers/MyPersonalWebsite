@@ -220,19 +220,6 @@
         color: rgba(255,255,255,0.4);
     }
 
-    /* reCAPTCHA 容器 */
-    .recaptcha-wrapper {
-        display: flex;
-        justify-content: center;
-        margin: 0.5rem 0;
-        min-height: 78px;
-    }
-
-    .recaptcha-wrapper .g-recaptcha {
-        transform: scale(0.92);
-        transform-origin: center center;
-    }
-
     /* 本地 SVG 图形验证码 */
     .svg-captcha-wrapper { display: flex; align-items: center; gap: 0.5rem; }
     .svg-captcha-wrapper img { height: 52px; border-radius: 10px; cursor: pointer; flex-shrink: 0; background: #fff; border: 1px solid rgba(255,255,255,0.06); }
@@ -247,9 +234,6 @@
         }
         .avatar-upload-area {
             flex-wrap: wrap;
-        }
-        .recaptcha-wrapper .g-recaptcha {
-            transform: scale(0.78);
         }
     }
 </style>
@@ -315,24 +299,12 @@
                 </div>
             </div>
 
-            <!-- reCAPTCHA 验证码 -->
+            <!-- 本地图形验证码 -->
             <div class="form-group">
                 <label>验证码</label>
-                <div class="recaptcha-wrapper">
-                    <div class="g-recaptcha" data-sitekey="6LcoPWstAAAAAJfXRZWdXDifAaacCYloZQyXtdpf" data-callback="onCaptchaSuccess"></div>
-                    <input type="hidden" id="captchaToken" name="captchaToken" />
-                </div>
-                <div style="text-align:center;color:rgba(255,255,255,0.08);font-size:0.6rem;margin-top:0.2rem;">
-                    💡 点击复选框验证你是人类
-                </div>
-            </div>
-
-            <!-- 本地图形验证码（备用方案） -->
-            <div class="form-group">
-                <label>备用验证码 <span style="font-weight:400;opacity:.45;font-size:.72rem;">（上方 reCAPTCHA 无法使用时填写此项）</span></label>
                 <div class="svg-captcha-wrapper">
                     <img id="svgCaptchaImg" src="/Captcha/Index" alt="图形验证码" title="点击刷新" onclick="refreshSvgCaptcha()" />
-                    <input type="text" id="svgCaptcha" name="svgCaptcha" placeholder="输入字符" maxlength="6" autocomplete="off" />
+                    <input type="text" id="svgCaptcha" name="svgCaptcha" placeholder="输入图中字符" maxlength="6" autocomplete="off" />
                     <button type="button" class="captcha-refresh" onclick="refreshSvgCaptcha()">🔄</button>
                 </div>
             </div>
@@ -348,22 +320,7 @@
     </div>
 </div>
 
-<!-- 使用 recaptcha.net 镜像 -->
-<script src="https://www.recaptcha.net/recaptcha/api.js" async defer></script>
-
 <script>
-    // reCAPTCHA 回调
-    function onCaptchaSuccess(token) {
-        document.getElementById('captchaToken').value = token;
-        console.log('✅ reCAPTCHA 验证成功');
-    }
-
-    // reCAPTCHA 过期回调
-    function onCaptchaExpired() {
-        document.getElementById('captchaToken').value = '';
-        console.log('⚠️ reCAPTCHA 已过期');
-    }
-
     // 头像预览
     document.getElementById('avatarInput').addEventListener('change', function(e) {
         const file = this.files[0];
@@ -400,12 +357,11 @@
     // 提交表单
     document.getElementById('registerForm').addEventListener('submit', function(e) {
         const btn = document.getElementById('submitBtn');
-        const token = document.getElementById('captchaToken').value;
         const svg = document.getElementById('svgCaptcha').value;
         
-        if (!token && !svg) {
+        if (!svg) {
             e.preventDefault();
-            alert('请完成验证码验证（reCAPTCHA 或备用图形验证码任选其一）');
+            alert('请填写图形验证码');
             return false;
         }
         
@@ -413,14 +369,10 @@
         btn.textContent = '⏳ 注册中...';
     });
 
-    // 如果验证失败，重置验证码（安全处理，避免无 reCAPTCHA widget 时报错）
+    // 如果验证失败，重置验证码
     @if (ViewBag.ResetCaptcha == true)
     {
         <text>
-            if (typeof grecaptcha !== 'undefined' && typeof grecaptcha.reset === 'function') {
-                try { grecaptcha.reset(); } catch (e) { }
-            }
-            document.getElementById('captchaToken').value = '';
             refreshSvgCaptcha();
         </text>
     }

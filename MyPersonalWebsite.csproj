@@ -32,6 +32,10 @@
     <Content Include="wwwroot\**\*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <!-- ✅ 配置文件随输出复制（EnableDefaultContentItems=false 时需手动包含） -->
+    <Content Include="appsettings.json;appsettings.Development.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
 </Project>

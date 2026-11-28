@@ -17,7 +17,6 @@ namespace MyPersonalWebsite.Controllers
         private readonly BrevoEmailService _emailService;
         private readonly RateLimitService _rateLimitService;
         private readonly AppDbContext _context;
-        private readonly ReCaptchaService _reCaptchaService;
         private readonly SvgCaptchaService _svgCaptchaService;
 
         public AuthController(
@@ -25,14 +24,12 @@ namespace MyPersonalWebsite.Controllers
             BrevoEmailService emailService,
             RateLimitService rateLimitService,
             AppDbContext context,
-            ReCaptchaService reCaptchaService,
             SvgCaptchaService svgCaptchaService)
         {
             _dataSync = dataSync;
             _emailService = emailService;
             _rateLimitService = rateLimitService;
             _context = context;
-            _reCaptchaService = reCaptchaService;
             _svgCaptchaService = svgCaptchaService;
         }
 
@@ -50,20 +47,10 @@ namespace MyPersonalWebsite.Controllers
         // ============================================================
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Register(string username, string email, string password, string captchaToken, string? svgCaptcha, IFormFile? avatar)
+        public async Task<IActionResult> Register(string username, string email, string password, string? svgCaptcha, IFormFile? avatar)
         {
-            // ⭐ 多重验证：优先 reCAPTCHA，失败或未填写时回退本地 SVG 图形验证码
-            var isCaptchaValid = false;
-            if (!string.IsNullOrEmpty(captchaToken))
-            {
-                isCaptchaValid = await _reCaptchaService.VerifyAsync(captchaToken);
-            }
-            if (!isCaptchaValid && !string.IsNullOrEmpty(svgCaptcha))
-            {
-                isCaptchaValid = _svgCaptchaService.VerifyCaptcha(svgCaptcha);
-            }
-
-            if (!isCaptchaValid)
+            // 仅使用本地 SVG 图形验证码
+            if (string.IsNullOrEmpty(svgCaptcha) || !_svgCaptchaService.VerifyCaptcha(svgCaptcha))
             {
                 ModelState.AddModelError("", "验证码验证失败，请刷新后重试");
                 ViewBag.ResetCaptcha = true;

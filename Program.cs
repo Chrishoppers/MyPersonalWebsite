@@ -119,7 +119,6 @@ builder.Services.AddScoped<TursoService>();
 builder.Services.AddScoped<DailyQuestionService>();
 builder.Services.AddScoped<GameSuggestionService>();
 builder.Services.AddScoped<TrainService>();
-builder.Services.AddScoped<ReCaptchaService>();
 builder.Services.AddScoped<EmailRateLimitService>();
 builder.Services.AddScoped<GameAntiCheatService>();
 builder.Services.AddScoped<DeepSeekService>();
@@ -140,7 +139,6 @@ builder.Services.AddScoped<PlatformVerifyService>();
 // ⭐ HttpClient 配置
 builder.Services.AddHttpClient<DeepSeekService>();
 builder.Services.AddHttpClient<TrainService>();
-builder.Services.AddHttpClient<ReCaptchaService>();
 
 builder.Services.AddSingleton<HxdaDb>();
 

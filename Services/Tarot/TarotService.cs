@@ -142,7 +142,7 @@ public sealed class TarotService
 
     private async Task<(string content, string? error)> CallDeepSeekAsync(string system, string user)
     {
-        var apiKey = _config["DeepSeek:ApiKey"];
+        var apiKey = Environment.GetEnvironmentVariable("DEEPSEEK_API_KEY") ?? _config["DeepSeek:ApiKey"];
         var apiUrl = _config["DeepSeek:ApiUrl"] ?? "https://api.deepseek.com/chat/completions";
         var model = _config["DeepSeek:Model"] ?? "deepseek-v4-pro";
 

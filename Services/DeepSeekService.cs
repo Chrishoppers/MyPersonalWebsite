@@ -14,7 +14,7 @@ namespace MyPersonalWebsite.Services
         public DeepSeekService(HttpClient httpClient, IConfiguration config)
         {
             _httpClient = httpClient;
-            _apiKey = config["DeepSeek:ApiKey"] ?? string.Empty;
+            _apiKey = Environment.GetEnvironmentVariable("DEEPSEEK_API_KEY") ?? config["DeepSeek:ApiKey"] ?? string.Empty;
             _apiUrl = config["DeepSeek:ApiUrl"] ?? "https://api.deepseek.com/chat/completions";
             _defaultModel = config["DeepSeek:Model"] ?? "deepseek-v4-pro";
         }
