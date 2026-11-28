@@ -34,10 +34,13 @@
     .tarot-head { text-align: center; padding: 1rem 0 0.4rem; position: relative; }
     .tarot-head h1 {
         font-size: 2.6rem; font-weight: 900; letter-spacing: 1px; margin: 0;
-        background: linear-gradient(135deg, #f4d07a 0%, #EC4899 45%, #8B5CF6 100%);
+        background: linear-gradient(135deg, #f4d07a 0%, #EC4899 30%, #8B5CF6 60%, #f4d07a 100%);
+        background-size: 200% 200%;
         -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-        filter: drop-shadow(0 0 18px rgba(139,92,246,0.4));
+        filter: drop-shadow(0 0 20px rgba(139,92,246,0.5));
+        animation: titleShimmer 4s ease infinite;
     }
+    @@keyframes titleShimmer { 0%,100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
     .tarot-head .subtitle { color: rgba(255,255,255,0.35); font-size: 0.88rem; margin-top: 0.3rem; }
     .history-btn {
         position: absolute; right: 0; top: 0.4rem; padding: 0.5rem 1rem; font-size: 0.82rem; font-weight: 700;
@@ -89,12 +92,24 @@
     .spread-info .si-item { display: inline-block; margin: 0 0.3rem; }
 
     .big-btn {
-        display: inline-block; padding: 0.95rem 3rem; font-size: 1.05rem; font-weight: 800; color: #1a1408;
-        background: linear-gradient(135deg, #f4d07a, #d99a3d); border: none; border-radius: 50px; cursor: pointer;
-        font-family: inherit; transition: all 0.2s ease; box-shadow: 0 10px 34px rgba(244,208,122,0.32); letter-spacing: 1px;
+        position: relative; display: inline-block; padding: 0.95rem 3rem; font-size: 1.05rem; font-weight: 800; color: #1a1408;
+        background: linear-gradient(135deg, #ffe3a3 0%, #f4d07a 35%, #d99a3d 70%, #c78a28 100%);
+        background-size: 200% 200%;
+        border: none; border-radius: 50px; cursor: pointer; font-family: inherit; letter-spacing: 1px; overflow: hidden;
+        box-shadow: 0 10px 34px rgba(244,208,122,0.35), inset 0 1px 0 rgba(255,255,255,0.6), inset 0 -2px 6px rgba(0,0,0,0.15);
+        transition: all 0.25s ease;
     }
-    .big-btn:hover { transform: translateY(-3px) scale(1.02); box-shadow: 0 14px 44px rgba(244,208,122,0.45); }
-    .big-btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; box-shadow: none; }
+    .big-btn::after {
+        content: ''; position: absolute; inset: 0;
+        background: linear-gradient(115deg, transparent 30%, rgba(255,255,255,0.55) 50%, transparent 70%);
+        transform: translateX(-130%);
+    }
+    .big-btn:hover { transform: translateY(-3px) scale(1.02); box-shadow: 0 16px 48px rgba(244,208,122,0.55), inset 0 1px 0 rgba(255,255,255,0.7); animation: bigBtnShine 1.4s ease; }
+    .big-btn:hover::after { animation: bigBtnSweep 1.1s ease; }
+    .big-btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; box-shadow: none; animation: none; }
+    .big-btn:disabled::after { display: none; }
+    @@keyframes bigBtnSweep { 0% { transform: translateX(-130%); } 100% { transform: translateX(130%); } }
+    @@keyframes bigBtnShine { 0%,100% { background-position: 0% 0%; } 50% { background-position: 100% 100%; } }
 
     .quota-info { text-align: center; color: rgba(255,255,255,0.4); font-size: 0.82rem; margin-bottom: 0.8rem; }
     .quota-info b { color: var(--gold); }
@@ -234,6 +249,8 @@
         display: flex; flex-direction: column; align-items: center;
     }
     .tcard.reversed .tcard-front-inner { transform: rotate(180deg); }
+    .tcard-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+    .tcard.reversed .tcard-img { transform: rotate(180deg); }
 
     .cf-top { text-align: center; height: 15px; flex: 0 0 auto; }
     .cf-num { font-size: 0.78rem; font-weight: 800; letter-spacing: 1px; color: var(--card-accent, var(--gold)); text-shadow: 0 0 10px rgba(244,208,122,0.5); }
@@ -272,6 +289,12 @@
     .tcard.reversed .tcard-badge { background: #ec5d7a; color: #fff; }
 
     .slot-card.flash { animation: slotFlash 0.9s ease; }
+    .gold-flash { position: absolute; inset: 0; border-radius: 10px; background: radial-gradient(circle at 50% 50%, rgba(244,208,122,0.7), transparent 70%); animation: goldFlash 0.7s ease forwards; pointer-events: none; z-index: 7; }
+    @@keyframes goldFlash { 0% { opacity: 0; } 30% { opacity: 1; } 100% { opacity: 0; } }
+    .shockwave { position: absolute; left: 50%; top: 50%; width: 24px; height: 24px; margin: -12px 0 0 -12px; border-radius: 50%; border: 2px solid rgba(244,208,122,0.85); box-shadow: 0 0 18px rgba(244,208,122,0.5); animation: shockwaveExpand 0.8s ease-out forwards; pointer-events: none; z-index: 8; }
+    @@keyframes shockwaveExpand { 0% { transform: scale(0.5); opacity: 1; } 100% { transform: scale(5.5); opacity: 0; } }
+    .shuffle-orb { position: absolute; left: 50%; top: 50%; width: 90px; height: 90px; margin: -45px 0 0 -45px; border-radius: 50%; background: radial-gradient(circle, rgba(244,208,122,0.55), rgba(139,92,246,0.25) 55%, transparent 75%); filter: blur(5px); animation: orbPulse 1.6s ease-in-out infinite; pointer-events: none; }
+    @@keyframes orbPulse { 0%,100% { transform: scale(1); opacity: 0.55; } 50% { transform: scale(1.5); opacity: 1; } }
     @@keyframes slotFlash { 0% { box-shadow: 0 0 0 0 rgba(244,208,122,0); } 30% { box-shadow: 0 0 0 6px rgba(244,208,122,0.5), 0 0 44px rgba(244,208,122,0.6); } 100% { box-shadow: 0 0 0 0 rgba(244,208,122,0); } }
 
     /* ============================================================
@@ -301,10 +324,11 @@
         padding: 0.55rem 1.2rem; font-size: 0.88rem; font-weight: 700; color: #fff; font-family: inherit; cursor: pointer;
         background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.12); border-radius: 50px; transition: all 0.15s ease;
     }
-    .chip-btn:hover { background: rgba(255,255,255,0.1); transform: translateY(-2px); }
+    .chip-btn:hover { background: rgba(255,255,255,0.1); border-color: rgba(244,208,122,0.4); transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,0.3), 0 0 12px rgba(244,208,122,0.15); }
     .chip-btn.primary { background: rgba(139,92,246,0.2); border-color: rgba(139,92,246,0.5); }
-    .chip-btn.gold { background: linear-gradient(135deg, #f4d07a, #d99a3d); color: #1a1408; border: none; }
-    .chip-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+    .chip-btn.primary:hover { box-shadow: 0 6px 18px rgba(0,0,0,0.3), 0 0 14px rgba(139,92,246,0.3); }
+    .chip-btn.gold { background: linear-gradient(135deg, #ffe3a3, #f4d07a, #d99a3d); color: #1a1408; border: none; box-shadow: 0 6px 20px rgba(244,208,122,0.3), inset 0 1px 0 rgba(255,255,255,0.6); }
+    .chip-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
     .num-input { width: 90px; padding: 0.5rem 0.6rem; text-align: center; font-size: 0.9rem; color: #fff; font-family: inherit;
         background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.14); border-radius: 50px; }
     .num-input:focus { outline: none; border-color: rgba(244,208,122,0.6); }
@@ -348,13 +372,14 @@
     @@keyframes verdictPop { 0% { transform: scale(0.7); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
 
     .reading-body { color: rgba(255,255,255,0.82); line-height: 1.9; font-size: 0.98rem; }
-    .reading-body h2 { color: var(--gold); font-size: 1.25rem; margin: 1.2rem 0 0.6rem; }
-    .reading-body h3 { color: var(--violet); font-size: 1.05rem; margin: 1rem 0 0.4rem; }
+    .reading-body h2 { color: var(--gold); font-size: 1.25rem; margin: 1.2rem 0 0.6rem; padding-left: 0.6rem; border-left: 3px solid var(--gold); text-shadow: 0 0 14px rgba(244,208,122,0.35); }
+    .reading-body h3 { color: var(--violet); font-size: 1.05rem; margin: 1rem 0 0.4rem; padding-left: 0.6rem; border-left: 3px solid var(--violet); }
     .reading-body ul { padding-left: 1.2rem; }
     .reading-body li { margin: 0.35rem 0; }
     .reading-body strong { color: #f4d07a; }
     .reading-summary-box { margin-top: 1rem; padding: 1rem 1.1rem; border-radius: 14px; border: 1px solid rgba(244,208,122,0.3); background: linear-gradient(135deg, rgba(244,208,122,0.08), rgba(139,92,246,0.06)); box-shadow: 0 8px 30px rgba(0,0,0,0.25); }
     .reading-summary-box h2, .reading-summary-box h3 { margin-top: 0.2rem; }
+    .warning-banner { margin: 0 0 1rem; padding: 0.7rem 1rem; border-radius: 12px; border: 1px solid rgba(255,193,7,0.35); background: rgba(255,193,7,0.08); color: #ffc107; font-size: 0.85rem; line-height: 1.6; animation: phaseIn 0.5s ease; }
     .rv-block { opacity: 0; transform: translateY(10px); transition: opacity 0.5s ease, transform 0.5s ease; }
     .rv-block.show { opacity: 1; transform: none; }
     .reading-actions { text-align: center; margin-top: 1.4rem; }
@@ -426,6 +451,71 @@
     .sd-num { display: inline-block; width: 20px; height: 20px; line-height: 20px; border-radius: 50%; background: rgba(244,208,122,0.16); color: var(--gold); font-size: 0.7rem; font-weight: 800; margin-bottom: 0.25rem; }
     .sd-name { display: block; color: #fff; font-size: 0.78rem; font-weight: 700; }
     .sd-sub { display: block; color: rgba(255,255,255,0.35); font-size: 0.66rem; margin-top: 1px; }
+
+    /* 卡面模式切换 */
+    .card-mode-toggle { text-align: center; margin-bottom: 1rem; display: flex; align-items: center; justify-content: center; gap: 0.4rem; flex-wrap: wrap; }
+    .cm-label { color: rgba(255,255,255,0.5); font-size: 0.8rem; }
+    .cm-btn { padding: 0.4rem 1rem; font-size: 0.8rem; font-weight: 700; cursor: pointer; font-family: inherit; color: rgba(255,255,255,0.5); background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 50px; transition: all 0.15s ease; }
+    .cm-btn.active { color: #1a1408; background: linear-gradient(135deg, #f4d07a, #d99a3d); border-color: transparent; }
+
+    /* 免责声明 */
+    .disclaimer-text { color: rgba(255,255,255,0.7); line-height: 1.9; font-size: 0.9rem; }
+    .disclaimer-text h2 { color: var(--gold); font-size: 1rem; margin: 0.8rem 0 0.4rem; }
+    .disclaimer-text p { margin: 0.3rem 0; }
+
+    /* 权威性介绍 splash */
+    .intro-splash { position: fixed; inset: 0; z-index: 4000; display: flex; align-items: center; justify-content: center; padding: 1.2rem; background: radial-gradient(1000px 700px at 50% 30%, rgba(139,92,246,0.25), rgba(7,6,15,0.96) 70%); backdrop-filter: blur(8px); }
+    .intro-inner { text-align: center; max-width: 520px; }
+    .intro-icon { font-size: 3.5rem; margin-bottom: 0.6rem; animation: introFloat 2.4s ease-in-out infinite; }
+    @@keyframes introFloat { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+    .intro-line { font-size: 1.05rem; color: rgba(255,255,255,0.85); margin: 0.5rem 0; opacity: 0; transform: translateY(12px); animation: introIn 0.7s ease forwards; }
+    .intro-line.l1 { animation-delay: 0.2s; }
+    .intro-line.l2 { animation-delay: 0.8s; }
+    .intro-line.l3 { animation-delay: 1.4s; }
+    @@keyframes introIn { to { opacity: 1; transform: none; } }
+    .intro-btn { margin-top: 1.4rem; padding: 0.8rem 2.6rem; font-size: 1rem; font-weight: 800; color: #1a1408; background: linear-gradient(135deg, #f4d07a, #d99a3d); border: none; border-radius: 50px; cursor: pointer; font-family: inherit; opacity: 0; animation: introIn 0.7s ease 2s forwards; box-shadow: 0 10px 34px rgba(244,208,122,0.35); }
+    .intro-btn:hover { transform: translateY(-2px); }
+
+
+    /* ============================================================
+       高级质感全面升级
+       ============================================================ */
+    .panel { animation: panelGlow 5s ease-in-out infinite; }
+    @@keyframes panelGlow {
+        0%,100% { box-shadow: 0 30px 80px rgba(0,0,0,0.4), 0 0 0 1px rgba(244,208,122,0.05); }
+        50% { box-shadow: 0 30px 80px rgba(0,0,0,0.4), 0 0 28px rgba(244,208,122,0.12), 0 0 0 1px rgba(244,208,122,0.12); }
+    }
+
+    .spread-opt { transition: all 0.25s cubic-bezier(0.34,1.56,0.64,1); }
+    .spread-opt:hover { box-shadow: 0 10px 26px rgba(0,0,0,0.35), 0 0 16px rgba(244,208,122,0.15); border-color: rgba(244,208,122,0.35); }
+    .spread-opt.active { box-shadow: 0 0 0 1px rgba(244,208,122,0.45), 0 0 28px rgba(244,208,122,0.28), inset 0 0 20px rgba(244,208,122,0.08); border-color: rgba(244,208,122,0.6); }
+
+    .fan-card { transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.25s ease; }
+    .fan-card:hover { transform: translateY(-12px) scale(1.08); box-shadow: 0 16px 30px rgba(0,0,0,0.6), 0 0 26px rgba(244,208,122,0.5); z-index: 5; }
+
+    .q-input:focus { box-shadow: 0 0 0 4px rgba(139,92,246,0.14), 0 0 22px rgba(139,92,246,0.28); }
+    .num-input:focus { box-shadow: 0 0 0 4px rgba(244,208,122,0.12), 0 0 20px rgba(244,208,122,0.22); }
+
+    .ai-progress { box-shadow: 0 0 16px rgba(244,208,122,0.28); }
+
+    .fortune-box, .verdict-banner, .daily-banner { animation: bannerGlow 3.2s ease-in-out infinite; }
+    @@keyframes bannerGlow { 0%,100% { box-shadow: 0 10px 40px rgba(0,0,0,0.3); } 50% { box-shadow: 0 10px 46px rgba(244,208,122,0.22); } }
+
+    .intro-btn { box-shadow: 0 10px 34px rgba(244,208,122,0.45), inset 0 1px 0 rgba(255,255,255,0.6); }
+    .intro-btn:hover { box-shadow: 0 14px 44px rgba(244,208,122,0.6), inset 0 1px 0 rgba(255,255,255,0.7); transform: translateY(-2px); }
+
+    .sd-cell { transition: all 0.2s ease; }
+    .sd-cell:hover { border-color: rgba(244,208,122,0.45); background: rgba(244,208,122,0.07); transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,0.3); }
+
+    .history-item { transition: all 0.2s ease; }
+    .history-item:hover { transform: translateX(3px); background: rgba(244,208,122,0.04); }
+
+    .cm-btn { transition: all 0.2s cubic-bezier(0.34,1.56,0.64,1); }
+    .cm-btn:hover { transform: translateY(-2px); border-color: rgba(244,208,122,0.5); box-shadow: 0 6px 16px rgba(0,0,0,0.3); }
+    .cm-btn.active { box-shadow: 0 6px 20px rgba(244,208,122,0.35), inset 0 1px 0 rgba(255,255,255,0.6); }
+
+    .history-btn:hover { box-shadow: 0 6px 18px rgba(0,0,0,0.3), 0 0 14px rgba(244,208,122,0.2); }
+    .ta-btn:hover { box-shadow: 0 6px 16px rgba(244,208,122,0.35); }
 
     @@media (max-width: 700px) {
         .tarot-head h1 { font-size: 1.9rem; }
@@ -569,8 +659,14 @@
                     </button>
                 </div>
                 <div class="spread-info" id="spreadInfo"></div>
-                <div style="text-align:center;margin-bottom:0.8rem;">
+                <div style="text-align:center;margin-bottom:0.8rem;display:flex;gap:0.5rem;justify-content:center;flex-wrap:wrap;">
                     <button class="chip-btn" id="spreadDiagramBtn">📋 查看牌阵图解</button>
+                    <button class="chip-btn" id="disclaimerBtn">📄 免责声明</button>
+                </div>
+                <div class="card-mode-toggle" id="cardModeToggle">
+                    <span class="cm-label">🎨 卡面：</span>
+                    <button class="cm-btn active" data-mode="simple">系统简易版</button>
+                    <button class="cm-btn" data-mode="original">原版图片</button>
                 </div>
                 <button class="big-btn" id="startShuffleBtn">🔮 开始洗牌</button>
             </div>
@@ -583,6 +679,7 @@
                     <div class="magic-ring"></div>
                     <div class="magic-ring r2"></div>
                     <div class="magic-ring r3"></div>
+                    <div class="shuffle-orb"></div>
                 </div>
                 <div class="shuffle-caption" id="shuffleCaption">🌌 宇宙能量注入中…</div>
             </div>
@@ -637,6 +734,36 @@
             <button class="sd-close" id="sdClose">✕</button>
         </div>
         <div class="sd-body" id="sdBody"></div>
+    </div>
+</div>
+
+<!-- 免责声明 & 隐私声明弹窗 -->
+<div class="sd-overlay" id="dscOverlay" style="display:none;">
+    <div class="sd-modal">
+        <div class="sd-head">
+            <span>📄 免责声明 & 隐私声明</span>
+            <button class="sd-close" id="dscClose">✕</button>
+        </div>
+        <div class="sd-body disclaimer-text">
+            <h2>免责声明</h2>
+            <p>塔罗牌占卜内容由 AI 大模型基于牌面象征与心理学联想自动生成，仅供娱乐与自我觉察参考，不构成任何医疗、法律、投资、婚姻等专业建议，也不应作为重要决策的唯一依据。</p>
+            <p>请理性看待解读结果，最终的判断与选择权始终在你自己手中。本站不对解读内容引发的任何直接或间接后果承担责任。</p>
+            <h2>隐私声明</h2>
+            <p>你提交的问题、抽取的牌与解读结果仅用于为你生成本次占卜解读，并保存在你的账号下，便于你随时回顾历史记录。</p>
+            <p>管理员可在后台查看占卜记录，用于运营与内容安全管理。未经你的同意，我们不会将你的占卜内容用于其他用途或提供给第三方。</p>
+            <p>AI 解读由第三方大模型服务（DeepSeek）处理，我们不会额外留存或转售你的个人数据。</p>
+        </div>
+    </div>
+</div>
+
+<!-- 权威性介绍 splash -->
+<div class="intro-splash" id="introSplash">
+    <div class="intro-inner">
+        <div class="intro-icon">🔮</div>
+        <div class="intro-line l1">✨ 资深塔罗占卜师 · 深度联想解读</div>
+        <div class="intro-line l2">🧠 融合伟特牌义 · 正逆位 · 牌阵位置</div>
+        <div class="intro-line l3">🌙 专业 · 温和 · 富有洞察力的 AI 指引</div>
+        <button class="intro-btn" id="introClose">开始占卜</button>
     </div>
 </div>
 
@@ -800,6 +927,7 @@
     var drawn = [];
     var reading = false;
     var STATUS = null;
+    var CARD_MODE = 'simple'; // 'simple'（系统简易版）| 'original'（原版图片）
 
     function $(id) { return document.getElementById(id); }
 
@@ -871,6 +999,29 @@
         return h;
     }
 
+    var ORIGINAL_MAJOR = {
+        'The Fool': 'Fool', 'The Magician': 'Magician', 'The High Priestess': 'High_Priestess',
+        'The Empress': 'Empress', 'The Emperor': 'Emperor', 'The Hierophant': 'Hierophant',
+        'The Lovers': 'Lovers', 'The Chariot': 'Chariot', 'Strength': 'Strength',
+        'The Hermit': 'Hermit', 'Wheel of Fortune': 'Wheel_of_Fortune', 'Justice': 'Justice',
+        'The Hanged Man': 'Hanged_Man', 'Death': 'Death', 'Temperance': 'Temperance',
+        'The Devil': 'Devil', 'The Tower': 'Tower', 'The Star': 'Star', 'The Moon': 'Moon',
+        'The Sun': 'Sun', 'Judgement': 'Judgement', 'The World': 'World'
+    };
+
+    function originalImageUrl(card) {
+        var base = 'https://raw.githubusercontent.com/look-fate/tarot-lab/main/SimpleTarotPng/';
+        if (card.arcana === 'major') {
+            var name = ORIGINAL_MAJOR[card.nameEn];
+            return name ? (base + name + '.jpg') : '';
+        }
+        var suits = ['Wands', 'Cups', 'Swords', 'Pents'];
+        var idx = Math.floor((card.id - 22) / 14);
+        var rankNum = ((card.id - 22) % 14) + 1;
+        if (idx < 0 || idx >= suits.length) return '';
+        return base + suits[idx] + (rankNum < 10 ? '0' + rankNum : '' + rankNum) + '.jpg';
+    }
+
     function frontHTML(card, reversed) {
         var isMajor = card.arcana === 'major';
         var isCourt = !isMajor && (card.rank === '侍从' || card.rank === '骑士' || card.rank === '王后' || card.rank === '国王');
@@ -890,13 +1041,19 @@
             center = '<div class="cf-pips">' + pipsHTML(card.symbol, rankNum) + '</div>';
         }
 
+        var img = '';
+        if (CARD_MODE === 'original') {
+            var url = originalImageUrl(card);
+            if (url) img = '<img class="tcard-img" src="' + url + '" alt="" loading="lazy" onerror="this.style.display=\'none\'" />';
+        }
+
         return '<div class="tcard-front-inner">' +
             '<span class="cf-corner tl"></span><span class="cf-corner tr"></span>' +
             '<span class="cf-corner bl"></span><span class="cf-corner br"></span>' +
             '<div class="cf-top"><span class="cf-num">' + topLabel + '</span></div>' +
             '<div class="cf-center">' + center + '</div>' +
             '<div class="cf-bottom"><div class="cf-name">' + card.name + '</div><div class="cf-en">' + card.nameEn + '</div></div>' +
-            '</div>' +
+            '</div>' + img +
             '<div class="tcard-badge">' + (reversed ? '逆位' : '正位') + '</div>';
     }
 
@@ -979,11 +1136,21 @@
         var canvas = $('starCanvas');
         var ctx = canvas.getContext('2d');
         var stars = [];
+        var meteor = null;
         function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
         resize(); window.addEventListener('resize', resize);
         var count = Math.min(160, Math.floor(window.innerWidth * window.innerHeight / 9000));
         for (var i = 0; i < count; i++) {
             stars.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, r: Math.random() * 1.4 + 0.3, tw: Math.random() * Math.PI * 2, sp: 0.02 + Math.random() * 0.05 });
+        }
+        function spawnMeteor() {
+            meteor = {
+                x: Math.random() * canvas.width * 0.8 + canvas.width * 0.2,
+                y: Math.random() * canvas.height * 0.4,
+                vx: -(6 + Math.random() * 8),
+                vy: (3 + Math.random() * 4),
+                life: 0, maxLife: 40 + Math.random() * 30
+            };
         }
         function frame() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -992,6 +1159,19 @@
                 var a = 0.3 + Math.abs(Math.sin(s.tw)) * 0.7;
                 ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
                 ctx.fillStyle = 'rgba(255,255,255,' + a + ')'; ctx.fill();
+            }
+            if (!meteor && Math.random() < 0.01) spawnMeteor();
+            if (meteor) {
+                meteor.x += meteor.vx; meteor.y += meteor.vy; meteor.life++;
+                var fade = 1 - meteor.life / meteor.maxLife;
+                var tailX = meteor.x - meteor.vx * 6, tailY = meteor.y - meteor.vy * 6;
+                var grad = ctx.createLinearGradient(meteor.x, meteor.y, tailX, tailY);
+                grad.addColorStop(0, 'rgba(244,208,122,' + (0.9 * fade) + ')');
+                grad.addColorStop(1, 'rgba(244,208,122,0)');
+                ctx.strokeStyle = grad;
+                ctx.lineWidth = 2;
+                ctx.beginPath(); ctx.moveTo(meteor.x, meteor.y); ctx.lineTo(tailX, tailY); ctx.stroke();
+                if (meteor.life >= meteor.maxLife) meteor = null;
             }
             requestAnimationFrame(frame);
         }
@@ -1158,7 +1338,7 @@
         var ty = srect.top + (srect.height - h) / 2 + window.scrollY;
         var sc = Math.min(slotEl.offsetWidth / w, slotEl.offsetHeight / h);
 
-        var dur = 680, t0 = performance.now();
+        var dur = 680, t0 = performance.now(), trailT = 0;
         function frame(now) {
             var p = Math.min((now - t0) / dur, 1);
             var e = easeInOutCubic(p);
@@ -1173,6 +1353,13 @@
             fly.style.top = (y - window.scrollY) + 'px';
             fly.style.transform = 'rotate(' + (p * 540) + 'deg) scale(' + (1 + (sc - 1) * e) + ')';
             fly.style.opacity = p > 0.9 ? Math.max(0, 1 - (p - 0.9) * 10) : 1;
+
+            // 拖尾粒子
+            if (p < 0.9 && now - trailT > 55) {
+                trailT = now;
+                var fr = fly.getBoundingClientRect();
+                burst(fr.left + fr.width / 2, fr.top + fr.height / 2, 'rgba(244,208,122,0.85)');
+            }
 
             if (p < 1) requestAnimationFrame(frame);
             else { fly.remove(); if (done) done(); }
@@ -1198,7 +1385,18 @@
                 var r = slotEl.getBoundingClientRect();
                 burst(r.left + r.width / 2, r.top + r.height / 2, suitColor(card));
                 sndChime();
-                if (card.arcana === 'major') screenShake(7);
+                var sw = document.createElement('div');
+                sw.className = 'shockwave';
+                sw.style.borderColor = suitColor(card);
+                slotEl.appendChild(sw);
+                setTimeout(function () { sw.remove(); }, 800);
+                if (card.arcana === 'major') {
+                    screenShake(7);
+                    var gf = document.createElement('div');
+                    gf.className = 'gold-flash';
+                    slotEl.appendChild(gf);
+                    setTimeout(function () { gf.remove(); }, 700);
+                }
                 setTimeout(function () { slotEl.classList.remove('flash'); }, 950);
             });
         });
@@ -1225,7 +1423,7 @@
             drawRandom();
             step++;
             if (step >= remaining || drawn.length >= spread.cardCount) clearInterval(iv);
-        }, 800);
+        }, 1400);
     }
 
     // ============================================================
@@ -1320,6 +1518,14 @@
         drawn = [];
         $('shuffleCaption').innerHTML = '<span class="glow">✨ 洗牌完成，请开始抽牌</span>';
         toast('✨ 洗牌完成');
+        // 收拢时的金色冲击波
+        var stage = $('shuffleStage');
+        var ring = document.createElement('div');
+        ring.className = 'shockwave';
+        ring.style.width = '120px'; ring.style.height = '120px';
+        ring.style.margin = '-60px 0 0 -60px';
+        stage.appendChild(ring);
+        setTimeout(function () { ring.remove(); }, 800);
         setTimeout(function () {
             buildBoard();
             buildFan();
@@ -1425,9 +1631,9 @@
                     try { cards = JSON.parse(data.cardsJson || '[]'); } catch (e) {}
                     var card = (cards.length && DECK.length > cards[0].cardId) ? DECK[cards[0].cardId] : null;
                     if (card) $('readingBody').innerHTML = renderDailyFortune(card);
-                    renderReading(data.content, false, '');
+                    renderReading(data.content, false, '', data.warning);
                 } else {
-                    renderReading(data.content, data.fallback, data.errorDetail);
+                    renderReading(data.content, data.fallback, data.errorDetail, data.warning);
                 }
                 // 刷新状态（每日一签/次数）
                 refreshStatus();
@@ -1440,7 +1646,7 @@
         .catch(function () { $('readingStatus').innerHTML = '⚠️ 网络异常，解读失败，请稍后再试。'; });
     }
 
-    function renderReading(md, fallback, errorDetail) {
+    function renderReading(md, fallback, errorDetail, warning) {
         if (fallback) {
             $('readingStatus').innerHTML = '🌙 本次为本地牌义解读（AI 服务暂不可用）' +
                 (errorDetail ? '<div style="font-size:0.72rem;color:rgba(255,255,255,0.35);margin-top:5px;">' + escapeHtml(errorDetail) + '</div>' : '');
@@ -1448,6 +1654,12 @@
             $('readingStatus').innerHTML = '🌙 解读完成 · 愿你听见内心的声音';
         }
         var body = $('readingBody');
+        if (warning) {
+            var wb = document.createElement('div');
+            wb.className = 'warning-banner';
+            wb.textContent = warning;
+            body.insertBefore(wb, body.firstChild);
+        }
         var wrapper = document.createElement('div');
         wrapper.className = 'reading-ai';
         wrapper.innerHTML = mdToHtml(md);
@@ -1665,7 +1877,14 @@
         spread = SPREADS.celtic;
         applySpreadUI();
 
-        $('startShuffleBtn').addEventListener('click', function () { ensureAudio(); runShuffle(); });
+        $('startShuffleBtn').addEventListener('click', function () {
+            if (!spread.daily && !($('qInput').value || '').trim()) {
+                toast('请先输入你的问题，再开始抽牌');
+                $('qInput').focus();
+                return;
+            }
+            ensureAudio(); runShuffle();
+        });
         $('randomDrawBtn').addEventListener('click', function () { ensureAudio(); drawRandom(); });
         $('autoDrawBtn').addEventListener('click', function () { ensureAudio(); autoDrawAll(); });
 
@@ -1697,6 +1916,22 @@
         $('spreadDiagramBtn').addEventListener('click', openSpreadDiagram);
         $('sdClose').addEventListener('click', closeSpreadDiagram);
         $('sdOverlay').addEventListener('click', function (e) { if (e.target === this) closeSpreadDiagram(); });
+        $('disclaimerBtn').addEventListener('click', function () { $('dscOverlay').style.display = 'flex'; });
+        $('dscClose').addEventListener('click', function () { $('dscOverlay').style.display = 'none'; });
+        $('dscOverlay').addEventListener('click', function (e) { if (e.target === this) $('dscOverlay').style.display = 'none'; });
+        $('introClose').addEventListener('click', function () {
+            $('introSplash').style.transition = 'opacity 0.5s ease';
+            $('introSplash').style.opacity = '0';
+            setTimeout(function () { $('introSplash').style.display = 'none'; }, 500);
+        });
+        document.querySelectorAll('.cm-btn').forEach(function (b) {
+            b.addEventListener('click', function () {
+                document.querySelectorAll('.cm-btn').forEach(function (x) { x.classList.remove('active'); });
+                b.classList.add('active');
+                CARD_MODE = b.dataset.mode;
+                try { localStorage.setItem('tarot_card_mode', CARD_MODE); } catch (e) {}
+            });
+        });
     }
 
     // ============================================================
@@ -1711,6 +1946,8 @@
 
     function init() {
         startStars();
+        try { CARD_MODE = localStorage.getItem('tarot_card_mode') || 'simple'; } catch (e) {}
+        document.querySelectorAll('.cm-btn').forEach(function (b) { b.classList.toggle('active', b.dataset.mode === CARD_MODE); });
         bind();
         fetch('/api/tarot/deck')
             .then(function (r) { return r.json(); })

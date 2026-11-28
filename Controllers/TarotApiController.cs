@@ -38,6 +38,7 @@ namespace MyPersonalWebsite.Controllers
 
             var spread = body.Spread ?? "凯尔特十字牌阵";
             var isDaily = body.IsDaily;
+            var question = body.Question ?? "";
 
             if (isDaily)
             {
@@ -67,11 +68,18 @@ namespace MyPersonalWebsite.Controllers
                 }
             }
 
-            var result = await _tarotService.InterpretAsync(body.Question ?? "", spread, body.Cards, body.Verdict);
+            // 相似提问检测（短时间内重复问同一问题会越来越不准确）
+            string? warning = null;
+            if (!isDaily)
+            {
+                warning = await _tarotService.GetSimilarQuestionWarningAsync(userId.Value, question);
+            }
+
+            var result = await _tarotService.InterpretAsync(question, spread, body.Cards, body.Verdict);
 
             if (result.Success && !string.IsNullOrWhiteSpace(result.Content))
             {
-                await _tarotService.SaveReadingAsync(userId.Value, body.Question ?? "", spread, body.Cards, result.Content, isDaily);
+                await _tarotService.SaveReadingAsync(userId.Value, question, spread, body.Cards, result.Content, isDaily);
 
                 // 非每日一签：若本次用完了额度，发一次通知 + 邮件
                 if (!isDaily)
@@ -92,6 +100,7 @@ namespace MyPersonalWebsite.Controllers
                 content = result.Content,
                 errorDetail = result.ErrorDetail,
                 cached = false,
+                warning = warning,
             });
         }
 

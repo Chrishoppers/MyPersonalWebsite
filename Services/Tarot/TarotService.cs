@@ -382,6 +382,23 @@ VALUES ({userId}, '{Esc(question)}', '{Esc(spread)}', '{Esc(cardsJson)}', '{Esc(
         return ParseQuotaList(json);
     }
 
+    /// <summary>检测最近 2 小时内是否有相同/类似提问，返回提示文案（无则 null）。</summary>
+    public async Task<string?> GetSimilarQuestionWarningAsync(int userId, string question)
+    {
+        if (string.IsNullOrWhiteSpace(question)) return null;
+        var since = DateTime.Now.AddHours(-2).ToString("yyyy-MM-dd HH:mm:ss");
+        var json = await _dataSync.QueryAsync($"SELECT Question FROM TarotReadings WHERE UserId = {userId} AND IsDaily = 0 AND CreatedAt >= '{since}' AND Question IS NOT NULL");
+        var questions = ParseQuestionList(json);
+        foreach (var q in questions)
+        {
+            if (AreSimilar(question, q))
+            {
+                return "⚠️ 你最近短时间内询问过相同或类似的问题。塔罗牌反映的是当下的心境，反复追问同一问题会越来越不准确，建议先静心沉淀，或换一个角度提问。";
+            }
+        }
+        return null;
+    }
+
     private static List<TarotHistoryItem> ParseHistory(string json)
     {
         var list = new List<TarotHistoryItem>();
@@ -431,6 +448,83 @@ VALUES ({userId}, '{Esc(question)}', '{Esc(spread)}', '{Esc(cardsJson)}', '{Esc(
         }
 
         return list;
+    }
+
+    private static List<string> ParseQuestionList(string json)
+    {
+        var list = new List<string>();
+        if (string.IsNullOrEmpty(json) || json == "{}") return list;
+        try
+        {
+            using var doc = JsonDocument.Parse(json);
+            var root = doc.RootElement;
+            if (!root.TryGetProperty("results", out var results) || results.GetArrayLength() == 0) return list;
+            if (!results[0].TryGetProperty("response", out var response)) return list;
+            if (!response.TryGetProperty("result", out var result)) return list;
+            if (!result.TryGetProperty("rows", out var rows)) return list;
+            if (!result.TryGetProperty("cols", out var cols)) return list;
+
+            var names = new string[cols.GetArrayLength()];
+            for (var i = 0; i < names.Length; i++)
+                names[i] = cols[i].GetProperty("name").GetString() ?? "";
+
+            var questionIdx = -1;
+            for (var i = 0; i < names.Length; i++)
+                if (names[i] == "Question") { questionIdx = i; break; }
+            if (questionIdx < 0) return list;
+
+            foreach (var row in rows.EnumerateArray())
+            {
+                if (row.ValueKind != JsonValueKind.Array || row.GetArrayLength() <= questionIdx) continue;
+                var cell = CellStr(row[questionIdx]);
+                if (!string.IsNullOrWhiteSpace(cell)) list.Add(cell);
+            }
+        }
+        catch { }
+        return list;
+    }
+
+    private static bool AreSimilar(string a, string b)
+    {
+        var na = Normalize(a);
+        var nb = Normalize(b);
+        if (na.Length == 0 || nb.Length == 0) return false;
+        if (na == nb) return true;
+        if (na.Length < 4 || nb.Length < 4) return false;
+        var dist = Levenshtein(na, nb);
+        var maxLen = Math.Max(na.Length, nb.Length);
+        return (1.0 - (double)dist / maxLen) >= 0.75;
+    }
+
+    private static string Normalize(string s)
+    {
+        if (string.IsNullOrEmpty(s)) return "";
+        var sb = new StringBuilder();
+        foreach (var ch in s)
+        {
+            if (char.IsLetterOrDigit(ch)) sb.Append(char.ToLowerInvariant(ch));
+        }
+        return sb.ToString();
+    }
+
+    private static int Levenshtein(string a, string b)
+    {
+        if (a.Length == 0) return b.Length;
+        if (b.Length == 0) return a.Length;
+        var prev = new int[b.Length + 1];
+        var curr = new int[b.Length + 1];
+        for (var j = 0; j <= b.Length; j++) prev[j] = j;
+        for (var i = 1; i <= a.Length; i++)
+        {
+            curr[0] = i;
+            for (var j = 1; j <= b.Length; j++)
+            {
+                var cost = a[i - 1] == b[j - 1] ? 0 : 1;
+                curr[j] = Math.Min(Math.Min(curr[j - 1] + 1, prev[j] + 1), prev[j - 1] + cost);
+            }
+            (prev, curr) = (curr, prev);
+        }
+        return prev[b.Length];
     }
 
     private static int ParseSingleInt(string json, int defaultValue)
