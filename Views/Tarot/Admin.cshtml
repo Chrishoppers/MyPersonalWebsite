@@ -51,6 +51,13 @@
     .ta-empty { text-align: center; color: rgba(255,255,255,0.3); padding: 1.5rem; font-size: 0.85rem; }
     .ta-back { display: inline-block; margin-bottom: 0.6rem; color: rgba(255,255,255,0.4); text-decoration: none; font-size: 0.8rem; }
     .ta-back:hover { color: #f4d07a; }
+    .ta-export { display: inline-block; padding: 0.45rem 1rem; font-size: 0.82rem; font-weight: 700; color: #1a1408; text-decoration: none; background: linear-gradient(135deg, #f4d07a, #d99a3d); border-radius: 10px; }
+    .ta-export:hover { filter: brightness(1.06); }
+
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: rgba(255,255,255,0.03); border-radius: 10px; }
+    ::-webkit-scrollbar-thumb { background: linear-gradient(180deg, rgba(244,208,122,0.4), rgba(139,92,246,0.4)); border-radius: 10px; }
+    ::-webkit-scrollbar-thumb:hover { background: linear-gradient(180deg, rgba(244,208,122,0.7), rgba(139,92,246,0.7)); }
 </style>
 
 <div class="tarot-admin">
@@ -66,9 +73,21 @@
     </section>
 
     <section class="ta-section">
-        <h2>📜 玩家测试记录</h2>
+        <h2>💰 Token 用量与金额统计</h2>
         <div style="margin-bottom:0.8rem;">
-            <input id="readingSearch" type="text" placeholder="🔍 按用户名筛选…" style="width:100%;max-width:320px;padding:0.55rem 0.9rem;color:#fff;font-family:inherit;font-size:0.85rem;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.12);border-radius:10px;outline:none;" />
+            <a class="ta-export" href="/api/tarot/admin/export-stats">📥 导出统计报表</a>
+        </div>
+        <div id="statsList"><div class="ta-empty">加载中…</div></div>
+    </section>
+
+    <section class="ta-section">
+        <h2>📜 玩家测试记录</h2>
+        <div style="margin-bottom:0.8rem;display:flex;gap:0.6rem;flex-wrap:wrap;align-items:center;">
+            <input id="readingSearch" type="text" placeholder="🔍 按用户名筛选…" style="width:100%;max-width:300px;padding:0.55rem 0.9rem;color:#fff;font-family:inherit;font-size:0.85rem;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.12);border-radius:10px;outline:none;" />
+            <select id="spreadFilter" style="padding:0.55rem 0.7rem;color:#fff;font-family:inherit;font-size:0.85rem;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.12);border-radius:10px;outline:none;">
+                <option value="">全部牌阵</option>
+            </select>
+            <a class="ta-export" href="/api/tarot/admin/export-readings">📥 导出记录</a>
         </div>
         <div id="readingsList"><div class="ta-empty">加载中…</div></div>
     </section>
@@ -170,26 +189,57 @@
 
     function filterReadings() {
         var kw = ($('readingSearch').value || '').trim().toLowerCase();
-        if (!kw) { renderReadings(ALL_READINGS); return; }
+        var sp = $('spreadFilter').value || '';
         var filtered = ALL_READINGS.filter(function (item) {
             var name = (item.username || ('用户' + item.userId) || '').toLowerCase();
             var q = (item.question || '').toLowerCase();
-            return name.indexOf(kw) >= 0 || q.indexOf(kw) >= 0;
+            var okKw = !kw || name.indexOf(kw) >= 0 || q.indexOf(kw) >= 0;
+            var okSp = !sp || (item.spread || '') === sp;
+            return okKw && okSp;
         });
         renderReadings(filtered);
     }
 
+    function populateSpreadOptions() {
+        var map = {};
+        ALL_READINGS.forEach(function (item) { if (item.spread) map[item.spread] = 1; });
+        var keys = Object.keys(map);
+        var sel = $('spreadFilter');
+        var cur = sel.value;
+        sel.innerHTML = '<option value="">全部牌阵</option>' + keys.map(function (k) { return '<option value="' + esc(k) + '">' + esc(k) + '</option>'; }).join('');
+        sel.value = cur;
+    }
+
     function loadReadings() {
-        fetch('/api/tarot/admin/readings?limit=300').then(function (r) { return r.json(); }).then(function (data) {
+        fetch('/api/tarot/admin/readings?limit=500').then(function (r) { return r.json(); }).then(function (data) {
             if (!data || !data.success) { $('readingsList').innerHTML = '<div class="ta-empty">加载失败</div>'; return; }
             ALL_READINGS = data.list || [];
+            populateSpreadOptions();
             renderReadings(ALL_READINGS);
         }).catch(function () { $('readingsList').innerHTML = '<div class="ta-empty">加载失败</div>'; });
     }
 
+    function loadStats() {
+        fetch('/api/tarot/admin/stats').then(function (r) { return r.json(); }).then(function (data) {
+            var el = $('statsList');
+            if (!data || !data.success || !data.list || !data.list.length) { el.innerHTML = '<div class="ta-empty">暂无数据</div>'; return; }
+            var html = '<table class="ta-table"><thead><tr><th>用户名</th><th>调用次数</th><th>输入Tokens</th><th>输出Tokens</th><th>总Tokens</th><th>估算金额(元)</th></tr></thead><tbody>';
+            var totalTokens = 0, totalCost = 0;
+            data.list.forEach(function (s) {
+                totalTokens += s.totalTokens; totalCost += s.cost;
+                html += '<tr><td>' + esc(s.username) + '</td><td>' + s.callCount + '</td><td>' + s.promptTokens + '</td><td>' + s.completionTokens + '</td><td>' + s.totalTokens + '</td><td style="color:#f4d07a;">¥' + s.cost.toFixed(4) + '</td></tr>';
+            });
+            html += '<tr><td style="color:#f4d07a;font-weight:700;">合计</td><td style="color:#f4d07a;font-weight:700;">—</td><td style="color:#f4d07a;">—</td><td style="color:#f4d07a;">—</td><td style="color:#f4d07a;font-weight:700;">' + totalTokens + '</td><td style="color:#f4d07a;font-weight:700;">¥' + totalCost.toFixed(4) + '</td></tr>';
+            html += '</tbody></table>';
+            el.innerHTML = html;
+        }).catch(function () { $('statsList').innerHTML = '<div class="ta-empty">加载失败</div>'; });
+    }
+
     $('readingSearch').addEventListener('input', filterReadings);
+    $('spreadFilter').addEventListener('change', filterReadings);
 
     loadQuotas();
+    loadStats();
     loadReadings();
 })();
 </script>

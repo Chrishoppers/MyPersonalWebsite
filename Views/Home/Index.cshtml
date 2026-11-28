@@ -83,6 +83,32 @@
     .card-dark .link { color: #8B5CF6; text-decoration: none; font-weight: 500; }
     .card-dark .link:hover { color: #A78BFA; }
     .empty-state { color: rgba(255,255,255,0.15); text-align: center; padding: 2rem; }
+
+    /* 塔罗牌占卜入口 */
+    .tarot-entry {
+        position: relative; display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap;
+        margin-bottom: 2rem; padding: 2rem; border-radius: 24px; overflow: hidden; text-decoration: none;
+        background: radial-gradient(800px 400px at 80% -20%, rgba(139,92,246,0.35), transparent 60%),
+                    radial-gradient(600px 300px at 10% 120%, rgba(236,72,153,0.2), transparent 60%),
+                    rgba(255,255,255,0.02);
+        border: 1px solid rgba(244,208,122,0.25);
+        box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .tarot-entry:hover { transform: translateY(-4px); box-shadow: 0 26px 70px rgba(0,0,0,0.45), 0 0 30px rgba(244,208,122,0.18); }
+    .tarot-entry::before {
+        content: ''; position: absolute; inset: 0; pointer-events: none;
+        background: linear-gradient(120deg, rgba(244,208,122,0.14), rgba(139,92,246,0.1), rgba(236,72,153,0.1));
+        background-size: 300% 300%; animation: tarotBorder 6s linear infinite;
+    }
+    @@keyframes tarotBorder { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+    .tarot-entry-icon { font-size: 3.4rem; position: relative; animation: tarotFloat 2.6s ease-in-out infinite; filter: drop-shadow(0 0 20px rgba(244,208,122,0.6)); }
+    @@keyframes tarotFloat { 0%,100% { transform: translateY(0) rotate(-5deg); } 50% { transform: translateY(-10px) rotate(5deg); } }
+    .tarot-entry-body { flex: 1; min-width: 240px; position: relative; }
+    .tarot-entry-title { font-size: 1.5rem; font-weight: 800; background: linear-gradient(135deg, #f4d07a, #EC4899, #8B5CF6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .tarot-entry-desc { color: rgba(255,255,255,0.55); font-size: 0.9rem; margin: 0.3rem 0 0.9rem; line-height: 1.7; }
+    .tarot-entry-btn { display: inline-block; padding: 0.7rem 2rem; border-radius: 50px; font-weight: 700; color: #1a1408; background: linear-gradient(135deg, #ffe3a3, #f4d07a, #d99a3d); box-shadow: 0 8px 28px rgba(244,208,122,0.4), inset 0 1px 0 rgba(255,255,255,0.6); transition: all 0.25s ease; }
+    .tarot-entry:hover .tarot-entry-btn { box-shadow: 0 14px 40px rgba(244,208,122,0.55); }
 </style>
 
 <div class="container" style="padding-top:1rem;">
@@ -94,6 +120,16 @@
         <p class="hero-desc">欢迎来到我的个人空间，这里记录了我的学习、思考和作品。</p>
         <a href="/Home/About" class="btn-glow">了解更多 →</a>
     </div>
+
+    <!-- ===== AI 塔罗牌占卜入口 ===== -->
+    <a href="/Tarot" class="tarot-entry">
+        <div class="tarot-entry-icon">🔮</div>
+        <div class="tarot-entry-body">
+            <div class="tarot-entry-title">✨ AI 塔罗牌占卜 · 深度联想解读</div>
+            <div class="tarot-entry-desc">写下你的问题，AI 结合伟特牌义、正逆位与经典牌阵，为你生成专业、温暖、有洞察力的专属解读。13 种牌阵 · 高级动画 · 每日运势 · 追问补充。</div>
+            <span class="tarot-entry-btn">立即占卜 →</span>
+        </div>
+    </a>
 
     <!-- ===== 技术栈 ===== -->
     <div style="margin-bottom:2rem;">

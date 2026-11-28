@@ -384,6 +384,25 @@
     .rv-block.show { opacity: 1; transform: none; }
     .reading-actions { text-align: center; margin-top: 1.4rem; }
 
+    /* 追问补充 */
+    .followup-section { margin-top: 1.4rem; padding-top: 1.2rem; border-top: 1px dashed rgba(255,255,255,0.1); }
+    .followup-hint { text-align: center; color: rgba(255,255,255,0.5); font-size: 0.8rem; margin-bottom: 0.7rem; }
+    .followup-hint b { color: var(--gold); }
+    .followup-chips { display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center; margin-bottom: 0.8rem; }
+    .followup-chip { padding: 0.35rem 0.8rem; font-size: 0.76rem; font-weight: 600; cursor: pointer; font-family: inherit; color: rgba(255,255,255,0.65); background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 50px; transition: all 0.18s ease; }
+    .followup-chip:hover { color: #fff; border-color: rgba(244,208,122,0.45); background: rgba(244,208,122,0.08); transform: translateY(-2px); }
+    .followup-input-row { display: flex; gap: 0.6rem; align-items: stretch; }
+    .followup-input { flex: 1; min-height: 60px; resize: vertical; padding: 0.7rem 0.9rem; font-size: 0.9rem; font-family: inherit; color: #fff; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.12); border-radius: 12px; line-height: 1.6; }
+    .followup-input:focus { outline: none; border-color: rgba(244,208,122,0.5); box-shadow: 0 0 0 4px rgba(244,208,122,0.12); }
+    .followup-input::placeholder { color: rgba(255,255,255,0.25); }
+    .followup-box { margin: 1rem 0 0; padding: 0.9rem 1rem; border-radius: 14px; border: 1px solid rgba(139,92,246,0.3); background: rgba(139,92,246,0.06); }
+    .followup-box .fu-user { color: rgba(255,255,255,0.75); font-size: 0.82rem; margin-bottom: 0.5rem; padding-bottom: 0.5rem; border-bottom: 1px dashed rgba(255,255,255,0.08); }
+    .followup-box .fu-user b { color: var(--gold); }
+    .followup-box .fu-ai { color: rgba(255,255,255,0.82); line-height: 1.85; font-size: 0.9rem; }
+    .followup-box .fu-ai h2 { color: var(--gold); font-size: 1rem; margin: 0.7rem 0 0.35rem; }
+    .followup-box .fu-ai h3 { color: var(--violet); font-size: 0.9rem; margin: 0.5rem 0 0.25rem; }
+    .followup-box .fu-ai strong { color: #f4d07a; }
+
     .float-toast {
         position: fixed; left: 50%; top: 22%; transform: translateX(-50%); z-index: 2000; pointer-events: none;
         color: var(--gold); font-size: 1.4rem; font-weight: 800; letter-spacing: 2px; text-shadow: 0 0 24px rgba(244,208,122,0.8);
@@ -705,6 +724,14 @@
             <div class="panel reading-panel">
                 <div class="reading-status" id="readingStatus"><span class="shimmer">✨ AI 正在与牌灵沟通，为你解读中…</span></div>
                 <div class="reading-body" id="readingBody"></div>
+                <div class="followup-section" id="followupSection" style="display:none;">
+                    <div class="followup-hint" id="followupHint"></div>
+                    <div class="followup-chips" id="followupChips"></div>
+                    <div class="followup-input-row">
+                        <textarea class="followup-input" id="followupInput" maxlength="300" placeholder="补充说明 / 追问…（每次消耗 1 次占卜次数）"></textarea>
+                        <button class="chip-btn gold" id="followupSendBtn">💬 发送追问</button>
+                    </div>
+                </div>
                 <div class="reading-actions">
                     <button class="big-btn" id="restartBtn">🔄 再来一次</button>
                 </div>
@@ -928,6 +955,13 @@
     var reading = false;
     var STATUS = null;
     var CARD_MODE = 'simple'; // 'simple'（系统简易版）| 'original'（原版图片）
+    var FOLLOWUP_CTX = null;
+    var FOLLOWUP_SUGGESTIONS = [
+        '能针对我的情况给出更具体的行动建议吗？',
+        '这个结果里我需要特别注意什么？',
+        '能结合牌阵整体再深入解读一下吗？',
+        '如果我想改变这个走向，应该怎么做？'
+    ];
 
     function $(id) { return document.getElementById(id); }
 
@@ -1617,6 +1651,15 @@
             })
         };
 
+        FOLLOWUP_CTX = {
+            question: q,
+            spread: spread.name,
+            cards: payload.cards,
+            content: ''
+        };
+        $('followupSection').style.display = 'none';
+        $('followupInput').value = '';
+
         fetch('/api/tarot/interpret', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -1635,6 +1678,8 @@
                 } else {
                     renderReading(data.content, data.fallback, data.errorDetail, data.warning);
                 }
+                if (FOLLOWUP_CTX) FOLLOWUP_CTX.content = data.content;
+                showFollowupSection();
                 // 刷新状态（每日一签/次数）
                 refreshStatus();
             } else if (data && data.message) {
@@ -1671,6 +1716,86 @@
                 (function (el, delay) { setTimeout(function () { el.classList.add('show'); }, delay); })(blocks[j], j * 90);
             }
         });
+    }
+
+    function showFollowupSection() {
+        if (spread.daily || !FOLLOWUP_CTX) {
+            $('followupSection').style.display = 'none';
+            return;
+        }
+        $('followupSection').style.display = 'block';
+        updateFollowupHint();
+        renderFollowupChips();
+    }
+
+    function updateFollowupHint() {
+        var remaining = (STATUS && typeof STATUS.remaining === 'number') ? STATUS.remaining : '—';
+        $('followupHint').innerHTML = '💡 追问 / 补充说明会额外消耗 <b>1 次</b> 占卜次数（今日剩余 <b>' + remaining + '</b> 次）';
+    }
+
+    function renderFollowupChips() {
+        var el = $('followupChips');
+        el.innerHTML = FOLLOWUP_SUGGESTIONS.map(function (s, i) {
+            return '<button class="followup-chip" data-idx="' + i + '">💡 ' + escapeHtml(s) + '</button>';
+        }).join('');
+        el.querySelectorAll('.followup-chip').forEach(function (c) {
+            c.addEventListener('click', function () {
+                $('followupInput').value = FOLLOWUP_SUGGESTIONS[parseInt(c.dataset.idx, 10)];
+                $('followupInput').focus();
+            });
+        });
+    }
+
+    function sendFollowup() {
+        var msg = ($('followupInput').value || '').trim();
+        if (!msg) { toast('请输入追问或补充说明'); return; }
+        if (!FOLLOWUP_CTX) return;
+        if (STATUS && typeof STATUS.remaining === 'number' && STATUS.remaining <= 0) {
+            toast('今日占卜次数已用完，无法追问');
+            return;
+        }
+        var btn = $('followupSendBtn');
+        btn.disabled = true; btn.textContent = '⏳ 思考中…';
+
+        var payload = {
+            originalQuestion: FOLLOWUP_CTX.question,
+            spread: FOLLOWUP_CTX.spread,
+            previousContent: FOLLOWUP_CTX.content,
+            message: msg,
+            cards: FOLLOWUP_CTX.cards
+        };
+
+        fetch('/api/tarot/followup', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+            btn.disabled = false; btn.textContent = '💬 发送追问';
+            if (data && data.success && data.content) {
+                appendFollowup(msg, data.content);
+                $('followupInput').value = '';
+                refreshStatus();
+            } else if (data && data.message) {
+                toast(data.message);
+            } else {
+                toast('追问失败，请稍后再试');
+            }
+        })
+        .catch(function () { btn.disabled = false; btn.textContent = '💬 发送追问'; toast('网络异常'); });
+    }
+
+    function appendFollowup(userMsg, aiContent) {
+        var body = $('readingBody');
+        var box = document.createElement('div');
+        box.className = 'followup-box';
+        box.innerHTML = '<div class="fu-user">💬 <b>你的追问：</b>' + escapeHtml(userMsg) + '</div>' +
+            '<div class="fu-ai">' + mdToHtml(aiContent) + '</div>';
+        body.appendChild(box);
+        // 累积上下文，支持连续多轮追问
+        FOLLOWUP_CTX.content = (FOLLOWUP_CTX.content ? FOLLOWUP_CTX.content + '\n\n---\n\n' : '') +
+            '【追问】' + userMsg + '\n\n' + aiContent;
+        box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
     function inlineMd(s) {
@@ -1931,6 +2056,10 @@
                 CARD_MODE = b.dataset.mode;
                 try { localStorage.setItem('tarot_card_mode', CARD_MODE); } catch (e) {}
             });
+        });
+        $('followupSendBtn').addEventListener('click', sendFollowup);
+        $('followupInput').addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendFollowup(); }
         });
     }
 

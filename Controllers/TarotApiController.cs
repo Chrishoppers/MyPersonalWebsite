@@ -79,7 +79,7 @@ namespace MyPersonalWebsite.Controllers
 
             if (result.Success && !string.IsNullOrWhiteSpace(result.Content))
             {
-                await _tarotService.SaveReadingAsync(userId.Value, question, spread, body.Cards, result.Content, isDaily);
+                await _tarotService.SaveReadingAsync(userId.Value, question, spread, body.Cards, result.Content, isDaily, result.PromptTokens, result.CompletionTokens);
 
                 // 非每日一签：若本次用完了额度，发一次通知 + 邮件
                 if (!isDaily)
@@ -102,6 +102,48 @@ namespace MyPersonalWebsite.Controllers
                 cached = false,
                 warning = warning,
             });
+        }
+
+        /// <summary>POST /api/tarot/followup —— 追问/补充说明（消耗 1 次占卜次数）。</summary>
+        [HttpPost("followup")]
+        public async Task<IActionResult> Followup([FromBody] FollowupRequest body)
+        {
+            if (body == null || string.IsNullOrWhiteSpace(body.Message) || body.Cards == null || body.Cards.Count == 0)
+            {
+                return BadRequest(new { success = false, message = "请输入追问内容" });
+            }
+
+            var userId = HttpContext.Session.GetInt32("UserId");
+            if (!userId.HasValue)
+            {
+                return Ok(new { success = false, message = "请先登录" });
+            }
+
+            // 实时额度检测（追问同样消耗 1 次）
+            var limit = await _tarotService.GetDailyLimitAsync(userId.Value);
+            var used = await _tarotService.GetTodayCountAsync(userId.Value);
+            if (used >= limit)
+            {
+                return Ok(new { success = false, message = $"今日塔罗测试次数已用完（{used}/{limit}），追问也需消耗次数，请明天再来。" });
+            }
+
+            var spread = body.Spread ?? "凯尔特十字牌阵";
+            var result = await _tarotService.InterpretFollowupAsync(
+                body.OriginalQuestion ?? "", spread, body.PreviousContent ?? "", body.Cards, body.Message.Trim());
+
+            if (result.Success && !string.IsNullOrWhiteSpace(result.Content))
+            {
+                await _tarotService.SaveReadingAsync(userId.Value, body.Message.Trim(), spread + " · 追问", body.Cards, result.Content, false, result.PromptTokens, result.CompletionTokens);
+
+                var usedAfter = await _tarotService.GetTodayCountAsync(userId.Value);
+                var limitAfter = await _tarotService.GetDailyLimitAsync(userId.Value);
+                if (usedAfter >= limitAfter)
+                {
+                    await _tarotService.NotifyQuotaExhaustedAsync(userId.Value, limitAfter);
+                }
+            }
+
+            return Ok(new { success = result.Success, content = result.Content, fallback = result.Fallback });
         }
 
         /// <summary>GET /api/tarot/status —— 当前用户配额、今日已用次数、今日每日一签结果。</summary>
@@ -180,6 +222,71 @@ namespace MyPersonalWebsite.Controllers
             await _tarotService.SetDailyLimitAndNotifyAsync(body.UserId, limit);
             return Ok(new { success = true, message = $"已将该用户每日次数调整为 {limit} 次，并已通知。" });
         }
+
+        /// <summary>GET /api/tarot/admin/stats —— 按用户统计 token 用量与估算金额。</summary>
+        [HttpGet("admin/stats")]
+        public async Task<IActionResult> AdminStats()
+        {
+            if ((HttpContext.Session.GetInt32("IsAdmin") ?? 0) != 1)
+                return Ok(new { success = false, message = "无权限" });
+
+            var list = await _tarotService.GetStatsAsync();
+            return Ok(new { success = true, list });
+        }
+
+        /// <summary>GET /api/tarot/admin/export-readings —— 导出占卜记录 CSV。</summary>
+        [HttpGet("admin/export-readings")]
+        public async Task<IActionResult> ExportReadings()
+        {
+            if ((HttpContext.Session.GetInt32("IsAdmin") ?? 0) != 1)
+                return Content("无权限");
+
+            var list = await _tarotService.GetAllReadingsAsync(2000);
+            var sb = new System.Text.StringBuilder();
+            sb.AppendLine("ID,用户名,用户ID,问题,牌阵,抽牌,解读,时间,输入Tokens,输出Tokens,是否每日一签");
+            foreach (var r in list)
+            {
+                var cards = "";
+                try
+                {
+                    using var doc = System.Text.Json.JsonDocument.Parse(r.CardsJson);
+                    cards = string.Join("; ", doc.RootElement.EnumerateArray().Select(x =>
+                        $"{x.GetProperty("positionName").GetString()}·{x.GetProperty("name").GetString()}{(x.GetProperty("reversed").GetBoolean() ? "(逆)" : "")}"));
+                }
+                catch { cards = r.CardsJson; }
+                var row = new[] { r.Id.ToString(), CsvEscape(r.Username), r.UserId.ToString(), CsvEscape(r.Question), CsvEscape(r.Spread), CsvEscape(cards), CsvEscape(r.ResultJson), CsvEscape(r.CreatedAt), r.PromptTokens.ToString(), r.CompletionTokens.ToString(), r.IsDaily ? "是" : "否" };
+                sb.AppendLine(string.Join(",", row));
+            }
+            var bytes = System.Text.Encoding.UTF8.GetPreamble().Concat(System.Text.Encoding.UTF8.GetBytes(sb.ToString())).ToArray();
+            return File(bytes, "text/csv", $"tarot_readings_{DateTime.Now:yyyyMMdd_HHmmss}.csv");
+        }
+
+        /// <summary>GET /api/tarot/admin/export-stats —— 导出成本统计 CSV。</summary>
+        [HttpGet("admin/export-stats")]
+        public async Task<IActionResult> ExportStats()
+        {
+            if ((HttpContext.Session.GetInt32("IsAdmin") ?? 0) != 1)
+                return Content("无权限");
+
+            var list = await _tarotService.GetStatsAsync();
+            var sb = new System.Text.StringBuilder();
+            sb.AppendLine("用户名,用户ID,调用次数,输入Tokens,输出Tokens,总Tokens,估算金额(元)");
+            foreach (var s in list)
+            {
+                var row = new[] { CsvEscape(s.Username), s.UserId.ToString(), s.CallCount.ToString(), s.PromptTokens.ToString(), s.CompletionTokens.ToString(), s.TotalTokens.ToString(), s.Cost.ToString("F4") };
+                sb.AppendLine(string.Join(",", row));
+            }
+            var bytes = System.Text.Encoding.UTF8.GetPreamble().Concat(System.Text.Encoding.UTF8.GetBytes(sb.ToString())).ToArray();
+            return File(bytes, "text/csv", $"tarot_stats_{DateTime.Now:yyyyMMdd_HHmmss}.csv");
+        }
+
+        private static string CsvEscape(string s)
+        {
+            s = s ?? "";
+            if (s.Contains(',') || s.Contains('"') || s.Contains('\n') || s.Contains('\r'))
+                return "\"" + s.Replace("\"", "\"\"") + "\"";
+            return s;
+        }
     }
 
     public sealed class InterpretRequest
@@ -190,6 +297,15 @@ namespace MyPersonalWebsite.Controllers
         public string? Verdict { get; set; }
         /// <summary>是否为每日一签。</summary>
         public bool IsDaily { get; set; }
+        public List<DrawnCardDto>? Cards { get; set; }
+    }
+
+    public sealed class FollowupRequest
+    {
+        public string? OriginalQuestion { get; set; }
+        public string? Spread { get; set; }
+        public string? PreviousContent { get; set; }
+        public string? Message { get; set; }
         public List<DrawnCardDto>? Cards { get; set; }
     }
 

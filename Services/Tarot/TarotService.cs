@@ -25,6 +25,10 @@ public sealed class TarotReadingResult
     public string Content { get; init; } = "";
     /// <summary>AI 调用失败时的错误详情（便于排查），成功时为空。</summary>
     public string ErrorDetail { get; init; } = "";
+    /// <summary>本次调用输入 tokens。</summary>
+    public int PromptTokens { get; init; }
+    /// <summary>本次调用输出 tokens。</summary>
+    public int CompletionTokens { get; init; }
 }
 
 /// <summary>一条历史占卜记录。</summary>
@@ -41,6 +45,20 @@ public sealed class TarotHistoryItem
     public string ResultJson { get; set; } = "";
     public string CreatedAt { get; set; } = "";
     public bool IsDaily { get; set; }
+    public int PromptTokens { get; set; }
+    public int CompletionTokens { get; set; }
+}
+
+/// <summary>成本统计项（管理员）。</summary>
+public sealed class TarotStatItem
+{
+    public string Username { get; set; } = "";
+    public int UserId { get; set; }
+    public int CallCount { get; set; }
+    public long TotalTokens { get; set; }
+    public long PromptTokens { get; set; }
+    public long CompletionTokens { get; set; }
+    public double Cost { get; set; }
 }
 
 /// <summary>用户每日塔罗配额（管理页使用）。</summary>
@@ -92,11 +110,11 @@ public sealed class TarotService
         string? errorDetail = null;
         try
         {
-            var (content, err) = await CallDeepSeekAsync(system, user);
-            errorDetail = err;
-            if (!string.IsNullOrWhiteSpace(content))
+            var r = await CallDeepSeekAsync(system, user);
+            errorDetail = r.Error;
+            if (!string.IsNullOrWhiteSpace(r.Content))
             {
-                return new TarotReadingResult { Success = true, Fallback = false, Content = content.Trim() };
+                return new TarotReadingResult { Success = true, Fallback = false, Content = r.Content.Trim(), PromptTokens = r.PromptTokens, CompletionTokens = r.CompletionTokens };
             }
         }
         catch (Exception ex)
@@ -110,6 +128,56 @@ public sealed class TarotService
             Success = true,
             Fallback = true,
             Content = BuildFallback(question, cards),
+            ErrorDetail = errorDetail ?? "",
+        };
+    }
+
+    /// <summary>针对已有解读进行追问/补充说明，生成续接回复。</summary>
+    public async Task<TarotReadingResult> InterpretFollowupAsync(
+        string originalQuestion, string spread, string previousContent, List<DrawnCardDto> cards, string message)
+    {
+        var system = BuildSystemPrompt();
+
+        var sb = new StringBuilder();
+        sb.AppendLine("以下是之前的一次塔罗占卜：");
+        sb.AppendLine($"原提问：{originalQuestion}");
+        sb.AppendLine($"牌阵：{spread}");
+        sb.AppendLine("抽到的牌：");
+        foreach (var d in cards)
+        {
+            var card = TarotDeck.GetById(d.CardId);
+            if (card == null) continue;
+            var o = d.Reversed ? "逆位" : "正位";
+            sb.AppendLine($"- {d.PositionName}：{card.Name}【{o}】");
+        }
+        sb.AppendLine();
+        sb.AppendLine($"之前的解读：{previousContent}");
+        sb.AppendLine();
+        sb.AppendLine($"用户的追问 / 补充说明：{message}");
+        sb.AppendLine();
+        sb.AppendLine("请针对这次追问或补充，结合原牌阵与牌面，给出有针对性的补充解读与答复（Markdown 格式，温暖、清晰）。");
+
+        string? errorDetail = null;
+        try
+        {
+            var r = await CallDeepSeekAsync(system, sb.ToString());
+            errorDetail = r.Error;
+            if (!string.IsNullOrWhiteSpace(r.Content))
+            {
+                return new TarotReadingResult { Success = true, Fallback = false, Content = r.Content.Trim(), PromptTokens = r.PromptTokens, CompletionTokens = r.CompletionTokens };
+            }
+        }
+        catch (Exception ex)
+        {
+            errorDetail = ex.Message;
+            _logger.LogWarning(ex, "塔罗追问解读失败");
+        }
+
+        return new TarotReadingResult
+        {
+            Success = true,
+            Fallback = true,
+            Content = "抱歉，追问解读暂时无法完成，请稍后再试。",
             ErrorDetail = errorDetail ?? "",
         };
     }
@@ -155,7 +223,15 @@ public sealed class TarotService
         return sb.ToString();
     }
 
-    private async Task<(string content, string? error)> CallDeepSeekAsync(string system, string user)
+    private sealed class DeepSeekCallResult
+    {
+        public string Content = "";
+        public string? Error;
+        public int PromptTokens;
+        public int CompletionTokens;
+    }
+
+    private async Task<DeepSeekCallResult> CallDeepSeekAsync(string system, string user)
     {
         var apiKey = Environment.GetEnvironmentVariable("DEEPSEEK_API_KEY") ?? _config["DeepSeek:ApiKey"];
         var apiUrl = _config["DeepSeek:ApiUrl"] ?? "https://api.deepseek.com/chat/completions";
@@ -164,7 +240,7 @@ public sealed class TarotService
         if (string.IsNullOrEmpty(apiKey))
         {
             _logger.LogWarning("DeepSeek API Key 未配置");
-            return ("", "DeepSeek API Key 未配置");
+            return new DeepSeekCallResult { Content = "", Error = "DeepSeek API Key 未配置" };
         }
 
         var payload = new
@@ -198,7 +274,7 @@ public sealed class TarotService
             if (!response.IsSuccessStatusCode)
             {
                 _logger.LogWarning($"DeepSeek 解读失败 ({response.StatusCode}): {body}");
-                return ("", $"HTTP {(int)response.StatusCode}: {body}");
+                return new DeepSeekCallResult { Content = "", Error = $"HTTP {(int)response.StatusCode}: {body}" };
             }
 
             using var doc = JsonDocument.Parse(body);
@@ -209,17 +285,23 @@ public sealed class TarotService
                                .GetProperty("message")
                                .GetProperty("content")
                                .GetString() ?? "";
-                return (content, null);
+                int prompt = 0, completion = 0;
+                if (root.TryGetProperty("usage", out var usage))
+                {
+                    if (usage.TryGetProperty("prompt_tokens", out var pt) && pt.ValueKind == JsonValueKind.Number) prompt = pt.GetInt32();
+                    if (usage.TryGetProperty("completion_tokens", out var ct) && ct.ValueKind == JsonValueKind.Number) completion = ct.GetInt32();
+                }
+                return new DeepSeekCallResult { Content = content, PromptTokens = prompt, CompletionTokens = completion };
             }
             catch
             {
-                return ("", "响应格式异常: " + body);
+                return new DeepSeekCallResult { Content = "", Error = "响应格式异常: " + body };
             }
         }
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "DeepSeek 请求异常");
-            return ("", ex.Message);
+            return new DeepSeekCallResult { Content = "", Error = ex.Message };
         }
     }
 
@@ -256,7 +338,7 @@ public sealed class TarotService
     // 占卜历史
     // ============================================================
 
-    public async Task SaveReadingAsync(int userId, string question, string spread, List<DrawnCardDto> cards, string resultContent, bool isDaily = false)
+    public async Task SaveReadingAsync(int userId, string question, string spread, List<DrawnCardDto> cards, string resultContent, bool isDaily = false, int promptTokens = 0, int completionTokens = 0)
     {
         try
         {
@@ -276,8 +358,8 @@ public sealed class TarotService
             }).ToList();
 
             var cardsJson = JsonSerializer.Serialize(cardsInfo);
-            var sql = $@"INSERT INTO TarotReadings (UserId, Question, Spread, CardsJson, ResultJson, CreatedAt, IsDaily)
-VALUES ({userId}, '{Esc(question)}', '{Esc(spread)}', '{Esc(cardsJson)}', '{Esc(resultContent)}', '{DateTime.Now:yyyy-MM-dd HH:mm:ss}', {(isDaily ? 1 : 0)})";
+            var sql = $@"INSERT INTO TarotReadings (UserId, Question, Spread, CardsJson, ResultJson, CreatedAt, IsDaily, PromptTokens, CompletionTokens)
+VALUES ({userId}, '{Esc(question)}', '{Esc(spread)}', '{Esc(cardsJson)}', '{Esc(resultContent)}', '{DateTime.Now:yyyy-MM-dd HH:mm:ss}', {(isDaily ? 1 : 0)}, {promptTokens}, {completionTokens})";
             await _dataSync.ExecuteSqlAsync(sql);
         }
         catch (Exception ex)
@@ -376,6 +458,32 @@ VALUES ({userId}, '{Esc(question)}', '{Esc(spread)}', '{Esc(cardsJson)}', '{Esc(
         return ParseHistory(json);
     }
 
+    /// <summary>成本统计（按用户汇总 token 用量与估算金额）。</summary>
+    public async Task<List<TarotStatItem>> GetStatsAsync()
+    {
+        var json = await _dataSync.QueryAsync(@"
+SELECT t.UserId, COALESCE(u.Username, '未知') AS Username,
+       COUNT(*) AS CallCount,
+       COALESCE(SUM(t.PromptTokens), 0) AS PromptTokens,
+       COALESCE(SUM(t.CompletionTokens), 0) AS CompletionTokens,
+       COALESCE(SUM(t.PromptTokens + t.CompletionTokens), 0) AS TotalTokens
+FROM TarotReadings t LEFT JOIN Users u ON u.Id = t.UserId
+GROUP BY t.UserId, u.Username ORDER BY CallCount DESC");
+        var list = ParseStatList(json);
+        foreach (var item in list)
+        {
+            item.Cost = CalculateCost(item.PromptTokens, item.CompletionTokens);
+        }
+        return list;
+    }
+
+    private double CalculateCost(long promptTokens, long completionTokens)
+    {
+        var inputPrice = double.TryParse(_config["DeepSeek:InputPricePerMillion"] ?? "2.0", out var ip) ? ip : 2.0;
+        var outputPrice = double.TryParse(_config["DeepSeek:OutputPricePerMillion"] ?? "8.0", out var op) ? op : 8.0;
+        return promptTokens / 1_000_000.0 * inputPrice + completionTokens / 1_000_000.0 * outputPrice;
+    }
+
     public async Task<List<TarotQuotaItem>> GetAllQuotasAsync()
     {
         var json = await _dataSync.QueryAsync("SELECT Id, Username, TarotDailyLimit FROM Users WHERE IsDeleted = 0 ORDER BY Id ASC");
@@ -437,6 +545,8 @@ VALUES ({userId}, '{Esc(question)}', '{Esc(spread)}', '{Esc(cardsJson)}', '{Esc(
                         case "ResultJson": item.ResultJson = cell; break;
                         case "CreatedAt": item.CreatedAt = cell; break;
                         case "IsDaily": item.IsDaily = cell == "1" || cell == "true"; break;
+                        case "PromptTokens": item.PromptTokens = int.TryParse(cell, out var pt) ? pt : 0; break;
+                        case "CompletionTokens": item.CompletionTokens = int.TryParse(cell, out var ct) ? ct : 0; break;
                     }
                 }
                 list.Add(item);
@@ -554,8 +664,50 @@ VALUES ({userId}, '{Esc(question)}', '{Esc(spread)}', '{Esc(cardsJson)}', '{Esc(
         return defaultValue;
     }
 
-    private static List<TarotQuotaItem> ParseQuotaList(string json)
+    private static List<TarotStatItem> ParseStatList(string json)
     {
+        var list = new List<TarotStatItem>();
+        if (string.IsNullOrEmpty(json) || json == "{}") return list;
+        try
+        {
+            using var doc = JsonDocument.Parse(json);
+            var root = doc.RootElement;
+            if (!root.TryGetProperty("results", out var results) || results.GetArrayLength() == 0) return list;
+            if (!results[0].TryGetProperty("response", out var response)) return list;
+            if (!response.TryGetProperty("result", out var result)) return list;
+            if (!result.TryGetProperty("rows", out var rows)) return list;
+            if (!result.TryGetProperty("cols", out var cols)) return list;
+
+            var names = new string[cols.GetArrayLength()];
+            for (var i = 0; i < names.Length; i++)
+                names[i] = cols[i].GetProperty("name").GetString() ?? "";
+
+            foreach (var row in rows.EnumerateArray())
+            {
+                if (row.ValueKind != JsonValueKind.Array) continue;
+                var item = new TarotStatItem();
+                var len = Math.Min(names.Length, row.GetArrayLength());
+                for (var c = 0; c < len; c++)
+                {
+                    var cell = CellStr(row[c]);
+                    switch (names[c])
+                    {
+                        case "UserId": item.UserId = int.TryParse(cell, out var uid) ? uid : 0; break;
+                        case "Username": item.Username = cell; break;
+                        case "CallCount": item.CallCount = int.TryParse(cell, out var cc) ? cc : 0; break;
+                        case "PromptTokens": item.PromptTokens = long.TryParse(cell, out var pt) ? pt : 0; break;
+                        case "CompletionTokens": item.CompletionTokens = long.TryParse(cell, out var ct) ? ct : 0; break;
+                        case "TotalTokens": item.TotalTokens = long.TryParse(cell, out var tt) ? tt : 0; break;
+                    }
+                }
+                list.Add(item);
+            }
+        }
+        catch { }
+        return list;
+    }
+
+    private static List<TarotQuotaItem> ParseQuotaList(string json)    {
         var list = new List<TarotQuotaItem>();
         if (string.IsNullOrEmpty(json) || json == "{}") return list;
 
