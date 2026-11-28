@@ -4,9 +4,6 @@
 }
 
 <style>
-    /* ============================================================
-       塔罗牌占卜 —— 全屏神秘特效 + 经典牌阵 + AI 解读
-       ============================================================ */
     :root {
         --gold: #f4d07a;
         --gold-dim: #b8914a;
@@ -15,7 +12,7 @@
         --ink: #07060f;
     }
 
-    .tarot-page { position: relative; min-height: 100vh; overflow: hidden; }
+    .tarot-page { position: relative; min-height: 100vh; overflow-x: hidden; }
 
     /* ---- 背景：星云 + 星星画布 ---- */
     .tarot-bg { position: fixed; inset: 0; z-index: -2; background:
@@ -34,7 +31,7 @@
 
     /* ---- 主容器 ---- */
     .tarot-wrap { position: relative; max-width: 1180px; margin: 0 auto; padding: 0.6rem 1.2rem 3rem; z-index: 1; }
-    .tarot-head { text-align: center; padding: 1rem 0 0.4rem; }
+    .tarot-head { text-align: center; padding: 1rem 0 0.4rem; position: relative; }
     .tarot-head h1 {
         font-size: 2.6rem; font-weight: 900; letter-spacing: 1px; margin: 0;
         background: linear-gradient(135deg, #f4d07a 0%, #EC4899 45%, #8B5CF6 100%);
@@ -42,13 +39,18 @@
         filter: drop-shadow(0 0 18px rgba(139,92,246,0.4));
     }
     .tarot-head .subtitle { color: rgba(255,255,255,0.35); font-size: 0.88rem; margin-top: 0.3rem; }
+    .history-btn {
+        position: absolute; right: 0; top: 0.4rem; padding: 0.5rem 1rem; font-size: 0.82rem; font-weight: 700;
+        color: rgba(255,255,255,0.6); background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 50px; cursor: pointer; font-family: inherit; transition: all 0.2s ease;
+    }
+    .history-btn:hover { color: #fff; border-color: rgba(244,208,122,0.5); background: rgba(244,208,122,0.08); }
 
     /* ---- 阶段切换 ---- */
     .phase { display: none; }
     .phase.active { display: block; animation: phaseIn 0.6s cubic-bezier(0.23,1,0.32,1); }
     @@keyframes phaseIn { from { opacity: 0; transform: translateY(16px) scale(0.98); } to { opacity: 1; transform: none; } }
 
-    /* ---- 玻璃面板 ---- */
     .panel {
         background: rgba(255,255,255,0.025); border: 1px solid rgba(255,255,255,0.06);
         border-radius: 22px; padding: 1.8rem 1.6rem; backdrop-filter: blur(14px);
@@ -58,8 +60,8 @@
     /* ============================================================
        阶段 1：提问
        ============================================================ */
-    #phase-question .panel { max-width: 680px; margin: 1.2rem auto 0; text-align: center; }
-    .question-label { color: rgba(255,255,255,0.55); font-weight: 600; margin-bottom: 0.8rem; font-size: 0.95rem; }
+    #phase-question .panel { max-width: 720px; margin: 1.2rem auto 0; text-align: center; }
+    .question-label { color: rgba(255,255,255,0.55); font-weight: 600; margin-bottom: 0.8rem; font-size: 0.95rem; min-height: 1.4em; }
     .question-label .moon { animation: moonFloat 3s ease-in-out infinite; display: inline-block; }
     @@keyframes moonFloat { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
     .q-input {
@@ -73,55 +75,61 @@
 
     .spread-select { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.7rem; margin: 1.2rem 0 1.4rem; }
     .spread-opt {
-        position: relative; padding: 0.9rem 0.7rem; cursor: pointer; text-align: center;
+        position: relative; padding: 0.85rem 0.6rem; cursor: pointer; text-align: center;
         background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
         border-radius: 14px; color: #fff; font-family: inherit; transition: all 0.2s ease;
     }
-    .spread-opt .s-name { font-weight: 700; font-size: 1rem; }
-    .spread-opt .s-desc { display: block; color: rgba(255,255,255,0.35); font-size: 0.75rem; margin-top: 0.25rem; }
+    .spread-opt .s-name { font-weight: 700; font-size: 0.95rem; }
+    .spread-opt .s-desc { display: block; color: rgba(255,255,255,0.35); font-size: 0.72rem; margin-top: 0.2rem; }
     .spread-opt:hover { transform: translateY(-3px); border-color: rgba(255,255,255,0.16); }
     .spread-opt.active { border-color: rgba(244,208,122,0.55); background: rgba(244,208,122,0.08); box-shadow: 0 0 24px rgba(244,208,122,0.12); }
-    .spread-opt .s-badge { position: absolute; top: -8px; right: -8px; font-size: 0.62rem; padding: 0.1rem 0.5rem; border-radius: 20px; background: rgba(236,72,153,0.16); color: #EC4899; }
+    .spread-opt .s-badge { position: absolute; top: -8px; right: -8px; font-size: 0.6rem; padding: 0.1rem 0.5rem; border-radius: 20px; background: rgba(236,72,153,0.16); color: #EC4899; }
 
     .big-btn {
         display: inline-block; padding: 0.95rem 3rem; font-size: 1.05rem; font-weight: 800; color: #1a1408;
         background: linear-gradient(135deg, #f4d07a, #d99a3d); border: none; border-radius: 50px; cursor: pointer;
-        font-family: inherit; transition: all 0.2s ease; box-shadow: 0 10px 34px rgba(244,208,122,0.32);
-        letter-spacing: 1px;
+        font-family: inherit; transition: all 0.2s ease; box-shadow: 0 10px 34px rgba(244,208,122,0.32); letter-spacing: 1px;
     }
     .big-btn:hover { transform: translateY(-3px) scale(1.02); box-shadow: 0 14px 44px rgba(244,208,122,0.45); }
     .big-btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; box-shadow: none; }
 
     /* ============================================================
-       阶段 2：洗牌
+       阶段 2：洗牌（高级 3D 多段式）
        ============================================================ */
-    #shuffleStage { position: relative; height: 420px; }
-    .shuffle-caption { text-align: center; color: rgba(255,255,255,0.55); font-size: 1rem; margin-top: 1rem; min-height: 1.6em; }
+    #shuffleStage { position: relative; height: 440px; overflow: hidden; }
+    .shuffle-caption { text-align: center; color: rgba(255,255,255,0.6); font-size: 1rem; margin-top: 1rem; min-height: 1.6em; }
     .shuffle-caption .glow { color: var(--gold); text-shadow: 0 0 16px rgba(244,208,122,0.8); }
 
     .magic-ring {
-        position: absolute; left: 50%; top: 50%; width: 300px; height: 300px; margin: -150px 0 0 -150px;
-        border-radius: 50%; border: 1px dashed rgba(244,208,122,0.35);
-        animation: ringSpin 6s linear infinite;
+        position: absolute; left: 50%; top: 50%; width: 320px; height: 320px; margin: -160px 0 0 -160px;
+        border-radius: 50%; border: 1px dashed rgba(244,208,122,0.35); animation: ringSpin 6s linear infinite;
     }
-    .magic-ring::before, .magic-ring::after {
-        content: '✦'; position: absolute; font-size: 1.4rem; color: var(--gold); text-shadow: 0 0 14px rgba(244,208,122,0.9);
-    }
+    .magic-ring::before, .magic-ring::after { content: '✦'; position: absolute; font-size: 1.4rem; color: var(--gold); text-shadow: 0 0 14px rgba(244,208,122,0.9); }
     .magic-ring::before { top: -12px; left: 50%; }
     .magic-ring::after { bottom: -12px; left: 50%; }
-    .magic-ring.r2 { width: 210px; height: 210px; margin: -105px 0 0 -105px; animation-direction: reverse; animation-duration: 4.5s; }
+    .magic-ring.r2 { width: 220px; height: 220px; margin: -110px 0 0 -110px; animation-direction: reverse; animation-duration: 4.5s; }
+    .magic-ring.r3 { width: 400px; height: 400px; margin: -200px 0 0 -200px; animation-duration: 8s; border-style: dotted; opacity: 0.6; }
     @@keyframes ringSpin { from { transform: rotate(0); } to { transform: rotate(360deg); } }
 
-    .fly-card {
-        position: absolute; width: 84px; height: 128px; border-radius: 10px;
-        background: linear-gradient(145deg, #241d4d, #150f2e);
-        border: 1px solid rgba(244,208,122,0.4);
-        box-shadow: 0 12px 30px rgba(0,0,0,0.5), inset 0 0 0 1px rgba(255,255,255,0.05);
-        display: flex; align-items: center; justify-content: center; color: var(--gold);
-        will-change: transform, left, top;
+    .deck3d { position: absolute; inset: 0; perspective: 1100px; }
+    .shuffle-card {
+        position: absolute; left: 50%; top: 50%; width: 84px; height: 128px; margin: -64px 0 0 -42px;
+        border-radius: 10px; background: linear-gradient(145deg, #2a2260, #150f2e);
+        border: 1px solid rgba(244,208,122,0.5);
+        box-shadow: 0 16px 38px rgba(0,0,0,0.6), 0 0 24px rgba(244,208,122,0.14), inset 0 0 0 1px rgba(255,255,255,0.06);
+        will-change: transform, opacity; transform-style: preserve-3d;
     }
 
-    /* ---- 卡背设计（通用） ---- */
+    .fly-card {
+        position: absolute; border-radius: 10px;
+        background: linear-gradient(145deg, #2a2260, #150f2e);
+        border: 1px solid rgba(244,208,122,0.5);
+        box-shadow: 0 18px 44px rgba(0,0,0,0.6), 0 0 30px rgba(244,208,122,0.3);
+        will-change: transform, left, top, opacity;
+    }
+    .fly-card .tcard-back-design { position: absolute; inset: 0; }
+
+    /* ---- 卡背设计 ---- */
     .tcard-back-design { position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; border-radius: inherit; }
     .tcard-back-design .back-ring { position: absolute; inset: 8px; border: 1px solid rgba(244,208,122,0.5); border-radius: 6px; }
     .tcard-back-design .back-ring::before { content: ''; position: absolute; inset: 4px; border: 1px dashed rgba(244,208,122,0.28); border-radius: 4px; }
@@ -134,15 +142,21 @@
     .board { display: none; margin: 1rem auto 0; }
     .board.visible { display: flex; animation: phaseIn 0.6s ease; }
 
-    .board-celtic { justify-content: center; align-items: center; gap: 22px; flex-wrap: wrap; }
-    .cross { position: relative; width: 372px; }
-    .cross-grid { display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); gap: 12px;
+    .board-celtic { justify-content: center; align-items: center; gap: 26px; flex-wrap: wrap; }
+    .cross { position: relative; width: 380px; padding: 8px; }
+    .cross::before, .cross::after {
+        content: ''; position: absolute; z-index: 0; pointer-events: none;
+        background: linear-gradient(transparent, rgba(244,208,122,0.22), transparent);
+    }
+    .cross::before { left: 50%; top: 4%; bottom: 4%; width: 1px; }
+    .cross::after { top: 50%; left: 4%; right: 4%; height: 1px; background: linear-gradient(90deg, transparent, rgba(244,208,122,0.22), transparent); }
+    .cross-grid { position: relative; z-index: 1; display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); gap: 12px;
         grid-template-areas: ". top ." "left center right" ". bottom ."; }
     .crossing { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 150px; z-index: 6; }
     .crossing .slot-card { transform: rotate(90deg); margin: 0 auto; }
-    .staff { display: flex; flex-direction: column; gap: 12px; }
+    .staff { position: relative; display: flex; flex-direction: column; gap: 12px; padding-left: 6px; }
+    .staff::before { content: ''; position: absolute; left: -8px; top: 4%; bottom: 4%; width: 1px; background: linear-gradient(transparent, rgba(244,208,122,0.2), transparent); }
 
-    .board-three { justify-content: center; align-items: stretch; gap: 22px; flex-wrap: wrap; }
     .board-row { justify-content: center; align-items: center; gap: 22px; flex-wrap: wrap; }
     .board-grid { justify-content: center; align-items: center; }
     .tarot-grid { display: grid; gap: 14px; justify-content: center; }
@@ -151,28 +165,41 @@
     .slot-label { text-align: center; }
     .slot-label .slot-name { display: block; color: var(--gold); font-weight: 700; font-size: 0.82rem; }
     .slot-label .slot-sub { display: block; color: rgba(255,255,255,0.28); font-size: 0.66rem; margin-top: 1px; }
-    .slot-card { position: relative; width: 88px; height: 140px; perspective: 900px; }
+    .slot-card { position: relative; width: 88px; height: 140px; perspective: 1000px; }
 
     /* ---- 3D 塔罗牌 ---- */
-    .tcard { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; transition: transform 0.8s cubic-bezier(0.2,0.7,0.2,1); }
-    .tcard.flipped { transform: rotateY(180deg); }
+    .tcard { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; }
+    .tcard.flipped { transform: rotateY(180deg); animation: flipPop 0.85s cubic-bezier(0.34, 1.4, 0.4, 1); }
+    @@keyframes flipPop {
+        0% { transform: rotateY(0deg) scale(0.72); }
+        55% { transform: rotateY(180deg) scale(1.07); }
+        100% { transform: rotateY(180deg) scale(1); }
+    }
     .tcard-face {
         position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden;
         border-radius: 10px; overflow: hidden;
     }
-    .tcard-back { background: linear-gradient(145deg, #241d4d, #150f2e); border: 1px solid rgba(244,208,122,0.45); }
+    .tcard-back { background: linear-gradient(145deg, #2a2260, #150f2e); border: 1px solid rgba(244,208,122,0.5); }
     .tcard-front {
         position: relative;
         background: var(--card-grad, linear-gradient(145deg, #2a1f4d, #170f30));
-        border: 1px solid rgba(244,208,122,0.5); transform: rotateY(180deg);
+        border: 1px solid rgba(244,208,122,0.55); transform: rotateY(180deg);
         box-shadow: inset 0 0 0 4px rgba(0,0,0,0.25); overflow: hidden;
     }
+    .tcard-front::after {
+        content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 3;
+        background: linear-gradient(115deg, transparent 35%, rgba(255,255,255,0.55) 50%, transparent 65%);
+        transform: translateX(-130%); opacity: 0;
+    }
+    .tcard.flipped .tcard-front::after { animation: shineSweep 0.6s ease 0.12s; }
+    @@keyframes shineSweep { 0% { transform: translateX(-130%); opacity: 0; } 25% { opacity: 1; } 100% { transform: translateX(130%); opacity: 0; } }
+
     .tcard-front-inner { position: absolute; inset: 0; }
     .tcard-fallback { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 6px; }
     .tcard-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
     .tcard.reversed .tcard-img, .tcard.reversed .tcard-fallback { transform: rotate(180deg); }
     .tcard-caption {
-        position: absolute; left: 0; right: 0; bottom: 0; padding: 3px 4px 2px;
+        position: absolute; left: 0; right: 0; bottom: 0; padding: 3px 4px 2px; z-index: 4;
         background: linear-gradient(transparent, rgba(0,0,0,0.82));
         display: flex; flex-direction: column; align-items: center; gap: 1px;
     }
@@ -182,35 +209,29 @@
     .tcard-name { font-size: 0.72rem; color: #fff; font-weight: 800; margin-top: 3px; }
     .tcard-en { font-size: 0.5rem; color: rgba(255,255,255,0.5); margin-top: 1px; }
     .tcard-caption .tcard-name { font-size: 0.56rem; margin-top: 0; text-shadow: 0 1px 3px rgba(0,0,0,0.9); }
-    .tcard-badge {
-        font-size: 0.5rem; padding: 0.02rem 0.45rem;
-        border-radius: 20px; color: #1a1408; background: var(--gold); font-weight: 700;
-    }
+    .tcard-badge { font-size: 0.5rem; padding: 0.02rem 0.45rem; border-radius: 20px; color: #1a1408; background: var(--gold); font-weight: 700; }
     .tcard.reversed .tcard-badge { background: #ec5d7a; color: #fff; }
 
     .slot-card.flash { animation: slotFlash 0.9s ease; }
-    @@keyframes slotFlash { 0% { box-shadow: 0 0 0 0 rgba(244,208,122,0); } 30% { box-shadow: 0 0 0 6px rgba(244,208,122,0.5), 0 0 40px rgba(244,208,122,0.6); } 100% { box-shadow: 0 0 0 0 rgba(244,208,122,0); } }
+    @@keyframes slotFlash { 0% { box-shadow: 0 0 0 0 rgba(244,208,122,0); } 30% { box-shadow: 0 0 0 6px rgba(244,208,122,0.5), 0 0 44px rgba(244,208,122,0.6); } 100% { box-shadow: 0 0 0 0 rgba(244,208,122,0); } }
 
     /* ============================================================
        抽牌阶段：扇形牌堆 + 控制
        ============================================================ */
     .fan-wrap { margin-top: 1.4rem; }
     .fan-hint { text-align: center; color: rgba(255,255,255,0.35); font-size: 0.8rem; margin-bottom: 0.6rem; }
-    .fan {
-        display: flex; justify-content: flex-start; align-items: center; overflow-x: auto;
-        padding: 12px 8px 16px; gap: 0; min-height: 104px;
-    }
+    .fan { display: flex; justify-content: flex-start; align-items: center; overflow-x: auto; padding: 12px 8px 16px; gap: 0; min-height: 104px; }
     .fan::-webkit-scrollbar { height: 6px; }
     .fan::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 10px; }
     .fan-card {
         flex: 0 0 auto; width: 54px; height: 84px; margin-left: -14px; cursor: pointer;
-        border-radius: 8px; background: linear-gradient(145deg, #241d4d, #150f2e);
-        border: 1px solid rgba(244,208,122,0.4); position: relative; transition: transform 0.2s ease, box-shadow 0.2s ease;
+        border-radius: 8px; background: linear-gradient(145deg, #2a2260, #150f2e);
+        border: 1px solid rgba(244,208,122,0.42); position: relative; transition: transform 0.2s ease, box-shadow 0.2s ease;
         box-shadow: 0 6px 16px rgba(0,0,0,0.4);
     }
     .fan-card:first-child { margin-left: 0; }
-    .fan-card:hover { transform: translateY(-10px) scale(1.05); box-shadow: 0 12px 26px rgba(0,0,0,0.55), 0 0 20px rgba(244,208,122,0.35); z-index: 5; }
-    .fan-card.drawn { opacity: 0.18; pointer-events: none; transform: scale(0.9); }
+    .fan-card:hover { transform: translateY(-10px) scale(1.06); box-shadow: 0 12px 26px rgba(0,0,0,0.55), 0 0 20px rgba(244,208,122,0.35); z-index: 5; }
+    .fan-card.drawn { opacity: 0.16; pointer-events: none; transform: scale(0.9); }
     .fan-card .fan-symbol { font-size: 1.25rem; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); }
     .fan-card .fan-idx { position: absolute; bottom: 3px; left: 0; right: 0; text-align: center; font-size: 0.55rem; color: rgba(255,255,255,0.4); }
 
@@ -240,6 +261,29 @@
         animation: shimmer 1.6s linear infinite;
     }
     @@keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+    .fortune-box {
+        text-align: center; padding: 1.2rem 1rem; margin: 0.5rem 0 1.2rem; border-radius: 18px;
+        background: linear-gradient(135deg, rgba(244,208,122,0.1), rgba(236,72,153,0.08), rgba(139,92,246,0.1));
+        border: 1px solid rgba(244,208,122,0.25); box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+    }
+    .fortune-title { font-size: 1.15rem; font-weight: 800; color: var(--gold); }
+    .fortune-stars { font-size: 1.5rem; color: var(--gold); letter-spacing: 3px; margin: 0.4rem 0; text-shadow: 0 0 18px rgba(244,208,122,0.6); }
+    .fortune-stars span { font-size: 0.8rem; color: rgba(255,255,255,0.45); letter-spacing: 0; }
+    .fortune-grid { display: flex; gap: 0.8rem; justify-content: center; flex-wrap: wrap; margin: 0.6rem 0; }
+    .fortune-item { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 0.5rem 1rem; }
+    .fortune-item span { display: block; font-size: 0.7rem; color: rgba(255,255,255,0.4); }
+    .fortune-item b { font-size: 1rem; color: #fff; }
+    .fortune-line { color: rgba(255,255,255,0.65); font-size: 0.9rem; margin: 0.3rem 0; }
+
+    .verdict-banner {
+        text-align: center; padding: 1rem; margin: 0.5rem 0 1.2rem; border-radius: 16px; font-size: 1.3rem; font-weight: 800;
+        background: linear-gradient(135deg, rgba(244,208,122,0.12), rgba(139,92,246,0.12));
+        border: 1px solid rgba(244,208,122,0.35); color: var(--gold); box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        animation: verdictPop 0.6s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    @@keyframes verdictPop { 0% { transform: scale(0.7); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+
     .reading-body { color: rgba(255,255,255,0.82); line-height: 1.9; font-size: 0.98rem; }
     .reading-body h2 { color: var(--gold); font-size: 1.25rem; margin: 1.2rem 0 0.6rem; }
     .reading-body h3 { color: var(--violet); font-size: 1.05rem; margin: 1rem 0 0.4rem; }
@@ -257,21 +301,58 @@
     }
     @@keyframes toastPop { 0% { opacity: 0; transform: translate(-50%, 10px) scale(0.8); } 20% { opacity: 1; transform: translate(-50%, 0) scale(1); } 80% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -18px) scale(1.05); } }
 
+    /* ============================================================
+       历史记录弹窗
+       ============================================================ */
+    .history-overlay {
+        position: fixed; inset: 0; z-index: 3000; background: rgba(0,0,0,0.7); backdrop-filter: blur(6px);
+        display: flex; align-items: center; justify-content: center; padding: 1.2rem;
+    }
+    .history-modal {
+        width: min(560px, 100%); max-height: 80vh; display: flex; flex-direction: column;
+        background: #14101f; border: 1px solid rgba(244,208,122,0.2); border-radius: 20px; overflow: hidden;
+        box-shadow: 0 40px 120px rgba(0,0,0,0.7); animation: phaseIn 0.35s ease;
+    }
+    .history-head { display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.2rem; border-bottom: 1px solid rgba(255,255,255,0.06); color: var(--gold); font-weight: 800; }
+    .history-close { background: none; border: none; color: rgba(255,255,255,0.5); font-size: 1.2rem; cursor: pointer; font-family: inherit; }
+    .history-close:hover { color: #fff; }
+    .history-list { overflow-y: auto; padding: 0.6rem; }
+    .history-list::-webkit-scrollbar { width: 5px; }
+    .history-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 10px; }
+    .history-empty { text-align: center; color: rgba(255,255,255,0.3); padding: 2.5rem 1rem; }
+    .history-item { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 14px; padding: 0.8rem 0.9rem; margin-bottom: 0.6rem; cursor: pointer; transition: border-color 0.2s ease; }
+    .history-item:hover { border-color: rgba(244,208,122,0.3); }
+    .history-item-head { display: flex; justify-content: space-between; align-items: center; gap: 0.6rem; }
+    .h-spread { color: var(--gold); font-weight: 700; font-size: 0.85rem; }
+    .h-time { color: rgba(255,255,255,0.25); font-size: 0.7rem; white-space: nowrap; }
+    .h-question { color: rgba(255,255,255,0.6); font-size: 0.8rem; margin: 0.35rem 0; }
+    .h-cards { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    .h-card { font-size: 0.72rem; padding: 0.15rem 0.5rem; border-radius: 20px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.06); color: rgba(255,255,255,0.7); }
+    .h-card .h-rev { color: #ec5d7a; font-weight: 700; }
+    .history-result { margin-top: 0.6rem; padding-top: 0.6rem; border-top: 1px dashed rgba(255,255,255,0.08); color: rgba(255,255,255,0.75); line-height: 1.8; font-size: 0.88rem; }
+    .history-result h2 { color: var(--gold); font-size: 1.05rem; margin: 0.8rem 0 0.4rem; }
+    .history-result h3 { color: var(--violet); font-size: 0.92rem; margin: 0.6rem 0 0.3rem; }
+    .history-result strong { color: #f4d07a; }
+
     @@media (max-width: 700px) {
         .tarot-head h1 { font-size: 1.9rem; }
+        .history-btn { position: static; margin-top: 0.6rem; }
         #shuffleStage { height: 340px; }
         .magic-ring { width: 220px; height: 220px; margin: -110px 0 0 -110px; }
         .magic-ring.r2 { width: 160px; height: 160px; margin: -80px 0 0 -80px; }
+        .magic-ring.r3 { width: 280px; height: 280px; margin: -140px 0 0 -140px; }
         .cross { width: 300px; }
         .slot-card { width: 70px; height: 112px; }
         .crossing { width: 120px; }
         .tcard-roman { font-size: 0.85rem; }
         .tcard-symbol { font-size: 1.5rem; }
         .tcard-name { font-size: 0.62rem; }
+        .spread-select { grid-template-columns: 1fr 1fr; }
     }
     @@media (max-width: 420px) {
         .cross { width: 264px; }
         .slot-card { width: 60px; height: 96px; }
+        .spread-select { grid-template-columns: 1fr; }
     }
 </style>
 
@@ -283,6 +364,7 @@
         <header class="tarot-head">
             <h1>🔮 塔罗牌占卜</h1>
             <div class="subtitle">静心 · 提问 · 洗牌 · 抽牌 · 聆听牌灵的启示</div>
+            <button class="history-btn" id="historyBtn">📜 我的记录</button>
         </header>
 
         <!-- 牌阵棋盘（抽牌/解读时显示） -->
@@ -291,7 +373,7 @@
         <!-- ===== 阶段 1：提问 ===== -->
         <section class="phase active" id="phase-question">
             <div class="panel">
-                <div class="question-label"><span class="moon">🌙</span> 在心中默念你的问题，然后写下来</div>
+                <div class="question-label" id="questionLabel"><span class="moon">🌙</span> 在心中默念你的问题，然后写下来</div>
                 <textarea class="q-input" id="qInput" maxlength="200" placeholder="例如：我最近的事业发展会如何？"></textarea>
                 <div class="spread-select" id="spreadSelect">
                     <button class="spread-opt active" data-spread="celtic">
@@ -303,9 +385,9 @@
                         <span class="s-name">✦ 三张牌</span>
                         <span class="s-desc">3 张 · 过去 · 现在 · 未来</span>
                     </button>
-                    <button class="spread-opt" data-spread="single">
-                        <span class="s-name">✦ 单张牌</span>
-                        <span class="s-desc">1 张 · 今日指引</span>
+                    <button class="spread-opt" data-spread="daily">
+                        <span class="s-name">✦ 每日一签</span>
+                        <span class="s-desc">1 张 · 今日运势</span>
                         <span class="s-badge">每日</span>
                     </button>
                     <button class="spread-opt" data-spread="five">
@@ -321,6 +403,11 @@
                         <span class="s-desc">7 张 · 爱恋关系</span>
                         <span class="s-badge">情感</span>
                     </button>
+                    <button class="spread-opt" data-spread="yesno">
+                        <span class="s-name">✦ 是否牌阵</span>
+                        <span class="s-desc">3 张 · 是 / 否</span>
+                        <span class="s-badge">速断</span>
+                    </button>
                 </div>
                 <button class="big-btn" id="startShuffleBtn">🔮 开始洗牌</button>
             </div>
@@ -332,6 +419,7 @@
                 <div id="shuffleStage">
                     <div class="magic-ring"></div>
                     <div class="magic-ring r2"></div>
+                    <div class="magic-ring r3"></div>
                 </div>
                 <div class="shuffle-caption" id="shuffleCaption">🌌 宇宙能量注入中…</div>
             </div>
@@ -367,6 +455,17 @@
     <div class="fly-overlay" id="flyOverlay"></div>
 </div>
 
+<!-- 历史记录弹窗 -->
+<div class="history-overlay" id="historyOverlay" style="display:none;">
+    <div class="history-modal">
+        <div class="history-head">
+            <span>📜 我的占卜记录</span>
+            <button class="history-close" id="historyClose">✕</button>
+        </div>
+        <div class="history-list" id="historyList"></div>
+    </div>
+</div>
+
 <script>
 (function () {
     'use strict';
@@ -375,11 +474,9 @@
     // 牌阵定义
     // ============================================================
     var SPREADS = {
-        single: {
-            key: 'single', name: '单张牌 · 每日指引', cardCount: 1, layout: 'row',
-            positions: [
-                { key: 'q1', name: '今日指引', sub: '核心讯息', area: 'c' }
-            ]
+        daily: {
+            key: 'daily', name: '每日一签 · 今日运势', cardCount: 1, layout: 'row', daily: true,
+            positions: [ { key: 'd1', name: '今日运势', sub: '每日指引', area: 'c' } ]
         },
         three: {
             key: 'three', name: '三张牌 · 过去现在未来', cardCount: 3, layout: 'row',
@@ -397,6 +494,14 @@
                 { key: 'f3', name: '未来', sub: '趋势', area: 'c' },
                 { key: 'f4', name: '建议', sub: '行动', area: 'd' },
                 { key: 'f5', name: '结果', sub: '结局', area: 'e' }
+            ]
+        },
+        yesno: {
+            key: 'yesno', name: '是否牌阵', cardCount: 3, layout: 'row', yesno: true,
+            positions: [
+                { key: 'y1', name: '过去', sub: '根源', area: 'a' },
+                { key: 'y2', name: '现在', sub: '核心', area: 'b' },
+                { key: 'y3', name: '未来', sub: '走向', area: 'c' }
             ]
         },
         choice: {
@@ -444,10 +549,10 @@
     // ============================================================
     // 状态
     // ============================================================
-    var DECK = [];          // 78 张牌数据
-    var order = [];         // 洗牌后的顺序（0..77）
-    var spread = null;      // 当前牌阵
-    var drawn = [];         // 已抽 [{deckIndex, card, reversed, pos}]
+    var DECK = [];
+    var order = [];
+    var spread = null;
+    var drawn = [];
     var reading = false;
 
     function $(id) { return document.getElementById(id); }
@@ -462,6 +567,18 @@
             var t = arr[i]; arr[i] = arr[j]; arr[j] = t;
         }
         return arr;
+    }
+
+    function easeInOutCubic(t) { return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; }
+    function easeOutBack(t) { var c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2); }
+
+    function mulberry32(a) {
+        return function () {
+            a |= 0; a = a + 0x6D2B79F5 | 0;
+            var t = Math.imul(a ^ a >>> 15, 1 | a);
+            t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+            return ((t ^ t >>> 14) >>> 0) / 4294967296;
+        };
     }
 
     function suitColor(card) {
@@ -490,37 +607,37 @@
             '</div>';
     }
 
+    function cardImgHTML(card) {
+        if (!card.imageUrl) return '';
+        var fn = card.imageUrl.split('/').pop();
+        var local = '/images/tarot/' + fn;
+        return '<img class="tcard-img" src="' + local + '" data-remote="' + card.imageUrl + '" alt="' + escapeHtml(card.name) + '" loading="lazy" ' +
+            'onerror="if(!this.dataset.fb){this.dataset.fb=1;if(this.dataset.remote){this.src=this.dataset.remote;}}else{this.style.display=\'none\';}" />';
+    }
+
     function frontHTML(card, reversed) {
         var fallback = '<div class="tcard-fallback">';
-        if (card.arcana === 'major') {
-            fallback += '<div class="tcard-roman">' + card.roman + '</div>';
-        }
+        if (card.arcana === 'major') fallback += '<div class="tcard-roman">' + card.roman + '</div>';
         fallback += '<div class="tcard-symbol">' + card.symbol + '</div>';
-        if (card.arcana === 'minor') {
-            fallback += '<div class="tcard-rank">' + card.rank + '</div>';
-        }
+        if (card.arcana === 'minor') fallback += '<div class="tcard-rank">' + card.rank + '</div>';
         fallback += '<div class="tcard-name">' + card.name + '</div>';
         fallback += '<div class="tcard-en">' + card.nameEn + '</div>';
         fallback += '</div>';
-
-        var img = card.imageUrl
-            ? '<img class="tcard-img" src="' + card.imageUrl + '" alt="' + escapeHtml(card.name) + '" loading="lazy" onerror="this.style.display=\'none\'" />'
-            : '';
 
         var caption = '<div class="tcard-caption">' +
             '<span class="tcard-name">' + card.name + '</span>' +
             '<span class="tcard-badge">' + (reversed ? '逆位' : '正位') + '</span>' +
             '</div>';
 
-        return '<div class="tcard-front-inner">' + fallback + img + caption + '</div>';
+        return '<div class="tcard-front-inner">' + fallback + cardImgHTML(card) + caption + '</div>';
     }
 
     function escapeHtml(s) {
-        return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
 
     // ============================================================
-    // 音效（轻量 WebAudio，失败静默）
+    // 音效
     // ============================================================
     var AC = null;
     function ensureAudio() {
@@ -541,33 +658,30 @@
         } catch (e) {}
     }
     function sndWhoosh() { tone(220, 0.4, 'sawtooth', 0.06); tone(180, 0.5, 'sawtooth', 0.05); }
-    function sndFlip() { tone(520, 0.12, 'triangle', 0.08); }
     function sndChime() { tone(880, 0.4, 'sine', 0.08); setTimeout(function () { tone(1320, 0.5, 'sine', 0.07); }, 90); }
-    function sndShuffle() {
-        for (var i = 0; i < 6; i++) setTimeout(function () { tone(400 + Math.random() * 400, 0.07, 'triangle', 0.05); }, i * 60);
-    }
+    function sndShuffle() { for (var i = 0; i < 6; i++) setTimeout(function () { tone(400 + Math.random() * 400, 0.07, 'triangle', 0.05); }, i * 60); }
 
     // ============================================================
     // 粒子 / 特效
     // ============================================================
     function burst(x, y, color) {
         var overlay = $('flyOverlay');
-        var n = 14;
+        var n = 16;
         for (var i = 0; i < n; i++) {
             var p = document.createElement('div');
             var size = 3 + Math.random() * 5;
             var ang = Math.random() * Math.PI * 2;
-            var dist = 30 + Math.random() * 70;
+            var dist = 34 + Math.random() * 80;
             var dx = Math.cos(ang) * dist, dy = Math.sin(ang) * dist;
             p.style.cssText = 'position:absolute;left:' + x + 'px;top:' + y + 'px;width:' + size + 'px;height:' + size + 'px;' +
                 'border-radius:50%;background:' + color + ';box-shadow:0 0 8px ' + color + ';pointer-events:none;' +
-                'transition:transform 0.9s cubic-bezier(0.2,0.6,0.3,1), opacity 0.9s ease;opacity:1;';
+                'transition:transform 0.95s cubic-bezier(0.2,0.6,0.3,1), opacity 0.95s ease;opacity:1;';
             overlay.appendChild(p);
             requestAnimationFrame(function () {
                 p.style.transform = 'translate(' + dx + 'px,' + dy + 'px) scale(0.2)';
                 p.style.opacity = '0';
             });
-            (function (el) { setTimeout(function () { el.remove(); }, 950); })(p);
+            (function (el) { setTimeout(function () { el.remove(); }, 1000); })(p);
         }
     }
 
@@ -625,7 +739,7 @@
         $(id).classList.add('active');
         if (id === 'phase-draw' || id === 'phase-reading') $('board').classList.add('visible');
         else $('board').classList.remove('visible');
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        if (id !== 'phase-draw') window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     // ============================================================
@@ -645,14 +759,11 @@
                 var slot = buildSlot(pos);
                 if (pos.area === 'crossing') { cross.appendChild(slot); }
                 else if (crossCells.indexOf(pos.area) >= 0) { grid.appendChild(slot); }
-                else { /* staff 稍后处理 */ }
             }
-            // crossing 需要加类
             cross.querySelector('.slot[data-key="p2"]').classList.add('crossing');
             cross.appendChild(grid);
 
             var staff = document.createElement('div'); staff.className = 'staff';
-            // staff 顺序：顶部 = staff1(p10), 底部 = staff4(p7)
             var staffOrder = ['staff1', 'staff2', 'staff3', 'staff4'];
             for (var s = 0; s < staffOrder.length; s++) {
                 for (var j = 0; j < spread.positions.length; j++) {
@@ -738,9 +849,10 @@
         var reversed = Math.random() < 0.25;
         var slot = document.querySelector('#board .slot[data-key="' + pos.key + '"] .slot-card');
 
-        // 标记扇形牌
         var fcard = originEl && originEl.classList.contains('fan-card') ? originEl : fanCardByDeckIndex(deckIndex);
-        var originRect = originEl ? originEl.getBoundingClientRect() : fanCenter();
+        var originRect = (originEl && originEl.classList.contains('fan-card'))
+            ? originEl.getBoundingClientRect()
+            : (fcard ? fcard.getBoundingClientRect() : fanCenter());
         if (fcard) fcard.classList.add('drawn');
 
         flyToSlot(originRect, slot, function () {
@@ -750,6 +862,7 @@
         });
     }
 
+    // 镜头跟随：卡牌飞行时，画面平滑平移跟踪到目标牌位
     function flyToSlot(originRect, slotEl, done) {
         var overlay = $('flyOverlay');
         var fly = document.createElement('div');
@@ -757,24 +870,35 @@
         fly.innerHTML = backDesignHTML();
         var w = originRect.width || 84, h = originRect.height || 128;
         fly.style.width = w + 'px'; fly.style.height = h + 'px';
-        fly.style.left = originRect.left + 'px'; fly.style.top = originRect.top + 'px';
         overlay.appendChild(fly);
 
         var srect = slotEl.getBoundingClientRect();
-        var sx = (srect.left + srect.width / 2) - (originRect.left + w / 2);
-        var sy = (srect.top + srect.height / 2) - (originRect.top + h / 2);
+        var ox = originRect.left + window.scrollX;
+        var oy = originRect.top + window.scrollY;
+        var tx = srect.left + (srect.width - w) / 2 + window.scrollX;
+        var ty = srect.top + (srect.height - h) / 2 + window.scrollY;
         var sc = Math.min(slotEl.offsetWidth / w, slotEl.offsetHeight / h);
 
-        requestAnimationFrame(function () {
-            requestAnimationFrame(function () {
-                fly.style.transition = 'transform 0.62s cubic-bezier(0.2,0.8,0.2,1), opacity 0.62s ease';
-                fly.style.transform = 'translate(' + sx + 'px,' + sy + 'px) rotate(560deg) scale(' + sc + ')';
-            });
-        });
-        setTimeout(function () {
-            fly.remove();
-            if (done) done();
-        }, 640);
+        var dur = 680, t0 = performance.now();
+        function frame(now) {
+            var p = Math.min((now - t0) / dur, 1);
+            var e = easeInOutCubic(p);
+            var x = ox + (tx - ox) * e;
+            var y = oy + (ty - oy) * e;
+
+            var sx = (x + w / 2) - window.innerWidth / 2;
+            var sy = (y + h / 2) - window.innerHeight * 0.42;
+            window.scrollTo(Math.max(0, sx), Math.max(0, sy));
+
+            fly.style.left = (x - window.scrollX) + 'px';
+            fly.style.top = (y - window.scrollY) + 'px';
+            fly.style.transform = 'rotate(' + (p * 540) + 'deg) scale(' + (1 + (sc - 1) * e) + ')';
+            fly.style.opacity = p > 0.9 ? Math.max(0, 1 - (p - 0.9) * 10) : 1;
+
+            if (p < 1) requestAnimationFrame(frame);
+            else { fly.remove(); if (done) done(); }
+        }
+        requestAnimationFrame(frame);
     }
 
     function fillSlot(slotEl, card, reversed) {
@@ -794,8 +918,8 @@
                 var r = slotEl.getBoundingClientRect();
                 burst(r.left + r.width / 2, r.top + r.height / 2, suitColor(card));
                 sndChime();
-                if (card.arcana === 'major') screenShake(8);
-                setTimeout(function () { slotEl.classList.remove('flash'); }, 900);
+                if (card.arcana === 'major') screenShake(7);
+                setTimeout(function () { slotEl.classList.remove('flash'); }, 950);
             });
         });
     }
@@ -821,48 +945,94 @@
             drawRandom();
             step++;
             if (step >= remaining || drawn.length >= spread.cardCount) clearInterval(iv);
-        }, 700);
+        }, 800);
     }
 
     // ============================================================
-    // 洗牌动画
+    // 洗牌动画（高级 3D 多段式：切牌 → 交错 → 扇形 → 收拢）
     // ============================================================
     function runShuffle() {
         showPhase('phase-shuffle');
         var stage = $('shuffleStage');
-        stage.querySelectorAll('.fly-card').forEach(function (n) { n.remove(); });
+        stage.querySelectorAll('.deck3d').forEach(function (n) { n.remove(); });
+        var layer = document.createElement('div');
+        layer.className = 'deck3d';
+        stage.appendChild(layer);
         $('shuffleCaption').innerHTML = '🌌 宇宙能量注入中…';
 
-        var N = 14;
-        var fly = [];
+        var N = 22;
+        var cards = [];
         for (var i = 0; i < N; i++) {
             var el = document.createElement('div');
-            el.className = 'fly-card';
+            el.className = 'shuffle-card';
             el.innerHTML = backDesignHTML();
-            stage.appendChild(el);
-            fly.push({ el: el, a: (i / N) * Math.PI * 2, r: 70 + Math.random() * 90, spin: (Math.random() * 2 - 1) * 4, bob: Math.random() * Math.PI * 2 });
+            layer.appendChild(el);
+            cards.push({ el: el, i: i });
         }
 
-        var t0 = performance.now(), dur = 2600, sndT = 0;
+        var t0 = performance.now(), dur = 3300, sndT = 0, sparkT = 0;
         function frame(now) {
             var p = Math.min((now - t0) / dur, 1);
             var cx = stage.clientWidth / 2, cy = stage.clientHeight / 2;
+
             for (var k = 0; k < N; k++) {
-                var f = fly[k];
-                var a = f.a + p * (Math.PI * 4 + k * 0.7);
-                var r = f.r * (1 - p * 0.55);
-                var x = cx + Math.cos(a) * r - 42;
-                var y = cy + Math.sin(a) * r * 0.62 - 64 + Math.sin(f.bob + p * 20) * 14;
-                var rot = a * 57.3 + f.spin * p * 220;
-                f.el.style.left = x + 'px'; f.el.style.top = y + 'px';
-                f.el.style.transform = 'rotate(' + rot + 'deg) scale(' + (0.75 + p * 0.25) + ')';
-                f.el.style.opacity = p > 0.9 ? Math.max(0, 1 - (p - 0.9) * 10) : 1;
+                var s = shuffleState(cards[k].i, N, p);
+                var el = cards[k].el;
+                el.style.transform = 'translate3d(' + s.dx + 'px,' + s.dy + 'px,' + s.z + 'px) rotateY(' + s.rotY + 'deg) rotateZ(' + s.rotZ + 'deg) scale(' + s.scale + ')';
+                el.style.opacity = s.opacity;
+                el.style.zIndex = Math.round(s.z + 100);
             }
-            if (now - sndT > 260) { sndT = now; sndShuffle(); }
+
+            // 粒子拖尾
+            if (now - sparkT > 90 && p < 0.9) {
+                sparkT = now;
+                var pickEl = cards[Math.floor(Math.random() * N)].el;
+                var rect = pickEl.getBoundingClientRect();
+                burst(rect.left + rect.width / 2, rect.top + rect.height / 2, 'rgba(244,208,122,0.9)');
+            }
+
+            updateShuffleCaption(p);
+            if (now - sndT > 300) { sndT = now; sndShuffle(); }
             if (p < 1) requestAnimationFrame(frame);
             else finishShuffle();
         }
         requestAnimationFrame(frame);
+    }
+
+    function shuffleState(i, N, p) {
+        if (p < 0.28) {
+            var t = p / 0.28, k = easeInOutCubic(t);
+            var half = i < N / 2 ? -1 : 1;
+            return { dx: half * k * 160, dy: (i - N / 2) * (1 - k) * 2.2, rotY: half * k * 34, rotZ: 0, z: 0, scale: 1, opacity: 1 };
+        }
+        if (p < 0.6) {
+            var t2 = (p - 0.28) / 0.32, k2 = easeInOutCubic(t2);
+            var half2 = i < N / 2 ? -1 : 1;
+            var alt = (i % 2 === 0) ? 1 : -1;
+            return { dx: half2 * 160 * (1 - k2) * 0.55, dy: alt * k2 * 38, rotY: half2 * 34 * (1 - k2), rotZ: alt * k2 * 22, z: alt * k2 * 36, scale: 1, opacity: 1 };
+        }
+        if (p < 0.86) {
+            var t3 = (p - 0.6) / 0.26, k3 = easeOutBack(t3);
+            var ang = (i / (N - 1) - 0.5) * 2.3;
+            var r = 290;
+            return { dx: Math.sin(ang) * r * k3, dy: (1 - Math.cos(ang)) * r * 0.8 * k3 + 16, rotY: 0, rotZ: ang * 57.3 * k3, z: 0, scale: 0.92, opacity: 1 };
+        }
+        var t4 = (p - 0.86) / 0.14, k4 = easeInOutCubic(t4);
+        var ang4 = (i / (N - 1) - 0.5) * 2.3;
+        var r4 = 290;
+        return {
+            dx: Math.sin(ang4) * r4 * (1 - k4),
+            dy: (1 - Math.cos(ang4)) * r4 * 0.8 * (1 - k4) + (i - N / 2) * k4 * 2 + 16 * (1 - k4),
+            rotY: 0, rotZ: ang4 * 57.3 * (1 - k4), z: 0, scale: 0.92 + 0.08 * k4, opacity: 1
+        };
+    }
+
+    function updateShuffleCaption(p) {
+        var cap = $('shuffleCaption');
+        if (p < 0.28) cap.innerHTML = '🂠 切牌中…';
+        else if (p < 0.6) cap.innerHTML = '🃏 交错洗牌中…';
+        else if (p < 0.86) cap.innerHTML = '✨ 扇形展开…';
+        else cap.innerHTML = '🔮 收拢能量…';
     }
 
     function finishShuffle() {
@@ -878,17 +1048,83 @@
     }
 
     // ============================================================
+    // 每日一签 & 是否牌阵
+    // ============================================================
+    var LUCKY_COLORS = ['金色', '紫色', '玫瑰红', '天蓝', '翡翠绿', '月光银', '琥珀橙', '靛青'];
+    var YI = ['宜：大胆尝试', '宜：整理思绪', '宜：主动沟通', '宜：静心阅读', '宜：亲近自然', '宜：表达爱意', '宜：制定小计划', '宜：犒赏自己'];
+    var JI = ['忌：冲动决定', '忌：熬夜', '忌：翻旧账', '忌：拖延', '忌：过度消费', '忌：猜疑', '忌：逞强', '忌：三心二意'];
+
+    function cardPositivity(card) {
+        var good = { 0: 1, 1: 1, 3: 1, 6: 1, 7: 1, 8: 1, 10: 1, 14: 1, 17: 1, 19: 1, 21: 1 };
+        var bad = { 12: 1, 13: 1, 15: 1, 16: 1, 18: 1 };
+        if (card.arcana === 'major') {
+            if (good[card.id]) return 5;
+            if (bad[card.id]) return 2;
+            return 3;
+        }
+        if (card.suit === 'swords' && (card.name.indexOf('九') >= 0 || card.name.indexOf('十') >= 0)) return 2;
+        if (card.rank === '王牌' || card.rank === '国王' || card.rank === '王后') return 5;
+        return 3;
+    }
+
+    function dailyFortune(card) {
+        var d = new Date();
+        var dateStr = '' + d.getFullYear() + (d.getMonth() + 1) + d.getDate();
+        var rnd = mulberry32(parseInt(dateStr, 10) * 131 + card.id);
+        var stars = Math.max(2, Math.min(5, cardPositivity(card) + (rnd() < 0.5 ? 0 : 1)));
+        return {
+            stars: stars,
+            color: LUCKY_COLORS[Math.floor(rnd() * LUCKY_COLORS.length)],
+            num: 1 + Math.floor(rnd() * 9),
+            yi: YI[Math.floor(rnd() * YI.length)],
+            ji: JI[Math.floor(rnd() * JI.length)]
+        };
+    }
+
+    function renderDailyFortune(card) {
+        var f = dailyFortune(card);
+        var starStr = '';
+        for (var i = 0; i < 5; i++) starStr += (i < f.stars ? '★' : '☆');
+        return '<div class="fortune-box">' +
+            '<div class="fortune-title">🌞 今日运势 · ' + escapeHtml(card.name) + '</div>' +
+            '<div class="fortune-stars">' + starStr + ' <span>(' + f.stars + '/5)</span></div>' +
+            '<div class="fortune-grid">' +
+            '<div class="fortune-item"><span>🍀 幸运色</span><b>' + f.color + '</b></div>' +
+            '<div class="fortune-item"><span>🔢 幸运数字</span><b>' + f.num + '</b></div>' +
+            '</div>' +
+            '<div class="fortune-line">' + f.yi + '</div>' +
+            '<div class="fortune-line">' + f.ji + '</div>' +
+            '</div>';
+    }
+
+    function yesNoVerdict(cards) {
+        var up = 0, rev = 0;
+        cards.forEach(function (d) { if (d.reversed) rev++; else up++; });
+        if (up === 3) return '✅ 是 · 强烈肯定';
+        if (up === 2) return '✅ 是 · 倾向肯定';
+        if (rev === 3) return '❌ 否 · 强烈否定';
+        return '❌ 否 · 倾向否定';
+    }
+
+    // ============================================================
     // 解读
     // ============================================================
     function startReading() {
         reading = true;
         showPhase('phase-reading');
         $('readingStatus').innerHTML = '<span class="shimmer">✨ AI 正在与牌灵沟通，为你解读中…</span>';
-        $('readingBody').innerHTML = '';
+        var body = $('readingBody');
+        body.innerHTML = '';
+        if (spread.daily && drawn.length) body.innerHTML = renderDailyFortune(drawn[0].card);
+        if (spread.yesno && drawn.length === spread.cardCount) body.innerHTML = '<div class="verdict-banner">' + yesNoVerdict(drawn) + '</div>';
+
+        var q = spread.daily ? '今日运势' : ($('qInput').value || '').trim();
+        var verdict = spread.yesno ? yesNoVerdict(drawn) : null;
 
         var payload = {
-            question: ($('qInput').value || '').trim(),
+            question: q,
             spread: spread.name,
+            verdict: verdict,
             cards: drawn.map(function (d) {
                 return { positionName: d.pos.name + '（' + d.pos.sub + '）', cardId: d.card.id, reversed: d.reversed };
             })
@@ -901,15 +1137,10 @@
         })
         .then(function (r) { return r.json(); })
         .then(function (data) {
-            if (data && data.success && data.content) {
-                renderReading(data.content, data.fallback);
-            } else {
-                $('readingStatus').innerHTML = '⚠️ 解读暂时无法完成，请稍后再试。';
-            }
+            if (data && data.success && data.content) renderReading(data.content, data.fallback);
+            else $('readingStatus').innerHTML = '⚠️ 解读暂时无法完成，请稍后再试。';
         })
-        .catch(function () {
-            $('readingStatus').innerHTML = '⚠️ 网络异常，解读失败，请稍后再试。';
-        });
+        .catch(function () { $('readingStatus').innerHTML = '⚠️ 网络异常，解读失败，请稍后再试。'; });
     }
 
     function renderReading(md, fallback) {
@@ -917,16 +1148,15 @@
             ? '🌙 本次为本地牌义解读（AI 服务暂不可用）'
             : '🌙 解读完成 · 愿你听见内心的声音';
         var body = $('readingBody');
-        body.innerHTML = mdToHtml(md);
-        var blocks = body.querySelectorAll('h2, h3, p, ul');
-        for (var i = 0; i < blocks.length; i++) {
-            blocks[i].classList.add('rv-block');
-        }
+        var wrapper = document.createElement('div');
+        wrapper.className = 'reading-ai';
+        wrapper.innerHTML = mdToHtml(md);
+        body.appendChild(wrapper);
+        var blocks = wrapper.querySelectorAll('h2, h3, p, ul');
+        for (var i = 0; i < blocks.length; i++) blocks[i].classList.add('rv-block');
         requestAnimationFrame(function () {
             for (var j = 0; j < blocks.length; j++) {
-                (function (el, delay) {
-                    setTimeout(function () { el.classList.add('show'); }, delay);
-                })(blocks[j], j * 90);
+                (function (el, delay) { setTimeout(function () { el.classList.add('show'); }, delay); })(blocks[j], j * 90);
             }
         });
     }
@@ -938,7 +1168,7 @@
     }
 
     function mdToHtml(md) {
-        var lines = md.split(/\r?\n/);
+        var lines = (md || '').split(/\r?\n/);
         var out = [], listOpen = false;
         for (var i = 0; i < lines.length; i++) {
             var t = lines[i].trim();
@@ -963,25 +1193,80 @@
     }
 
     // ============================================================
+    // 历史记录
+    // ============================================================
+    function toggleHistory(show) {
+        $('historyOverlay').style.display = show ? 'flex' : 'none';
+        if (show) loadHistory();
+    }
+
+    function loadHistory() {
+        $('historyList').innerHTML = '<div class="history-empty">加载中…</div>';
+        fetch('/api/tarot/history?limit=30')
+            .then(function (r) { return r.json(); })
+            .then(function (data) { renderHistory(data && data.list ? data.list : []); })
+            .catch(function () { $('historyList').innerHTML = '<div class="history-empty">加载失败，请稍后再试</div>'; });
+    }
+
+    function renderHistory(list) {
+        var el = $('historyList');
+        if (!list.length) { el.innerHTML = '<div class="history-empty">暂无记录，快去占卜一次吧 ✨</div>'; return; }
+        var html = '';
+        list.forEach(function (item) {
+            var cards = [];
+            try { cards = JSON.parse(item.cardsJson || '[]'); } catch (e) {}
+            var pills = cards.map(function (c) {
+                return '<span class="h-card">' + escapeHtml(c.positionName) + ' · ' + escapeHtml(c.name) +
+                    (c.reversed ? ' <span class="h-rev">逆</span>' : '') + '</span>';
+            }).join('');
+            html += '<div class="history-item">' +
+                '<div class="history-item-head"><span class="h-spread">' + escapeHtml(item.spread) + '</span><span class="h-time">' + escapeHtml(item.createdAt) + '</span></div>' +
+                '<div class="h-question">' + escapeHtml(item.question) + '</div>' +
+                '<div class="h-cards">' + pills + '</div>' +
+                '<div class="history-result" style="display:none;">' + mdToHtml(item.resultJson) + '</div>' +
+                '</div>';
+        });
+        el.innerHTML = html;
+        el.querySelectorAll('.history-item').forEach(function (it) {
+            it.addEventListener('click', function () {
+                var res = it.querySelector('.history-result');
+                res.style.display = res.style.display === 'none' ? 'block' : 'none';
+            });
+        });
+    }
+
+    // ============================================================
     // 事件绑定
     // ============================================================
+    function applySpreadUI() {
+        if (spread.daily) {
+            $('qInput').style.display = 'none';
+            $('questionLabel').innerHTML = '<span class="moon">🌞</span> 今日运势 · 无需提问，默念「今天会如何」';
+        } else if (spread.yesno) {
+            $('qInput').style.display = '';
+            $('qInput').placeholder = '请提出一个「是 / 否」问题，例如：我该接受这份工作吗？';
+            $('questionLabel').innerHTML = '<span class="moon">🌙</span> 心中默念一个「是 / 否」问题';
+        } else {
+            $('qInput').style.display = '';
+            $('qInput').placeholder = '例如：我最近的事业发展会如何？';
+            $('questionLabel').innerHTML = '<span class="moon">🌙</span> 在心中默念你的问题，然后写下来';
+        }
+    }
+
     function bind() {
-        // 牌阵选择
         var opts = document.querySelectorAll('.spread-opt');
         opts.forEach(function (b) {
             b.addEventListener('click', function () {
                 opts.forEach(function (x) { x.classList.remove('active'); });
                 b.classList.add('active');
                 spread = SPREADS[b.dataset.spread];
+                applySpreadUI();
             });
         });
         spread = SPREADS.celtic;
+        applySpreadUI();
 
-        $('startShuffleBtn').addEventListener('click', function () {
-            ensureAudio();
-            runShuffle();
-        });
-
+        $('startShuffleBtn').addEventListener('click', function () { ensureAudio(); runShuffle(); });
         $('randomDrawBtn').addEventListener('click', function () { ensureAudio(); drawRandom(); });
         $('autoDrawBtn').addEventListener('click', function () { ensureAudio(); autoDrawAll(); });
 
@@ -989,30 +1274,25 @@
             var v = parseInt($('numInput').value, 10);
             if (isNaN(v) || v < 1 || v > 78) { toast('请输入 1–78 之间的编号'); return; }
             ensureAudio(); sndWhoosh();
-            var deckIndex = v - 1;
-            var fcard = fanCardByDeckIndex(deckIndex);
-            drawCard(deckIndex, fcard);
+            var fcard = fanCardByDeckIndex(v - 1);
+            drawCard(v - 1, fcard);
         });
-        $('numInput').addEventListener('keydown', function (e) {
-            if (e.key === 'Enter') $('numDrawBtn').click();
-        });
+        $('numInput').addEventListener('keydown', function (e) { if (e.key === 'Enter') $('numDrawBtn').click(); });
 
-        // 监听抽牌完成 → 开始解读按钮自动出现
-        var drawControls = document.querySelector('.draw-controls');
         var readBtn = document.createElement('button');
         readBtn.className = 'chip-btn gold'; readBtn.id = 'readBtn'; readBtn.textContent = '🔮 开始解读';
         readBtn.style.display = 'none';
         readBtn.addEventListener('click', function () { ensureAudio(); startReading(); });
-        drawControls.appendChild(readBtn);
+        document.querySelector('.draw-controls').appendChild(readBtn);
         setInterval(function () {
-            if (spread && drawn.length >= spread.cardCount && !reading) {
-                readBtn.style.display = 'inline-block';
-            } else if (!reading) {
-                readBtn.style.display = 'none';
-            }
+            if (spread && drawn.length >= spread.cardCount && !reading) readBtn.style.display = 'inline-block';
+            else if (!reading) readBtn.style.display = 'none';
         }, 200);
 
         $('restartBtn').addEventListener('click', resetAll);
+        $('historyBtn').addEventListener('click', function () { toggleHistory(true); });
+        $('historyClose').addEventListener('click', function () { toggleHistory(false); });
+        $('historyOverlay').addEventListener('click', function (e) { if (e.target === this) toggleHistory(false); });
     }
 
     // ============================================================
@@ -1023,10 +1303,8 @@
         bind();
         fetch('/api/tarot/deck')
             .then(function (r) { return r.json(); })
-            .then(function (data) {
-                if (data && data.cards) DECK = data.cards;
-            })
-            .catch(function () { /* 若失败，页面仍可交互但无法抽牌 */ });
+            .then(function (data) { if (data && data.cards) DECK = data.cards; })
+            .catch(function () {});
     }
 
     init();
