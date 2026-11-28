@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Net.Http;
 using System.Text;
@@ -39,8 +39,8 @@ namespace MyPersonalWebsite.Controllers
             try
             {
                 var apiKey = _config["DeepSeek:ApiKey"];
-                var apiUrl = _config["DeepSeek:ApiUrl"] ?? "https://api.deepseek.com/v1/chat/completions";
-                var model = _config["DeepSeek:Model"] ?? "deepseek-chat";
+                var apiUrl = _config["DeepSeek:ApiUrl"] ?? "https://api.deepseek.com/chat/completions";
+                var model = _config["DeepSeek:Model"] ?? "deepseek-v4-pro";
 
                 if (string.IsNullOrEmpty(apiKey))
                 {
@@ -66,7 +66,8 @@ namespace MyPersonalWebsite.Controllers
                     messages = messages,
                     temperature = temperature,
                     max_tokens = maxTokens,
-                    stream = false
+                    stream = false,
+                    thinking = new { type = "disabled" }
                 };
 
                 var json = JsonSerializer.Serialize(payload);

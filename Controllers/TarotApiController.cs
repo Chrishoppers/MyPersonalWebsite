@@ -40,7 +40,7 @@ namespace MyPersonalWebsite.Controllers
                     userId.Value, body.Question ?? "", body.Spread ?? "凯尔特十字牌阵", body.Cards, result.Content);
             }
 
-            return Ok(new { success = result.Success, fallback = result.Fallback, content = result.Content });
+            return Ok(new { success = result.Success, fallback = result.Fallback, content = result.Content, errorDetail = result.ErrorDetail });
         }
 
         /// <summary>GET /api/tarot/history?limit=20 —— 当前用户的占卜历史。</summary>

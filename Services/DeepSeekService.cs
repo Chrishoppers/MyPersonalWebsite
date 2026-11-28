@@ -15,8 +15,8 @@ namespace MyPersonalWebsite.Services
         {
             _httpClient = httpClient;
             _apiKey = config["DeepSeek:ApiKey"] ?? string.Empty;
-            _apiUrl = config["DeepSeek:ApiUrl"] ?? "https://api.deepseek.com/v1/chat/completions";
-            _defaultModel = config["DeepSeek:Model"] ?? "deepseek-chat";
+            _apiUrl = config["DeepSeek:ApiUrl"] ?? "https://api.deepseek.com/chat/completions";
+            _defaultModel = config["DeepSeek:Model"] ?? "deepseek-v4-pro";
         }
 
         /// <summary>
@@ -39,7 +39,8 @@ namespace MyPersonalWebsite.Services
                     },
                     temperature = temperature,
                     max_tokens = maxTokens,
-                    stream = false
+                    stream = false,
+                    thinking = new { type = "disabled" }
                 };
 
                 var json = JsonSerializer.Serialize(request);

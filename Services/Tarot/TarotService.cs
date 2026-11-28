@@ -22,6 +22,8 @@ public sealed class TarotReadingResult
     /// <summary>true 表示 AI 调用失败，使用了本地牌义兜底解读。</summary>
     public bool Fallback { get; init; }
     public string Content { get; init; } = "";
+    /// <summary>AI 调用失败时的错误详情（便于排查），成功时为空。</summary>
+    public string ErrorDetail { get; init; } = "";
 }
 
 /// <summary>一条历史占卜记录。</summary>
@@ -72,9 +74,11 @@ public sealed class TarotService
         var user = BuildUserPrompt(question, spread, cards, verdict);
 
         // 尝试调用 DeepSeek
+        string? errorDetail = null;
         try
         {
-            var content = await CallDeepSeekAsync(system, user);
+            var (content, err) = await CallDeepSeekAsync(system, user);
+            errorDetail = err;
             if (!string.IsNullOrWhiteSpace(content))
             {
                 return new TarotReadingResult { Success = true, Fallback = false, Content = content.Trim() };
@@ -82,6 +86,7 @@ public sealed class TarotService
         }
         catch (Exception ex)
         {
+            errorDetail = ex.Message;
             _logger.LogWarning(ex, "塔罗 AI 解读调用失败，回退到本地牌义解读");
         }
 
@@ -90,6 +95,7 @@ public sealed class TarotService
             Success = true,
             Fallback = true,
             Content = BuildFallback(question, cards),
+            ErrorDetail = errorDetail ?? "",
         };
     }
 
@@ -134,16 +140,16 @@ public sealed class TarotService
         return sb.ToString();
     }
 
-    private async Task<string> CallDeepSeekAsync(string system, string user)
+    private async Task<(string content, string? error)> CallDeepSeekAsync(string system, string user)
     {
         var apiKey = _config["DeepSeek:ApiKey"];
-        var apiUrl = _config["DeepSeek:ApiUrl"] ?? "https://api.deepseek.com/v1/chat/completions";
-        var model = _config["DeepSeek:Model"] ?? "deepseek-chat";
+        var apiUrl = _config["DeepSeek:ApiUrl"] ?? "https://api.deepseek.com/chat/completions";
+        var model = _config["DeepSeek:Model"] ?? "deepseek-v4-pro";
 
         if (string.IsNullOrEmpty(apiKey))
         {
             _logger.LogWarning("DeepSeek API Key 未配置");
-            return "";
+            return ("", "DeepSeek API Key 未配置");
         }
 
         var payload = new
@@ -155,40 +161,50 @@ public sealed class TarotService
                 new { role = "user", content = user },
             },
             temperature = 0.9,
-            max_tokens = 2500,
+            max_tokens = 3000,
             stream = false,
+            thinking = new { type = "disabled" },
         };
 
         var client = _httpClientFactory.CreateClient();
         client.Timeout = TimeSpan.FromSeconds(60);
 
-        using var request = new HttpRequestMessage(HttpMethod.Post, apiUrl)
-        {
-            Content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json"),
-        };
-        request.Headers.Add("Authorization", $"Bearer {apiKey}");
-
-        using var response = await client.SendAsync(request);
-        var body = await response.Content.ReadAsStringAsync();
-
-        if (!response.IsSuccessStatusCode)
-        {
-            _logger.LogWarning($"DeepSeek 解读失败 ({response.StatusCode}): {body}");
-            return "";
-        }
-
-        using var doc = JsonDocument.Parse(body);
-        var root = doc.RootElement;
         try
         {
-            return root.GetProperty("choices")[0]
-                       .GetProperty("message")
-                       .GetProperty("content")
-                       .GetString() ?? "";
+            using var request = new HttpRequestMessage(HttpMethod.Post, apiUrl)
+            {
+                Content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json"),
+            };
+            request.Headers.Add("Authorization", $"Bearer {apiKey}");
+
+            using var response = await client.SendAsync(request);
+            var body = await response.Content.ReadAsStringAsync();
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogWarning($"DeepSeek 解读失败 ({response.StatusCode}): {body}");
+                return ("", $"HTTP {(int)response.StatusCode}: {body}");
+            }
+
+            using var doc = JsonDocument.Parse(body);
+            var root = doc.RootElement;
+            try
+            {
+                var content = root.GetProperty("choices")[0]
+                               .GetProperty("message")
+                               .GetProperty("content")
+                               .GetString() ?? "";
+                return (content, null);
+            }
+            catch
+            {
+                return ("", "响应格式异常: " + body);
+            }
         }
-        catch
+        catch (Exception ex)
         {
-            return "";
+            _logger.LogWarning(ex, "DeepSeek 请求异常");
+            return ("", ex.Message);
         }
     }
 
